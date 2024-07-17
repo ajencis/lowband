@@ -1010,7 +1010,8 @@ void on_new_level(void)
 	}
 
 	/* L: new level, new mana */
-	player->floor_mana = randint0(player->depth) + randint0(player->depth) + randint0(25);
+	player->floor_mana = randint0(player->depth) + randint0(player->depth) +
+	                     randint0(25) + randint0(25) + 2;
 
 	/* Disturb */
 	disturb(player);

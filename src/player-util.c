@@ -528,6 +528,7 @@ void player_regen_mana(struct player *p)
 {
 	int32_t sp_gain;
 	int percent, old_csp = p->csp;
+	int oldfeel;
 
 	/* Save the old spell points */
 	old_csp = p->csp;
@@ -537,7 +538,7 @@ void player_regen_mana(struct player *p)
 
 	/* L: Limited abount of mana per floor */
 	percent *= p->floor_mana;
-	percent /= 25;
+	percent /= 5;
 
 	/* Various things speed up regeneration, but shouldn't punish healthy BGs */
 	if (!(player_has(p, PF_COMBAT_REGEN) && p->chp > p->mhp / 2)) {
@@ -556,8 +557,8 @@ void player_regen_mana(struct player *p)
 
 	/* Regenerate mana */
 	sp_gain = (int32_t)(p->msp * percent);
-	/*if (percent >= 0)
-		sp_gain += PY_REGEN_MNBASE;*/
+	if (percent > 0)
+		sp_gain += PY_REGEN_MNBASE;
 	sp_gain = player_adjust_mana_precise(p, sp_gain);
 
 	/* SP degen heals BGs at double efficiency vs casting */
@@ -567,8 +568,12 @@ void player_regen_mana(struct player *p)
 
 	/* Notice changes */
 	if (old_csp != p->csp) {
-		if (player->depth)
+		if (player->depth) {
+            oldfeel = (p->floor_mana + 14) / 15;
 			p->floor_mana = MAX(0, p->floor_mana + old_csp - p->csp);
+			if ((p->floor_mana + 14) / 15 != oldfeel) 
+			    display_mana_feeling();
+		}
 		p->upkeep->redraw |= (PR_MANA);
 		equip_learn_flag(p, OF_REGEN);
 		equip_learn_flag(p, OF_IMPAIR_MANA);

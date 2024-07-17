@@ -1798,6 +1798,25 @@ static const char *mon_feeling_text[] =
 	"This seems a quiet, peaceful place"
 };
 
+
+/**
+ * L: Array of feeling strings for mana feeling
+ */
+static const char *mana_feeling_text[] =
+{
+    "There is no mana left here.",
+	"This place has very little mana.",
+	"There is not much mana here.",
+	"This place has limited amounts of mana.",
+	"There is a bit of mana here.",
+	"This place has some mana.",
+	"There is a fair bit of mana here.",
+	"This place has quite a bit of mana.",
+	"There is a lot of mana here.",
+	"Mana abounds in this place.",
+	"This place overflows with mana!",
+};
+
 /**
  * Display the feeling.  Players always get a monster feeling.
  * Object feelings are delayed until the player has explored some
@@ -1821,7 +1840,8 @@ void display_feeling(bool obj_only)
 	/* Display only the object feeling when it's first discovered. */
 	if (obj_only) {
 		disturb(player);
-		msg("You feel that %s", obj_feeling_text[obj_feeling]);
+     	msg("You feel that %s", obj_feeling_text[obj_feeling]);
+		display_mana_feeling();
 		return;
 	}
 
@@ -1848,6 +1868,23 @@ void display_feeling(bool obj_only)
 	/* Display the feeling */
 	msg("%s%s %s", mon_feeling_text[mon_feeling], join,
 		obj_feeling_text[obj_feeling]);
+
+	/* L: display mana feeling */
+	display_mana_feeling();
+}
+
+/**
+ * L: show roughly how much mana is in the current level
+ */
+void display_mana_feeling(void)
+{
+	if (!player->msp) return;
+	if (cave->feeling_squares < z_info->feeling_need) return;
+
+	uint16_t max_mana_feeling = N_ELEMENTS(mana_feeling_text) - 1;
+	uint16_t mana_feeling = MIN((player->floor_mana + 14) / 15, max_mana_feeling);
+
+	msg("%s", mana_feeling_text[mana_feeling]);
 }
 
 

@@ -1492,8 +1492,8 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	/* Extract "effective" player level */
 	levels = (p->lev - p->class->magic.spell_first) + 1;
 	if (levels > 0) {
-		msp = 1;
-		msp += adj_mag_mana[average_spell_stat(p, state)] * levels / 100;
+		msp = 3;
+		msp += adj_mag_mana[average_spell_stat(p, state)] * levels / 500;
 	} else {
 		levels = 0;
 		msp = 0;
