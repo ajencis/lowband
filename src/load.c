@@ -776,6 +776,7 @@ int rd_player(void)
 	rd_s16b(&player->msp);
 	rd_s16b(&player->csp);
 	rd_u16b(&player->csp_frac);
+	rd_u16b(&player->floor_mana); /* L: new */
 
 	rd_s16b(&player->max_lev);
 	rd_s16b(&player->max_depth);

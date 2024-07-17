@@ -19,6 +19,7 @@
 #include "angband.h"
 #include "cave.h"
 #include "cmd-core.h"
+#include "effects.h"
 #include "game-input.h"
 #include "game-world.h"
 #include "generate.h"
@@ -268,6 +269,53 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 }
 
 /**
+ * L: take occasional stat damage when damaged
+ */
+void take_stat_hit(struct player *p, int dam)
+{
+	int stat = STAT_STR;
+	if (p->is_dead) return;
+    if (dam <= randint0(p->chp + p->mhp)) return;
+
+    stat = randint0(STAT_MAX);
+
+	effect_simple(EF_DRAIN_STAT, source_none(), "0", stat, 0, 0, 0, 0, NULL);
+}
+
+/**
+ * L: take occasional stat damage when damaged by an element
+ */
+void take_stat_hit_elemental(struct player *p, int dam, int element)
+{
+	int stat = STAT_STR;
+	if (p->is_dead) return;
+    if (dam <= randint0(p->chp + p->mhp)) return;
+
+	switch (element) {
+		case ELEM_ACID:
+		    stat = STAT_WIS;
+			break;
+		case ELEM_COLD:
+		    stat = STAT_DEX;
+			break;
+		case ELEM_FIRE:
+		    stat = STAT_STR;
+			break;
+		case ELEM_ELEC:
+		    stat = STAT_INT;
+			break;
+		case ELEM_POIS:
+		    stat = STAT_CON;
+			break;
+		default:
+		    stat = randint0(STAT_MAX);
+			break;
+	}
+
+    effect_simple(EF_DRAIN_STAT, source_none(), "0", stat, 0, 0, 0, 0, NULL);		    
+}
+
+/**
  * Win or not, know inventory, home items and history upon death, enter score
  */
 void death_knowledge(struct player *p)
@@ -487,8 +535,12 @@ void player_regen_mana(struct player *p)
 	/* Default regeneration */
 	percent = PY_REGEN_NORMAL;
 
+	/* L: Limited abount of mana per floor */
+	percent *= p->floor_mana;
+	percent /= 25;
+
 	/* Various things speed up regeneration, but shouldn't punish healthy BGs */
-	if (!(player_has(p, PF_COMBAT_REGEN) && p->chp  > p->mhp / 2)) {
+	if (!(player_has(p, PF_COMBAT_REGEN) && p->chp > p->mhp / 2)) {
 		if (player_of_has(p, OF_REGEN))
 			percent *= 2;
 		if (player_resting_can_regenerate(p))
@@ -504,8 +556,8 @@ void player_regen_mana(struct player *p)
 
 	/* Regenerate mana */
 	sp_gain = (int32_t)(p->msp * percent);
-	if (percent >= 0)
-		sp_gain += PY_REGEN_MNBASE;
+	/*if (percent >= 0)
+		sp_gain += PY_REGEN_MNBASE;*/
 	sp_gain = player_adjust_mana_precise(p, sp_gain);
 
 	/* SP degen heals BGs at double efficiency vs casting */
@@ -515,6 +567,8 @@ void player_regen_mana(struct player *p)
 
 	/* Notice changes */
 	if (old_csp != p->csp) {
+		if (player->depth)
+			p->floor_mana = MAX(0, p->floor_mana + old_csp - p->csp);
 		p->upkeep->redraw |= (PR_MANA);
 		equip_learn_flag(p, OF_REGEN);
 		equip_learn_flag(p, OF_IMPAIR_MANA);
@@ -1494,7 +1548,7 @@ void player_resting_complete_special(struct player *p)
 			disturb(p);
 	} else if (p->upkeep->resting == REST_COMPLETE) {
 		if ((p->chp == p->mhp) &&
-			(p->csp == p->msp || player_has(p, PF_COMBAT_REGEN)) &&
+			(p->csp == p->msp || player_has(p, PF_COMBAT_REGEN) || !p->floor_mana) &&
 			!p->timed[TMD_BLIND] && !p->timed[TMD_CONFUSED] &&
 			!p->timed[TMD_POISONED] && !p->timed[TMD_AFRAID] &&
 			!p->timed[TMD_TERROR] && !p->timed[TMD_STUN] &&

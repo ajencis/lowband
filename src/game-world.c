@@ -544,7 +544,7 @@ void process_world(struct chunk *c)
 	/*** Check the Time ***/
 
 	/* Play an ambient sound at regular intervals. */
-	if (!(turn % ((10L * z_info->day_length) / 4)))
+	if (!(turn % ((10L * z_info->day_length) / 4)) && !player->upkeep->generate_level)
 		play_ambient_sound();
 
 	/* Handle stores and sunshine */
@@ -578,7 +578,7 @@ void process_world(struct chunk *c)
 	}
 
 	/* Check for creature generation */
-	if (one_in_(z_info->alloc_monster_chance)) {
+	if (one_in_(z_info->alloc_monster_chance) && !player->upkeep->generate_level) {
 		(void)pick_and_place_distant_monster(c, player->grid,
 			z_info->max_sight + 5, true, player->depth);
 	}
@@ -729,7 +729,7 @@ void process_world(struct chunk *c)
 	player_update_light(player);
 
 	/* Update noise and scent (not if resting) */
-	if (!player_is_resting(player)) {
+	if (!player_is_resting(player) && !player->upkeep->generate_level) {
 		make_noise(player);
 		update_scent();
 	}
@@ -789,13 +789,15 @@ void process_world(struct chunk *c)
 			cmdq_flush();
 
 			/* Determine the level */
+			/* You can go up but you can't go down */
 			if (player->depth) {
 				msgt(MSG_TPLEVEL, "You feel yourself yanked upwards!");
 				dungeon_change_level(player, 0);
 			} else {
-				msgt(MSG_TPLEVEL, "You feel yourself yanked downwards!");
+				msgt(MSG_GENERIC, "The air around you calms down...");
+				/*msgt(MSG_TPLEVEL, "You feel yourself yanked downwards!");
 				player_set_recall_depth(player);
-				dungeon_change_level(player, player->recall_depth);
+				dungeon_change_level(player, player->recall_depth);*/
 			}
 		}
 	}
@@ -1007,6 +1009,9 @@ void on_new_level(void)
 		health_track(player->upkeep, NULL);
 	}
 
+	/* L: new level, new mana */
+	player->floor_mana = randint0(player->depth) + randint0(player->depth) + randint0(25);
+
 	/* Disturb */
 	disturb(player);
 
@@ -1079,6 +1084,8 @@ static void on_leave_level(void) {
  */
 void run_game_loop(void)
 {
+    int i;
+
 	/* Tidy up after the player's command */
 	process_player_cleanup();
 
@@ -1170,6 +1177,19 @@ void run_game_loop(void)
 			}
 
 			prepare_next_level(player);
+
+            // removed temporarily
+            //turn += 10 - (turn % 10);
+			/* L: process the world a bunch */
+			/*for (i = 0; (i < player->upkeep->taking_stairs) && !player->is_dead; i++)
+			{
+				turn += 10;
+				//msg("turn %i, food %i", turn, player->timed[TMD_FOOD]);
+				process_world(cave);
+			}*/
+
+			player->upkeep->taking_stairs = 0;
+			
 			on_new_level();
 
 			player->upkeep->generate_level = false;

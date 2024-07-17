@@ -941,8 +941,8 @@ int apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 	 * This change is meant to go in conjunction with the changes
 	 * to ego item allocation levels. (-fizzix)
 	 */
-	int good_chance = (33 + lev);
-	int great_chance = 30;
+	int good_chance = (randint0(33) + lev) / 33;
+	int great_chance = 10;
 
 	/* Roll for "good" */
 	if (good || (randint0(100) < good_chance)) {
@@ -954,7 +954,7 @@ int apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 	}
 
 	/* Roll for artifact creation */
-	if (allow_artifacts) {
+	if (allow_artifacts && one_in_(100)) {
 		int rolls = 0;
 
 		/* Get one roll if excellent */
@@ -1162,12 +1162,12 @@ struct object_kind *get_obj_num(int level, bool good, int tval)
 struct object *make_object(struct chunk *c, int lev, bool good, bool great,
 		bool extra_roll, int32_t *value, int tval)
 {
-	int base, tries = 3;
+	int base, tries = 33;
 	struct object_kind *kind = NULL;
 	struct object *new_obj;
 
 	/* Try to make a special artifact */
-	if (one_in_(good ? 10 : 1000)) {
+	if (one_in_(good ? 100 : 10000)) {
 		new_obj = make_artifact_special(lev, tval);
 		if (new_obj) {
 			if (value) *value = object_value_real(new_obj, 1);
@@ -1186,6 +1186,11 @@ struct object *make_object(struct chunk *c, int lev, bool good, bool great,
 		kind = get_obj_num(base, good || great, tval);
 		if (kind && tval_is_book_k(kind) && !obj_kind_can_browse(kind)) {
 			if (one_in_(5)) break;
+			kind = NULL;
+			tries--;
+			continue;
+		} else if (kind && tval_is_food_k(kind)) { /* L: Less food deeper */
+            if (randint1(lev + 1) < 5) break;
 			kind = NULL;
 			tries--;
 			continue;

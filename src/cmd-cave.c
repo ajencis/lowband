@@ -50,12 +50,40 @@
 #include "store.h"
 #include "trap.h"
 
+
+static bool check_can_take_stairs(struct player *p, int time)
+{
+    if (p->timed[TMD_CUT])
+	{
+		msg("You would bleed out on the stairs.");
+		return false;
+	}
+	else if (p->timed[TMD_POISONED])
+	{
+		msg("You would die of poison on the stairs.");
+		return false;
+	}
+	else if (p->timed[TMD_BLOODLUST])
+	{
+		msg("There's no-one to fight on the stairs.");
+		return false;
+	}
+	else if (p->timed[TMD_FOOD] < 10 + time)
+	{
+		msg("You should eat before you take the stairs.");
+		return false;
+	}
+	return true;
+}
+
+
 /**
  * Go up one level
  */
 void do_cmd_go_up(struct command *cmd)
 {
 	int ascend_to;
+	int time;
 
 	/* Verify stairs */
 	if (!square_isupstairs(cave, player->grid)) {
@@ -69,15 +97,23 @@ void do_cmd_go_up(struct command *cmd)
 		return;
 	}
 	
-	ascend_to = dungeon_get_next_level(player, player->depth, -1);
+	ascend_to = dungeon_get_next_level(player, player->depth, -randint1(player->depth / 5 + 1));
 	
-	if (ascend_to == player->depth) {
+	if (ascend_to >= player->depth) {
 		msg("You can't go up from here!");
 		return;
 	}
 
+	time = player->depth * (player->depth - ascend_to) * 100 + 5000;
+
+	/* L: make sure the player won't die on the stairs */
+	if (!check_can_take_stairs(player, time)) return;
+
 	/* Take a turn */
 	player->upkeep->energy_use = z_info->move_energy;
+
+	/* L: prepare to take time on the stairs */
+	player->upkeep->taking_stairs = time / 10;
 
 	/* Success */
 	msgt(MSG_STAIRS_UP, "You enter a maze of up staircases.");
@@ -96,7 +132,8 @@ void do_cmd_go_up(struct command *cmd)
  */
 void do_cmd_go_down(struct command *cmd)
 {
-	int descend_to = dungeon_get_next_level(player, player->depth, 1);
+	int descend_to = dungeon_get_next_level(player, player->depth, randint1(player->depth / 5 + 1));
+	int time;
 
 	/* Verify stairs */
 	if (!square_isdownstairs(cave, player->grid)) {
@@ -110,6 +147,10 @@ void do_cmd_go_down(struct command *cmd)
 		return;
 	}
 
+	time = descend_to * (descend_to - player->depth) * 100 + 5000;
+
+	if (!check_can_take_stairs(player, time)) return;
+
 	/* Warn a force_descend player if they're going to a quest level */
 	if (OPT(player, birth_force_descend)) {
 		descend_to = dungeon_get_next_level(player,
@@ -121,6 +162,9 @@ void do_cmd_go_down(struct command *cmd)
 
 	/* Hack -- take a turn */
 	player->upkeep->energy_use = z_info->move_energy;
+
+	/* L: prepare to take time on the stairs */
+	player->upkeep->taking_stairs = time / 10;
 
 	/* Success */
 	msgt(MSG_STAIRS_DOWN, "You enter a maze of down staircases.");

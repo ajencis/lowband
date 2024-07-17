@@ -519,7 +519,7 @@ static void chest_death(struct loc grid, struct object *chest)
 	level = chest->origin_depth + 5;
 	while (number > 0) {
 		struct object *treasure;
-		treasure = make_object(cave, level, true, large, false, NULL, 0);
+		treasure = make_object(cave, level, large && one_in_(5), false, false, NULL, 0);
 		if (!treasure)
 			continue;
 		if (tval_is_chest(treasure)) {

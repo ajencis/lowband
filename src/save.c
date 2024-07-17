@@ -476,6 +476,7 @@ void wr_player(void)
 	wr_s16b(player->msp);
 	wr_s16b(player->csp);
 	wr_u16b(player->csp_frac);
+	wr_u16b(player->floor_mana); /* L: new */
 
 	/* Max Player and Dungeon Levels */
 	wr_s16b(player->max_lev);

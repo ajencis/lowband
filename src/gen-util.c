@@ -794,11 +794,11 @@ bool alloc_object(struct chunk *c, int set, int typ, int depth, uint8_t origin)
 			case TYP_OBJECT:
 				place_object(c, grid, depth, false, false, origin, 0);
 				break;
-			case TYP_GOOD:
-				place_object(c, grid, depth, true, false, origin, 0);
+			case TYP_GOOD: // much fewer good | great objects
+				place_object(c, grid, depth, one_in_(5), false, origin, 0);
 				break;
 			case TYP_GREAT:
-				place_object(c, grid, depth, true, true, origin, 0);
+				place_object(c, grid, depth, true, one_in_(5), origin, 0);
 				break;
 			}
 			placed = true;

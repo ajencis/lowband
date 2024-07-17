@@ -452,6 +452,7 @@ struct player_upkeep {
 	bool dropping;			/* True if auto-drop is in progress */
 
 	int energy_use;			/* Energy use this turn */
+	int taking_stairs;      /* L: how long they stay on the stairs */
 	int new_spells;			/* Number of spells available */
 
 	struct monster *health_who;			/* Health bar trackee */
@@ -539,6 +540,7 @@ struct player {
 	int16_t msp;		/* Max mana pts */
 	int16_t csp;		/* Cur mana pts */
 	uint16_t csp_frac;	/* Cur mana frac (times 2^16) */
+	uint16_t floor_mana;    /* L: amount of mana on the current floor */
 
 	int16_t stat_max[STAT_MAX];	/* Current "maximal" stat values */
 	int16_t stat_cur[STAT_MAX];	/* Current "natural" stat values */

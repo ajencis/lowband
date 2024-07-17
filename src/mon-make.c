@@ -837,12 +837,12 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 			/* Allocate by hand, prep, apply magic */
 			obj = mem_zalloc(sizeof(*obj));
 			object_prep(obj, drop->kind, level, RANDOMISE);
-			apply_magic(obj, level, true, good, great, extra_roll);
+			apply_magic(obj, level, true, (good && one_in_(10)) || great, great && one_in_(10), extra_roll);
 		} else {
 			/* Choose by set tval */
 			assert(drop->tval);
-			obj = make_object(c, level, good, great, extra_roll, NULL,
-							  drop->tval);
+			obj = make_object(c, level, (good && one_in_(10)) || great, great && one_in_(10), extra_roll,
+			                  NULL, drop->tval);
 		}
 
 		/* Skip if the object couldn't be created. */
@@ -869,7 +869,8 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 		if (gold_ok && (!item_ok || (randint0(100) < 50))) {
 			obj = make_gold(level, "any");
 		} else {
-			obj = make_object(c, level, good, great, extra_roll, NULL, 0);
+			obj = make_object(c, level, (good && one_in_(10)) || great, great && one_in_(10), extra_roll,
+			                  NULL, 0);
 			if (!obj) continue;
 		}
 
