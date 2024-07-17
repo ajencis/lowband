@@ -790,7 +790,7 @@ static void melee_effect_handler_EAT_GOLD(melee_effect_handler_context_t *contex
 
     /* Attempt saving throw (unless paralyzed) based on dex and level */
     if (!current_player->timed[TMD_PARALYZED] &&
-        (randint0(100) < (adj_dex_safe[current_player->state.stat_ind[STAT_DEX]]
+        (randint0(100) < (adj_dex_safe(current_player->state.stat_ind[STAT_DEX])
 						  + current_player->lev))) {
         /* Saving throw message */
         msg("You quickly protect your money pouch!");
@@ -855,7 +855,7 @@ static void melee_effect_handler_EAT_ITEM(melee_effect_handler_context_t *contex
 
 	/* Steal from player or monster */
 	if (context->p) {
-		int chance = adj_dex_safe[context->p->state.stat_ind[STAT_DEX]] +
+		int chance = adj_dex_safe(context->p->state.stat_ind[STAT_DEX]) +
 			context->p->lev;
 
 		/* Saving throw (unless paralyzed) based on dex and level */

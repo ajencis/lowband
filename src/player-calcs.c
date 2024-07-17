@@ -39,6 +39,8 @@
 #include "player-timed.h"
 #include "player-util.h"
 
+
+#if 0
 /**
  * Stat Table (INT) -- Magic devices
  */
@@ -857,6 +859,116 @@ static const int adj_mag_mana[STAT_RANGE] =
 	800	/* 18/210-18/219 */,
 	800	/* 18/220+ */
 };
+#endif
+
+
+/* L: rewriting the stat stuff entirely */
+
+/**
+ * L: scales a number to the stat value such that
+ * stat_scale(10, x) = 0
+ * and
+ * stat_scale(18, x) = x
+ * with numbers increasing quadratically
+ * generally scaleto is the high value for that table
+ */
+static int stat_scale(int index, int scaleto) {
+    int highstat = 18;
+
+	if (index > 10) return (int)(scaleto * 
+	                             ((index - 10) * (index - 10)) /
+								 ((highstat - 10) * (highstat - 10)));
+
+	if (index < 10) return (index - 10) * MAX(50, scaleto) / 50;
+
+	return 0;
+}
+
+
+int adj_int_dev(int index) {
+	return stat_scale(index, 15);
+}
+
+int adj_wis_sav(int index) {
+	return stat_scale(index, 25);
+}
+
+int adj_dex_dis(int index) {
+	return stat_scale(index, 20);
+}
+
+int adj_int_dis(int index) {
+	return stat_scale(index, 20);
+}
+
+int adj_dex_ta(int index) {
+	return stat_scale(index, 50);
+}
+
+int adj_str_td(int index) {
+	return stat_scale(index, 25);
+}
+
+int adj_dex_th(int index) {
+	return stat_scale(index, 35);
+}
+
+int adj_str_th(int index) {
+	return stat_scale(index, 15);
+}
+
+int adj_str_wgt(int index) {
+	return 10 + stat_scale(index, 20);
+}
+
+int adj_str_hold(int index) {
+	return 20 + stat_scale(index, 100);
+}
+
+int adj_str_dig(int index) {
+	return stat_scale(index, 100);
+}
+
+int adj_str_blow(int index) {
+	return 50 + stat_scale(index, 240);
+}
+
+int adj_dex_blow(int index) {
+	return 10 + stat_scale(index, 10);
+}
+
+int adj_stat_blow(int index) {
+	return 100 + stat_scale(index, 500);
+}
+
+int adj_dex_safe(int index) {
+	return 20 + stat_scale(index, 80);
+}
+
+int adj_con_fix(int index) {
+	return 10 + stat_scale(index, 10);
+}
+
+int adj_con_mhp(int index) {
+	return stat_scale(index, 1000);
+}
+
+int adj_mag_study(int index) {
+	return index * 250 / 18;
+}
+
+int adj_mag_mana(int index) {
+	return index * 500 / 18;
+}
+
+static int stepdown(int num) {
+	int i;
+
+	for (i = 0; i < 100; i++) {
+		if ((i * (i + 1) / 2) >= num) return i;
+	}
+	return i;
+}
 
 /**
  * This table is used to help calculate the number of blows the player can
@@ -1294,7 +1406,7 @@ static void calc_spells(struct player *p)
 	if (levels < 0) levels = 0;
 
 	/* Number of 1/100 spells per level (or something - needs clarifying) */
-	percent_spells = adj_mag_study[average_spell_stat(p, &p->state)];
+	percent_spells = adj_mag_study(average_spell_stat(p, &p->state));
 
 	/* Extract total allowed spells (rounded up) */
 	num_allowed = (((percent_spells * levels) + 50) / 100);
@@ -1493,7 +1605,7 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	levels = (p->lev - p->class->magic.spell_first) + 1;
 	if (levels > 0) {
 		msp = 3;
-		msp += adj_mag_mana[average_spell_stat(p, state)] * levels / 500;
+		msp += adj_mag_mana(average_spell_stat(p, state)) * levels / 500;
 	} else {
 		levels = 0;
 		msp = 0;
@@ -1565,7 +1677,7 @@ static void calc_hitpoints(struct player *p)
 	int mhp;
 
 	/* Get "1/100th hitpoint bonus per level" value */
-	bonus = adj_con_mhp[p->state.stat_ind[STAT_CON]];
+	bonus = adj_con_mhp(p->state.stat_ind[STAT_CON]);
 
 	/* Calculate hitpoints */
 	mhp = p->player_hp[p->lev-1] + (bonus * p->lev / 100);
@@ -1690,6 +1802,32 @@ int calc_unlocking_chance(const struct player *p, int lock_power,
 }
 
 /**
+ * L: new calc_blows 
+ * relies on sqrt(object weight), melee skill, and both str and dex, with
+ * the higher of str and dex weighted more heavily
+ */
+int calc_blows(struct player *p, const struct object *obj,
+               struct player_state *state, int extra_blows)
+{
+	int weight = obj ? object_weight_one(obj) : 0;
+	weight = MAX(weight, p->class->min_weight);
+	weight = stepdown(weight);
+
+    int dexind = state->stat_ind[STAT_DEX];
+	int strind = state->stat_ind[STAT_STR];
+
+	int statind = (dexind > strind ? 2 * dexind + strind : dexind + 2 * strind) / 3;
+
+	int baseblows = adj_stat_blow(statind);
+
+	int blows = baseblows * state->skills[SKILL_TO_HIT_MELEE] / weight / 10 + 100;
+
+	blows = MIN(blows, 100 * p->class->max_attacks);
+
+	return blows + 100 * extra_blows;
+}
+
+/**
  * Calculate the blows a player would get.
  *
  * \param obj is the object for which we are calculating blows
@@ -1699,7 +1837,7 @@ int calc_unlocking_chance(const struct player *p, int lock_power,
  *
  * N.B. state->num_blows is now 100x the number of blows.
  */
-int calc_blows(struct player *p, const struct object *obj,
+int calc_blows_old(struct player *p, const struct object *obj,
 			   struct player_state *state, int extra_blows)
 {
 	int blows;
@@ -1714,14 +1852,14 @@ int calc_blows(struct player *p, const struct object *obj,
 	div = (weight < min_weight) ? min_weight : weight;
 
 	/* Get the strength vs weight */
-	str_index = adj_str_blow[state->stat_ind[STAT_STR]] *
+	str_index = adj_str_blow(state->stat_ind[STAT_STR]) *
 			p->class->att_multiply / div;
 
 	/* Maximal value */
 	if (str_index > 11) str_index = 11;
 
 	/* Index by dexterity */
-	dex_index = MIN(adj_dex_blow[state->stat_ind[STAT_DEX]], 11);
+	dex_index = MIN(adj_dex_blow(state->stat_ind[STAT_DEX]), 11);
 
 	/* Use the blows table to get energy per blow */
 	blow_energy = blows_table[str_index][dex_index];
@@ -1742,7 +1880,7 @@ static int weight_limit(struct player_state *state)
 	int i;
 
 	/* Weight limit based only on strength */
-	i = adj_str_wgt[state->stat_ind[STAT_STR]] * 100;
+	i = adj_str_wgt(state->stat_ind[STAT_STR]) * 100;
 
 	/* Return the result */
 	return (i);
@@ -1757,7 +1895,7 @@ int weight_remaining(struct player *p)
 	int i;
 
 	/* Weight limit based only on strength */
-	i = 60 * adj_str_wgt[p->state.stat_ind[STAT_STR]]
+	i = 60 * adj_str_wgt(p->state.stat_ind[STAT_STR])
 		- p->upkeep->total_weight - 1;
 
 	/* Return the result */
@@ -2054,8 +2192,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	for (i = 0; i < STAT_MAX; i++) {
 		int add, use, ind;
 
+        /* Class doesn't affect stats any more */
 		add = state->stat_add[i];
-		add += (p->race->r_adj[i] + p->class->c_adj[i]);
+		add += (p->race->r_adj[i]);// + p->class->c_adj[i]);
 		state->stat_top[i] =  modify_stat_value(p->stat_max[i], add);
 		use = modify_stat_value(p->stat_cur[i], add);
 
@@ -2124,7 +2263,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 				state->skills[SKILL_DISARM_MAGIC] /= 10;
 				state->skills[SKILL_SAVE] *= 9;
 				state->skills[SKILL_SAVE] /= 10;
-				state->skills[SKILL_SEARCH] *=9;
+				state->skills[SKILL_SEARCH] *= 9;
 				state->skills[SKILL_SEARCH] /= 10;
 			}
 		}
@@ -2229,25 +2368,25 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		state->speed = 199;
 
 	/* Apply modifier bonuses (Un-inflate stat bonuses) */
-	state->to_a += adj_dex_ta[state->stat_ind[STAT_DEX]];
-	state->to_d += adj_str_td[state->stat_ind[STAT_STR]];
-	state->to_h += adj_dex_th[state->stat_ind[STAT_DEX]];
-	state->to_h += adj_str_th[state->stat_ind[STAT_STR]];
+	state->to_a += adj_dex_ta(state->stat_ind[STAT_DEX]);
+	state->to_d += adj_str_td(state->stat_ind[STAT_STR]);
+	state->to_h += adj_dex_th(state->stat_ind[STAT_DEX]);
+	state->to_h += adj_str_th(state->stat_ind[STAT_STR]);
 
 
 	/* Modify skills */
-	state->skills[SKILL_DISARM_PHYS] += adj_dex_dis[state->stat_ind[STAT_DEX]];
-	state->skills[SKILL_DISARM_MAGIC] += adj_int_dis[state->stat_ind[STAT_INT]];
-	state->skills[SKILL_DEVICE] += adj_int_dev[state->stat_ind[STAT_INT]];
-	state->skills[SKILL_SAVE] += adj_wis_sav[state->stat_ind[STAT_WIS]];
-	state->skills[SKILL_DIGGING] += adj_str_dig[state->stat_ind[STAT_STR]];
+	state->skills[SKILL_DISARM_PHYS] += adj_dex_dis(state->stat_ind[STAT_DEX]);
+	state->skills[SKILL_DISARM_MAGIC] += adj_int_dis(state->stat_ind[STAT_INT]);
+	state->skills[SKILL_DEVICE] += adj_int_dev(state->stat_ind[STAT_INT]);
+	state->skills[SKILL_SAVE] += adj_wis_sav(state->stat_ind[STAT_WIS]);
+	state->skills[SKILL_DIGGING] += adj_str_dig(state->stat_ind[STAT_STR]);
 	for (i = 0; i < SKILL_MAX; i++)
 		state->skills[i] += (p->class->x_skills[i] * p->lev / 10);
 
 	if (state->skills[SKILL_DIGGING] < 1) state->skills[SKILL_DIGGING] = 1;
 	if (state->skills[SKILL_STEALTH] > 30) state->skills[SKILL_STEALTH] = 30;
 	if (state->skills[SKILL_STEALTH] < 0) state->skills[SKILL_STEALTH] = 0;
-	hold = adj_str_hold[state->stat_ind[STAT_STR]];
+	hold = adj_str_hold(state->stat_ind[STAT_STR]);
 
 
 	/* Analyze launcher */

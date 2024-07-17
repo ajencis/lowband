@@ -41,6 +41,8 @@
  * \param dam is the unadjusted damage.
  * \param dam_aspect is the calc we want (min, avg, max, random).
  * \param resist is the degree of resistance (-1 = vuln, 3 = immune).
+ * 
+ * L: will now also reduce damage depending on the player's Save skill
  */
 int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 			   int resist, bool actual)
@@ -90,6 +92,10 @@ int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 	for (i = resist; i > 0; i--)
 		if (denom)
 			dam = dam * projections[type].numerator / denom;
+
+	/* L: saving throw reduces damage */
+	dam = dam * (100 - randint0(p->state.skills[SKILL_SAVE])) / 100;
+	dam = MAX(dam, 0);
 
 	return dam;
 }

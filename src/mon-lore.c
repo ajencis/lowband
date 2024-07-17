@@ -205,7 +205,7 @@ static int blow_color(struct player *p, int blow_idx)
 
 	/* Now look at what player attributes can protect from the effects */
 	if (streq(blow->effect_type, "theft")) {
-		if (p->lev + adj_dex_safe[p->known_state.stat_ind[STAT_DEX]] >= 100) {
+		if (p->lev + adj_dex_safe(p->known_state.stat_ind[STAT_DEX]) >= 100) {
 			return blow->lore_attr_resist;
 		} else {
 			return blow->lore_attr;

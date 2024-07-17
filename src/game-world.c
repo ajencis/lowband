@@ -279,7 +279,7 @@ void play_ambient_sound(void)
  */
 static void decrease_timeouts(void)
 {
-	int adjust = (adj_con_fix[player->state.stat_ind[STAT_CON]] + 1);
+	int adjust = (adj_con_fix(player->state.stat_ind[STAT_CON]) + 1);
 	int i;
 
 	/* Most timed effects decrement by 1 */
@@ -1085,7 +1085,7 @@ static void on_leave_level(void) {
  */
 void run_game_loop(void)
 {
-    int i;
+    //int i;
 
 	/* Tidy up after the player's command */
 	process_player_cleanup();

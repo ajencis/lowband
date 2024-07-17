@@ -443,6 +443,7 @@ static void display_player_flag_info(void)
 
 /**
  * Special display, part 2b
+ * L: no more stats from class
  */
 void display_player_stat_info(void)
 {
@@ -460,9 +461,9 @@ void display_player_stat_info(void)
 	/* Print out the labels for the columns */
 	c_put_str(COLOUR_WHITE, "  Self", row-1, col+5);
 	c_put_str(COLOUR_WHITE, " RB", row-1, col+12);
-	c_put_str(COLOUR_WHITE, " CB", row-1, col+16);
-	c_put_str(COLOUR_WHITE, " EB", row-1, col+20);
-	c_put_str(COLOUR_WHITE, "  Best", row-1, col+24);
+	//c_put_str(COLOUR_WHITE, " CB", row-1, col+16);
+	c_put_str(COLOUR_WHITE, " EB", row-1, col+16);
+	c_put_str(COLOUR_WHITE, "  Best", row-1, col+20);
 
 	/* Display the stats */
 	for (i = 0; i < STAT_MAX; i++) {
@@ -487,16 +488,16 @@ void display_player_stat_info(void)
 		c_put_str(COLOUR_L_BLUE, buf, row+i, col+12);
 
 		/* Class Bonus */
-		strnfmt(buf, sizeof(buf), "%+3d", player->class->c_adj[i]);
-		c_put_str(COLOUR_L_BLUE, buf, row+i, col+16);
+		/*strnfmt(buf, sizeof(buf), "%+3d", player->class->c_adj[i]);
+		c_put_str(COLOUR_L_BLUE, buf, row+i, col+16);*/
 
 		/* Equipment Bonus */
 		strnfmt(buf, sizeof(buf), "%+3d", player->state.stat_add[i]);
-		c_put_str(COLOUR_L_BLUE, buf, row+i, col+20);
+		c_put_str(COLOUR_L_BLUE, buf, row+i, col+16);
 
 		/* Resulting "modified" maximum value */
 		cnv_stat(player->state.stat_top[i], buf, sizeof(buf));
-		c_put_str(COLOUR_L_GREEN, buf, row+i, col+24);
+		c_put_str(COLOUR_L_GREEN, buf, row+i, col+20);
 
 		/* Only display stat_use if there has been draining */
 		if (player->stat_cur[i] < player->stat_max[i]) {

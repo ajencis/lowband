@@ -1436,7 +1436,7 @@ void steal_monster_item(struct monster *mon, int midx)
 		int guard = (mon->race->level * (unique ? 4 : 3)) / 4 +
 			mon->mspeed - player->state.speed;
 		int steal_skill = player->state.skills[SKILL_STEALTH] +
-			adj_dex_th[player->state.stat_ind[STAT_DEX]];
+			adj_dex_th(player->state.stat_ind[STAT_DEX]);
 		int monster_reaction;
 
 		/* No object */

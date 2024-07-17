@@ -302,10 +302,10 @@ static void race_help(int i, void *db, const region *l)
 
 static void class_help(int i, void *db, const region *l)
 {
-	int j;
+	//int j;
 	struct player_class *c = player_id2class(i);
 	const struct player_race *r = player->race;
-	int len = (STAT_MAX + 1) / 2;
+	//int len = (STAT_MAX + 1) / 2;
 
 	struct player_ability *ability;
 	int n_flags = 0;
@@ -320,7 +320,8 @@ static void class_help(int i, void *db, const region *l)
 	text_out_indent = CLASS_AUX_COL;
 	Term_gotoxy(CLASS_AUX_COL, TABLE_ROW);
 
-	for (j = 0; j < len; j++) {  
+    /* L: class doesn't affect stats any more */
+	/*for (j = 0; j < len; j++) {  
 		const char *name = stat_names_reduced[j];
 		int adj = c->c_adj[j] + r->r_adj[j];
 
@@ -333,9 +334,9 @@ static void class_help(int i, void *db, const region *l)
 		}
 
 		text_out("\n");
-	}
+	}*/
 
-	text_out_e("\n");
+	//text_out_e("\n");
 	
 	skill_help(r->r_skills, c->c_skills, r->r_mhp + c->c_mhp,
 			   r->r_exp + c->c_exp, -1);

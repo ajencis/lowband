@@ -902,7 +902,7 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 
 	/* Bashing chance depends on melee skill, DEX, and a level bonus. */
 	int bash_chance = p->state.skills[SKILL_TO_HIT_MELEE] / 8 +
-		adj_dex_th[p->state.stat_ind[STAT_DEX]] / 2;
+		adj_dex_th(p->state.stat_ind[STAT_DEX]) / 2;
 
 	/* No shield, no bash */
 	if (!shield) return false;
@@ -935,7 +935,7 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 	bash_dam *= bash_quality / 40 + p->lev / 14;
 
 	/* Strength bonus. */
-	bash_dam += adj_str_td[p->state.stat_ind[STAT_STR]];
+	bash_dam += adj_str_td(p->state.stat_ind[STAT_STR]);
 
 	/* Paranoia. */
 	if (bash_dam <= 0) return false;
@@ -966,7 +966,7 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 	}
 
 	/* The player will sometimes stumble. */
-	if (35 + adj_dex_th[p->state.stat_ind[STAT_DEX]] < randint1(60)) {
+	if (35 + adj_dex_th(p->state.stat_ind[STAT_DEX]) < randint1(60)) {
 		energy_lost = randint1(50) + 25;
 		/* Lose 26-75% of a turn due to stumbling after shield bash. */
 		msgt(MSG_GENERIC, "You stumble!");
@@ -1362,7 +1362,7 @@ void do_cmd_fire(struct command *cmd) {
 void do_cmd_throw(struct command *cmd) {
 	int dir;
 	int shots = 10;
-	int str = adj_str_blow[player->state.stat_ind[STAT_STR]];
+	int str = adj_str_blow(player->state.stat_ind[STAT_STR]);
 	ranged_attack attack = make_ranged_throw;
 
 	int weight;
