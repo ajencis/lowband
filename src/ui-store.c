@@ -1313,10 +1313,23 @@ void use_store(game_event_type type, game_event_data *data, void *user)
 
 void leave_store(game_event_type type, game_event_data *data, void *user)
 {
+    int i;
+
 	/* Disable repeats */
 	cmd_disable_repeat();
 
 	sound(MSG_STORE_LEAVE);
+
+	/* L: home heals you */
+	if (store_at(cave, player->grid)->feat == FEAT_HOME) {
+        for (i = 0; i < STAT_MAX; i++) {
+			player->stat_cur[i] = player->stat_max[i];
+		}
+		player->csp = player->msp;
+		player->chp = player->mhp;
+
+		msg("You feel much better.");
+	}
 
 	/* Switch back to the normal game view. */
 	event_signal(EVENT_ENTER_WORLD);
