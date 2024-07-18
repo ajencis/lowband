@@ -545,6 +545,7 @@ struct player {
 	int16_t stat_max[STAT_MAX];	/* Current "maximal" stat values */
 	int16_t stat_cur[STAT_MAX];	/* Current "natural" stat values */
 	int16_t stat_map[STAT_MAX];	/* Tracks remapped stats from temp stat swap */
+	int16_t stat_max_max[STAT_MAX]; /* Cap of increases to stats */
 
 	int16_t *timed;				/* Timed effects */
 

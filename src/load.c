@@ -730,6 +730,7 @@ int rd_player(void)
 	for (i = 0; i < stat_max; i++) rd_s16b(&player->stat_cur[i]);
 	for (i = 0; i < stat_max; i++) rd_s16b(&player->stat_map[i]);
 	for (i = 0; i < stat_max; i++) rd_s16b(&player->stat_birth[i]);
+	for (i = 0; i < stat_max; i++) rd_s16b(&player->stat_max_max[i]);
 
 	rd_s16b(&player->ht_birth);
 	rd_s16b(&player->wt_birth);

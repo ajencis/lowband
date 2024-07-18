@@ -463,7 +463,8 @@ void display_player_stat_info(void)
 	c_put_str(COLOUR_WHITE, " RB", row-1, col+12);
 	//c_put_str(COLOUR_WHITE, " CB", row-1, col+16);
 	c_put_str(COLOUR_WHITE, " EB", row-1, col+16);
-	c_put_str(COLOUR_WHITE, "  Best", row-1, col+20);
+	c_put_str(COLOUR_WHITE, " Best", row-1, col+20);
+	c_put_str(COLOUR_WHITE, "  Max", row-1, col+26);
 
 	/* Display the stats */
 	for (i = 0; i < STAT_MAX; i++) {
@@ -476,7 +477,7 @@ void display_player_stat_info(void)
 			put_str(stat_names[i], row+i, col);
 
 		/* Indicate natural maximum */
-		if (player->stat_max[i] == 18+100)
+		if (player->stat_max[i] == player->stat_max_max[i])
 			put_str("!", row+i, col+3);
 
 		/* Internal "natural" maximum value */
@@ -497,7 +498,11 @@ void display_player_stat_info(void)
 
 		/* Resulting "modified" maximum value */
 		cnv_stat(player->state.stat_top[i], buf, sizeof(buf));
-		c_put_str(COLOUR_L_GREEN, buf, row+i, col+20);
+		c_put_str(COLOUR_L_GREEN, buf, row+i, col+19);
+
+		/* L: maxima */
+		cnv_stat(player->stat_max_max[i], buf, sizeof(buf));
+		c_put_str(COLOUR_L_GREEN, buf, row+i, col+25);
 
 		/* Only display stat_use if there has been draining */
 		if (player->stat_cur[i] < player->stat_max[i]) {

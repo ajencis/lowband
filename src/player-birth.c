@@ -157,7 +157,7 @@ static void save_roller_data(birther *tosave)
 
 	/* Save the stats */
 	for (i = 0; i < STAT_MAX; i++)
-		tosave->stat[i] = player->stat_birth[i];
+		tosave->stat[i] = player->stat_max_max[i];
 
 	if (tosave->history) {
 		string_free(tosave->history);
@@ -201,8 +201,9 @@ static void load_roller_data(birther *saved, birther *prev_player)
 
 	/* Load previous stats */
 	for (i = 0; i < STAT_MAX; i++) {
+		player->stat_max_max[i] = saved->stat[i];
 		player->stat_max[i] = player->stat_cur[i] = player->stat_birth[i]
-			= saved->stat[i];
+			= MIN(saved->stat[i] / 2 + 5, saved->stat[i]);
 		player->stat_map[i] = i;
 	}
 
@@ -257,10 +258,11 @@ static void get_stats(int stat_use[STAT_MAX])
 		j = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 
 		/* Save that value */
-		player->stat_max[i] = j;
+		player->stat_max_max[i] = j;
+		player->stat_max[i] = MIN(j / 2 + 5, j);
 
 		/* Obtain a "bonus" for "race" and "class" */
-		bonus = player->race->r_adj[i] + player->class->c_adj[i];
+		bonus = player->race->r_adj[i];// + player->class->c_adj[i];
 
 		/* Start fully healed */
 		player->stat_cur[i] = player->stat_max[i];
@@ -673,7 +675,7 @@ static void player_outfit(struct player *p)
 /**
  * Cost of each "point" of a stat.
  */
-static const int birth_stat_costs[18 + 1] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 4 };
+static const int birth_stat_costs[18 + 1] = { 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2 };
 
 /* It was feasible to get base 17 in 3 stats with the autoroller */
 #define MAX_BIRTH_POINTS 20 /* 3 * (1+1+1+1+1+1+2) */
@@ -684,8 +686,9 @@ static void recalculate_stats(int *stats_local_local, int points_left_local)
 
 	/* Variable stat maxes */
 	for (i = 0; i < STAT_MAX; i++) {
-		player->stat_cur[i] = player->stat_max[i] =
-				player->stat_birth[i] = stats_local_local[i];
+		player->stat_max_max[i] = stats_local_local[i];
+		player->stat_cur[i] = player->stat_max[i] =	player->stat_birth[i] 
+		                    = MIN(stats_local_local[i] / 2 + 5, stats_local_local[i]);
 		player->stat_map[i] = i;
 	}
 
@@ -773,7 +776,8 @@ static bool sell_stat(int choice, int stats_local[STAT_MAX],
 	int *points_left_local, bool update_display)
 {
 	/* Must be a valid stat, and we can't "sell" stats below the base of 10. */
-	if (!(choice >= STAT_MAX || choice < 0) && (stats_local[choice] > 10)) {
+	/* L: now can sell down to 7 */
+	if (!(choice >= STAT_MAX || choice < 0) && (stats_local[choice] > 7)) {
 		int stat_cost = birth_stat_costs[stats_local[choice]];
 
 		stats_local[choice]--;

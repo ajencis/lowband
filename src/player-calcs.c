@@ -2192,7 +2192,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	for (i = 0; i < STAT_MAX; i++) {
 		int add, use, ind;
 
-        /* Class doesn't affect stats any more */
+        /* L: Class doesn't affect stats any more */
 		add = state->stat_add[i];
 		add += (p->race->r_adj[i]);// + p->class->c_adj[i]);
 		state->stat_top[i] =  modify_stat_value(p->stat_max[i], add);

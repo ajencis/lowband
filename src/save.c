@@ -444,6 +444,7 @@ void wr_player(void)
 	for (i = 0; i < STAT_MAX; ++i) wr_s16b(player->stat_cur[i]);
 	for (i = 0; i < STAT_MAX; ++i) wr_s16b(player->stat_map[i]);
 	for (i = 0; i < STAT_MAX; ++i) wr_s16b(player->stat_birth[i]);
+	for (i = 0; i < STAT_MAX; ++i) wr_s16b(player->stat_max_max[i]);
 
 	wr_s16b(player->ht_birth);
 	wr_s16b(player->wt_birth);

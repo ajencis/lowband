@@ -161,6 +161,10 @@ bool player_stat_inc(struct player *p, int stat)
 		p->stat_cur[stat] = 18 + 100;
 	}
 
+	/* L: impose maxima based on birth */
+	if (p->stat_cur[stat] > p->stat_max_max[stat])
+	    p->stat_cur[stat] = p->stat_max_max[stat];
+
 	if (p->stat_cur[stat] > p->stat_max[stat])
 		p->stat_max[stat] = p->stat_cur[stat];
 	
@@ -207,6 +211,8 @@ bool player_stat_dec(struct player *p, int stat, bool permanent)
 
 static void adjust_level(struct player *p, bool verbose)
 {
+	int i;
+
 	if (p->exp < 0)
 		p->exp = 0;
 
@@ -238,8 +244,25 @@ static void adjust_level(struct player *p, bool verbose)
 		p->lev++;
 
 		/* Save the highest level */
-		if (p->lev > p->max_lev)
-			p->max_lev = p->lev;
+		/* L: and do stuff that happens on the first time reaching a level */
+		while (p->lev > p->max_lev) {
+			p->max_lev++;
+
+			if (!(p->max_lev % 3)) {
+				int num = 0;
+				int choice = 0;
+				for (i = 0; i < STAT_MAX; i++)
+				{
+					if (p->stat_max[i] < p->stat_max_max[i]) {
+						num++;
+						if (one_in_(num)) choice = i;
+					}
+				}
+				if (num) {
+					p->stat_max[choice]++;
+				}
+			}
+		}
 
 		if (verbose) {
 			/* Log level updates */
@@ -250,11 +273,11 @@ static void adjust_level(struct player *p, bool verbose)
 			msgt(MSG_LEVEL, "Welcome to level %d.",	p->lev);
 		}
 
-		effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_STR, 0, 0, 0, 0, NULL);
+		/*effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_STR, 0, 0, 0, 0, NULL);
 		effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_INT, 0, 0, 0, 0, NULL);
 		effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_WIS, 0, 0, 0, 0, NULL);
 		effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_DEX, 0, 0, 0, 0, NULL);
-		effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_CON, 0, 0, 0, 0, NULL);
+		effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_CON, 0, 0, 0, 0, NULL);*/
 	}
 
 	while ((p->max_lev < PY_MAX_LEVEL) &&
