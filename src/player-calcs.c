@@ -890,7 +890,7 @@ int adj_int_dev(int index) {
 }
 
 int adj_wis_sav(int index) {
-	return stat_scale(index, 25);
+	return stat_scale(index, 50);
 }
 
 int adj_dex_dis(int index) {
@@ -938,7 +938,7 @@ int adj_dex_blow(int index) {
 }
 
 int adj_stat_blow(int index) {
-	return 100 + stat_scale(index, 500);
+	return 50 + stat_scale(index, 400);
 }
 
 int adj_dex_safe(int index) {
@@ -1820,7 +1820,7 @@ int calc_blows(struct player *p, const struct object *obj,
 
 	int baseblows = adj_stat_blow(statind);
 
-	int blows = baseblows * state->skills[SKILL_TO_HIT_MELEE] / weight / 10 + 100;
+	int blows = MAX(0, baseblows) * state->skills[SKILL_TO_HIT_MELEE] / weight / 10 + 100;
 
 	blows = MIN(blows, 100 * p->class->max_attacks);
 
