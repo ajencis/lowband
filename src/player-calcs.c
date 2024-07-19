@@ -970,6 +970,43 @@ static int stepdown(int num) {
 	return i;
 }
 
+
+/**
+ * L: monk agility bonuses
+ */
+static int max_body_arm_wgt(struct player *p)
+{
+	int i; int wgt = 0;
+	for (i = 0; i < p->body.count; i++) {
+		struct object *obj = slot_object(p, i);
+        if (obj && slot_type_is(p, i, EQUIP_BODY_ARMOR))
+		{
+			int owgt = object_weight_one(obj);
+			wgt = MAX(wgt, owgt);
+		}
+	}
+	return wgt;
+}
+
+static int unarmoured_speed_bonus(struct player *p)
+{
+    if (!player_has(p, PF_UNARMOURED_AGILITY)) return 0;
+
+	if (max_body_arm_wgt(p) > 25) return 0;
+
+	return p->lev * 9 / 50 + 1;
+}
+
+static int unarmoured_ac_bonus(struct player *p)
+{
+    if (!player_has(p, PF_UNARMOURED_AGILITY)) return 0;
+
+	if (max_body_arm_wgt(p) > 25) return 0;
+
+	return p->lev * 40 / 50 + 10;
+}
+
+
 /**
  * This table is used to help calculate the number of blows the player can
  * make in a single round of attacks (one player turn) with a normal weapon.
@@ -2268,6 +2305,12 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			}
 		}
 	}
+
+
+    /* L: monk bonuses */
+	state->speed += unarmoured_speed_bonus(p);
+	state->ac += unarmoured_ac_bonus(p);
+
 
 	/* Other timed effects */
 	player_flags_timed(p, state->flags);

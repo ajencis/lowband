@@ -54,6 +54,12 @@ extern void do_cmd_fire_at_nearest(void);
 extern void do_cmd_throw(struct command *cmd);
 
 
+/* L: new */
+int unarmed_melee_dam_dice(void);
+int unarmed_melee_dam_sides(void);
+int unarmed_melee_to_hit(void);
+int unarmed_melee_to_dam(void);
+
 extern int breakage_chance(const struct object *obj, bool hit_target);
 int chance_of_missile_hit_base(const struct player *p,
 	const struct object *missile, const struct object *launcher);

@@ -47,6 +47,34 @@
 #include "target.h"
 
 /**
+ * L: functions to get bonuses for monks et al
+ */
+int unarmed_melee_dam_dice(void) {
+	if (!player_has(player, PF_UNARMED_STRIKE)) return 1;
+
+	return player->lev * 4 / 50 + 1;
+}
+
+int unarmed_melee_dam_sides(void) {
+	if (!player_has(player, PF_UNARMED_STRIKE)) return 1;
+
+	return player->lev * 10 / 50 + 5;
+}
+
+int unarmed_melee_to_dam(void) {
+	if (!player_has(player, PF_UNARMED_STRIKE)) return 0;
+
+	return player->lev / 5;
+}
+
+int unarmed_melee_to_hit(void) {
+    if (!player_has(player, PF_UNARMED_STRIKE)) return 0;
+
+	return player->lev * 3 / 2;
+}
+
+
+/**
  * ------------------------------------------------------------------------
  * Hit and breakage calculations
  * ------------------------------------------------------------------------ */
@@ -88,7 +116,7 @@ int breakage_chance(const struct object *obj, bool hit_target) {
 int chance_of_melee_hit_base(const struct player *p,
 		const struct object *weapon)
 {
-	int bonus = p->state.to_h + (weapon ? object_to_hit(weapon) : 0);
+	int bonus = p->state.to_h + (weapon ? object_to_hit(weapon) : unarmed_melee_to_hit());
 	return p->state.skills[SKILL_TO_HIT_MELEE] + bonus * BTH_PLUS_ADJ;
 }
 
@@ -478,7 +506,9 @@ static int o_critical_melee(const struct player *p,
  */
 static int melee_damage(const struct monster *mon, struct object *obj, int b, int s)
 {
-	int dmg = (obj) ? damroll(obj->dd, obj->ds) : 1;
+	int dmg;
+	if (obj) dmg = damroll(obj->dd, obj->ds);
+	else dmg = damroll(unarmed_melee_dam_dice(), unarmed_melee_dam_sides());
 
 	if (s) {
 		dmg *= slays[s].multiplier;
@@ -487,6 +517,7 @@ static int melee_damage(const struct monster *mon, struct object *obj, int b, in
 	}
 
 	if (obj) dmg += object_to_dam(obj);
+	else dmg += unarmed_melee_to_dam();
 
 	return dmg;
 }

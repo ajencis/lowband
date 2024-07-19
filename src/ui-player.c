@@ -26,6 +26,7 @@
 #include "obj-knowledge.h"
 #include "obj-util.h"
 #include "player.h"
+#include "player-attack.h"
 #include "player-calcs.h"
 #include "player-timed.h"
 #include "player-util.h"
@@ -749,6 +750,12 @@ static struct panel *get_panel_combat(void) {
 		melee_sides = obj->ds;
 		dam += object_to_dam(obj);
 		hit += object_to_hit(obj);
+	}
+	else {
+		melee_dice = unarmed_melee_dam_dice();
+		melee_sides = unarmed_melee_dam_sides();
+		dam += unarmed_melee_to_dam();
+		hit += unarmed_melee_to_hit();
 	}
 
 	panel_space(p);
