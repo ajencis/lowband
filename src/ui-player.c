@@ -640,10 +640,10 @@ static const char *show_title(void)
 
 static const char *show_adv_exp(void)
 {
-	if (player->lev < PY_MAX_LEVEL) {
+	if (!player_at_max_level(player)) {
 		static char buffer[30];
 		int32_t advance = (player_exp[player->lev - 1]
-			* player->expfact / 100L);
+			* player->state.expfact / 100L);
 		strnfmt(buffer, sizeof(buffer), "%ld", (long)advance);
 		return buffer;
 	}

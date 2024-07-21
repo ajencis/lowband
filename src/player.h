@@ -76,9 +76,9 @@ enum
 /**
  * Player constants
  */
-#define PY_MAX_EXP		99999999L	/* Maximum exp */
+#define PY_MAX_EXP		6000000L	/* Maximum exp */
 #define PY_KNOW_LEVEL	30			/* Level to know all runes */
-#define PY_MAX_LEVEL	50			/* Maximum level */
+#define PY_MAX_LEVEL	60			/* Maximum level */
 
 /**
  * Flags for player.spell_flags[]
@@ -432,6 +432,8 @@ struct player_state {
 
 	bool cumber_armor;	/**< Mana draining armor */
 
+	int expfact;        /**< L: now changes based on int */
+
 	bitflag flags[OF_SIZE];					/**< Status flags from race and items */
 	bitflag pflags[PF_SIZE];				/**< Player intrinsic flags */
 	struct element_info el_info[ELEM_MAX];	/**< Resists from race and items */
@@ -514,13 +516,13 @@ struct player {
 	struct loc old_grid;/* Player location before leaving for an arena */
 
 	uint8_t hitdie;		/* Hit dice (sides) */
-	uint8_t expfact;	/* Experience factor */
 
 	int16_t age;		/* Characters age */
 	int16_t ht;		/* Height */
 	int16_t wt;		/* Weight */
 
 	int32_t au;		/* Current Gold */
+	int32_t expfact;
 
 	int16_t max_depth;	/* Max depth */
 	int16_t recall_depth;	/* Recall depth */
@@ -633,8 +635,12 @@ const char *stat_idx_to_name(int type);
 const struct magic_realm *lookup_realm(const char *code);
 bool player_stat_inc(struct player *p, int stat);
 bool player_stat_dec(struct player *p, int stat, bool permanent);
+bool player_at_max_level(struct player *p);
+bool player_can_level_up(struct player *p);
 void player_exp_gain(struct player *p, int32_t amount);
 void player_exp_lose(struct player *p, int32_t amount, bool permanent);
+void player_level_up_one(struct player *p, bool verbose);
+void check_level(struct player *p);
 void player_flags(struct player *p, bitflag f[OF_SIZE]);
 void player_flags_timed(struct player *p, bitflag f[OF_SIZE]);
 uint8_t player_hp_attr(struct player *p);

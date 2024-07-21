@@ -244,6 +244,15 @@ look-in-preposition:at
 desc:Your safe piece of Middle Earth, and the only place you can store goods
 desc: apart from on your person.
 
+code:DOJO
+name:Trainer
+graphics:9:w
+priority:20
+flags:SHOP | LOS | PROJECT | PASSABLE | PERMANENT | INTERESTING | EASY
+look-prefix:the entrance to the
+look-in-preposition:at
+desc:You can go here to train, if you feel you are ready.
+
 code:SECRET
 name:secret door
 graphics:#:w

@@ -478,6 +478,37 @@ static bool store_get_check(const char *prompt)
 	return (true);
 }
 
+/**
+ * L: train at the dojo
+ */
+static bool store_train(struct player *p)
+{
+	int cost = MAX(0, p->lev - 5) * p->lev * 100000 / (44 * 49);
+
+	if (!player_can_level_up(p)) {
+        msg("You aren't ready to level up.");
+		return false;
+	}
+
+	if (p->au < cost) {
+		msg("You don't have enough money to train.");
+		return false;
+	}
+
+	if (cost && !store_get_check(format("Train (%i gold)? [ESC, any other key to accept]", cost))) {
+		return false;
+	}
+
+	msg("You spend some time training...");
+
+	p->au -= cost;
+
+    player_level_up_one(p, true);
+
+	return true;
+}
+
+
 /*
  * Sell an object, or drop if it we're in the home.
  */
@@ -1279,6 +1310,12 @@ void use_store(game_event_type type, game_event_data *data, void *user)
 	/* Check that we're on a store */
 	if (!store) return;
 
+	/* L: hack: train at the dojo instead of entering it */
+	if (store->feat == FEAT_DOJO) {
+		store_train(player);
+		return;
+	}
+
 	/*** Display ***/
 
 	/* Save current screen (ie. dungeon) */
@@ -1294,7 +1331,7 @@ void use_store(game_event_type type, game_event_data *data, void *user)
 		prt_welcome(store->owner);
 
 	/* Shopping */
-	menu_select(&ctx.menu, 0, false);
+    menu_select(&ctx.menu, 0, false);
 
 	/* Shopping's done */
 	event_remove_handler(EVENT_STORECHANGED, refresh_stock, &ctx);

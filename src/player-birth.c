@@ -283,11 +283,11 @@ static void roll_hp(void)
 	int i, j, min_value, max_value;
 
 	/* Minimum hitpoints at highest level */
-	min_value = (PY_MAX_LEVEL * (player->hitdie - 1) * 3) / 8;
+	min_value = (PY_MAX_LEVEL * (player->hitdie - 1) * 7) / 15;
 	min_value += PY_MAX_LEVEL;
 
 	/* Maximum hitpoints at highest level */
-	max_value = (PY_MAX_LEVEL * (player->hitdie - 1) * 5) / 8;
+	max_value = (PY_MAX_LEVEL * (player->hitdie - 1) * 8) / 15;
 	max_value += PY_MAX_LEVEL;
 
 	/* Roll out the hitpoints */
@@ -995,9 +995,6 @@ void player_generate(struct player *p, const struct player_race *r,
 
 	/* Level 1 */
 	p->max_lev = p->lev = 1;
-
-	/* Experience factor */
-	p->expfact = p->race->r_exp + p->class->c_exp;
 
 	/* Hitdice */
 	p->hitdie = p->race->r_mhp + p->class->c_mhp;

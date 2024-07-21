@@ -961,6 +961,11 @@ int adj_mag_mana(int index) {
 	return index * 500 / 18;
 }
 
+int adj_int_xp(int index) {
+	return 20 - 2 * index;
+}
+
+
 static int stepdown(int num) {
 	int i;
 
@@ -2416,6 +2421,12 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	state->to_h += adj_dex_th(state->stat_ind[STAT_DEX]);
 	state->to_h += adj_str_th(state->stat_ind[STAT_STR]);
 
+	
+
+	/* L: change expfact based on int */
+	if (character_generated)
+    	state->expfact = p->race->r_exp + p->class->c_exp + adj_int_xp(state->stat_ind[STAT_INT]);
+
 
 	/* Modify skills */
 	state->skills[SKILL_DISARM_PHYS] += adj_dex_dis(state->stat_ind[STAT_DEX]);
@@ -2557,6 +2568,10 @@ static void update_bonuses(struct player *p)
 			p->upkeep->update |= (PU_MANA | PU_SPELLS);
 		}
 	}
+
+	/* L: update exp if needed */
+	if (state.expfact != p->state.expfact)
+		p->upkeep->redraw |= PR_EXP;
 
 
 	/* Hack -- Telepathy Change */

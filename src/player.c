@@ -96,7 +96,17 @@ const int32_t player_exp[PY_MAX_LEVEL] =
 	3500000L,
 	4000000L,
 	4500000L,
-	5000000L
+	5000000L,
+	6400000L,
+	8100000L,
+	10000000L,
+	12100000L,
+	14400000L,
+	16900000L,
+	19600000L,
+	22500000L,
+	25600000L,
+	28900000L
 };
 
 
@@ -209,7 +219,25 @@ bool player_stat_dec(struct player *p, int stat, bool permanent)
 	return res;
 }
 
-static void adjust_level(struct player *p, bool verbose)
+bool player_at_max_level(struct player *p)
+{
+	if (p->lev >= PY_MAX_LEVEL) return false;
+
+	if (player_exp[p->lev-1] / 100L * p->state.expfact > PY_MAX_EXP) return false;
+
+	return true;
+}
+
+bool player_can_level_up(struct player *p)
+{
+	if (p->lev >= PY_MAX_LEVEL) return false;
+
+    if (p->exp < (player_exp[p->lev-1] * p->state.expfact / 100L)) return false;
+
+	return true;
+}
+
+static void adjust_level(struct player *p, bool verbose, bool levelup)
 {
 	int i;
 
@@ -233,12 +261,10 @@ static void adjust_level(struct player *p, bool verbose)
 	handle_stuff(p);
 
 	while ((p->lev > 1) &&
-	       (p->exp < (player_exp[p->lev-2] * p->expfact / 100L)))
+	       (p->exp < (player_exp[p->lev-2] * p->state.expfact / 100L)))
 		p->lev--;
 
-
-	while ((p->lev < PY_MAX_LEVEL) &&
-	       (p->exp >= (player_exp[p->lev-1] * p->expfact / 100L))) {
+	if (levelup && player_can_level_up(p)) {
 		char buf[80];
 
 		p->lev++;
@@ -280,9 +306,9 @@ static void adjust_level(struct player *p, bool verbose)
 		effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_CON, 0, 0, 0, 0, NULL);*/
 	}
 
-	while ((p->max_lev < PY_MAX_LEVEL) &&
+	/*while ((p->max_lev < PY_MAX_LEVEL) && levelup &&
 	       (p->max_exp >= (player_exp[p->max_lev-1] * p->expfact / 100L)))
-		p->max_lev++;
+		p->max_lev++;*/
 
 	p->upkeep->update |= (PU_BONUS | PU_HP | PU_SPELLS);
 	p->upkeep->redraw |= (PR_LEV | PR_TITLE | PR_EXP | PR_STATS);
@@ -294,7 +320,7 @@ void player_exp_gain(struct player *p, int32_t amount)
 	p->exp += amount;
 	if (p->exp < p->max_exp)
 		p->max_exp += amount / 10;
-	adjust_level(p, true);
+	adjust_level(p, true, false);
 }
 
 void player_exp_lose(struct player *p, int32_t amount, bool permanent)
@@ -304,7 +330,18 @@ void player_exp_lose(struct player *p, int32_t amount, bool permanent)
 	p->exp -= amount;
 	if (permanent)
 		p->max_exp -= amount;
-	adjust_level(p, true);
+	adjust_level(p, true, false);
+}
+
+void player_level_up_one(struct player *p, bool verbose)
+{
+	adjust_level(p, verbose, true);
+}
+
+void check_level(struct player *p)
+{
+	msg("test5");
+	adjust_level(p, false, false);
 }
 
 /**

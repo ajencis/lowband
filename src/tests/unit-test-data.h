@@ -1146,7 +1146,6 @@ static struct player TEST_DATA test_player = {
 	.race = &test_race,
 	.class = &test_class,
 	.hitdie = 10,
-	.expfact = 100,
 	.age = 12,
 	.ht = 40,
 	.wt = 80,

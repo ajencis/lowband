@@ -225,16 +225,24 @@ static void prt_level(int row, int col)
  */
 static void prt_exp(int row, int col)
 {
+	bool ready = false;
 	char out_val[32];
-	bool lev50 = (player->lev == 50);
+	bool lev50 = (player->exp >= PY_MAX_EXP);
 
 	long xp = (long)player->exp;
 
 
 	/* Calculate XP for next level */
 	if (!lev50)
-		xp = (long)(player_exp[player->lev - 1] * player->expfact / 100L) -
+		xp = (long)(player_exp[player->lev - 1] * player->state.expfact / 100L) -
 			player->exp;
+	
+	/* L: can have xp to level without having leveled now */
+	if (xp <= 0)
+	{
+		xp = 0;
+		ready = true;
+	}
 
 	/* Format XP */
 	strnfmt(out_val, sizeof(out_val), "%8ld", xp);
@@ -242,10 +250,10 @@ static void prt_exp(int row, int col)
 
 	if (player->exp >= player->max_exp) {
 		put_str((lev50 ? "EXP" : "NXT"), row, col);
-		c_put_str(COLOUR_L_GREEN, out_val, row, col + 4);
+		c_put_str(ready ? COLOUR_L_BLUE : COLOUR_L_GREEN, out_val, row, col + 4);
 	} else {
 		put_str((lev50 ? "Exp" : "Nxt"), row, col);
-		c_put_str(COLOUR_YELLOW, out_val, row, col + 4);
+		c_put_str(ready ? COLOUR_L_BLUE : COLOUR_YELLOW, out_val, row, col + 4);
 	}
 }
 
@@ -637,7 +645,7 @@ static int prt_exp_short(int row, int col)
 
 	/* Calculate XP for next level */
 	if (!lev50)
-		xp = (long)(player_exp[player->lev - 1] * player->expfact / 100L) -
+		xp = (long)(player_exp[player->lev - 1] * player->state.expfact / 100L) -
 			player->exp;
 
 	/* Format XP */

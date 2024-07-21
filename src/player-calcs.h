@@ -101,6 +101,7 @@ int adj_str_blow(int index);
 int adj_dex_safe(int index);
 int adj_con_fix(int index);
 int adj_str_hold(int index);
+int adj_int_xp(int index);
 
 /*extern const int adj_dex_th[STAT_RANGE];
 extern const int adj_str_td[STAT_RANGE];
