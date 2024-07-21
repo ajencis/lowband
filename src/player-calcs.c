@@ -979,36 +979,33 @@ static int stepdown(int num) {
 /**
  * L: monk agility bonuses
  */
-static int max_body_arm_wgt(struct player *p)
+
+static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 {
-	int i; int wgt = 0;
-	for (i = 0; i < p->body.count; i++) {
-		struct object *obj = slot_object(p, i);
-        if (obj && slot_type_is(p, i, EQUIP_BODY_ARMOR))
-		{
-			int owgt = object_weight_one(obj);
-			wgt = MAX(wgt, owgt);
-		}
-	}
-	return wgt;
+    int lev = s->powers[PP_UNARMOURED_AGILITY];
+
+    if (!lev) return 0;
+
+	if (wgt > 25) return 0;
+
+	int bonus = lev * 10 / 50;
+
+    s->speed += bonus;
+	return bonus;
 }
 
-static int unarmoured_speed_bonus(struct player *p)
+static int unarmoured_ac_bonus(struct player_state *s, int wgt)
 {
-    if (!player_has(p, PF_UNARMOURED_AGILITY)) return 0;
+    int lev = s->powers[PP_UNARMOURED_AGILITY];
 
-	if (max_body_arm_wgt(p) > 25) return 0;
+    if (!lev) return 0;
 
-	return p->lev * 9 / 50 + 1;
-}
+	if (wgt > 25) return 0;
 
-static int unarmoured_ac_bonus(struct player *p)
-{
-    if (!player_has(p, PF_UNARMOURED_AGILITY)) return 0;
+    int bonus = lev * 50 / 50;
 
-	if (max_body_arm_wgt(p) > 25) return 0;
-
-	return p->lev * 40 / 50 + 10;
+    s->ac += bonus;
+	return bonus;
 }
 
 
@@ -2061,6 +2058,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	int extra_shots = 0;
 	int extra_might = 0;
 	int extra_moves = 0;
+	int armwgt = 0;
 	struct object *launcher = equipped_item_by_slot_name(p, "shooting");
 	struct object *weapon = equipped_item_by_slot_name(p, "weapon");
 	bitflag f[OF_SIZE];
@@ -2100,6 +2098,11 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	/* Extract the player flags */
 	player_flags(p, collect_f);
 
+	/* L: get powers */
+	for (i = 0; i < PP_MAX; i++) {
+        state->powers[i] = p->class->c_powers[i] * MAX(p->lev, p->lev / 2 + 5) / 100;
+	}
+
 	/* Analyze equipment */
 	for (i = 0; i < p->body.count; i++) {
 		int index = 0;
@@ -2108,6 +2111,11 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 		while (obj) {
 			int dig = 0;
+			int owgt = object_weight_one(obj);
+
+			/* L: track armour weight */
+			if (slot_type_is(p, i, EQUIP_BODY_ARMOR))
+			    armwgt = MAX(armwgt, owgt);
 
 			/* Extract the item flags */
 			if (known_only) {
@@ -2313,8 +2321,8 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 
     /* L: monk bonuses */
-	state->speed += unarmoured_speed_bonus(p);
-	state->ac += unarmoured_ac_bonus(p);
+	unarmoured_speed_bonus(state, armwgt);
+	unarmoured_ac_bonus(state, armwgt);
 
 
 	/* Other timed effects */

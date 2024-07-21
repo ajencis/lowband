@@ -734,7 +734,8 @@ static struct panel *get_panel_combat(void) {
 	struct panel *p = panel_allocate(9);
 	struct object *obj;
 	int bth, dam, hit;
-	int melee_dice = 1, melee_sides = 1;
+	//int melee_dice = 1, melee_sides = 1;
+	struct attack_roll aroll;
 
 	/* AC */
 	panel_line(p, COLOUR_L_BLUE, "Armor", "[%d,%+d]",
@@ -742,8 +743,9 @@ static struct panel *get_panel_combat(void) {
 
 	/* Melee */
 	obj = equipped_item_by_slot_name(player, "weapon");
+	aroll = get_attack(player, obj);
 	bth = (player->state.skills[SKILL_TO_HIT_MELEE] * 10) / BTH_PLUS_ADJ;
-	dam = player->known_state.to_d;
+	/*dam = player->known_state.to_d;
 	hit = player->known_state.to_h;
 	if (obj) {
 		melee_dice = obj->dd;
@@ -756,11 +758,11 @@ static struct panel *get_panel_combat(void) {
 		melee_sides = unarmed_melee_dam_sides();
 		dam += unarmed_melee_to_dam();
 		hit += unarmed_melee_to_hit();
-	}
+	}*/
 
 	panel_space(p);
-	panel_line(p, COLOUR_L_BLUE, "Melee", "%dd%d,%+d", melee_dice, melee_sides, dam);
-	panel_line(p, COLOUR_L_BLUE, "To-hit", "%d,%+d", bth / 10, hit);
+	panel_line(p, COLOUR_L_BLUE, "Melee", "%dd%d,%+d", aroll.ddice, aroll.dsides, aroll.to_dam);
+	panel_line(p, COLOUR_L_BLUE, "To-hit", "%d,%+d", bth / 10, aroll.to_hit);
 	panel_line(p, COLOUR_L_BLUE, "Blows", "%d.%d/turn",
 			player->state.num_blows / 100, (player->state.num_blows / 10 % 10));
 

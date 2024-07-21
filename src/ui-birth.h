@@ -19,6 +19,13 @@
 #ifndef INCLUDED_UI_BIRTH_H
 #define INCLUDED_UI_BIRTH_H
 
+
+typedef struct power_name power_name;
+struct power_name {
+	int ppval;
+	const char *name;
+};
+
 void ui_init_birthstate_handlers(void);
 int textui_do_birth(void);
 

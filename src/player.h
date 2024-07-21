@@ -48,6 +48,17 @@ enum
 	PF_MAX
 };
 
+/**
+ * L: Player race and class powers
+ */
+enum
+{
+	#define PP(x, a) PP_##x,
+	#include "list-player-powers.h"
+	#undef PP
+	PP_MAX
+};
+
 #define PF_SIZE                FLAG_SIZE(PF_MAX)
 
 #define pf_has(f, flag)        flag_has_dbg(f, PF_SIZE, flag, #f, #flag)
@@ -317,6 +328,8 @@ struct player_class {
 	int c_skills[SKILL_MAX];	/**< Class skills */
 	int x_skills[SKILL_MAX];	/**< Extra skills */
 
+	int c_powers[PP_MAX];       /**< L: Class powers */
+
 	int c_mhp;					/**< Hit-dice adjustment */
 	int c_exp;					/**< Experience factor */
 
@@ -405,6 +418,7 @@ struct player_state {
 	int stat_top[STAT_MAX];	/**< Maximal modified stats */
 
 	int skills[SKILL_MAX];		/**< Skills */
+	int powers[PP_MAX];         /**< L: Powers */
 
 	int speed;			/**< Current speed */
 

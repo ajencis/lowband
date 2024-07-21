@@ -49,28 +49,63 @@
 /**
  * L: functions to get bonuses for monks et al
  */
-int unarmed_melee_dam_dice(void) {
-	if (!player_has(player, PF_UNARMED_STRIKE)) return 1;
 
-	return player->lev * 4 / 50 + 1;
+static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
+{
+	if (obj) return;
+	int lev = player->state.powers[PP_UNARMED_STRIKE];
+	aroll->ddice = lev * 2 / 50 + 1;
+    aroll->dsides = lev * 13 / 50 + 2;
+	aroll->to_hit = lev * 50 / 50;
+	aroll->to_dam = 0;
 }
 
-int unarmed_melee_dam_sides(void) {
-	if (!player_has(player, PF_UNARMED_STRIKE)) return 1;
-
-	return player->lev * 10 / 50 + 5;
+static void specialization_mod_attack(struct attack_roll *aroll, struct object *obj)
+{
+	if (!obj) return;
+	int lev = 0;
+    if (obj->tval == TV_HAFTED) lev = player->state.powers[PP_HAFTED_SPECIALIZATION];
+	if (obj->tval == TV_POLEARM) lev = player->state.powers[PP_POLEARM_SPECIALIZATION];
+	if (obj->tval == TV_SWORD) lev = player->state.powers[PP_SWORD_SPECIALIZATION];
+	
+	aroll->to_hit += lev * 15 / 50;
+	aroll->to_dam += lev * 15 / 50;
 }
 
-int unarmed_melee_to_dam(void) {
-	if (!player_has(player, PF_UNARMED_STRIKE)) return 0;
 
-	return player->lev / 5;
+
+/**
+ * L: get the attack for various uses
+ */
+struct attack_roll get_attack(struct player *p, struct object *obj)
+{
+	struct attack_roll aroll = {0};
+	if (obj) {
+		aroll.ddice = obj->dd;
+		aroll.dsides = obj->ds;
+		aroll.to_dam = object_to_dam(obj);
+		aroll.to_hit = object_to_hit(obj);
+	}
+	else {
+        unarmed_get_attack(&aroll, obj);
+	}
+
+	aroll.to_hit += p->state.to_h;
+	aroll.to_dam += p->state.to_d;
+
+	specialization_mod_attack(&aroll, obj);
+
+	return aroll;
 }
 
-int unarmed_melee_to_hit(void) {
-    if (!player_has(player, PF_UNARMED_STRIKE)) return 0;
-
-	return player->lev * 3 / 2;
+static int get_attack_dam(struct attack_roll *aroll, struct monster *mon, int b, int s) {
+    int dmg = damroll(aroll->ddice, aroll->dsides) + aroll->to_dam;
+	if (s) {
+		dmg *= slays[s].multiplier;
+	} else if (b) {
+		dmg *= get_monster_brand_multiplier(mon, &brands[b], false);
+	}
+	return dmg;
 }
 
 
@@ -113,10 +148,9 @@ int breakage_chance(const struct object *obj, bool hit_target) {
  * \param p The player
  * \param weapon The player's weapon
  */
-int chance_of_melee_hit_base(const struct player *p,
-		const struct object *weapon)
+int chance_of_melee_hit_base(const struct player *p, struct attack_roll *aroll)
 {
-	int bonus = p->state.to_h + (weapon ? object_to_hit(weapon) : unarmed_melee_to_hit());
+	int bonus = aroll->to_hit;//p->state.to_h + (weapon ? object_to_hit(weapon) : unarmed_melee_to_hit());
 	return p->state.skills[SKILL_TO_HIT_MELEE] + bonus * BTH_PLUS_ADJ;
 }
 
@@ -129,9 +163,9 @@ int chance_of_melee_hit_base(const struct player *p,
  * \param mon The monster
  */
 static int chance_of_melee_hit(const struct player *p,
-		const struct object *weapon, const struct monster *mon)
+		struct attack_roll *aroll, const struct monster *mon)
 {
-	int chance = chance_of_melee_hit_base(p, weapon);
+	int chance = chance_of_melee_hit_base(p, aroll);
 	/* Non-visible targets have a to-hit penalty of 50% */
 	return monster_is_visible(mon) ? chance : chance / 2;
 }
@@ -460,6 +494,7 @@ static int critical_melee(const struct player *p,
 	return new_dam;
 }
 
+#if 0
 /**
  * Determine O-combat damage for critical hits from melee.
  */
@@ -498,7 +533,9 @@ static int o_critical_melee(const struct player *p,
 
 	return add_dice;
 }
+#endif
 
+#if 0
 /**
  * Determine standard melee damage.
  *
@@ -521,7 +558,9 @@ static int melee_damage(const struct monster *mon, struct object *obj, int b, in
 
 	return dmg;
 }
+#endif
 
+#if 0
 /**
  * Determine O-combat melee damage.
  *
@@ -575,6 +614,7 @@ static int o_melee_damage(struct player *p, const struct monster *mon,
 
 	return dmg;
 }
+#endif
 
 /**
  * Determine standard ranged damage.
@@ -762,6 +802,9 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 	bool do_quake = false;
 	bool success = false;
 
+	/* L: the attack itself */
+	struct attack_roll aroll = get_attack(p, obj);
+
 	char verb[20];
 	uint32_t msg_type = MSG_HIT;
 	int j, b, s, weight, dmg;
@@ -790,7 +833,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 	mon_clear_timed(mon, MON_TMD_HOLD, MON_TMD_FLG_NOTIFY);
 
 	/* See if the player hit */
-	success = test_hit(chance_of_melee_hit(p, obj, mon), mon->race->ac);
+	success = test_hit(chance_of_melee_hit(p, &aroll, mon), mon->race->ac);
 
 	/* If a miss, skip this hit */
 	if (!success) {
@@ -830,15 +873,15 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 	improve_attack_modifier(p, NULL, mon, &b, &s, verb, false);
 
 	/* Get the damage */
-	if (!OPT(p, birth_percent_damage)) {
-		dmg = melee_damage(mon, obj, b, s);
+	if (!OPT(p, birth_percent_damage) || true) {
+		dmg = get_attack_dam(&aroll, mon, b, s);// melee_damage(mon, obj, b, s);
 		/* For now, exclude criticals on unarmed combat */
 		if (obj) {
 			dmg = critical_melee(p, mon, weight, object_to_hit(obj),
 				dmg, &msg_type);
 		}
 	} else {
-		dmg = o_melee_damage(p, mon, obj, b, s, &msg_type);
+		//dmg = o_melee_damage(p, mon, obj, b, s, &msg_type);
 	}
 
 	/* Splash damage and earthquakes */

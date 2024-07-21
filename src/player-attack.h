@@ -23,6 +23,14 @@
 
 struct player;
 
+/* L: defines an attack ready to be rolled */
+struct attack_roll {
+	int ddice;
+	int dsides;
+	int to_hit;
+	int to_dam;
+};
+
 struct attack_result {
     bool success;
     int dmg;
@@ -55,16 +63,13 @@ extern void do_cmd_throw(struct command *cmd);
 
 
 /* L: new */
-int unarmed_melee_dam_dice(void);
-int unarmed_melee_dam_sides(void);
-int unarmed_melee_to_hit(void);
-int unarmed_melee_to_dam(void);
+struct attack_roll get_attack(struct player *p, struct object *obj);
 
 extern int breakage_chance(const struct object *obj, bool hit_target);
 int chance_of_missile_hit_base(const struct player *p,
 	const struct object *missile, const struct object *launcher);
 int chance_of_melee_hit_base(const struct player *p,
-	const struct object *weapon);
+	struct attack_roll *aroll);
 extern bool test_hit(int to_hit, int ac);
 void hit_chance(random_chance *, int, int);
 void apply_deadliness(int *die_average, int deadliness);

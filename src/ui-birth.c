@@ -53,6 +53,17 @@
  * with their character, we send the CMD_ACCEPT_CHARACTER command.
  */
 
+
+/**
+ * List of { tval, name } pairs.
+ */
+static const power_name pnames[] =
+{
+	#define PP(a, b) { PP_##a, b },
+	#include "list-player-powers.h"
+	#undef PP
+};
+
 /**
  * A local-to-this-file global to hold the most important bit of state
  * between calls to the game proper.  Probably not strictly necessary,
@@ -89,6 +100,9 @@ enum birth_rollers
 	BR_NORMAL,
 	MAX_BIRTH_ROLLERS
 };
+
+
+
 
 
 static void finish_with_random_choices(enum birth_stage current);
@@ -302,10 +316,9 @@ static void race_help(int i, void *db, const region *l)
 
 static void class_help(int i, void *db, const region *l)
 {
-	//int j;
+	int j;
 	struct player_class *c = player_id2class(i);
 	const struct player_race *r = player->race;
-	//int len = (STAT_MAX + 1) / 2;
 
 	struct player_ability *ability;
 	int n_flags = 0;
@@ -381,6 +394,17 @@ static void class_help(int i, void *db, const region *l)
 
 		text_out_e("\n%s", ability->name);
 		n_flags++;
+	}
+
+	/* L: show powers */
+	for (j = 0; j < PP_MAX; j++)
+	{
+		if (!c->c_powers[j]) continue;
+
+        const char *name = pnames[j].name;
+		int value = c->c_powers[j];
+
+		text_out_e("\n%s [%i%%]", name, value);
 	}
 
 	while (n_flags < flag_space) {

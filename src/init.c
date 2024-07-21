@@ -115,6 +115,13 @@ const char *list_obj_flag_names[] = {
 	NULL
 };
 
+static const char *list_player_powers_names[] = {
+	#define PP(x, a) #x,
+	#include "list-player-powers.h"
+	#undef PP
+	NULL
+};
+
 static const char *obj_mods[] = {
 	#define STAT(a) #a,
 	#include "list-stats.h"
@@ -3466,6 +3473,26 @@ static enum parser_error parse_class_skill_dig(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+/* L: parse abilities */
+static enum parser_error parse_class_power(struct parser *p) {
+	struct player_class *c = parser_priv(p);
+	if (!c)
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	int i = 0;
+	int v = parser_getint(p, "value");
+	char *s = string_make(parser_getstr(p, "name"));
+
+	while (list_player_powers_names[i] && !streq(list_player_powers_names[i], s))
+	    i++;
+	string_free(s);
+	if (!list_player_powers_names[i])
+        return PARSE_ERROR_GENERIC;
+
+	c->c_powers[i] = v;
+
+	return PARSE_ERROR_NONE;
+}
+
 static enum parser_error parse_class_hitdie(struct parser *p) {
 	struct player_class *c = parser_priv(p);
 
@@ -4093,6 +4120,7 @@ static struct parser *init_parse_class(void) {
 	parser_reg(p, "skill-shoot int base int incr", parse_class_skill_shoot);
 	parser_reg(p, "skill-throw int base int incr", parse_class_skill_throw);
 	parser_reg(p, "skill-dig int base int incr", parse_class_skill_dig);
+	parser_reg(p, "power int value str name", parse_class_power);
 	parser_reg(p, "hitdie int mhp", parse_class_hitdie);
 	parser_reg(p, "exp int exp", parse_class_exp);
 	parser_reg(p, "max-attacks int max-attacks", parse_class_max_attacks);

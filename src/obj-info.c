@@ -547,6 +547,7 @@ static void calculate_melee_crits(struct player_state *state, int weight,
 	}
 }
 
+#if 0
 /**
  * Account for criticals in the calculation of melee prowess for O-combat;
  * crit chance * average number of dice added
@@ -570,6 +571,7 @@ static void o_calculate_melee_crits(struct player_state *state,
 		 */
 		struct player_state old_state = player->state;
 		int power, chance_num, chance_den;
+		struct attack_roll aroll = get_attack(player, obj);
 
 		if (z_info->o_m_max_added.n == 0) {
 			z_info->o_m_max_added =
@@ -577,7 +579,7 @@ static void o_calculate_melee_crits(struct player_state *state,
 		}
 
 		player->state = *state;
-		power = chance_of_melee_hit_base(player, obj);
+		power = chance_of_melee_hit_base(player, &aroll);
 		player->state = old_state;
 		power = (power * z_info->o_m_crit_power_toh_scl_num)
 			/ z_info->o_m_crit_power_toh_scl_den;
@@ -617,6 +619,7 @@ static void o_calculate_melee_crits(struct player_state *state,
 		*frac_dice = my_rational_construct(0, 1);
 	}
 }
+#endif
 
 /**
  * Missile crits follow the same approach as melee crits.
@@ -1305,7 +1308,8 @@ bool o_obj_known_damage(const struct object *obj, int *normal_damage,
 
 	/* Get the number of additional dice from criticals (x100) */
 	if (weapon)	{
-		o_calculate_melee_crits(&state, obj, &added_dice, &frac_dice);
+		//o_calculate_melee_crits(&state, obj, &added_dice, &frac_dice);
+		added_dice = 0;
 		dice += added_dice;
 		old_blows = state.num_blows;
 	} else if (ammo) {
