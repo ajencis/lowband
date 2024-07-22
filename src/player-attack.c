@@ -54,9 +54,9 @@ static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
 {
 	if (obj) return;
 	int lev = player->state.powers[PP_UNARMED_STRIKE];
-	aroll->ddice = lev * 2 / 50 + 1;
-    aroll->dsides = lev * 13 / 50 + 2;
-	aroll->to_hit = lev * 50 / 50;
+	aroll->ddice = 1;
+    aroll->dsides = lev * 39 / 50 + 1;
+	aroll->to_hit = lev * 25 / 50;
 	aroll->to_dam = 0;
 }
 

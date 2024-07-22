@@ -490,12 +490,12 @@ static bool store_train(struct player *p)
 		return false;
 	}
 
-	if (p->au < cost) {
-		msg("You don't have enough money to train.");
+	if (cost && !store_get_check(format("Train (%i gold)? [ESC, any other key to accept]", cost))) {
 		return false;
 	}
 
-	if (cost && !store_get_check(format("Train (%i gold)? [ESC, any other key to accept]", cost))) {
+	if (p->au < cost) {
+		msg("You don't have enough money to train.");
 		return false;
 	}
 
@@ -1366,6 +1366,8 @@ void leave_store(game_event_type type, game_event_data *data, void *user)
 		player->chp = player->mhp;
 
 		msg("You feel much better.");
+
+		player->upkeep->update |= PU_BONUS;
 	}
 
 	/* Switch back to the normal game view. */

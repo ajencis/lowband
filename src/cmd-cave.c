@@ -53,6 +53,7 @@
 
 static bool check_can_take_stairs(struct player *p, int time)
 {
+	return true;
     if (p->timed[TMD_CUT])
 	{
 		msg("You would bleed out on the stairs.");
@@ -68,7 +69,7 @@ static bool check_can_take_stairs(struct player *p, int time)
 		msg("There's no-one to fight on the stairs.");
 		return false;
 	}
-	else if (p->timed[TMD_FOOD] < 10 + time)
+	else if (p->timed[TMD_FOOD] < 10 + time / 10)
 	{
 		msg("You should eat before you take the stairs.");
 		return false;

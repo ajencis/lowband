@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "list-object-flags.h": "c",
-        "list-player-flags.h": "c",
-        "list-player-powers.h": "c"
-    }
-}

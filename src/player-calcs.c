@@ -2100,7 +2100,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* L: get powers */
 	for (i = 0; i < PP_MAX; i++) {
-        state->powers[i] = p->class->c_powers[i] * MAX(p->lev, p->lev / 2 + 5) / 100;
+        state->powers[i] = p->class->c_powers[i] * MAX(p->lev, p->lev / 2 + 10) / 100;
 	}
 
 	/* Analyze equipment */
