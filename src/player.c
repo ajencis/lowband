@@ -221,11 +221,11 @@ bool player_stat_dec(struct player *p, int stat, bool permanent)
 
 bool player_at_max_level(struct player *p)
 {
-	if (p->lev >= PY_MAX_LEVEL) return false;
+	if (p->lev >= PY_MAX_LEVEL) return true;
 
-	if (player_exp[p->lev-1] / 100L * p->state.expfact > PY_MAX_EXP) return false;
+	if (player_exp[p->lev-1] / 100L * p->state.expfact > PY_MAX_EXP) return true;
 
-	return true;
+	return false;
 }
 
 bool player_can_level_up(struct player *p)

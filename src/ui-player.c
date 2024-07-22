@@ -469,6 +469,7 @@ void display_player_stat_info(void)
 
 	/* Display the stats */
 	for (i = 0; i < STAT_MAX; i++) {
+		int maxmax;
 		/* Reduced or normal */
 		if (player->stat_cur[i] < player->stat_max[i])
 			/* Use lowercase stat name */
@@ -502,7 +503,10 @@ void display_player_stat_info(void)
 		c_put_str(COLOUR_L_GREEN, buf, row+i, col+19);
 
 		/* L: maxima */
-		cnv_stat(player->stat_max_max[i], buf, sizeof(buf));
+        maxmax = player->stat_max_max[i];
+		maxmax = modify_stat_value(maxmax, player->race->r_adj[i]);
+		maxmax = modify_stat_value(maxmax, player->state.stat_add[i]);
+		cnv_stat(maxmax, buf, sizeof(buf));
 		c_put_str(COLOUR_L_GREEN, buf, row+i, col+25);
 
 		/* Only display stat_use if there has been draining */

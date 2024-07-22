@@ -1740,7 +1740,7 @@ desc:Causes a radius 13 earthquake centered around the player.
 
 
 ############### MONK ###############
-name:Monk
+name:Ascetic
 stats:0:0:0:0:0
 skill-disarm-phys:25:15
 skill-disarm-magic:20:10
