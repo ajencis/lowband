@@ -285,7 +285,8 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 					}
 				}
 				if (num) {
-					p->stat_max[choice]++;
+					effect_simple(EF_RESTORE_STAT, source_none(), "0", choice, 0, 0, 0, 0, NULL);
+					effect_simple(EF_GAIN_STAT, source_none(), "0", choice, 0, 0, 0, 0, NULL);
 				}
 			}
 		}

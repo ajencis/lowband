@@ -19,6 +19,7 @@
 #include "angband.h"
 #include "cave.h"
 #include "cmds.h"
+#include "effects.h"
 #include "game-event.h"
 #include "game-input.h"
 #include "hint.h"
@@ -1359,13 +1360,12 @@ void leave_store(game_event_type type, game_event_data *data, void *user)
 
 	/* L: home heals you */
 	if (store_at(cave, player->grid)->feat == FEAT_HOME) {
+		msg("You feel refreshed after resting at home.");
         for (i = 0; i < STAT_MAX; i++) {
-			player->stat_cur[i] = player->stat_max[i];
+			effect_simple(EF_RESTORE_STAT, source_none(), "0", i, 0, 0, 0, 0, NULL);
 		}
 		player->csp = player->msp;
 		player->chp = player->mhp;
-
-		msg("You feel much better.");
 
 		player->upkeep->update |= PU_BONUS;
 	}
