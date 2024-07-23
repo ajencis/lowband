@@ -872,108 +872,115 @@ static const int adj_mag_mana[STAT_RANGE] =
  * with numbers increasing quadratically
  * generally scaleto is the high value for that table
  */
-static int stat_scale(int index, int scaleto) {
-    int highstat = 18;
+static int stat_scale(int index, int scaleto, bool minzero) {
+    int hsi = 15;
+	int asi = 7;
+	int lsi = 0;
+	assert((hsi - asi) != 0);
+	index = MAX(index, lsi);
 
-	if (index > 10) return (int)(scaleto * 
-	                             ((index - 10) * (index - 10)) /
-								 ((highstat - 10) * (highstat - 10)));
+	int negative = (lsi - asi) * (scaleto + 49) / 50;
 
-	if (index < 10) return (index - 10) * MAX(50, scaleto) / 50;
+	if (index >= asi) return (int)(scaleto * 
+	                             ((index - asi) * (index - asi)) /
+								 ((hsi - asi) * (hsi - asi))) + 
+								 minzero ? negative : 0;
+
+	if (index <= asi) return (index - asi) * (scaleto + 49) / 50 + minzero ? negative : 0;
 
 	return 0;
 }
 
 
 int adj_int_dev(int index) {
-	return stat_scale(index, 15);
+	return stat_scale(index, 15, false);
 }
 
 int adj_wis_sav(int index) {
-	return stat_scale(index, 50);
+	return stat_scale(index, 50, false);
 }
 
 int adj_dex_dis(int index) {
-	return stat_scale(index, 20);
+	return stat_scale(index, 20, false);
 }
 
 int adj_int_dis(int index) {
-	return stat_scale(index, 20);
+	return stat_scale(index, 20, false);
 }
 
 int adj_dex_ta(int index) {
-	return stat_scale(index, 50);
+	return stat_scale(index, 50, false);
 }
 
 int adj_str_td(int index) {
-	return stat_scale(index, 25);
+	return stat_scale(index, 25, false);
 }
 
 int adj_dex_th(int index) {
-	return stat_scale(index, 35);
+	return stat_scale(index, 35, false);
 }
 
 int adj_str_th(int index) {
-	return stat_scale(index, 15);
+	return stat_scale(index, 15, false);
 }
 
 int adj_str_wgt(int index) {
-	return 10 + stat_scale(index, 20);
+	return stat_scale(index, 20, true);
 }
 
 int adj_str_hold(int index) {
-	return 20 + stat_scale(index, 100);
+	return stat_scale(index, 100, true);
 }
 
 int adj_str_dig(int index) {
-	return stat_scale(index, 100);
+	return stat_scale(index, 100, false);
 }
 
 int adj_str_blow(int index) {
-	return 50 + stat_scale(index, 240);
+	return stat_scale(index, 240, true);
 }
 
 int adj_dex_blow(int index) {
-	return 10 + stat_scale(index, 10);
+	return stat_scale(index, 10, true);
 }
 
 int adj_stat_blow(int index) {
-	return 50 + stat_scale(index, 400);
+	return stat_scale(index, 400, true);
 }
 
 int adj_dex_safe(int index) {
-	return 20 + stat_scale(index, 80);
+	return stat_scale(index, 80, true);
 }
 
 int adj_con_fix(int index) {
-	return 10 + stat_scale(index, 10);
+	return stat_scale(index, 10, true);
 }
 
 int adj_con_mhp(int index) {
-	return stat_scale(index, 1000);
+	return stat_scale(index, 1000, false);
 }
 
 int adj_mag_study(int index) {
-	return index * 250 / 18;
+	return index * 250 / 15;
 }
 
 int adj_mag_mana(int index) {
-	return index * 500 / 18;
+	return index * 500 / 15;
 }
 
 int adj_int_xp(int index) {
-	return 20 - 2 * index;
+	return 14 - 2 * index;
 }
 
 
-static int stepdown(int num) {
+/*static int stepdown(int num) {
 	int i;
 
 	for (i = 0; i < 100; i++) {
 		if ((i * (i + 1) / 2) >= num) return i;
 	}
 	return i;
-}
+}*/
 
 
 /**
@@ -1849,8 +1856,8 @@ int calc_blows(struct player *p, const struct object *obj,
                struct player_state *state, int extra_blows)
 {
 	int weight = obj ? object_weight_one(obj) : 0;
-	weight = MAX(weight, p->class->min_weight);
-	weight = stepdown(weight);
+	weight = MAX(weight, 0) + 100;
+	//weight = stepdown(weight);
 
     int dexind = state->stat_ind[STAT_DEX];
 	int strind = state->stat_ind[STAT_STR];
@@ -1859,9 +1866,9 @@ int calc_blows(struct player *p, const struct object *obj,
 
 	int baseblows = adj_stat_blow(statind);
 
-	int blows = MAX(0, baseblows) * state->skills[SKILL_TO_HIT_MELEE] / weight / 10 + 100;
+	int blows = MAX(0, baseblows) * state->skills[SKILL_TO_HIT_MELEE] / weight / 2 + 100;
 
-	blows = MIN(blows, 100 * p->class->max_attacks);
+	//blows = MIN(blows, 100 * p->class->max_attacks);
 
 	return blows + 100 * extra_blows;
 }

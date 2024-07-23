@@ -40,7 +40,7 @@ INTERFACE, false)
 OP(animate_flicker,       "Color: Shimmer multi-colored things",
 INTERFACE, false)
 OP(center_player,         "Center map continuously",
-INTERFACE, false)
+INTERFACE, true)
 OP(purple_uniques,        "Color: Show unique monsters in purple",
 INTERFACE, false)
 OP(auto_more,             "Automatically clear '-more-' prompts",

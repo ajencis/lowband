@@ -278,6 +278,7 @@ static void get_stats(int stat_use[STAT_MAX])
 }
 
 
+/* L: now give average */
 static void roll_hp(void)
 {
 	int i, j, min_value, max_value;
@@ -294,15 +295,16 @@ static void roll_hp(void)
 	while (true) {
 		/* Roll the hitpoint values */
 		for (i = 1; i < PY_MAX_LEVEL; i++) {
-			j = randint1(player->hitdie);
+			j = (player->hitdie + (i & 1)) / 2;
+			//j = randint1(player->hitdie);
 			player->player_hp[i] = player->player_hp[i-1] + j;
 		}
 
 		/* XXX Could also require acceptable "mid-level" hitpoints */
 
 		/* Require "valid" hitpoints at highest level */
-		if (player->player_hp[PY_MAX_LEVEL-1] < min_value) continue;
-		if (player->player_hp[PY_MAX_LEVEL-1] > max_value) continue;
+		/*if (player->player_hp[PY_MAX_LEVEL-1] < min_value) continue;
+		if (player->player_hp[PY_MAX_LEVEL-1] > max_value) continue;*/
 
 		/* Acceptable */
 		break;

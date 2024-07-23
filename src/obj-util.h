@@ -86,4 +86,6 @@ void mark_artifact_created(const struct artifact *art, bool created);
 void mark_artifact_seen(const struct artifact *art, bool seen);
 void mark_artifact_everseen(const struct artifact *art, bool seen);
 
+void alter_weapon_properties(struct object_kind *objs);
+
 #endif /* OBJECT_UTIL_H */

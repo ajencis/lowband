@@ -99,7 +99,7 @@ struct attack_roll get_attack(struct player *p, struct object *obj)
 }
 
 static int get_attack_dam(struct attack_roll *aroll, struct monster *mon, int b, int s) {
-    int dmg = damroll(aroll->ddice, aroll->dsides) + aroll->to_dam;
+    int dmg = damroll(aroll->ddice, aroll->dsides + aroll->to_dam);
 	if (s) {
 		dmg *= slays[s].multiplier;
 	} else if (b) {

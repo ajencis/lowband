@@ -230,7 +230,7 @@ bool player_at_max_level(struct player *p)
 
 bool player_can_level_up(struct player *p)
 {
-	if (p->lev >= PY_MAX_LEVEL) return false;
+	if (player_at_max_level(p)) return false;
 
     if (p->exp < (player_exp[p->lev-1] * p->state.expfact / 100L)) return false;
 
@@ -274,7 +274,7 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 		while (p->lev > p->max_lev) {
 			p->max_lev++;
 
-			if (!(p->max_lev % 3)) {
+			if (!(p->max_lev % 3) || p->max_lev > 30) {
 				int num = 0;
 				int choice = 0;
 				for (i = 0; i < STAT_MAX; i++)

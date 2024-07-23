@@ -1214,3 +1214,50 @@ void mark_artifact_everseen(const struct artifact *art, bool seen)
 	assert(art->aidx == aup_info[art->aidx].aidx);
 	aup_info[art->aidx].everseen = seen;
 }
+
+
+/**
+ * L: alter weapons after parsing
+ */
+#define MIN_MEDIUM_WEIGHT 75
+#define MIN_HEAVY_WEIGHT 150
+
+static bool is_kind_melee_weapon(struct object_kind *obj)
+{
+	if (obj->tval == TV_HAFTED) return true;
+	if (obj->tval == TV_POLEARM) return true;
+	if (obj->tval == TV_SWORD) return true;
+	if (obj->tval == TV_DIGGING) return true;
+	return false;
+}
+
+static void alter_one_weapon(struct object_kind *weap)
+{
+	if (!is_kind_melee_weapon(weap)) return;
+
+	int ddice = 1;
+	if (weap->weight >= MIN_MEDIUM_WEIGHT) ddice++;
+	if (weap->weight >= MIN_HEAVY_WEIGHT) ddice++;
+
+    int dam = weap->weight / 20 + 5 - ddice;
+
+	if (weap->tval == TV_DIGGING) dam /= 2;
+
+	int dsides = dam * 2 / ddice - 1;
+	dsides = MAX(dsides, 1);
+
+	weap->dd = ddice;
+	weap->ds = dsides;
+}
+
+
+void alter_weapon_properties(struct object_kind *objs)
+{
+    struct object_kind *curr = objs;
+
+    while (curr) {
+		if (is_kind_melee_weapon(curr)) alter_one_weapon(curr);
+		curr = curr->next;
+	}
+}
+
