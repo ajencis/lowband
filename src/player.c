@@ -222,6 +222,8 @@ bool player_stat_dec(struct player *p, int stat, bool permanent)
 bool player_at_max_level(struct player *p)
 {
 	if (p->lev >= PY_MAX_LEVEL) return true;
+	
+    if (p->lev >= 50 + adj_int_lev(p->state.stat_use[STAT_INT])) return true;
 
 	if (player_exp[p->lev-1] / 100L * p->state.expfact > PY_MAX_EXP) return true;
 
@@ -240,6 +242,7 @@ bool player_can_level_up(struct player *p)
 static void adjust_level(struct player *p, bool verbose, bool levelup)
 {
 	int i;
+	bool doneone = false;
 
 	if (p->exp < 0)
 		p->exp = 0;
@@ -264,7 +267,7 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 	       (p->exp < (player_exp[p->lev-2] * p->state.expfact / 100L)))
 		p->lev--;
 
-	if (levelup && player_can_level_up(p)) {
+	while (((levelup && !doneone) || p->lev < p->max_lev) && player_can_level_up(p)) {
 		char buf[80];
 
 		p->lev++;
@@ -272,9 +275,13 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 		/* Save the highest level */
 		/* L: and do stuff that happens on the first time reaching a level */
 		while (p->lev > p->max_lev) {
+            doneone = true;
+
 			p->max_lev++;
 
-			if (!(p->max_lev % 3) || p->max_lev > 30) {
+			int freq = p->max_lev < 20 ? 5 : p->max_lev < 36 ? 4 : 3;
+
+			if (!(p->max_lev % freq)) {
 				int num = 0;
 				int choice = 0;
 				for (i = 0; i < STAT_MAX; i++)
@@ -285,7 +292,7 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 					}
 				}
 				if (num) {
-					effect_simple(EF_RESTORE_STAT, source_none(), "0", choice, 0, 0, 0, 0, NULL);
+					p->stat_cur[choice] = p->stat_max[choice];
 					effect_simple(EF_GAIN_STAT, source_none(), "0", choice, 0, 0, 0, 0, NULL);
 				}
 			}
@@ -299,12 +306,6 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 			/* Message */
 			msgt(MSG_LEVEL, "Welcome to level %d.",	p->lev);
 		}
-
-		/*effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_STR, 0, 0, 0, 0, NULL);
-		effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_INT, 0, 0, 0, 0, NULL);
-		effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_WIS, 0, 0, 0, 0, NULL);
-		effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_DEX, 0, 0, 0, 0, NULL);
-		effect_simple(EF_RESTORE_STAT, source_none(), "0", STAT_CON, 0, 0, 0, 0, NULL);*/
 	}
 
 	/*while ((p->max_lev < PY_MAX_LEVEL) && levelup &&

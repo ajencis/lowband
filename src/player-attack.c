@@ -46,68 +46,6 @@
 #include "project.h"
 #include "target.h"
 
-/**
- * L: functions to get bonuses for monks et al
- */
-
-static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
-{
-	if (obj) return;
-	int lev = player->state.powers[PP_UNARMED_STRIKE];
-	aroll->ddice = 1;
-    aroll->dsides = lev * 39 / 50 + 1;
-	aroll->to_hit = lev * 25 / 50;
-	aroll->to_dam = 0;
-}
-
-static void specialization_mod_attack(struct attack_roll *aroll, struct object *obj)
-{
-	if (!obj) return;
-	int lev = 0;
-    if (obj->tval == TV_HAFTED) lev = player->state.powers[PP_HAFTED_SPECIALIZATION];
-	if (obj->tval == TV_POLEARM) lev = player->state.powers[PP_POLEARM_SPECIALIZATION];
-	if (obj->tval == TV_SWORD) lev = player->state.powers[PP_SWORD_SPECIALIZATION];
-	
-	aroll->to_hit += lev * 15 / 50;
-	aroll->to_dam += lev * 15 / 50;
-}
-
-
-
-/**
- * L: get the attack for various uses
- */
-struct attack_roll get_attack(struct player *p, struct object *obj)
-{
-	struct attack_roll aroll = {0};
-	if (obj) {
-		aroll.ddice = obj->dd;
-		aroll.dsides = obj->ds;
-		aroll.to_dam = object_to_dam(obj);
-		aroll.to_hit = object_to_hit(obj);
-	}
-	else {
-        unarmed_get_attack(&aroll, obj);
-	}
-
-	aroll.to_hit += p->state.to_h;
-	aroll.to_dam += p->state.to_d;
-
-	specialization_mod_attack(&aroll, obj);
-
-	return aroll;
-}
-
-static int get_attack_dam(struct attack_roll *aroll, struct monster *mon, int b, int s) {
-    int dmg = damroll(aroll->ddice, aroll->dsides + aroll->to_dam);
-	if (s) {
-		dmg *= slays[s].multiplier;
-	} else if (b) {
-		dmg *= get_monster_brand_multiplier(mon, &brands[b], false);
-	}
-	return dmg;
-}
-
 
 /**
  * ------------------------------------------------------------------------
@@ -766,6 +704,74 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 	return false;
 }
 
+
+
+/**
+ * L: functions to create the attack itself
+ */
+
+static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
+{
+	if (obj) return;
+	int lev = player->state.powers[PP_UNARMED_STRIKE];
+	aroll->ddice = 1;
+    aroll->dsides = lev * 39 / 50 + 1;
+	aroll->to_hit = lev * 25 / 50;
+	aroll->to_dam = 0;
+}
+
+static void specialization_mod_attack(struct attack_roll *aroll, struct object *obj)
+{
+	if (!obj) return;
+	int lev = 0;
+    if (obj->tval == TV_HAFTED) lev = player->state.powers[PP_HAFTED_SPECIALIZATION];
+	if (obj->tval == TV_POLEARM) lev = player->state.powers[PP_POLEARM_SPECIALIZATION];
+	if (obj->tval == TV_SWORD) lev = player->state.powers[PP_SWORD_SPECIALIZATION];
+	
+	aroll->to_hit += lev * 10 / 50;
+	aroll->to_dam += lev * 5 / 50;
+	aroll->dsides += lev * 5 / 50;
+}
+
+
+/**
+ * L: get the attack for various uses
+ */
+struct attack_roll get_attack(struct player *p, struct object *obj)
+{
+	struct attack_roll aroll = {0};
+	if (obj) {
+		aroll.ddice = obj->dd;
+		aroll.dsides = obj->ds + object_to_dam(obj);
+		aroll.to_dam = 0;
+		aroll.to_hit = object_to_hit(obj);
+	}
+	else {
+        unarmed_get_attack(&aroll, obj);
+	}
+
+	aroll.to_hit += p->state.to_h;
+	aroll.dsides += player_damage_bonus(&p->state);
+
+	specialization_mod_attack(&aroll, obj);
+
+	return aroll;
+}
+
+static int get_attack_dam(struct attack_roll *aroll, struct monster *mon, int b, int s) {
+    int dmg = damroll(aroll->ddice, aroll->dsides) + aroll->to_dam;
+	if (s) {
+		dmg *= slays[s].multiplier;
+	} else if (b) {
+		dmg *= get_monster_brand_multiplier(mon, &brands[b], false);
+	}
+	return dmg;
+}
+
+
+
+
+
 /**
  * ------------------------------------------------------------------------
  * Melee attack
@@ -809,8 +815,11 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 	uint32_t msg_type = MSG_HIT;
 	int j, b, s, weight, dmg;
 
-	/* Default to punching */
-	my_strcpy(verb, "punch", sizeof(verb));
+	/* Default to punching / kicking */
+	if (one_in_(3))
+	    my_strcpy(verb, "kick", sizeof(verb));
+	else
+    	my_strcpy(verb, "punch", sizeof(verb));
 
 	/* Extract monster name (or "it") */
 	monster_desc(m_name, sizeof(m_name), mon, MDESC_TARG);
@@ -873,7 +882,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 	improve_attack_modifier(p, NULL, mon, &b, &s, verb, false);
 
 	/* Get the damage */
-	if (!OPT(p, birth_percent_damage) || true) {
+	if (true || !OPT(p, birth_percent_damage)) {
 		dmg = get_attack_dam(&aroll, mon, b, s);// melee_damage(mon, obj, b, s);
 		/* For now, exclude criticals on unarmed combat */
 		if (obj) {
@@ -896,9 +905,10 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 	learn_brand_slay_from_melee(p, obj, mon);
 
 	/* Apply the player damage bonuses */
-	if (!OPT(p, birth_percent_damage)) {
+	/* L: now handled elsewhere */
+	/*if (!OPT(p, birth_percent_damage)) {
 		dmg += player_damage_bonus(&p->state);
-	}
+	}*/
 
 	/* Substitute shape-specific blows for shapechanged players */
 	if (player_is_shapechanged(p)) {

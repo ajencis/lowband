@@ -766,7 +766,7 @@ static struct panel *get_panel_combat(void) {
 
 	panel_space(p);
 	if (aroll.to_dam)
-		panel_line(p, COLOUR_L_BLUE, "Melee", "%dd(%d%+d)", aroll.ddice, aroll.dsides, aroll.to_dam);
+		panel_line(p, COLOUR_L_BLUE, "Melee", "%dd%d%+d", aroll.ddice, aroll.dsides, aroll.to_dam);
 	else
 	    panel_line(p, COLOUR_L_BLUE, "Melee", "%dd%d", aroll.ddice, aroll.dsides);
 	panel_line(p, COLOUR_L_BLUE, "To-hit", "%d,%+d", bth / 10, aroll.to_hit);

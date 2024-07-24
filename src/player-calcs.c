@@ -876,19 +876,19 @@ static int stat_scale(int index, int scaleto, bool minzero) {
     int hsi = 15;
 	int asi = 7;
 	int lsi = 0;
-	assert((hsi - asi) != 0);
+	assert(hsi != asi);
 	index = MAX(index, lsi);
 
-	int negative = (lsi - asi) * (scaleto + 49) / 50;
+	int negative = ((asi - lsi) * scaleto + 49) / 50;
 
 	if (index >= asi) return (int)(scaleto * 
-	                             ((index - asi) * (index - asi)) /
-								 ((hsi - asi) * (hsi - asi))) + 
-								 minzero ? negative : 0;
+	                               ((index - asi) * (index - asi)) /
+								   ((hsi - asi) * (hsi - asi))) + 
+								   (minzero ? negative : 0);
 
-	if (index <= asi) return (index - asi) * (scaleto + 49) / 50 + minzero ? negative : 0;
+	if (index <= asi) return ((index - asi) * scaleto - 49) / 50 + (minzero ? negative : 0);
 
-	return 0;
+	return minzero ? negative : 0;
 }
 
 
@@ -925,7 +925,7 @@ int adj_str_th(int index) {
 }
 
 int adj_str_wgt(int index) {
-	return stat_scale(index, 20, true);
+	return stat_scale(index, 200, true) + 50;
 }
 
 int adj_str_hold(int index) {
@@ -970,6 +970,10 @@ int adj_mag_mana(int index) {
 
 int adj_int_xp(int index) {
 	return 14 - 2 * index;
+}
+
+int adj_int_lev(int index) {
+	return index - 7;
 }
 
 
@@ -1926,7 +1930,7 @@ static int weight_limit(struct player_state *state)
 	int i;
 
 	/* Weight limit based only on strength */
-	i = adj_str_wgt(state->stat_ind[STAT_STR]) * 100;
+	i = adj_str_wgt(state->stat_ind[STAT_STR]) * 10;
 
 	/* Return the result */
 	return (i);
@@ -1941,7 +1945,7 @@ int weight_remaining(struct player *p)
 	int i;
 
 	/* Weight limit based only on strength */
-	i = 60 * adj_str_wgt(p->state.stat_ind[STAT_STR])
+	i = 6 * adj_str_wgt(p->state.stat_ind[STAT_STR])
 		- p->upkeep->total_weight - 1;
 
 	/* Return the result */

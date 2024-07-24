@@ -677,16 +677,16 @@ static void player_outfit(struct player *p)
 /**
  * Cost of each "point" of a stat.
  */
-static const int birth_stat_costs[18 + 1] = { 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2 };
+static const int birth_stat_costs[18 + 1] = { 0, 0, 0, 2, 2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 2 };
 
-/* It was feasible to get base 17 in 3 stats with the autoroller */
-#define MAX_BIRTH_POINTS 20 /* 3 * (1+1+1+1+1+1+2) */
+/* L: average stats for everyone */
+#define MAX_BIRTH_POINTS 3
 
 static void recalculate_stats(int *stats_local_local, int points_left_local)
 {
 	int i;
 
-	/* Variable stat maxes */
+	/* L: Variable stat maxes */
 	for (i = 0; i < STAT_MAX; i++) {
 		player->stat_max_max[i] = stats_local_local[i];
 		player->stat_cur[i] = player->stat_max[i] =	player->stat_birth[i] 
@@ -778,8 +778,8 @@ static bool sell_stat(int choice, int stats_local[STAT_MAX],
 	int *points_left_local, bool update_display)
 {
 	/* Must be a valid stat, and we can't "sell" stats below the base of 10. */
-	/* L: now can sell down to 7 */
-	if (!(choice >= STAT_MAX || choice < 0) && (stats_local[choice] > 7)) {
+	/* L: now can sell down to 3 */
+	if (!(choice >= STAT_MAX || choice < 0) && (stats_local[choice] > 3)) {
 		int stat_cost = birth_stat_costs[stats_local[choice]];
 
 		stats_local[choice]--;
