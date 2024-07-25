@@ -873,7 +873,7 @@ static const int adj_mag_mana[STAT_RANGE] =
  * generally scaleto is the high value for that table
  */
 static int stat_scale(int index, int scaleto, bool minzero) {
-    int hsi = 15;
+    int hsi = 14;
 	int asi = 7;
 	int lsi = 0;
 	assert(hsi != asi);
@@ -925,11 +925,12 @@ int adj_str_th(int index) {
 }
 
 int adj_str_wgt(int index) {
-	return stat_scale(index, 200, true) + 50;
+	int ret = stat_scale(index, 250, false) + 100;
+	return MAX(ret, 25);
 }
 
 int adj_str_hold(int index) {
-	return stat_scale(index, 100, true);
+	return stat_scale(index, 200, true);
 }
 
 int adj_str_dig(int index) {

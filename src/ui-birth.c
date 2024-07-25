@@ -1043,7 +1043,7 @@ static enum birth_stage roller_command(bool first_call)
 /* The locations of the "costs" area on the birth screen. */
 #define COSTS_ROW 2
 #define COSTS_COL (42 + 32)
-#define TOTAL_COL (42 + 19)
+#define TOTAL_COL (42 + 16)
 
 /*
  * Remember what's possible for a given stat.  0 means can't buy or sell.
@@ -1104,7 +1104,7 @@ static void point_based_points(game_event_type type, game_event_data *data,
 		sum += spent[i];
 	}
 	
-	put_str(format("Total Cost: %2d/%2d", sum, remaining + sum),
+	put_str(format("Points Remaining: %2i", remaining),
 		COSTS_ROW + STAT_MAX, TOTAL_COL);
 }
 

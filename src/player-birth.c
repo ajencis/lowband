@@ -677,10 +677,10 @@ static void player_outfit(struct player *p)
 /**
  * Cost of each "point" of a stat.
  */
-static const int birth_stat_costs[18 + 1] = { 0, 0, 0, 2, 2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 2 };
+static const int birth_stat_costs[18 + 1] = { 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 2 };
 
 /* L: average stats for everyone */
-#define MAX_BIRTH_POINTS 3
+#define MAX_BIRTH_POINTS 0
 
 static void recalculate_stats(int *stats_local_local, int points_left_local)
 {

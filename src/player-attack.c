@@ -755,6 +755,9 @@ struct attack_roll get_attack(struct player *p, struct object *obj)
 
 	specialization_mod_attack(&aroll, obj);
 
+	aroll.dsides = MAX(aroll.dsides, 1);
+	aroll.ddice = MAX(aroll.ddice, 1);
+
 	return aroll;
 }
 
