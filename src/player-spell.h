@@ -28,6 +28,7 @@ int spell_collect_from_book(const struct player *p, const struct object *obj,
 	int **spells);
 int spell_book_count_spells(const struct player *p, const struct object *obj,
 	bool (*tester)(const struct player *p, int spell_index));
+int caster_level_bonus(const struct player *p, const struct class_spell *spell);
 bool spell_okay_list(const struct player *p,
 	bool (*spell_test)(const struct player *p, int spell_index),
 	const int spells[], int n_spells);
@@ -37,6 +38,8 @@ bool spell_okay_to_browse(const struct player *p, int spell_index);
 int16_t spell_chance(int spell_index);
 void spell_learn(int spell_index);
 bool spell_cast(int spell_index, int dir, struct command *cmd);
+
+int school_find_idx(const char *name);
 
 extern void get_spell_info(int index, char *buf, size_t len);
 extern bool cast_spell(int tval, int index, int dir);

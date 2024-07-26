@@ -29,6 +29,7 @@
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "player.h"
 #include "project.h"
 #include "target.h"
 
@@ -41,6 +42,16 @@ struct spell_info_iteration_state {
 	random_value pre_rv;
 	random_value shared_rv;
 	bool have_shared;
+};
+
+/**
+ * List of { school, name } pairs.
+ */
+static const grouper school_names[] =
+{
+	#define MS(a, b, c) { MS_##a, b },
+	#include "list-magic-schools.h"
+	#undef MS
 };
 
 /**
@@ -315,6 +326,16 @@ int spell_book_count_spells(const struct player *p, const struct object *obj,
 
 
 /**
+ * L: get effective caster level for a given spell
+ */
+int caster_level_bonus(const struct player *p, const struct class_spell *spell)
+{
+	if (p->state.powers[spell->school]) return p->state.powers[spell->school] * 20 / 50;
+	return 0;
+}
+
+
+/**
  * True if at least one spell in spells[] is OK according to spell_test.
  */
 bool spell_okay_list(const struct player *p,
@@ -345,7 +366,7 @@ bool spell_okay_to_cast(const struct player *p, int spell)
 bool spell_okay_to_study(const struct player *p, int spell_index)
 {
 	const struct class_spell *spell = spell_by_index(p, spell_index);
-	return spell && spell->slevel <= p->lev
+	return spell && spell->slevel <= (caster_level_bonus(p, spell) + p->lev)
 		&& !(p->spell_flags[spell_index] & PY_SPELL_LEARNED);
 }
 
@@ -396,7 +417,7 @@ int16_t spell_chance(int spell_index)
 	chance = spell->sfail;
 
 	/* Reduce failure rate by "effective" level adjustment */
-	chance -= 3 * (player->lev - spell->slevel);
+	chance -= 3 * (caster_level_bonus(player, spell) + player->lev - spell->slevel);
 
 	/* Reduce failure rate by casting stat level adjustment */
 	chance -= fail_adjust(player, spell);
@@ -511,7 +532,7 @@ bool spell_cast(int spell_index, int dir, struct command *cmd)
 	} else {
 		/* Cast the spell */
 		if (!effect_do(spell->effect, source_player(), NULL, &ident, true, dir,
-					   beam, 0, cmd)) {
+					   beam, caster_level_bonus(player, spell), cmd)) {
 			return false;
 		}
 
@@ -718,3 +739,19 @@ void get_spell_info(int spell_index, char *p, size_t len)
 		effect = effect->next;
 	}
 }
+
+/**
+ * L: functions for magic schools
+ */
+int school_find_idx(const char *name)
+{
+	int i;
+	int sizemax = N_ELEMENTS(school_names);
+
+	for (i = 0; i < sizemax; i++)
+	{
+		if (!my_stricmp(name, school_names[i].name)) return school_names[i].tval;
+	}
+	return -1;
+}
+

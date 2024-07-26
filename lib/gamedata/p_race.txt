@@ -117,6 +117,7 @@ skill-melee:-5
 skill-shoot:15
 skill-throw:15
 skill-dig:0
+power:SWORD_SPECIALIZATION:25
 hitdie:9
 exp:120
 infravision:3

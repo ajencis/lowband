@@ -116,6 +116,7 @@ const char *list_obj_flag_names[] = {
 };
 
 static const char *list_player_powers_names[] = {
+	"NONE",
 	#define PP(x, a) #x,
 	#include "list-player-powers.h"
 	#undef PP
@@ -2793,6 +2794,26 @@ static enum parser_error parse_p_race_values(struct parser *p) {
 	return t ? PARSE_ERROR_INVALID_VALUE : PARSE_ERROR_NONE;
 }
 
+/* L: parse abilities */
+static enum parser_error parse_p_race_power(struct parser *p) {
+	struct player_race *r = parser_priv(p);
+	if (!r)
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	int i = 0;
+	const char *s = parser_getsym(p, "name");
+	int v = parser_getint(p, "value");
+
+	while (list_player_powers_names[i] && !streq(list_player_powers_names[i], s))
+	    i++;
+
+	if (!list_player_powers_names[i])
+        return PARSE_ERROR_GENERIC;
+
+	r->r_powers[i] = v;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_p_race(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -2818,6 +2839,7 @@ static struct parser *init_parse_p_race(void) {
 	parser_reg(p, "obj-flags ?str flags", parse_p_race_obj_flags);
 	parser_reg(p, "player-flags ?str flags", parse_p_race_play_flags);
 	parser_reg(p, "values str values", parse_p_race_values);
+	parser_reg(p, "power sym name int value", parse_p_race_power);
 	return p;
 }
 
@@ -4102,6 +4124,41 @@ static enum parser_error parse_class_desc(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_class_school(struct parser *p) {
+	struct player_class *c = parser_priv(p);
+	struct class_book *book;
+	struct class_spell *spell;
+	const char *school_name;
+	int school_idx;
+
+	if (!c) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	if (c->magic.num_books < 1) {
+		/*
+		 * Either missing a magic directive for the class or didn't
+		 * have a book directive after the magic directive.
+		 */
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	assert(c->magic.books && c->magic.num_books <= class_max_books);
+	book = &c->magic.books[c->magic.num_books - 1];
+	if (book->num_spells < 1) {
+		/* Missing a spell directive after the book directive. */
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	assert(book->spells && book->num_spells <= book_max_spells);
+	spell = &book->spells[book->num_spells - 1];
+	school_name = parser_getsym(p, "school");
+
+    school_idx = school_find_idx(school_name);
+	if (school_idx == -1) return PARSE_ERROR_GENERIC;
+
+	spell->school = school_idx;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_class(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -4146,6 +4203,7 @@ static struct parser *init_parse_class(void) {
 	parser_reg(p, "expr sym name sym base str expr", parse_class_expr);
 	parser_reg(p, "effect-msg str text", parse_class_effect_msg);
 	parser_reg(p, "desc str desc", parse_class_desc);
+	parser_reg(p, "school sym school", parse_class_school);
 	return p;
 }
 

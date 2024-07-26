@@ -1485,7 +1485,7 @@ static void calc_spells(struct player *p)
 		spell = spell_by_index(p, j);
 
 		/* Skip spells we are allowed to know */
-		if (spell->slevel <= p->lev) continue;
+		if (spell->slevel <= (p->lev + caster_level_bonus(p, spell))) continue;
 
 		/* Is it known? */
 		if (p->spell_flags[j] & PY_SPELL_LEARNED) {
@@ -1579,7 +1579,7 @@ static void calc_spells(struct player *p)
 
 		/* Skip spells we cannot remember or don't exist */
 		if (!spell) continue;
-		if (spell->slevel > p->lev || spell->slevel == 0) continue;
+		if (spell->slevel > (p->lev + caster_level_bonus(p, spell)) || spell->slevel == 0) continue;
 
 		/* Skip spells we already know */
 		if (p->spell_flags[j] & PY_SPELL_LEARNED)

@@ -185,7 +185,7 @@ static int fmt_title(char buf[], int max, bool short_mode)
 		my_strcpy(buf, player->shape->name, max);
 		my_strcap(buf);		
 	} else if (!short_mode) {
-		my_strcpy(buf, player->class->title[(player->lev - 1) / 5], max);
+		my_strcpy(buf, player->class->title[MIN(player->lev - 1, 49) / 5], max);
 	}
 
 	return strlen(buf);
@@ -229,7 +229,7 @@ static void prt_exp(int row, int col)
 {
 	bool ready = false;
 	char out_val[32];
-	bool lev50 = (player->exp >= PY_MAX_EXP);
+	bool lev50 = player_at_max_level(player);
 
 	long xp = (long)player->exp;
 
@@ -641,7 +641,7 @@ static int prt_stat_short(int stat, int row, int col)
 static int prt_exp_short(int row, int col)
 {
 	char out_val[32];
-	bool lev50 = (player->lev == 50);
+	bool lev50 = player_at_max_level(player);
 
 	long xp = (long)player->exp;
 

@@ -53,10 +53,23 @@ enum
  */
 enum
 {
+	PP_NONE,
 	#define PP(x, a) PP_##x,
 	#include "list-player-powers.h"
 	#undef PP
 	PP_MAX
+};
+
+/**
+ * L: Player spell schools
+ */
+enum
+{
+	MS_NONE,
+	#define MS(x, a, b) MS_##x,
+	#include "list-magic-schools.h"
+	#undef MS
+	MS_MAX
 };
 
 #define PF_SIZE                FLAG_SIZE(PF_MAX)
@@ -205,6 +218,8 @@ struct player_race {
 
 	int r_skills[SKILL_MAX];	/**< Skills */
 
+	int r_powers[PP_MAX];       /**< L: powers */
+
 	bitflag flags[OF_SIZE];		/**< Racial (object) flags */
 	bitflag pflags[PF_SIZE];	/**< Racial (player) flags */
 
@@ -281,6 +296,8 @@ struct class_spell {
 
 	struct effect *effect;	/**< The spell's effect */
 	const struct magic_realm *realm;	/**< The magic realm of this spell */
+
+	int school;             /**< L: the school of the spell */
 
 	int sidx;				/**< The index of this spell for this class */
 	int bidx;				/**< The index into the player's books array */

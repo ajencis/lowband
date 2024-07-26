@@ -639,7 +639,7 @@ static const char *show_title(void)
 	else if (player->total_winner || player->lev > PY_MAX_LEVEL)
 		return "***WINNER***";
 	else
-		return player->class->title[(player->lev - 1) / 5];
+		return player->class->title[MIN(player->lev - 1, 49) / 5];
 }
 
 static const char *show_adv_exp(void)

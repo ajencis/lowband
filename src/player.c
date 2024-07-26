@@ -223,7 +223,7 @@ bool player_at_max_level(struct player *p)
 {
 	if (p->lev >= PY_MAX_LEVEL) return true;
 	
-    if (p->lev >= 50 + adj_int_lev(p->state.stat_use[STAT_INT])) return true;
+    if (p->lev >= (50 + adj_int_lev(p->state.stat_ind[STAT_INT]))) return true;
 
 	if (player_exp[p->lev-1] / 100L * p->state.expfact > PY_MAX_EXP) return true;
 

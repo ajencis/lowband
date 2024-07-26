@@ -59,6 +59,7 @@
  */
 static const power_name pnames[] =
 {
+	{ PP_NONE, "none" },
 	#define PP(a, b) { PP_##a, b },
 	#include "list-player-powers.h"
 	#undef PP
@@ -303,6 +304,17 @@ static void race_help(int i, void *db, const region *l)
 		}
 		text_out_e("\n%s", ability->name);
 		n_flags++;
+	}
+
+	/* L: show powers */
+	for (j = 0; j < PP_MAX; j++)
+	{
+		if (!r->r_powers[j]) continue;
+
+        const char *name = pnames[j].name;
+		int value = r->r_powers[j];
+
+		text_out_e("\n%s [%i%%]", name, value);
 	}
 
 	while (n_flags < flag_space) {
