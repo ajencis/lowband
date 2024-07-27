@@ -44,6 +44,13 @@ static void view_ability_display(struct menu *menu, int oid, bool cursor,
 	struct player_ability *choices = menu->menu_data;
 
 	switch (choices[oid].group) {
+	case PLAYER_FLAG_POWER:
+	    {
+			strnfmt(buf, sizeof(buf), "Power: %s (level %i)", 
+			    choices[oid].name, player->state.powers[choices[oid].index]);
+			color = COLOUR_GREEN;
+			break;
+		}
 	case PLAYER_FLAG_SPECIAL:
 		{
 			strnfmt(buf, sizeof(buf), "Specialty Ability: %s",

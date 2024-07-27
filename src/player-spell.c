@@ -330,7 +330,7 @@ int spell_book_count_spells(const struct player *p, const struct object *obj,
  */
 int caster_level_bonus(const struct player *p, const struct class_spell *spell)
 {
-	if (p->state.powers[spell->school]) return p->state.powers[spell->school] * 20 / 50;
+	if (p->state.powers[spell->school]) return (p->state.powers[spell->school] * 20 + 25) / 50;
 	return 0;
 }
 

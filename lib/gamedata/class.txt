@@ -459,7 +459,6 @@ skill-melee:45:20
 skill-shoot:40:30
 skill-throw:40:30
 skill-dig:0:0
-power:100:EARTH_SPECIALIZATION
 hitdie:2
 max-attacks:4
 min-weight:35
@@ -701,7 +700,7 @@ skill-melee:45:20
 skill-shoot:35:20
 skill-throw:35:20
 skill-dig:0:0
-power:25:HAFTED_SPECIALIZATION
+power:HAFTED_SPECIALIZATION:25
 hitdie:2
 max-attacks:4
 min-weight:35
@@ -1390,6 +1389,8 @@ skill-melee:35:45
 skill-shoot:66:30
 skill-throw:72:45
 skill-dig:0:0
+power:SWORD_SPECIALIZATION:25
+power:BACKSTAB:100
 hitdie:4
 max-attacks:5
 min-weight:20
@@ -1757,8 +1758,8 @@ skill-melee:50:35
 skill-shoot:55:45
 skill-throw:55:45
 skill-dig:0:0
-power:100:UNARMED_STRIKE
-power:100:UNARMOURED_AGILITY
+power:UNARMED_STRIKE:100
+power:UNARMOURED_AGILITY:100
 hitdie:5
 max-attacks:6
 min-weight:10

@@ -300,3 +300,85 @@ bindui:resist_ui_compact_0:0:-1
 name:Vulnerability
 desc:You are vulnerable to
 value:-1
+
+
+# L: powers
+type:power
+code:AIR_SPECIALIZATION
+name:Air Specialization
+desc:You are particularly good at air magic.
+
+type:power
+code:FIRE_SPECIALIZATION
+name:Fire Specialization
+desc:You are particularly good at fire magic.
+
+type:power
+code:EARTH_SPECIALIZATION
+name:Earth Specialization
+desc:You are particularly good at earth magic.
+
+type:power
+code:WATER_SPECIALIZATION
+name:WATER Specialization
+desc:You are particularly good at water magic.
+
+type:power
+code:POISON_SPECIALIZATION
+name:Poison Specialization
+desc:You are particularly good at poison magic.
+
+type:power
+code:DIVINATION_SPECIALIZATION
+name:Divination Specialization
+desc:You are particularly good at divination.
+
+type:power
+code:TELEPORTATION_SPECIALIZATION
+name:Teleportation Specialization
+desc:You are particularly good at teleportation magic.
+
+type:power
+code:NECROMANCY_SPECIALIZATION
+name:Necromancy Specialization
+desc:You are particularly good at necromancy.
+
+type:power
+code:HEALING_SPECIALIZATION
+name:Healing Specialization
+desc:You are particularly good at healing magic.
+
+type:power
+code:SWORD_SPECIALIZATION
+name:Swordmastery
+desc:You are particularly good with swords.
+
+type:power
+code:HAFTED_SPECIALIZATION
+name:Haftedmastery
+desc:You are particularly good with hafted weapons.
+
+type:power
+code:POLEARM_SPECIALIZATION
+name:Polearm-mastery
+desc:You are particularly good with polearms.
+
+type:power
+code:BOW_SPECIALIZATION
+name:Bowmastery
+desc:You are particularly good with bows.
+
+type:power
+code:UNARMED_STRIKE
+name:Unarmed Strike
+desc:Your body is a lethal weapon.
+
+type:power
+code:UNARMOURED_AGILITY
+name:Unarmoured Agility
+desc:You are very fast if you aren't weighed down.
+
+type:power
+code:BACKSTAB
+name:Backstabbing
+desc:You know where to hit where it hurts if your target is distracted.

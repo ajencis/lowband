@@ -996,11 +996,11 @@ static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 {
     int lev = s->powers[PP_UNARMOURED_AGILITY];
 
-    if (!lev) return 0;
+    if (lev <= 0) return 0;
 
 	if (wgt > 25) return 0;
 
-	int bonus = lev * 10 / 50;
+	int bonus = (lev * 10 + 25) / 50;
 
     s->speed += bonus;
 	return bonus;
@@ -1010,11 +1010,11 @@ static int unarmoured_ac_bonus(struct player_state *s, int wgt)
 {
     int lev = s->powers[PP_UNARMOURED_AGILITY];
 
-    if (!lev) return 0;
+    if (lev <= 0) return 0;
 
 	if (wgt > 25) return 0;
 
-    int bonus = lev * 50 / 50;
+    int bonus = (lev * 50 + 25) / 50;
 
     s->ac += bonus;
 	return bonus;
@@ -1656,7 +1656,7 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	levels = (p->lev - p->class->magic.spell_first) + 1;
 	if (levels > 0) {
 		msp = 3;
-		msp += adj_mag_mana(average_spell_stat(p, state)) * levels / 500;
+		msp += adj_mag_mana(average_spell_stat(p, state)) * levels / 100;
 	} else {
 		levels = 0;
 		msp = 0;
@@ -2112,7 +2112,17 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* L: get powers */
 	for (i = 0; i < PP_MAX; i++) {
-        state->powers[i] = p->class->c_powers[i] * MAX(p->lev, p->lev / 2 + 5) / 100;
+		int scale = p->class->c_powers[i] + p->race->r_powers[i];
+		int minlev = 25 - (scale + 5) / 3;
+		int efflev = minlev < 0 ? MAX((p->lev + 1) / 2 - minlev    , p->lev) :
+		                          MIN((p->lev + 1) * 2 - minlev * 2, p->lev);
+
+		if ((scale <= 0) || (efflev <= 0))
+			state->powers[i] = 0;
+
+		else
+    		state->powers[i] = efflev * scale / 100;
+        //state->powers[i] = p->class->c_powers[i] * MAX(p->lev, p->lev / 2 + 10) / 100;
 	}
 
 	/* Analyze equipment */

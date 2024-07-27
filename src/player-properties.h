@@ -24,7 +24,8 @@ enum {
     PLAYER_FLAG_NONE,
     PLAYER_FLAG_SPECIAL,
     PLAYER_FLAG_RACE,
-    PLAYER_FLAG_CLASS
+    PLAYER_FLAG_CLASS,
+    PLAYER_FLAG_POWER
 };
 
 bool class_has_ability(const struct player_class *class,

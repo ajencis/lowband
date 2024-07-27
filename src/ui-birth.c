@@ -57,13 +57,13 @@
 /**
  * List of { tval, name } pairs.
  */
-static const power_name pnames[] =
+/*static const power_name pnames[] =
 {
 	{ PP_NONE, "none" },
 	#define PP(a, b) { PP_##a, b },
 	#include "list-player-powers.h"
 	#undef PP
-};
+};*/
 
 /**
  * A local-to-this-file global to hold the most important bit of state
@@ -301,20 +301,17 @@ static void race_help(int i, void *db, const region *l)
 		} else if (streq(ability->type, "element") &&
 				   (r->el_info[ability->index].res_level != ability->value)) {
 			continue;
+		} else if (streq(ability->type, "power") &&
+		           (!r->r_powers[ability->index])) {
+            continue;
 		}
-		text_out_e("\n%s", ability->name);
+
+		if (streq(ability->type, "power"))
+		    text_out_e("\n%s [%i%%]", ability->name, r->r_powers[ability->index]);
+		else
+			text_out_e("\n%s", ability->name);
+
 		n_flags++;
-	}
-
-	/* L: show powers */
-	for (j = 0; j < PP_MAX; j++)
-	{
-		if (!r->r_powers[j]) continue;
-
-        const char *name = pnames[j].name;
-		int value = r->r_powers[j];
-
-		text_out_e("\n%s [%i%%]", name, value);
 	}
 
 	while (n_flags < flag_space) {
@@ -328,7 +325,6 @@ static void race_help(int i, void *db, const region *l)
 
 static void class_help(int i, void *db, const region *l)
 {
-	int j;
 	struct player_class *c = player_id2class(i);
 	const struct player_race *r = player->race;
 
@@ -402,21 +398,17 @@ static void class_help(int i, void *db, const region *l)
 			continue;
 		} else if (streq(ability->type, "element")) {
 			continue;
+		} else if (streq(ability->type, "power") &&
+		           !c->c_powers[ability->index]) {
+            continue;
 		}
 
-		text_out_e("\n%s", ability->name);
-		n_flags++;
-	}
+		if (streq(ability->type, "power"))
+		    text_out_e("\n%s [%i%%]", ability->name, c->c_powers[ability->index]);
+        else
+            text_out_e("\n%s", ability->name);
 
-	/* L: show powers */
-	for (j = 0; j < PP_MAX; j++)
-	{
-		if (!c->c_powers[j]) continue;
-
-        const char *name = pnames[j].name;
-		int value = c->c_powers[j];
-
-		text_out_e("\n%s [%i%%]", name, value);
+        n_flags++;
 	}
 
 	while (n_flags < flag_space) {

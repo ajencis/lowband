@@ -35,6 +35,7 @@ bool class_has_ability(const struct player_class *class,
 			   of_has(class->flags, ability->index)) {
 		return true;
 	}
+
 	return false;
 }
 
@@ -80,6 +81,14 @@ static void view_abilities(void)
 			memcpy(&ability_list[num_abilities], ability,
 				   sizeof(struct player_ability));
 			ability_list[num_abilities++].group = PLAYER_FLAG_RACE;
+		}
+	}
+
+	for (ability = player_abilities; ability; ability = ability->next) {
+		if (player->state.powers[ability->index] && streq(ability->type, "power")) {
+			memcpy(&ability_list[num_abilities], ability,
+				   sizeof(struct player_ability));
+			ability_list[num_abilities++].group = PLAYER_FLAG_POWER;
 		}
 	}
 

@@ -1228,6 +1228,8 @@ static enum parser_error parse_player_prop_code(struct parser *p) {
 		index = code_index_in_array(player_info_flags, code);
 	} else if (streq(embryo->ability.type, "object")) {
 		index = code_index_in_array(list_obj_flag_names, code);
+	} else if (streq(embryo->ability.type, "power")) {
+		index = code_index_in_array(list_player_powers_names, code);
 	}
 	if (index >= 0) {
 		embryo->ability.index = index;
@@ -3501,8 +3503,8 @@ static enum parser_error parse_class_power(struct parser *p) {
 	if (!c)
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	int i = 0;
+	char *s = string_make(parser_getsym(p, "name"));
 	int v = parser_getint(p, "value");
-	char *s = string_make(parser_getstr(p, "name"));
 
 	while (list_player_powers_names[i] && !streq(list_player_powers_names[i], s))
 	    i++;
@@ -4177,7 +4179,7 @@ static struct parser *init_parse_class(void) {
 	parser_reg(p, "skill-shoot int base int incr", parse_class_skill_shoot);
 	parser_reg(p, "skill-throw int base int incr", parse_class_skill_throw);
 	parser_reg(p, "skill-dig int base int incr", parse_class_skill_dig);
-	parser_reg(p, "power int value str name", parse_class_power);
+	parser_reg(p, "power sym name int value", parse_class_power);
 	parser_reg(p, "hitdie int mhp", parse_class_hitdie);
 	parser_reg(p, "exp int exp", parse_class_exp);
 	parser_reg(p, "max-attacks int max-attacks", parse_class_max_attacks);

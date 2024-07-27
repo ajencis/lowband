@@ -484,7 +484,9 @@ static bool store_get_check(const char *prompt)
  */
 static bool store_train(struct player *p)
 {
-	int cost = MAX(0, p->lev - 5) * p->lev * 100000 / (44 * 49);
+	int i; int cost = 10; int mult = p->lev % 10;
+    for (i = 0; i < p->lev / 10; i++) cost *= 10;
+	cost *= MAX(mult * 10, mult * 5 + 5);
 
 	if (!player_can_level_up(p)) {
         msg("You aren't ready to level up.");

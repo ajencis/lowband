@@ -714,9 +714,10 @@ static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
 {
 	if (obj) return;
 	int lev = player->state.powers[PP_UNARMED_STRIKE];
+	lev = lev * MIN(player->lev + 15, 40) / 40;
 	aroll->ddice = 1;
-    aroll->dsides = lev * 39 / 50 + 1;
-	aroll->to_hit = lev * 25 / 50;
+    aroll->dsides = (lev * 49 + 25) / 50 + 1;
+	aroll->to_hit = (lev * 25 + 25) / 50;
 	aroll->to_dam = 0;
 }
 
@@ -728,9 +729,19 @@ static void specialization_mod_attack(struct attack_roll *aroll, struct object *
 	if (obj->tval == TV_POLEARM) lev = player->state.powers[PP_POLEARM_SPECIALIZATION];
 	if (obj->tval == TV_SWORD) lev = player->state.powers[PP_SWORD_SPECIALIZATION];
 	
-	aroll->to_hit += lev * 10 / 50;
-	aroll->to_dam += lev * 5 / 50;
-	aroll->dsides += lev * 5 / 50;
+	aroll->to_hit += (lev * 10 + 25) / 50;
+	aroll->to_dam += (lev * 5 + 25) / 50;
+	aroll->dsides += (lev * 5 + 25) / 50;
+}
+
+static void backstab_mod_attack(struct attack_roll *aroll, struct object *obj)
+{
+	int lev = player->state.powers[PP_BACKSTAB];
+
+	aroll->dsides *= (lev + 25);
+	aroll->dsides /= 25;
+	aroll->to_hit += (lev * 10 + 25) / 50;
+	aroll->to_dam += (lev * 10 + 25) / 50;
 }
 
 
@@ -810,6 +821,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 	int splash = 0;
 	bool do_quake = false;
 	bool success = false;
+	int backstab = 0;
 
 	/* L: the attack itself */
 	struct attack_roll aroll = get_attack(p, obj);
@@ -840,6 +852,14 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 		return false;
 	}
 
+	/* L: is it a backstab? */
+	if (!p->state.powers[PP_BACKSTAB]) backstab = 0;
+    else if (mon->m_timed[MON_TMD_SLEEP] || mon->m_timed[MON_TMD_HOLD]) backstab = 2;
+	else if (mon->m_timed[MON_TMD_SLOW] || mon->m_timed[MON_TMD_FEAR] || mon->m_timed[MON_TMD_STUN]) backstab = 1;
+    
+
+    if (backstab) backstab_mod_attack(&aroll, obj);    
+
 	/* Disturb the monster */
 	monster_wake(mon, false, 100);
 	mon_clear_timed(mon, MON_TMD_HOLD, MON_TMD_FLG_NOTIFY);
@@ -863,9 +883,15 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 	if (obj) {
 		/* Handle normal weapon */
 		weight = object_weight_one(obj);
-		my_strcpy(verb, "hit", sizeof(verb));
 	} else {
 		weight = 0;
+	}
+
+    /* L: backstab uses different verbs */
+	if (backstab) {
+		my_strcpy(verb, "backstab", sizeof(verb));
+	} else if (obj) {
+		my_strcpy(verb, "hit", sizeof(verb));
 	}
 
 	/* Best attack from all slays or brands on all non-launcher equipment */
