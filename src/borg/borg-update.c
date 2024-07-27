@@ -2224,8 +2224,13 @@ void borg_update(void)
             if (r_ptr->level > borg.trait[BI_MAXDEPTH])
                 continue;
 
-            /* skip certain questor Monsters */
-            if (rf_has(r_ptr->flags, RF_QUESTOR))
+            /* skip certain questor or seasonal Monsters */
+            if (rf_has(r_ptr->flags, RF_QUESTOR)
+                || rf_has(r_ptr->flags, RF_SEASONAL))
+                continue;
+
+            /* skip things that are just a shape of a different entry */
+            if (!r_ptr->rarity)
                 continue;
 
             /* Define some numbers used by Prep code */
@@ -2278,11 +2283,6 @@ void borg_update(void)
             /* dont let it get to 0 or borg will recast the spell */
             if (borg.goal.recalling <= 0)
                 borg.goal.recalling = 1;
-        }
-
-        /* Lets make sure we did not miss read */
-        if (borg.goal.recalling && !player->word_recall) {
-            borg.goal.recalling = 0;
         }
 
         /* when we need to cast this spell again */
@@ -2408,8 +2408,8 @@ void borg_update(void)
     borg_update_map();
 
     /* Mark this grid as having been stepped on */
-    track_step.x[track_step.num] = player->grid.x;
-    track_step.y[track_step.num] = player->grid.y;
+    track_step.x[track_step.num] = borg.c.x;
+    track_step.y[track_step.num] = borg.c.y;
     track_step.num++;
 
     /* Hack - Clean the steps every so often */
