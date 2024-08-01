@@ -1728,7 +1728,7 @@ static bool monster_check_active(struct monster *mon)
 static void monster_reduce_sleep(struct monster *mon)
 {
 	int stealth = player->state.skills[SKILL_STEALTH];
-	uint32_t player_noise = ((uint32_t) 1) << (30 - stealth);
+	uint32_t player_noise = ((uint32_t) 1) << (10 - stealth);
 	uint32_t notice = (uint32_t) randint0(1024);
 	struct monster_lore *lore = get_lore(mon->race);
 
@@ -1748,10 +1748,11 @@ static void monster_reduce_sleep(struct monster *mon)
 			msg("%s wakes up.", m_name);
 			equip_learn_flag(player, OF_AGGRAVATE);
 		}
-	} else if ((notice * notice * notice) <= player_noise) {
+	} else if (notice <= player_noise) {
 		int sleep_reduction = 1;
 		int local_noise = cave->noise.grids[mon->grid.y][mon->grid.x];
 		bool woke_up = false;
+		int curr = mon->m_timed[MON_TMD_SLEEP];
 
 		/* Test - wake up faster in hearing distance of the player 
 		 * Note no dependence on stealth for now */
@@ -1760,8 +1761,16 @@ static void monster_reduce_sleep(struct monster *mon)
 		}
 
 		/* Note a complete wakeup */
-		if (mon->m_timed[MON_TMD_SLEEP] <= sleep_reduction) {
+		/* L: also note gettign close to wakeup */
+		if (curr <= sleep_reduction) {
 			woke_up = true;
+		} else if (((curr & 3) < sleep_reduction) &&
+		           (sleep_reduction >= (curr + 25)) &&
+				   monster_is_obvious(mon)) {
+			char m_name[80];
+			monster_desc(m_name, sizeof(m_name), mon,
+			    MDESC_CAPITAL | MDESC_IND_HID | MDESC_COMMA);
+			msg("%s stirs.", m_name);
 		}
 
 		/* Monster wakes up a bit */

@@ -85,7 +85,7 @@
 static int sqrt_size_percent(int depth)
 {
 	int i;
-	int target = 40 + depth * 60 / 100;
+	int target = 33 + depth * 67 / 100;
 	for (i = 33; i*i < target*100 && i < 100; i++) {};
 	return i;
 }

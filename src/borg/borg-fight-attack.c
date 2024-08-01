@@ -2291,7 +2291,7 @@ static int borg_attack_aux_object(void)
         div = ((item->weight > 10) ? item->weight : 10);
 
         /* Hack -- Distance -- Reward strength, penalize weight */
-        b_r = (adj_str_blow[borg.stat_ind[STAT_STR]] + 20) * mul / div;
+        b_r = (adj_str_blow(borg.stat_ind[STAT_STR]) + 20) * mul / div;
 
         /* Max distance of 10 */
         if (b_r > 10)
@@ -4077,14 +4077,14 @@ int borg_calculate_attack_effectiveness(int attack_type)
         return (borg_attack_aux_spell_bolt(
             RIVER_OF_LIGHTNING, rad, dam, BORG_ATTACK_PLASMA, 20, true));
 
-    /* spell -- Spear of Oromë */
+    /* spell -- Spear of Oromï¿½ */
     case BF_SPELL_SPEAR_OF_OROME:
         rad = 0;
         dam = ((borg.trait[BI_CLEVEL] / 2) + (8 + 1)) / 2;
         return (borg_attack_aux_spell_bolt(
             SPEAR_OF_OROME, rad, dam, BORG_ATTACK_HOLY_ORB, z_info->max_range, false));
 
-    /* spell -- Light of Manwë */
+    /* spell -- Light of Manwï¿½ */
     case BF_SPELL_LIGHT_OF_MANWE:
         rad = 0;
         dam = borg.trait[BI_CLEVEL] * 5 + 100;
@@ -4483,7 +4483,7 @@ int borg_calculate_attack_effectiveness(int attack_type)
         return (borg_attack_aux_activation(
             act_cold_ball50, rad, dam, BORG_ATTACK_COLD, true, -1));
 
-    /* Artifact -- Aranrúth- frost bolt 12d8*/
+    /* Artifact -- Aranrï¿½th- frost bolt 12d8*/
     case BF_ACT_COLD_BOLT2:
         rad = 0;
         dam = (12 * (8 + 1) / 2);
@@ -4565,7 +4565,7 @@ int borg_calculate_attack_effectiveness(int attack_type)
         return (borg_attack_aux_activation(
             act_dispel_evil, rad, dam, BORG_ATTACK_DISP_EVIL, true, -1));
 
-    /* Artifact -- Eöl -- Mana Bolt 12d8 */
+    /* Artifact -- Eï¿½l -- Mana Bolt 12d8 */
     case BF_ACT_MANA_BOLT:
         rad = 0;
         dam = (12 * (8 + 1)) / 2;

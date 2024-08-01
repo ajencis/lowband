@@ -193,6 +193,7 @@ struct chunk {
 
 	uint16_t feeling_squares; /* How many feeling squares the player has visited */
 	int *feat_count;
+	int squares_everseen; /* L: how many suares have been XP-checked */
 
 	struct square **squares;
 	struct heatmap noise;

@@ -1031,7 +1031,7 @@ int borg_calc_blows(borg_item *item)
     div = (weight < min_weight) ? min_weight : weight;
 
     /* Get the strength vs weight */
-    str_index = adj_str_blow[borg.stat_ind[STAT_STR]]
+    str_index = adj_str_blow(borg.stat_ind[STAT_STR])
                 * player->class->att_multiply / div;
 
     /* Maximal value */
@@ -1818,7 +1818,7 @@ static void borg_notice_equipment(void)
     borg.trait[BI_TOHIT] += borg_adj_str_th[borg.stat_ind[STAT_STR]];
 
     /* Obtain the "hold" value */
-    hold = adj_str_hold[borg.stat_ind[STAT_STR]];
+    hold = adj_str_hold(borg.stat_ind[STAT_STR]);
 
     /* digging */
     borg.trait[BI_DIG] += borg_adj_str_dig[borg.stat_ind[STAT_STR]];

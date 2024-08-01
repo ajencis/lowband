@@ -24,7 +24,7 @@
 #
 
 # Executable name and default target
-EXE = angband.exe
+EXE = lowband.exe
 all: ../$(EXE)
 
 # Include list of object files

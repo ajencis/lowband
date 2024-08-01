@@ -824,8 +824,20 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 		}
 	}
 
-	if (los(c, p->grid, loc(xc, yc)))
+	if (los(c, p->grid, loc(xc, yc))) {
+		const struct square *sqr = square(c, grid);
 		become_viewable(c, grid, p, close);
+		/* L: give exp for exploration */
+		if (!sqinfo_has(sqr->info, SQUARE_GAVE_EXP) && (c->depth > 0)) {
+			c->squares_everseen++;
+			sqinfo_on(sqr->info, SQUARE_GAVE_EXP);
+			int total = MAX(c->depth, 10) * c->depth; // will be divided by 1000 later
+			int freq = MAX(99 / total, 0) + 1;
+			int q = MAX(total * freq / 1000, 1);
+			if (c->squares_everseen > 100 && one_in_(freq)) player_exp_gain(p, q);
+		}
+		if (!sqinfo_has(sqr->info, SQUARE_VIEW)) msg("square does not have view");
+	}
 }
 
 /**

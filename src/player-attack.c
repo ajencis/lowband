@@ -689,8 +689,14 @@ static void blow_side_effects(struct player *p, struct monster *mon)
  * Apply blow after effects
  */
 static bool blow_after_effects(struct loc grid, int dmg, int splash,
-							   bool *fear, bool quake)
+							   bool *fear, bool quake, int stun)
 {
+    struct monster *mon = square_monster(cave, grid);
+
+    if (stun && mon) {
+		mon_inc_timed(mon, MON_TMD_STUN, stun, MON_TMD_FLG_NOTIFY);
+	}
+
 	/* Apply earthquake brand */
 	if (quake) {
 		effect_simple(EF_EARTHQUAKE, source_player(), "0", 0, 10, 0, 0, 0,
@@ -714,11 +720,12 @@ static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
 {
 	if (obj) return;
 	int lev = player->state.powers[PP_UNARMED_STRIKE];
-	lev = lev * MIN(player->lev + 15, 40) / 40;
+	lev = lev * MIN(player->lev + 10, 35) / 35;
 	aroll->ddice = 1;
     aroll->dsides = (lev * 49 + 25) / 50 + 1;
 	aroll->to_hit = (lev * 25 + 25) / 50;
 	aroll->to_dam = 0;
+	aroll->stun = (lev * 25 + 25) / 50;
 }
 
 static void specialization_mod_attack(struct attack_roll *aroll, struct object *obj)
@@ -738,7 +745,8 @@ static void backstab_mod_attack(struct attack_roll *aroll, struct object *obj)
 {
 	int lev = player->state.powers[PP_BACKSTAB];
 
-	aroll->dsides *= (lev + 25);
+	aroll->dsides *= (lev + 50);
+	aroll->dsides += 12;
 	aroll->dsides /= 25;
 	aroll->to_hit += (lev * 10 + 25) / 50;
 	aroll->to_dam += (lev * 10 + 25) / 50;
@@ -752,10 +760,12 @@ struct attack_roll get_attack(struct player *p, struct object *obj)
 {
 	struct attack_roll aroll = {0};
 	if (obj) {
+		int td = object_to_dam(obj);
 		aroll.ddice = obj->dd;
-		aroll.dsides = obj->ds + object_to_dam(obj);
-		aroll.to_dam = 0;
+		aroll.dsides = obj->ds + td / 2;
+		aroll.to_dam = (td + 1) / 2;
 		aroll.to_hit = object_to_hit(obj);
+		aroll.stun = 0;
 	}
 	else {
         unarmed_get_attack(&aroll, obj);
@@ -821,6 +831,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 	int splash = 0;
 	bool do_quake = false;
 	bool success = false;
+	int stun = 0;
 	int backstab = 0;
 
 	/* L: the attack itself */
@@ -929,6 +940,8 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 		equip_learn_flag(p, OF_IMPACT);
 	}
 
+	if (aroll.stun && one_in_(5)) stun = randint1(aroll.stun) + randint1(aroll.stun); 
+
 	/* Learn by use */
 	equip_learn_on_melee_attack(p);
 	learn_brand_slay_from_melee(p, obj, mon);
@@ -996,7 +1009,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 		(*fear) = false;
 
 	/* Post-damage effects */
-	if (blow_after_effects(grid, dmg, splash, fear, do_quake))
+	if (blow_after_effects(grid, dmg, splash, fear, do_quake, stun))
 		stop = true;
 
 	return stop;

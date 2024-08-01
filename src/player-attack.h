@@ -29,6 +29,7 @@ struct attack_roll {
 	int dsides;
 	int to_hit;
 	int to_dam;
+	int stun;
 };
 
 struct attack_result {

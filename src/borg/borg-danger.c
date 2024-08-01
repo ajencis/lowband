@@ -162,7 +162,7 @@ static int borg_danger_physical(int i, bool full_damage)
             if (borg.trait[BI_CLEVEL] < 5)
                 z += 50;
             power = 5;
-            if (100 <= adj_dex_safe[borg.stat_ind[STAT_DEX]]
+            if (100 <= adj_dex_safe(borg.stat_ind[STAT_DEX])
                            + borg.trait[BI_CLEVEL])
                 break;
             if (borg.trait[BI_GOLD] < 100)
@@ -178,7 +178,7 @@ static int borg_danger_physical(int i, bool full_damage)
         case MONBLOW_EAT_ITEM:
             z     = (d_dice * d_side);
             power = 5;
-            if (100 <= adj_dex_safe[borg.stat_ind[STAT_DEX]]
+            if (100 <= adj_dex_safe(borg.stat_ind[STAT_DEX])
                            + borg.trait[BI_CLEVEL])
                 break;
             /* Add fear for the effect */

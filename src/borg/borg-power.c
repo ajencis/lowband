@@ -55,7 +55,7 @@ static int32_t borg_power_equipment(void)
     borg_item *item;
 
     /* Obtain the "hold" value (weight limit for weapons) */
-    hold = adj_str_hold[borg.stat_ind[STAT_STR]];
+    hold = adj_str_hold(borg.stat_ind[STAT_STR]);
 
     /*** Analyze weapon ***/
 

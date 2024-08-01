@@ -892,23 +892,23 @@ static int stat_scale(int index, int scaleto, bool minzero) {
 }
 
 
-int adj_int_dev(int index) {
+static int adj_int_dev(int index) {
 	return stat_scale(index, 15, false);
 }
 
-int adj_wis_sav(int index) {
+static int adj_wis_sav(int index) {
 	return stat_scale(index, 50, false);
 }
 
-int adj_dex_dis(int index) {
+static int adj_dex_dis(int index) {
 	return stat_scale(index, 20, false);
 }
 
-int adj_int_dis(int index) {
+static int adj_int_dis(int index) {
 	return stat_scale(index, 20, false);
 }
 
-int adj_dex_ta(int index) {
+static int adj_dex_ta(int index) {
 	return stat_scale(index, 50, false);
 }
 
@@ -920,11 +920,11 @@ int adj_dex_th(int index) {
 	return stat_scale(index, 35, false);
 }
 
-int adj_str_th(int index) {
+static int adj_str_th(int index) {
 	return stat_scale(index, 15, false);
 }
 
-int adj_str_wgt(int index) {
+static int adj_str_wgt(int index) {
 	int ret = stat_scale(index, 250, false) + 100;
 	return MAX(ret, 25);
 }
@@ -933,7 +933,7 @@ int adj_str_hold(int index) {
 	return stat_scale(index, 200, true);
 }
 
-int adj_str_dig(int index) {
+static int adj_str_dig(int index) {
 	return stat_scale(index, 100, false);
 }
 
@@ -941,11 +941,11 @@ int adj_str_blow(int index) {
 	return stat_scale(index, 240, true);
 }
 
-int adj_dex_blow(int index) {
+static int adj_dex_blow(int index) {
 	return stat_scale(index, 10, true);
 }
 
-int adj_stat_blow(int index) {
+static int adj_stat_blow(int index) {
 	return stat_scale(index, 400, true);
 }
 
@@ -957,15 +957,15 @@ int adj_con_fix(int index) {
 	return stat_scale(index, 10, true);
 }
 
-int adj_con_mhp(int index) {
+static int adj_con_mhp(int index) {
 	return stat_scale(index, 1000, false);
 }
 
-int adj_mag_study(int index) {
+static int adj_mag_study(int index) {
 	return index * 250 / 15;
 }
 
-int adj_mag_mana(int index) {
+static int adj_mag_mana(int index) {
 	return index * 500 / 15;
 }
 
@@ -2114,7 +2114,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	for (i = 0; i < PP_MAX; i++) {
 		int scale = p->class->c_powers[i] + p->race->r_powers[i];
 		int minlev = 25 - (scale + 5) / 3;
-		int efflev = minlev < 0 ? MAX((p->lev + 1) / 2 - minlev    , p->lev) :
+		int efflev = minlev < 0 ? MAX( p->lev      / 2 - minlev    , p->lev) :
 		                          MIN((p->lev + 1) * 2 - minlev * 2, p->lev);
 
 		if ((scale <= 0) || (efflev <= 0))

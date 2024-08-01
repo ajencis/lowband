@@ -1142,7 +1142,8 @@ static bool place_new_monster_one(struct chunk *c, struct loc grid,
 	/* Enforce sleeping if needed */
 	if (sleep && race->sleep) {
 		int val = race->sleep;
-		mon->m_timed[MON_TMD_SLEEP] = ((val * 2) + randint1(val * 10));
+		int q = randint1(6);
+		mon->m_timed[MON_TMD_SLEEP] = q * q * val;
 	}
 
 	/* Uniques get a fixed amount of HP */

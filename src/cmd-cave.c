@@ -53,7 +53,6 @@
 
 static bool check_can_take_stairs(struct player *p, int time)
 {
-	return true;
     if (p->timed[TMD_CUT])
 	{
 		msg("You would bleed out on the stairs.");
@@ -98,7 +97,7 @@ void do_cmd_go_up(struct command *cmd)
 		return;
 	}
 	
-	ascend_to = dungeon_get_next_level(player, player->depth, -randint1(player->depth / 5 + 1));
+	ascend_to = dungeon_get_next_level(player, player->depth, -randint1(player->depth / 10 + 2));
 	
 	if (ascend_to >= player->depth) {
 		msg("You can't go up from here!");
@@ -133,8 +132,8 @@ void do_cmd_go_up(struct command *cmd)
  */
 void do_cmd_go_down(struct command *cmd)
 {
-	int descend_to = dungeon_get_next_level(player, player->depth, randint1(player->depth / 5 + 1));
-	int time;
+	int descend_to = dungeon_get_next_level(player, player->depth, randint1(player->depth / 10 + 2));
+	int time; int posstime;
 
 	/* Verify stairs */
 	if (!square_isdownstairs(cave, player->grid)) {
@@ -149,8 +148,9 @@ void do_cmd_go_down(struct command *cmd)
 	}
 
 	time = descend_to * (descend_to - player->depth) * 100 + 5000;
+	posstime = descend_to * (player->depth / 10 + 2) * 100 + 5000;
 
-	if (!check_can_take_stairs(player, time)) return;
+	if (!check_can_take_stairs(player, posstime)) return;
 
 	/* Warn a force_descend player if they're going to a quest level */
 	if (OPT(player, birth_force_descend)) {

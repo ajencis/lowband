@@ -384,8 +384,8 @@ static size_t obj_desc_combat(const struct object *obj, char *buf, size_t max,
 	/* Display damage dice if they are known */
 	if (kf_has(obj->kind->kind_flags, KF_SHOW_DICE) &&
 		(!p || (p->obj_k->dd && p->obj_k->ds))) {
-		if (to_d != 0 && (!p || p->obj_k->to_d))
-    		strnfcat(buf, max, &end, " (%dd(%d+%d))", obj->dd, obj->ds, to_d);
+		if (to_d > 1 && (!p || p->obj_k->to_d))
+    		strnfcat(buf, max, &end, " (%dd(%d+%d))", obj->dd, obj->ds, to_d / 2);
 		else
 		    strnfcat(buf, max, &end, " (%dd%d)", obj->dd, obj->ds);
 	}
@@ -407,13 +407,13 @@ static size_t obj_desc_combat(const struct object *obj, char *buf, size_t max,
 			|| obj->to_h != to_h)
 			&& !obj->artifact && !obj->ego))) {
 		/* In general show full combat bonuses */
-		strnfcat(buf, max, &end, " (%+d)", to_h);
+		strnfcat(buf, max, &end, " (%+d, %+d)", to_h, (to_d + 1) / 2);
 	} else if (obj->to_h < 0 && object_has_standard_to_h(obj)) {
 		/* Special treatment for body armor with only a to-hit penalty */
 		strnfcat(buf, max, &end, " (%+d)", obj->to_h);
-	/*} else if (to_d != 0 && (!p || p->obj_k->to_d)) {
+	} else if (to_d != 0 && (!p || p->obj_k->to_d)) {
 		// To-dam rune known only
-		strnfcat(buf, max, &end, " (%+d)", to_d);*/
+		strnfcat(buf, max, &end, " (%+d)", to_d);
 	} else if (to_h != 0 && (!p || p->obj_k->to_h)) {
 		/* To-hit rune known only */
 		strnfcat(buf, max, &end, " (%+d)", to_h);
