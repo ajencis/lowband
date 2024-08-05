@@ -885,6 +885,23 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 		}
 	}
 
+	if (!done && rf_has(mon->race->flags, RF_TAKE_ITEM) && !los(cave, mon->grid, player->grid)) {
+		int i; int dist = 100;
+		for (i = 0; i < cave->obj_max; i++) {
+            if (!cave->objects[i]) continue;
+			if (tval_is_money(cave->objects[i])) continue;
+			if (cave->objects[i]->mimicking_m_idx) continue;
+			if (react_to_slay(cave->objects[i], mon)) continue;
+            if (los(cave, mon->grid, cave->objects[i]->grid) && 
+			        distance(mon->grid, cave->objects[i]->grid) < dist) {
+				mon->target.grid = cave->objects[i]->grid;
+				grid = loc_diff(mon->target.grid, mon->grid);
+				dist = distance(mon->grid, cave->objects[i]->grid);
+				done = true;
+			}
+		}
+	}
+
 	/* Normal animal packs try to get the player out of corridors. */
 	if (!done && group_ai && !monster_passes_walls(mon)) {
 		int i, open = 0;
@@ -1724,12 +1741,13 @@ static bool monster_check_active(struct monster *mon)
  * amount of sleep reduction takes into account the monster's distance from
  * the player.  Currently straight line distance is used; possibly this
  * should take into account dungeon structure.
+ * 
+ * L: rewritten; there is a minimum distance for each monster for it to
+ * decrease sleep now
  */
 static void monster_reduce_sleep(struct monster *mon)
 {
 	int stealth = player->state.skills[SKILL_STEALTH];
-	uint32_t player_noise = ((uint32_t) 1) << (10 - stealth);
-	uint32_t notice = (uint32_t) randint0(1024);
 	struct monster_lore *lore = get_lore(mon->race);
 
 	/* Aggravation */
@@ -1748,24 +1766,21 @@ static void monster_reduce_sleep(struct monster *mon)
 			msg("%s wakes up.", m_name);
 			equip_learn_flag(player, OF_AGGRAVATE);
 		}
-	} else if (notice <= player_noise) {
+	} else {
 		int sleep_reduction = 1;
 		int local_noise = cave->noise.grids[mon->grid.y][mon->grid.x];
 		bool woke_up = false;
 		int curr = mon->m_timed[MON_TMD_SLEEP];
+		int dist_val = local_noise + stealth;
 
-		/* Test - wake up faster in hearing distance of the player 
-		 * Note no dependence on stealth for now */
-		if ((local_noise > 0) && (local_noise < 50)) {
-			sleep_reduction = (100 / local_noise);
-		}
+		sleep_reduction = MAX(0, 11 - dist_val) * 3;
 
 		/* Note a complete wakeup */
-		/* L: also note gettign close to wakeup */
+		/* L: also note getting close to wakeup */
 		if (curr <= sleep_reduction) {
 			woke_up = true;
 		} else if (((curr & 3) < sleep_reduction) &&
-		           (sleep_reduction >= (curr + 25)) &&
+		           (curr - sleep_reduction <= 25) &&
 				   monster_is_obvious(mon)) {
 			char m_name[80];
 			monster_desc(m_name, sizeof(m_name), mon,
@@ -1774,7 +1789,9 @@ static void monster_reduce_sleep(struct monster *mon)
 		}
 
 		/* Monster wakes up a bit */
-		mon_dec_timed(mon, MON_TMD_SLEEP, sleep_reduction, MON_TMD_FLG_NOTIFY);
+		if (sleep_reduction) {
+			mon_dec_timed(mon, MON_TMD_SLEEP, sleep_reduction, MON_TMD_FLG_NOTIFY);
+		}
 
 		/* Update knowledge */
 		if (monster_is_obvious(mon)) {

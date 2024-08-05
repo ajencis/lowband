@@ -866,6 +866,9 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 
 	/* Make some objects */
 	for (j = 0; j < number; j++) {
+		struct loc droploc;
+		bool dummy = true;
+
 		if (gold_ok && (!item_ok || (randint0(100) < 50))) {
 			obj = make_gold(level, "any");
 		} else {
@@ -879,8 +882,14 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 		obj->origin_depth = convert_depth_to_origin(c->depth);
 		obj->origin_race = effective_race;
 
+		droploc = mon->grid;
+
+		drop_find_grid(player, c, obj, false, &droploc);
+
 		/* Try to carry */
-		if (monster_carry(c, mon, obj)) {
+		if (floor_carry(cave, droploc, obj, &dummy)) {
+            any = true;
+		} if (monster_carry(c, mon, obj)) {
 			any = true;
 		} else {
 			if (obj->artifact) {

@@ -78,6 +78,8 @@ struct object *floor_object_for_use(struct player *p, struct object *obj,
 	int num, bool message, bool *none_left);
 bool floor_carry(struct chunk *c, struct loc grid, struct object *drop,
 				 bool *note);
+void drop_find_grid(const struct player *p, struct chunk *c,
+	            	struct object *drop, bool prefer_pile, struct loc *grid);
 void drop_near(struct chunk *c, struct object **dropped, int chance,
 			   struct loc grid, bool verbose, bool prefer_pile);
 void push_object(struct loc grid);

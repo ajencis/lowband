@@ -836,7 +836,6 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 			int q = MAX(total * freq / 1000, 1);
 			if (c->squares_everseen > 100 && one_in_(freq)) player_exp_gain(p, q);
 		}
-		if (!sqinfo_has(sqr->info, SQUARE_VIEW)) msg("square does not have view");
 	}
 }
 

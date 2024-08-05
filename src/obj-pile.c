@@ -1015,7 +1015,7 @@ static void floor_carry_fail(struct chunk *c, struct object *drop, bool broke)
  *
  * If no appropriate grid is found, the given grid is unchanged
  */
-static void drop_find_grid(const struct player *p, struct chunk *c,
+void drop_find_grid(const struct player *p, struct chunk *c,
 		struct object *drop, bool prefer_pile, struct loc *grid)
 {
 	int best_score = -1;

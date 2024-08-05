@@ -741,15 +741,20 @@ static void specialization_mod_attack(struct attack_roll *aroll, struct object *
 	aroll->dsides += (lev * 5 + 25) / 50;
 }
 
-static void backstab_mod_attack(struct attack_roll *aroll, struct object *obj)
+static bool backstab_mod_attack(struct attack_roll *aroll, struct object *obj, int power)
 {
+	if (!power) return false;
 	int lev = player->state.powers[PP_BACKSTAB];
 
-	aroll->dsides *= (lev + 50);
+	int dsm = lev + 25 * power;
+	if (dsm <= 25) return false;
+
+	aroll->dsides *= dsm;
 	aroll->dsides += 12;
 	aroll->dsides /= 25;
 	aroll->to_hit += (lev * 10 + 25) / 50;
 	aroll->to_dam += (lev * 10 + 25) / 50;
+	return true;
 }
 
 
@@ -833,6 +838,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 	bool success = false;
 	int stun = 0;
 	int backstab = 0;
+	bool did_backstab = false;
 
 	/* L: the attack itself */
 	struct attack_roll aroll = get_attack(p, obj);
@@ -864,12 +870,10 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 	}
 
 	/* L: is it a backstab? */
-	if (!p->state.powers[PP_BACKSTAB]) backstab = 0;
-    else if (mon->m_timed[MON_TMD_SLEEP] || mon->m_timed[MON_TMD_HOLD]) backstab = 2;
+	if (mon->m_timed[MON_TMD_SLEEP] || mon->m_timed[MON_TMD_HOLD]) backstab = 2;
 	else if (mon->m_timed[MON_TMD_SLOW] || mon->m_timed[MON_TMD_FEAR] || mon->m_timed[MON_TMD_STUN]) backstab = 1;
-    
 
-    if (backstab) backstab_mod_attack(&aroll, obj);    
+	if (backstab) did_backstab = backstab_mod_attack(&aroll, obj, backstab);
 
 	/* Disturb the monster */
 	monster_wake(mon, false, 100);
@@ -899,7 +903,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 	}
 
     /* L: backstab uses different verbs */
-	if (backstab) {
+	if (did_backstab) {
 		my_strcpy(verb, "backstab", sizeof(verb));
 	} else if (obj) {
 		my_strcpy(verb, "hit", sizeof(verb));
@@ -940,7 +944,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear)
 		equip_learn_flag(p, OF_IMPACT);
 	}
 
-	if (aroll.stun && one_in_(5)) stun = randint1(aroll.stun) + randint1(aroll.stun); 
+	if (aroll.stun && one_in_(5)) stun = randint0(aroll.stun) + randint0(aroll.stun) + 1;
 
 	/* Learn by use */
 	equip_learn_on_melee_attack(p);
