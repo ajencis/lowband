@@ -28,6 +28,7 @@
 #include "mon-blows.h"
 #include "mon-desc.h"
 #include "mon-lore.h"
+#include "mon-move.h"
 #include "mon-predicate.h"
 #include "mon-spell.h"
 #include "mon-timed.h"
@@ -91,8 +92,14 @@ static bool monster_can_cast(struct monster *mon, bool innate)
 	int chance = innate ? mon->race->freq_innate : mon->race->freq_spell;
 	int tdist;
 	struct loc tgrid;
+	bool target_is_player;
 
 	monster_get_target_dist_grid(mon, &tdist, &tgrid);
+
+	target_is_player = tgrid.x == player->grid.x && tgrid.y == player->grid.y;
+
+	/* L: friendly monsters won't cast spells at the player */
+	if (!mon_will_attack_player(mon, player) && target_is_player) return false;
 
 	/* Cannot cast spells when nice */
 	if (mflag_has(mon->mflag, MFLAG_NICE)) return false;
@@ -121,7 +128,7 @@ static bool monster_can_cast(struct monster *mon, bool innate)
 		return false;
 
 	/* If the target isn't the player, only cast if the player can witness */
-	if ((tgrid.x != player->grid.x || tgrid.y != player->grid.y) &&
+	if ((target_is_player) &&
 		!square_isview(cave, mon->grid) &&
 		!square_isview(cave, tgrid)) {
 		struct loc *path = mem_alloc(z_info->max_range * sizeof(*path));
@@ -770,6 +777,8 @@ bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 	char m_name[80];
 	char t_name[80];
 	bool blinked = false;
+	struct loc grid = t_mon->grid;
+	struct loc mgrid = mon->grid;
 
 	/* Not allowed to attack */
 	if (rf_has(mon->race->flags, RF_NEVER_BLOW)) return (false);
@@ -780,7 +789,6 @@ bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 
 	/* Scan through all blows */
 	for (ap_cnt = 0; ap_cnt < z_info->mon_blows_max; ap_cnt++) {
-		struct loc grid = t_mon->grid;
 		bool visible = monster_is_visible(mon) || (mon->race->light > 0);
 		bool obvious = false;
 
@@ -881,6 +889,10 @@ bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 
 		/* Skip the other blows if the target has moved or died */
 		if (!square_monster(cave, grid)) break;
+	}
+
+	if (square_monster(cave, grid) && square_monster(cave, mgrid)) {
+		t_mon->target.midx = mon->midx;
 	}
 
 	/* Blink away */

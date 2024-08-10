@@ -22,6 +22,7 @@
 #include "game-input.h"
 #include "init.h"
 #include "mon-desc.h"
+#include "mon-move.h"
 #include "mon-util.h"
 #include "monster.h"
 #include "obj-ignore.h"
@@ -92,6 +93,10 @@ void look_mon_desc(char *buf, size_t max, int m_idx)
 	if (mon->m_timed[MON_TMD_STUN]) my_strcat(buf, ", stunned", max);
 	if (mon->m_timed[MON_TMD_SLOW]) my_strcat(buf, ", slowed", max);
 	if (mon->m_timed[MON_TMD_FAST]) my_strcat(buf, ", hasted", max);
+
+	/* L: friendliness */
+	if (mon->faction == '@') my_strcat(buf, ", allied", max);
+	else if (!mon_will_attack_player(mon, player)) my_strcat(buf, ", friendly", max);
 }
 
 

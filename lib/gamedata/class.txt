@@ -1030,7 +1030,7 @@ desc:Detects all monsters which have a spirit in the immediate area,
 desc: and then maps in a region around them, increasing in size with
 desc: character level.
 
-book:shadow book:town:[Dark Rituals]:5:shadow
+book:shadow book:town:[Dark Rituals]:6:shadow
 book-graphics:?:P
 book-properties:400:40:10 to 100
 
@@ -1073,6 +1073,11 @@ dice:2d$S
 expr:S:PLAYER_LEVEL:* 2 + 10
 desc:Casts a bolt which wounds, and makes spellcasting monsters less successful
 desc: in casting spells.
+
+spell:Summon Undead:20:15:50:15
+effect:SUMMON:UNDEAD
+dice:1d5
+desc:Summons foul necromantic minions.
 
 book:shadow book:town:[Fear and Torment]:5:shadow
 book-graphics:?:P

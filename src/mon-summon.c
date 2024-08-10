@@ -399,7 +399,7 @@ static int call_monster(struct loc grid)
  *
  * Note that this function may not succeed, though this is very rare.
  */
-int summon_specific(struct loc grid, int lev, int type, bool delay, bool call)
+int summon_specific(struct loc grid, int lev, int type, bool delay, bool call, wchar_t faction)
 {
 	int d;
 	struct loc near = grid;
@@ -453,6 +453,9 @@ int summon_specific(struct loc grid, int lev, int type, bool delay, bool call)
 
 	/* Success, return the level of the monster */
 	mon = square_monster(cave, near);
+
+	if (faction)
+	    mon->faction = faction;
 
 	/* If delay, try to let the player act before the summoned monsters,
 	 * including holding faster monsters for the required number of turns */

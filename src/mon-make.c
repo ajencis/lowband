@@ -23,6 +23,7 @@
 #include "mon-group.h"
 #include "mon-lore.h"
 #include "mon-make.h"
+#include "mon-move.h"
 #include "mon-predicate.h"
 #include "mon-timed.h"
 #include "mon-util.h"
@@ -34,6 +35,13 @@
 #include "player-calcs.h"
 #include "player-timed.h"
 #include "target.h"
+
+/**
+ * L: faction creation
+ */
+static void mon_give_faction(struct monster *mon) {
+	mon->faction = mon->race->d_char;
+}
 
 /**
  * ------------------------------------------------------------------------
@@ -887,9 +895,9 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 		drop_find_grid(player, c, obj, false, &droploc);
 
 		/* Try to carry */
-		if (floor_carry(cave, droploc, obj, &dummy)) {
+		if (floor_carry(c, droploc, obj, &dummy)) {
             any = true;
-		} if (monster_carry(c, mon, obj)) {
+		} else if (monster_carry(c, mon, obj)) {
 			any = true;
 		} else {
 			if (obj->artifact) {
@@ -1178,6 +1186,12 @@ static bool place_new_monster_one(struct chunk *c, struct loc grid,
 
 	/* Give a random starting energy */
 	mon->energy = (uint8_t)randint0(50);
+
+	/* L: set target to player */
+	mon->target.midx = MON_TARGET_PLAYER;
+
+	/* L: give it a faction */
+	mon_give_faction(mon);
 
 	/* Force monster to wait for player */
 	if (rf_has(race->flags, RF_FORCE_SLEEP))

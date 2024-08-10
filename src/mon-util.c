@@ -1348,6 +1348,28 @@ bool monster_taking_terrain_damage(struct chunk *c, struct monster *mon)
 }
 
 
+struct object *monster_nearest_takeable_item(struct chunk *c, struct monster *mon) {
+    if (!rf_has(mon->race->flags, RF_TAKE_ITEM)) return NULL;
+	int i; int dist = 100;
+	struct object *obj;
+	struct object *best = NULL;
+
+	for (i = 0; i < c->obj_max; i++) {
+		obj = c->objects[i];
+        if (!obj) continue;
+		if (tval_is_money(obj)) continue;
+		if (obj->mimicking_m_idx) continue;
+		if (react_to_slay(obj, mon)) continue;
+        if (los(cave, mon->grid, obj->grid) && 
+		        distance(mon->grid, obj->grid) < dist) {
+			best = obj;
+		}
+	}
+	return best;
+}
+
+
+
 /**
  * ------------------------------------------------------------------------
  * Monster inventory utilities

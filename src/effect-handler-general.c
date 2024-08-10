@@ -2262,25 +2262,39 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 	if (player->upkeep->arena_level) return true;
 
 	/* Monster summon */
-	if (context->origin.what == SRC_MONSTER) {
+	if (context->origin.what == SRC_MONSTER || context->origin.what == SRC_PLAYER) {
 		struct monster *mon = cave_monster(cave, context->origin.which.monster);
 		int rlev;
+        bool isplayer = context->origin.what == SRC_PLAYER;
+		struct loc srcgrid = isplayer ? player->grid : mon->grid;
+		wchar_t faction;
+        
+		if (!isplayer)
+			assert(mon);
 
-		assert(mon);
+		if (isplayer)
+			faction = '@';
+		else
+			faction = mon->faction;
 
 		/* Set the kin_base if necessary */
 		if (summon_type == summon_name_to_idx("KIN")) {
+			assert(!isplayer);
 			kin_base = mon->race->base;
 		}
 
 		/* Continue summoning until we reach the current dungeon level */
-		rlev = mon->race->level;
+		if (isplayer)
+			rlev = player->lev;
+		else
+			rlev = mon->race->level;
+
 		while ((val < player->depth * rlev) && (attempts < summon_max)) {
 			int temp;
 
 			/* Get a monster */
-			temp = summon_specific(mon->grid, rlev + level_boost, summon_type,
-								   false, false);
+			temp = summon_specific(srcgrid, rlev + level_boost, summon_type,
+								   false, false, faction);
 
 			val += temp * temp;
 
@@ -2299,8 +2313,8 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 				int temp;
 
 				/* Get a monster */
-				temp = summon_specific(mon->grid, rlev + level_boost,
-									   fallback_type, false, false);
+				temp = summon_specific(srcgrid, rlev + level_boost,
+									   fallback_type, false, false, faction);
 
 				val += temp * temp;
 
@@ -2320,7 +2334,7 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 		/* If not a monster summon, it's simple */
 		while (summon_max) {
 			count += summon_specific(player->grid, player->depth + level_boost,
-									 summon_type, true, one_in_(4));
+									 summon_type, true, one_in_(4), 0);
 			summon_max--;
 		}
 	}
@@ -3646,4 +3660,10 @@ bool effect_handler_UNSCRAMBLE_STATS(effect_handler_context_t *context)
 {
 	player_fix_scramble(player);
 	return true;
+}
+
+bool effect_handler_SUMMON_UNDEAD(effect_handler_context_t *context)
+{
+    context->subtype == summon_name_to_idx("UNDEAD");
+	return effect_handler_SUMMON(context);
 }

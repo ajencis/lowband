@@ -28,6 +28,7 @@
 #include "mon-attack.h"
 #include "mon-desc.h"
 #include "mon-lore.h"
+#include "mon-move.h"
 #include "mon-predicate.h"
 #include "mon-spell.h"
 #include "mon-timed.h"
@@ -1096,11 +1097,14 @@ void move_player(int dir, bool disarm)
 	bool trapsafe = player_is_trapsafe(player);
 	bool trap = square_isdisarmabletrap(cave, grid);
 	bool door = square_iscloseddoor(cave, grid);
+	bool step = false;
 
 	/* Many things can happen on movement */
 	if (m_idx > 0) {
+		if (!mon_will_attack_player(mon, player)) {
+			step = true;
 		/* Attack monsters */
-		if (monster_is_camouflaged(mon)) {
+		} else if (monster_is_camouflaged(mon)) {
 			become_aware(cave, mon);
 
 			/* Camouflaged monster wakes up and becomes aware */
@@ -1169,7 +1173,7 @@ void move_player(int dir, bool disarm)
 		/* See if trap detection status will change */
 		bool old_dtrap = square_isdtrap(cave, player->grid);
 		bool new_dtrap = square_isdtrap(cave, grid);
-		bool step = true;
+		step = true;
 
 		/* Note the change in the detect status */
 		if (old_dtrap != new_dtrap)
@@ -1211,23 +1215,22 @@ void move_player(int dir, bool disarm)
 			}
 		}
 
-		if (step) {
-			/* Move player */
-			monster_swap(player->grid, grid);
-			player_handle_post_move(player, true, false);
-			cmdq_push(CMD_AUTOPICKUP);
-			/*
-			 * The autopickup is a side effect of the move:
-			 * whatever command triggered the move will be the
-			 * target for CMD_REPEAT rather than repeating the
-			 * autopickup, and the autopickup won't trigger
-			 * bloodlust.
-			 */
-			cmdq_peek()->background_command = 2;
-		} else {
-			/* No move made so no energy spent. */
-			player->upkeep->energy_use = 0;
-		}
+		if (!step) player->upkeep->energy_use = 0;
+	}
+
+	if (step) {
+		/* Move player */
+		monster_swap(player->grid, grid);
+		player_handle_post_move(player, true, false);
+		cmdq_push(CMD_AUTOPICKUP);
+		/*
+		 * The autopickup is a side effect of the move:
+		 * whatever command triggered the move will be the
+		 * target for CMD_REPEAT rather than repeating the
+		 * autopickup, and the autopickup won't trigger
+		 * bloodlust.
+		 */
+		cmdq_peek()->background_command = 2;
 	}
 
 	player->upkeep->running_firststep = false;

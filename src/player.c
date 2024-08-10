@@ -225,7 +225,7 @@ bool player_at_max_level(struct player *p)
 	
     if (p->lev >= (50 + adj_int_lev(p->state.stat_ind[STAT_INT]))) return true;
 
-	if (player_exp[p->lev-1] / 100L * p->state.expfact > PY_MAX_EXP) return true;
+	if (player_exp[p->lev-1] / 100L * p->state.expfact >= PY_MAX_EXP) return true;
 
 	return false;
 }
@@ -261,7 +261,7 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 
 	p->upkeep->redraw |= PR_EXP;
 
-	handle_stuff(p);
+	//handle_stuff(p);
 
 	while ((p->lev > 1) &&
 	       (p->exp < (player_exp[p->lev-2] * p->state.expfact / 100L)))
@@ -310,16 +310,23 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 
 	p->upkeep->update |= (PU_BONUS | PU_HP | PU_SPELLS);
 	p->upkeep->redraw |= (PR_LEV | PR_TITLE | PR_EXP | PR_STATS);
-	handle_stuff(p);
+	//handle_stuff(p);
 }
 
 void player_exp_gain(struct player *p, int32_t amount)
 {
-	int tolev = player_exp[p->max_lev-1] * p->state.expfact / 100L;
-	p->exp += amount;
-	p->exp = MIN(tolev, p->exp);
+	int32_t tolev;
+
+	if (p->max_lev == PY_MAX_LEVEL) tolev = PY_MAX_EXP;
+	else if (p->max_lev > 25) tolev = player_exp[p->max_lev-1] / 100L * p->state.expfact;
+	else tolev = player_exp[p->max_lev-1] * p->state.expfact / 100L;
+
+	if (amount > tolev - p->exp) p->exp = tolev;
+	else p->exp += amount;
+	
 	if (p->exp < p->max_exp)
 		p->max_exp = MIN(amount / 10 + p->max_exp, tolev);
+
 	adjust_level(p, true, false);
 }
 
@@ -340,7 +347,6 @@ void player_level_up_one(struct player *p, bool verbose)
 
 void check_level(struct player *p)
 {
-	msg("test5");
 	adjust_level(p, false, false);
 }
 

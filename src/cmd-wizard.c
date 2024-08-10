@@ -418,14 +418,21 @@ void do_cmd_wiz_advance(struct command *cmd)
 
 	/* Max stats */
 	for (i = 0; i < STAT_MAX; i++) {
-		player->stat_cur[i] = player->stat_max[i] = 118;
+		player->stat_cur[i] = player->stat_max[i] = player->stat_max_max[i];
 	}
+
+	player->upkeep->update |= PU_BONUS;
+	handle_stuff(player);
 
 	/* Lots of money */
 	player->au = 1000000L;
 
 	/* Level 50 */
 	player_exp_gain(player, PY_MAX_EXP);
+	while (player_can_level_up(player)) {
+		player_level_up_one(player, true);
+		player_exp_gain(player, PY_MAX_EXP);
+	}
 
 	/* Heal the player */
 	player->chp = player->mhp;
@@ -1309,7 +1316,7 @@ void do_cmd_wiz_edit_player_stat(struct command *cmd)
 		return;
 	}
 
-	strnfmt(prompt, sizeof(prompt), "%s (3-118): ", stat_idx_to_name(stat));
+	strnfmt(prompt, sizeof(prompt), "%s (3-%i): ", stat_idx_to_name(stat), player->stat_max_max[stat]);
 
 	/* Set default value. */
 	strnfmt(s, sizeof(s), "%d", player->stat_max[stat]);
@@ -1322,7 +1329,7 @@ void do_cmd_wiz_edit_player_stat(struct command *cmd)
 	}
 
 	/* Limit to the range of [3, 118]. */
-	newv = MIN(118, MAX(3, newv));
+	newv = MIN(player->stat_max_max[stat], MAX(3, newv));
 
 	player->stat_cur[stat] = player->stat_max[stat] = newv;
 
@@ -1352,7 +1359,7 @@ void do_cmd_wiz_increase_exp(struct command *cmd)
 	int n;
 
 	if (cmd_get_arg_number(cmd, "quantity", &n) != CMD_OK) {
-		n = get_quantity("Gain how much experience? ", 9999);
+		n = get_quantity("Gain how much experience? ", 999999);
 		cmd_set_arg_number(cmd, "quantity", n);
 	}
 

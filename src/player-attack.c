@@ -27,6 +27,7 @@
 #include "mon-desc.h"
 #include "mon-lore.h"
 #include "mon-make.h"
+#include "mon-move.h"
 #include "mon-msg.h"
 #include "mon-predicate.h"
 #include "mon-timed.h"
@@ -1146,6 +1147,10 @@ void py_attack(struct player *p, struct loc grid)
 	while (avail_energy - p->upkeep->energy_use >= blow_energy && !slain) {
 		slain = py_attack_real(p, grid, &fear);
 		p->upkeep->energy_use += blow_energy;
+	}
+
+	if (!slain) {
+		mon->target.midx = MON_TARGET_PLAYER;
 	}
 
 	/* Hack - delay fear messages */

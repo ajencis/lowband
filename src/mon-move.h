@@ -18,6 +18,13 @@
 #ifndef MONSTER_MOVE_H
 #define MONSTER_MOVE_H
 
+#define MON_TARGET_PLAYER -1
+#define MON_TARGET_NONE -2
+
+struct opposed_monster_char {
+	wchar_t char1;
+	wchar_t char2;
+};
 
 enum monster_stagger {
 	 NO_STAGGER = 0,
@@ -25,6 +32,7 @@ enum monster_stagger {
 	 INNATE_STAGGER = 2
 };
 
+bool mon_will_attack_player(const struct monster *mon, const struct player *player);
 bool multiply_monster(const struct monster *mon);
 void process_monsters(int minimum_energy);
 void reset_monsters(void);

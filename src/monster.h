@@ -415,6 +415,8 @@ struct monster {
 
 	uint8_t min_range;			/* What is the closest we want to be? */
 	uint8_t best_range;			/* How close do we want to be? */
+
+	wchar_t faction;            /* L: general group of monsters */
 };
 
 /** Variables **/
