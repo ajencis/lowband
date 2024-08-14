@@ -23,6 +23,14 @@
 #include "player.h"
 
 /**
+ * L: struct fr matching monster resists to player resists
+ */
+struct mon_player_match {
+	int mval;
+	int pval;
+};
+
+/**
  * Bit flags for the "player->upkeep->notice" variable
  */
 #define PN_COMBINE      0x00000001L    /* Combine the pack */

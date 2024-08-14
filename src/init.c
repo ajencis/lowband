@@ -2816,6 +2816,26 @@ static enum parser_error parse_p_race_power(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+/* L: parse monster source */
+static enum parser_error parse_p_race_monster(struct parser *p) {
+	struct player_race *r = parser_priv(p);
+	if (!r)
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	const char *s = parser_getsym(p, "monster");
+	struct monster_race *mon;
+	
+	if (!s)
+		return PARSE_ERROR_GENERIC;
+
+	mon = lookup_monster(s);
+	if (mon == NULL)
+		return PARSE_ERROR_INVALID_MONSTER;
+
+	r->monster = mon->ridx;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_p_race(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -2842,6 +2862,7 @@ static struct parser *init_parse_p_race(void) {
 	parser_reg(p, "player-flags ?str flags", parse_p_race_play_flags);
 	parser_reg(p, "values str values", parse_p_race_values);
 	parser_reg(p, "power sym name int value", parse_p_race_power);
+	parser_reg(p, "monster sym monster", parse_p_race_monster);
 	return p;
 }
 
@@ -4457,7 +4478,6 @@ static struct {
 	{ "ego-items", &ego_parser },
 	{ "history charts", &history_parser },
 	{ "bodies", &body_parser },
-	{ "player races", &p_race_parser },
 	{ "magic realms", &realm_parser },
 	{ "player classes", &class_parser },
 	{ "artifacts", &artifact_parser },
@@ -4467,6 +4487,7 @@ static struct {
 	{ "blow effects", &eff_parser },
 	{ "monster spells", &mon_spell_parser },
 	{ "monsters", &monster_parser },
+	{ "player races", &p_race_parser },
 	{ "monster pits" , &pit_parser },
 	{ "monster lore" , &lore_parser },
 	{ "traps", &trap_parser },

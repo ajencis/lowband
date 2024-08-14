@@ -861,6 +861,28 @@ static const int adj_mag_mana[STAT_RANGE] =
 };
 #endif
 
+/* L: matching monster resists to player_resists */
+struct mon_player_match elem_matches[] = {
+	{ RF_IM_ACID, ELEM_ACID },
+	{ RF_IM_ELEC, ELEM_ELEC },
+	{ RF_IM_FIRE, ELEM_FIRE },
+	{ RF_IM_COLD, ELEM_COLD },
+	{ RF_IM_POIS, ELEM_POIS },
+	{ RF_IM_NETHER, ELEM_NETHER },
+	{ RF_IM_WATER, ELEM_WATER },
+	{ RF_IM_PLASMA, ELEM_PLASMA },
+	{ RF_IM_NEXUS, ELEM_NEXUS },
+	{ RF_IM_DISEN, ELEM_DISEN },
+	{ RF_NONE, -1 }
+};
+
+/*struct mon_player_match flag_matches[] = {
+	{ RF_NO_FEAR, OF_PROT_FEAR },
+	{ RF_NO_STUN, OF_PROT_STUN },
+	{ RF_NO_CONF, OF_PROT_CONF },
+	{ -1, -1 }
+};*/
+
 
 /* L: rewriting the stat stuff entirely */
 
@@ -976,16 +998,6 @@ int adj_int_xp(int index) {
 int adj_int_lev(int index) {
 	return index - 7;
 }
-
-
-/*static int stepdown(int num) {
-	int i;
-
-	for (i = 0; i < 100; i++) {
-		if ((i * (i + 1) / 2) >= num) return i;
-	}
-	return i;
-}*/
 
 
 /**
@@ -2041,6 +2053,26 @@ static void calc_shapechange(struct player_state *state, bool vuln[ELEM_MAX],
 }
 
 /**
+ * L: calculate the effects of being a monster on player state
+ */
+static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
+						 struct monster_race *mrace)
+{
+	if (!mrace) return;
+	int i;
+
+	i = 0;
+	while (elem_matches[i].mval != RF_NONE) {
+		if (rf_has(mrace->flags, elem_matches[i].mval)) {
+			state->el_info[elem_matches[i].pval].res_level = 3;
+		}
+		i++;
+	}
+
+	state->speed += mrace->speed / 2 - 55;
+}
+
+/**
  * Calculate the players current "state", taking into account
  * not only race/class intrinsics, but also objects being worn
  * and temporary spell effects.
@@ -2076,6 +2108,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	bitflag f[OF_SIZE];
 	bitflag collect_f[OF_SIZE];
 	bool vuln[ELEM_MAX];
+	struct monster_race *mrace;
 
 	/* Hack to allow calculating hypothetical blows for extra STR, DEX - NRM */
 	int str_ind = state->stat_ind[STAT_STR];
@@ -2239,6 +2272,12 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	/* Add shapechange info */
 	calc_shapechange(state, vuln, p->shape, &extra_blows, &extra_shots,
 		&extra_might, &extra_moves);
+
+	/* L: add monster info */
+	mrace = lookup_player_monster(p);
+	if (mrace) {
+		calc_monster(state, vuln, mrace);
+	}
 
 	/* Now deal with vulnerabilities */
 	for (i = 0; i < ELEM_MAX; i++) {

@@ -147,3 +147,10 @@ uniques:1
 race-flag:UNIQUE
 fallback:HI_UNDEAD
 desc:unique monsters
+
+name:SKELETON
+msgt:SUM_UNDEAD
+uniques:0
+base:skeleton
+specific:skeleton human
+desc:a skeleton

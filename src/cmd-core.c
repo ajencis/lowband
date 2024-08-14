@@ -75,7 +75,7 @@ static const struct command_info game_cmds[] =
 	{ CMD_GO_DOWN, "go down stairs", do_cmd_go_down, false, true, 0 },
 	{ CMD_WALK, "walk", do_cmd_walk, true, true, 0 },
 	{ CMD_RUN, "run", do_cmd_run, true, true, 0 },
-	{ CMD_EXPLORE, "explore", do_cmd_explore, false, true, 999 },
+	{ CMD_EXPLORE, "explore", do_cmd_explore, true, true, 99 },
 	{ CMD_NAVIGATE_UP, "navigate up", do_cmd_navigate_up, false, true, 0 },
 	{ CMD_NAVIGATE_DOWN, "navigate down", do_cmd_navigate_down, false, true, 0 },
 	{ CMD_JUMP, "jump", do_cmd_jump, false, true, 0 },
@@ -308,9 +308,11 @@ errr cmdq_push_copy(struct command *cmd)
 				cmd_copy(&cmd_queue[cmd_head],
 					&cmd_queue[last_command_idx]);
 			}
+			cmd_queue[cmd_head].nrepeats = 0;
 		} else if (last_command.code != CMD_NULL) {
 			cmd_release(&cmd_queue[cmd_head]);
 			cmd_copy(&cmd_queue[cmd_head], &last_command);
+			cmd_queue[cmd_head].nrepeats = 0;
 		} else {
 			return 1;
 		}
@@ -329,6 +331,7 @@ errr cmdq_push_copy(struct command *cmd)
  */
 static void process_command(cmd_context ctx, struct command *cmd)
 {
+	//if (character_generated) msg("entering pc");
 	int oldrepeats = cmd->nrepeats;
 	/* Hack - command a monster */
 	int idx = cmd_idx(player->timed[TMD_COMMAND] ?
@@ -392,6 +395,7 @@ static void process_command(cmd_context ctx, struct command *cmd)
 	/* If the command hasn't changed nrepeats, count this execution. */
 	if (cmd->nrepeats > 0 && oldrepeats == cmd_get_nrepeats())
 		cmd_set_repeat(oldrepeats - 1);
+	//if (character_generated) msg("leaving pc;");
 }
 
 /**
@@ -399,12 +403,14 @@ static void process_command(cmd_context ctx, struct command *cmd)
  */
 bool cmdq_pop(cmd_context c)
 {
+	//if (character_generated) msg("entering cpop;");
 	struct command *cmd;
 
 	/* If we're repeating, just pull the last command again. */
-	if (repeating) {
+	/*if (repeating) {
 		cmd = &cmd_queue[prev_cmd_idx(cmd_tail)];
-	} else if (cmd_head != cmd_tail) {
+	} else*/
+	if (cmd_head != cmd_tail) {
 		/* If we have a command ready, set it. */
 		cmd = &cmd_queue[cmd_tail++];
 		if (cmd_tail == CMD_QUEUE_SIZE)
@@ -419,6 +425,30 @@ bool cmdq_pop(cmd_context c)
 		last_command_idx = prev_cmd_idx(cmd_tail);
 	}
 	process_command(c, cmd);
+	//if (character_generated) msg("leaving cpop");
+
+	if (cmd_head == cmd_tail) { // last command
+		struct command *last;
+		if (last_command_idx >= 0)
+			last = &cmd_queue[last_command_idx];
+		else if (last_command.code != CMD_NULL)
+			last = &last_command;
+		else
+			return true;
+		
+		if (last->nrepeats == 0)
+			return true;
+		
+		if (cmd_head != last_command_idx) {
+			cmd_release(&cmd_queue[cmd_head]);
+			cmd_copy(&cmd_queue[cmd_head], last);
+			last_command_idx = cmd_head;
+		}
+		cmd_head++;
+		if (cmd_head == CMD_QUEUE_SIZE) cmd_head = 0;
+		cmd_set_repeat(last->nrepeats - 1);
+	}
+
 	return true;
 }
 
@@ -450,7 +480,9 @@ errr cmdq_push_repeat(cmd_code c, int nrepeats)
  */
 errr cmdq_push(cmd_code c)
 {
+	//if (character_generated) msg("entering cpush;");
 	return cmdq_push_repeat(c, 0);
+	//if (character_generated) msg("leaving cpush;");
 }
 
 

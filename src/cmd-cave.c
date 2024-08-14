@@ -1393,6 +1393,7 @@ void do_cmd_jump(struct command *cmd)
  */
 void do_cmd_run(struct command *cmd)
 {
+	//msg("entering dcr;");
 	struct loc grid;
 	int dir;
 
@@ -1569,9 +1570,11 @@ void do_cmd_navigate_up(struct command *cmd)
  */
 void do_cmd_explore(struct command *cmd)
 {
+	//msg("entering dce;");
 	bool visible_monster = false;
 	/* cancel if confused */
 	if (player->timed[TMD_CONFUSED]) {
+		cmd_cancel_repeat();
 		msg("You cannot explore while confused.");
 	   	return;
 	}
@@ -1597,7 +1600,7 @@ void do_cmd_explore(struct command *cmd)
 			if (square_isoccupied(cave, grid)) {
 				int m_idx = square(cave, grid)->mon;
 				struct monster *mon = cave_monster(cave, m_idx);
-				if (monster_is_obvious(mon)) {
+				if (monster_is_obvious(mon) && mon_will_attack_player(mon, player)) {
 					visible_monster = true;
 					break; /* only breaks the inner loop */
 				}
@@ -1606,6 +1609,7 @@ void do_cmd_explore(struct command *cmd)
 	}
 
 	if (visible_monster) {
+		cmd_cancel_repeat();
 		msg("Something is here.");
 		return;
 	}
@@ -1613,6 +1617,13 @@ void do_cmd_explore(struct command *cmd)
 	assert(!player->upkeep->steps);
 	player->upkeep->step_count = path_nearest_unknown(player, player->grid,
 		&player->upkeep->path_dest, &player->upkeep->steps);
+
+
+	if (count_neighbors(NULL, cave, player->upkeep->path_dest, square_isknown, true) >= 9) {
+		// don't keep exploring if we're not going anywhere new
+		cmd_cancel_repeat();
+	}
+
 	if (player->upkeep->step_count > 0) {
 		player->upkeep->running = player->upkeep->step_count;
 		/* Calculate torch radius */
@@ -1621,6 +1632,7 @@ void do_cmd_explore(struct command *cmd)
 		return;
 	}
 
+	cmd_cancel_repeat();
 	msg("No apparent path for exploration.");
 }
 

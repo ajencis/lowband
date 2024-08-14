@@ -2269,13 +2269,14 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 		struct loc srcgrid = isplayer ? player->grid : mon->grid;
 		wchar_t faction;
         
-		if (!isplayer)
+		if (!isplayer) {
 			assert(mon);
-
-		if (isplayer)
-			faction = '@';
-		else
 			faction = mon->faction;
+			rlev = mon->race->level;
+		} else {
+			faction = '@';
+			rlev = player->lev;
+		}
 
 		/* Set the kin_base if necessary */
 		if (summon_type == summon_name_to_idx("KIN")) {
@@ -2284,11 +2285,6 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 		}
 
 		/* Continue summoning until we reach the current dungeon level */
-		if (isplayer)
-			rlev = player->lev;
-		else
-			rlev = mon->race->level;
-
 		while ((val < player->depth * rlev) && (attempts < summon_max)) {
 			int temp;
 
@@ -2328,8 +2324,12 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 		}
 
 		/* Summoner failed */
-		if (!count)
-			msg("But nothing comes.");
+		if (!count) {
+			if (isplayer)
+				msg("Nothing comes.");
+			else
+				msg("But nothing comes.");
+		}
 	} else {
 		/* If not a monster summon, it's simple */
 		while (summon_max) {
@@ -3660,10 +3660,4 @@ bool effect_handler_UNSCRAMBLE_STATS(effect_handler_context_t *context)
 {
 	player_fix_scramble(player);
 	return true;
-}
-
-bool effect_handler_SUMMON_UNDEAD(effect_handler_context_t *context)
-{
-    context->subtype == summon_name_to_idx("UNDEAD");
-	return effect_handler_SUMMON(context);
 }

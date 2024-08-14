@@ -35,6 +35,7 @@ struct summon {
 	int race_flag;
 	char *fallback_name;
 	int fallback;
+	char *specific;
 	char *desc;
 };
 

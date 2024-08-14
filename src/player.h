@@ -214,6 +214,8 @@ struct player_race {
 
 	int body;		/**< Race body */
 
+	int monster;	/**< L: monster equivalent */
+
 	int r_adj[STAT_MAX];		/**< Stat bonuses */
 
 	int r_skills[SKILL_MAX];	/**< Skills */

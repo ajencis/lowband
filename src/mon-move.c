@@ -1756,7 +1756,7 @@ static void monster_turn(struct monster *mon)
 			if (rf_has(mon->race->flags, RF_NEVER_BLOW))
 				continue;
 
-			if (!mon_will_attack_player(mon, player) && stagger == NO_STAGGER)
+			if (!mon_will_attack_player(mon, player) && stagger != CONFUSED_STAGGER)
 			    continue;
 
 			/* Otherwise, attack the player */

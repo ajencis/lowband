@@ -1854,6 +1854,7 @@ static bool run_test(const struct player *p)
  */
 void run_step(int dir)
 {
+	//msg("entering rs;");
 	/* Trapsafe player will treat the trap as if it isn't there */
 	bool disarm = player_is_trapsafe(player) ? false : true;
 
@@ -2042,5 +2043,7 @@ void run_step(int dir)
 		mem_free(player->upkeep->steps);
 		player->upkeep->steps = NULL;
 	}
+
+	//msg("leaving rs;");
 }
 

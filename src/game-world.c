@@ -934,6 +934,7 @@ void process_player(void)
 
 	/* Repeat until energy is reduced */
 	do {
+		//if (character_generated) msg("processing player;");
 		/* Refresh */
 		notice_stuff(player);
 		handle_stuff(player);
@@ -964,10 +965,14 @@ void process_player(void)
 			cmdq_push(CMD_SLEEP);
 		}
 
+		//if (character_generated) msg("preparing for next command");
+
 		/* Prepare for the next command */
 		if (cmd_get_nrepeats() > 0) {
+			//if (character_generated) msg("signaling repeats;");
 			event_signal(EVENT_COMMAND_REPEAT);
 		} else {
+			//if (character_generated) msg("signaling refresh;");
 			/* Check monster recall */
 			if (player->upkeep->monster_race)
 				player->upkeep->redraw |= (PR_MONSTER);
@@ -975,6 +980,8 @@ void process_player(void)
 			/* Place cursor on player/target */
 			event_signal(EVENT_REFRESH);
 		}
+
+		//if (character_generated) msg("popping;");
 
 		/* Get a command from the queue if there is one */
 		if (!cmdq_pop(CTX_GAME))
@@ -984,6 +991,8 @@ void process_player(void)
 			break;
 
 		process_player_cleanup();
+
+		//if (character_generated) msg("done processing player.");
 	} while (!player->upkeep->energy_use &&
 			 !player->is_dead &&
 			 !player->upkeep->generate_level);

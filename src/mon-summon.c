@@ -141,6 +141,17 @@ static enum parser_error parse_summon_desc(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_summon_specific(struct parser *p) {
+	struct summon *s = parser_priv(p);
+	assert(s);
+
+	s->specific = string_make(parser_getsym(p, "specific"));
+	if (s->specific == NULL) {
+		return PARSE_ERROR_INVALID_MONSTER_BASE;
+	}
+	return PARSE_ERROR_NONE;
+}
+
 
 
 static struct parser *init_parse_summon(void) {
@@ -152,6 +163,7 @@ static struct parser *init_parse_summon(void) {
 	parser_reg(p, "uniques int allowed", parse_summon_unique);
 	parser_reg(p, "base sym base", parse_summon_base);
 	parser_reg(p, "race-flag sym flag", parse_summon_race_flag);
+	parser_reg(p, "specific sym specific", parse_summon_specific);
 	parser_reg(p, "fallback str fallback", parse_summon_fallback);
 	parser_reg(p, "desc str desc", parse_summon_desc);
 	return p;
@@ -205,6 +217,7 @@ static void cleanup_summon(void)
 			mem_free(s);
 			s = next;
 		}
+		string_free(summons[idx].specific);
 		string_free(summons[idx].desc);
 		string_free(summons[idx].fallback_name);
 		string_free(summons[idx].name);
@@ -380,7 +393,7 @@ static int call_monster(struct loc grid)
 
 /**
  * Places a monster (of the specified "type") near the given
- * location.  Return the siummoned monster's level iff a monster was
+ * location.  Return the summoned monster's level iff a monster was
  * actually summoned.
  *
  * We will attempt to place the monster up to 10 times before giving up.
@@ -426,14 +439,20 @@ int summon_specific(struct loc grid, int lev, int type, bool delay, bool call, w
 		return (call_monster(near));
 	}
 
-	/* Prepare allocation table */
-	get_mon_num_prep(summon_specific_okay);
+	/* L: get the specific summon if it exists */
+	if (summons[type].specific) {
+		race = lookup_monster(summons[type].specific);
+	}
+	else {
+		/* Prepare allocation table */
+		get_mon_num_prep(summon_specific_okay);
 
-	/* Pick a monster, using the level calculation */
-	race = get_mon_num((player->depth + lev) / 2 + 5, player->depth);
+		/* Pick a monster, using the level calculation */
+		race = get_mon_num((player->depth + lev) / 2 + 5, player->depth);
 
-	/* Prepare allocation table */
-	get_mon_num_prep(NULL);
+		/* Prepare allocation table */
+		get_mon_num_prep(NULL);
+	}
 
 	/* Handle failure */
 	if (!race) return (0);

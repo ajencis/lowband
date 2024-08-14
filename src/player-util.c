@@ -24,6 +24,7 @@
 #include "game-world.h"
 #include "generate.h"
 #include "init.h"
+#include "mon-util.h"
 #include "obj-chest.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
@@ -44,6 +45,15 @@
 #include "target.h"
 #include "trap.h"
 #include "ui-input.h"
+
+/**
+ * L: functions for races that are monsters
+ */
+struct monster_race *lookup_player_monster(struct player *p)
+{
+	if (!p->race->monster) return NULL;
+	return &r_info[p->race->monster];
+}
 
 /**
  * Increment to the next or decrement to the preceeding level
