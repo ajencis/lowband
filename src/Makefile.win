@@ -53,10 +53,14 @@ ifdef CONSOLE
   #PDCURSES_INC = ../../pdcurses/include
   #PDCURSES_LIB = ../../pdcurses/lib/pdcurses.a
 else
-  CFLAGS = -DWINDOWS -static
+  CFLAGS = -DWINDOWS
+  # CFLAGS = -DWINDOWS -static
 
-  CFLAGS += -Iwin/include -Lwin/lib
-  LDFLAGS += -Lwin/lib
+  # CFLAGS += -Iwin/include -Lwin/lib
+  # LDFLAGS += -Lwin/lib
+
+  CFLAGS += -Iwin/include -Lwin/lib -Lwin/dll
+  LDFLAGS += -Lwin/lib -Lwin/dll
 
   IOBJS = $(BASEOBJS) win/$(PROGNAME).res $(SOUNDFILES) main-win.o win/readdib.o win/readpng.o win/scrnshot.o win/win-layout.o
   LIBS = -mwindows -lwinmm -lzlib -llibpng -lmsimg32

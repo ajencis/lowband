@@ -1147,7 +1147,7 @@ bool player_is_trapsafe(const struct player *p)
  */
 bool player_can_cast(const struct player *p, bool show_msg)
 {
-	if (!p->class->magic.total_spells) {
+	if (!p->class->magic.total_spells && !pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) {
 		if (show_msg) {
 			msg("You cannot pray or produce magics.");
 		}

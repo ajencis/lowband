@@ -1084,7 +1084,7 @@ void lore_append_toughness(textblock *tb, const struct monster_race *race,
 
 		/* Player's base chance to hit */
 		random_chance c;
-		struct attack_roll aroll = get_attack(player, weapon);
+		struct attack_roll aroll = get_weapon_attack(player, weapon);
 		hit_chance(&c, chance_of_melee_hit_base(player, &aroll), race->ac);
 		int percent = random_chance_scaled(c, 100);
 

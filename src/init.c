@@ -117,9 +117,17 @@ const char *list_obj_flag_names[] = {
 
 static const char *list_player_powers_names[] = {
 	"NONE",
-	#define PP(x, a) #x,
+	#define PP(x, a, b) #x,
 	#include "list-player-powers.h"
 	#undef PP
+	NULL
+};
+
+static const char *list_school_names[] = {
+	"NONE",
+	#define MS(x, a, b) #x,
+	#include "list-magic-schools.h"
+	#undef MS
 	NULL
 };
 
@@ -4153,6 +4161,7 @@ static enum parser_error parse_class_school(struct parser *p) {
 	struct class_spell *spell;
 	const char *school_name;
 	int school_idx;
+	int i;
 
 	if (!c) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -4174,7 +4183,13 @@ static enum parser_error parse_class_school(struct parser *p) {
 	spell = &book->spells[book->num_spells - 1];
 	school_name = parser_getsym(p, "school");
 
-    school_idx = school_find_idx(school_name);
+	school_idx = -1;
+	for (i = 0; list_school_names[i]; i++) {
+		if (streq(school_name, list_school_names[i])) {
+			school_idx = i;
+		}
+	}
+
 	if (school_idx == -1) return PARSE_ERROR_GENERIC;
 
 	spell->school = school_idx;
@@ -4236,6 +4251,8 @@ static errr run_parse_class(struct parser *p) {
 
 static errr finish_parse_class(struct parser *p) {
 	struct player_class *c;
+	int bi, si;
+	int spell_num = 0;
 	int num = 0;
 	classes = parser_priv(p);
 	for (c = classes; c; c = c->next) num++;
@@ -4243,6 +4260,31 @@ static errr finish_parse_class(struct parser *p) {
 		assert(num);
 		c->cidx = num - 1;
 	}
+
+	all_spells_num = 0;
+	for (c = classes; c; c = c->next) {
+		for (bi = 0; bi < c->magic.num_books; bi++) {
+			all_spells_num += c->magic.books[bi].num_spells;
+		}
+	}
+
+	all_spells = mem_zalloc(sizeof(struct class_spell) * all_spells_num);
+
+	for (c = classes; c; c = c->next) {
+		for (bi = 0; bi < c->magic.num_books; bi++) {
+			for (si = 0; si < c->magic.books[bi].num_spells; si++) {
+				struct class_spell curr = c->magic.books[bi].spells[si];
+				all_spells[spell_num] = curr;
+				/*all_spells[spell_num].name = string_make(curr.name);
+				all_spells[spell_num].text = string_make(curr.text);
+				all_spells[spell_num].effect = mem_zalloc(sizeof(struct effect));
+				memcpy(all_spells[spell_num].effect, curr.effect; sizeof(struct effect));*/
+				spell_num++;
+			}
+		}
+	}
+	assert(spell_num == all_spells_num);
+
 	parser_destroy(p);
 	return 0;
 }
@@ -4283,6 +4325,8 @@ static void cleanup_class(void)
 		mem_free(c);
 		c = next;
 	}
+
+	mem_free(all_spells);
 }
 
 struct file_parser class_parser = {

@@ -1472,7 +1472,7 @@ void do_cmd_navigate_down(struct command *cmd)
 			if (square_isoccupied(cave, grid)) {
 				int m_idx = square(cave, grid)->mon;
 				struct monster *mon = cave_monster(cave, m_idx);
-				if (monster_is_obvious(mon)) {
+				if (monster_is_obvious(mon) && mon_will_attack_player(mon, player)) {
 					visible_monster_count++;
 					break;
 				}
@@ -1535,7 +1535,7 @@ void do_cmd_navigate_up(struct command *cmd)
 			if (square_isoccupied(cave, grid)) {
 				int m_idx = square(cave, grid)->mon;
 				struct monster *mon = cave_monster(cave, m_idx);
-				if (monster_is_obvious(mon)) {
+				if (monster_is_obvious(mon) && mon_will_attack_player(mon, player)) {
 					visible_monster_count++;
 					break;
 				}

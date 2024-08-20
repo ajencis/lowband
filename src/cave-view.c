@@ -832,9 +832,9 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 			c->squares_everseen++;
 			sqinfo_on(sqr->info, SQUARE_GAVE_EXP);
 			int total = MAX(c->depth, 10) * c->depth; // will be divided by 1000 later
-			int freq = MAX(99 / total, 0) + 1;
+			int freq = MAX(999 / total, 0) + 1;
 			int q = MAX(total * freq / 1000, 1);
-			if (c->squares_everseen > 100 && one_in_(freq)) player_exp_gain(p, q);
+			if (c->squares_everseen > 100 && !(c->squares_everseen % freq)) player_exp_gain(p, q);
 		}
 	}
 }

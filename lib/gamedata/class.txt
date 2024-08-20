@@ -259,7 +259,7 @@ effect:BALL:FIRE:2
 dice:$Bd6
 expr:B:PLAYER_LEVEL:/ 2 + 5
 desc:Shoots a radius-2 fire ball.
-school:fire
+school:FIRE
 
 book:magic book:town:[Attacks and Knowledge]:6:arcane
 book-graphics:?:R
@@ -538,7 +538,7 @@ dice:20+1d30
 desc:Produces a beam that destroys the first section of wall it hits,
 desc: unless it is a permanent wall.  Each monster caught in the beam that
 desc: is susceptible to rock remover takes 20+1d30 points of damage.
-school:earth
+school:EARTH
 
 spell:Sense Surroundings:9:4:35:6
 effect:MAP_AREA
@@ -564,7 +564,7 @@ dice:$Dd6
 expr:D:PLAYER_LEVEL:/ 3 + 2
 desc:Causes shards to explode in a line out of the earth, striking objects and
 desc: monsters.  Length of the line increases with player level.
-school:earth
+school:EARTH
 
 book:nature book:dungeon:[Creature Dominion]:5:nature
 book-graphics:?:o
@@ -608,7 +608,7 @@ desc:  Earthquakes may hurt the player, damage monsters and destroy items
 desc: in some squares in the area of effect.
 desc:  Artifacts will not be destroyed by this spell.
 desc:  This spell has no effect when used in the town.
-school:earth
+school:EARTH
 
 spell:Haste Self:25:12:65:15
 effect:TIMED_INC:FAST:0:5

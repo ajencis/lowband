@@ -54,7 +54,7 @@ enum
 enum
 {
 	PP_NONE,
-	#define PP(x, a) PP_##x,
+	#define PP(x, a, b) PP_##x,
 	#include "list-player-powers.h"
 	#undef PP
 	PP_MAX
@@ -122,6 +122,8 @@ enum
 #ifdef ALLOW_BORG
 #define NOSCORE_BORG		0x0020
 #endif
+
+#define PY_MAX_ATTACKS 10
 
 /**
  * Terrain that the player has a chance of digging through
@@ -236,6 +238,17 @@ struct player_race {
 struct player_blow {
 	struct player_blow *next;
 	char *name;
+};
+
+/* L: defines an attack ready to be rolled */
+struct attack_roll {
+	int ddice;
+	int dsides;
+	int to_hit;
+	int to_dam;
+	int stun;
+	char *message;
+	int energy;
 };
 
 /**
@@ -470,6 +483,8 @@ struct player_state {
 	bitflag flags[OF_SIZE];					/**< Status flags from race and items */
 	bitflag pflags[PF_SIZE];				/**< Player intrinsic flags */
 	struct element_info el_info[ELEM_MAX];	/**< Resists from race and items */
+
+	struct attack_roll attacks[PY_MAX_ATTACKS];
 };
 
 #define player_has(p, flag)       (pf_has(p->state.pflags, (flag)))
@@ -655,6 +670,8 @@ extern struct player_shape *shapes;
 extern struct player_class *classes;
 extern struct player_ability *player_abilities;
 extern struct magic_realm *realms;
+extern struct class_spell *all_spells;
+extern int all_spells_num;
 
 extern const int32_t player_exp[PY_MAX_LEVEL];
 extern struct player *player;

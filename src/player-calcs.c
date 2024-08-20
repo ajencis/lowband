@@ -1444,6 +1444,7 @@ static void calc_spells(struct player *p)
 {
 	int i, j, k, levels;
 	int num_allowed, num_known, num_total = p->class->magic.total_spells;
+	if (pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) num_total = all_spells_num;
 	int percent_spells;
 
 	const struct class_spell *spell;
@@ -1451,7 +1452,7 @@ static void calc_spells(struct player *p)
 	int16_t old_spells;
 
 	/* Hack -- must be literate */
-	if (!p->class->magic.total_spells) return;
+	if (!p->class->magic.total_spells && !pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) return;
 
 	/* Hack -- wait for creation */
 	if (!character_generated) return;
@@ -1657,7 +1658,7 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	int i, msp, levels, cur_wgt, max_wgt; 
 
 	/* Must be literate */
-	if (!p->class->magic.total_spells) {
+	if (!p->class->magic.total_spells && !pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) {
 		p->msp = 0;
 		p->csp = 0;
 		p->csp_frac = 0;
@@ -1890,6 +1891,7 @@ int calc_blows(struct player *p, const struct object *obj,
 	return blows + 100 * extra_blows;
 }
 
+#if 0
 /**
  * Calculate the blows a player would get.
  *
@@ -1933,6 +1935,7 @@ int calc_blows_old(struct player *p, const struct object *obj,
 	return MAX(blows + (100 * extra_blows),
 			   OPT(p, birth_percent_damage) ? 200 : 100);
 }
+#endif
 
 
 /**
@@ -2861,7 +2864,7 @@ void update_stuff(struct player *p)
 
 	if (p->upkeep->update & (PU_SPELLS)) {
 		p->upkeep->update &= ~(PU_SPELLS);
-		if (p->class->magic.total_spells > 0) {
+		if (p->class->magic.total_spells > 0 || pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) {
 			calc_spells(p);
 		}
 	}

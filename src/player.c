@@ -41,6 +41,8 @@ struct player_shape *shapes;
 struct player_class *classes;
 struct player_ability *player_abilities;
 struct magic_realm *realms;
+struct class_spell *all_spells;
+int all_spells_num = 0;
 
 /**
  * Base experience levels, may be adjusted up for race and/or class

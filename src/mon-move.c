@@ -69,7 +69,7 @@ struct opposed_monster_char opposed_chars[] =
 	{0, 0}
 };
 
-bool mon_will_attack_player(const struct monster *mon, const struct player *player)
+bool mon_will_attack_player(const struct monster *mon, const struct player *p)
 {
 	if (mon->faction == '@') return false;
 	return true;

@@ -23,15 +23,6 @@
 
 struct player;
 
-/* L: defines an attack ready to be rolled */
-struct attack_roll {
-	int ddice;
-	int dsides;
-	int to_hit;
-	int to_dam;
-	int stun;
-};
-
 struct attack_result {
     bool success;
     int dmg;
@@ -64,7 +55,8 @@ extern void do_cmd_throw(struct command *cmd);
 
 
 /* L: new */
-struct attack_roll get_attack(struct player *p, struct object *obj);
+struct attack_roll get_weapon_attack(struct player *p, struct object *obj);
+void get_monster_attacks(struct player *p, struct monster_race *mr, struct attack_roll *aroll, int maxnum);
 
 extern int breakage_chance(const struct object *obj, bool hit_target);
 int chance_of_missile_hit_base(const struct player *p,
@@ -75,7 +67,7 @@ extern bool test_hit(int to_hit, int ac);
 void hit_chance(random_chance *, int, int);
 void apply_deadliness(int *die_average, int deadliness);
 extern void py_attack(struct player *p, struct loc grid);
-extern bool py_attack_real(struct player *p, struct loc grid, bool *fear);
+extern bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack_roll aroll);
 
 /* These are public for use by unit test cases. */
 struct attack_result make_ranged_shot(struct player *p, struct object *ammo,

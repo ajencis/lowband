@@ -67,3 +67,7 @@ src/config
 src/stats/db.dep
 src/tests/ran-already
 src/version.h
+
+libpng12.dll
+zlib1.dll
+angband.INI
