@@ -36,9 +36,13 @@ struct blow_method {
 	bool phys;
 	int msgt;
 	struct blow_message *messages;
+	char *fmessage;
 	int num_messages;
 	char *desc;
 	struct blow_method *next;
+
+	int equip_slot;			/* L: the slot it uses */
+	int skill;				/* L: the skill it uses to hit */
 };
 
 extern struct blow_method *blow_methods;
@@ -84,6 +88,7 @@ struct blow_effect {
 	int resist;
 	int lash_type;
 	struct blow_effect *next;
+	int mtimed;					/* L: the timed effect to apply to a monster taking this attack */
 };
 
 extern struct blow_effect *blow_effects;

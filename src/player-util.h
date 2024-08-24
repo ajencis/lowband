@@ -61,6 +61,8 @@ enum
 #define REST_REQUIRED_FOR_REGEN 5
 
 struct monster_race *lookup_player_monster(struct player *p);
+void check_player_monster(struct player *p, bool init);
+void player_race_name(struct player *p, char *buf, int bufsize);
 int dungeon_get_next_level(struct player *p, int dlev, int added);
 void player_set_recall_depth(struct player *p);
 bool player_get_recall_depth(struct player *p);

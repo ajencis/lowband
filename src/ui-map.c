@@ -281,6 +281,7 @@ void grid_data_as_text(struct grid_data *g, int *ap, wchar_t *cp, int *tap,
 		}
 	} else if (g->is_player) {
 		struct monster_race *race = &r_info[0];
+		if (player->curr_monster_ridx) race = &r_info[player->curr_monster_ridx];
 
 		/* Get the "player" attr */
 		a = monster_x_attr[race->ridx];

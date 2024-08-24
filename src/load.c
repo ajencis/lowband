@@ -678,6 +678,9 @@ int rd_player(void)
 		return -1;
 	}
 
+	/* L: current monster */
+	rd_u16b(&player->curr_monster_ridx);
+
 	/* Player shape */
 	rd_string(buf, sizeof(buf));
 	for (s = shapes; s; s = s->next) {
@@ -712,7 +715,6 @@ int rd_player(void)
 
 	/* Special Race/Class info */
 	rd_byte(&player->hitdie);
-	//rd_byte(&player->expfact);
 
 	/* Age/Height/Weight */
 	rd_s16b(&player->age);

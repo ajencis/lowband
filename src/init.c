@@ -2831,6 +2831,7 @@ static enum parser_error parse_p_race_monster(struct parser *p) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	const char *s = parser_getsym(p, "monster");
 	struct monster_race *mon;
+	int i;
 	
 	if (!s)
 		return PARSE_ERROR_GENERIC;
@@ -2839,7 +2840,12 @@ static enum parser_error parse_p_race_monster(struct parser *p) {
 	if (mon == NULL)
 		return PARSE_ERROR_INVALID_MONSTER;
 
-	r->monster = mon->ridx;
+	for (i = 0; i < MAX_RACE_MONSTERS; i++) {
+		if (r->monsters[i] == 0) {
+			r->monsters[i] = mon->ridx;
+			break;
+		}
+	}
 
 	return PARSE_ERROR_NONE;
 }

@@ -702,9 +702,11 @@ static const uint8_t colour_table[] =
 
 static struct panel *get_panel_topleft(void) {
 	struct panel *p = panel_allocate(6);
+	char buf[13] = "";
+	player_race_name(player, buf, sizeof(buf));
 
 	panel_line(p, COLOUR_L_BLUE, "Name", "%s", player->full_name);
-	panel_line(p, COLOUR_L_BLUE, "Race",	"%s", player->race->name);
+	panel_line(p, COLOUR_L_BLUE, "Race", "%s", buf);
 	panel_line(p, COLOUR_L_BLUE, "Class", "%s", player->class->name);
 	panel_line(p, COLOUR_L_BLUE, "Title", "%s", show_title());
 	panel_line(p, COLOUR_L_BLUE, "HP", "%d/%d", player->chp, player->mhp);
@@ -738,7 +740,6 @@ static struct panel *get_panel_combat(void) {
 	struct panel *p = panel_allocate(9);
 	struct object *obj;
 	int bth, dam, hit;
-	//int melee_dice = 1, melee_sides = 1;
 	struct attack_roll aroll;
 
 	/* AC */
@@ -747,25 +748,13 @@ static struct panel *get_panel_combat(void) {
 
 	/* Melee */
 	obj = equipped_item_by_slot_name(player, "weapon");
-	aroll = get_weapon_attack(player, obj);
+	aroll = player->state.attacks[0];
 	bth = (player->state.skills[SKILL_TO_HIT_MELEE] * 10) / BTH_PLUS_ADJ;
-	/*dam = player->known_state.to_d;
-	hit = player->known_state.to_h;
-	if (obj) {
-		melee_dice = obj->dd;
-		melee_sides = obj->ds;
-		dam += object_to_dam(obj);
-		hit += object_to_hit(obj);
-	}
-	else {
-		melee_dice = unarmed_melee_dam_dice();
-		melee_sides = unarmed_melee_dam_sides();
-		dam += unarmed_melee_to_dam();
-		hit += unarmed_melee_to_hit();
-	}*/
 
 	panel_space(p);
-	if (aroll.to_dam)
+	if (!aroll.ddice || !aroll.dsides)
+		panel_line(p, COLOUR_L_BLUE, "Melee", "%d", aroll.to_dam);
+	else if (aroll.to_dam)
 		panel_line(p, COLOUR_L_BLUE, "Melee", "%dd%d%+d", aroll.ddice, aroll.dsides, aroll.to_dam);
 	else
 	    panel_line(p, COLOUR_L_BLUE, "Melee", "%dd%d", aroll.ddice, aroll.dsides);

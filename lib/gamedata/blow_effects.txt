@@ -44,6 +44,7 @@ lore-color-resist:Light Green
 effect-type:element
 resist:DISEN
 lash-type:DISEN
+mon-timed:DISEN
 
 name:DRAIN_CHARGES
 power:10
@@ -145,6 +146,7 @@ lore-color-resist:Light Green
 effect-type:flag
 resist:PROT_CONF
 lash-type:CHAOS
+mon-timed:CONF
 
 name:TERRIFY
 power:0
@@ -155,6 +157,7 @@ lore-color-resist:Light Green
 effect-type:flag
 resist:PROT_FEAR
 lash-type:CHAOS
+mon-timed:FEAR
 
 name:PARALYZE
 power:0
@@ -165,6 +168,7 @@ lore-color-resist:Light Green
 effect-type:flag
 resist:FREE_ACT
 lash-type:INERTIA
+mon-timed:HOLD
 
 name:LOSE_STR
 power:0
@@ -281,6 +285,7 @@ lore-color-resist:Light Green
 effect-type:element
 resist:CHAOS
 lash-type:CHAOS
+mon-timed:CONF
 
 name:BLACK_BREATH
 power:0

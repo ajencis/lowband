@@ -1460,3 +1460,32 @@ void project_m(struct source origin, int r, struct loc grid, int dam, int typ,
 	*was_obvious = !!obvious;
 }
 
+bool proj_melee_attack_mon(struct monster *mon, struct player *p, int dmg, int proj_type, bool *fear, const char *note)
+{
+	project_monster_handler_f monster_handler = monster_handlers[proj_type];
+	project_monster_handler_context_t context = {
+		source_player(),
+		0,
+		mon->grid,
+		dmg,
+		proj_type,
+		true,
+		false,
+		mon, /* mon */
+		get_lore(mon->race), /* lore */
+		false,
+		true,
+		false, /* skipped */
+		0, /* flag */
+		0, /* do_poly */
+		0, /* teleport_distance */
+		MON_MSG_NONE, /* hurt_msg */
+		MON_MSG_NONE, /* die_msg */
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	};
+
+	monster_handler(&context);
+
+	return mon_take_hit(mon, player, context.dam, fear, note);
+}
+

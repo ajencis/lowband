@@ -427,12 +427,12 @@ void wr_player(void)
 
 	/* Race/Class/Gender/Spells */
 	wr_string(player->race->name);
+	wr_u16b(player->curr_monster_ridx);
 	wr_string(player->shape->name);
 	wr_string(player->class->name);
 	wr_byte(player->opts.name_suffix);
 
 	wr_byte(player->hitdie);
-	//wr_byte(player->expfact);
 
 	wr_s16b(player->age);
 	wr_s16b(player->ht);

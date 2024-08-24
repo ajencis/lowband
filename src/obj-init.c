@@ -394,6 +394,18 @@ static enum parser_error parse_projection_color(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_projection_player_message(struct parser *p) {
+	struct projection *projection = parser_priv(p);
+	const char *message;
+
+	if (!projection) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	message = parser_getstr(p, "message");
+	projection->player_message = string_make(message);
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_projection(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -404,6 +416,7 @@ static struct parser *init_parse_projection(void) {
 	parser_reg(p, "player-desc str desc", parse_projection_player_desc);
 	parser_reg(p, "blind-desc str desc", parse_projection_blind_desc);
 	parser_reg(p, "lash-desc str desc", parse_projection_lash_desc);
+	parser_reg(p, "player-brand str message", parse_projection_player_message);
 	parser_reg(p, "numerator uint num", parse_projection_numerator);
 	parser_reg(p, "denominator rand denom", parse_projection_denominator);
 	parser_reg(p, "divisor uint div", parse_projection_divisor);
@@ -463,6 +476,7 @@ static void cleanup_projection(void)
 		string_free(projections[idx].lash_desc);
 		string_free(projections[idx].player_desc);
 		string_free(projections[idx].blind_desc);
+		string_free(projections[idx].player_message);
 	}
 	mem_free(projections);
 }

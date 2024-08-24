@@ -71,3 +71,4 @@ src/version.h
 libpng12.dll
 zlib1.dll
 angband.INI
+src/win/angband.res

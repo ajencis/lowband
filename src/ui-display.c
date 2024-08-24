@@ -564,18 +564,23 @@ static void prt_race(int row, int col) {
 	if (player_is_shapechanged(player)) {
 		prt_field("", row, col);
 	} else {
-		prt_field(player->race->name, row, col);
+		char buf[13] = "";
+		player_race_name(player, buf, sizeof(buf));
+		prt_field(buf, row, col);
 	}
 }
 
 static int prt_race_class_short(int row, int col)
 {
 	char buf[512] = "";
+	char buf2[13] = "";
 
 	if (player_is_shapechanged(player)) return 0;
 
+	player_race_name(player, buf2, sizeof(buf2));
+
 	strnfmt(buf, sizeof(buf), "%s %s",
-		player->race->name,
+		buf2,
 		player->class->title[(player->lev - 1) / 5]);
 
 	c_put_str(COLOUR_L_GREEN, buf, row, col);
@@ -2076,11 +2081,14 @@ static void update_player_compact_subwindow(game_event_type type,
 	term *old = Term;
 	term *inv_term = user;
 
+	char buf[13] = "";
+
 	/* Activate */
 	Term_activate(inv_term);
 
 	/* Race and Class */
-	prt_field(player->race->name, row++, col);
+	player_race_name(player, buf, sizeof(buf));
+	prt_field(buf, row++, col);
 	prt_field(player->class->name, row++, col);
 
 	/* Title */

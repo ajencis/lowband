@@ -1260,6 +1260,9 @@ void do_cmd_accept_character(struct command *cmd)
 	/* Initialise the spells */
 	player_spells_init(player);
 
+	/* L: check which monster to be */
+	check_player_monster(player, true);
+
 	/* Know all runes for ID on walkover */
 	if (OPT(player, birth_know_runes))
 		player_learn_all_runes(player);

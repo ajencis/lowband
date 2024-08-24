@@ -19,6 +19,8 @@
 #ifndef MONSTER_TIMED_H
 #define MONSTER_TIMED_H
 
+#include "player.h"
+
 /**
  * Monster timed effect constants
  */
@@ -33,11 +35,6 @@
 /**
  * Monster Timed Effects
  */
-enum {
-	#define MON_TMD(a, b, c, d, e, f, g, h) MON_TMD_##a,
-	#include "list-mon-timed.h"
-	#undef MON_TMD
-};
 
 /**
  * Flags for the monster timed functions

@@ -34,6 +34,7 @@
 #include "obj-power.h"
 #include "obj-tval.h"
 #include "obj-util.h"
+#include "player-attack.h"
 #include "player-calcs.h"
 #include "player-spell.h"
 #include "player-timed.h"
@@ -884,6 +885,17 @@ struct mon_player_match elem_matches[] = {
 };*/
 
 
+/* L: simple stepdown that approximates a square root */
+static int stepdown(int num) {
+	int i;
+	for (i = 0; i < 100; i++) {
+		if ((i * (i + 1) / 2) >= num)
+			break;
+	}
+	return i;
+}
+
+
 /* L: rewriting the stat stuff entirely */
 
 /**
@@ -963,9 +975,9 @@ int adj_str_blow(int index) {
 	return stat_scale(index, 240, true);
 }
 
-static int adj_dex_blow(int index) {
+/*static int adj_dex_blow(int index) {
 	return stat_scale(index, 10, true);
-}
+}*/
 
 static int adj_stat_blow(int index) {
 	return stat_scale(index, 400, true);
@@ -1010,9 +1022,9 @@ static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 
     if (lev <= 0) return 0;
 
-	if (wgt > 25) return 0;
-
-	int bonus = (lev * 10 + 25) / 50;
+	int wpen = MAX(0, wgt - lev) / 5;
+	int bonus = (lev * 10 + 49) / 50;
+	bonus = MAX(0, bonus - wpen);
 
     s->speed += bonus;
 	return bonus;
@@ -1024,15 +1036,16 @@ static int unarmoured_ac_bonus(struct player_state *s, int wgt)
 
     if (lev <= 0) return 0;
 
-	if (wgt > 25) return 0;
-
-    int bonus = (lev * 50 + 25) / 50;
+	int wpen = MAX(0, wgt - lev);
+    int bonus = (lev * 50 + 49) / 50;
+	bonus = MAX(0, bonus - wpen);
 
     s->ac += bonus;
 	return bonus;
 }
 
 
+#if 0
 /**
  * This table is used to help calculate the number of blows the player can
  * make in a single round of attacks (one player turn) with a normal weapon.
@@ -1104,6 +1117,7 @@ static const int blows_table[12][12] =
 	{  33,  29,  26,  24,  22,  21,  20,  19,  18,  17,  16,  15 },
    /* DEX: 3,   10,  17,  /20, /40, /60, /80, /100,/120,/150,/180,/200 */
 };
+#endif
 
 /**
  * Decide which object comes earlier in the standard inventory listing,
@@ -1746,6 +1760,12 @@ static void calc_hitpoints(struct player *p)
 	/* Calculate hitpoints */
 	mhp = p->player_hp[p->lev-1] + (bonus * p->lev / 100);
 
+	/* L: bonus from being a monster */
+	if (p->curr_monster_ridx) {
+		struct monster_race *mon = lookup_player_monster(p);
+		mhp += stepdown(mon->avg_hp);
+	}
+
 	/* Always have at least one hitpoint per level */
 	if (mhp < p->lev + 1) mhp = p->lev + 1;
 
@@ -1875,7 +1895,6 @@ int calc_blows(struct player *p, const struct object *obj,
 {
 	int weight = obj ? object_weight_one(obj) : 0;
 	weight = MAX(weight, 0) + 100;
-	//weight = stepdown(weight);
 
     int dexind = state->stat_ind[STAT_DEX];
 	int strind = state->stat_ind[STAT_STR];
@@ -1884,7 +1903,9 @@ int calc_blows(struct player *p, const struct object *obj,
 
 	int baseblows = adj_stat_blow(statind);
 
-	int blows = MAX(0, baseblows) * state->skills[SKILL_TO_HIT_MELEE] / weight / 2 + 100;
+	int skill = p->state.attacks[0].attack_skill;
+
+	int blows = MAX(0, baseblows) * state->skills[skill] / weight / 2 + 100;
 
 	//blows = MIN(blows, 100 * p->class->max_attacks);
 
@@ -2073,6 +2094,8 @@ static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
 	}
 
 	state->speed += mrace->speed / 2 - 55;
+
+	if (rf_has(mrace->flags, RF_NEVER_MOVE)) state->speed -= 5;
 }
 
 /**
@@ -2106,12 +2129,13 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	int extra_might = 0;
 	int extra_moves = 0;
 	int armwgt = 0;
+	int attacknum;
 	struct object *launcher = equipped_item_by_slot_name(p, "shooting");
 	struct object *weapon = equipped_item_by_slot_name(p, "weapon");
 	bitflag f[OF_SIZE];
 	bitflag collect_f[OF_SIZE];
 	bool vuln[ELEM_MAX];
-	struct monster_race *mrace;
+	struct monster_race *mrace = lookup_player_monster(p);
 
 	/* Hack to allow calculating hypothetical blows for extra STR, DEX - NRM */
 	int str_ind = state->stat_ind[STAT_STR];
@@ -2277,7 +2301,6 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		&extra_might, &extra_moves);
 
 	/* L: add monster info */
-	mrace = lookup_player_monster(p);
 	if (mrace) {
 		calc_monster(state, vuln, mrace);
 	}
@@ -2551,6 +2574,22 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		if (state->num_shots < 10) state->num_shots = 10;
 	}
 
+	attacknum = 0;
+	if (weapon) {
+		state->attacks[attacknum] = get_weapon_attack(p, weapon);
+		++attacknum;
+	}
+	if (mrace) {
+		attacknum += get_monster_attacks(p,
+										 mrace,
+										 &state->attacks[attacknum],
+										 PY_MAX_ATTACKS - attacknum);
+	}
+	if (!attacknum) {
+		state->attacks[attacknum] = get_weapon_attack(p, NULL);
+		++attacknum;
+	}
+	if (attacknum < PY_MAX_ATTACKS) state->attacks[attacknum].proj_type = -1;
 
 	/* Analyze weapon */
 	state->heavy_wield = false;

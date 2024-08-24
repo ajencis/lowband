@@ -89,8 +89,8 @@ int breakage_chance(const struct object *obj, bool hit_target) {
  */
 int chance_of_melee_hit_base(const struct player *p, struct attack_roll *aroll)
 {
-	int bonus = aroll->to_hit;//p->state.to_h + (weapon ? object_to_hit(weapon) : unarmed_melee_to_hit());
-	return p->state.skills[SKILL_TO_HIT_MELEE] + bonus * BTH_PLUS_ADJ;
+	int bonus = aroll->to_hit;
+	return p->state.skills[aroll->attack_skill] + bonus * BTH_PLUS_ADJ;
 }
 
 /**
@@ -690,12 +690,18 @@ static void blow_side_effects(struct player *p, struct monster *mon)
  * Apply blow after effects
  */
 static bool blow_after_effects(struct loc grid, int dmg, int splash,
-							   bool *fear, bool quake, int stun)
+							   bool *fear, bool quake, struct attack_roll *aroll)
 {
     struct monster *mon = square_monster(cave, grid);
+	bool gone = false;
 
-    if (stun && mon) {
-		mon_inc_timed(mon, MON_TMD_STUN, stun, MON_TMD_FLG_NOTIFY);
+    if (mon) {
+		int i;
+		for (i = 0; i < MON_TMD_MAX; i++) {
+			if (!aroll->mtimed[i]) continue;
+			int power = randint1(aroll->mtimed[i]);
+			mon_inc_timed(mon, i, power, MON_TMD_FLG_NOTIFY);
+		}
 	}
 
 	/* Apply earthquake brand */
@@ -705,10 +711,10 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 
 		/* Monster may be dead or moved */
 		if (!square_monster(cave, grid))
-			return true;
+			gone = true;
 	}
 
-	return false;
+	return gone;
 }
 
 
@@ -722,11 +728,18 @@ static void unarmed_mod_attack(struct attack_roll *aroll, struct object *obj)
 	if (obj) return;
 	int lev = player->state.powers[PP_UNARMED_STRIKE];
 	if (!lev) return;
-	lev = lev * MIN(player->lev + 10, 35) / 35;
-    aroll->dsides += (lev * 49 + 25) / 50;
-	aroll->to_hit += (lev * 25 + 25) / 50;
-	aroll->to_dam += 0;
-	aroll->stun += (lev * 25 + 25) / 50;
+    aroll->dsides += (lev * 5 + 49) / 50;
+	aroll->to_hit += (lev * 25 + 49) / 50;
+	aroll->to_dam += (lev * 5 + 49) / 50;
+	aroll->mtimed[MON_TMD_STUN] += (lev * 10 + 49) / 50;
+}
+
+static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
+{
+	int lev = player->state.powers[PP_UNARMED_STRIKE];
+	aroll->ddice = 1 + (lev * 2 + 25) / 50;
+	aroll->dsides = 1 + (lev * 9 + 49) / 50;
+	aroll->mtimed[MON_TMD_STUN] = (lev * 15 + 49) / 50;
 }
 
 static void specialization_mod_attack(struct attack_roll *aroll, struct object *obj)
@@ -737,9 +750,9 @@ static void specialization_mod_attack(struct attack_roll *aroll, struct object *
 	if (obj->tval == TV_POLEARM) lev = player->state.powers[PP_POLEARM_SPECIALIZATION];
 	if (obj->tval == TV_SWORD) lev = player->state.powers[PP_SWORD_SPECIALIZATION];
 	
-	aroll->to_hit += (lev * 10 + 25) / 50;
-	aroll->to_dam += (lev * 5 + 25) / 50;
-	aroll->dsides += (lev * 5 + 25) / 50;
+	aroll->to_hit += (lev * 15 + 49) / 50;
+	aroll->to_dam += (lev * 10 + 49) / 50;
+	aroll->dsides += (lev * 10 + 49) / 50;
 }
 
 static bool backstab_mod_attack(struct attack_roll *aroll, struct object *obj, int power)
@@ -751,10 +764,10 @@ static bool backstab_mod_attack(struct attack_roll *aroll, struct object *obj, i
 	if (dsm <= 25) return false;
 
 	aroll->dsides *= dsm;
-	aroll->dsides += 12;
+	aroll->dsides += 24;
 	aroll->dsides /= 25;
-	aroll->to_hit += (lev * 10 + 25) / 50;
-	aroll->to_dam += (lev * 10 + 25) / 50;
+	aroll->to_hit += (lev * 10 + 49) / 50;
+	aroll->to_dam += (lev * 10 + 49) / 50;
 	return true;
 }
 
@@ -771,18 +784,16 @@ struct attack_roll get_weapon_attack(struct player *p, struct object *obj)
 		aroll.dsides = obj->ds + td / 2;
 		aroll.to_dam = (td + 1) / 2;
 		aroll.to_hit = object_to_hit(obj);
-		aroll.stun = 0;
-		aroll.message = NULL;
+		aroll.message = (char *)"hit";
 	}
 	else {
-		aroll.ddice = 1;
-		aroll.dsides = 1;
-		aroll.to_dam = 0;
-		aroll.to_hit = 0;
-		aroll.stun = 0;
+		unarmed_get_attack(&aroll, obj);
         unarmed_mod_attack(&aroll, obj);
-		aroll.message = NULL;
+		aroll.message = (char *)"punch";
 	}
+
+	aroll.proj_type = PROJ_MISSILE;
+	aroll.attack_skill = SKILL_TO_HIT_MELEE;
 
 	aroll.to_hit += p->state.to_h;
 	aroll.dsides += player_damage_bonus(&p->state);
@@ -795,26 +806,51 @@ struct attack_roll get_weapon_attack(struct player *p, struct object *obj)
 	return aroll;
 }
 
-void get_monster_attacks(struct player *p, struct monster_race *mr, struct attack_roll *aroll, int maxnum)
+int get_monster_attacks(struct player *p, struct monster_race *mr, struct attack_roll *aroll, int maxnum)
 {
 	assert(mr);
 	struct monster_blow *mb;
-	int i = 0;
+	int j;
+	bool foundempty; bool foundfull;
+	int mbi; int pai = 0;
 
-	for (mb = mr->blow; mb; mb = mb->next) {
-		if (i >= maxnum) break;
-		aroll[i].ddice = mb->dice.dice;
-		aroll[i].dsides = mb->dice.sides;
-		aroll[i].energy = 0;
-		aroll[i].message = mb->method->messages->act_msg;
-		aroll[i].to_hit = 0;
-		aroll[i].to_dam = 0;
-		aroll[i].stun = 0;
+	for (mbi = 0; mbi < z_info->mon_blows_max && pai < maxnum; mbi++) {
+		mb = &mr->blow[mbi];
+		if (!mb->method) break;
 
-		unarmed_mod_attack(&aroll[i], NULL);
+		foundempty = false;
+		foundfull = false;
+		for (j = 0; j < p->body.count; j++) {
+			if (!slot_type_is(p, j, mb->method->equip_slot))
+				continue;
+			struct object *obj = slot_object(p, j);
+			if (!obj) foundempty = true;
+			else foundfull = true;
+		}
+		if (foundfull && !foundempty)
+			continue;
 
-		i++;
+		aroll[pai].ddice = mb->dice.dice;
+		aroll[pai].dsides = mb->dice.sides;
+		aroll[pai].energy = 0;
+		aroll[pai].message = mb->method->fmessage;
+		aroll[pai].to_hit = 0;
+		aroll[pai].to_dam = 0;
+		aroll[pai].proj_type = mb->effect->lash_type;
+		aroll[pai].attack_skill = mb->method->skill;
+		for (j = 0; j < MON_TMD_MAX; j++) {
+			if (mb->effect->mtimed == j)
+				aroll[pai].mtimed[j] = 50;
+			else
+				aroll[pai].mtimed[j] = 0;
+		}
+
+		unarmed_mod_attack(&aroll[pai], NULL);
+
+		pai++;
 	}
+
+	return pai;
 }
 
 static int get_attack_dam(struct attack_roll *aroll, struct monster *mon, int b, int s) {
@@ -866,12 +902,9 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	int splash = 0;
 	bool do_quake = false;
 	bool success = false;
-	int stun = 0;
 	int backstab = 0;
 	bool did_backstab = false;
-
-	/* L: the attack itself */
-	//struct attack_roll aroll = get_weapon_attack(p, obj);
+	bool proj_dam = (aroll.proj_type != PROJ_MISSILE);
 
 	char verb[20];
 	uint32_t msg_type = MSG_HIT;
@@ -932,10 +965,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 		weight = 0;
 	}
 
-    /* L: backstab uses different verbs */
-	if (did_backstab) {
-		my_strcpy(verb, "backstab", sizeof(verb));
-	} else if (aroll.message) {
+	if (aroll.message) {
 		my_strcpy(verb, aroll.message, sizeof(verb));
 	} else if (obj) {
 		my_strcpy(verb, "hit", sizeof(verb));
@@ -944,7 +974,9 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	/* Best attack from all slays or brands on all non-launcher equipment */
 	b = 0;
 	s = 0;
-	for (j = 2; j < p->body.count; j++) {
+	for (j = 0; j < p->body.count; j++) {
+		if (slot_type_is(p, j, EQUIP_BOW) || slot_type_is(p, j, EQUIP_WEAPON))
+			continue;
 		struct object *obj_local = slot_object(p, j);
 		if (obj_local)
 			improve_attack_modifier(p, obj_local, mon, &b, &s,
@@ -959,7 +991,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 
 	/* Get the damage */
 	if (true || !OPT(p, birth_percent_damage)) {
-		dmg = get_attack_dam(&aroll, mon, b, s);// melee_damage(mon, obj, b, s);
+		dmg = get_attack_dam(&aroll, mon, b, s);
 		/* For now, exclude criticals on unarmed combat */
 		if (obj) {
 			dmg = critical_melee(p, mon, weight, object_to_hit(obj),
@@ -975,8 +1007,6 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 		do_quake = true;
 		equip_learn_flag(p, OF_IMPACT);
 	}
-
-	if (aroll.stun && one_in_(5)) stun = randint0(aroll.stun) + randint0(aroll.stun) + 1;
 
 	/* Learn by use */
 	equip_learn_on_melee_attack(p);
@@ -1005,28 +1035,43 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 		my_strcpy(verb, "fail to harm", sizeof(verb));
 	}
 
+	if (did_backstab) msg("You backstab %s.", m_name);
+
 	for (i = 0; i < N_ELEMENTS(melee_hit_types); i++) {
 		const char *dmg_text = "";
+		const char *proj_text = "";
 
 		if (msg_type != melee_hit_types[i].msg_type)
 			continue;
 
 		if (OPT(p, show_damage))
 			dmg_text = format(" (%d)", dmg);
+		if (proj_dam) {
+			char proj_name[64] = "";
+			monster_desc(proj_name, sizeof(proj_name), mon, MDESC_PRO_VIS | MDESC_OBJE);
+			proj_text = format("; you %s %s", projections[aroll.proj_type].player_message, proj_name);
+		}
 
 		if (melee_hit_types[i].text)
-			msgt(msg_type, "You %s %s%s. %s", verb, m_name, dmg_text,
+			msgt(msg_type, "You %s %s%s. %s", verb, m_name, proj_text, dmg_text,
 					melee_hit_types[i].text);
 		else
-			msgt(msg_type, "You %s %s%s.", verb, m_name, dmg_text);
+			msgt(msg_type, "You %s %s%s.", verb, m_name, proj_text, dmg_text);
+
+		break;
 	}
 
 	/* Pre-damage side effects */
 	blow_side_effects(p, mon);
 
-	/* Damage, check for hp drain, fear and death */
 	drain = MIN(mon->hp, dmg);
-	stop = mon_take_hit(mon, p, dmg, fear, NULL);
+
+	if (proj_dam) {
+		stop = proj_melee_attack_mon(mon, p, dmg, aroll.proj_type, fear, NULL);
+	} else {
+		/* Damage, check for hp drain, fear and death */
+		stop = mon_take_hit(mon, p, dmg, fear, NULL);
+	}
 
 	/* Small chance of bloodlust side-effects */
 	if (p->timed[TMD_BLOODLUST] && one_in_(50)) {
@@ -1045,7 +1090,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 		(*fear) = false;
 
 	/* Post-damage effects */
-	if (blow_after_effects(grid, dmg, splash, fear, do_quake, stun))
+	if (blow_after_effects(grid, dmg, splash, fear, do_quake, &aroll))
 		stop = true;
 
 	return stop;
@@ -1152,9 +1197,8 @@ void py_attack(struct player *p, struct loc grid)
 	int blow_energy = 100 * z_info->move_energy / p->state.num_blows;
 	bool slain = false, fear = false;
 	struct monster *mon = square_monster(cave, grid);
-	struct object *obj;
 	struct attack_roll aroll;
-	struct monster_race *mrace = lookup_player_monster(p);
+	int i;
 
 	/* Disturb the player */
 	disturb(p);
@@ -1178,20 +1222,15 @@ void py_attack(struct player *p, struct loc grid)
 	/* Attack until the next attack would exceed energy available or
 	 * a full turn or until the enemy dies. We limit energy use
 	 * to avoid giving monsters a possible double move. */
-	obj = equipped_item_by_slot_name(p, "weapon");
-	aroll = get_weapon_attack(p, obj);
+	aroll = p->state.attacks[0];
 	while (avail_energy - p->upkeep->energy_use >= blow_energy && !slain) {
 		slain = py_attack_real(p, grid, &fear, aroll);
 		p->upkeep->energy_use += blow_energy;
 	}
 
-	if (!slain && mrace) {
-		int i;
-		struct attack_roll marolls[5] = {{0}, {0}, {0}, {0}};
-		get_monster_attacks(p, mrace, marolls, 4);
-		for (i = 0; (i < 4) && marolls[i].dsides && !slain; i++) {
-			slain = py_attack_real(p, grid, &fear, marolls[i]);
-		}
+	for (i = 1; (i < PY_MAX_ATTACKS) && !slain && (p->state.attacks[i].proj_type >= 0); i++) {
+		if (randint0(z_info->move_energy) < p->upkeep->energy_use)
+			slain = py_attack_real(p, grid, &fear, p->state.attacks[i]);
 	}
 
 	if (!slain) {

@@ -51,8 +51,58 @@
  */
 struct monster_race *lookup_player_monster(struct player *p)
 {
-	if (!p->race->monster) return NULL;
-	return &r_info[p->race->monster];
+	if (!p->curr_monster_ridx) return NULL;
+	return &r_info[p->curr_monster_ridx];
+}
+
+static void change_player_monster(struct player *p, struct monster_race *mon, bool message) {
+	if (is_a_vowel(mon->name[0]) && message)
+		msg("You transform into an %s.", mon->name);
+	else if (message)
+		msg("You transform into a %s.", mon->name);
+	p->curr_monster_ridx = mon->ridx;
+	player->upkeep->redraw |= (PR_MAP | PR_MISC);
+	player->upkeep->update |= (PU_BONUS | PU_HP);
+}
+
+void check_player_monster(struct player *p, bool init)
+{
+	int i;
+	struct monster_race *mon;
+	struct monster_race *best = NULL;
+
+	for (i = 0; i < MAX_RACE_MONSTERS; i++)
+	{
+		if (!p->race->monsters[i]) continue;
+		mon = &r_info[p->race->monsters[i]];
+		if (mon->level > p->lev * 70 / 50 + 5) continue;
+		if (best && mon->level < best->level) continue;
+		best = mon;
+	}
+
+	if (!best) return;
+	if (best->ridx == p->curr_monster_ridx) return;
+
+	change_player_monster(p, best, !init);
+
+	if (init) update_stuff(p);
+}
+
+void player_race_name(struct player *p, char *buf, int bufsize) {
+	struct monster_race *mon = lookup_player_monster(p);
+	unsigned int i;
+	if (!mon) {
+		my_strcpy(buf, p->race->name, sizeof(buf));
+		return;
+	}
+	my_strcpy(buf, mon->name, bufsize);
+	for (i = 0; i < (bufsize / sizeof(buf[0])); i++) {
+		if (buf[i] == '\0')
+			break;
+		if (i == 0 || buf[i - 1] == ' ')
+			buf[i] = toupper(buf[i]);
+	}
+	return;
 }
 
 /**

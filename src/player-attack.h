@@ -56,7 +56,7 @@ extern void do_cmd_throw(struct command *cmd);
 
 /* L: new */
 struct attack_roll get_weapon_attack(struct player *p, struct object *obj);
-void get_monster_attacks(struct player *p, struct monster_race *mr, struct attack_roll *aroll, int maxnum);
+int get_monster_attacks(struct player *p, struct monster_race *mr, struct attack_roll *aroll, int maxnum);
 
 extern int breakage_chance(const struct object *obj, bool hit_target);
 int chance_of_missile_hit_base(const struct player *p,

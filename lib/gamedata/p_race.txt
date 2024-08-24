@@ -319,8 +319,35 @@ power:POLEARM_SPECIALIZATION:25
 hitdie:3
 exp:120
 infravision:5
-history:23
+history:1
 age:45:30
 height:37:4
 weight:65:5
 monster:vampire
+monster:master vampire
+monster:vampire lord
+monster:elder vampire
+
+name:Eyestalk
+stats:-2:2:-1:1:0
+skill-disarm-phys:4
+skill-disarm-magic:4
+skill-device:5
+skill-save:5
+skill-stealth:1
+skill-search:7
+skill-melee:0
+skill-shoot:5
+skill-throw:5
+skill-dig:0
+hitdie:4
+exp:120
+infravision:0
+history:1
+age:5:2
+height:80:6
+weight:190:20
+monster:floating eye
+monster:spectator
+monster:gauth
+monster:beholder

@@ -1793,8 +1793,7 @@ bool effect_handler_MOVE_ATTACK(effect_handler_context_t *context)
 	struct loc next_grid, grid_diff;
 	bool fear;
 	struct monster *mon;
-	struct object *obj = equipped_item_by_slot_name(player, "weapon");
-	struct attack_roll aroll = get_weapon_attack(player, obj);
+	struct attack_roll aroll = player->state.attacks[0];
 
 	/* Ask for a target */
 	if (context->dir == DIR_TARGET) {
@@ -1917,8 +1916,7 @@ bool effect_handler_MELEE_BLOWS(effect_handler_context_t *context)
 	struct loc target = loc(-1, -1);
 	struct loc grid = player->grid;
 	struct monster *mon = NULL;
-	struct object *obj = equipped_item_by_slot_name(player, "weapon");
-	struct attack_roll aroll = get_weapon_attack(player, obj);
+	struct attack_roll aroll = player->state.attacks[0];
 
 	/* players only for now */
 	if (context->origin.what != SRC_PLAYER)
@@ -1964,8 +1962,7 @@ bool effect_handler_SWEEP(effect_handler_context_t *context)
 	bool fear;
 	int i;
 	struct loc target;
-	struct object *obj = equipped_item_by_slot_name(player, "weapon");
-	struct attack_roll aroll = get_weapon_attack(player, obj);
+	struct attack_roll aroll = player->state.attacks[0];
 
 	/* Players only for now */
 	if (context->origin.what != SRC_PLAYER)	return false;

@@ -1370,6 +1370,8 @@ void leave_store(game_event_type type, game_event_data *data, void *user)
 		player->chp = player->mhp;
 
 		player->upkeep->update |= PU_BONUS;
+
+		check_player_monster(player, false);
 	}
 
 	/* Switch back to the normal game view. */

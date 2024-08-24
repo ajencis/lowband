@@ -28,6 +28,7 @@
 #include "mon-util.h"
 #include "mon-blows.h"
 #include "monster.h"
+#include "obj-gear.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
@@ -69,6 +70,30 @@ static const char *obj_flags[] =
     ""
 };
 
+static const char *equip_slot_names[] =
+{
+	#define EQUIP(a, b, c, d, e, f) #a,
+	#include "list-equip-slots.h"
+	#undef EQUIP
+	""
+};
+
+static const char *skill_names[] =
+{
+	#define SKILL(x) #x,
+	#include "list-skills.h"
+	#undef SKILL
+	""
+};
+
+static const char *mtimed_names[] =
+{
+	#define MON_TMD(x, a, b, c, d, e, f, g) #x,
+	#include "list-mon-timed.h"
+	#undef MON_TMD
+	""
+};
+
 /**
  * Return the index of a flag from its name.
  */
@@ -77,6 +102,51 @@ static int flag_index_by_name(const char *name)
 	size_t i;
 	for (i = 0; i < N_ELEMENTS(obj_flags); i++) {
 		if (streq(name, obj_flags[i])) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+/**
+ * Return the index of an equip slot from its name.
+ */
+static int equip_slot_index_by_name(const char *name)
+{
+	size_t i;
+	for (i = 0; i < N_ELEMENTS(equip_slot_names); i++) {
+		if (streq(name, equip_slot_names[i])) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+/**
+ * Return the index of an skill from its name.
+ */
+static int skill_index_by_name(const char *name)
+{
+	size_t i;
+	for (i = 0; i < N_ELEMENTS(skill_names); i++) {
+		if (streq(name, skill_names[i])) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+/**
+ * Return the index of an skill from its name.
+ */
+static int mtimed_index_by_name(const char *name)
+{
+	size_t i;
+	for (i = 0; i < N_ELEMENTS(mtimed_names); i++) {
+		if (streq(name, mtimed_names[i])) {
 			return i;
 		}
 	}
@@ -107,6 +177,7 @@ static enum parser_error parse_meth_name(struct parser *p) {
 	meth->next = h;
 	parser_setpriv(p, meth);
 	meth->name = string_make(name);
+	meth->skill = SKILL_TO_HIT_MELEE;
 
 	return PARSE_ERROR_NONE;
 }
@@ -195,6 +266,58 @@ static enum parser_error parse_meth_desc(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_meth_fact_msg(struct parser *p) {
+	const char *message = parser_getstr(p, "fact");
+	struct blow_method *meth = parser_priv(p);
+	char *msg;
+
+	if (!meth) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	msg = string_make(message);
+	meth->fmessage = msg;
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_meth_equip_slot(struct parser *p) {
+	const char *slot = parser_getsym(p, "slot");
+	struct blow_method *meth = parser_priv(p);
+	int slotnum;
+
+	if (!meth) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	slotnum = equip_slot_index_by_name(slot);
+	if (slotnum < 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	meth->equip_slot = slotnum;
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_meth_skill(struct parser *p) {
+	const char *skill = parser_getsym(p, "skill");
+	struct blow_method *meth = parser_priv(p);
+	int skillnum;
+
+	if (!meth) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	skillnum = skill_index_by_name(skill);
+	if (skillnum < 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	meth->skill = skillnum;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_meth(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -205,7 +328,10 @@ static struct parser *init_parse_meth(void) {
 	parser_reg(p, "phys uint phys", parse_meth_phys);
 	parser_reg(p, "msg ?str msg", parse_meth_message_type);
 	parser_reg(p, "act str act", parse_meth_act_msg);
+	parser_reg(p, "fact str fact", parse_meth_fact_msg);
 	parser_reg(p, "desc str desc", parse_meth_desc);
+	parser_reg(p, "slot sym slot", parse_meth_equip_slot);
+	parser_reg(p, "skill sym skill", parse_meth_skill);
 	return p;
 }
 
@@ -257,6 +383,7 @@ static void cleanup_meth(void)
 			msg = next;
 		}
 		string_free(meth->name);
+		string_free(meth->fmessage);
 		meth = meth->next;
 	}
 	mem_free(blow_methods);
@@ -294,6 +421,7 @@ static enum parser_error parse_eff_name(struct parser *p) {
 	eff->next = h;
 	parser_setpriv(p, eff);
 	eff->name = string_make(name);
+	eff->mtimed = -1;
 
 	return PARSE_ERROR_NONE;
 }
@@ -410,6 +538,20 @@ static enum parser_error parse_eff_lash_type(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_eff_mtimed(struct parser *p) {
+	struct blow_effect *eff = parser_priv(p);
+	int mtimed;
+	assert(eff);
+
+	mtimed = mtimed_index_by_name(parser_getsym(p, "mtimed"));
+	if (mtimed < 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	eff->mtimed = mtimed;
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_eff(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -423,6 +565,7 @@ static struct parser *init_parse_eff(void) {
 	parser_reg(p, "effect-type str type", parse_eff_effect_type);
 	parser_reg(p, "resist str resist", parse_eff_resist);
 	parser_reg(p, "lash-type str type", parse_eff_lash_type);
+	parser_reg(p, "mon-timed sym mtimed", parse_eff_mtimed);
 	return p;
 }
 

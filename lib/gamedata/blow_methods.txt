@@ -9,6 +9,7 @@
 # phys: 1 if the method does physical damage, 0 if not
 # msg: message type to display
 # act: action string to append
+# fact: action string in the first person
 # desc: monster lore description
 
 name:HIT
@@ -18,7 +19,9 @@ miss:1
 phys:1
 msg:MON_HIT
 act:hits {target}
+fact:hit
 desc:hit
+slot:WEAPON
 
 name:TOUCH
 cut:0
@@ -27,7 +30,9 @@ miss:1
 phys:0
 msg:MON_TOUCH
 act:touches {target}
+fact:touch
 desc:touch
+slot:GLOVES
 
 name:PUNCH
 cut:0
@@ -36,7 +41,9 @@ miss:1
 phys:1
 msg:MON_PUNCH
 act:punches {target}
+fact:punch
 desc:punch
+slot:WEAPON
 
 name:KICK
 cut:0
@@ -45,7 +52,9 @@ miss:1
 phys:1
 msg:MON_KICK
 act:kicks {target}
+fact:kick
 desc:kick
+slot:BOOTS
 
 name:CLAW
 cut:1
@@ -54,7 +63,9 @@ miss:1
 phys:1
 msg:MON_CLAW
 act:claws {target}
+fact:claw
 desc:claw
+slot:WEAPON
 
 name:BITE
 cut:1
@@ -63,7 +74,9 @@ miss:1
 phys:1
 msg:MON_BITE
 act:bites {target}
+fact:bite
 desc:bite
+slot:HAT
 
 name:STING
 cut:0
@@ -72,7 +85,9 @@ miss:1
 phys:1
 msg:MON_STING
 act:stings {target}
+fact:sting
 desc:sting
+slot:CLOAK
 
 name:BUTT
 cut:0
@@ -81,7 +96,9 @@ miss:1
 phys:1
 msg:MON_BUTT
 act:butts {target}
+fact:butt
 desc:butt
+slot:HAT
 
 name:CRUSH
 cut:0
@@ -90,7 +107,9 @@ miss:1
 phys:1
 msg:MON_CRUSH
 act:crushes {target}
+fact:crush
 desc:crush
+slot:CLOAK
 
 name:ENGULF
 cut:0
@@ -99,7 +118,9 @@ miss:1
 phys:0
 msg:MON_ENGULF
 act:engulfs {target}
+fact:engulf
 desc:engulf
+slot:GLOVES
 
 name:CRAWL
 cut:0
@@ -108,7 +129,9 @@ miss:0
 phys:0
 msg:MON_CRAWL
 act:crawls on {target}
+fact:crawl on
 desc:crawl on you
+slot:BOOTS
 
 name:DROOL
 cut:0
@@ -117,7 +140,9 @@ miss:0
 phys:0
 msg:MON_DROOL
 act:drools on {target}
+fact:drool on
 desc:drool on you
+slot:HAT
 
 name:SPIT
 cut:0
@@ -126,7 +151,9 @@ miss:0
 phys:0
 msg:MON_SPIT
 act:spits on {target}
+fact:spit on
 desc:spit
+slot:HAT
 
 name:GAZE
 cut:0
@@ -135,7 +162,10 @@ miss:0
 phys:0
 msg:MON_GAZE
 act:gazes at {target}
+fact:gaze at
 desc:gaze
+slot:HAT
+skill:SEARCH
 
 name:WAIL
 cut:0
@@ -144,7 +174,9 @@ miss:0
 phys:0
 msg:MON_WAIL
 act:wails at {target}
+fact:wail at
 desc:wail
+slot:HAT
 
 name:SPORE
 cut:0
@@ -153,7 +185,9 @@ miss:0
 phys:0
 msg:MON_SPORE
 act:releases spores at {target}
+fact:release spores at
 desc:release spores
+slot:BODY_ARMOR
 
 name:BEG
 cut:0
@@ -162,7 +196,9 @@ miss:0
 phys:0
 msg:MON_BEG
 act:begs {target} for money
+fact:beg
 desc:beg
+slot:GLOVES
 
 name:INSULT
 cut:0
@@ -178,7 +214,9 @@ act:defiles {target}!
 act:dances around {target}!
 act:makes obscene gestures!
 act:moons {target}!!!
+fact:insult
 desc:insult
+slot:HAT
 
 name:MOAN
 cut:0
@@ -194,5 +232,7 @@ act:asks 'Do you want to buy any mushrooms?'
 act:seems sad about something
 act:asks if {target} {has} seen his dogs
 act:mumbles something about mushrooms
+fact:moan at
 desc:moan
+slot:HAT
 

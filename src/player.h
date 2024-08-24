@@ -72,6 +72,12 @@ enum
 	MS_MAX
 };
 
+enum {
+	#define MON_TMD(a, b, c, d, e, f, g, h) MON_TMD_##a,
+	#include "list-mon-timed.h"
+	#undef MON_TMD
+};
+
 #define PF_SIZE                FLAG_SIZE(PF_MAX)
 
 #define pf_has(f, flag)        flag_has_dbg(f, PF_SIZE, flag, #f, #flag)
@@ -125,6 +131,8 @@ enum
 
 #define PY_MAX_ATTACKS 10
 
+#define MAX_RACE_MONSTERS 5
+
 /**
  * Terrain that the player has a chance of digging through
  */
@@ -142,17 +150,9 @@ enum {
  * Skill indexes
  */
 enum {
-	SKILL_DISARM_PHYS,		/* Disarming - physical */
-	SKILL_DISARM_MAGIC,		/* Disarming - magical */
-	SKILL_DEVICE,			/* Magic Devices */
-	SKILL_SAVE,				/* Saving throw */
-	SKILL_SEARCH,			/* Searching ability */
-	SKILL_STEALTH,			/* Stealth factor */
-	SKILL_TO_HIT_MELEE,		/* To hit (normal) */
-	SKILL_TO_HIT_BOW,		/* To hit (shooting) */
-	SKILL_TO_HIT_THROW,		/* To hit (throwing) */
-	SKILL_DIGGING,			/* Digging */
-
+	#define SKILL(x) SKILL_##x,
+	#include "list-skills.h"
+	#undef SKILL
 	SKILL_MAX
 };
 
@@ -216,13 +216,13 @@ struct player_race {
 
 	int body;		/**< Race body */
 
-	int monster;	/**< L: monster equivalent */
+	int monsters[MAX_RACE_MONSTERS];		/**< L: monster equivalents */
 
 	int r_adj[STAT_MAX];		/**< Stat bonuses */
 
 	int r_skills[SKILL_MAX];	/**< Skills */
 
-	int r_powers[PP_MAX];       /**< L: powers */
+	int r_powers[PP_MAX];		/**< L: powers */
 
 	bitflag flags[OF_SIZE];		/**< Racial (object) flags */
 	bitflag pflags[PF_SIZE];	/**< Racial (player) flags */
@@ -246,9 +246,11 @@ struct attack_roll {
 	int dsides;
 	int to_hit;
 	int to_dam;
-	int stun;
+	int mtimed[MON_TMD_MAX];
 	char *message;
 	int energy;
+	int proj_type;
+	int attack_skill; /* L: which skill it uses to decide accuracy */
 };
 
 /**
@@ -484,7 +486,7 @@ struct player_state {
 	bitflag pflags[PF_SIZE];				/**< Player intrinsic flags */
 	struct element_info el_info[ELEM_MAX];	/**< Resists from race and items */
 
-	struct attack_roll attacks[PY_MAX_ATTACKS];
+	struct attack_roll attacks[PY_MAX_ATTACKS];	/**< L: attacks they currently have available */
 };
 
 #define player_has(p, flag)       (pf_has(p->state.pflags, (flag)))
@@ -656,6 +658,8 @@ struct player {
 	struct player_state state;			/* Calculatable state */
 	struct player_state known_state;	/* What the player can know of the above */
 	struct player_upkeep *upkeep;		/* Temporary player-related values */
+
+	uint16_t curr_monster_ridx;			/* L: if the player is a monster */
 };
 
 
