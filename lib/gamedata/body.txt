@@ -9,7 +9,7 @@
 # followed by a sequence of alternating slot-type and slot-name lines.
 
 body:Humanoid
-slot:WEAPON:weapon
+slot:WEAPON:hand
 slot:BOW:shooting
 slot:RING:right hand
 slot:RING:left hand
@@ -17,8 +17,21 @@ slot:AMULET:neck
 slot:LIGHT:light
 slot:BODY_ARMOR:body
 slot:CLOAK:back
-slot:SHIELD:arm
+slot:WEAPON:offhand
 slot:HAT:head
 slot:GLOVES:hands
 slot:BOOTS:feet
 
+body:Beholder
+slot:RING:eyestalk
+slot:RING:eyestalk
+slot:RING:eyestalk
+slot:RING:eyestalk
+slot:RING:eyestalk
+slot:RING:eyestalk
+slot:RING:eyestalk
+slot:RING:eyestalk
+slot:AMULET:eye
+slot:LIGHT:light
+slot:CLOAK:back
+slot:HAT:head

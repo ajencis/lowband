@@ -307,8 +307,8 @@ stats:1:1:-2:1:-1
 skill-disarm-phys:10
 skill-disarm-magic:10
 skill-device:5
-skill-save:0
-skill-stealth:3
+skill-save:5
+skill-stealth:5
 skill-search:10
 skill-melee:5
 skill-shoot:0
@@ -327,27 +327,33 @@ monster:vampire
 monster:master vampire
 monster:vampire lord
 monster:elder vampire
+body:Humanoid
 
 name:Eyestalk
 stats:-2:2:-1:1:0
-skill-disarm-phys:4
-skill-disarm-magic:4
-skill-device:5
+skill-disarm-phys:0
+skill-disarm-magic:5
+skill-device:10
 skill-save:5
-skill-stealth:1
-skill-search:7
-skill-melee:0
-skill-shoot:5
-skill-throw:5
-skill-dig:0
-hitdie:4
+skill-stealth:4
+skill-search:20
+skill-melee:-10
+skill-shoot:0
+skill-throw:0
+skill-dig:-5
+power:DIVINATION_SPECIALIZATION:25
+hitdie:0
 exp:120
-infravision:0
+infravision:10
 history:1
 age:5:2
 height:80:6
 weight:190:20
+obj-flags:SEE_INVIS
+values:RES_DARK[-1]
 monster:floating eye
 monster:spectator
 monster:gauth
 monster:beholder
+monster:beholder hive-mother
+body:Beholder

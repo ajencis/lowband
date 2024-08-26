@@ -954,9 +954,9 @@ int adj_dex_th(int index) {
 	return stat_scale(index, 35, false);
 }
 
-static int adj_str_th(int index) {
+/*static int adj_str_th(int index) {
 	return stat_scale(index, 15, false);
-}
+}*/
 
 static int adj_str_wgt(int index) {
 	int ret = stat_scale(index, 250, false) + 100;
@@ -1896,18 +1896,18 @@ int calc_blows(struct player *p, const struct object *obj,
 	int weight = obj ? object_weight_one(obj) : 0;
 	weight = MAX(weight, 0) + 100;
 
-    int dexind = state->stat_ind[STAT_DEX];
-	int strind = state->stat_ind[STAT_STR];
+	struct attack_roll aroll = p->state.attacks[0];
 
-	int statind = (dexind > strind ? 2 * dexind + strind : dexind + 2 * strind) / 3;
+    int sind1 = state->stat_ind[aroll.damage_stat];
+	int sind2 = state->stat_ind[aroll.accuracy_stat];
+
+	int statind = (sind1 > sind2 ? 2 * sind1 + sind2 : sind1 + 2 * sind2) / 3;
 
 	int baseblows = adj_stat_blow(statind);
 
-	int skill = p->state.attacks[0].attack_skill;
+	int skill = aroll.attack_skill;
 
-	int blows = MAX(0, baseblows) * state->skills[skill] / weight / 2 + 100;
-
-	//blows = MIN(blows, 100 * p->class->max_attacks);
+	int blows = MAX(0, baseblows) * (state->skills[skill] + 100) / weight / 2 + 100;
 
 	return blows + 100 * extra_blows;
 }
@@ -2080,7 +2080,7 @@ static void calc_shapechange(struct player_state *state, bool vuln[ELEM_MAX],
  * L: calculate the effects of being a monster on player state
  */
 static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
-						 struct monster_race *mrace)
+						 struct monster_race *mrace, int *moves)
 {
 	if (!mrace) return;
 	int i;
@@ -2094,8 +2094,9 @@ static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
 	}
 
 	state->speed += mrace->speed / 2 - 55;
+	state->ac = MAX(state->ac, mrace->ac);
 
-	if (rf_has(mrace->flags, RF_NEVER_MOVE)) state->speed -= 5;
+	if (rf_has(mrace->flags, RF_NEVER_MOVE)) *moves -= 2;
 }
 
 /**
@@ -2130,8 +2131,8 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	int extra_moves = 0;
 	int armwgt = 0;
 	int attacknum;
-	struct object *launcher = equipped_item_by_slot_name(p, "shooting");
-	struct object *weapon = equipped_item_by_slot_name(p, "weapon");
+	struct object *launcher = NULL;
+	struct object *weapon = NULL;
 	bitflag f[OF_SIZE];
 	bitflag collect_f[OF_SIZE];
 	bool vuln[ELEM_MAX];
@@ -2198,6 +2199,12 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			/* L: track armour weight */
 			if (slot_type_is(p, i, EQUIP_BODY_ARMOR))
 			    armwgt = MAX(armwgt, owgt);
+
+			if (!weapon && slot_type_is(p, i, EQUIP_WEAPON))
+				weapon = obj;
+
+			if (!launcher && slot_type_is(p, i, EQUIP_BOW))
+				launcher = obj;
 
 			/* Extract the item flags */
 			if (known_only) {
@@ -2302,7 +2309,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* L: add monster info */
 	if (mrace) {
-		calc_monster(state, vuln, mrace);
+		calc_monster(state, vuln, mrace, &extra_moves);
 	}
 
 	/* Now deal with vulnerabilities */
@@ -2329,9 +2336,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	for (i = 0; i < STAT_MAX; i++) {
 		int add, use, ind;
 
-        /* L: Class doesn't affect stats any more */
+        /* L: Class doesn't affect stats any more, race affects them elsewhere */
 		add = state->stat_add[i];
-		add += (p->race->r_adj[i]);// + p->class->c_adj[i]);
+		//add += p->race->r_adj[i] + p->class->c_adj[i];
 		state->stat_top[i] =  modify_stat_value(p->stat_max[i], add);
 		use = modify_stat_value(p->stat_cur[i], add);
 
@@ -2406,11 +2413,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		}
 	}
 
-
     /* L: monk bonuses */
 	unarmoured_speed_bonus(state, armwgt);
 	unarmoured_ac_bonus(state, armwgt);
-
 
 	/* Other timed effects */
 	player_flags_timed(p, state->flags);
@@ -2512,9 +2517,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* Apply modifier bonuses (Un-inflate stat bonuses) */
 	state->to_a += adj_dex_ta(state->stat_ind[STAT_DEX]);
-	state->to_d += adj_str_td(state->stat_ind[STAT_STR]);
-	state->to_h += adj_dex_th(state->stat_ind[STAT_DEX]);
-	state->to_h += adj_str_th(state->stat_ind[STAT_STR]);
+	//state->to_d += adj_str_td(state->stat_ind[STAT_STR]);
+	//state->to_h += adj_dex_th(state->stat_ind[STAT_DEX]);
+	//state->to_h += adj_str_th(state->stat_ind[STAT_STR]);
 
 	
 

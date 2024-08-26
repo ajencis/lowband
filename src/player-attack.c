@@ -700,7 +700,7 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 		for (i = 0; i < MON_TMD_MAX; i++) {
 			if (!aroll->mtimed[i]) continue;
 			int power = randint1(aroll->mtimed[i]);
-			mon_inc_timed(mon, i, power, MON_TMD_FLG_NOTIFY);
+			mon_inc_timed(mon, i, power, MON_TMD_FLG_NOMESSAGE);
 		}
 	}
 
@@ -740,6 +740,8 @@ static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
 	aroll->ddice = 1 + (lev * 2 + 25) / 50;
 	aroll->dsides = 1 + (lev * 9 + 49) / 50;
 	aroll->mtimed[MON_TMD_STUN] = (lev * 15 + 49) / 50;
+	aroll->accuracy_stat = STAT_DEX;
+	aroll->damage_stat = STAT_STR;
 }
 
 static void specialization_mod_attack(struct attack_roll *aroll, struct object *obj)
@@ -755,7 +757,7 @@ static void specialization_mod_attack(struct attack_roll *aroll, struct object *
 	aroll->dsides += (lev * 10 + 49) / 50;
 }
 
-static bool backstab_mod_attack(struct attack_roll *aroll, struct object *obj, int power)
+static bool backstab_mod_attack(struct attack_roll *aroll, int power)
 {
 	if (!power) return false;
 	int lev = player->state.powers[PP_BACKSTAB];
@@ -785,6 +787,8 @@ struct attack_roll get_weapon_attack(struct player *p, struct object *obj)
 		aroll.to_dam = (td + 1) / 2;
 		aroll.to_hit = object_to_hit(obj);
 		aroll.message = (char *)"hit";
+		aroll.accuracy_stat = STAT_DEX;
+		aroll.damage_stat = STAT_STR;
 	}
 	else {
 		unarmed_get_attack(&aroll, obj);
@@ -798,6 +802,9 @@ struct attack_roll get_weapon_attack(struct player *p, struct object *obj)
 	aroll.to_hit += p->state.to_h;
 	aroll.dsides += player_damage_bonus(&p->state);
 
+	aroll.to_hit += adj_dex_th(p->state.stat_ind[aroll.accuracy_stat]);
+	aroll.to_dam += adj_str_td(p->state.stat_ind[aroll.damage_stat]);
+
 	specialization_mod_attack(&aroll, obj);
 
 	aroll.dsides = MAX(aroll.dsides, 1);
@@ -808,7 +815,7 @@ struct attack_roll get_weapon_attack(struct player *p, struct object *obj)
 
 int get_monster_attacks(struct player *p, struct monster_race *mr, struct attack_roll *aroll, int maxnum)
 {
-	assert(mr);
+	if (!mr) return 0;
 	struct monster_blow *mb;
 	int j;
 	bool foundempty; bool foundfull;
@@ -834,16 +841,23 @@ int get_monster_attacks(struct player *p, struct monster_race *mr, struct attack
 		aroll[pai].dsides = mb->dice.sides;
 		aroll[pai].energy = 0;
 		aroll[pai].message = mb->method->fmessage;
-		aroll[pai].to_hit = 0;
-		aroll[pai].to_dam = 0;
+		aroll[pai].to_hit = mr->level / 5;
+		aroll[pai].to_dam = mr->level / 2;
 		aroll[pai].proj_type = mb->effect->lash_type;
 		aroll[pai].attack_skill = mb->method->skill;
 		for (j = 0; j < MON_TMD_MAX; j++) {
 			if (mb->effect->mtimed == j)
-				aroll[pai].mtimed[j] = 50;
+				aroll[pai].mtimed[j] = 50 + mr->level;
 			else
 				aroll[pai].mtimed[j] = 0;
 		}
+		aroll[pai].accuracy_stat = STAT_DEX;
+		aroll[pai].damage_stat = STAT_STR;
+		if (mb->method->skill == SKILL_SEARCH) aroll[pai].damage_stat = STAT_INT;
+		
+		aroll[pai].to_hit += adj_dex_th(p->state.stat_ind[aroll[pai].accuracy_stat]);
+		aroll[pai].to_dam += adj_str_td(p->state.stat_ind[aroll[pai].damage_stat]);
+
 
 		unarmed_mod_attack(&aroll[pai], NULL);
 
@@ -902,8 +916,6 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	int splash = 0;
 	bool do_quake = false;
 	bool success = false;
-	int backstab = 0;
-	bool did_backstab = false;
 	bool proj_dam = (aroll.proj_type != PROJ_MISSILE);
 
 	char verb[20];
@@ -932,15 +944,9 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 		return false;
 	}
 
-	/* L: is it a backstab? */
-	if (mon->m_timed[MON_TMD_SLEEP] || mon->m_timed[MON_TMD_HOLD]) backstab = 2;
-	else if (mon->m_timed[MON_TMD_SLOW] || mon->m_timed[MON_TMD_FEAR] || mon->m_timed[MON_TMD_STUN]) backstab = 1;
-
-	if (backstab) did_backstab = backstab_mod_attack(&aroll, obj, backstab);
-
 	/* Disturb the monster */
 	monster_wake(mon, false, 100);
-	mon_clear_timed(mon, MON_TMD_HOLD, MON_TMD_FLG_NOTIFY);
+	mon_clear_timed(mon, MON_TMD_HOLD, MON_TMD_FLG_NOMESSAGE);
 
 	/* See if the player hit */
 	success = test_hit(chance_of_melee_hit(p, &aroll, mon), mon->race->ac);
@@ -1034,8 +1040,6 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 		msg_type = MSG_MISS;
 		my_strcpy(verb, "fail to harm", sizeof(verb));
 	}
-
-	if (did_backstab) msg("You backstab %s.", m_name);
 
 	for (i = 0; i < N_ELEMENTS(melee_hit_types); i++) {
 		const char *dmg_text = "";
@@ -1199,6 +1203,14 @@ void py_attack(struct player *p, struct loc grid)
 	struct monster *mon = square_monster(cave, grid);
 	struct attack_roll aroll;
 	int i;
+	int pretimed[MON_TMD_MAX];
+	int backstab = 0;
+
+	if (mon->m_timed[MON_TMD_SLEEP] || mon->m_timed[MON_TMD_HOLD]) backstab = 2;
+	else if (mon->m_timed[MON_TMD_SLOW] || mon->m_timed[MON_TMD_FEAR] || mon->m_timed[MON_TMD_STUN]) backstab = 1;
+
+	for (i = 0; i < MON_TMD_MAX; i++)
+		pretimed[i] = (int)mon->m_timed[i];
 
 	/* Disturb the player */
 	disturb(p);
@@ -1223,14 +1235,23 @@ void py_attack(struct player *p, struct loc grid)
 	 * a full turn or until the enemy dies. We limit energy use
 	 * to avoid giving monsters a possible double move. */
 	aroll = p->state.attacks[0];
+	if (backstab && backstab_mod_attack(&aroll, backstab)) {
+		char m_name[80];
+		monster_desc(m_name, sizeof(m_name), mon, MDESC_TARG);
+		msg("You backstab %s.", m_name);
+	}
 	while (avail_energy - p->upkeep->energy_use >= blow_energy && !slain) {
 		slain = py_attack_real(p, grid, &fear, aroll);
 		p->upkeep->energy_use += blow_energy;
 	}
 
 	for (i = 1; (i < PY_MAX_ATTACKS) && !slain && (p->state.attacks[i].proj_type >= 0); i++) {
-		if (randint0(z_info->move_energy) < p->upkeep->energy_use)
-			slain = py_attack_real(p, grid, &fear, p->state.attacks[i]);
+		if (randint0(z_info->move_energy) < p->upkeep->energy_use) {
+			aroll = p->state.attacks[i];
+			if (backstab)
+				backstab_mod_attack(&aroll, backstab);
+			slain = py_attack_real(p, grid, &fear, aroll);
+		}
 	}
 
 	if (!slain) {
@@ -1238,8 +1259,13 @@ void py_attack(struct player *p, struct loc grid)
 	}
 
 	/* Hack - delay fear messages */
-	if (fear && monster_is_visible(mon)) {
+	/*if (fear && monster_is_visible(mon)) {
 		add_monster_message(mon, MON_MSG_FLEE_IN_TERROR, true);
+	}*/
+	for (i = 0; i < MON_TMD_MAX; i++) {
+		if (monster_is_visible(mon)) {
+			add_mon_timed_message(mon, i, true, pretimed[i], (int)mon->m_timed[i]);
+		}
 	}
 }
 

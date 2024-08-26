@@ -49,16 +49,16 @@
 /**
  * L: functions for races that are monsters
  */
-struct monster_race *lookup_player_monster(struct player *p)
+struct monster_race *lookup_player_monster(const struct player *p)
 {
 	if (!p->curr_monster_ridx) return NULL;
 	return &r_info[p->curr_monster_ridx];
 }
 
-static void change_player_monster(struct player *p, struct monster_race *mon, bool message) {
-	if (is_a_vowel(mon->name[0]) && message)
+static void change_player_monster(struct player *p, struct monster_race *mon, bool verbose) {
+	if (is_a_vowel(mon->name[0]) && verbose)
 		msg("You transform into an %s.", mon->name);
-	else if (message)
+	else if (verbose)
 		msg("You transform into a %s.", mon->name);
 	p->curr_monster_ridx = mon->ridx;
 	player->upkeep->redraw |= (PR_MAP | PR_MISC);
@@ -69,29 +69,30 @@ void check_player_monster(struct player *p, bool init)
 {
 	int i;
 	struct monster_race *mon;
-	struct monster_race *best = NULL;
+	struct monster_race *best = lookup_player_monster(p); // don't change if we're on track but ahead
+	bool on_track = p->curr_monster_ridx == 0; // are we one of the mosters we can naturally turn into?
 
 	for (i = 0; i < MAX_RACE_MONSTERS; i++)
 	{
 		if (!p->race->monsters[i]) continue;
 		mon = &r_info[p->race->monsters[i]];
+		if (p->curr_monster_ridx == mon->ridx) on_track = true;
 		if (mon->level > p->lev * 70 / 50 + 5) continue;
 		if (best && mon->level < best->level) continue;
 		best = mon;
 	}
 
 	if (!best) return;
+	if (!on_track) return;
 	if (best->ridx == p->curr_monster_ridx) return;
 
 	change_player_monster(p, best, !init);
-
-	if (init) update_stuff(p);
 }
 
 void player_race_name(struct player *p, char *buf, int bufsize) {
 	struct monster_race *mon = lookup_player_monster(p);
 	unsigned int i;
-	if (!mon) {
+	if (!mon || !character_generated) {
 		my_strcpy(buf, p->race->name, sizeof(buf));
 		return;
 	}
@@ -424,7 +425,9 @@ int energy_per_move(struct player *p)
 {
 	int num = p->state.num_moves;
 	int energy = z_info->move_energy;
-	return (energy * (1 + ABS(num) - num)) / (1 + ABS(num));
+
+	int result =  (energy * (1 + ABS(num) - num)) / (1 + ABS(num));
+	return result;
 }
 
 /**

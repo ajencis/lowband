@@ -573,7 +573,7 @@ bool effect_handler_SPOT(effect_handler_context_t *context)
 bool effect_handler_SPHERE(effect_handler_context_t *context)
 {
 	struct loc pgrid = player->grid;
-	int dam = effect_calculate_value(context, false);
+	int dam = effect_calculate_value(context, true);
 	int rad = context->radius ? context->radius : 0;
 	int diameter_of_source = context->other ? context->other : 0;
 
@@ -682,7 +682,7 @@ bool effect_handler_BALL(effect_handler_context_t *context)
  */
 bool effect_handler_BREATH(effect_handler_context_t *context)
 {
-	int dam = effect_calculate_value(context, false);
+	int dam = effect_calculate_value(context, true);
 	int type = context->subtype;
 
 	struct loc target = loc(-1, -1);
@@ -853,7 +853,7 @@ bool effect_handler_ARC(effect_handler_context_t *context)
  */
 bool effect_handler_SHORT_BEAM(effect_handler_context_t *context)
 {
-	int dam = effect_calculate_value(context, false);
+	int dam = effect_calculate_value(context, true);
 	int type = context->subtype;
 	bool addons = (context->origin.what == SRC_PLAYER) && (context->other > 0);
 	int rad = context->radius + (addons ? player->lev / context->other : 0);
@@ -1616,7 +1616,7 @@ bool effect_handler_EARTHQUAKE(effect_handler_context_t *context)
  */
 bool effect_handler_TAP_UNLIFE(effect_handler_context_t *context)
 {
-	int amount = effect_calculate_value(context, false);
+	int amount = effect_calculate_value(context, true);
 	struct loc target;
 	struct monster *mon = NULL;
 	char m_name[80];
@@ -1666,7 +1666,7 @@ bool effect_handler_TAP_UNLIFE(effect_handler_context_t *context)
  */
 bool effect_handler_CURSE(effect_handler_context_t *context)
 {
-	int dam = effect_calculate_value(context, false);
+	int dam = effect_calculate_value(context, true);
 	struct monster *mon = target_get_monster();
 	bool fear = false;
 	bool dead = false;
@@ -1711,7 +1711,7 @@ bool effect_handler_CURSE(effect_handler_context_t *context)
  */
 bool effect_handler_JUMP_AND_BITE(effect_handler_context_t *context)
 {
-	int amount = effect_calculate_value(context, false);
+	int amount = effect_calculate_value(context, true);
 	struct loc victim, grid;
 	int d, first_d = randint0(8);
 	struct monster *mon = NULL;
@@ -1993,7 +1993,7 @@ bool effect_handler_SWEEP(effect_handler_context_t *context)
 bool effect_handler_WONDER(effect_handler_context_t *context)
 {
 	int plev = player->lev;
-	int die = effect_calculate_value(context, false);
+	int die = effect_calculate_value(context, true);
 	int subtype = 0, radius = 0, other = 0, y = 0, x = 0;
 	int beam = context->beam;
 	effect_handler_f handler = NULL;

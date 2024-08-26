@@ -499,7 +499,7 @@ bool effect_handler_RANDOM(effect_handler_context_t *context)
  */
 bool effect_handler_NOURISH(effect_handler_context_t *context)
 {
-	int amount = effect_calculate_value(context, false);
+	int amount = effect_calculate_value(context, true);
 	amount *= z_info->food_value;
 	if (context->subtype == 0) {
 		/* Increase food level by amount */
@@ -559,7 +559,7 @@ bool effect_handler_CURE(effect_handler_context_t *context)
  */
 bool effect_handler_TIMED_SET(effect_handler_context_t *context)
 {
-	int amount = effect_calculate_value(context, false);
+	int amount = effect_calculate_value(context, true);
 	player_set_timed(player, context->subtype, MAX(amount, 0), true,
 		context->origin.what != SRC_PLAYER || !context->aware);
 	context->ident = true;
@@ -574,7 +574,7 @@ bool effect_handler_TIMED_SET(effect_handler_context_t *context)
  */
 bool effect_handler_TIMED_INC(effect_handler_context_t *context)
 {
-	int amount = effect_calculate_value(context, false);
+	int amount = effect_calculate_value(context, true);
 	struct monster *t_mon = monster_target_monster(context);
 	struct loc decoy = cave_find_decoy(cave);
 
@@ -667,7 +667,7 @@ bool effect_handler_MON_TIMED_INC(effect_handler_context_t *context)
 {
 	assert(context->origin.what == SRC_MONSTER);
 
-	int amount = effect_calculate_value(context, false);
+	int amount = effect_calculate_value(context, true);
 	struct monster *mon = cave_monster(cave, context->origin.which.monster);
 
 	if (mon) {
@@ -684,7 +684,7 @@ bool effect_handler_MON_TIMED_INC(effect_handler_context_t *context)
  */
 bool effect_handler_TIMED_DEC(effect_handler_context_t *context)
 {
-	int amount = effect_calculate_value(context, false);
+	int amount = effect_calculate_value(context, true);
 	if (context->other)
 		amount = player->timed[context->subtype] / context->other;
 	(void) player_dec_timed(player, context->subtype, MAX(amount, 0), true,
@@ -911,7 +911,7 @@ bool effect_handler_RESTORE_EXP(effect_handler_context_t *context)
 /* Note the divisor of 2, a slight hack to simplify food description */
 bool effect_handler_GAIN_EXP(effect_handler_context_t *context)
 {
-	int amount = effect_calculate_value(context, false);
+	int amount = effect_calculate_value(context, true);
 	if (player->exp < PY_MAX_EXP) {
 		msg("You feel more experienced.");
 		player_exp_gain(player, amount / 2);
@@ -1027,7 +1027,7 @@ bool effect_handler_DRAIN_MANA(effect_handler_context_t *context)
 
 bool effect_handler_RESTORE_MANA(effect_handler_context_t *context)
 {
-	int amount = effect_calculate_value(context, false);
+	int amount = effect_calculate_value(context, true);
 	if (!amount) amount = player->msp;
 	if (player->csp < player->msp) {
 		player->csp += amount;
@@ -1052,7 +1052,7 @@ bool effect_handler_REMOVE_CURSE(effect_handler_context_t *context)
 	const char *prompt = "Uncurse which item? ";
 	const char *rejmsg = "You have no curses to remove.";
 	int itemmode = (USE_EQUIP | USE_INVEN | USE_QUIVER | USE_FLOOR);
-	int strength = effect_calculate_value(context, false);
+	int strength = effect_calculate_value(context, true);
 	struct object *obj = NULL;
 	char dice_string[20];
 
@@ -2202,7 +2202,7 @@ bool effect_handler_RECHARGE(effect_handler_context_t *context)
 
 bool effect_handler_ACQUIRE(effect_handler_context_t *context)
 {
-	int num = effect_calculate_value(context, false);
+	int num = effect_calculate_value(context, true);
 	acquirement(player->grid, player->depth, num, true);
 	context->ident = true;
 	return true;
@@ -2249,7 +2249,7 @@ bool effect_handler_WAKE(effect_handler_context_t *context)
  */
 bool effect_handler_SUMMON(effect_handler_context_t *context)
 {
-	int summon_max = effect_calculate_value(context, false);
+	int summon_max = effect_calculate_value(context, true);
 	int summon_type = context->subtype;
 	int level_boost = context->other;
 	int message_type = summon_message_type(summon_type);
@@ -3493,7 +3493,7 @@ bool effect_handler_SHAPECHANGE(effect_handler_context_t *context)
  */
 bool effect_handler_COMMAND(effect_handler_context_t *context)
 {
-	int amount = effect_calculate_value(context, false);
+	int amount = effect_calculate_value(context, true);
 	struct monster *mon = target_get_monster();
 
 	context->ident = true;
@@ -3625,7 +3625,7 @@ bool effect_handler_SELECT(effect_handler_context_t *context)
  */
 bool effect_handler_SET_VALUE(effect_handler_context_t *context)
 {
-	set_value = effect_calculate_value(context, false);
+	set_value = effect_calculate_value(context, true);
 	return true;
 }
 

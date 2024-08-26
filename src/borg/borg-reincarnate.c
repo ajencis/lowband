@@ -490,13 +490,13 @@ void reincarnate_borg(void)
     seed_flavor = randint0(0x10000000);
 
     /* Embody */
-    memcpy(&p->body, &bodies[p->race->body], sizeof(p->body));
-    my_strcpy(buf, bodies[p->race->body].name, sizeof(buf));
+    memcpy(&p->body, p->race->body, sizeof(p->body));
+    my_strcpy(buf, p->race->body->name, sizeof(buf));
     p->body.name  = string_make(buf);
     p->body.slots = mem_zalloc(p->body.count * sizeof(struct equip_slot));
     for (i = 0; i < p->body.count; i++) {
-        p->body.slots[i].type = bodies[p->race->body].slots[i].type;
-        my_strcpy(buf, bodies[p->race->body].slots[i].name, sizeof(buf));
+        p->body.slots[i].type = p->race->body->slots[i].type;
+        my_strcpy(buf, p->race->body->slots[i].name, sizeof(buf));
         p->body.slots[i].name = string_make(buf);
     }
 

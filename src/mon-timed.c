@@ -226,6 +226,20 @@ static bool mon_set_timed(struct monster *mon,
 	return !resisted;
 }
 
+bool add_mon_timed_message(struct monster *mon, int effect_type, bool delay, int before, int after)
+{
+	struct mon_timed_effect *effect = &effects[effect_type];
+	int m_note = 0;
+
+	if (before == 0 && after > 0) m_note = effect->message_begin;
+	else if (before > 0 && after == 0) m_note = effect->message_end;
+	else if (before > 0 && after > before) m_note = effect->message_increase;
+
+	if (!m_note) return false;
+	
+	return add_monster_message(mon, m_note, delay);
+}
+
 /** Minimum number of turns a new timed effect can last */
 #define MON_INC_MIN_TURNS		2
 

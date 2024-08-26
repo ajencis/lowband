@@ -2580,7 +2580,7 @@ static enum parser_error parse_p_race_name(struct parser *p) {
 	r->next = h;
 	r->name = string_make(parser_getstr(p, "name"));
 	/* Default body is humanoid */
-	r->body = 0;
+	r->body = &bodies[0];
 	parser_setpriv(p, r);
 	return PARSE_ERROR_NONE;
 }
@@ -2850,6 +2850,28 @@ static enum parser_error parse_p_race_monster(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_p_race_body(struct parser *p) {
+	struct player_race *r = parser_priv(p);
+	if (!r)
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+
+	const char *bname = parser_getstr(p, "name");
+	if (!bname)
+		return PARSE_ERROR_GENERIC;
+
+	struct player_body *pbody;
+	for (pbody = bodies; ; pbody = pbody->next) {
+		if (!pbody)
+			return PARSE_ERROR_GENERIC;
+		if (streq(bname, pbody->name)) {
+			r->body = pbody;
+			break;
+		}
+	}
+	
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_p_race(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -2877,6 +2899,7 @@ static struct parser *init_parse_p_race(void) {
 	parser_reg(p, "values str values", parse_p_race_values);
 	parser_reg(p, "power sym name int value", parse_p_race_power);
 	parser_reg(p, "monster sym monster", parse_p_race_monster);
+	parser_reg(p, "body str name", parse_p_race_body);
 	return p;
 }
 

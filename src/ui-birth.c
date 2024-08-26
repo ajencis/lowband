@@ -260,7 +260,7 @@ static void race_help(int i, void *db, const region *l)
 
 	struct player_ability *ability;
 	int n_flags = 0;
-	int flag_space = 3;
+	int flag_space = 5;
 
 	if (!r) return;
 
@@ -330,7 +330,7 @@ static void class_help(int i, void *db, const region *l)
 
 	struct player_ability *ability;
 	int n_flags = 0;
-	int flag_space = 5;
+	int flag_space = 5 + 1 + 4;
 
 	if (!c) return;
 
@@ -1046,8 +1046,8 @@ static enum birth_stage roller_command(bool first_call)
 
 /* The locations of the "costs" area on the birth screen. */
 #define COSTS_ROW 2
-#define COSTS_COL (42 + 32)
-#define TOTAL_COL (42 + 16)
+#define COSTS_COL (42 + 28)
+#define TOTAL_COL (42 + 12)
 
 /*
  * Remember what's possible for a given stat.  0 means can't buy or sell.

@@ -809,6 +809,11 @@ bool obj_can_wear(const struct object *obj)
 	return (wield_slot(obj) >= 0);
 }
 
+bool obj_can_wear_k(const struct object_kind *obj)
+{
+	return (wield_slot_k(obj) >= 0);
+}
+
 /* Can only fire an item with the right tval */
 bool obj_can_fire(const struct object *obj)
 {

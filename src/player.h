@@ -214,7 +214,7 @@ struct player_race {
 
 	int infra;		/**< Infra-vision range */
 
-	int body;		/**< Race body */
+	struct player_body *body;		/**< Race body */
 
 	int monsters[MAX_RACE_MONSTERS];		/**< L: monster equivalents */
 
@@ -250,7 +250,9 @@ struct attack_roll {
 	char *message;
 	int energy;
 	int proj_type;
-	int attack_skill; /* L: which skill it uses to decide accuracy */
+	int attack_skill;	/* which skill it uses to decide accuracy */
+	int accuracy_stat;	/* stat that determines accuracy */
+	int damage_stat;	/* stat that determines damage */
 };
 
 /**

@@ -59,7 +59,7 @@ int slot_by_name(struct player *p, const char *name)
 		}
 	}
 
-	assert(i < p->body.count);
+	if (i == p->body.count) return -1;
 
 	/* Index for that slot */
 	return i;
@@ -70,7 +70,7 @@ int slot_by_name(struct player *p, const char *name)
  */
 static int slot_by_type(struct player *p, int type, bool full)
 {
-	int i, fallback = p->body.count;
+	int i, fallback = -1;
 
 	/* Look for a correct slot type */
 	for (i = 0; i < p->body.count; i++) {
@@ -114,6 +114,7 @@ bool slot_type_is(struct player *p, int slot, int type)
 struct object *slot_object(struct player *p, int slot)
 {
 	/* Check bounds */
+	if (slot == -1) return NULL;
 	assert(slot >= 0 && slot < p->body.count);
 
 	/* Ensure a valid body */
@@ -338,7 +339,7 @@ const char *equip_describe(struct player *p, int slot)
  * For items where multiple slots could work (e.g. rings), the function
  * will try to return an open slot if possible.
  */
-int wield_slot(const struct object *obj)
+int wield_slot_k(const struct object_kind *obj)
 {
 	/* Slot for equipment */
 	switch (obj->tval)
@@ -346,24 +347,29 @@ int wield_slot(const struct object *obj)
 		case TV_BOW: return slot_by_type(player, EQUIP_BOW, false);
 		case TV_AMULET: return slot_by_type(player, EQUIP_AMULET, false);
 		case TV_CLOAK: return slot_by_type(player, EQUIP_CLOAK, false);
-		case TV_SHIELD: return slot_by_type(player, EQUIP_SHIELD, false);
+		case TV_SHIELD: return slot_by_type(player, EQUIP_WEAPON, false);
 		case TV_GLOVES: return slot_by_type(player, EQUIP_GLOVES, false);
 		case TV_BOOTS: return slot_by_type(player, EQUIP_BOOTS, false);
 	}
 
-	if (tval_is_melee_weapon(obj))
+	if (tval_is_melee_weapon_k(obj))
 		return slot_by_type(player, EQUIP_WEAPON, false);
-	else if (tval_is_ring(obj))
+	else if (tval_is_ring_k(obj))
 		return slot_by_type(player, EQUIP_RING, false);
-	else if (tval_is_light(obj))
+	else if (tval_is_light_k(obj))
 		return slot_by_type(player, EQUIP_LIGHT, false);
-	else if (tval_is_body_armor(obj))
+	else if (tval_is_body_armor_k(obj))
 		return slot_by_type(player, EQUIP_BODY_ARMOR, false);
-	else if (tval_is_head_armor(obj))
+	else if (tval_is_head_armor_k(obj))
 		return slot_by_type(player, EQUIP_HAT, false);
 
 	/* No slot available */
 	return -1;
+}
+
+int wield_slot(const struct object *obj)
+{
+	return wield_slot_k(obj->kind);
 }
 
 

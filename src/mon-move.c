@@ -61,17 +61,21 @@ struct opposed_monster_char opposed_chars[] =
 	{'s', 'A'},
 	{'G', 'A'},
 	{'L', 'A'},
-	{'U', 'A'},
-	{'u', 'A'},
 	{'V', 'A'},
 	{'W', 'A'},
 	{'z', 'A'},
-	{0, 0}
+	{'U', 'A'},
+	{'u', 'A'},
+	{-1, -1}
 };
 
 bool mon_will_attack_player(const struct monster *mon, const struct player *p)
 {
 	if (mon->faction == '@') return false;
+
+	struct monster_race *pmonr = lookup_player_monster(p);
+	if (pmonr && pmonr->d_char == mon->faction) return false;
+
 	return true;
 }
 
@@ -82,7 +86,7 @@ static bool mon_will_attack_mon(const struct monster *mon, const struct monster 
 	if (mon->faction == '@' && mon_will_attack_player(other, player)) return true;
 	if (other->faction == '@' && mon_will_attack_player(mon, player)) return true;
 
-	while (opposed_chars[i].char1) {
+	while (opposed_chars[i].char1 >= 0) {
 
 		if (mon->faction == opposed_chars[i].char1 &&
 		    other->faction == opposed_chars[i].char2)
@@ -1756,8 +1760,10 @@ static void monster_turn(struct monster *mon)
 			if (rf_has(mon->race->flags, RF_NEVER_BLOW))
 				continue;
 
-			if (!mon_will_attack_player(mon, player) && stagger != CONFUSED_STAGGER)
+			if (!mon_will_attack_player(mon, player) && stagger != CONFUSED_STAGGER) {
+				if (mon->target.midx == MON_TARGET_PLAYER) return;
 			    continue;
+			}
 
 			/* Otherwise, attack the player */
 			make_attack_normal(mon, player);

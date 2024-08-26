@@ -431,6 +431,7 @@ void do_cmd_wiz_advance(struct command *cmd)
 	player_exp_gain(player, PY_MAX_EXP);
 	while (player_can_level_up(player)) {
 		player_level_up_one(player, true);
+		check_player_monster(player, false);
 		player_exp_gain(player, PY_MAX_EXP);
 	}
 

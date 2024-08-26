@@ -22,8 +22,8 @@
 #define MON_TARGET_NONE -2
 
 struct opposed_monster_char {
-	wchar_t char1;
-	wchar_t char2;
+	int char1;
+	int char2;
 };
 
 enum monster_stagger {

@@ -461,11 +461,11 @@ void display_player_stat_info(void)
 
 	/* Print out the labels for the columns */
 	c_put_str(COLOUR_WHITE, "  Self", row-1, col+5);
-	c_put_str(COLOUR_WHITE, " RB", row-1, col+12);
+	//c_put_str(COLOUR_WHITE, " RB", row-1, col+12);
 	//c_put_str(COLOUR_WHITE, " CB", row-1, col+16);
-	c_put_str(COLOUR_WHITE, " EB", row-1, col+16);
-	c_put_str(COLOUR_WHITE, " Best", row-1, col+20);
-	c_put_str(COLOUR_WHITE, "  Max", row-1, col+26);
+	c_put_str(COLOUR_WHITE, " EB", row-1, col+12);
+	c_put_str(COLOUR_WHITE, " Best", row-1, col+16);
+	c_put_str(COLOUR_WHITE, "  Max", row-1, col+22);
 
 	/* Display the stats */
 	for (i = 0; i < STAT_MAX; i++) {
@@ -487,32 +487,32 @@ void display_player_stat_info(void)
 		c_put_str(COLOUR_L_GREEN, buf, row+i, col+5);
 
 		/* Race Bonus */
-		strnfmt(buf, sizeof(buf), "%+3d", player->race->r_adj[i]);
-		c_put_str(COLOUR_L_BLUE, buf, row+i, col+12);
+		//strnfmt(buf, sizeof(buf), "%+3d", player->race->r_adj[i]);
+		//c_put_str(COLOUR_L_BLUE, buf, row+i, col+12);
 
 		/* Class Bonus */
-		/*strnfmt(buf, sizeof(buf), "%+3d", player->class->c_adj[i]);
-		c_put_str(COLOUR_L_BLUE, buf, row+i, col+16);*/
+		//strnfmt(buf, sizeof(buf), "%+3d", player->class->c_adj[i]);
+		//c_put_str(COLOUR_L_BLUE, buf, row+i, col+16);
 
 		/* Equipment Bonus */
 		strnfmt(buf, sizeof(buf), "%+3d", player->state.stat_add[i]);
-		c_put_str(COLOUR_L_BLUE, buf, row+i, col+16);
+		c_put_str(COLOUR_L_BLUE, buf, row+i, col+12);
 
 		/* Resulting "modified" maximum value */
 		cnv_stat(player->state.stat_top[i], buf, sizeof(buf));
-		c_put_str(COLOUR_L_GREEN, buf, row+i, col+19);
+		c_put_str(COLOUR_L_GREEN, buf, row+i, col+15);
 
 		/* L: maxima */
         maxmax = player->stat_max_max[i];
-		maxmax = modify_stat_value(maxmax, player->race->r_adj[i]);
+		//maxmax = modify_stat_value(maxmax, player->race->r_adj[i]);
 		maxmax = modify_stat_value(maxmax, player->state.stat_add[i]);
 		cnv_stat(maxmax, buf, sizeof(buf));
-		c_put_str(COLOUR_L_GREEN, buf, row+i, col+25);
+		c_put_str(COLOUR_L_GREEN, buf, row+i, col+21);
 
 		/* Only display stat_use if there has been draining */
 		if (player->stat_cur[i] < player->stat_max[i]) {
 			cnv_stat(player->state.stat_use[i], buf, sizeof(buf));
-			c_put_str(COLOUR_YELLOW, buf, row+i, col+31);
+			c_put_str(COLOUR_YELLOW, buf, row+i, col+27);
 		}
 	}
 }
@@ -702,7 +702,7 @@ static const uint8_t colour_table[] =
 
 static struct panel *get_panel_topleft(void) {
 	struct panel *p = panel_allocate(6);
-	char buf[13] = "";
+	char buf[13];
 	player_race_name(player, buf, sizeof(buf));
 
 	panel_line(p, COLOUR_L_BLUE, "Name", "%s", player->full_name);
@@ -749,7 +749,7 @@ static struct panel *get_panel_combat(void) {
 	/* Melee */
 	obj = equipped_item_by_slot_name(player, "weapon");
 	aroll = player->state.attacks[0];
-	bth = (player->state.skills[SKILL_TO_HIT_MELEE] * 10) / BTH_PLUS_ADJ;
+	bth = (player->state.skills[aroll.attack_skill] * 10) / BTH_PLUS_ADJ;
 
 	panel_space(p);
 	if (!aroll.ddice || !aroll.dsides)

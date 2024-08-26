@@ -262,7 +262,8 @@ static void get_stats(int stat_use[STAT_MAX])
 		player->stat_max[i] = MIN(j / 2 + 5, j);
 
 		/* Obtain a "bonus" for "race" and "class" */
-		bonus = player->race->r_adj[i];// + player->class->c_adj[i];
+		//bonus = player->race->r_adj[i]; + player->class->c_adj[i];
+		bonus = 0;
 
 		/* Start fully healed */
 		player->stat_cur[i] = player->stat_max[i];
@@ -314,6 +315,10 @@ static void roll_hp(void)
 
 static void get_bonuses(void)
 {
+	/* L: check monster */
+	player->curr_monster_ridx = 0;
+	check_player_monster(player, true);
+
 	/* Calculate the bonuses and hitpoints */
 	player->upkeep->update |= (PU_BONUS | PU_HP);
 
@@ -377,13 +382,13 @@ static void player_embody(struct player *p)
 
 	assert(p->race);
 
-	memcpy(&p->body, &bodies[p->race->body], sizeof(p->body));
-	my_strcpy(buf, bodies[p->race->body].name, sizeof(buf));
+	memcpy(&p->body, p->race->body, sizeof(p->body));
+	my_strcpy(buf, p->race->body->name, sizeof(buf));
 	p->body.name = string_make(buf);
 	p->body.slots = mem_zalloc(p->body.count * sizeof(struct equip_slot));
 	for (i = 0; i < p->body.count; i++) {
-		p->body.slots[i].type = bodies[p->race->body].slots[i].type;
-		my_strcpy(buf, bodies[p->race->body].slots[i].name, sizeof(buf));
+		p->body.slots[i].type = p->race->body->slots[i].type;
+		my_strcpy(buf, p->race->body->slots[i].name, sizeof(buf));
 		p->body.slots[i].name = string_make(buf);
 	}
 }
@@ -620,6 +625,9 @@ static void player_outfit(struct player *p)
 			num = 1;
 		}
 
+		if (tval_is_wearable_k(kind) && !obj_can_wear_k(kind))
+			continue;
+
 		/* Exclude if configured to do so based on birth options. */
 		if (si->eopts) {
 			bool included = true;
@@ -688,9 +696,10 @@ static void recalculate_stats(int *stats_local_local, int points_left_local)
 
 	/* L: Variable stat maxes */
 	for (i = 0; i < STAT_MAX; i++) {
-		player->stat_max_max[i] = stats_local_local[i];
+		player->stat_max_max[i] = MAX(stats_local_local[i] + player->race->r_adj[i], 3);
+		if (player->stat_max_max[i] > 18) player->stat_max_max[i] = (player->stat_max_max[i] - 18) * 10 + 18;
 		player->stat_cur[i] = player->stat_max[i] =	player->stat_birth[i] 
-		                    = MIN(stats_local_local[i] / 2 + 5, stats_local_local[i]);
+		                    = MIN(stats_local_local[i] / 2 + 5, player->stat_max_max[i]);
 		player->stat_map[i] = i;
 	}
 
@@ -822,6 +831,7 @@ static bool sell_stat(int choice, int stats_local[STAT_MAX],
 static void generate_stats(int st[STAT_MAX], int spent[STAT_MAX],
 		int inc[STAT_MAX], int *left)
 {
+	return;
 	int step = 0;
 	bool maxed[STAT_MAX] = { 0 };
 	/* Hack - for now, just use stat of first book - NRM */
@@ -1259,9 +1269,6 @@ void do_cmd_accept_character(struct command *cmd)
 
 	/* Initialise the spells */
 	player_spells_init(player);
-
-	/* L: check which monster to be */
-	check_player_monster(player, true);
 
 	/* Know all runes for ID on walkover */
 	if (OPT(player, birth_know_runes))

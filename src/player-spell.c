@@ -22,6 +22,7 @@
 #include "effects.h"
 #include "init.h"
 #include "monster.h"
+#include "mon-spell.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
@@ -338,8 +339,24 @@ int spell_book_count_spells(const struct player *p, const struct object *obj,
  */
 int caster_level_bonus(const struct player *p, const struct class_spell *spell)
 {
-	if (p->state.powers[spell->school]) return (p->state.powers[spell->school] * 20 + 25) / 50;
-	return 0;
+	int bonus = 0;
+	struct monster_race *mon = lookup_player_monster(p);
+
+	if (p->state.powers[spell->school]) 
+		bonus += (p->state.powers[spell->school] * 20 + 49) / 50;
+
+	if (mon) {
+		int monspells = 0;
+		int i;
+		for (i = 0; i < RSF_MAX; i++) {
+			if (mon_spell_is_innate(i)) continue;
+			if (!rsf_has(mon->spell_flags, i)) continue;
+			++monspells;
+		}
+		bonus += monspells;
+	}
+
+	return bonus;
 }
 
 

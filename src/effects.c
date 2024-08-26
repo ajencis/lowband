@@ -307,7 +307,7 @@ static int32_t effect_value_base_max_sight(void)
 
 static int32_t effect_value_base_weapon_damage(void)
 {
-	struct object *obj = player->body.slots[slot_by_name(player, "weapon")].obj;
+	struct object *obj = slot_object(player, slot_by_name(player, "weapon"));
 	if (!obj) {
 		return 0;
 	}

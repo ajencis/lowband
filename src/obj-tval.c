@@ -76,6 +76,11 @@ bool tval_is_light_k(const struct object_kind *kind)
 	return kind->tval == TV_LIGHT;
 }
 
+bool tval_is_ring_k(const struct object_kind *obj)
+{
+	return obj->tval == TV_RING;
+}
+
 bool tval_is_ring(const struct object *obj)
 {
 	return obj->tval == TV_RING;
@@ -122,7 +127,7 @@ bool tval_can_have_timeout(const struct object *obj)
 	return obj->tval == TV_ROD;
 }
 
-bool tval_is_body_armor(const struct object *obj)
+bool tval_is_body_armor_k(const struct object_kind *obj)
 {
 	switch (obj->tval) {
 		case TV_SOFT_ARMOR:
@@ -134,7 +139,17 @@ bool tval_is_body_armor(const struct object *obj)
 	}
 }
 
+bool tval_is_body_armor(const struct object *obj)
+{
+	return tval_is_body_armor_k(obj->kind);
+}
+
 bool tval_is_head_armor(const struct object *obj)
+{
+	return obj->tval == TV_HELM || obj->tval == TV_CROWN;
+}
+
+bool tval_is_head_armor_k(const struct object_kind *obj)
 {
 	return obj->tval == TV_HELM || obj->tval == TV_CROWN;
 }
@@ -240,7 +255,7 @@ bool tval_is_armor(const struct object *obj)
 	}
 }
 
-bool tval_is_melee_weapon(const struct object *obj)
+bool tval_is_melee_weapon_k(const struct object_kind *obj)
 {
 	switch (obj->tval) {
 		case TV_SWORD:
@@ -251,6 +266,11 @@ bool tval_is_melee_weapon(const struct object *obj)
 		default:
 			return false;
 	}
+}
+
+bool tval_is_melee_weapon(const struct object *obj)
+{
+	return tval_is_melee_weapon_k(obj->kind);
 }
 
 bool tval_has_variable_power(const struct object *obj)
@@ -282,7 +302,7 @@ bool tval_has_variable_power(const struct object *obj)
 	}
 }
 
-bool tval_is_wearable(const struct object *obj)
+bool tval_is_wearable_k(const struct object_kind *obj)
 {
 	switch (obj->tval) {
 		case TV_BOW:
@@ -306,6 +326,11 @@ bool tval_is_wearable(const struct object *obj)
 		default:
 			return false;
 	}
+}
+
+bool tval_is_wearable(const struct object *obj)
+{
+	return tval_is_wearable_k(obj->kind);
 }
 
 bool tval_is_edible(const struct object *obj)

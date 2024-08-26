@@ -60,6 +60,7 @@ bool obj_can_study(const struct object *obj);
 bool obj_can_takeoff(const struct object *obj);
 bool obj_can_throw(const struct object *obj);
 bool obj_can_wear(const struct object *obj);
+bool obj_can_wear_k(const struct object_kind *obj);
 bool obj_can_fire(const struct object *obj);
 bool obj_is_throwing(const struct object *obj);
 bool obj_is_known_artifact(const struct object *obj);
