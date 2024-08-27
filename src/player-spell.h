@@ -45,3 +45,5 @@ extern void get_spell_info(int index, char *buf, size_t len);
 extern bool cast_spell(int tval, int index, int dir);
 extern bool spell_needs_aim(int spell_index);
 
+int innate_spell_mana(const struct monster_race *mon);
+

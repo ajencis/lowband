@@ -695,6 +695,26 @@ const char *mon_spell_lore_description(int index,
 	}
 }
 
+void get_mon_spell_name(char *buf, int bufsize, int index, const struct monster_race *race)
+{
+	const char *desc = mon_spell_lore_description(index, race);
+	int i;
+
+	buf[0] = '\0';
+	if (monster_spell_is_breath(index))
+		my_strcpy(buf, "Breathe ", bufsize);
+	
+	my_strcat(buf, desc, bufsize);
+
+	for (i = 0; i < (int)(bufsize / sizeof(buf[0])); i++)
+	{
+		if (buf[i] == '\0')
+			break;
+		if (i == 0 || buf[i - 1] == ' ')
+			buf[i] = toupper(buf[i]);
+	}
+}
+
 int mon_spell_lore_damage(int index, const struct monster_race *race,
 		bool know_hp)
 {

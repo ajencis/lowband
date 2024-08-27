@@ -80,5 +80,7 @@ const char *mon_spell_lore_description(int index,
 									   const struct monster_race *race);
 int mon_spell_lore_damage(int index, const struct monster_race *race,
 						  bool know_hp);
+void get_mon_spell_name(char *buf, int bufsize, int index,
+						const struct monster_race *race);
 
 #endif /* MONSTER_SPELL_H */

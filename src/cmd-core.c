@@ -117,6 +117,7 @@ static const struct command_info game_cmds[] =
 	{ CMD_RETIRE, "retire character", do_cmd_retire, false, false, 0 },
 	{ CMD_HELP, "help", NULL, false, false, 0 },
 	{ CMD_REPEAT, "repeat", NULL, false, false, 0 },
+	{ CMD_INNATE, "use innate power", do_cmd_innate, false, true, 0 },
 
 	{ CMD_COMMAND_MONSTER, "make a monster act", do_cmd_mon_command, false, true, 0 },
 
@@ -775,6 +776,28 @@ int cmd_get_spell(struct command *cmd, const char *arg, struct player *p,
 	if (*spell >= 0) {
 		cmd_set_arg_item(cmd, "book", book);
 		cmd_set_arg_choice(cmd, arg, *spell);
+		return CMD_OK;
+	}
+
+	return CMD_ARG_ABORTED;
+}
+
+int cmd_get_innate(struct command *cmd, const char *arg, struct player *p,
+		int *innate, bool (*innate_filter)(const struct player *p, int innate),
+		const char *error)
+{
+	struct monster_race *monr = lookup_player_monster(p);
+	if (!monr) return CMD_ARG_ABORTED;
+
+	if (cmd_get_arg_choice(cmd, arg, innate) == CMD_OK) {
+		if (!innate_filter || innate_filter(p, *innate))
+			return CMD_OK;
+	}
+
+	*innate = get_innate(p, monr, error, innate_filter);
+
+	if (*innate >= 0) {
+		cmd_set_arg_choice(cmd, arg, *innate);
 		return CMD_OK;
 	}
 

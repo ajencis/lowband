@@ -26,6 +26,7 @@
 #include "player-quest.h"
 #include "player-spell.h"
 #include "player-timed.h"
+#include "player-util.h"
 #include "randname.h"
 #include "z-color.h"
 #include "z-util.h"
@@ -227,7 +228,7 @@ bool player_at_max_level(struct player *p)
 	
     if (p->lev >= (50 + adj_int_lev(p->state.stat_ind[STAT_INT]))) return true;
 
-	if (player_exp[p->lev-1] / 100L * p->state.expfact >= PY_MAX_EXP) return true;
+	if (player_exp[p->lev-1] >= PY_MAX_EXP) return true;
 
 	return false;
 }
@@ -236,14 +237,13 @@ bool player_can_level_up(struct player *p)
 {
 	if (player_at_max_level(p)) return false;
 
-    if (p->exp < (player_exp[p->lev-1] * p->state.expfact / 100L)) return false;
+    if (p->exp < (player_exp[p->lev-1])) return false;
 
 	return true;
 }
 
 static void adjust_level(struct player *p, bool verbose, bool levelup)
 {
-	int i;
 	bool doneone = false;
 
 	if (p->exp < 0)
@@ -266,7 +266,7 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 	//handle_stuff(p);
 
 	while ((p->lev > 1) &&
-	       (p->exp < (player_exp[p->lev-2] * p->state.expfact / 100L)))
+		   (p->exp < player_exp[p->lev-2]))
 		p->lev--;
 
 	while (((levelup && !doneone) || p->lev < p->max_lev) && player_can_level_up(p)) {
@@ -277,26 +277,14 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 		/* Save the highest level */
 		/* L: and do stuff that happens on the first time reaching a level */
 		while (p->lev > p->max_lev) {
-            doneone = true;
+			doneone = true;
 
 			p->max_lev++;
 
 			int freq = p->max_lev < 20 ? 5 : p->max_lev < 36 ? 4 : 3;
 
 			if (!(p->max_lev % freq)) {
-				int num = 0;
-				int choice = 0;
-				for (i = 0; i < STAT_MAX; i++)
-				{
-					if (p->stat_max[i] < p->stat_max_max[i]) {
-						num++;
-						if (one_in_(num)) choice = i;
-					}
-				}
-				if (num) {
-					p->stat_cur[choice] = p->stat_max[choice];
-					effect_simple(EF_GAIN_STAT, source_none(), "0", choice, 0, 0, 0, 0, NULL);
-				}
+				player_increase_stat(p);
 			}
 		}
 
@@ -320,8 +308,11 @@ void player_exp_gain(struct player *p, int32_t amount)
 	int32_t tolev;
 
 	if (p->max_lev == PY_MAX_LEVEL) tolev = PY_MAX_EXP;
-	else if (p->max_lev > 25) tolev = player_exp[p->max_lev-1] / 100L * p->state.expfact;
-	else tolev = player_exp[p->max_lev-1] * p->state.expfact / 100L;
+	else tolev = player_exp[p->max_lev-1];
+
+	amount *= 100;
+	amount += p->state.expfact - 1;
+	amount /= p->state.expfact;
 
 	if (amount > tolev - p->exp) p->exp = tolev;
 	else p->exp += amount;

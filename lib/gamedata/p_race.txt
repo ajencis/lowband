@@ -117,7 +117,7 @@ skill-melee:-5
 skill-shoot:15
 skill-throw:15
 skill-dig:0
-power:SWORD_SPECIALIZATION:15
+power:BOW_SPECIALIZATION:25
 hitdie:4
 exp:120
 infravision:3
@@ -303,7 +303,7 @@ weight:65:5
 values:RES_POIS[1]
 
 name:Dhampir
-stats:1:1:-2:1:-1
+stats:1:1:-2:2:-1
 skill-disarm-phys:10
 skill-disarm-magic:10
 skill-device:5
@@ -317,7 +317,7 @@ skill-dig:0
 power:BACKSTAB:25
 power:POLEARM_SPECIALIZATION:25
 hitdie:3
-exp:120
+exp:150
 infravision:5
 history:1
 age:45:30
@@ -327,10 +327,9 @@ monster:vampire
 monster:master vampire
 monster:vampire lord
 monster:elder vampire
-body:Humanoid
 
 name:Eyestalk
-stats:-2:2:-1:1:0
+stats:-2:2:0:1:0
 skill-disarm-phys:0
 skill-disarm-magic:5
 skill-device:10
@@ -343,7 +342,7 @@ skill-throw:0
 skill-dig:-5
 power:DIVINATION_SPECIALIZATION:25
 hitdie:0
-exp:120
+exp:150
 infravision:10
 history:1
 age:5:2
@@ -357,3 +356,29 @@ monster:gauth
 monster:beholder
 monster:beholder hive-mother
 body:Beholder
+
+name:Red Draconian
+stats:1:1:-1:-1:1
+skill-disarm-phys:0
+skill-disarm-magic:0
+skill-device:5
+skill-save:10
+skill-stealth:2
+skill-search:15
+skill-melee:15
+skill-shoot:0
+skill-throw:0
+skill-dig:10
+power:FIRE_SPECIALIZATION:50
+hitdie:5
+exp:175
+infravision:5
+history:1
+age:100:50
+height:80:6
+weight:190:20
+monster:baby red dragon
+monster:young red dragon
+monster:mature red dragon
+monster:ancient red dragon
+body:Dragon

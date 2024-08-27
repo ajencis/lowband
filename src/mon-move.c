@@ -1902,16 +1902,16 @@ static void monster_reduce_sleep(struct monster *mon)
 		int local_noise = cave->noise.grids[mon->grid.y][mon->grid.x];
 		bool woke_up = false;
 		int curr = mon->m_timed[MON_TMD_SLEEP];
-		int dist_val = local_noise + stealth;
 
-		sleep_reduction = MAX(0, 11 - dist_val) * 3;
+		sleep_reduction = MAX(0, 11 - local_noise);
+		sleep_reduction *= MAX(0, sleep_reduction - stealth);
 
 		/* Note a complete wakeup */
 		/* L: also note getting close to wakeup */
 		if (curr <= sleep_reduction) {
 			woke_up = true;
-		} else if (((curr & 3) < sleep_reduction) &&
-		           (curr - sleep_reduction <= 25) &&
+		} else if (((curr & 0xf) < sleep_reduction) &&
+		           (curr - sleep_reduction <= 64) &&
 				   monster_is_obvious(mon)) {
 			char m_name[80];
 			monster_desc(m_name, sizeof(m_name), mon,

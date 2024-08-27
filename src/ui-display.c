@@ -236,8 +236,7 @@ static void prt_exp(int row, int col)
 
 	/* Calculate XP for next level */
 	if (!lev50)
-		xp = (long)(player_exp[player->lev - 1] * player->state.expfact / 100L) -
-			player->exp;
+		xp = (long)(player_exp[player->lev - 1]) - player->exp;
 	
 	/* L: can have xp to level without having leveled now */
 	if (xp <= 0)
@@ -652,8 +651,7 @@ static int prt_exp_short(int row, int col)
 
 	/* Calculate XP for next level */
 	if (!lev50)
-		xp = (long)(player_exp[player->lev - 1] * player->state.expfact / 100L) -
-			player->exp;
+		xp = (long)(player_exp[player->lev - 1]) - player->exp;
 
 	/* Format XP */
 	strnfmt(out_val, sizeof(out_val), "%ld", xp);

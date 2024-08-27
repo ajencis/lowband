@@ -130,7 +130,7 @@ struct cmd_info cmd_item[] =
 	{ "Quaff a potion", { 'q' }, CMD_QUAFF, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Read a scroll", { 'r' }, CMD_READ_SCROLL, NULL, player_can_read_prereq, 0, NULL, NULL, NULL, 0 },
 	{ "Fuel your light source", { 'F' }, CMD_REFILL, NULL, player_can_refuel_prereq, 0, NULL, NULL, NULL, 0 },
-	{ "Use an item", { 'U', 'X' }, CMD_USE, NULL, NULL, 0, NULL, NULL, NULL, 0 }
+	{ "Use an item", { 'X' }, CMD_USE, NULL, NULL, 0, NULL, NULL, NULL, 0 }
 };
 
 /**
@@ -151,6 +151,7 @@ struct cmd_info cmd_action[] =
 	{ "Fire at nearest target", { 'h', KC_TAB }, CMD_NULL, do_cmd_fire_at_nearest, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Throw an item", { 'v' }, CMD_THROW, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Walk into a trap", { 'W', '-' }, CMD_JUMP, NULL, NULL, 0, NULL, NULL, NULL, 0 },
+	{ "Use an innnate power", { 'U' }, CMD_INNATE, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 };
 
 /**

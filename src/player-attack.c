@@ -803,7 +803,7 @@ struct attack_roll get_weapon_attack(struct player *p, struct object *obj)
 	aroll.dsides += player_damage_bonus(&p->state);
 
 	aroll.to_hit += adj_dex_th(p->state.stat_ind[aroll.accuracy_stat]);
-	aroll.to_dam += adj_str_td(p->state.stat_ind[aroll.damage_stat]);
+	aroll.dsides += adj_str_td(p->state.stat_ind[aroll.damage_stat]);
 
 	specialization_mod_attack(&aroll, obj);
 
@@ -813,55 +813,86 @@ struct attack_roll get_weapon_attack(struct player *p, struct object *obj)
 	return aroll;
 }
 
+static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow)
+{
+	bool foundempty = false;
+	bool foundfull = false;
+	int j;
+	struct object *obj;
+
+	for (j = 0; j < p->body.count; j++) {
+		if (!slot_type_is(p, j, blow->method->equip_slot)) continue;
+
+		obj = slot_object(p, j);
+
+		if (obj) foundfull = true;
+		else foundempty = true;
+	}
+
+	return (!foundfull || foundempty);
+}
+
+static bool get_monster_attack(struct player *p, struct monster_race *mr, struct attack_roll *aroll, int aind)
+{
+	int j;
+	struct monster_blow *mb = &mr->blow[aind];
+	if (!mb->method) return false;
+	if (!monster_attack_is_usable(p, mb)) return false;
+
+	aroll->ddice = mb->dice.dice;
+	aroll->dsides = mb->dice.sides;
+	aroll->energy = 0;
+	aroll->message = mb->method->fmessage;
+	aroll->to_hit = mr->level / 5;
+	aroll->to_dam = mr->level / 2;
+	aroll->proj_type = mb->effect->lash_type;
+	aroll->attack_skill = mb->method->skill;
+	for (j = 0; j < MON_TMD_MAX; j++) {
+		if (mb->effect->mtimed == j)
+			aroll->mtimed[j] = 50 + mr->level;
+		else
+			aroll->mtimed[j] = 0;
+	}
+	aroll->accuracy_stat = STAT_DEX;
+	aroll->damage_stat = STAT_STR;
+	if (mb->method->skill == SKILL_SEARCH) aroll->damage_stat = STAT_INT;
+		
+	aroll->to_hit += adj_dex_th(p->state.stat_ind[aroll->accuracy_stat]);
+	aroll->to_dam += adj_str_td(p->state.stat_ind[aroll->damage_stat]);
+
+	unarmed_mod_attack(aroll, NULL);
+
+	return true;
+}
+
 int get_monster_attacks(struct player *p, struct monster_race *mr, struct attack_roll *aroll, int maxnum)
 {
 	if (!mr) return 0;
+	if (!mr->blow[0].method) return 0;
 	struct monster_blow *mb;
-	int j;
-	bool foundempty; bool foundfull;
 	int mbi; int pai = 0;
+	int bestblow = -1;
+	int bestblowdam = -1;
+	int currdam;
 
-	for (mbi = 0; mbi < z_info->mon_blows_max && pai < maxnum; mbi++) {
+	for (mbi = 0; mbi < z_info->mon_blows_max && mr->blow[mbi].method; mbi++) {
 		mb = &mr->blow[mbi];
-		if (!mb->method) break;
-
-		foundempty = false;
-		foundfull = false;
-		for (j = 0; j < p->body.count; j++) {
-			if (!slot_type_is(p, j, mb->method->equip_slot))
-				continue;
-			struct object *obj = slot_object(p, j);
-			if (!obj) foundempty = true;
-			else foundfull = true;
+		if (monster_attack_is_usable(p, mb)) continue;
+		currdam = (mb->dice.sides + 1) * mb->dice.dice;
+		if (currdam > bestblowdam) {
+			bestblow = mbi;
+			bestblowdam = currdam;
 		}
-		if (foundfull && !foundempty)
-			continue;
+	}
 
-		aroll[pai].ddice = mb->dice.dice;
-		aroll[pai].dsides = mb->dice.sides;
-		aroll[pai].energy = 0;
-		aroll[pai].message = mb->method->fmessage;
-		aroll[pai].to_hit = mr->level / 5;
-		aroll[pai].to_dam = mr->level / 2;
-		aroll[pai].proj_type = mb->effect->lash_type;
-		aroll[pai].attack_skill = mb->method->skill;
-		for (j = 0; j < MON_TMD_MAX; j++) {
-			if (mb->effect->mtimed == j)
-				aroll[pai].mtimed[j] = 50 + mr->level;
-			else
-				aroll[pai].mtimed[j] = 0;
-		}
-		aroll[pai].accuracy_stat = STAT_DEX;
-		aroll[pai].damage_stat = STAT_STR;
-		if (mb->method->skill == SKILL_SEARCH) aroll[pai].damage_stat = STAT_INT;
-		
-		aroll[pai].to_hit += adj_dex_th(p->state.stat_ind[aroll[pai].accuracy_stat]);
-		aroll[pai].to_dam += adj_str_td(p->state.stat_ind[aroll[pai].damage_stat]);
+	if (bestblow >= 0) {
+		if (get_monster_attack(p, mr, aroll, bestblow))
+			++pai;
+	}
 
-
-		unarmed_mod_attack(&aroll[pai], NULL);
-
-		pai++;
+	for (mbi = 0; mbi < z_info->mon_blows_max && pai < maxnum && mr->blow[mbi].method; mbi++) {
+		if (mbi == bestblow) continue;
+		if (get_monster_attack(p, mr, &aroll[pai], mbi)) ++pai;
 	}
 
 	return pai;

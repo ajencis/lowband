@@ -55,11 +55,14 @@ struct monster_race *lookup_player_monster(const struct player *p)
 	return &r_info[p->curr_monster_ridx];
 }
 
-static void change_player_monster(struct player *p, struct monster_race *mon, bool verbose) {
+static void change_player_monster(struct player *p, struct monster_race *mon, bool verbose)
+{
+	assert(mon);
 	if (is_a_vowel(mon->name[0]) && verbose)
 		msg("You transform into an %s.", mon->name);
 	else if (verbose)
 		msg("You transform into a %s.", mon->name);
+
 	p->curr_monster_ridx = mon->ridx;
 	player->upkeep->redraw |= (PR_MAP | PR_MISC);
 	player->upkeep->update |= (PU_BONUS | PU_HP);
@@ -71,13 +74,17 @@ void check_player_monster(struct player *p, bool init)
 	struct monster_race *mon;
 	struct monster_race *best = lookup_player_monster(p); // don't change if we're on track but ahead
 	bool on_track = p->curr_monster_ridx == 0; // are we one of the mosters we can naturally turn into?
+	int maxlev = p->lev < 10 ? p->lev :
+				 p->lev < 20 ? p->lev * 3 - 20 :
+				 p->lev < 40 ? p->lev + 20 :
+							   p->lev * 3 / 2;
 
 	for (i = 0; i < MAX_RACE_MONSTERS; i++)
 	{
 		if (!p->race->monsters[i]) continue;
 		mon = &r_info[p->race->monsters[i]];
 		if (p->curr_monster_ridx == mon->ridx) on_track = true;
-		if (mon->level > p->lev * 70 / 50 + 5) continue;
+		if (mon->level > maxlev) continue;
 		if (best && mon->level < best->level) continue;
 		best = mon;
 	}
@@ -87,9 +94,12 @@ void check_player_monster(struct player *p, bool init)
 	if (best->ridx == p->curr_monster_ridx) return;
 
 	change_player_monster(p, best, !init);
+
+	if (!init) player_increase_stat(p);
 }
 
-void player_race_name(struct player *p, char *buf, int bufsize) {
+void player_race_name(struct player *p, char *buf, int bufsize)
+{
 	struct monster_race *mon = lookup_player_monster(p);
 	unsigned int i;
 	if (!mon || !character_generated) {
@@ -103,7 +113,38 @@ void player_race_name(struct player *p, char *buf, int bufsize) {
 		if (i == 0 || buf[i - 1] == ' ')
 			buf[i] = toupper(buf[i]);
 	}
-	return;
+}
+
+bool player_increase_stat(struct player *p)
+{
+	int num = 0;
+	int backup_num = 0;
+	int choice = -1;
+	int backup_choice = -1;
+	int i;
+	bool dummy = false;
+	for (i = 0; i < STAT_MAX; i++) {
+		if (p->stat_max[i] < p->stat_max_max[i]) {
+			++num;
+			if (one_in_(num))
+				choice = i;
+		}
+		if (p->stat_cur[i] < p->stat_max_max[i]) {
+			++backup_num;
+			if (one_in_(backup_num))
+				backup_choice = i;
+		}
+	}
+
+	if (num) {
+		p->stat_cur[choice] = p->stat_max[choice];
+		effect_simple(EF_GAIN_STAT, source_player(), NULL, choice, 0, 0, 0, 0, &dummy);
+		return true;
+	}
+	if (backup_num) {
+		effect_simple(EF_RESTORE_STAT, source_player(), NULL, backup_choice, 0, 0, 0, 0, &dummy);
+	}
+	return false;
 }
 
 /**

@@ -782,3 +782,9 @@ int school_find_idx(const char *name)
 	return -1;
 }
 
+int innate_spell_mana(const struct monster_race *mon)
+{
+	int freq = mon->freq_innate;
+	int cost = 11 - freq / 4;
+	return MAX(1, cost);
+}

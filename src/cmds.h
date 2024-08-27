@@ -73,6 +73,7 @@ void do_cmd_cast(struct command *cmd);
 void do_cmd_study_spell(struct command *cmd);
 void do_cmd_study_book(struct command *cmd);
 void do_cmd_study(struct command *cmd);
+void do_cmd_innate(struct command *cmd);
 
 /* cmd-pickup.c */
 int do_autopickup(struct player *p);

@@ -35,3 +35,16 @@ slot:AMULET:eye
 slot:LIGHT:light
 slot:CLOAK:back
 slot:HAT:head
+
+
+body:Dragon
+slot:WEAPON:claw
+slot:WEAPON:claw
+slot:RING:claw
+slot:RING:claw
+slot:RING:claw
+slot:RING:claw
+slot:AMULET:neck
+slot:LIGHT:light
+slot:CLOAK:back
+slot:HAT:head

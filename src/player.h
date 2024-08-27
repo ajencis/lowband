@@ -662,6 +662,8 @@ struct player {
 	struct player_upkeep *upkeep;		/* Temporary player-related values */
 
 	uint16_t curr_monster_ridx;			/* L: if the player is a monster */
+
+	int list_extra_powers[PP_MAX];		/* L: if the player gained powers outside of their class */
 };
 
 

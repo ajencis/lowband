@@ -179,6 +179,8 @@ static void save_roller_data(birther *tosave)
 static void load_roller_data(birther *saved, birther *prev_player)
 {
 	int i;
+	int tempstat;
+	int penalty = saved->race->monsters[0] ? 1 : 0;
 
      /* The initialisation is just paranoia - structure assignment is
         (perhaps) not strictly defined to work with uninitialised parts
@@ -202,8 +204,10 @@ static void load_roller_data(birther *saved, birther *prev_player)
 	/* Load previous stats */
 	for (i = 0; i < STAT_MAX; i++) {
 		player->stat_max_max[i] = saved->stat[i];
+		tempstat = saved->stat[i];
+		if (tempstat > 18) tempstat = (tempstat - 18) / 10 + 18;
 		player->stat_max[i] = player->stat_cur[i] = player->stat_birth[i]
-			= MIN(saved->stat[i] / 2 + 5, saved->stat[i]);
+			= MIN((tempstat - penalty) / 2 + 5, tempstat);
 		player->stat_map[i] = i;
 	}
 
@@ -232,6 +236,7 @@ static void load_roller_data(birther *saved, birther *prev_player)
 static void get_stats(int stat_use[STAT_MAX])
 {
 	int i, j;
+	int penalty = player->race->monsters[0] ? 1 : 0;
 
 	int dice[3 * STAT_MAX];
 
@@ -258,11 +263,12 @@ static void get_stats(int stat_use[STAT_MAX])
 		j = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 
 		/* Save that value */
-		player->stat_max_max[i] = j;
-		player->stat_max[i] = MIN(j / 2 + 5, j);
+		player->stat_max_max[i] = j + player->race->r_adj[i];
+		player->stat_max[i] = MIN((j - penalty) / 2 + 5, j);
+		if (player->stat_max_max[i] > 18)
+			player->stat_max_max[i] = (player->stat_max_max[i] - 18) / 10 + 18;
 
 		/* Obtain a "bonus" for "race" and "class" */
-		//bonus = player->race->r_adj[i]; + player->class->c_adj[i];
 		bonus = 0;
 
 		/* Start fully healed */
@@ -693,13 +699,14 @@ static const int birth_stat_costs[18 + 1] = { 0, 0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 1
 static void recalculate_stats(int *stats_local_local, int points_left_local)
 {
 	int i;
+	int penalty = player->race->monsters[0] ? 1 : 0;
 
 	/* L: Variable stat maxes */
 	for (i = 0; i < STAT_MAX; i++) {
 		player->stat_max_max[i] = MAX(stats_local_local[i] + player->race->r_adj[i], 3);
 		if (player->stat_max_max[i] > 18) player->stat_max_max[i] = (player->stat_max_max[i] - 18) * 10 + 18;
-		player->stat_cur[i] = player->stat_max[i] =	player->stat_birth[i] 
-		                    = MIN(stats_local_local[i] / 2 + 5, player->stat_max_max[i]);
+		player->stat_cur[i] = player->stat_max[i] =	player->stat_birth[i]
+		                    = MIN((stats_local_local[i] - penalty) / 2 + 5, player->stat_max_max[i]);
 		player->stat_map[i] = i;
 	}
 

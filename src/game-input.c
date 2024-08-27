@@ -20,6 +20,7 @@
 #include "cmd-core.h"
 #include "game-input.h"
 #include "player.h"
+#include "ui-spell.h"
 
 bool (*get_string_hook)(const char *prompt, char *buf, size_t len);
 int (*get_quantity_hook)(const char *prompt, int max);
@@ -34,6 +35,9 @@ int (*get_spell_hook)(struct player *p, const char *verb,
 	item_tester book_filter, cmd_code cmd, const char *book_error,
 	bool (*spell_filter)(const struct player *p, int spell),
 	const char *spell_error, struct object **rtn_book);
+int (*get_innate_hook)(struct player *p,
+	struct monster_race *monr, const char *error,
+	bool (*innate_filter)(const struct player *p, int innate_index));
 bool (*get_item_hook)(struct object **choice, const char *pmt, const char *str,
 					  cmd_code cmd, item_tester tester, int mode);
 bool (*get_curse_hook)(int *choice, struct object *obj, char *dice_string);
@@ -188,6 +192,15 @@ int get_spell(struct player *p, const char *verb,
 	if (get_spell_hook) {
 		return get_spell_hook(p, verb, book_filter, cmd, book_error,
 			spell_filter, spell_error, rtn_book);
+	}
+	return -1;
+}
+
+int get_innate(struct player *p, struct monster_race *monr, const char *error,
+		bool (*innate_filter)(const struct player *p, int innate))
+{
+	if (get_innate_hook) {
+		return get_innate_hook(p, monr, error, innate_filter);
 	}
 	return -1;
 }

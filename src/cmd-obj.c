@@ -24,6 +24,7 @@
 #include "effects.h"
 #include "game-input.h"
 #include "init.h"
+#include "mon-spell.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
@@ -1179,4 +1180,48 @@ void do_cmd_study(struct command *cmd)
 		do_cmd_study_spell(cmd);
 	else
 		do_cmd_study_book(cmd);
+}
+
+static bool dummy_innate(const struct player *p, int innate)
+{
+	return true;
+}
+
+void do_cmd_innate(struct command *cmd)
+{
+	int innate_index;
+	int dir;
+	bool ident;
+	const struct monster_spell *ms;
+	struct monster_race *mr = lookup_player_monster(player);
+	int mana;
+	const char *fail = "You don't have any innate powers.";
+
+	if (!mr) {
+		msg(fail);
+		return;
+	}
+	mana = innate_spell_mana(mr);
+
+	if (cmd_get_innate(cmd,
+			"innate",
+			player,
+			&innate_index,
+			dummy_innate,
+			fail) != CMD_OK)
+		return;
+	
+	if (mana > player->chp) {
+		msg("You do not have enough HP to use this innate power.");
+		return;
+	}
+	
+	ms = monster_spell_by_index(innate_index);
+
+	if (cmd_get_target(cmd, "target", &dir) != CMD_OK) return;
+
+	effect_do(ms->effect, source_player(), NULL, &ident, true, dir, 0, 0, cmd);
+
+	player->chp -= mana;
+	player->upkeep->redraw |= PR_HP;
 }

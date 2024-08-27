@@ -646,8 +646,7 @@ static const char *show_adv_exp(void)
 {
 	if (!player_at_max_level(player)) {
 		static char buffer[30];
-		int32_t advance = (player_exp[player->lev - 1]
-			* player->state.expfact / 100L);
+		int32_t advance = player_exp[player->lev - 1];
 		strnfmt(buffer, sizeof(buffer), "%ld", (long)advance);
 		return buffer;
 	}

@@ -1669,7 +1669,8 @@ static void calc_spells(struct player *p)
  */
 static void calc_mana(struct player *p, struct player_state *state, bool update)
 {
-	int i, msp, levels, cur_wgt, max_wgt; 
+	int i, msp, levels, cur_wgt, max_wgt;
+	struct monster_race *monr = lookup_player_monster(p);
 
 	/* Must be literate */
 	if (!p->class->magic.total_spells && !pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) {
@@ -1719,6 +1720,10 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 
 		/* Reduce mana */
 		msp -= ((cur_wgt - max_wgt) / 10);
+	}
+
+	if (monr && msp > 0 && monr->freq_spell) {
+		msp += MIN(msp, monr->freq_spell);
 	}
 
 	/* Mana can never be negative */
@@ -2176,14 +2181,16 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		int scale = p->class->c_powers[i] + p->race->r_powers[i];
 		int minlev = 25 - (scale + 5) / 3;
 		int efflev = minlev < 0 ? MAX( p->lev      / 2 - minlev    , p->lev) :
-		                          MIN((p->lev + 1) * 2 - minlev * 2, p->lev);
+								  MIN((p->lev + 1) * 2 - minlev * 2, p->lev);
 
 		if ((scale <= 0) || (efflev <= 0))
 			state->powers[i] = 0;
 
+		else if (p->lev > 50)
+			state->powers[i] = p->lev * scale / 100;
+
 		else
-    		state->powers[i] = efflev * scale / 100;
-        //state->powers[i] = p->class->c_powers[i] * MAX(p->lev, p->lev / 2 + 10) / 100;
+			state->powers[i] = efflev * scale / 100;
 	}
 
 	/* Analyze equipment */
@@ -2200,7 +2207,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			if (slot_type_is(p, i, EQUIP_BODY_ARMOR))
 			    armwgt = MAX(armwgt, owgt);
 
-			if (!weapon && slot_type_is(p, i, EQUIP_WEAPON))
+			if (!weapon && slot_type_is(p, i, EQUIP_WEAPON) && obj->tval != TV_SHIELD)
 				weapon = obj;
 
 			if (!launcher && slot_type_is(p, i, EQUIP_BOW))
@@ -2413,7 +2420,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		}
 	}
 
-    /* L: monk bonuses */
+	/* L: monk bonuses */
 	unarmoured_speed_bonus(state, armwgt);
 	unarmoured_ac_bonus(state, armwgt);
 
@@ -2524,8 +2531,8 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	
 
 	/* L: change expfact based on int */
-	if (character_generated)
-    	state->expfact = p->race->r_exp + p->class->c_exp + adj_int_xp(state->stat_ind[STAT_INT]);
+	//if (character_generated)
+	state->expfact = p->race->r_exp + p->class->c_exp + adj_int_xp(state->stat_ind[STAT_INT]);
 
 
 	/* Modify skills */

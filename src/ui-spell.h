@@ -30,5 +30,8 @@ int textui_get_spell(struct player *p, const char *verb,
 	item_tester book_filter, cmd_code cmd, const char *book_error,
 	bool (*spell_filter)(const struct player *p, int spell_index),
 	const char *spell_error, struct object **rtn_book);
+int textui_get_innate(struct player *p,
+	struct monster_race *monr, const char *error,
+	bool (*innate_filter)(const struct player *p, int innate_index));
 
 #endif /* INCLUDED_UI_SPELL_H */
