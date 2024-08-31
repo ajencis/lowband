@@ -90,7 +90,7 @@ static void display_exit_screen(void)
 	if (player->total_winner)
 		put_str_centred(line++, 8, 8+31, "Magnificent");
 	else
-		put_str_centred(line++, 8, 8+31, "%s", player->class->title[(player->lev - 1) / 5]);
+		put_str_centred(line++, 8, 8+31, "%s", player->class->title[MIN(player->lev - 1, 49) / 5]);
 
 	line++;
 

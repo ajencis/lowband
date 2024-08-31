@@ -700,6 +700,7 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 		for (i = 0; i < MON_TMD_MAX; i++) {
 			if (!aroll->mtimed[i]) continue;
 			int power = randint1(aroll->mtimed[i]);
+			if (power < randint0(25)) continue;
 			mon_inc_timed(mon, i, power, MON_TMD_FLG_NOMESSAGE);
 		}
 	}
@@ -726,9 +727,9 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 static void unarmed_mod_attack(struct attack_roll *aroll, struct object *obj)
 {
 	if (obj) return;
-	int lev = player->state.powers[PP_UNARMED_STRIKE];
+	int lev = get_power_scale(player, PP_UNARMED_STRIKE);
 	if (!lev) return;
-    aroll->dsides += (lev * 5 + 49) / 50;
+    aroll->dsides += (lev * 15 + 49) / 50;
 	aroll->to_hit += (lev * 25 + 49) / 50;
 	aroll->to_dam += (lev * 5 + 49) / 50;
 	aroll->mtimed[MON_TMD_STUN] += (lev * 10 + 49) / 50;
@@ -736,8 +737,8 @@ static void unarmed_mod_attack(struct attack_roll *aroll, struct object *obj)
 
 static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
 {
-	int lev = player->state.powers[PP_UNARMED_STRIKE];
-	aroll->ddice = 1 + (lev * 2 + 25) / 50;
+	int lev = get_power_scale(player, PP_UNARMED_STRIKE);
+	aroll->ddice = lev >= 20 ? 2 : 1;
 	aroll->dsides = 1 + (lev * 9 + 49) / 50;
 	aroll->mtimed[MON_TMD_STUN] = (lev * 15 + 49) / 50;
 	aroll->accuracy_stat = STAT_DEX;
@@ -832,6 +833,12 @@ static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow
 	return (!foundfull || foundempty);
 }
 
+static int mon_blow_dam_stat(struct monster_blow *mb)
+{
+	if (mb->method->skill == SKILL_SEARCH) return STAT_INT;
+	return STAT_STR;
+}
+
 static bool get_monster_attack(struct player *p, struct monster_race *mr, struct attack_roll *aroll, int aind)
 {
 	int j;
@@ -854,13 +861,13 @@ static bool get_monster_attack(struct player *p, struct monster_race *mr, struct
 			aroll->mtimed[j] = 0;
 	}
 	aroll->accuracy_stat = STAT_DEX;
-	aroll->damage_stat = STAT_STR;
-	if (mb->method->skill == SKILL_SEARCH) aroll->damage_stat = STAT_INT;
+	aroll->damage_stat = mon_blow_dam_stat(mb);
 		
 	aroll->to_hit += adj_dex_th(p->state.stat_ind[aroll->accuracy_stat]);
 	aroll->to_dam += adj_str_td(p->state.stat_ind[aroll->damage_stat]);
 
-	unarmed_mod_attack(aroll, NULL);
+	if (aroll->attack_skill == SKILL_TO_HIT_MELEE)
+		unarmed_mod_attack(aroll, NULL);
 
 	return true;
 }
@@ -870,15 +877,14 @@ int get_monster_attacks(struct player *p, struct monster_race *mr, struct attack
 	if (!mr) return 0;
 	if (!mr->blow[0].method) return 0;
 	struct monster_blow *mb;
-	int mbi; int pai = 0;
-	int bestblow = -1;
-	int bestblowdam = -1;
-	int currdam;
+	int mbi, pai = 0;
+	int bestblow = -1, bestblowdam = -1, currdam;
 
 	for (mbi = 0; mbi < z_info->mon_blows_max && mr->blow[mbi].method; mbi++) {
 		mb = &mr->blow[mbi];
-		if (monster_attack_is_usable(p, mb)) continue;
+		if (!monster_attack_is_usable(p, mb)) continue;
 		currdam = (mb->dice.sides + 1) * mb->dice.dice;
+		currdam += adj_str_td(p->state.stat_ind[mon_blow_dam_stat(mb)]) * 2;
 		if (currdam > bestblowdam) {
 			bestblow = mbi;
 			bestblowdam = currdam;
@@ -886,8 +892,7 @@ int get_monster_attacks(struct player *p, struct monster_race *mr, struct attack
 	}
 
 	if (bestblow >= 0) {
-		if (get_monster_attack(p, mr, aroll, bestblow))
-			++pai;
+		if (get_monster_attack(p, mr, aroll, bestblow))	++pai;
 	}
 
 	for (mbi = 0; mbi < z_info->mon_blows_max && pai < maxnum && mr->blow[mbi].method; mbi++) {
@@ -940,7 +945,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	bool stop = false;
 
 	/* The weapon used */
-	struct object *obj = equipped_item_by_slot_name(p, "weapon");
+	struct object *obj = slot_object(p, slot_by_type(p, EQUIP_WEAPON, true));
 
 	/* Information about the attack */
 	int drain = 0;
@@ -1137,8 +1142,8 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
  */
 static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fear)
 {
-	struct object *weapon = slot_object(p, slot_by_name(p, "weapon"));
-	struct object *shield = slot_object(p, slot_by_name(p, "arm"));
+	struct object *weapon = slot_object(p, slot_by_type(p, EQUIP_WEAPON, true));
+	struct object *shield = slot_object(p, slot_by_type(p, EQUIP_WEAPON, true));
 	int nblows = p->state.num_blows / 100;
 	int bash_quality, bash_dam, energy_lost;
 
@@ -1153,7 +1158,7 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 	if (mon->race->level < p->lev / 2) return false;
 
 	/* Players bash more often when they see a real need: */
-	if (!equipped_item_by_slot_name(p, "weapon")) {
+	if (!weapon) {
 		/* Unarmed... */
 		bash_chance *= 4;
 	} else if (weapon->dd * weapon->ds * nblows < shield->dd * shield->ds * 3) {
@@ -1506,7 +1511,7 @@ struct attack_result make_ranged_shot(struct player *p,
 {
 	char *hit_verb = mem_alloc(20 * sizeof(char));
 	struct attack_result result = {false, 0, 0, hit_verb};
-	struct object *bow = equipped_item_by_slot_name(p, "shooting");
+	struct object *bow = slot_object(p, slot_by_type(p, EQUIP_BOW, true));
 	struct monster *mon = square_monster(cave, grid);
 	int b = 0, s = 0;
 
@@ -1587,7 +1592,7 @@ void do_cmd_fire(struct command *cmd) {
 
 	ranged_attack attack = make_ranged_shot;
 
-	struct object *bow = equipped_item_by_slot_name(player, "shooting");
+	struct object *bow = slot_object(player, slot_by_type(player, EQUIP_BOW, true));
 	struct object *obj;
 
 	if (!player_get_resume_normal_shape(player, cmd)) {
@@ -1687,7 +1692,7 @@ void do_cmd_throw(struct command *cmd) {
 void do_cmd_fire_at_nearest(void) {
 	int i, dir = DIR_TARGET;
 	struct object *ammo = NULL;
-	struct object *bow = equipped_item_by_slot_name(player, "shooting");
+	struct object *bow = slot_object(player, slot_by_type(player, EQUIP_BOW, true));
 
 	/* Require a usable launcher */
 	if (!bow || !player->state.ammo_tval) {

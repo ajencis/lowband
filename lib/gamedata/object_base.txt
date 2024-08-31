@@ -195,5 +195,10 @@ graphics:light purple
 # max-stack:5
 flags:HATES_FIRE | EASY_KNOW
 
+#name:tome:Tome~
+#graphics:light umber
+# max-stack:5
+#flags:HATES_FIRE | EASY_KNOW
+
 name:gold
 graphics:light yellow

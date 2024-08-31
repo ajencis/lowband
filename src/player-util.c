@@ -74,7 +74,8 @@ void check_player_monster(struct player *p, bool init)
 	struct monster_race *mon;
 	struct monster_race *best = lookup_player_monster(p); // don't change if we're on track but ahead
 	bool on_track = p->curr_monster_ridx == 0; // are we one of the mosters we can naturally turn into?
-	int maxlev = p->lev < 10 ? p->lev :
+	int maxlev = p->lev <  5 ? 4 :
+				 p->lev < 10 ? p->lev :
 				 p->lev < 20 ? p->lev * 3 - 20 :
 				 p->lev < 40 ? p->lev + 20 :
 							   p->lev * 3 / 2;
@@ -145,6 +146,27 @@ bool player_increase_stat(struct player *p)
 		effect_simple(EF_RESTORE_STAT, source_player(), NULL, backup_choice, 0, 0, 0, 0, &dummy);
 	}
 	return false;
+}
+
+static bool power_scales_exponentially(int power) {
+	assert(power >= 0);
+	assert(power < PP_MAX);
+
+	switch (power)
+	{
+		case PP_UNARMED_STRIKE:
+		case PP_UNARMOURED_AGILITY:
+			return true;
+	}
+	return false;
+}
+
+int get_power_scale(struct player *p, int power) {
+	assert(power >= 0 && power < PP_MAX);
+	bool expon = power_scales_exponentially(power);
+
+	if (expon) return (p->lev * p->state.powers[power] + 49) / 50;
+	return p->state.powers[power];
 }
 
 /**
@@ -273,6 +295,20 @@ int player_apply_damage_reduction(struct player *p, int dam)
 }
 
 
+static void take_max_hp_dam(struct player *p, int dam)
+{
+	if (p->is_dead) return;
+	if (dam <= 5) return;
+	int quantity;
+	for (quantity = 0; quantity < 100; quantity++) {
+		if (quantity * quantity > dam - 5) break;
+	}
+
+	p->hp_burn += quantity;
+
+	p->upkeep->update |= PU_HP;
+}
+
 /**
  * Decreases players hit points and sets death flag if necessary
  *
@@ -368,53 +404,22 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 		msgt(MSG_HITPOINT_WARN, "*** LOW HITPOINT WARNING! ***");
 		event_signal(EVENT_MESSAGE_FLUSH);
 	}
+
+	if (one_in_(10)) take_max_hp_dam(p, dam);
 }
 
-/**
- * L: take occasional stat damage when damaged
- */
-void take_stat_hit(struct player *p, int dam)
+void take_max_sp_dam(struct player *p, int dam)
 {
-	int stat = STAT_STR;
 	if (p->is_dead) return;
-    if (dam <= randint0(p->chp + p->mhp)) return;
-
-    stat = randint0(STAT_MAX);
-
-	effect_simple(EF_DRAIN_STAT, source_none(), "0", stat, 0, 0, 0, 0, NULL);
-}
-
-/**
- * L: take occasional stat damage when damaged by an element
- */
-void take_stat_hit_elemental(struct player *p, int dam, int element)
-{
-	int stat = STAT_STR;
-	if (p->is_dead) return;
-    if (dam <= randint0(p->chp + p->mhp)) return;
-
-	switch (element) {
-		case ELEM_ACID:
-		    stat = STAT_WIS;
-			break;
-		case ELEM_COLD:
-		    stat = STAT_DEX;
-			break;
-		case ELEM_FIRE:
-		    stat = STAT_STR;
-			break;
-		case ELEM_ELEC:
-		    stat = STAT_INT;
-			break;
-		case ELEM_POIS:
-		    stat = STAT_CON;
-			break;
-		default:
-		    stat = randint0(STAT_MAX);
-			break;
+	if (dam <= 5) return;
+	int quantity;
+	for (quantity = 0; quantity < 100; quantity++) {
+		if (quantity * quantity > dam - 5) break;
 	}
 
-    effect_simple(EF_DRAIN_STAT, source_none(), "0", stat, 0, 0, 0, 0, NULL);		    
+	p->sp_burn += quantity;
+
+	p->upkeep->update |= PU_MANA;
 }
 
 /**
@@ -598,8 +603,8 @@ void player_regen_hp(struct player *p)
 	percent /= 100;
 
 	/* Various things speed up regeneration */
-	if (player_of_has(p, OF_REGEN))
-		percent *= 2;
+	if (player_of_has(p, OF_REGEN) || p->timed[TMD_REGEN])
+		percent *= 3;
 	if (player_resting_can_regenerate(p))
 		percent *= 2;
 
@@ -837,7 +842,7 @@ void convert_mana_to_hp(struct player *p, int32_t sp_long) {
 void player_update_light(struct player *p)
 {
 	/* Check for light being wielded */
-	struct object *obj = equipped_item_by_slot_name(p, "light");
+	struct object *obj = slot_object(p, slot_by_type(p, EQUIP_LIGHT, true));
 
 	/* Burn some fuel in the current light */
 	if (obj && tval_is_light(obj)) {
@@ -898,12 +903,14 @@ void player_update_light(struct player *p)
  */
 struct object *player_best_digger(struct player *p, bool forbid_stack)
 {
-	int weapon_slot = slot_by_name(p, "weapon");
+	int weapon_slot = slot_by_type(p, EQUIP_WEAPON, true);
 	struct object *current_weapon = slot_object(p, weapon_slot);
 	struct object *obj, *best = NULL;
 	/* Prefer any melee weapon over unarmed digging, i.e. best == NULL. */
 	int best_score = -1;
 	struct player_state local_state;
+
+	if (weapon_slot == -1) return NULL;
 
 	for (obj = p->gear; obj; obj = obj->next) {
 		int score, old_number;
@@ -1360,7 +1367,7 @@ bool player_can_read(const struct player *p, bool show_msg)
  */
 bool player_can_fire(struct player *p, bool show_msg)
 {
-	struct object *obj = equipped_item_by_slot_name(p, "shooting");
+	struct object *obj = slot_object(p, slot_by_type(p, EQUIP_BOW, true));
 
 	/* Require a usable launcher */
 	if (!obj || !p->state.ammo_tval) {
@@ -1381,7 +1388,7 @@ bool player_can_fire(struct player *p, bool show_msg)
  */
 bool player_can_refuel(struct player *p, bool show_msg)
 {
-	struct object *obj = equipped_item_by_slot_name(p, "light");
+	struct object *obj = slot_object(p, slot_by_type(p, EQUIP_LIGHT, true));
 
 	if (obj && of_has(obj->flags, OF_TAKES_FUEL)) {
 		return true;

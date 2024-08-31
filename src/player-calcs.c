@@ -1018,7 +1018,7 @@ int adj_int_lev(int index) {
 
 static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 {
-    int lev = s->powers[PP_UNARMOURED_AGILITY];
+    int lev = get_power_scale(player, PP_UNARMOURED_AGILITY);
 
     if (lev <= 0) return 0;
 
@@ -1032,7 +1032,7 @@ static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 
 static int unarmoured_ac_bonus(struct player_state *s, int wgt)
 {
-    int lev = s->powers[PP_UNARMOURED_AGILITY];
+    int lev = get_power_scale(player, PP_UNARMOURED_AGILITY);
 
     if (lev <= 0) return 0;
 
@@ -1729,6 +1729,8 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	/* Mana can never be negative */
 	if (msp < 0) msp = 0;
 
+	msp = MAX(msp / 2, msp - p->sp_burn);
+
 	/* Return if no updates */
 	if (!update) return;
 
@@ -1773,6 +1775,8 @@ static void calc_hitpoints(struct player *p)
 
 	/* Always have at least one hitpoint per level */
 	if (mhp < p->lev + 1) mhp = p->lev + 1;
+
+	mhp = MAX(mhp / 2, mhp - p->hp_burn);
 
 	/* New maximum hitpoints */
 	if (p->mhp != mhp) {
@@ -2180,7 +2184,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	for (i = 0; i < PP_MAX; i++) {
 		int scale = p->class->c_powers[i] + p->race->r_powers[i];
 		int minlev = 25 - (scale + 5) / 3;
-		int efflev = minlev < 0 ? MAX( p->lev      / 2 - minlev    , p->lev) :
+		int efflev = minlev < 0 ? MAX((p->lev + 1) / 2 - minlev    , p->lev) :
 								  MIN((p->lev + 1) * 2 - minlev * 2, p->lev);
 
 		if ((scale <= 0) || (efflev <= 0))
@@ -2735,7 +2739,7 @@ static void update_bonuses(struct player *p)
 			/* Message */
 			if (state.heavy_shoot)
 				msg("You have trouble wielding such a heavy bow.");
-			else if (equipped_item_by_slot_name(p, "shooting"))
+			else if (slot_object(p, slot_by_type(p, EQUIP_BOW, true)))
 				msg("You have no trouble wielding your bow.");
 			else
 				msg("You feel relieved to put down your heavy bow.");
@@ -2746,7 +2750,7 @@ static void update_bonuses(struct player *p)
 			/* Message */
 			if (state.heavy_wield)
 				msg("You have trouble wielding such a heavy weapon.");
-			else if (equipped_item_by_slot_name(p, "weapon"))
+			else if (slot_object(p, slot_by_type(p, EQUIP_WEAPON, true)))
 				msg("You have no trouble wielding your weapon.");
 			else
 				msg("You feel relieved to put down your heavy weapon.");	
@@ -2757,7 +2761,7 @@ static void update_bonuses(struct player *p)
 			/* Message */
 			if (state.bless_wield) {
 				msg("You feel attuned to your weapon.");
-			} else if (equipped_item_by_slot_name(p, "weapon")) {
+			} else if (slot_object(p, slot_by_type(p, EQUIP_WEAPON, true))) {
 				msg("You feel less attuned to your weapon.");
 			}
 		}

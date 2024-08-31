@@ -388,7 +388,6 @@ static bool monster_damage_target(melee_effect_handler_context_t *context,
 		display_blow_message_vs_player(context->method, context->m_name,
 			context->p, reduced);
 		take_hit(context->p, reduced, context->ddesc);
-		take_stat_hit(context->p, reduced);
 		if (context->p->is_dead) return true;
 	} else {
 		bool dead;
@@ -473,8 +472,6 @@ static void melee_effect_elemental(melee_effect_handler_context_t *context,
 			display_blow_message_vs_player(context->method,
 				context->m_name, context->p, reduced);
 			take_hit(context->p, reduced, context->ddesc);
-			take_stat_hit(context->p, physical_dam);
-			take_stat_hit_elemental(context->p, elemental_dam, type);
 		} else {
 			assert(context->t_mon);
 			display_blow_message_vs_monster(context->method,

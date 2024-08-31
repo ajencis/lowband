@@ -50,9 +50,11 @@ struct spell_info_iteration_state {
  */
 static const grouper school_names[] =
 {
+	{ MS_NONE, "" },
 	#define MS(a, b, c) { MS_##a, b },
 	#include "list-magic-schools.h"
 	#undef MS
+	{ MS_MAX, "" }
 };
 
 /**
@@ -589,8 +591,12 @@ bool spell_cast(int spell_index, int dir, struct command *cmd)
 	if (spell->smana <= player->csp) {
 		/* Use some mana */
 		player->csp -= spell->smana;
+
+		if (one_in_(10)) take_max_sp_dam(player, spell->smana);
 	} else {
 		int oops = spell->smana - player->csp;
+
+		take_max_sp_dam(player, one_in_(10) ? spell->smana : oops);
 
 		/* No mana left */
 		player->csp = 0;

@@ -166,7 +166,7 @@ static void prt_welcome(const struct owner *proprietor)
 
 		/* Get a title for the character */
 		if ((i % 2) && randint0(2))
-			player_name = player->class->title[(player->lev - 1) / 5];
+			player_name = player->class->title[MIN(player->lev - 1, 49) / 5];
 		else if (randint0(2))
 			player_name = player->full_name;
 		else
@@ -1329,6 +1329,9 @@ void use_store(game_event_type type, game_event_data *data, void *user)
 	event_add_handler(EVENT_STORECHANGED, refresh_stock, &ctx);
 	store_menu_init(&ctx, store, false);
 
+	assert(store->owner);
+	assert(store->owner->name);
+
 	/* Say a friendly hello. */
 	if (store->feat != FEAT_HOME)
 		prt_welcome(store->owner);
@@ -1353,8 +1356,6 @@ void use_store(game_event_type type, game_event_data *data, void *user)
 
 void leave_store(game_event_type type, game_event_data *data, void *user)
 {
-    int i;
-
 	/* Disable repeats */
 	cmd_disable_repeat();
 
@@ -1363,13 +1364,14 @@ void leave_store(game_event_type type, game_event_data *data, void *user)
 	/* L: home heals you */
 	if (store_at(cave, player->grid)->feat == FEAT_HOME) {
 		msg("You feel refreshed after resting at home.");
-        for (i = 0; i < STAT_MAX; i++) {
-			effect_simple(EF_RESTORE_STAT, source_none(), "0", i, 0, 0, 0, 0, NULL);
-		}
+        
+		player->hp_burn = 0;
+		player->sp_burn = 0;
+
 		player->csp = player->msp;
 		player->chp = player->mhp;
 
-		player->upkeep->update |= PU_BONUS;
+		player->upkeep->update |= (PU_HP | PU_MANA);
 
 		check_player_monster(player, false);
 	}

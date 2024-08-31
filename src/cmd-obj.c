@@ -284,6 +284,9 @@ void do_cmd_wield(struct command *cmd)
 	slot = wield_slot(obj);
 	equip_obj = slot_object(player, slot);
 
+	/* No slot to put it in */
+	if (slot == -1) return;
+
 	/* If the slot is open, wield and be done */
 	if (!equip_obj) {
 		inven_wield(obj, slot);
@@ -998,7 +1001,7 @@ static void refill_lamp(struct object *lamp, struct object *obj)
 
 void do_cmd_refill(struct command *cmd)
 {
-	struct object *light = equipped_item_by_slot_name(player, "light");
+	struct object *light = slot_object(player, slot_by_type(player, EQUIP_LIGHT, true));
 	struct object *obj;
 
 	if (!player_get_resume_normal_shape(player, cmd)) {
@@ -1222,6 +1225,5 @@ void do_cmd_innate(struct command *cmd)
 
 	effect_do(ms->effect, source_player(), NULL, &ident, true, dir, 0, 0, cmd);
 
-	player->chp -= mana;
-	player->upkeep->redraw |= PR_HP;
+	take_hit(player, mana, "using an innate power");
 }

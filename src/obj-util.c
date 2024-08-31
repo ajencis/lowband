@@ -739,7 +739,7 @@ bool obj_can_activate(const struct object *obj)
  */
 bool obj_can_refill(const struct object *obj)
 {
-	const struct object *light = equipped_item_by_slot_name(player, "light");
+	const struct object *light = slot_object(player, slot_by_type(player, EQUIP_LIGHT, true));
 
 	/* Need fuel? */
 	if (of_has(obj->flags, OF_NO_FUEL)) return false;

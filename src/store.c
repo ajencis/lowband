@@ -349,7 +349,7 @@ void store_reset(void) {
 		object_pile_free(NULL, NULL, s->stock);
 		s->stock_k = NULL;
 		s->stock = NULL;
-		if (s->feat == FEAT_HOME)
+		if (s->feat == FEAT_HOME || s->feat == FEAT_DOJO)
 			continue;
 		for (j = 0; j < 10; j++)
 			store_maint(s);
@@ -1294,7 +1294,7 @@ static struct object *store_create_item(struct store *store,
 static void store_maint(struct store *s)
 {
 	/* Ignore home */
-	if (s->feat == FEAT_HOME)
+	if (s->feat == FEAT_HOME || s->feat == FEAT_DOJO)
 		return;
 
 	/* Destroy crappy black market items */
@@ -1428,7 +1428,7 @@ void store_update(void)
 		/* Maintain each shop (except home) */
 		for (n = 0; n < z_info->store_max; n++) {
 			/* Skip the home */
-			if (stores[n].feat == FEAT_HOME) continue;
+			if (stores[n].feat == FEAT_HOME || stores[n].feat == FEAT_DOJO) continue;
 
 			/* Maintain */
 			store_maint(&stores[n]);
@@ -1445,7 +1445,7 @@ void store_update(void)
 
 			/* Pick a random shop (except home) */
 			for (n = 0; n < z_info->store_max; n++) {
-				if (stores[n].feat != FEAT_HOME) {
+				if (stores[n].feat != FEAT_HOME && stores[n].feat != FEAT_DOJO) {
 					non_home_inds[n_without_home] = n;
 					++n_without_home;
 				}

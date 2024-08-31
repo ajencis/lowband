@@ -241,7 +241,7 @@ static int blow_color(struct player *p, int blow_idx)
 			return blow->lore_attr_resist;
 		}
 	} else if (streq(blow->effect_type, "eat-light")) {
-		int light_slot = slot_by_name(p, "light");
+		int light_slot = slot_by_type(p, EQUIP_LIGHT, true);
 		struct object *obj = slot_object(p, light_slot);
 		if (obj && obj->timeout && !of_has(obj->flags, OF_NO_FUEL)) {
 			return blow->lore_attr;

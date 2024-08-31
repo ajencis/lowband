@@ -736,33 +736,38 @@ static struct panel *get_panel_midleft(void) {
 }
 
 static struct panel *get_panel_combat(void) {
-	struct panel *p = panel_allocate(9);
+	struct panel *p = panel_allocate(11);
 	struct object *obj;
 	int bth, dam, hit;
 	struct attack_roll aroll;
+	int i;
 
 	/* AC */
 	panel_line(p, COLOUR_L_BLUE, "Armor", "[%d,%+d]",
 			player->known_state.ac, player->known_state.to_a);
 
 	/* Melee */
-	obj = equipped_item_by_slot_name(player, "weapon");
-	aroll = player->state.attacks[0];
-	bth = (player->state.skills[aroll.attack_skill] * 10) / BTH_PLUS_ADJ;
-
 	panel_space(p);
-	if (!aroll.ddice || !aroll.dsides)
-		panel_line(p, COLOUR_L_BLUE, "Melee", "%d", aroll.to_dam);
-	else if (aroll.to_dam)
-		panel_line(p, COLOUR_L_BLUE, "Melee", "%dd%d%+d", aroll.ddice, aroll.dsides, aroll.to_dam);
-	else
-	    panel_line(p, COLOUR_L_BLUE, "Melee", "%dd%d", aroll.ddice, aroll.dsides);
-	panel_line(p, COLOUR_L_BLUE, "To-hit", "%d,%+d", bth / 10, aroll.to_hit);
-	panel_line(p, COLOUR_L_BLUE, "Blows", "%d.%d/turn",
-			player->state.num_blows / 100, (player->state.num_blows / 10 % 10));
+	for (i = 0; player->state.attacks[i].proj_type >= 0; i++) {
+		bool first = i == 0;
+		aroll = player->state.attacks[0];
+		bth = (player->state.skills[aroll.attack_skill] * 10) / BTH_PLUS_ADJ + aroll.to_hit;
+		const char * title = first ? "Melee" : "Aux. Melee";
+
+		if (!aroll.ddice || !aroll.dsides)
+			panel_line(p, COLOUR_L_BLUE, title, "%+d; %d", bth, aroll.to_dam);
+		else if (aroll.to_dam)
+			panel_line(p, COLOUR_L_BLUE, title, "%+d; %dd%d%+d", bth, aroll.ddice, aroll.dsides, aroll.to_dam);
+		else
+		    panel_line(p, COLOUR_L_BLUE, title, "%+d; %dd%d", bth, aroll.ddice, aroll.dsides);
+
+		if (first)
+			panel_line(p, COLOUR_L_BLUE, "Blows", "%d.%d/turn",
+					player->state.num_blows / 100, (player->state.num_blows / 10 % 10));
+	}
 
 	/* Ranged */
-	obj = equipped_item_by_slot_name(player, "shooting");
+	obj = slot_object(player, slot_by_type(player, EQUIP_BOW, true));
 	bth = (player->state.skills[SKILL_TO_HIT_BOW] * 10) / BTH_PLUS_ADJ;
 	dam = 0;
 	hit = player->known_state.to_h;

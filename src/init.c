@@ -31,6 +31,7 @@
 #include "datafile.h"
 #include "effects.h"
 #include "game-event.h"
+#include "game-input.h"
 #include "game-world.h"
 #include "generate.h"
 #include "hint.h"
@@ -4698,9 +4699,10 @@ void cleanup_angband(void)
 	mem_free(chunk_list);
 	chunk_list = NULL;
 
-	for (i = 0; modules[i]; i++)
+	for (i = 0; modules[i]; i++) {
 		if (modules[i]->cleanup)
 			modules[i]->cleanup();
+	}
 
 	event_remove_all_handlers();
 

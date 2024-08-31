@@ -182,7 +182,7 @@ static int to_damage_power(const struct object *obj)
 	if (p) log_obj("%d power from to_dam\n", p);
 
 	/* Add second lot of damage power for non-weapons */
-	if ((wield_slot(obj) != slot_by_name(player, "shooting")) &&
+	if ((wield_slot_type(obj) != EQUIP_BOW) &&
 		!tval_is_melee_weapon(obj) &&
 		!tval_is_ammo(obj)) {
 		int q = (obj->to_d * DAMAGE_POWER);
@@ -204,7 +204,7 @@ static int damage_dice_power(const struct object *obj)
 	if (tval_is_melee_weapon(obj) || tval_is_ammo(obj)) {
 		dice = ((obj->dd * (obj->ds + 1) * DAMAGE_POWER) / 4);
 		log_obj("Add %d power for damage dice, ", dice);
-	} else if (wield_slot(obj) != slot_by_name(player, "shooting")) {
+	} else if (wield_slot_type(obj) != EQUIP_BOW) {
 		/* Add power boost for nonweapons with combat flags */
 		if (obj->brands || obj->slays ||
 			(obj->modifiers[OBJ_MOD_BLOWS] > 0) ||
@@ -226,7 +226,7 @@ static int ammo_damage_power(const struct object *obj, int p)
 	int q = 0;
 	int launcher = -1;
 
-	if (wield_slot(obj) == slot_by_name(player, "shooting")) {
+	if (wield_slot_type(obj) == EQUIP_BOW) {
 		if (kf_has(obj->kind->kind_flags, KF_SHOOTS_SHOTS))
 			launcher = 0;
 		else if (kf_has(obj->kind->kind_flags, KF_SHOOTS_ARROWS))
@@ -441,7 +441,7 @@ static int32_t slay_power(const struct object *obj, int p, int verbose,
  */
 static int rescale_bow_power(const struct object *obj, int p)
 {
-	if (wield_slot(obj) == slot_by_name(player, "shooting")) {
+	if (wield_slot_type(obj) == EQUIP_BOW) {
 		p /= MAX_BLOWS;
 		log_obj("Rescaling bow power, total is %d\n", p);
 	}
@@ -1209,7 +1209,6 @@ int object_value_real(const struct object *obj, int qty)
 		total_value = value * qty;
 		if (total_value < 0) total_value = 0;
 	} else {
-
 		/* Worthless items */
 		if (!obj->kind->cost) return (0L);
 

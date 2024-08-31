@@ -139,6 +139,15 @@ static birther quickstart_prev;
 
 
 
+static int birth_stat(struct player *p, int stat)
+{
+	int use = p->stat_max_max[stat];
+	if (use > 18) use = (use - 18) / 10 + 18;
+	use -= p->race->r_adj[stat];
+	use += p->race->monsters[0] ? 0 : 1;
+
+	return MIN(p->stat_max_max[stat], use / 2 + 5);
+}
 
 /**
  * Save the currently rolled data into the supplied 'player'.
@@ -179,8 +188,6 @@ static void save_roller_data(birther *tosave)
 static void load_roller_data(birther *saved, birther *prev_player)
 {
 	int i;
-	int tempstat;
-	int penalty = saved->race->monsters[0] ? 1 : 0;
 
      /* The initialisation is just paranoia - structure assignment is
         (perhaps) not strictly defined to work with uninitialised parts
@@ -204,10 +211,8 @@ static void load_roller_data(birther *saved, birther *prev_player)
 	/* Load previous stats */
 	for (i = 0; i < STAT_MAX; i++) {
 		player->stat_max_max[i] = saved->stat[i];
-		tempstat = saved->stat[i];
-		if (tempstat > 18) tempstat = (tempstat - 18) / 10 + 18;
 		player->stat_max[i] = player->stat_cur[i] = player->stat_birth[i]
-			= MIN((tempstat - penalty) / 2 + 5, tempstat);
+			= birth_stat(player, i);
 		player->stat_map[i] = i;
 	}
 
@@ -236,7 +241,6 @@ static void load_roller_data(birther *saved, birther *prev_player)
 static void get_stats(int stat_use[STAT_MAX])
 {
 	int i, j;
-	int penalty = player->race->monsters[0] ? 1 : 0;
 
 	int dice[3 * STAT_MAX];
 
@@ -257,19 +261,16 @@ static void get_stats(int stat_use[STAT_MAX])
 
 	/* Roll the stats */
 	for (i = 0; i < STAT_MAX; i++) {
-		int bonus;
 
 		/* Extract 5 + 1d3 + 1d4 + 1d5 */
 		j = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 
 		/* Save that value */
 		player->stat_max_max[i] = j + player->race->r_adj[i];
-		player->stat_max[i] = MIN((j - penalty) / 2 + 5, j);
 		if (player->stat_max_max[i] > 18)
 			player->stat_max_max[i] = (player->stat_max_max[i] - 18) / 10 + 18;
 
-		/* Obtain a "bonus" for "race" and "class" */
-		bonus = 0;
+		player->stat_max[i] = birth_stat(player, i);
 
 		/* Start fully healed */
 		player->stat_cur[i] = player->stat_max[i];
@@ -278,7 +279,7 @@ static void get_stats(int stat_use[STAT_MAX])
 		player->stat_map[i] = i;
 
 		/* Efficiency -- Apply the racial/class bonuses */
-		stat_use[i] = modify_stat_value(player->stat_max[i], bonus);
+		stat_use[i] = player->stat_max[i];
 
 		player->stat_birth[i] = player->stat_max[i];
 	}
@@ -699,14 +700,13 @@ static const int birth_stat_costs[18 + 1] = { 0, 0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 1
 static void recalculate_stats(int *stats_local_local, int points_left_local)
 {
 	int i;
-	int penalty = player->race->monsters[0] ? 1 : 0;
 
 	/* L: Variable stat maxes */
 	for (i = 0; i < STAT_MAX; i++) {
 		player->stat_max_max[i] = MAX(stats_local_local[i] + player->race->r_adj[i], 3);
 		if (player->stat_max_max[i] > 18) player->stat_max_max[i] = (player->stat_max_max[i] - 18) * 10 + 18;
 		player->stat_cur[i] = player->stat_max[i] =	player->stat_birth[i]
-		                    = MIN((stats_local_local[i] - penalty) / 2 + 5, player->stat_max_max[i]);
+		                    = birth_stat(player, i);
 		player->stat_map[i] = i;
 	}
 

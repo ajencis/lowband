@@ -218,7 +218,7 @@ static int compute_locked_penalty(struct player *p)
  */
 static int compute_rubble_penalty(struct player *p)
 {
-	int weapon_slot = slot_by_name(p, "weapon");
+	int weapon_slot = slot_by_type(p, EQUIP_WEAPON, true);
 	struct object *current_weapon = slot_object(p, weapon_slot);
 	struct object *best_digger = player_best_digger(p, false);
 	struct player_state local_state, *used_state;
@@ -226,7 +226,7 @@ static int compute_rubble_penalty(struct player *p)
 	bool swapped_digger;
 	int penalty;
 
-	if (best_digger != current_weapon && (!current_weapon
+	if (weapon_slot >= 0 && best_digger != current_weapon && (!current_weapon
 			|| obj_can_takeoff(current_weapon))) {
 		swapped_digger = true;
 		if (best_digger) {

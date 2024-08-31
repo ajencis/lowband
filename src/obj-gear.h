@@ -34,6 +34,7 @@ enum
 };
 
 int slot_by_name(struct player *p, const char *name);
+int slot_by_type(struct player *p, int type, bool full);
 bool slot_type_is(struct player *p, int slot, int type);
 struct object *slot_object(struct player *p, int slot);
 struct object *equipped_item_by_slot_name(struct player *p, const char *name);
@@ -46,6 +47,8 @@ uint16_t object_pack_total(struct player *p, const struct object *obj,
 int pack_slots_used(const struct player *p);
 const char *equip_mention(struct player *p, int slot);
 const char *equip_describe(struct player *p, int slot);
+int wield_slot_type(const struct object *obj);
+int wield_slot_type_k(const struct object_kind *obj);
 int wield_slot(const struct object *obj);
 int wield_slot_k(const struct object_kind *obj);
 bool minus_ac(struct player *p);

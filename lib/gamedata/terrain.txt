@@ -207,13 +207,14 @@ desc:A quiet, reflective place of refuge, lined with shelves of
 desc: mystical tomes.
 
 code:STORE_ALCHEMY
-name:Alchemy Shop
+name:Mushroom Shop
 graphics:5:b
 priority:20
 flags:SHOP | LOS | PROJECT | PASSABLE | PERMANENT | INTERESTING | EASY
 look-prefix:the entrance to the
 look-in-preposition:at
-desc:A dim, scented room where potions and scrolls are traded.
+desc:A dim, scented room where medicinal mushrooms are bought by
+desc: those who can afford them.
 
 code:STORE_MAGIC
 name:Magic Shop

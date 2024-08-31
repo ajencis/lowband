@@ -2014,8 +2014,8 @@ void equip_learn_on_ranged_attack(struct player *p)
 
 	for (i = 0; i < p->body.count; i++) {
 		struct object *obj = slot_object(p, i);
-		if (i == slot_by_name(p, "weapon")) continue;
-		if (i == slot_by_name(p, "shooting")) continue;
+		if (p->body.slots[i].type == EQUIP_WEAPON) continue;
+		if (p->body.slots[i].type == EQUIP_BOW) continue;
 		if (obj) {
 			assert(obj->known);
 			if (!object_has_standard_to_h(obj)) {
@@ -2051,7 +2051,7 @@ void equip_learn_on_melee_attack(struct player *p)
 
 	for (i = 0; i < p->body.count; i++) {
 		struct object *obj = slot_object(p, i);
-		if (i == slot_by_name(p, "shooting")) continue;
+		if (p->body.slots[i].type == EQUIP_BOW) continue;
 		if (obj) {
 			assert(obj->known);
 			if (!object_has_standard_to_h(obj)) {

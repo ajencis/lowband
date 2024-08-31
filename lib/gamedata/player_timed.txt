@@ -569,3 +569,8 @@ grade:G:10000:FrAct:Your limbs fill with energy!
 on-end:Your limbs return to normal.
 on-increase:Your limbs feel more energetic!
 flag-synonym:FREE_ACT:1
+
+name:REGEN
+desc:regeneration
+grade:G:10000:Heal:Your metabolism accelerates.
+on-end:Your metabolism returns to normal.

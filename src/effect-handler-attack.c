@@ -534,7 +534,6 @@ bool effect_handler_DAMAGE(effect_handler_context_t *context)
 		msg("You take %d damage.", dam);
 	}
 	take_hit(player, dam, killer);
-	take_stat_hit(player, dam);
 
 	return true;
 }

@@ -316,7 +316,7 @@ skill-throw:0
 skill-dig:0
 power:BACKSTAB:25
 power:POLEARM_SPECIALIZATION:25
-hitdie:3
+hitdie:4
 exp:150
 infravision:5
 history:1
@@ -341,7 +341,7 @@ skill-shoot:0
 skill-throw:0
 skill-dig:-5
 power:DIVINATION_SPECIALIZATION:25
-hitdie:0
+hitdie:2
 exp:150
 infravision:10
 history:1
@@ -370,7 +370,7 @@ skill-shoot:0
 skill-throw:0
 skill-dig:10
 power:FIRE_SPECIALIZATION:50
-hitdie:5
+hitdie:6
 exp:175
 infravision:5
 history:1
@@ -382,3 +382,29 @@ monster:young red dragon
 monster:mature red dragon
 monster:ancient red dragon
 body:Dragon
+
+name:Tiefling
+stats:1:0:-1:-1:2
+skill-disarm-phys:0
+skill-disarm-magic:0
+skill-device:15
+skill-save:10
+skill-stealth:3
+skill-search:5
+skill-melee:10
+skill-shoot:5
+skill-throw:5
+skill-dig:3
+power:FIRE_SPECIALIZATION:25
+hitdie:6
+exp:150
+infravision:5
+history:1
+age:100:50
+height:80:6
+weight:190:20
+monster:lemure
+monster:bodak
+monster:nalfeshnee
+monster:lesser Balrog
+monster:greater Balrog

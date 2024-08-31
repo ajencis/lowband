@@ -664,6 +664,9 @@ struct player {
 	uint16_t curr_monster_ridx;			/* L: if the player is a monster */
 
 	int list_extra_powers[PP_MAX];		/* L: if the player gained powers outside of their class */
+
+	int hp_burn;						/* L: temporary reduction of max hp */
+	int sp_burn;						/* L: temporary reduction of max mp */
 };
 
 

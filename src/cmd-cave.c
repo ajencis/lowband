@@ -570,7 +570,7 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 	bool gold = square_hasgoldvein(cave, grid);
 	bool rubble = square_isrubble(cave, grid);
 	bool digger_swapped = false;
-	int weapon_slot = slot_by_name(player, "weapon");
+	int weapon_slot = slot_by_type(player, EQUIP_WEAPON, true);
 	struct object *current_weapon = slot_object(player, weapon_slot);
 	struct object *best_digger = NULL;
 	struct player_state local_state;
@@ -583,7 +583,7 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 
 	/* Find what we're digging with and our chance of success */
 	best_digger = player_best_digger(player, false);
-	if (best_digger != current_weapon &&
+	if (weapon_slot >= 0 && best_digger != current_weapon &&
 			(!current_weapon || obj_can_takeoff(current_weapon))) {
 		digger_swapped = true;
 		with_clause = "with your swap digger";

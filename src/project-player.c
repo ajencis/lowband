@@ -914,7 +914,6 @@ bool project_p(struct source origin, int r, struct loc grid, int dam, int typ,
 			msg("You take %d damage.", reduced);
 		}
 		take_hit(player, reduced, killer);
-		take_stat_hit_elemental(player, reduced, typ);
 	}
 
 	/* Handle side effects, possibly including extra damage */

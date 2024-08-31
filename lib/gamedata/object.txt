@@ -484,8 +484,8 @@ cost:200
 alloc:10:5 to 40
 pile:70:1d4
 power:7
-effect:HEAL_HP
-dice:30
+effect:TIMED_INC:REGEN
+dice:25+5d5
 effect:CURE:STUN
 effect:CURE:CUT
 effect:CURE:POISONED

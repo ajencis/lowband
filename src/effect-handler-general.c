@@ -928,7 +928,7 @@ bool effect_handler_DRAIN_LIGHT(effect_handler_context_t *context)
 {
 	int drain = effect_calculate_value(context, false);
 
-	int light_slot = slot_by_name(player, "light");
+	int light_slot = slot_by_type(player, EQUIP_LIGHT, true);
 	struct object *obj = slot_object(player, light_slot);
 
 	if (obj && !of_has(obj->flags, OF_NO_FUEL) && (obj->timeout > 0)) {
@@ -3122,7 +3122,7 @@ bool effect_handler_CURSE_ARMOR(effect_handler_context_t *context)
 	char o_name[80];
 
 	/* Curse the body armor */
-	obj = equipped_item_by_slot_name(player, "body");
+	obj = slot_object(player, slot_by_type(player, EQUIP_BODY_ARMOR, true));
 
 	/* Nothing to curse */
 	if (!obj) return (true);

@@ -791,7 +791,7 @@ bool player_set_timed(struct player *p, int idx, int v, bool notify,
 	struct timed_effect_data *effect = &timed_effects[idx];
 	struct timed_grade *new_grade = effect->grade;
 	struct timed_grade *current_grade = effect->grade;
-	struct object *weapon = equipped_item_by_slot_name(p, "weapon");
+	struct object *weapon = slot_object(p, slot_by_type(p, EQUIP_WEAPON, true));
 
 	/* Lower bound */
 	v = MAX(v, effect->lower_bound);
