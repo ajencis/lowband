@@ -83,6 +83,7 @@ history:1
 age:14:6
 height:69:10
 weight:165:35
+body:Humanoid
 
 name:Half-Elf
 stats:0:0:-1:1:0
@@ -104,6 +105,7 @@ age:24:16
 height:71:8
 weight:115:25
 obj-flags:SUST_DEX
+body:Humanoid
 
 name:Elf
 stats:0:1:-1:1:-1
@@ -127,6 +129,7 @@ height:73:7
 weight:90:10
 obj-flags:SUST_DEX
 values:RES_LIGHT[1]
+body:Humanoid
 
 name:Hobbit
 stats:-2:0:0:1:1
@@ -149,6 +152,7 @@ height:34:4
 weight:55:5
 obj-flags:HOLD_LIFE
 player-flags:KNOW_MUSHROOM
+body:Humanoid
 
 name:Gnome
 stats:-1:1:-2:1:1
@@ -171,6 +175,7 @@ height:40:5
 weight:80:5
 obj-flags:FREE_ACT
 player-flags:KNOW_ZAPPER
+body:Humanoid
 
 name:Dwarf
 stats:0:-1:0:-2:2
@@ -193,6 +198,7 @@ height:47:4
 weight:135:20
 obj-flags:PROT_BLIND
 player-flags:SEE_ORE
+body:Humanoid
 
 name:Half-Orc
 stats:1:-1:-1:0:1
@@ -214,6 +220,7 @@ age:11:4
 height:64:2
 weight:135:15
 values:RES_DARK[1]
+body:Humanoid
 
 name:Half-Troll
 stats:2:-1:-1:-1:1
@@ -235,6 +242,7 @@ age:20:10
 height:90:16
 weight:240:60
 obj-flags:SUST_STR | REGEN
+body:Humanoid
 
 name:Dunadan
 stats:0:0:0:0:0
@@ -256,6 +264,7 @@ age:50:20
 height:80:6
 weight:190:20
 obj-flags:SUST_CON
+body:Humanoid
 
 name:High-Elf
 stats:-1:2:-1:1:-1
@@ -279,6 +288,7 @@ height:77:6
 weight:190:20
 obj-flags:SEE_INVIS
 values:RES_LIGHT[1]
+body:Humanoid
 
 name:Kobold
 stats:-1:1:-1:2:-1
@@ -301,6 +311,7 @@ age:15:10
 height:37:4
 weight:65:5
 values:RES_POIS[1]
+body:Humanoid
 
 name:Dhampir
 stats:1:1:-2:2:-1
@@ -327,6 +338,7 @@ monster:vampire
 monster:master vampire
 monster:vampire lord
 monster:elder vampire
+body:Humanoid
 
 name:Eyestalk
 stats:-2:2:0:1:0
@@ -407,3 +419,4 @@ monster:bodak
 monster:nalfeshnee
 monster:lesser Balrog
 monster:greater Balrog
+body:Humanoid
