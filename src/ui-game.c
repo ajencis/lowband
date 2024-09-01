@@ -582,7 +582,7 @@ void textui_process_command(void)
 		if (cmd && cmd->hook)
 			/* UI command */
 			cmd->hook();
-		else if (cmd && cmd->cmd)
+		else if (cmd && cmd->cmd) 
 			/* Game command */
 			cmdq_push_repeat(cmd->cmd, count);
 	} else

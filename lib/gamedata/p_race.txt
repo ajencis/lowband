@@ -403,7 +403,6 @@ history:1
 age:100:50
 height:80:6
 weight:190:20
-monster:lemure
 monster:bodak
 monster:nalfeshnee
 monster:lesser Balrog

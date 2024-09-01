@@ -1806,6 +1806,7 @@ void disturb(struct player *p)
 {
 	/* Cancel repeated commands */
 	cmd_cancel_repeat();
+	cmdq_flush();
 
 	/* Cancel Resting */
 	if (player_is_resting(p)) {

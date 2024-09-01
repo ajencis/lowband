@@ -465,7 +465,7 @@ type:mushroom
 graphics:,:d
 level:0
 weight:1
-cost:200
+cost:40
 alloc:10:5 to 100
 pile:70:1d4
 power:10
@@ -480,7 +480,7 @@ type:mushroom
 graphics:,:d
 level:0
 weight:1
-cost:200
+cost:40
 alloc:10:5 to 40
 pile:70:1d4
 power:7
@@ -498,7 +498,7 @@ type:mushroom
 graphics:,:d
 level:0
 weight:1
-cost:200
+cost:80
 alloc:25:20 to 100
 pile:13:1d3
 power:15
@@ -515,7 +515,7 @@ type:mushroom
 graphics:,:d
 level:0
 weight:1
-cost:200
+cost:40
 alloc:10:5 to 40
 pile:70:1d4
 power:8
@@ -534,7 +534,7 @@ type:mushroom
 graphics:,:d
 level:0
 weight:1
-cost:60
+cost:12
 alloc:10:5 to 100
 pile:70:1d4
 power:7
@@ -554,7 +554,7 @@ type:mushroom
 graphics:,:d
 level:0
 weight:1
-cost:60
+cost:15
 alloc:10:5 to 40
 pile:70:1d4
 power:5
@@ -569,7 +569,7 @@ type:mushroom
 graphics:,:d
 level:0
 weight:1
-cost:60
+cost:15
 alloc:10:10 to 40
 pile:70:1d4
 power:5
@@ -584,7 +584,7 @@ type:mushroom
 graphics:,:d
 level:0
 weight:1
-cost:60
+cost:15
 #alloc:10:5 to 100
 pile:70:1d4
 #E:SHROOM_TURB
@@ -595,7 +595,7 @@ type:mushroom
 graphics:,:d
 level:0
 weight:1
-cost:20
+cost:5
 alloc:10:10 to 40
 pile:70:1d4
 power:5
@@ -612,7 +612,7 @@ type:mushroom
 graphics:,:d
 level:0
 weight:1
-cost:100
+cost:20
 alloc:1:15 to 100
 pile:70:1d4
 power:5
@@ -627,7 +627,7 @@ type:mushroom
 graphics:,:d
 level:0
 weight:1
-cost:60
+cost:12
 alloc:1:15 to 100
 pile:70:1d4
 power:5
@@ -644,7 +644,7 @@ type:mushroom
 graphics:,:d
 level:0
 weight:1
-cost:300
+cost:60
 alloc:20:50 to 100
 pile:70:1d4
 power:9
@@ -1984,7 +1984,7 @@ graphics:=:d
 level:30
 weight:2
 cost:500
-alloc:50:30 to 100
+alloc:5:30 to 100
 flags:SUST_STR | 
 values:STR[1+M5]
 
@@ -1994,7 +1994,7 @@ graphics:=:d
 level:30
 weight:2
 cost:500
-alloc:50:30 to 100
+alloc:5:30 to 100
 flags:SUST_INT | 
 values:INT[1+M5]
 
@@ -2004,7 +2004,7 @@ graphics:=:d
 level:30
 weight:2
 cost:500
-alloc:50:30 to 100
+alloc:5:30 to 100
 flags:SUST_DEX | 
 values:DEX[1+M5]
 
@@ -2014,7 +2014,7 @@ graphics:=:d
 level:30
 weight:2
 cost:500
-alloc:50:30 to 100
+alloc:5:30 to 100
 flags:SUST_CON | 
 values:CON[1+M5]
 
@@ -2024,7 +2024,7 @@ graphics:=:d
 level:75
 weight:2
 cost:100000
-alloc:40:75 to 100
+alloc:4:75 to 100
 flags:GOOD
 values:SPEED[4+M6]
 
@@ -2034,7 +2034,7 @@ graphics:=:d
 level:5
 weight:2
 cost:250
-alloc:20:5 to 90
+alloc:2:5 to 90
 values:SEARCH[d4M2]
 
 ### Stat sustain rings ###
@@ -2045,7 +2045,7 @@ graphics:=:d
 level:30
 weight:2
 cost:750
-alloc:20:30 to 100
+alloc:2:30 to 100
 flags:SUST_STR | SUST_DEX | SUST_CON | EASY_KNOW
 
 name:Soulkeeping
@@ -2054,7 +2054,7 @@ graphics:=:d
 level:30
 weight:2
 cost:600
-alloc:20:30 to 100
+alloc:2:30 to 100
 flags:SUST_STR | SUST_INT | SUST_WIS | EASY_KNOW
 
 
@@ -2066,7 +2066,7 @@ graphics:=:d
 level:40
 weight:2
 cost:16000
-alloc:50:40 to 100
+alloc:5:40 to 100
 flags:EASY_KNOW
 values:RES_POIS[1]
 
@@ -2076,7 +2076,7 @@ graphics:=:d
 level:10
 weight:2
 cost:250
-alloc:50:10 to 50
+alloc:5:10 to 50
 flags:IGNORE_COLD | IGNORE_FIRE | EASY_KNOW
 values:RES_FIRE[1] | RES_COLD[1]
 
@@ -2088,7 +2088,7 @@ graphics:=:d
 level:0
 weight:2
 cost:400
-alloc:20:25 to 100
+alloc:2:25 to 100
 values:SEARCH[1+M5] | LIGHT[1] | RES_LIGHT[1]
 
 name:Flames
@@ -2097,7 +2097,7 @@ graphics:=:d
 level:50
 weight:2
 cost:500
-alloc:20:20 to 100
+alloc:2:20 to 100
 attack:0d0:0:0
 armor:0:5+d5M10
 flags:IGNORE_FIRE
@@ -2115,7 +2115,7 @@ graphics:=:d
 level:50
 weight:2
 cost:500
-alloc:20:20 to 100
+alloc:2:20 to 100
 attack:0d0:0:0
 armor:0:5+d5M10
 flags:IGNORE_ACID
@@ -2133,7 +2133,7 @@ graphics:=:d
 level:50
 weight:2
 cost:500
-alloc:20:20 to 100
+alloc:2:20 to 100
 attack:0d0:0:0
 armor:0:5+d5M10
 flags:IGNORE_COLD
@@ -2151,7 +2151,7 @@ graphics:=:d
 level:50
 weight:2
 cost:500
-alloc:20:20 to 100
+alloc:2:20 to 100
 attack:0d0:0:0
 armor:0:5+d5M10
 flags:IGNORE_ELEC
@@ -2171,7 +2171,7 @@ graphics:=:d
 level:20
 weight:2
 cost:500
-alloc:30:20 to 100
+alloc:3:20 to 100
 attack:0d0:0:5+d3M7
 armor:0:0
 desc:It boosts your to-dam value.
@@ -2182,7 +2182,7 @@ graphics:=:d
 level:20
 weight:2
 cost:500
-alloc:30:20 to 100
+alloc:3:20 to 100
 attack:0d0:10+d6M7:0
 armor:0:0
 desc:It boosts your to-hit value.
@@ -2193,7 +2193,7 @@ graphics:=:d
 level:40
 weight:2
 cost:1000
-alloc:20:40 to 100
+alloc:2:40 to 100
 attack:0d0:d10M10:d5M5
 armor:0:0
 desc:It boosts your to-hit and to-dam values.
@@ -2204,7 +2204,7 @@ graphics:=:d
 level:10
 weight:2
 cost:500
-alloc:50:10 to 40
+alloc:5:10 to 40
 attack:0d0:0:0
 armor:0:5+d5M10
 desc:It increases your armor class.
@@ -2218,7 +2218,7 @@ graphics:=:d
 level:5
 weight:2
 cost:1000
-alloc:20:10 to 50
+alloc:2:10 to 50
 flags:EASY_KNOW
 curse:teleportation:100
 values:SPEED[2]
@@ -2229,7 +2229,7 @@ graphics:=:d
 level:0
 weight:2
 cost:200
-alloc:30:10 to 50
+alloc:3:10 to 50
 attack:0d0:2+d3:2+d3
 armor:0:-8+4d3
 
@@ -2239,7 +2239,7 @@ graphics:=:d
 level:10
 weight:2
 cost:700
-alloc:20:10 to 50
+alloc:2:10 to 50
 flags:IMPAIR_HP | EASY_KNOW
 power:25
 effect:HEAL_HP
@@ -2255,7 +2255,7 @@ graphics:=:d
 level:30
 weight:2
 cost:4000
-alloc:50:15 to 80
+alloc:5:15 to 80
 flags:AFRAID | EASY_KNOW
 values:SPEED[2]
 
@@ -2265,7 +2265,7 @@ graphics:=:d
 level:30
 weight:2
 cost:100
-alloc:50:10 to 50
+alloc:5:10 to 50
 attack:0d0:0:-3d5
 armor:0:0
 values:DEX[d4] | STEALTH[d4]
@@ -2276,7 +2276,7 @@ graphics:=:d
 level:0
 weight:2
 cost:100
-alloc:50:10 to 50
+alloc:5:10 to 50
 flags:PROT_FEAR | EASY_KNOW
 values:STEALTH[-2]
 
@@ -2288,7 +2288,7 @@ graphics:=:d
 level:5
 weight:2
 cost:250
-alloc:30:10 to 50
+alloc:3:10 to 50
 flags:SLOW_DIGEST | EASY_KNOW
 
 name:Feather Falling
@@ -2297,7 +2297,7 @@ graphics:=:d
 level:5
 weight:2
 cost:200
-alloc:20:10 to 50
+alloc:2:10 to 50
 flags:FEATHER | EASY_KNOW
 
 name:Free Action
@@ -2306,7 +2306,7 @@ graphics:=:d
 level:20
 weight:2
 cost:1500
-alloc:50:20 to 100
+alloc:5:20 to 100
 flags:FREE_ACT | EASY_KNOW
 
 name:See Invisible
@@ -2315,7 +2315,7 @@ graphics:=:d
 level:30
 weight:2
 cost:340
-alloc:50:30 to 100
+alloc:5:30 to 100
 flags:SEE_INVIS | EASY_KNOW
 
 name:Digging
@@ -2324,7 +2324,7 @@ graphics:=:d
 level:0
 weight:2
 cost:800
-alloc:20:10 to 50
+alloc:2:10 to 50
 values:TUNNEL[2+d3]
 power:6
 effect:LINE:KILL_WALL
@@ -2343,7 +2343,7 @@ graphics:":d
 level:30
 weight:3
 cost:500
-alloc:50:20 to 90
+alloc:5:20 to 90
 flags:SUST_WIS | 
 values:WIS[1+M5]
 
@@ -2355,7 +2355,7 @@ graphics:":d
 level:10
 weight:3
 cost:300
-alloc:50:10 to 50
+alloc:5:10 to 50
 flags:IGNORE_ELEC | EASY_KNOW
 values:RES_ELEC[1]
 
@@ -2365,7 +2365,7 @@ graphics:":d
 level:10
 weight:3
 cost:300
-alloc:50:10 to 50
+alloc:5:10 to 50
 flags:IGNORE_ACID | EASY_KNOW
 values:RES_ACID[1]
 
@@ -2375,7 +2375,7 @@ graphics:":d
 level:60
 weight:3
 cost:20000
-alloc:10:60 to 100
+alloc:1:60 to 100
 flags:EASY_KNOW
 flags:IGNORE_ACID | IGNORE_ELEC | IGNORE_FIRE | IGNORE_COLD
 values:RES_FIRE[1] | RES_ACID[1] | RES_ELEC[1] | RES_COLD[1]
@@ -2388,7 +2388,7 @@ graphics:":d
 level:60
 weight:3
 cost:20000
-alloc:10:60 to 100
+alloc:1:60 to 100
 flags:SUST_STR | SUST_INT | SUST_WIS | SUST_DEX | SUST_CON |
 flags:HOLD_LIFE | SLOW_DIGEST | EASY_KNOW | 
 flags:IGNORE_ACID | IGNORE_ELEC | IGNORE_FIRE | IGNORE_COLD
@@ -2399,7 +2399,7 @@ graphics:":d
 level:70
 weight:3
 cost:30000
-alloc:10:70 to 100
+alloc:1:70 to 100
 attack:0d0:0:0
 armor:0:d5M5
 flags:FREE_ACT | SEE_INVIS | SUST_INT | PROT_BLIND | GOOD
@@ -2412,7 +2412,7 @@ graphics:":d
 level:50
 weight:3
 cost:25000
-alloc:10:60 to 100
+alloc:1:60 to 100
 flags:TELEPATHY
 flags:IGNORE_ACID | IGNORE_ELEC | IGNORE_FIRE | IGNORE_COLD | 
 
@@ -2422,7 +2422,7 @@ graphics:":d
 level:70
 weight:3
 cost:30000
-alloc:10:70 to 100
+alloc:1:70 to 100
 flags:HOLD_LIFE | SUST_WIS | GOOD
 values:WIS[1+M3] | LIGHT[1] | RES_DARK[1] | RES_LIGHT[1] | RES_FIRE[1]
 
@@ -2432,7 +2432,7 @@ graphics:":d
 level:70
 weight:3
 cost:30000
-alloc:10:70 to 100
+alloc:1:70 to 100
 attack:0d0:1+M4:1+M4
 armor:0:0
 flags:SUST_STR | SUST_CON | FREE_ACT | PROT_FEAR | GOOD
@@ -2444,7 +2444,7 @@ graphics:":d
 level:70
 weight:3
 cost:30000
-alloc:10:70 to 100
+alloc:1:70 to 100
 flags:SUST_DEX | GOOD
 values:DEX[1+M4] | SPEED[1+M2] | STEALTH[1+M2] | SEARCH[1+d3M3] | INFRA[1+d3M3]
 values:RES_NEXUS[1] | RES_POIS[1]
@@ -2457,7 +2457,7 @@ graphics:":d
 level:30
 weight:3
 cost:600
-alloc:20:30 to 100
+alloc:2:30 to 100
 flags:REGEN | EASY_KNOW
 
 name:Infravision
@@ -2466,7 +2466,7 @@ graphics:":d
 level:10
 weight:3
 cost:200
-alloc:30:10 to 70
+alloc:3:10 to 70
 values:INFRA[1+M5]
 
 name:Searching
@@ -2475,7 +2475,7 @@ graphics:":d
 level:15
 weight:3
 cost:600
-alloc:20:10 to 40
+alloc:2:10 to 40
 values:SEARCH[d5M5]
 
 ### Powers ###
@@ -2486,7 +2486,7 @@ graphics:":d
 level:10
 weight:3
 cost:10
-alloc:20:10 to 40
+alloc:2:10 to 40
 flags:EASY_KNOW
 curse:teleportation:100
 
@@ -2496,7 +2496,7 @@ graphics:":d
 level:15
 weight:3
 cost:200
-alloc:20:15 to 40
+alloc:2:15 to 40
 flags:SLOW_DIGEST | EASY_KNOW
 
 name:Adornment
@@ -2505,7 +2505,7 @@ graphics:":d
 level:10
 weight:3
 cost:0
-alloc:20:10 to 40
+alloc:2:10 to 40
 flags:EASY_KNOW
 
 
@@ -2517,7 +2517,7 @@ graphics:":d
 level:15
 weight:3
 cost:10
-alloc:20:15 to 40
+alloc:2:15 to 40
 flags:FREE_ACT
 values:SPEED[-3+1d2]
 
@@ -2534,7 +2534,7 @@ graphics:?:w
 level:1
 weight:5
 cost:15
-alloc:50:1 to 100
+alloc:5:1 to 100
 pile:100:2d3
 power:5
 effect:TELEPORT
@@ -2546,7 +2546,7 @@ graphics:?:w
 level:10
 weight:5
 cost:40
-alloc:40:10 to 100
+alloc:4:10 to 100
 pile:25:2
 power:6
 effect:TELEPORT
@@ -2558,7 +2558,7 @@ graphics:?:w
 level:20
 weight:5
 cost:800
-alloc:16:20 to 100
+alloc:1:20 to 100
 pile:10:2
 power:15
 effect:TELEPORT_LEVEL
@@ -2572,7 +2572,7 @@ graphics:?:w
 level:5
 weight:5
 cost:65
-alloc:50:5 to 100
+alloc:5:5 to 100
 pile:70:1d3
 power:10
 effect:MAP_AREA
@@ -2584,7 +2584,7 @@ graphics:?:w
 level:0
 weight:5
 cost:70
-alloc:50:0 to 70
+alloc:5:0 to 70
 pile:40:1d5
 power:6
 effect:DETECT_ORE
@@ -2600,7 +2600,7 @@ graphics:?:w
 level:1
 weight:5
 cost:15
-alloc:50:1 to 70
+alloc:5:1 to 70
 pile:70:1d3
 power:6
 effect:DETECT_INVISIBLE_MONSTERS
@@ -2612,7 +2612,7 @@ graphics:?:w
 level:1
 weight:5
 cost:200
-alloc:50:5 to 100
+alloc:5:5 to 100
 pile:70:1d4
 power:6
 effect:IDENTIFY
@@ -2625,7 +2625,7 @@ graphics:?:w
 level:15
 weight:5
 cost:125
-alloc:40:15 to 70
+alloc:4:15 to 70
 pile:25:2
 power:15
 effect:ENCHANT:TOHIT
@@ -2637,7 +2637,7 @@ graphics:?:w
 level:15
 weight:5
 cost:125
-alloc:40:15 to 70
+alloc:4:15 to 70
 pile:25:2
 power:20
 effect:ENCHANT:TODAM
@@ -2649,7 +2649,7 @@ graphics:?:w
 level:15
 weight:5
 cost:125
-alloc:40:15 to 70
+alloc:4:15 to 70
 pile:25:2
 power:12
 effect:ENCHANT:TOAC
@@ -2661,7 +2661,7 @@ graphics:?:w
 level:50
 weight:5
 cost:500
-alloc:40:50 to 100
+alloc:4:50 to 100
 pile:25:2
 power:22
 effect:ENCHANT:TOBOTH
@@ -2674,7 +2674,7 @@ graphics:?:w
 level:50
 weight:5
 cost:500
-alloc:40:50 to 100
+alloc:4:50 to 100
 pile:25:2
 power:15
 effect:ENCHANT:TOAC
@@ -2687,7 +2687,7 @@ graphics:?:w
 level:10
 weight:5
 cost:100
-alloc:16:10 to 100
+alloc:1:10 to 100
 pile:25:2
 power:8
 effect:REMOVE_CURSE
@@ -2700,7 +2700,7 @@ graphics:?:w
 level:50
 weight:5
 cost:8000
-alloc:16:50 to 100
+alloc:1:50 to 100
 pile:25:2
 power:20
 effect:REMOVE_CURSE
@@ -2714,7 +2714,7 @@ graphics:?:w
 level:1
 weight:5
 cost:0
-alloc:10:1 to 100
+alloc:1:1 to 100
 pile:70:1d3
 power:0
 effect:SUMMON:ANY
@@ -2726,7 +2726,7 @@ graphics:?:w
 level:15
 weight:5
 cost:0
-alloc:10:15 to 100
+alloc:1:15 to 100
 pile:70:1d3
 power:0
 effect:SUMMON:UNDEAD
@@ -2738,7 +2738,7 @@ graphics:?:w
 level:20
 weight:5
 cost:5000
-alloc:10:20 to 100
+alloc:1:20 to 100
 power:20000
 effect:ACQUIRE
 dice:1
@@ -2749,7 +2749,7 @@ graphics:?:w
 level:60
 weight:5
 cost:10000
-alloc:5:60 to 100
+alloc:1:60 to 100
 power:20000
 effect:ACQUIRE
 dice:1+1d2
@@ -2763,7 +2763,7 @@ graphics:?:w
 level:40
 weight:5
 cost:200
-alloc:40:40 to 100
+alloc:4:40 to 100
 pile:25:2
 power:9
 effect:PROJECT_LOS:DISP_UNDEAD:0:1
@@ -2775,7 +2775,7 @@ graphics:?:w
 level:40
 weight:5
 cost:2500
-alloc:25:40 to 100
+alloc:2:40 to 100
 power:20
 effect:BANISH
 
@@ -2785,7 +2785,7 @@ graphics:?:w
 level:50
 weight:5
 cost:3000
-alloc:20:50 to 100
+alloc:2:50 to 100
 power:25
 effect:MASS_BANISH
 
@@ -2798,7 +2798,7 @@ graphics:?:w
 level:5
 weight:5
 cost:10
-alloc:60:5 to 100
+alloc:1:5 to 100
 pile:100:2d3
 power:7
 effect:NOURISH:INC_TO
@@ -2810,7 +2810,7 @@ graphics:?:w
 level:0
 weight:5
 cost:15
-alloc:50:0 to 60
+alloc:5:0 to 60
 pile:35:2d3
 power:4
 effect:LIGHT_AREA
@@ -2823,7 +2823,7 @@ graphics:?:w
 level:5
 weight:5
 cost:125
-alloc:50:5 to 100
+alloc:5:5 to 100
 pile:35:2d3
 power:15
 effect:RECALL
@@ -2834,7 +2834,7 @@ graphics:?:w
 level:40
 weight:5
 cost:200
-alloc:40:40 to 100
+alloc:4:40 to 100
 pile:12:2d3
 power:11
 effect:RECHARGE
@@ -2846,7 +2846,7 @@ graphics:?:w
 level:10
 weight:5
 cost:50
-alloc:40:10 to 60
+alloc:4:10 to 60
 pile:25:2d3
 power:6
 effect:TOUCH:KILL_DOOR
@@ -2857,7 +2857,7 @@ graphics:?:w
 level:10
 weight:5
 cost:250
-alloc:20:1 to 100
+alloc:2:1 to 100
 pile:20:2
 power:19
 effect:DEEP_DESCENT
@@ -2871,7 +2871,7 @@ graphics:?:w
 level:1
 weight:5
 cost:15
-alloc:50:1 to 50
+alloc:5:1 to 50
 pile:70:1d3
 power:6
 effect:TIMED_INC:BLESSED
@@ -2883,7 +2883,7 @@ graphics:?:w
 level:10
 weight:5
 cost:40
-alloc:40:10 to 70
+alloc:4:10 to 70
 pile:25:2
 power:7
 effect:TIMED_INC:BLESSED
@@ -2895,7 +2895,7 @@ graphics:?:w
 level:25
 weight:5
 cost:80
-alloc:40:50 to 100
+alloc:4:50 to 100
 pile:25:2
 power:8
 effect:TIMED_INC:BLESSED
@@ -2907,7 +2907,7 @@ graphics:?:w
 level:30
 weight:5
 cost:50
-alloc:40:30 to 100
+alloc:4:30 to 100
 pile:25:2
 power:6
 effect:TIMED_INC:PROTEVIL
@@ -2923,7 +2923,7 @@ graphics:?:w
 level:5
 weight:5
 cost:30
-alloc:16:5 to 60
+alloc:1:5 to 60
 pile:25:2
 power:8
 effect:TIMED_INC:ATT_CONF
@@ -2935,7 +2935,7 @@ graphics:?:w
 level:60
 weight:5
 cost:500
-alloc:30:70 to 100
+alloc:3:70 to 100
 power:20
 effect:GLYPH:WARDING
 
@@ -2945,7 +2945,7 @@ graphics:?:w
 level:40
 weight:5
 cost:1000
-alloc:30:40 to 100
+alloc:3:40 to 100
 power:12
 effect:DESTRUCTION:LIGHT:15
 
@@ -2957,7 +2957,7 @@ graphics:?:w
 level:5
 weight:5
 cost:0
-alloc:10:5 to 70
+alloc:1:5 to 70
 pile:70:1d3
 power:0
 msg:There is a high pitched humming noise.
@@ -2993,7 +2993,7 @@ graphics:?:w
 level:1
 weight:5
 cost:0
-alloc:10:1 to 70
+alloc:1:1 to 70
 pile:70:1d3
 power:0
 effect:DARKEN_AREA
@@ -3006,7 +3006,7 @@ graphics:?:w
 level:10
 weight:5
 cost:0
-alloc:10:10 to 70
+alloc:1:10 to 70
 pile:70:1d3
 power:0
 msg:You hear a low-pitched whistling sound.
@@ -3025,7 +3025,7 @@ graphics:!:d
 level:30
 weight:4
 cost:8000
-alloc:30:30 to 100
+alloc:3:30 to 100
 pile:10:2
 power:20000
 effect:RESTORE_STAT:STR
@@ -3037,7 +3037,7 @@ graphics:!:d
 level:30
 weight:4
 cost:8000
-alloc:30:30 to 100
+alloc:3:30 to 100
 pile:10:2
 power:20000
 effect:RESTORE_STAT:INT
@@ -3049,7 +3049,7 @@ graphics:!:d
 level:30
 weight:4
 cost:8000
-alloc:30:30 to 100
+alloc:3:30 to 100
 pile:10:2
 power:20000
 effect:RESTORE_STAT:WIS
@@ -3061,7 +3061,7 @@ graphics:!:d
 level:30
 weight:4
 cost:8000
-alloc:30:30 to 100
+alloc:3:30 to 100
 pile:10:2
 power:20000
 effect:RESTORE_STAT:DEX
@@ -3073,7 +3073,7 @@ graphics:!:d
 level:30
 weight:4
 cost:8000
-alloc:30:30 to 100
+alloc:3:30 to 100
 pile:10:2
 power:20000
 effect:RESTORE_STAT:CON
@@ -3085,7 +3085,7 @@ graphics:!:d
 level:40
 weight:4
 cost:50000
-alloc:20:40 to 100
+alloc:2:40 to 100
 attack:1d1:0:0
 armor:0:0
 power:20000
@@ -3106,7 +3106,7 @@ graphics:!:d
 level:65
 weight:4
 cost:25000
-alloc:50:65 to 100
+alloc:5:65 to 100
 power:20000
 effect:GAIN_EXP
 dice:200000
@@ -3119,7 +3119,7 @@ graphics:!:d
 level:0
 weight:4
 cost:20
-alloc:80:1 to 15
+alloc:8:1 to 15
 pile:90:2d3
 power:3
 effect:HEAL_HP
@@ -3138,7 +3138,7 @@ graphics:!:d
 level:3
 weight:4
 cost:70
-alloc:80:5 to 40
+alloc:8:5 to 40
 pile:80:2d3
 power:6
 effect:HEAL_HP
@@ -3155,7 +3155,7 @@ graphics:!:d
 level:5
 weight:4
 cost:200
-alloc:80:12 to 100
+alloc:8:12 to 100
 pile:70:2d3
 power:9
 effect:HEAL_HP
@@ -3175,7 +3175,7 @@ graphics:!:d
 level:15
 weight:4
 cost:800
-alloc:64:30 to 100
+alloc:6:30 to 100
 pile:25:2
 power:12
 effect:HEAL_HP
@@ -3195,7 +3195,7 @@ graphics:!:d
 level:40
 weight:4
 cost:1500
-alloc:40:40 to 100
+alloc:4:40 to 100
 attack:1d1:0:0
 armor:0:0
 power:18
@@ -3214,7 +3214,7 @@ graphics:!:d
 level:60
 weight:4
 cost:5000
-alloc:20:60 to 100
+alloc:2:60 to 100
 attack:1d1:0:0
 armor:0:0
 msg:You feel life flow through your body!
@@ -3241,7 +3241,7 @@ graphics:!:d
 level:5
 weight:4
 cost:75
-alloc:60:1 to 35
+alloc:6:1 to 35
 pile:25:2
 power:1
 effect:CURE:POISONED
@@ -3252,7 +3252,7 @@ graphics:!:d
 level:25
 weight:4
 cost:350
-alloc:64:15 to 100
+alloc:6:15 to 100
 pile:25:2
 power:20
 effect:RESTORE_MANA
@@ -3268,7 +3268,7 @@ graphics:!:d
 level:40
 weight:4
 cost:400
-alloc:40:30 to 100
+alloc:4:30 to 100
 pile:25:2
 power:8
 effect:RESTORE_EXP
@@ -3282,7 +3282,7 @@ graphics:!:d
 level:3
 weight:4
 cost:1000
-alloc:30:20 to 40
+alloc:3:20 to 40
 pile:10:2
 power:30
 effect:RESTORE_STAT:STR
@@ -3295,7 +3295,7 @@ graphics:!:d
 level:20
 weight:4
 cost:1000
-alloc:30:20 to 40
+alloc:3:20 to 40
 pile:10:2
 power:25
 effect:RESTORE_STAT:INT
@@ -3308,7 +3308,7 @@ graphics:!:d
 level:20
 weight:4
 cost:1000
-alloc:30:20 to 40
+alloc:3:20 to 40
 pile:10:2
 power:25
 effect:RESTORE_STAT:WIS
@@ -3321,7 +3321,7 @@ graphics:!:d
 level:5
 weight:4
 cost:1000
-alloc:30:20 to 40
+alloc:3:20 to 40
 pile:10:2
 power:25
 effect:RESTORE_STAT:DEX
@@ -3334,7 +3334,7 @@ graphics:!:d
 level:10
 weight:4
 cost:1000
-alloc:30:20 to 40
+alloc:3:20 to 40
 pile:10:2
 power:30
 effect:RESTORE_STAT:CON
@@ -3350,7 +3350,7 @@ graphics:!:d
 level:25
 weight:4
 cost:800
-alloc:40:25 to 100
+alloc:4:25 to 100
 pile:25:2
 power:22
 effect:LIGHT_LEVEL
@@ -3362,7 +3362,7 @@ graphics:!:d
 level:70
 weight:4
 cost:12000
-alloc:8:70 to 100
+alloc:1:70 to 100
 attack:1d1:0:0
 armor:0:0
 power:20000
@@ -3392,7 +3392,7 @@ graphics:!:d
 level:1
 weight:4
 cost:75
-alloc:40:1 to 100
+alloc:4:1 to 100
 pile:25:2
 power:10
 effect:TIMED_INC:FAST:0:5
@@ -3404,7 +3404,7 @@ graphics:!:d
 level:1
 weight:4
 cost:25
-alloc:40:1 to 100
+alloc:4:1 to 100
 pile:25:2
 power:7
 effect:HEAL_HP
@@ -3419,7 +3419,7 @@ graphics:!:d
 level:3
 weight:4
 cost:80
-alloc:40:3 to 100
+alloc:4:3 to 100
 pile:25:2
 power:8
 effect:HEAL_HP
@@ -3434,7 +3434,7 @@ graphics:!:d
 level:1
 weight:4
 cost:8
-alloc:40:1 to 90
+alloc:4:1 to 90
 pile:25:2
 power:2
 effect:CURE:AFRAID
@@ -3445,7 +3445,7 @@ graphics:!:d
 level:30
 weight:4
 cost:30
-alloc:40:30 to 100
+alloc:4:30 to 100
 pile:25:2
 power:4
 effect:TIMED_INC:OPP_FIRE
@@ -3457,7 +3457,7 @@ graphics:!:d
 level:30
 weight:4
 cost:30
-alloc:40:30 to 100
+alloc:4:30 to 100
 pile:25:2
 power:4
 effect:TIMED_INC:OPP_COLD
@@ -3469,7 +3469,7 @@ graphics:!:d
 level:20
 weight:4
 cost:30
-alloc:40:20 to 100
+alloc:4:20 to 100
 pile:25:2
 power:4
 effect:TIMED_INC:OPP_POIS
@@ -3482,7 +3482,7 @@ graphics:!:d
 level:3
 weight:4
 cost:50
-alloc:40:3 to 40
+alloc:4:3 to 40
 pile:25:2
 power:7
 effect:CURE:BLIND
@@ -3495,7 +3495,7 @@ graphics:!:d
 level:3
 weight:4
 cost:20
-alloc:40:3 to 40
+alloc:4:3 to 40
 pile:25:2
 power:5
 effect:TIMED_INC:SINFRA
@@ -3510,7 +3510,7 @@ graphics:!:d
 level:0
 weight:4
 cost:2
-alloc:10:1 to 10
+alloc:1:1 to 10
 pile:70:2d3
 power:0
 effect:NOURISH:INC_BY
@@ -3522,7 +3522,7 @@ graphics:!:d
 level:0
 weight:4
 cost:0
-alloc:10:0 to 10
+alloc:1:0 to 10
 pile:70:2d3
 attack:3d4:0:0
 armor:0:0
@@ -3538,7 +3538,7 @@ graphics:!:d
 level:0
 weight:4
 cost:0
-alloc:10:0 to 10
+alloc:1:0 to 10
 pile:70:2d3
 attack:3d4:0:0
 armor:0:0
@@ -3552,7 +3552,7 @@ graphics:!:d
 level:0
 weight:4
 cost:0
-alloc:10:0 to 10
+alloc:1:0 to 10
 pile:70:2d3
 attack:3d4:0:0
 armor:0:0
@@ -3568,7 +3568,7 @@ graphics:!:d
 level:3
 weight:4
 cost:0
-alloc:10:0 to 10
+alloc:1:0 to 10
 pile:70:2d3
 attack:3d4:0:0
 armor:0:0
@@ -3582,7 +3582,7 @@ graphics:!:d
 level:1
 weight:4
 cost:0
-alloc:10:0 to 10
+alloc:1:0 to 10
 pile:70:2d3
 attack:3d4:0:0
 armor:0:0
@@ -3598,7 +3598,7 @@ graphics:!:d
 level:10
 weight:4
 cost:0
-alloc:10:10 to 15
+alloc:1:10 to 15
 pile:25:2
 power:0
 effect:RANDOM
@@ -3617,7 +3617,7 @@ graphics:!:d
 level:0
 weight:4
 cost:0
-alloc:10:3 to 15
+alloc:1:3 to 15
 pile:100:1d2
 power:0
 msg:The potion makes you queasy.
@@ -3637,7 +3637,7 @@ level:0
 weight:4
 cost:100
 pile:100:1d2
-alloc:20:40 to 100
+alloc:2:40 to 100
 pile:70:1d3
 power:8
 effect:SELECT
@@ -3659,7 +3659,7 @@ graphics:-:d
 level:3
 weight:10
 cost:200
-alloc:20:3 to 60
+alloc:2:3 to 60
 attack:1d1:0:0
 armor:0:0
 charges:6+d10
@@ -3673,7 +3673,7 @@ graphics:-:d
 level:15
 weight:10
 cost:600
-alloc:20:15 to 60
+alloc:2:15 to 60
 attack:1d1:0:0
 armor:0:0
 charges:6+d8
@@ -3687,7 +3687,7 @@ graphics:-:d
 level:20
 weight:10
 cost:800
-alloc:20:20 to 60
+alloc:2:20 to 60
 attack:1d1:0:0
 armor:0:0
 charges:6+d5
@@ -3701,7 +3701,7 @@ graphics:-:d
 level:30
 weight:10
 cost:1000
-alloc:20:30 to 60
+alloc:2:30 to 60
 attack:1d1:0:0
 armor:0:0
 charges:6+d8
@@ -3715,7 +3715,7 @@ graphics:-:d
 level:30
 weight:10
 cost:950
-alloc:20:30 to 60
+alloc:2:30 to 60
 attack:1d1:0:0
 armor:0:0
 charges:6+d8
@@ -3732,7 +3732,7 @@ graphics:-:d
 level:5
 weight:10
 cost:400
-alloc:20:5 to 60
+alloc:2:5 to 60
 attack:1d1:0:0
 armor:0:0
 charges:6+d8
@@ -3746,7 +3746,7 @@ graphics:-:d
 level:35
 weight:10
 cost:1200
-alloc:20:35 to 100
+alloc:2:35 to 100
 attack:1d1:0:0
 armor:0:0
 charges:4+d8
@@ -3761,7 +3761,7 @@ graphics:-:d
 level:40
 weight:10
 cost:1500
-alloc:20:40 to 100
+alloc:2:40 to 100
 attack:1d1:0:0
 armor:0:0
 charges:2+d6
@@ -3776,7 +3776,7 @@ graphics:-:d
 level:50
 weight:10
 cost:1800
-alloc:20:50 to 100
+alloc:2:50 to 100
 attack:1d1:0:0
 armor:0:0
 charges:2+d4
@@ -3791,7 +3791,7 @@ graphics:-:d
 level:50
 weight:10
 cost:1650
-alloc:20:50 to 100
+alloc:2:50 to 100
 attack:1d1:0:0
 armor:0:0
 charges:2+d5
@@ -3809,7 +3809,7 @@ graphics:-:d
 level:5
 weight:10
 cost:500
-alloc:20:5 to 100
+alloc:2:5 to 100
 attack:1d1:0:0
 armor:0:0
 charges:2+d6
@@ -3823,7 +3823,7 @@ graphics:-:d
 level:5
 weight:10
 cost:500
-alloc:20:5 to 100
+alloc:2:5 to 100
 attack:1d1:0:0
 armor:0:0
 charges:2+d6
@@ -3837,7 +3837,7 @@ graphics:-:d
 level:5
 weight:10
 cost:500
-alloc:20:5 to 100
+alloc:2:5 to 100
 attack:1d1:0:0
 armor:0:0
 charges:2+d6
@@ -3851,7 +3851,7 @@ graphics:-:d
 level:5
 weight:10
 cost:500
-alloc:20:5 to 100
+alloc:2:5 to 100
 attack:1d1:0:0
 armor:0:0
 charges:2+d6
@@ -3865,7 +3865,7 @@ graphics:-:d
 level:10
 weight:10
 cost:500
-alloc:20:10 to 100
+alloc:2:10 to 100
 attack:1d1:0:0
 armor:0:0
 charges:3+d5
@@ -3882,7 +3882,7 @@ graphics:-:d
 level:3
 weight:10
 cost:200
-alloc:20:3 to 60
+alloc:2:3 to 60
 attack:1d1:0:0
 armor:0:0
 charges:6+d10
@@ -3897,7 +3897,7 @@ graphics:-:d
 level:10
 weight:10
 cost:300
-alloc:20:10 to 100
+alloc:2:10 to 100
 attack:1d1:0:0
 armor:0:0
 charges:6+d10
@@ -3911,7 +3911,7 @@ graphics:-:d
 level:20
 weight:10
 cost:400
-alloc:20:20 to 60
+alloc:2:20 to 60
 attack:1d1:0:0
 armor:0:0
 charges:6+d8
@@ -3926,7 +3926,7 @@ graphics:-:d
 level:3
 weight:10
 cost:100
-alloc:20:3 to 60
+alloc:2:3 to 60
 attack:1d1:0:0
 armor:0:0
 charges:6+d10
@@ -3940,7 +3940,7 @@ graphics:-:d
 level:15
 weight:10
 cost:0
-alloc:20:15 to 100
+alloc:2:15 to 100
 attack:1d1:0:0
 armor:0:0
 charges:3+d5
@@ -3953,7 +3953,7 @@ graphics:-:d
 level:20
 weight:10
 cost:3500
-alloc:20:20 to 100
+alloc:2:20 to 100
 attack:1d1:0:0
 armor:0:0
 charges:6+d5
@@ -3968,7 +3968,7 @@ graphics:-:d
 level:20
 weight:10
 cost:700
-alloc:20:20 to 60
+alloc:2:20 to 60
 attack:1d1:0:0
 armor:0:0
 charges:4+d5
@@ -3981,7 +3981,7 @@ graphics:-:d
 level:3
 weight:10
 cost:250
-alloc:20:3 to 60
+alloc:2:3 to 60
 attack:1d1:0:0
 armor:0:0
 charges:8+d15
@@ -4001,7 +4001,7 @@ graphics:-:d
 level:50
 weight:10
 cost:2400
-alloc:20:50 to 100
+alloc:2:50 to 100
 attack:1d1:0:0
 armor:0:0
 charges:1+d3
@@ -4016,7 +4016,7 @@ graphics:-:d
 level:50
 weight:10
 cost:2400
-alloc:20:50 to 100
+alloc:2:50 to 100
 attack:1d1:0:0
 armor:0:0
 charges:1+d3
@@ -4031,7 +4031,7 @@ graphics:-:d
 level:60
 weight:10
 cost:2400
-alloc:20:60 to 100
+alloc:2:60 to 100
 attack:1d1:0:0
 armor:0:0
 charges:1+d3
@@ -4059,7 +4059,7 @@ graphics:-:d
 level:50
 weight:10
 cost:1200
-alloc:50:50 to 100
+alloc:5:50 to 100
 attack:1d1:0:0
 armor:0:0
 charges:3+d3
@@ -4073,7 +4073,7 @@ graphics:-:d
 level:60
 weight:10
 cost:3000
-alloc:20:60 to 100
+alloc:2:60 to 100
 attack:1d1:0:0
 armor:0:0
 charges:1+d2
@@ -4091,7 +4091,7 @@ graphics:-:d
 level:3
 weight:10
 cost:0
-alloc:10:3 to 40
+alloc:1:3 to 40
 attack:1d1:0:0
 armor:0:0
 charges:8+d20
@@ -4105,7 +4105,7 @@ graphics:-:d
 level:3
 weight:10
 cost:0
-alloc:10:3 to 40
+alloc:1:3 to 40
 attack:1d1:0:0
 armor:0:0
 charges:8+d20
@@ -4126,7 +4126,7 @@ graphics:_:d
 level:10
 weight:50
 cost:0
-alloc:10:10 to 100
+alloc:1:10 to 100
 attack:1d2:0:0
 armor:0:0
 charges:2d3
@@ -4140,7 +4140,7 @@ graphics:_:d
 level:10
 weight:50
 cost:0
-alloc:10:10 to 40
+alloc:1:10 to 40
 attack:1d2:0:0
 armor:0:0
 charges:8+d8
@@ -4154,7 +4154,7 @@ graphics:_:d
 level:5
 weight:50
 cost:0
-alloc:10:5 to 40
+alloc:1:5 to 40
 attack:1d2:0:0
 armor:0:0
 charges:8+d8
@@ -4171,7 +4171,7 @@ graphics:_:d
 level:40
 weight:50
 cost:350
-alloc:20:40 to 100
+alloc:2:40 to 100
 attack:1d2:0:0
 armor:0:0
 charges:3+d5
@@ -4184,7 +4184,7 @@ graphics:_:d
 level:50
 weight:50
 cost:6000
-alloc:20:50 to 100
+alloc:2:50 to 100
 attack:1d2:0:0
 armor:0:0
 charges:1+d3
@@ -4199,7 +4199,7 @@ graphics:_:d
 level:10
 weight:50
 cost:800
-alloc:20:10 to 100
+alloc:2:10 to 100
 attack:1d2:0:0
 armor:0:0
 charges:3+d3
@@ -4213,7 +4213,7 @@ graphics:_:d
 level:10
 weight:50
 cost:800
-alloc:20:10 to 100
+alloc:2:10 to 100
 attack:1d2:0:0
 armor:0:0
 charges:4+d4
@@ -4227,7 +4227,7 @@ graphics:_:d
 level:10
 weight:50
 cost:700
-alloc:20:10 to 100
+alloc:2:10 to 100
 attack:1d2:0:0
 armor:0:0
 charges:6+d5
@@ -4245,7 +4245,7 @@ graphics:_:d
 level:5
 weight:50
 cost:200
-alloc:30:5 to 100 
+alloc:3:5 to 100 
 attack:1d2:0:0
 armor:0:0
 charges:8+d15
@@ -4259,7 +4259,7 @@ graphics:_:d
 level:20
 weight:50
 cost:350
-alloc:30:20 to 100
+alloc:3:20 to 100
 attack:1d2:0:0
 armor:0:0
 charges:8+d15
@@ -4273,7 +4273,7 @@ graphics:_:d
 level:20
 weight:50
 cost:600
-alloc:40:10 to 100
+alloc:4:10 to 100
 attack:1d2:0:0
 armor:0:0
 charges:5+d5
@@ -4290,7 +4290,7 @@ graphics:_:d
 level:25
 weight:50
 cost:500
-alloc:30:10 to 100
+alloc:3:10 to 100
 attack:1d2:0:0
 armor:0:0
 charges:4+d3
@@ -4307,7 +4307,7 @@ graphics:_:d
 level:5
 weight:50
 cost:350
-alloc:30:5 to 100
+alloc:3:5 to 100
 attack:1d2:0:0
 armor:0:0
 charges:6+d5
@@ -4326,7 +4326,7 @@ graphics:_:d
 level:70
 weight:50
 cost:5000
-alloc:10:70 to 100
+alloc:1:70 to 100
 attack:1d2:0:0
 armor:0:0
 charges:1+d2
@@ -4349,7 +4349,7 @@ graphics:_:d
 level:50
 weight:50
 cost:1200
-alloc:50:50 to 100
+alloc:5:50 to 100
 attack:1d2:0:0
 armor:0:0
 charges:4+d3
@@ -4363,7 +4363,7 @@ graphics:_:d
 level:70
 weight:50
 cost:5000
-alloc:10:70 to 100
+alloc:1:70 to 100
 attack:1d2:0:0
 armor:0:0
 charges:1+d2
@@ -4376,7 +4376,7 @@ graphics:_:d
 level:70
 weight:50
 cost:4000
-alloc:20:70 to 100
+alloc:2:70 to 100
 attack:1d2:0:0
 armor:0:0
 charges:1+d3
@@ -4390,7 +4390,7 @@ graphics:_:d
 level:70
 weight:50
 cost:3500
-alloc:20:70 to 100
+alloc:2:70 to 100
 attack:1d2:0:0
 armor:0:0
 charges:2d2
@@ -4422,7 +4422,7 @@ graphics:_:d
 level:5
 weight:50
 cost:250
-alloc:30:5 to 80
+alloc:3:5 to 80
 attack:1d2:0:0
 armor:0:0
 charges:8+d20
@@ -4437,7 +4437,7 @@ graphics:_:d
 level:20
 weight:50
 cost:800
-alloc:20:20 to 80
+alloc:2:20 to 80
 attack:1d2:0:0
 armor:0:0
 charges:6+d5
@@ -4451,7 +4451,7 @@ graphics:_:d
 level:20
 weight:50
 cost:2000
-alloc:50:20 to 100
+alloc:5:20 to 100
 attack:1d2:0:0
 armor:0:0
 charges:5+d4
@@ -4465,7 +4465,7 @@ graphics:_:d
 level:40
 weight:50
 cost:2000
-alloc:20:40 to 100
+alloc:2:40 to 100
 attack:1d2:0:0
 armor:0:0
 charges:4+d3
@@ -4479,7 +4479,7 @@ graphics:_:d
 level:40
 weight:50
 cost:500
-alloc:20:40 to 100
+alloc:2:40 to 100
 attack:1d2:0:0
 armor:0:0
 charges:4+d3
@@ -4493,7 +4493,7 @@ graphics:_:d
 level:70
 weight:50
 cost:4500
-alloc:10:70 to 100
+alloc:1:70 to 100
 attack:1d2:0:0
 armor:0:0
 charges:2+1d2
@@ -4513,7 +4513,7 @@ graphics:-:d
 level:5
 weight:15
 cost:1000
-alloc:30:8 to 75
+alloc:3:8 to 75
 power:6
 effect:DETECT_ORE
 effect-yx:22:40
@@ -4529,7 +4529,7 @@ graphics:-:d
 level:30
 weight:15
 cost:3000
-alloc:30:50 to 100
+alloc:3:50 to 100
 attack:1d1:0:0
 armor:0:0
 flags:IGNORE_ELEC
@@ -4552,7 +4552,7 @@ graphics:-:d
 level:65
 weight:15
 cost:2000
-alloc:30:35 to 100
+alloc:3:35 to 100
 attack:1d1:0:0
 armor:0:0
 power:10
@@ -4566,7 +4566,7 @@ graphics:-:d
 level:35
 weight:15
 cost:1000
-alloc:20:35 to 100
+alloc:2:35 to 100
 attack:1d1:0:0
 armor:0:0
 power:8
@@ -4582,7 +4582,7 @@ graphics:-:d
 level:30
 weight:15
 cost:3000
-alloc:20:30 to 80
+alloc:2:30 to 80
 attack:1d1:0:0
 armor:0:0
 power:7
@@ -4596,7 +4596,7 @@ graphics:-:d
 level:25
 weight:15
 cost:2500
-alloc:20:25 to 80
+alloc:2:25 to 80
 attack:1d1:0:0
 armor:0:0
 power:7
@@ -4610,7 +4610,7 @@ graphics:-:d
 level:20
 weight:15
 cost:2000
-alloc:20:20 to 80
+alloc:2:20 to 80
 attack:1d1:0:0
 armor:0:0
 power:5
@@ -4624,7 +4624,7 @@ graphics:-:d
 level:40
 weight:15
 cost:3500
-alloc:20:40 to 80
+alloc:2:40 to 80
 attack:1d1:0:0
 armor:0:0
 power:7
@@ -4641,7 +4641,7 @@ graphics:-:d
 level:75
 weight:15
 cost:5000
-alloc:20:75 to 100
+alloc:2:75 to 100
 attack:1d1:0:0
 armor:0:0
 power:11
@@ -4655,7 +4655,7 @@ graphics:-:d
 level:60
 weight:15
 cost:4500
-alloc:20:60 to 100
+alloc:2:60 to 100
 attack:1d1:0:0
 armor:0:0
 power:10
@@ -4669,7 +4669,7 @@ graphics:-:d
 level:55
 weight:15
 cost:4000
-alloc:20:55 to 100
+alloc:2:55 to 100
 attack:1d1:0:0
 armor:0:0
 flags:IGNORE_ELEC
@@ -4684,7 +4684,7 @@ graphics:-:d
 level:70
 weight:15
 cost:5500
-alloc:20:70 to 100
+alloc:2:70 to 100
 attack:1d1:0:0
 armor:0:0
 power:11
@@ -4701,7 +4701,7 @@ graphics:-:d
 level:30
 weight:15
 cost:1500
-alloc:20:30 to 100
+alloc:2:30 to 100
 attack:1d1:0:0
 armor:0:0
 power:3
@@ -4715,7 +4715,7 @@ graphics:-:d
 level:30
 weight:15
 cost:1500
-alloc:20:30 to 100
+alloc:2:30 to 100
 attack:1d1:0:0
 armor:0:0
 power:3
@@ -4732,7 +4732,7 @@ graphics:-:d
 level:65
 weight:15
 cost:1000
-alloc:20:10 to 80
+alloc:2:10 to 80
 attack:1d1:0:0
 armor:0:0
 power:9
@@ -4749,7 +4749,7 @@ graphics:-:d
 level:80
 weight:15
 cost:20000
-alloc:20:80 to 100
+alloc:2:80 to 100
 attack:1d1:0:0
 armor:0:0
 flags:IGNORE_ELEC
@@ -4766,7 +4766,7 @@ graphics:-:d
 level:80
 weight:15
 cost:25000
-alloc:10:80 to 100
+alloc:1:80 to 100
 attack:1d1:0:0
 armor:0:0
 flags:IGNORE_ELEC
@@ -4788,7 +4788,7 @@ graphics:-:d
 level:35
 weight:15
 cost:1200
-alloc:20:35 to 80
+alloc:2:35 to 80
 attack:1d1:0:0
 armor:0:0
 power:7
@@ -4803,7 +4803,7 @@ graphics:-:d
 level:75
 weight:15
 cost:3600
-alloc:20:75 to 100
+alloc:2:75 to 100
 attack:1d1:0:0
 armor:0:0
 power:11
@@ -4817,7 +4817,7 @@ graphics:-:d
 level:45
 weight:15
 cost:5000
-alloc:20:45 to 100
+alloc:2:45 to 100
 attack:1d1:0:0
 armor:0:0
 power:11
@@ -4832,7 +4832,7 @@ graphics:-:d
 level:35
 weight:15
 cost:2100
-alloc:10:10 to 100
+alloc:1:10 to 100
 attack:1d1:0:0
 armor:0:0
 power:7
@@ -4845,7 +4845,7 @@ graphics:-:d
 level:10
 weight:15
 cost:500
-alloc:30:5 to 100
+alloc:3:5 to 100
 attack:1d1:0:0
 armor:0:0
 vis-msg:A line of shimmering blue light appears.
@@ -4860,7 +4860,7 @@ graphics:-:d
 level:20
 weight:15
 cost:1000
-alloc:20:10 to 100
+alloc:2:10 to 100
 attack:1d1:0:0
 armor:0:0
 power:4
@@ -4875,7 +4875,7 @@ graphics:-:d
 level:30
 weight:15
 cost:4000
-alloc:10:30 to 100
+alloc:1:30 to 100
 attack:1d1:0:0
 armor:0:0
 flags:IGNORE_ELEC
@@ -4889,7 +4889,7 @@ graphics:-:d
 level:95
 weight:15
 cost:25000
-alloc:10:80 to 100
+alloc:1:80 to 100
 attack:1d1:0:0
 armor:0:0
 flags:IGNORE_ELEC

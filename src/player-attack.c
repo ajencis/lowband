@@ -1143,9 +1143,16 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fear)
 {
 	struct object *weapon = slot_object(p, slot_by_type(p, EQUIP_WEAPON, true));
-	struct object *shield = slot_object(p, slot_by_type(p, EQUIP_WEAPON, true));
+	struct object *shield = NULL;
+	int i;
 	int nblows = p->state.num_blows / 100;
 	int bash_quality, bash_dam, energy_lost;
+
+	for (i = 0; i < p->body.count; i++) {
+		if (p->body.slots[i].obj == weapon) continue;
+		if (p->body.slots[i].obj && p->body.slots[i].obj->kind->tval == TV_SHIELD)
+			shield = p->body.slots[i].obj;
+	}
 
 	/* Bashing chance depends on melee skill, DEX, and a level bonus. */
 	int bash_chance = p->state.skills[SKILL_TO_HIT_MELEE] / 8 +

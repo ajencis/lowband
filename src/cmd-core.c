@@ -261,6 +261,7 @@ static struct command last_command = {
 
 static bool repeat_prev_allowed = false;
 static bool repeating = false;
+static bool cancel_current = false;
 
 
 struct command *cmdq_peek(void)
@@ -295,6 +296,8 @@ errr cmdq_push_copy(struct command *cmd)
 		}
 		cmd_release(&cmd_queue[cmd_head]);
 		cmd_queue[cmd_head] = *cmd;
+		if (cmd->nrepeats) repeating = true;
+		else repeating = false;
 	} else if (!repeat_prev_allowed) {
 		return 1;
 	} else {
@@ -332,7 +335,6 @@ errr cmdq_push_copy(struct command *cmd)
  */
 static void process_command(cmd_context ctx, struct command *cmd)
 {
-	//if (character_generated) msg("entering pc");
 	int oldrepeats = cmd->nrepeats;
 	/* Hack - command a monster */
 	int idx = cmd_idx(player->timed[TMD_COMMAND] ?
@@ -344,11 +346,15 @@ static void process_command(cmd_context ctx, struct command *cmd)
 	if (idx == -1) return;
 
 	/* Command repetition */
-	if (game_cmds[idx].repeat_allowed) {
-		/* Auto-repeat only if there isn't already a repeat length. */
+	/*if (game_cmds[idx].repeat_allowed) {
+		// Auto-repeat only if there isn't already a repeat length.
 		if (game_cmds[idx].auto_repeat_n > 0 && cmd->nrepeats == 0)
 			cmd_set_repeat(game_cmds[idx].auto_repeat_n);
 	} else {
+		cmd->nrepeats = 0;
+		repeating = false;
+	}*/
+	if (!game_cmds[idx].repeat_allowed) {
 		cmd->nrepeats = 0;
 		repeating = false;
 	}
@@ -396,7 +402,6 @@ static void process_command(cmd_context ctx, struct command *cmd)
 	/* If the command hasn't changed nrepeats, count this execution. */
 	if (cmd->nrepeats > 0 && oldrepeats == cmd_get_nrepeats())
 		cmd_set_repeat(oldrepeats - 1);
-	//if (character_generated) msg("leaving pc;");
 }
 
 /**
@@ -404,7 +409,6 @@ static void process_command(cmd_context ctx, struct command *cmd)
  */
 bool cmdq_pop(cmd_context c)
 {
-	//if (character_generated) msg("entering cpop;");
 	struct command *cmd;
 
 	/* If we're repeating, just pull the last command again. */
@@ -421,12 +425,18 @@ bool cmdq_pop(cmd_context c)
 		return false;
 	}
 
+	/* L: if we've been asked to cancel the current command do so */
+	if (cancel_current) {
+		cancel_current = false;
+		return false;
+	}
+
 	/* Now process it */
 	if (!cmd->background_command) {
 		last_command_idx = prev_cmd_idx(cmd_tail);
 	}
 	process_command(c, cmd);
-	//if (character_generated) msg("leaving cpop");
+
 
 	if (cmd_head == cmd_tail) { // last command
 		struct command *last;
@@ -447,7 +457,7 @@ bool cmdq_pop(cmd_context c)
 		}
 		cmd_head++;
 		if (cmd_head == CMD_QUEUE_SIZE) cmd_head = 0;
-		cmd_set_repeat(last->nrepeats - 1);
+		cmd_set_repeat(last->nrepeats);
 	}
 
 	return true;
@@ -467,11 +477,13 @@ errr cmdq_push_repeat(cmd_code c, int nrepeats)
 		.arg = { { 0 } }
 	};
 
-	if (cmd_idx(c) == -1)
-		return 1;
+	int repeats = nrepeats;
+	int idx = cmd_idx(c);
+	if (idx == CMD_ARG_NOT_PRESENT) return 1;
+	if (game_cmds[idx].repeat_allowed && !repeats) repeats = game_cmds[idx].auto_repeat_n;
 
 	cmd.code = c;
-	cmd.nrepeats = nrepeats;
+	cmd.nrepeats = repeats;
 
 	return cmdq_push_copy(&cmd);
 }
@@ -481,9 +493,7 @@ errr cmdq_push_repeat(cmd_code c, int nrepeats)
  */
 errr cmdq_push(cmd_code c)
 {
-	//if (character_generated) msg("entering cpush;");
 	return cmdq_push_repeat(c, 0);
-	//if (character_generated) msg("leaving cpush;");
 }
 
 
@@ -530,16 +540,43 @@ void cmdq_release(void)
  */
 void cmd_cancel_repeat(void)
 {
-	struct command *cmd = &cmd_queue[prev_cmd_idx(cmd_tail)];
+	//struct command *cmd = &cmd_queue[prev_cmd_idx(cmd_tail)];
+	struct command *cmd;
+	int i;
+	
+	struct command *last = NULL;
+	if (last_command_idx >= 0)
+		last = &cmd_queue[last_command_idx];
+	else if (last_command.code != CMD_NULL)
+		last = &last_command;
+	
+	if (!last) return;
+	if (last->nrepeats == 0) return;
 
-	if (cmd->nrepeats || repeating) {
-		/* Cancel */
-		cmd->nrepeats = 0;
-		repeating = false;
+	last->nrepeats = 0;
+	//cancel_current = true;
+	player->upkeep->redraw |= PR_STATE;
 
-		/* Redraw the state (later) */
-		player->upkeep->redraw |= (PR_STATE);
+	/*for (i = 0; i < CMD_QUEUE_SIZE; i++) {
+		cmd = &cmd_queue[i];
+		if (cmd->nrepeats) {
+			cmd->nrepeats = 0;
+			player->upkeep->redraw |= (PR_STATE);
+		}
 	}
+	if (last_command.code != CMD_NULL && last_command.nrepeats) {
+		last_command.nrepeats = 0;
+		player->upkeep->redraw |= (PR_STATE);
+	}*/
+
+
+	/*if (cmd->nrepeats) {
+		// Cancel
+		cmd->nrepeats = 0;
+
+		// Redraw the state (later)
+		player->upkeep->redraw |= (PR_STATE);
+	}*/
 }
 
 /**

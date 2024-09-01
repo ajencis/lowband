@@ -38,11 +38,9 @@ normal:food:Pint of Fine Wine
 normal:food:Slime Mold
 normal:food:Flask of Whisky
 normal:food:Hard Biscuit
-normal:mushroom:Stoneskin
-normal:mushroom:Purging
+normal:scroll:Word of Recall
 buy:light
 buy:food
-buy:mushroom
 buy:flask
 buy:digger
 buy:cloak
@@ -149,13 +147,13 @@ buy:prayer book
 buy:nature book
 buy:shadow book
 
-# Alchemist
+# Mushroomer, was Alchemist
 store:STORE_ALCHEMY
-owner:10000:Mauser the Chemist (Half-Elf)
+owner:10000:Mauser the Herbalist (Half-Elf)
 owner:10000:Wizzle the Chaotic (Hobbit)
 owner:15000:Ga-nat the Greedy (Gnome)
 owner:15000:Vella the Slender (Human)
-slots:1:5
+slots:3:6
 turnover:1
 always:mushroom:Fast Recovery
 normal:mushroom:Clear Mind
@@ -163,6 +161,7 @@ normal:mushroom:Emergency
 normal:mushroom:Terror
 normal:mushroom:Sprinting
 normal:mushroom:Purging
+normal:mushroom:Vigor
 buy:mushroom
 
 # Magic-user's
