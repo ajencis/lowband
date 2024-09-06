@@ -1393,7 +1393,6 @@ void do_cmd_jump(struct command *cmd)
  */
 void do_cmd_run(struct command *cmd)
 {
-	//msg("entering dcr;");
 	struct loc grid;
 	int dir;
 
@@ -1570,8 +1569,8 @@ void do_cmd_navigate_up(struct command *cmd)
  */
 void do_cmd_explore(struct command *cmd)
 {
-	//msg("entering dce;");
 	bool visible_monster = false;
+	int y, x;
 	/* cancel if confused */
 	if (player->timed[TMD_CONFUSED]) {
 		cmd_cancel_repeat();
@@ -1591,8 +1590,8 @@ void do_cmd_explore(struct command *cmd)
 	
 
 	/* Screen for visible monsters */
-	for (int y = 0; y < cave->height && !visible_monster; y++) {
-		for (int x = 0; x < cave->width; x++) {
+	for (y = 0; y < cave->height && !visible_monster; y++) {
+		for (x = 0; x < cave->width; x++) {
 			struct loc grid = loc(x, y);
 			
 			if (loc_eq(grid, player->grid)) continue;
@@ -1617,6 +1616,11 @@ void do_cmd_explore(struct command *cmd)
 	assert(!player->upkeep->steps);
 	player->upkeep->step_count = path_nearest_unknown(player, player->grid,
 		&player->upkeep->path_dest, &player->upkeep->steps);
+
+	if (count_neighbors(NULL, cave, player->grid, square_isknown, true) < 9) {
+		// don't keep exploring if we're not getting new knowledge
+		cmd_cancel_repeat();
+	}
 
 
 	if (count_neighbors(NULL, cave, player->upkeep->path_dest, square_isknown, true) >= 9) {
@@ -1716,7 +1720,6 @@ void do_cmd_rest(struct command *cmd)
 	/* XXX-AS need to insert UI here */
 	if (cmd_get_arg_choice(cmd, "choice", &n) != CMD_OK)
 		return;
-
 	/* 
 	 * A little sanity checking on the input - only the specified negative 
 	 * values are valid. 
@@ -1758,7 +1761,6 @@ void do_cmd_rest(struct command *cmd)
 	} else {
 		player_resting_cancel(player, false);
 	}
-
 }
 
 

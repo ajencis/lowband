@@ -962,6 +962,7 @@ void monster_death(struct monster *mon, struct player *p, bool stats)
 
 	/* Drop objects being carried */
 	while (obj) {
+		msg("dropping an object");
 		struct object *next = obj->next;
 
 		/* Object no longer held */
@@ -1190,7 +1191,8 @@ static bool monster_scared_by_damage(struct monster *mon, int dam)
  */
 bool mon_take_nonplayer_hit(int dam, struct monster *t_mon,
 							enum mon_messages hurt_msg,
-							enum mon_messages die_msg)
+							enum mon_messages die_msg,
+							bool skipmsg)
 {
 	assert(t_mon);
 
@@ -1220,12 +1222,13 @@ bool mon_take_nonplayer_hit(int dam, struct monster *t_mon,
 
 		/* Delete the monster */
 		delete_monster_idx(cave, t_mon->midx);
+
 		return true;
 	} else if (!monster_is_camouflaged(t_mon)) {
 		/* Give detailed messages if visible */
 		if (hurt_msg != MON_MSG_NONE) {
 			add_monster_message(t_mon, hurt_msg, false);
-		} else if (dam > 0) {
+		} else if (dam > 0 && !skipmsg) {
 			message_pain(t_mon, dam);
 		}
 	}
@@ -1325,13 +1328,25 @@ void monster_take_terrain_damage(struct monster *mon)
 
 		if (!rf_has(mon->race->flags, RF_IM_FIRE)) {
 			mon_take_nonplayer_hit(100 + randint1(100), mon, MON_MSG_CATCH_FIRE,
-								   MON_MSG_DISINTEGRATES);
+								   MON_MSG_DISINTEGRATES, false);
 		}
 
 		if (fear && monster_is_visible(mon)) {
 			add_monster_message(mon, MON_MSG_FLEE_IN_TERROR, true);
 		}
-	}	
+	}
+}
+
+void monster_take_poison_damage(struct monster *mon, int energy)
+{
+	if (mon->m_timed[MON_TMD_POISONED]) {
+		int pois1 = (mon->m_timed[MON_TMD_POISONED] + 3) / 4;
+		int pois2 = (mon->m_timed[MON_TMD_POISONED] + 5) / 4;
+		int pdam = (pois1 * pois2 + energy - 1) / energy;
+		msg("p1,p2,en,pd are %i,%i,%i,%i;", pois1, pois2, energy, pdam);
+		if (pdam <= 0) return;
+		mon_take_nonplayer_hit(pdam * pdam, mon, MON_MSG_NONE, MON_MSG_DEATH_POIS, true);
+	}
 }
 
 /**

@@ -665,12 +665,25 @@ bool effect_handler_TIMED_INC_NO_RES(effect_handler_context_t *context)
  */
 bool effect_handler_MON_TIMED_INC(effect_handler_context_t *context)
 {
-	assert(context->origin.what == SRC_MONSTER);
-
 	int amount = effect_calculate_value(context, true);
-	struct monster *mon = cave_monster(cave, context->origin.which.monster);
+	struct monster *mon;
 
-	if (mon) {
+	if (context->origin.what == SRC_PLAYER) {
+		struct loc grid = loc(-1, -1);
+		if (context->dir == DIR_TARGET && target_okay()) {
+			target_get(&grid);
+		} else {
+			/* Use the adjacent grid in the given direction as target */
+			grid = loc_sum(player->grid, ddgrid[context->dir]);
+		}
+		mon = square_monster(cave, grid);
+		if (!mon)
+			return false;
+		if (amount > 0)
+			mon_inc_timed(mon, context->subtype, amount, 0);
+	}
+	else if (context->origin.what == SRC_MONSTER) {
+		mon = cave_monster(cave, context->origin.which.monster);
 		mon_inc_timed(mon, context->subtype, MAX(amount, 0), 0);
 		context->ident = true;
 	}

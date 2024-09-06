@@ -48,7 +48,7 @@ pain:1
 flags:POWERFUL | SPIRIT | SMART
 flags:ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR | TAKE_ITEM | CLEAR_WEB
-flags:IM_COLD | IM_FIRE | IM_POIS | NO_CONF | NO_SLEEP | NO_HOLD
+flags:IM_COLD | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 desc:Ainu/maia
 
@@ -99,7 +99,7 @@ pain:1
 flags:COLD_BLOOD | METAL | UNAWARE | EMPTY_MIND
 flags:ONLY_GOLD
 flags:BASH_DOOR | CLEAR_WEB
-flags:IM_ELEC | IM_POIS | NO_CONF | NO_SLEEP
+flags:IM_ELEC | NO_CONF | NO_SLEEP
 flags:MIMIC_INV
 desc:Creeping Coins
 
@@ -171,7 +171,7 @@ desc:Giant Humanoid
 name:golem
 glyph:g
 pain:1
-flags:EMPTY_MIND | CLEAR_WEB
+flags:EMPTY_MIND | CLEAR_WEB | IM_POIS
 flags:IM_ELEC | NO_FEAR | NO_CONF | NO_SLEEP
 flags:NONLIVING
 desc:Golem
@@ -238,7 +238,6 @@ glyph:k
 pain:1
 flags:EVIL
 flags:OPEN_DOOR | BASH_DOOR | SPIRIT | CLEAR_WEB
-flags:IM_POIS
 desc:Kobold
 
 # Powerful undead spellcasters, tending to drain dexterity and charges in melee

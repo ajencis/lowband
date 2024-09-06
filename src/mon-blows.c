@@ -395,7 +395,7 @@ static bool monster_damage_target(melee_effect_handler_context_t *context,
 		display_blow_message_vs_monster(context->method,
 			context->m_name, context->t_mon->midx);
 		dead = mon_take_nonplayer_hit(context->damage, context->t_mon,
-			MON_MSG_NONE, MON_MSG_DIE);
+			MON_MSG_NONE, MON_MSG_DIE, false);
 		return (dead || no_further_monster_effect);
 	}
 	return false;
@@ -477,7 +477,7 @@ static void melee_effect_elemental(melee_effect_handler_context_t *context,
 			display_blow_message_vs_monster(context->method,
 				context->m_name, context->t_mon->midx);
 			(void) mon_take_nonplayer_hit(context->damage,
-				context->t_mon, hurt_msg, die_msg);
+				context->t_mon, hurt_msg, die_msg, false);
 		}
 	}
 
@@ -610,7 +610,7 @@ static void melee_effect_experience(melee_effect_handler_context_t *context,
 		display_blow_message_vs_monster(context->method,
 			context->m_name, context->t_mon->midx);
 		(void) mon_take_nonplayer_hit(context->damage, context->t_mon,
-									  MON_MSG_NONE, MON_MSG_DIE);
+									  MON_MSG_NONE, MON_MSG_DIE, false);
 		return;
 	}
 

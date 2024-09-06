@@ -1009,6 +1009,12 @@ static void project_monster_handler_MON_CRUSH(project_monster_handler_context_t 
 	}
 }
 
+static void project_monster_handler_MON_POIS(project_monster_handler_context_t *context)
+{
+	context->mon_timed[MON_TMD_POISONED] = context->dam;
+	context->dam = 0;
+}
+
 static const project_monster_handler_f monster_handlers[] = {
 	#define ELEM(a) project_monster_handler_##a,
 	#include "list-elements.h"

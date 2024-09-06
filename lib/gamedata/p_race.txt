@@ -303,6 +303,7 @@ skill-shoot:10
 skill-throw:10
 skill-dig:0
 power:BACKSTAB:25
+power:POISON_SPECIALIZATION:25
 hitdie:3
 exp:120
 infravision:5

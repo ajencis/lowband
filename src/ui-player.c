@@ -751,8 +751,8 @@ static struct panel *get_panel_combat(void) {
 	for (i = 0; player->state.attacks[i].proj_type >= 0; i++) {
 		bool first = i == 0;
 		aroll = player->state.attacks[0];
-		bth = (player->state.skills[aroll.attack_skill] * 10) / BTH_PLUS_ADJ + aroll.to_hit;
-		const char * title = first ? "Melee" : "Aux. Melee";
+		bth = player->state.skills[aroll.attack_skill] / BTH_PLUS_ADJ + aroll.to_hit;
+		const char * title = first ? "Melee" : "Aux.";
 
 		if (!aroll.ddice || !aroll.dsides)
 			panel_line(p, COLOUR_L_BLUE, title, "%+d; %d", bth, aroll.to_dam);

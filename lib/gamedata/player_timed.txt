@@ -572,5 +572,10 @@ flag-synonym:FREE_ACT:1
 
 name:REGEN
 desc:regeneration
-grade:G:10000:Heal:Your metabolism accelerates.
+grade:G:10000:Regen:Your metabolism accelerates.
 on-end:Your metabolism returns to normal.
+
+name:RAD_POIS
+desc:poison radiance
+grade:G:10000:RadPois:You radiate poison.
+on-end:You stop radiating poison.

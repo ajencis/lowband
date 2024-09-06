@@ -344,8 +344,8 @@ int caster_level_bonus(const struct player *p, const struct class_spell *spell)
 	int bonus = 0;
 	struct monster_race *mon = lookup_player_monster(p);
 
-	if (p->state.powers[spell->school]) 
-		bonus += (p->state.powers[spell->school] * 20 + 49) / 50;
+	if (p->state.powers[spell->school] > 0) 
+		bonus += (p->state.powers[spell->school] * 50 + 49) / 50;
 
 	if (mon) {
 		int monspells = 0;

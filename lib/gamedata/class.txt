@@ -201,22 +201,59 @@ title:Warlock
 title:Sorcerer
 title:Arch-Mage
 
-magic:1:300:5
+magic:1:300:6
 
-book:magic book:town:[First Spells]:7:arcane
+book:magic book:town:[First Spells]:9:arcane
 book-graphics:?:R
 book-properties:25:40:1 to 100
 equip:magic book:[First Spells]:1:1:none
 
-spell:Magic Missile:1:1:22:4
-effect:BOLT_OR_BEAM:MISSILE:0:-10
-dice:$Dd4
-expr:D:PLAYER_LEVEL:- 1 / 5 + 3
-desc:Fires a magic missile that always hits its target and does
-desc: unresistable damage.
-desc:  Sometimes a beam is fired instead that hurts each monster
-desc: in its path.
-desc:  The chance to get a beam goes up with your character level.
+spell:Firebolt:1:1:22:4
+effect:BOLT:FIRE:0:-10
+dice:$Dd$S
+expr:D:PLAYER_LEVEL:- 1 / 5 + 1
+expr:S:PLAYER_LEVEL:- 1 / 10 + 5
+desc:Fires a firebolt that always hits its target.
+school:FIRE
+
+spell:Electric Bolt:1:1:22:4
+effect:BOLT:ELEC:0:-10
+dice:$Dd$S
+expr:D:PLAYER_LEVEL:- 1 / 5 + 1
+expr:S:PLAYER_LEVEL:- 1 / 10 + 5
+desc:Fires an electric bolt that always hits its target.
+school:AIR
+
+spell:Cold Bolt:1:1:22:4
+effect:BOLT:COLD:0:-10
+dice:$Dd$S
+expr:D:PLAYER_LEVEL:- 1 / 5 + 1
+expr:S:PLAYER_LEVEL:- 1 / 10 + 5
+desc:Fires a cold bolt that always hits its target.
+school:WATER
+
+spell:Acid Bolt:1:1:22:4
+effect:BOLT:ACID:0:-10
+dice:$Dd$S
+expr:D:PLAYER_LEVEL:- 1 / 5 + 1
+expr:S:PLAYER_LEVEL:- 1 / 10 + 5
+desc:Fires an acid bolt that always hits its target.
+school:EARTH
+
+spell:Envenom:2:2:22:4
+effect:MON_TIMED_INC:POISONED:0:-10
+dice:$Dd$S
+expr:D:PLAYER_LEVEL:- 1 / 3 + 5
+expr:S:PLAYER_LEVEL:- 1 / 3 + 5
+desc:Poisons a monster, causing it to take damage over time.
+school:POISON
+
+spell:Sleep:3:3:22:4
+effect:MON_TIMED_INC:SLEEP:0:-10
+dice:$Dd10
+expr:D:PLAYER_LEVEL:- 1 / 5 + 15
+desc:Puts a monster to sleep.
+school:ENCHANTMENT
 
 spell:Light Room:1:2:26:4
 effect:LIGHT_AREA
@@ -234,32 +271,41 @@ effect-yx:22:40
 effect:DETECT_STAIRS
 effect-yx:22:40
 desc:Detects all traps, doors, and stairs in the immediate area.
+school:DIVINATION
 
 spell:Phase Door:2:2:22:4
 effect:TELEPORT
 dice:10
 desc:Teleports you randomly up to 10 squares away.
+school:TELEPORTATION
 
-spell:Electric Arc:2:2:34:4
-effect:SHORT_BEAM:ELEC:0:1
-dice:$Dd6
-expr:D:PLAYER_LEVEL:- 1 / 5 + 3
-desc:Creates an electrical discharge that hurts monsters and destroys
-desc: vulnerable items in its path.  Length of the effect increases
-desc: with player level.
+book:magic book:dungeon:[Poison]:3:arcane
+book-graphics:?:R
+book-properties:400:40:10 to 100
 
-spell:Detect Monsters:3:2:24:4
-effect:DETECT_VISIBLE_MONSTERS
-effect-yx:22:40
-desc:Detects all non-invisible monsters in the immediate area,
-desc: for one turn only.
+spell:Envenom Monsters:10:10:22:4
+effect:PROJECT_LOS:MON_POIS:0:-10
+dice:$Dd$S
+expr:D:PLAYER_LEVEL:- 1 / 4 + 5
+expr:S:PLAYER_LEVEL:- 1 / 4 + 5
+desc:Poisons all monsters in view, causing them to take damage over time.
+school:POISON
 
-spell:Fireball:6:5:33:5
-effect:BALL:FIRE:2
-dice:$Bd6
-expr:B:PLAYER_LEVEL:/ 2 + 5
-desc:Shoots a radius-2 fire ball.
-school:FIRE
+spell:Poison Radiance:25:15:22:4
+effect:TIMED_INC:RAD_POIS:0:-10
+dice:$Dd$S
+expr:D:PLAYER_LEVEL:- 1 / 5 + 5
+expr:S:PLAYER_LEVEL:- 1 / 5 + 5
+desc:Radiates an aura that poisons all monsters in view.
+school:POISON
+
+spell:Toxic:35:20:22:4
+effect:MON_TIMED_INC:TOXIC:0:-10
+dice:$Dd$S
+expr:D:PLAYER_LEVEL:- 1 / 2 + 5
+expr:S:PLAYER_LEVEL:- 1 / 2 + 5
+desc:Toxic poisons a monster, causing it to get more poisoned over time.
+school:POISON
 
 book:magic book:town:[Attacks and Knowledge]:6:arcane
 book-graphics:?:R

@@ -34,6 +34,7 @@
 #include "player-calcs.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "project.h"
 #include "source.h"
 #include "target.h"
 #include "trap.h"
@@ -594,6 +595,12 @@ void process_world(struct chunk *c)
 		}
 	}
 
+	if (player->timed[TMD_RAD_POIS]) {
+		struct loc g = player->grid;
+		bool dummy;
+		effect_simple(EF_PROJECT_LOS, source_player(), "2d9", PROJ_MON_POIS, 0, 0, g.y, g.x, &dummy);
+	}
+
 	/* Take damage from cuts, worse from serious cuts */
 	if (player->timed[TMD_CUT]) {
 		if (player_has(player, PF_ROCK)) {
@@ -826,6 +833,9 @@ void process_world(struct chunk *c)
 			}
 		}
 	}
+
+
+	/*** L: Monster damage ***/
 }
 
 
@@ -934,7 +944,6 @@ void process_player(void)
 
 	/* Repeat until energy is reduced */
 	do {
-		//if (character_generated) msg("processing player;");
 		/* Refresh */
 		notice_stuff(player);
 		handle_stuff(player);
@@ -965,14 +974,11 @@ void process_player(void)
 			cmdq_push(CMD_SLEEP);
 		}
 
-		//if (character_generated) msg("preparing for next command");
-
 		/* Prepare for the next command */
 		if (cmd_get_nrepeats() > 0) {
 			//if (character_generated) msg("signaling repeats;");
 			event_signal(EVENT_COMMAND_REPEAT);
 		} else {
-			//if (character_generated) msg("signaling refresh;");
 			/* Check monster recall */
 			if (player->upkeep->monster_race)
 				player->upkeep->redraw |= (PR_MONSTER);
@@ -980,8 +986,6 @@ void process_player(void)
 			/* Place cursor on player/target */
 			event_signal(EVENT_REFRESH);
 		}
-
-		//if (character_generated) msg("popping;");
 
 		/* Get a command from the queue if there is one */
 		if (!cmdq_pop(CTX_GAME))
@@ -992,7 +996,6 @@ void process_player(void)
 
 		process_player_cleanup();
 
-		//if (character_generated) msg("done processing player.");
 	} while (!player->upkeep->energy_use &&
 			 !player->is_dead &&
 			 !player->upkeep->generate_level);

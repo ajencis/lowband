@@ -802,6 +802,7 @@ struct attack_roll get_weapon_attack(struct player *p, struct object *obj)
 
 	aroll.to_hit += p->state.to_h;
 	aroll.dsides += player_damage_bonus(&p->state);
+	aroll.ddice = aroll.ddice * (p->state.skills[aroll.attack_skill] + 19) / 20;
 
 	aroll.to_hit += adj_dex_th(p->state.stat_ind[aroll.accuracy_stat]);
 	aroll.dsides += adj_str_td(p->state.stat_ind[aroll.damage_stat]);
@@ -862,6 +863,10 @@ static bool get_monster_attack(struct player *p, struct monster_race *mr, struct
 	}
 	aroll->accuracy_stat = STAT_DEX;
 	aroll->damage_stat = mon_blow_dam_stat(mb);
+
+	aroll->to_hit += p->state.to_h;
+	aroll->dsides += player_damage_bonus(&p->state);
+	aroll->ddice = aroll->ddice * (p->state.skills[aroll->attack_skill] + 19) / 20;
 		
 	aroll->to_hit += adj_dex_th(p->state.stat_ind[aroll->accuracy_stat]);
 	aroll->to_dam += adj_str_td(p->state.stat_ind[aroll->damage_stat]);

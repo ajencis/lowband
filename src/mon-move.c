@@ -1857,6 +1857,8 @@ static bool monster_check_active(struct monster *mon)
 	} else if (monster_nearest_takeable_item(cave, mon)) {
 		/* L: Monster has an item to pick up */
 		mflag_on(mon->mflag, MFLAG_ACTIVE);
+	} else if (mon->m_timed[MON_TMD_POISONED] || mon->m_timed[MON_TMD_TOXIC]) {
+		mflag_on(mon->mflag, MFLAG_ACTIVE);
 	} else {
 		/* Otherwise go passive */
 		mflag_off(mon->mflag, MFLAG_ACTIVE);
@@ -1981,6 +1983,12 @@ static bool process_monster_timed(struct monster *mon)
 		mon_dec_timed(mon, MON_TMD_FEAR, d, MON_TMD_FLG_NOTIFY);
 	}
 
+	if (mon->m_timed[MON_TMD_TOXIC]) {
+		mon_dec_timed(mon, MON_TMD_TOXIC, 1, 0);
+		mon_inc_timed(mon, MON_TMD_POISONED, 5, 0);
+	} else if (mon->m_timed[MON_TMD_POISONED])
+		mon_dec_timed(mon, MON_TMD_POISONED, 1, 0);
+
 	/* Always miss turn if held or commanded, one in STUN_MISS_CHANCE chance
 	 * of missing if stunned,  */
 	if (mon->m_timed[MON_TMD_HOLD] || mon->m_timed[MON_TMD_COMMAND]) {
@@ -2104,21 +2112,21 @@ void process_monsters(int minimum_energy)
 
 		/* Check if the monster is active */
 		if (monster_check_active(mon)) {
-			/* Process timed effects - skip turn if necessary */
-			if (process_monster_timed(mon))
-				continue;
-
 			/* Set this monster to be the current actor */
 			cave->mon_current = i;
 
-			/* The monster takes its turn */
-			monster_turn(mon);
+			/* Process timed effects - skip turn if necessary */
+			if (!process_monster_timed(mon)) {
+				/* The monster takes its turn */
+				monster_turn(mon);
+			}
 
 			/*
 			 * For symmetry with the player, monster can take
 			 * terrain damage after its turn.
 			 */
 			monster_take_terrain_damage(mon);
+			monster_take_poison_damage(mon, turn_energy(mspeed));
 
 			/* Monster is no longer current */
 			cave->mon_current = -1;

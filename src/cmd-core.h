@@ -336,6 +336,7 @@ void cmdq_release(void);
  * Remove any pending repeats from the current command.
  */
 void cmd_cancel_repeat(void);
+void cmd_cancel(struct command *cmd);
 
 /**
  * Update the number of repeats pending for the current command.

@@ -47,7 +47,7 @@
 int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 			   int resist, bool actual)
 {
-	int i, denom = 0;
+	int i, denom = 0, sav;
 
 	/* If an actual player exists, get their actual resist */
 	if (p && p->race) {
@@ -94,7 +94,8 @@ int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 			dam = dam * projections[type].numerator / denom;
 
 	/* L: saving throw reduces damage */
-	dam = dam * (100 - randint0(p->state.skills[SKILL_SAVE])) / 100;
+	sav = p->state.skills[SKILL_SAVE];
+	dam = dam * (100 - sav / 2 - randint0(sav / 2)) / 100;
 	dam = MAX(dam, 0);
 
 	return dam;
@@ -762,6 +763,11 @@ static int project_player_handler_MON_DRAIN(project_player_handler_context_t *co
 }
 
 static int project_player_handler_MON_CRUSH(project_player_handler_context_t *context)
+{
+	return 0;
+}
+
+static int project_player_handler_MON_POIS(project_player_handler_context_t *context)
 {
 	return 0;
 }

@@ -1360,6 +1360,7 @@ static void trace_map_updates(game_event_type type, game_event_data *data,
 static void update_maps(game_event_type type, game_event_data *data, void *user)
 {
 	term *t = user;
+	//msg("entering um");
 
 	/* This signals a whole-map redraw. */
 	if (data->point.x == -1 && data->point.y == -1)
@@ -1380,6 +1381,7 @@ static void update_maps(game_event_type type, game_event_data *data, void *user)
 		kx = data->point.x - t->offset_x;
 
 		if (t == angband_term[0]) {
+			//msg("term 0");
 			/* Verify location */
 			if ((ky < 0) || (ky >= SCREEN_HGT)) return;
 			if ((kx < 0) || (kx >= SCREEN_WID)) return;
@@ -1404,9 +1406,12 @@ static void update_maps(game_event_type type, game_event_data *data, void *user)
 		}
 
 
+		//msg("map info");
 		/* Redraw the grid spot */
 		map_info(data->point, &g);
+		//msg("getting grid data");
 		grid_data_as_text(&g, &a, &c, &ta, &tc);
+		//msg("queueing char");
 		Term_queue_char(t, vx, vy, a, c, ta, tc);
 #ifdef MAP_DEBUG
 		/* Plot 'spot' updates in light green to make them visible */
@@ -1416,6 +1421,7 @@ static void update_maps(game_event_type type, game_event_data *data, void *user)
 		if ((tile_width > 1) || (tile_height > 1))
 			Term_big_queue_char(t, vx, vy, clipy, a, c, COLOUR_WHITE, L' ');
 	}
+	//msg("refreshing");
 
 	/* Refresh the main screen unless the map needs to center */
 	if (player->upkeep->update & (PU_PANEL) && OPT(player, center_player)) {
@@ -1429,6 +1435,7 @@ static void update_maps(game_event_type type, game_event_data *data, void *user)
 	}
 
 	Term_fresh();
+	//msg("done");
 }
 
 /**

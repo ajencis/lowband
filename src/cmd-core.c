@@ -261,7 +261,6 @@ static struct command last_command = {
 
 static bool repeat_prev_allowed = false;
 static bool repeating = false;
-static bool cancel_current = false;
 
 
 struct command *cmdq_peek(void)
@@ -409,27 +408,29 @@ static void process_command(cmd_context ctx, struct command *cmd)
  */
 bool cmdq_pop(cmd_context c)
 {
-	struct command *cmd;
+	struct command *cmd = NULL;
 
 	/* If we're repeating, just pull the last command again. */
 	/*if (repeating) {
 		cmd = &cmd_queue[prev_cmd_idx(cmd_tail)];
 	} else*/
-	if (cmd_head != cmd_tail) {
-		/* If we have a command ready, set it. */
+	while (!cmd && cmd_head != cmd_tail) {
 		cmd = &cmd_queue[cmd_tail++];
-		if (cmd_tail == CMD_QUEUE_SIZE)
-			cmd_tail = 0;
+		if (cmd->nrepeats == -1) cmd = NULL;
+		if (cmd_tail == CMD_QUEUE_SIZE) cmd_tail = 0;
+	}
+	/*if (cmd_head != cmd_tail) {
+		cmd = &cmd_queue[cmd_tail++];
+		while (cmd_head != cmd_tail && cmd->nrepeats < 0) {
+			cmd = &cmd_queue[cmd_tail++];
+			if (cmd_tail == CMD_QUEUE_SIZE)
+				cmd_tail = 0;
+		}
 	} else {
-		/* Failure to get a command. */
+		// Failure to get a command. 
 		return false;
-	}
-
-	/* L: if we've been asked to cancel the current command do so */
-	if (cancel_current) {
-		cancel_current = false;
-		return false;
-	}
+	}*/
+	if (!cmd) return false;
 
 	/* Now process it */
 	if (!cmd->background_command) {
@@ -457,7 +458,6 @@ bool cmdq_pop(cmd_context c)
 		}
 		cmd_head++;
 		if (cmd_head == CMD_QUEUE_SIZE) cmd_head = 0;
-		cmd_set_repeat(last->nrepeats);
 	}
 
 	return true;
@@ -535,15 +535,23 @@ void cmdq_release(void)
  * Handling of repeated commands
  * ------------------------------------------------------------------------ */
 
+void cmd_cancel(struct command *cmd)
+{
+	if (!cmd) return;
+	cmd->nrepeats = -1;
+}
+
 /**
  * Remove any pending repeats from the current command.
  */
 void cmd_cancel_repeat(void)
 {
 	//struct command *cmd = &cmd_queue[prev_cmd_idx(cmd_tail)];
-	struct command *cmd;
 	int i;
-	
+	for (i = cmd_tail; i != cmd_head; i = (i + 1) % CMD_QUEUE_SIZE) {
+		if (cmd_queue[i].nrepeats > 0) cmd_cancel(&cmd_queue[i]);
+	}
+
 	struct command *last = NULL;
 	if (last_command_idx >= 0)
 		last = &cmd_queue[last_command_idx];
@@ -551,11 +559,13 @@ void cmd_cancel_repeat(void)
 		last = &last_command;
 	
 	if (!last) return;
-	if (last->nrepeats == 0) return;
-
 	last->nrepeats = 0;
-	//cancel_current = true;
-	player->upkeep->redraw |= PR_STATE;
+	return;
+
+	/*last->nrepeats = 0;
+	if (cmd_head != cmd_tail && last == &cmd_queue[cmd_tail])
+		cancel_current = true;
+	player->upkeep->redraw |= PR_STATE;*/
 
 	/*for (i = 0; i < CMD_QUEUE_SIZE; i++) {
 		cmd = &cmd_queue[i];

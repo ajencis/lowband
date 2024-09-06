@@ -20,11 +20,13 @@
 
 #include "angband.h"
 #include "cave.h"
+#include "effects.h"
 #include "game-event.h"
 #include "game-input.h"
 #include "game-world.h"
 #include "init.h"
 #include "mon-msg.h"
+#include "mon-spell.h"
 #include "mon-util.h"
 #include "obj-curse.h"
 #include "obj-gear.h"
@@ -996,7 +998,7 @@ static int adj_con_mhp(int index) {
 }
 
 static int adj_mag_study(int index) {
-	return index * 250 / 15;
+	return index * 10 / 15;
 }
 
 static int adj_mag_mana(int index) {
@@ -1456,10 +1458,9 @@ static int average_spell_stat(struct player *p, struct player_state *state)
  */
 static void calc_spells(struct player *p)
 {
-	int i, j, k, levels;
+	int i, j, k;
 	int num_allowed, num_known, num_total = p->class->magic.total_spells;
 	if (pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) num_total = all_spells_num;
-	int percent_spells;
 
 	const struct class_spell *spell;
 
@@ -1478,16 +1479,16 @@ static void calc_spells(struct player *p)
 	old_spells = p->upkeep->new_spells;
 
 	/* Determine the number of spells allowed */
-	levels = p->lev - p->class->magic.spell_first + 1;
+	//levels = p->lev - p->class->magic.spell_first + 1;
 
 	/* Hack -- no negative spells */
-	if (levels < 0) levels = 0;
+	//if (levels < 0) levels = 0;
 
 	/* Number of 1/100 spells per level (or something - needs clarifying) */
-	percent_spells = adj_mag_study(average_spell_stat(p, &p->state));
+	num_allowed = adj_mag_study(average_spell_stat(p, &p->state));
 
 	/* Extract total allowed spells (rounded up) */
-	num_allowed = (((percent_spells * levels) + 50) / 100);
+	//num_allowed = (((percent_spells * levels) + 50) / 100);
 
 	/* Assume none known */
 	num_known = 0;
@@ -2085,6 +2086,64 @@ static void calc_shapechange(struct player_state *state, bool vuln[ELEM_MAX],
 	}
 }
 
+static bool calc_monster_spell(struct player_state *state, const struct monster_spell *mspell)
+{
+	if (!mspell) return false;
+
+	int skill = -1;
+
+	switch (mspell->effect->index)
+	{
+		case EF_BALL:
+		case EF_BEAM:
+		case EF_BOLT:
+		{
+			switch (mspell->effect->subtype)
+			{
+				case ELEM_PLASMA:
+				case ELEM_FIRE:
+					skill = PP_FIRE_SPECIALIZATION;
+					break;
+				case ELEM_FORCE:
+				case ELEM_ACID:
+				case ELEM_SHARD:
+					skill = PP_EARTH_SPECIALIZATION;
+					break;
+				case ELEM_ICE:
+				case ELEM_COLD:
+				case ELEM_WATER:
+					skill = PP_WATER_SPECIALIZATION;
+					break;
+				case ELEM_ELEC:
+					skill = PP_AIR_SPECIALIZATION;
+					break;
+				case ELEM_NETHER:
+					skill = PP_NECROMANCY_SPECIALIZATION;
+					break;
+				case ELEM_POIS:
+					skill = PP_POISON_SPECIALIZATION;
+					break;
+				default:
+					skill = -1;
+					break;
+			}
+			break;
+		}
+		case EF_MON_HEAL_HP:
+		case EF_MON_HEAL_KIN:
+			skill = PP_HEALING_SPECIALIZATION;
+			break;
+		default:
+			skill = -1;
+			break;
+	}
+	if (skill > -1) {
+		state->powers[skill] += 3;
+		return true;
+	}
+	return false;
+}
+
 /**
  * L: calculate the effects of being a monster on player state
  */
@@ -2093,6 +2152,7 @@ static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
 {
 	if (!mrace) return;
 	int i;
+	const struct monster_spell *mspell;
 
 	i = 0;
 	while (elem_matches[i].mval != RF_NONE) {
@@ -2106,6 +2166,13 @@ static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
 	state->ac = MAX(state->ac, mrace->ac);
 
 	if (rf_has(mrace->flags, RF_NEVER_MOVE)) *moves -= 2;
+
+	for (i = 0; i < RSF_MAX; i++)
+	{
+		if (!rsf_has(mrace->spell_flags, i)) continue;
+		mspell = monster_spell_by_index(i);
+		calc_monster_spell(state, mspell);
+	}
 }
 
 /**

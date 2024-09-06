@@ -64,6 +64,7 @@ MON_MSG(APPEAR,			MSG_GENERIC,	false,	"appear[s]!")
 MON_MSG(HIT_AND_RUN,		MSG_GENERIC,	true,	"There is a puff of smoke!")
 MON_MSG(QUAKE_DEATH,		MSG_KILL,	false,	"[is|are] embedded in rock!")
 MON_MSG(QUAKE_HURT,		MSG_GENERIC,	false,	"wail[s] out in pain!")
+MON_MSG(DEATH_POIS,			MSG_KILL,		false,	"collapse[s].")
 /* Dummy messages for monster pain - we use edit file info instead. */
 MON_MSG(95,					MSG_GENERIC,	false,	"")
 MON_MSG(75,					MSG_GENERIC,	false,	"")

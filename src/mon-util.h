@@ -41,11 +41,13 @@ struct monster *choose_nearby_injured_kin(struct chunk *c, const struct monster 
 void monster_death(struct monster *mon, struct player *p, bool stats);
 bool mon_take_nonplayer_hit(int dam, struct monster *t_mon,
 							enum mon_messages hurt_msg,
-							enum mon_messages die_msg);
+							enum mon_messages die_msg,
+							bool skipmsg);
 bool mon_take_hit(struct monster *mon, struct player *p, int dam, bool *fear,
 	const char *note);
 void kill_arena_monster(struct monster *mon);
 void monster_take_terrain_damage(struct monster *mon);
+void monster_take_poison_damage(struct monster *mon, int energy);
 bool monster_taking_terrain_damage(struct chunk *c, struct monster *mon);
 struct object *monster_nearest_takeable_item(struct chunk *c, struct monster *mon);
 struct monster *get_commanded_monster(void);

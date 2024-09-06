@@ -721,3 +721,10 @@ blind-desc:something
 obvious:1
 color:White
 
+code:MON_POIS
+type:monster
+desc:poisons monsters
+blind-desc:something
+obvious:1
+color:White
+

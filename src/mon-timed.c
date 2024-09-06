@@ -74,14 +74,14 @@ int mon_timed_name_to_idx(const char *name)
 static bool saving_throw(const struct monster *mon, int effect_type, int timer, int flag)
 {
 	int resist_chance = MIN(
-								90,
-								mon->race->level + MAX(0, 25 - timer / 2)
+								75,
+								mon->race->level / 3 + MAX(0, 25 - timer) + 5
 						   );
 
 	/* Give unique monsters a double check */
-	if (monster_is_unique(mon) && (randint0(100) < resist_chance)) {
+	/*if (monster_is_unique(mon) && (randint0(100) < resist_chance)) {
 		return true;
-	}
+	}*/
 
 	return randint0(100) < resist_chance;
 }
