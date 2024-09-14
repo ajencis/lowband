@@ -75,7 +75,7 @@ static bool saving_throw(const struct monster *mon, int effect_type, int timer, 
 {
 	int resist_chance = MIN(
 								75,
-								mon->race->level / 3 + MAX(0, 25 - timer) + 5
+								mon->race->level / 4 + MAX(0, 25 - timer) + 25
 						   );
 
 	/* Give unique monsters a double check */
@@ -110,7 +110,7 @@ static bool does_resist(const struct monster *mon, int effect_type, int timer, i
 	}
 
 	/* Some effects get a saving throw; others don't */
-	if (effect->gets_save == true) {
+	if (effect->gets_save == true || (flag & MON_TMD_FLG_GETS_SAVE)) {
 		return saving_throw(mon, effect_type, timer, flag);
 	} else {
 		return false;

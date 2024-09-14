@@ -114,6 +114,8 @@
 #include <wchar.h>
 #include <wctype.h>
 
+#include <math.h>
+
 /** POSIX headers **/
 #ifdef UNIX
 # include <pwd.h>

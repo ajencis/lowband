@@ -962,7 +962,6 @@ void monster_death(struct monster *mon, struct player *p, bool stats)
 
 	/* Drop objects being carried */
 	while (obj) {
-		msg("dropping an object");
 		struct object *next = obj->next;
 
 		/* Object no longer held */
@@ -1197,10 +1196,10 @@ bool mon_take_nonplayer_hit(int dam, struct monster *t_mon,
 	assert(t_mon);
 
 	/* "Unique" or arena monsters can only be "killed" by the player */
-	if (monster_is_unique(t_mon) || player->upkeep->arena_level) {
-		/* Reduce monster hp to zero, but don't kill it. */
+	/*if (monster_is_unique(t_mon) || player->upkeep->arena_level) {
+		// Reduce monster hp to zero, but don't kill it.
 		if (dam > t_mon->hp) dam = t_mon->hp;
-	}
+	}*/
 
 	/* Redraw (later) if needed */
 	if (player->upkeep->health_who == t_mon)
@@ -1339,13 +1338,12 @@ void monster_take_terrain_damage(struct monster *mon)
 
 void monster_take_poison_damage(struct monster *mon, int energy)
 {
-	if (mon->m_timed[MON_TMD_POISONED]) {
+	if (mon->m_timed[MON_TMD_POISONED] > 0) {
 		int pois1 = (mon->m_timed[MON_TMD_POISONED] + 3) / 4;
 		int pois2 = (mon->m_timed[MON_TMD_POISONED] + 5) / 4;
 		int pdam = (pois1 * pois2 + energy - 1) / energy;
-		msg("p1,p2,en,pd are %i,%i,%i,%i;", pois1, pois2, energy, pdam);
 		if (pdam <= 0) return;
-		mon_take_nonplayer_hit(pdam * pdam, mon, MON_MSG_NONE, MON_MSG_DEATH_POIS, true);
+		mon_take_nonplayer_hit(pdam, mon, MON_MSG_NONE, MON_MSG_DEATH_POIS, true);
 	}
 }
 
@@ -1741,4 +1739,114 @@ bool monster_revert_shape(struct monster *mon)
 	}
 
 	return false;
+}
+
+
+static void rearrange_monster(struct monster_race *mr)
+{
+	int power = mr->level + randint0(mr->level / 5 + 1) - randint0(mr->level / 5 + 1);
+	int blows = 0;
+	bool spells = false, breaths = false;
+	int ttdam; // twice total dam
+	struct monster_blow *cblow;
+	int mintotal, maxtotal;
+	int i, quo;
+
+	// change monster's power based on its flags
+	if (rf_has(mr->flags, RF_UNIQUE)) power = power * 4 / 3 + 5;
+	if (rf_has(mr->flags, RF_MULTIPLY)) power -= 5;
+	if (mr->friends && mr->friends->race->level >= mr->level) power -= 3;
+	if (rf_has(mr->flags, RF_NEVER_MOVE)) power = power * 5 / 4 + 3;
+	power = MAX(power, 0);
+	mintotal = power * 5 - 2;
+	maxtotal = power * 5 + 2;
+
+	// randomize different abilities
+	int dam = randint0(power + 2) + randint0(power);
+	int hp  = randint0(power + 2) + randint0(power);
+	int ac  = randint0(power + 2) + randint0(power);
+	int spe = randint0(power + 2) + randint0(power);
+	int mag = randint0(power + 2) + randint0(power);
+
+	// check if it has no attacks or no spells
+	i = 0;
+	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
+		if (mr->blow[i].dice.dice > 0) ++blows;
+	}
+	if (!blows) dam /= 2;
+
+	if (!rsf_is_empty(mr->spell_flags)) spells = true;
+	if (!spells) mag /= 2;
+
+	// if it breathes give it better hp at expense of magic
+	if (test_spells(mr->spell_flags, RST_BREATH)) breaths = true;
+	if (breaths && mag > hp) {
+		int temp = hp;
+		hp = mag;
+		mag = temp;
+	}
+
+	// make sure the monster has averageish total power
+	while (dam + hp + ac + spe + mag < mintotal) {
+		int inc = (mintotal - dam - hp - ac - spe - mag + 4) / 5;
+		if (blows) dam += inc;
+		hp += inc;
+		ac += inc;
+		spe += inc;
+		if (spells) mag += inc;
+	}
+	while (dam + hp + ac + spe + mag > maxtotal) {
+		int dec = (dam + hp + ac + spe + mag - maxtotal + 4) / 5;
+		dam = MAX(dam - dec, 0);
+		hp  = MAX(hp  - dec, 0);
+		ac  = MAX(ac  - dec, 0);
+		spe = MAX(spe - dec, 0);
+		mag = MAX(mag - dec, 0);
+	}
+
+	// calculate its stats based on power
+	mr->avg_hp = MAX(hp / 2 + 5, hp) * MAX((hp + 1) / 2 + 10, hp) / 10; // 1000ish for level 100
+	mr->ac = ac; // 100ish for level 100
+	mr->speed = 108 + (spe * 27 + 49) / 100; // 135ish for level 100
+	mr->spell_power = mag; // 100ish for level 100
+	ttdam = MAX(dam + 9, dam * 3 / 2);
+	if (dam > 0) mr->freq_spell = 10 * mag / dam;
+	else mr->freq_spell = 100;
+	mr->freq_spell = MIN(40, mr->freq_spell);
+
+	// spread damage over its damaging blows
+	quo = blows;
+	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
+		cblow = &mr->blow[i];
+
+		if (cblow->dice.dice < 1)
+			continue;
+
+		int ddice = (int)cbrt((double)(ttdam / quo));
+		ddice = MAX(1, MIN(4, ddice));
+		int dsides = (ttdam + quo * ddice - 1) / quo / ddice - 1;
+		dsides = MAX(1, dsides);
+
+		cblow->dice.dice = ddice;
+		cblow->dice.sides = dsides;
+
+		ttdam -= ddice * (dsides + 1);
+
+		quo = MAX(1, quo - 1);
+	}
+}
+
+void rearrange_monsters(struct monster_race *mraces, uint32_t seed)
+{
+	Rand_quick = true;
+	Rand_value = seed;
+	
+	struct monster_base *pbase = lookup_monster_base("player");
+	struct monster_race *curr;
+	for (curr = mraces; curr; curr = curr->next) {
+		if (curr->base == pbase) continue;
+		if (curr->level <= 0) continue;
+		rearrange_monster(curr);
+	}
+	Rand_quick = false;
 }

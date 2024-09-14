@@ -43,6 +43,7 @@
 uint16_t daycount = 0;
 uint32_t seed_randart;		/* Hack -- consistent random artifacts */
 uint32_t seed_flavor;		/* Hack -- consistent object colors */
+uint32_t seed_monsters = 0;	/* L: Hack -- monsters get randomized too */
 int32_t turn;			/* Current game turn */
 bool character_generated;	/* The character exists */
 bool character_dungeon;		/* The character has a dungeon */

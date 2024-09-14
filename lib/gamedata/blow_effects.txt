@@ -19,14 +19,14 @@ eval:0
 lore-color-base:Dark
 
 name:HURT
-power:40
+power:10
 eval:0
 desc:attack
 lore-color-base:Light Green
 lash-type:MISSILE
 
 name:POISON
-power:20
+power:5
 eval:10
 desc:poison
 lore-color-base:Orange
@@ -36,7 +36,7 @@ resist:POIS
 lash-type:POIS
 
 name:DISENCHANT
-power:10
+power:5
 eval:30
 desc:disenchant
 lore-color-base:Light Red
@@ -47,7 +47,7 @@ lash-type:DISEN
 mon-timed:DISEN
 
 name:DRAIN_CHARGES
-power:10
+power:5
 eval:30
 desc:drain charges
 lore-color-base:Light Red
@@ -92,7 +92,7 @@ effect-type:eat-light
 lash-type:MISSILE
 
 name:ACID
-power:20
+power:5
 eval:20
 desc:shoot acid
 lore-color-base:Orange
@@ -101,7 +101,7 @@ lore-color-immune:Light Green
 lash-type:ACID
 
 name:ELEC
-power:40
+power:10
 eval:10
 desc:electrify
 lore-color-base:Orange
@@ -110,7 +110,7 @@ lore-color-immune:Light Green
 lash-type:ELEC
 
 name:FIRE
-power:40
+power:10
 eval:10
 desc:burn
 lore-color-base:Orange
@@ -119,7 +119,7 @@ lore-color-immune:Light Green
 lash-type:FIRE
 
 name:COLD
-power:40
+power:10
 eval:10
 desc:freeze
 lore-color-base:Orange
@@ -138,7 +138,7 @@ resist:PROT_BLIND
 lash-type:DARK
 
 name:CONFUSE
-power:20
+power:5
 eval:20
 desc:confuse
 lore-color-base:Orange
@@ -230,14 +230,14 @@ effect-type:all_sustains
 lash-type:TIME
 
 name:SHATTER
-power:60
+power:15
 eval:300
 desc:shatter
 lore-color-base:Yellow
 lash-type:SHARDS
 
 name:EXP_10
-power:20
+power:5
 eval:5
 desc:lower experience
 lore-color-base:Orange
@@ -247,7 +247,7 @@ resist:HOLD_LIFE
 lash-type:NETHER
 
 name:EXP_20
-power:20
+power:5
 eval:5
 desc:lower experience
 lore-color-base:Orange
@@ -257,7 +257,7 @@ resist:HOLD_LIFE
 lash-type:NETHER
 
 name:EXP_40
-power:20
+power:5
 eval:10
 desc:lower experience
 lore-color-base:Orange
@@ -267,7 +267,7 @@ resist:HOLD_LIFE
 lash-type:NETHER
 
 name:EXP_80
-power:20
+power:5
 eval:10
 desc:lower experience
 lore-color-base:Orange

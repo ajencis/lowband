@@ -178,6 +178,7 @@ bool test_hit(int to_hit, int ac)
 	return random_chance_check(c);
 }
 
+#if 0
 /**
  * Return a random_chance by reference, which represents the likelihood of a
  * hit roll succeeding for the given to_hit and ac values. The hit calculation
@@ -193,7 +194,7 @@ bool test_hit(int to_hit, int ac)
  * \param to_hit The to-hit value to use
  * \param ac The AC to roll against
  */
-void hit_chance(random_chance *chance, int to_hit, int ac)
+void hit_chance_old(random_chance *chance, int to_hit, int ac)
 {
 	/* Percentages scaled to 10,000 to avoid rounding error */
 	const int HUNDRED_PCT = 10000;
@@ -216,6 +217,22 @@ void hit_chance(random_chance *chance, int to_hit, int ac)
 			(HUNDRED_PCT - ALWAYS_MISS - ALWAYS_HIT) / HUNDRED_PCT;
 
 	/* Add in the guaranteed hit */
+	chance->numerator += ALWAYS_HIT;
+}
+#endif
+
+void hit_chance(random_chance *chance, int to_hit, int ac)
+{
+	const int ALWAYS_HIT = 12;
+	const int ALWAYS_MISS = 5;
+
+	chance->denominator = 100;
+
+    int scaleto = chance->denominator - ALWAYS_HIT - ALWAYS_MISS;
+
+	chance->numerator = scaleto / 2 + (to_hit - ac) * 5 / 3;
+	chance->numerator = MAX(chance->numerator, 0);
+	chance->numerator = MIN(chance->numerator, scaleto);
 	chance->numerator += ALWAYS_HIT;
 }
 
@@ -697,11 +714,11 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 
     if (mon) {
 		int i;
+		int flgs = MON_TMD_FLG_NOMESSAGE | MON_TMD_FLG_GETS_SAVE;
 		for (i = 0; i < MON_TMD_MAX; i++) {
 			if (!aroll->mtimed[i]) continue;
 			int power = randint1(aroll->mtimed[i]);
-			if (power < randint0(25)) continue;
-			mon_inc_timed(mon, i, power, MON_TMD_FLG_NOMESSAGE);
+			mon_inc_timed(mon, i, power, flgs);
 		}
 	}
 
@@ -743,6 +760,7 @@ static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
 	aroll->mtimed[MON_TMD_STUN] = (lev * 15 + 49) / 50;
 	aroll->accuracy_stat = STAT_DEX;
 	aroll->damage_stat = STAT_STR;
+	aroll->message = "punch";
 }
 
 static void specialization_mod_attack(struct attack_roll *aroll, struct object *obj)
@@ -761,6 +779,7 @@ static void specialization_mod_attack(struct attack_roll *aroll, struct object *
 static bool backstab_mod_attack(struct attack_roll *aroll, int power)
 {
 	if (!power) return false;
+	if (aroll->attack_skill != SKILL_TO_HIT_MELEE) return false;
 	int lev = player->state.powers[PP_BACKSTAB];
 
 	int dsm = lev + 25 * power;
@@ -787,14 +806,13 @@ struct attack_roll get_weapon_attack(struct player *p, struct object *obj)
 		aroll.dsides = obj->ds + td / 2;
 		aroll.to_dam = (td + 1) / 2;
 		aroll.to_hit = object_to_hit(obj);
-		aroll.message = (char *)"hit";
+		aroll.message = "hit";
 		aroll.accuracy_stat = STAT_DEX;
 		aroll.damage_stat = STAT_STR;
 	}
 	else {
 		unarmed_get_attack(&aroll, obj);
         unarmed_mod_attack(&aroll, obj);
-		aroll.message = (char *)"punch";
 	}
 
 	aroll.proj_type = PROJ_MISSILE;
@@ -802,7 +820,7 @@ struct attack_roll get_weapon_attack(struct player *p, struct object *obj)
 
 	aroll.to_hit += p->state.to_h;
 	aroll.dsides += player_damage_bonus(&p->state);
-	aroll.ddice = aroll.ddice * (p->state.skills[aroll.attack_skill] + 19) / 20;
+	aroll.ddice = aroll.ddice * (p->state.skills[aroll.attack_skill] + 33) / 33;
 
 	aroll.to_hit += adj_dex_th(p->state.stat_ind[aroll.accuracy_stat]);
 	aroll.dsides += adj_str_td(p->state.stat_ind[aroll.damage_stat]);
@@ -822,6 +840,10 @@ static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow
 	int j;
 	struct object *obj;
 
+	if (blow->method->skill == SKILL_SEARCH) {
+		if (p->timed[TMD_BLIND]) return false;
+	}
+
 	for (j = 0; j < p->body.count; j++) {
 		if (!slot_type_is(p, j, blow->method->equip_slot)) continue;
 
@@ -831,12 +853,16 @@ static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow
 		else foundempty = true;
 	}
 
-	return (!foundfull || foundempty);
+	if (foundfull && !foundempty) return false;
+
+	return true;
 }
 
-static int mon_blow_dam_stat(struct monster_blow *mb)
+static int mon_blow_dam_stat(struct monster_blow *mb, struct player *p)
 {
-	if (mb->method->skill == SKILL_SEARCH) return STAT_INT;
+	if (mb->method->skill == SKILL_SEARCH) {
+		return p->state.stat_ind[STAT_INT] > p->state.stat_ind[STAT_WIS] ? STAT_WIS : STAT_INT;
+	}
 	return STAT_STR;
 }
 
@@ -847,12 +873,15 @@ static bool get_monster_attack(struct player *p, struct monster_race *mr, struct
 	if (!mb->method) return false;
 	if (!monster_attack_is_usable(p, mb)) return false;
 
+	int mindice = 1;
+	int minsides = mb->dice.sides ? 1 : 0;
+
 	aroll->ddice = mb->dice.dice;
 	aroll->dsides = mb->dice.sides;
 	aroll->energy = 0;
-	aroll->message = mb->method->fmessage;
-	aroll->to_hit = mr->level / 5;
-	aroll->to_dam = mr->level / 2;
+	aroll->message = (const char *)mb->method->fmessage;
+	aroll->to_hit = 0;
+	aroll->to_dam = 0;
 	aroll->proj_type = mb->effect->lash_type;
 	aroll->attack_skill = mb->method->skill;
 	for (j = 0; j < MON_TMD_MAX; j++) {
@@ -862,14 +891,17 @@ static bool get_monster_attack(struct player *p, struct monster_race *mr, struct
 			aroll->mtimed[j] = 0;
 	}
 	aroll->accuracy_stat = STAT_DEX;
-	aroll->damage_stat = mon_blow_dam_stat(mb);
+	aroll->damage_stat = mon_blow_dam_stat(mb, p);
 
 	aroll->to_hit += p->state.to_h;
 	aroll->dsides += player_damage_bonus(&p->state);
-	aroll->ddice = aroll->ddice * (p->state.skills[aroll->attack_skill] + 19) / 20;
-		
+	aroll->ddice = aroll->ddice * (p->state.skills[aroll->attack_skill] + 33) / 33;
+	
 	aroll->to_hit += adj_dex_th(p->state.stat_ind[aroll->accuracy_stat]);
-	aroll->to_dam += adj_str_td(p->state.stat_ind[aroll->damage_stat]);
+	aroll->dsides += adj_str_td(p->state.stat_ind[aroll->damage_stat]);
+
+	aroll->dsides = MAX(minsides, aroll->dsides);
+	aroll->ddice = MAX(mindice, aroll->ddice);
 
 	if (aroll->attack_skill == SKILL_TO_HIT_MELEE)
 		unarmed_mod_attack(aroll, NULL);
@@ -881,15 +913,14 @@ int get_monster_attacks(struct player *p, struct monster_race *mr, struct attack
 {
 	if (!mr) return 0;
 	if (!mr->blow[0].method) return 0;
-	struct monster_blow *mb;
+	//struct monster_blow *mb;
 	int mbi, pai = 0;
-	int bestblow = -1, bestblowdam = -1, currdam;
 
-	for (mbi = 0; mbi < z_info->mon_blows_max && mr->blow[mbi].method; mbi++) {
+	/*for (mbi = 0; mbi < z_info->mon_blows_max && mr->blow[mbi].method; mbi++) {
 		mb = &mr->blow[mbi];
 		if (!monster_attack_is_usable(p, mb)) continue;
 		currdam = (mb->dice.sides + 1) * mb->dice.dice;
-		currdam += adj_str_td(p->state.stat_ind[mon_blow_dam_stat(mb)]) * 2;
+		currdam += adj_str_td(p->state.stat_ind[mon_blow_dam_stat(mb, p)]) * 2;
 		if (currdam > bestblowdam) {
 			bestblow = mbi;
 			bestblowdam = currdam;
@@ -898,10 +929,9 @@ int get_monster_attacks(struct player *p, struct monster_race *mr, struct attack
 
 	if (bestblow >= 0) {
 		if (get_monster_attack(p, mr, aroll, bestblow))	++pai;
-	}
+	}*/
 
 	for (mbi = 0; mbi < z_info->mon_blows_max && pai < maxnum && mr->blow[mbi].method; mbi++) {
-		if (mbi == bestblow) continue;
 		if (get_monster_attack(p, mr, &aroll[pai], mbi)) ++pai;
 	}
 
@@ -1253,6 +1283,7 @@ void py_attack(struct player *p, struct loc grid)
 	int i;
 	int pretimed[MON_TMD_MAX];
 	int backstab = 0;
+	bool backstab_msg = false;
 
 	if (mon->m_timed[MON_TMD_SLEEP] || mon->m_timed[MON_TMD_HOLD]) backstab = 2;
 	else if (mon->m_timed[MON_TMD_SLOW] || mon->m_timed[MON_TMD_FEAR] || mon->m_timed[MON_TMD_STUN]) backstab = 1;
@@ -1282,25 +1313,29 @@ void py_attack(struct player *p, struct loc grid)
 	/* Attack until the next attack would exceed energy available or
 	 * a full turn or until the enemy dies. We limit energy use
 	 * to avoid giving monsters a possible double move. */
-	aroll = p->state.attacks[0];
-	if (backstab && backstab_mod_attack(&aroll, backstab)) {
-		char m_name[80];
-		monster_desc(m_name, sizeof(m_name), mon, MDESC_TARG);
-		msg("You backstab %s.", m_name);
-	}
 	while (avail_energy - p->upkeep->energy_use >= blow_energy && !slain) {
+		int which = randint0(p->state.num_attacks);
+		aroll = p->state.attacks[which];
+
+		if (backstab && backstab_mod_attack(&aroll, backstab) && !backstab_msg) {
+			backstab_msg = true;
+			char m_name[80];
+			monster_desc(m_name, sizeof(m_name), mon, MDESC_TARG);
+			msg("You backstab %s.", m_name);
+		}
+
 		slain = py_attack_real(p, grid, &fear, aroll);
 		p->upkeep->energy_use += blow_energy;
 	}
 
-	for (i = 1; (i < PY_MAX_ATTACKS) && !slain && (p->state.attacks[i].proj_type >= 0); i++) {
+	/*for (i = 1; (i < PY_MAX_ATTACKS) && !slain && (p->state.attacks[i].proj_type >= 0); i++) {
 		if (randint0(z_info->move_energy) < p->upkeep->energy_use) {
 			aroll = p->state.attacks[i];
 			if (backstab)
 				backstab_mod_attack(&aroll, backstab);
 			slain = py_attack_real(p, grid, &fear, aroll);
 		}
-	}
+	}*/
 
 	if (!slain) {
 		mon->target.midx = MON_TARGET_PLAYER;

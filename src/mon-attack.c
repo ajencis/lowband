@@ -343,7 +343,7 @@ static int monster_spell_failrate(struct monster *mon)
 int chance_of_monster_hit_base(const struct monster_race *race,
 	const struct blow_effect *effect)
 {
-	return MAX(race->level, 1) * 3 + effect->power;
+	return MAX(race->level, 1) + effect->power;
 }
 
 /**

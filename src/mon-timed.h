@@ -43,6 +43,7 @@
 /* 0x02 */
 #define MON_TMD_FLG_NOMESSAGE	0x04 /* Never show a message */
 #define MON_TMD_FLG_NOFAIL		0x08 /* Never fail */
+#define MON_TMD_FLG_GETS_SAVE   0x10 /* L: gets a save even if effect normally wouldn't allow one */
 
 /** Functions **/
 int mon_timed_name_to_idx(const char *name);

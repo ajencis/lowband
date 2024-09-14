@@ -247,7 +247,7 @@ struct attack_roll {
 	int to_hit;
 	int to_dam;
 	int mtimed[MON_TMD_MAX];
-	char *message;
+	const char *message;
 	int energy;
 	int proj_type;
 	int attack_skill;	/* which skill it uses to decide accuracy */
@@ -488,6 +488,7 @@ struct player_state {
 	bitflag pflags[PF_SIZE];				/**< Player intrinsic flags */
 	struct element_info el_info[ELEM_MAX];	/**< Resists from race and items */
 
+	int num_attacks;							/**< L: number of attacks they currently have available */
 	struct attack_roll attacks[PY_MAX_ATTACKS];	/**< L: attacks they currently have available */
 };
 

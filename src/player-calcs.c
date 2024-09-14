@@ -888,14 +888,14 @@ struct mon_player_match elem_matches[] = {
 
 
 /* L: simple stepdown that approximates a square root */
-static int stepdown(int num) {
+/*static int stepdown(int num) {
 	int i;
 	for (i = 0; i < 100; i++) {
 		if ((i * (i + 1) / 2) >= num)
 			break;
 	}
 	return i;
-}
+}*/
 
 
 /* L: rewriting the stat stuff entirely */
@@ -904,7 +904,7 @@ static int stepdown(int num) {
  * L: scales a number to the stat value such that
  * stat_scale(10, x) = 0
  * and
- * stat_scale(18, x) = x
+ * stat_scale(17, x) = x
  * with numbers increasing quadratically
  * generally scaleto is the high value for that table
  */
@@ -922,7 +922,7 @@ static int stat_scale(int index, int scaleto, bool minzero) {
 								   ((hsi - asi) * (hsi - asi))) + 
 								   (minzero ? negative : 0);
 
-	if (index <= asi) return ((index - asi) * scaleto - 49) / 50 + (minzero ? negative : 0);
+	if (index <= asi) return ((index - asi) * scaleto - 24) / 25 + (minzero ? negative : 0);
 
 	return minzero ? negative : 0;
 }
@@ -945,15 +945,15 @@ static int adj_int_dis(int index) {
 }
 
 static int adj_dex_ta(int index) {
-	return stat_scale(index, 50, false);
+	return stat_scale(index, 15, false);
 }
 
 int adj_str_td(int index) {
-	return stat_scale(index, 25, false);
+	return (index + 5) * 15 / 20;
 }
 
 int adj_dex_th(int index) {
-	return stat_scale(index, 35, false);
+	return (index + 5) * 35 / 20;
 }
 
 /*static int adj_str_th(int index) {
@@ -982,7 +982,7 @@ int adj_str_blow(int index) {
 }*/
 
 static int adj_stat_blow(int index) {
-	return stat_scale(index, 400, true);
+	return (index + 5) * 600 / 20;
 }
 
 int adj_dex_safe(int index) {
@@ -994,15 +994,15 @@ int adj_con_fix(int index) {
 }
 
 static int adj_con_mhp(int index) {
-	return stat_scale(index, 1000, false);
+	return stat_scale(index, 250, false);
 }
 
 static int adj_mag_study(int index) {
-	return index * 10 / 15;
+	return (index + 5) * 10 / 20;
 }
 
 static int adj_mag_mana(int index) {
-	return index * 500 / 15;
+	return (index + 5) * 500 / 20;
 }
 
 int adj_int_xp(int index) {
@@ -1761,6 +1761,7 @@ static void calc_hitpoints(struct player *p)
 {
 	long bonus;
 	int mhp;
+	struct monster_race *mon = lookup_player_monster(p);
 
 	/* Get "1/100th hitpoint bonus per level" value */
 	bonus = adj_con_mhp(p->state.stat_ind[STAT_CON]);
@@ -1769,9 +1770,9 @@ static void calc_hitpoints(struct player *p)
 	mhp = p->player_hp[p->lev-1] + (bonus * p->lev / 100);
 
 	/* L: bonus from being a monster */
-	if (p->curr_monster_ridx) {
-		struct monster_race *mon = lookup_player_monster(p);
-		mhp += stepdown(mon->avg_hp);
+	if (mon) {
+		mhp += (int)sqrt((double)(mon->avg_hp * 10));
+		//mhp += stepdown(mon->avg_hp);
 	}
 
 	/* Always have at least one hitpoint per level */
@@ -1897,27 +1898,30 @@ int calc_unlocking_chance(const struct player *p, int lock_power,
 
 /**
  * L: new calc_blows 
- * relies on sqrt(object weight), melee skill, and both str and dex, with
+ * relies on object weight, melee skill, and both str and dex, with
  * the higher of str and dex weighted more heavily
  */
-int calc_blows(struct player *p, const struct object *obj,
+int calc_blows(struct player *p, int wgt,
                struct player_state *state, int extra_blows)
 {
-	int weight = obj ? object_weight_one(obj) : 0;
-	weight = MAX(weight, 0) + 100;
+	int weight = MAX(wgt * 2, 25) + 100;
 
 	struct attack_roll aroll = p->state.attacks[0];
 
     int sind1 = state->stat_ind[aroll.damage_stat];
 	int sind2 = state->stat_ind[aroll.accuracy_stat];
 
-	int statind = (sind1 > sind2 ? 2 * sind1 + sind2 : sind1 + 2 * sind2) / 3;
+	// max 18
+	int statind = (sind1 > sind2 ? 2 * sind1 + sind2 + 2 : sind1 + 2 * sind2 + 2) / 3;
 
+	// max 600
 	int baseblows = adj_stat_blow(statind);
 
+	// max 100
 	int skill = aroll.attack_skill;
 
-	int blows = MAX(0, baseblows) * (state->skills[skill] + 100) / weight / 2 + 100;
+	// max 600 * 100 / 100 + 100
+	int blows = MAX(0, baseblows) * state->skills[skill] / weight + 100 * state->num_attacks;
 
 	return blows + 100 * extra_blows;
 }
@@ -2208,7 +2212,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	int armwgt = 0;
 	int attacknum;
 	struct object *launcher = NULL;
-	struct object *weapon = NULL;
+	struct object *weapon[PY_MAX_ATTACKS] = { 0 };
 	bitflag f[OF_SIZE];
 	bitflag collect_f[OF_SIZE];
 	bool vuln[ELEM_MAX];
@@ -2278,8 +2282,14 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			if (slot_type_is(p, i, EQUIP_BODY_ARMOR))
 			    armwgt = MAX(armwgt, owgt);
 
-			if (!weapon && slot_type_is(p, i, EQUIP_WEAPON) && obj->tval != TV_SHIELD)
-				weapon = obj;
+			if (slot_type_is(p, i, EQUIP_WEAPON) && obj->tval != TV_SHIELD) {
+				for (j = 0; j < PY_MAX_ATTACKS; j++) {
+					if (!weapon[j]) {
+						weapon[j] = obj;
+						break;
+					}
+				}
+			}
 
 			if (!launcher && slot_type_is(p, i, EQUIP_BOW))
 				launcher = obj;
@@ -2602,7 +2612,6 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	
 
 	/* L: change expfact based on int */
-	//if (character_generated)
 	state->expfact = p->race->r_exp + p->class->c_exp + adj_int_xp(state->stat_ind[STAT_INT]);
 
 
@@ -2658,9 +2667,8 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	}
 
 	attacknum = 0;
-	if (weapon) {
-		state->attacks[attacknum] = get_weapon_attack(p, weapon);
-		++attacknum;
+	for (attacknum = 0; attacknum < PY_MAX_ATTACKS - 1 && weapon[attacknum]; ++attacknum) {
+		state->attacks[attacknum] = get_weapon_attack(p, weapon[attacknum]);
 	}
 	if (mrace) {
 		attacknum += get_monster_attacks(p,
@@ -2673,12 +2681,17 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		++attacknum;
 	}
 	if (attacknum < PY_MAX_ATTACKS) state->attacks[attacknum].proj_type = -1;
+	state->num_attacks = attacknum;
 
 	/* Analyze weapon */
 	state->heavy_wield = false;
 	state->bless_wield = false;
-	if (weapon) {
-		int16_t weapon_weight = object_weight_one(weapon);
+	if (weapon[0]) {
+		int16_t weapon_weight = 0;
+		for (i = 0; weapon[i]; i++) {
+			int currwgt = object_weight_one(weapon[i]);
+			weapon_weight = MAX(weapon_weight, currwgt);
+		}
 
 		/* It is hard to hold a heavy weapon */
 		if (hold < weapon_weight / 10) {
@@ -2688,13 +2701,13 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 		/* Normal weapons */
 		if (!state->heavy_wield) {
-			state->num_blows = calc_blows(p, weapon, state, extra_blows);
+			state->num_blows = calc_blows(p, weapon_weight, state, extra_blows);
 			state->skills[SKILL_DIGGING] += weapon_weight / 10;
 		}
 
 		/* Divine weapon bonus for blessed weapons */
 		if (pf_has(state->pflags, PF_BLESS_WEAPON)
-				&& (weapon->tval == TV_HAFTED
+				&& (weapon[0]->tval == TV_HAFTED
 				|| of_has(state->flags, OF_BLESSED))) {
 			state->to_h += 2;
 			state->to_d += 2;
@@ -2702,7 +2715,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		}
 	} else {
 		/* Unarmed */
-		state->num_blows = calc_blows(p, NULL, state, extra_blows);
+		state->num_blows = calc_blows(p, 0, state, extra_blows);
 	}
 
 	/* Mana */

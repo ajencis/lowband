@@ -964,6 +964,10 @@ int rd_misc(void)
 	rd_u32b(&seed_flavor);
 	flavor_init();
 
+	/* L: read mnster seed */
+	rd_u32b(&seed_monsters);
+	rearrange_monsters(r_info, seed_monsters);
+
 	/* Special stuff */
 	rd_u16b(&player->total_winner);
 	rd_u16b(&player->noscore);

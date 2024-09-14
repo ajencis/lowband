@@ -415,6 +415,9 @@ uint8_t monster_health_attr(void)
 		/* Commanded */
 		if (mon->m_timed[MON_TMD_COMMAND]) attr = COLOUR_L_PURPLE;
 
+		/* L: Poisoned */
+		if (mon->m_timed[MON_TMD_POISONED]) attr = COLOUR_GREEN;
+
 		/* Confused */
 		if (mon->m_timed[MON_TMD_CONF]) attr = COLOUR_UMBER;
 

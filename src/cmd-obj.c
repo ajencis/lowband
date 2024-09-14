@@ -1204,6 +1204,7 @@ void do_cmd_innate(struct command *cmd)
 		msg(fail);
 		return;
 	}
+	ref_race = mr;
 	mana = innate_spell_mana(mr);
 
 	if (cmd_get_innate(cmd,
@@ -1226,4 +1227,6 @@ void do_cmd_innate(struct command *cmd)
 	effect_do(ms->effect, source_player(), NULL, &ident, true, dir, 0, 0, cmd);
 
 	take_hit(player, mana, "using an innate power");
+
+	ref_race = NULL;
 }

@@ -342,7 +342,7 @@ monster:elder vampire
 body:Humanoid
 
 name:Eyestalk
-stats:-2:2:0:1:0
+stats:-2:2:1:0:0
 skill-disarm-phys:0
 skill-disarm-magic:5
 skill-device:10

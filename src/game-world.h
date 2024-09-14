@@ -32,6 +32,7 @@ struct level {
 extern uint16_t daycount;
 extern uint32_t seed_randart;
 extern uint32_t seed_flavor;
+extern uint32_t seed_monsters;
 extern int32_t turn;
 extern bool character_generated;
 extern bool character_dungeon;

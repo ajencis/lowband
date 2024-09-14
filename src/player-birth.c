@@ -23,6 +23,7 @@
 #include "game-world.h"
 #include "init.h"
 #include "mon-lore.h"
+#include "mon-util.h"
 #include "monster.h"
 #include "obj-curse.h"
 #include "obj-gear.h"
@@ -138,6 +139,13 @@ static birther prev;
 static birther quickstart_prev;
 
 
+static void init_monsters(void)
+{
+	if (seed_monsters == 0) {
+		seed_monsters = randint0(0x10000000 - 1) + 1;
+		rearrange_monsters(r_info, seed_monsters);
+	}
+}
 
 static int birth_stat(struct player *p, int stat)
 {
@@ -322,6 +330,9 @@ static void roll_hp(void)
 
 static void get_bonuses(void)
 {
+	/* L: rearrange monsters so being a monster works as intended */
+	init_monsters();
+
 	/* L: check monster */
 	player->curr_monster_ridx = 0;
 	check_player_monster(player, true);
@@ -711,7 +722,7 @@ static void recalculate_stats(int *stats_local_local, int points_left_local)
 	}
 
 	/* Gold is inversely proportional to cost */
-	player->au_birth = z_info->start_gold + (50 * points_left_local);
+	player->au_birth = z_info->start_gold * (1 + points_left_local);
 
 	/* Update bonuses, hp, etc. */
 	get_bonuses();
@@ -1304,6 +1315,9 @@ void do_cmd_accept_character(struct command *cmd)
 		do_randart(seed_randart, true);
 		deactivate_randart_file();
 	}
+
+	/* L: seed for monsters */
+	init_monsters();
 
 	/* Seed for flavors */
 	seed_flavor = randint0(0x10000000);

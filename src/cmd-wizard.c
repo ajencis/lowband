@@ -979,7 +979,7 @@ void do_cmd_wiz_cure_all(struct command *cmd)
 	player_set_timed(player, TMD_FOOD, PY_FOOD_FULL - 1, false, false);
 
 	/* Flag what needs to be updated or redrawn */
-	player->upkeep->update |= PU_TORCH | PU_UPDATE_VIEW | PU_MONSTERS;
+	player->upkeep->update |= PU_TORCH | PU_UPDATE_VIEW | PU_MONSTERS | PU_BONUS;
 	player->upkeep->redraw |= PR_BASIC | PR_EXTRA | PR_MAP | PR_EQUIP;
 
 	/* Give the player some feedback */

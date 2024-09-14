@@ -1880,19 +1880,16 @@ static bool monster_check_active(struct monster *mon)
  */
 static void monster_reduce_sleep(struct monster *mon)
 {
-	int stealth = player->state.skills[SKILL_STEALTH];
-	struct monster_lore *lore = get_lore(mon->race);
+	// Get the name
+	char m_name[80];
+	monster_desc(m_name, sizeof(m_name), mon, 
+		MDESC_CAPITAL | MDESC_IND_HID | MDESC_COMMA);
 
 	/* Aggravation */
 	if (player_of_has(player, OF_AGGRAVATE)) {
-		char m_name[80];
 
 		/* Wake the monster, make it aware */
 		monster_wake(mon, false, 100);
-
-		/* Get the monster name */
-		monster_desc(m_name, sizeof(m_name), mon,
-			MDESC_CAPITAL | MDESC_IND_HID | MDESC_COMMA);
 
 		/* Notify the player if aware */
 		if (monster_is_obvious(mon)) {
@@ -1900,34 +1897,31 @@ static void monster_reduce_sleep(struct monster *mon)
 			equip_learn_flag(player, OF_AGGRAVATE);
 		}
 	} else {
-		int sleep_reduction = 1;
+		int stealth = player->state.skills[SKILL_STEALTH];
 		int local_noise = cave->noise.grids[mon->grid.y][mon->grid.x];
 		bool woke_up = false;
 		int curr = mon->m_timed[MON_TMD_SLEEP];
-
-		sleep_reduction = MAX(0, 11 - local_noise);
-		sleep_reduction *= MAX(0, sleep_reduction - stealth);
+		int distfact = MAX(0, 20 - local_noise) / 2;
+		int16_t sred = 1 << MIN(14, distfact) / MAX(stealth + 1, 1);
 
 		/* Note a complete wakeup */
 		/* L: also note getting close to wakeup */
-		if (curr <= sleep_reduction) {
+		if (curr <= sred) {
 			woke_up = true;
-		} else if (((curr & 0xf) < sleep_reduction) &&
-		           (curr - sleep_reduction <= 64) &&
+		} else if (((curr & 0xf) < sred) &&
+		           (curr - sred <= 64) &&
 				   monster_is_obvious(mon)) {
-			char m_name[80];
-			monster_desc(m_name, sizeof(m_name), mon,
-			    MDESC_CAPITAL | MDESC_IND_HID | MDESC_COMMA);
 			msg("%s stirs.", m_name);
 		}
 
 		/* Monster wakes up a bit */
-		if (sleep_reduction) {
-			mon_dec_timed(mon, MON_TMD_SLEEP, sleep_reduction, MON_TMD_FLG_NOTIFY);
+		if (sred) {
+			mon_dec_timed(mon, MON_TMD_SLEEP, sred, MON_TMD_FLG_NOTIFY);
 		}
 
 		/* Update knowledge */
 		if (monster_is_obvious(mon)) {
+			struct monster_lore *lore = get_lore(mon->race);
 			if (!woke_up && lore->ignore < UCHAR_MAX)
 				lore->ignore++;
 			else if (woke_up && lore->wake < UCHAR_MAX)

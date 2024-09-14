@@ -619,6 +619,9 @@ void wr_misc(void)
 	/* Write the "object seeds" */
 	wr_u32b(seed_flavor);
 
+	/* L: random monster seed */
+	wr_u32b(seed_monsters);
+
 	/* Special stuff */
 	wr_u16b(player->total_winner);
 	wr_u16b(player->noscore);

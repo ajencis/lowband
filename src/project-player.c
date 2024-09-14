@@ -49,6 +49,11 @@ int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 {
 	int i, denom = 0, sav;
 
+	/* L: saving throw reduces damage */
+	sav = p->state.skills[SKILL_SAVE];
+	dam = dam * (100 - sav / 3 - randint0(sav / 3)) / 100;
+	dam = MAX(dam, 0);
+
 	/* If an actual player exists, get their actual resist */
 	if (p && p->race) {
 		/* Ice is a special case */
@@ -92,11 +97,6 @@ int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 	for (i = resist; i > 0; i--)
 		if (denom)
 			dam = dam * projections[type].numerator / denom;
-
-	/* L: saving throw reduces damage */
-	sav = p->state.skills[SKILL_SAVE];
-	dam = dam * (100 - sav / 2 - randint0(sav / 2)) / 100;
-	dam = MAX(dam, 0);
 
 	return dam;
 }

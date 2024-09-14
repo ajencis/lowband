@@ -30,6 +30,7 @@
 #include "player-calcs.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "project.h"
 #include "store.h"
 #include "ui-birth.h"
 #include "ui-display.h"
@@ -53,7 +54,7 @@
  */
 struct panel_line {
 	uint8_t attr;
-	const char *label;
+	char label[20];
 	char value[20];
 };
 
@@ -104,7 +105,8 @@ static void panel_line(struct panel *p, uint8_t attr, const char *label,
 
 	/* Set the basics */
 	pl->attr = attr;
-	pl->label = label;
+	my_strcpy(pl->label, label, sizeof(pl->label));
+	//pl->label = label;
 
 	/* Set the value */
 	va_start(vp, fmt);
@@ -607,7 +609,7 @@ static void display_panel(const struct panel *p, bool left_adj,
 		for (i = 0; i < p->len; i++) {
 			struct panel_line *pl = &p->lines[i];
 
-			int len = pl->label ? strlen(pl->label) : 0;
+			int len = strlen(pl->label);
 			if (offset < len) offset = len;
 		}
 		offset += 2;
@@ -617,7 +619,7 @@ static void display_panel(const struct panel *p, bool left_adj,
 		int len;
 		struct panel_line *pl = &p->lines[i];
 
-		if (!pl->label)
+		if (!pl->label[0])
 			continue;
 
 		Term_putstr(col, row, strlen(pl->label), COLOUR_WHITE, pl->label);
@@ -741,6 +743,9 @@ static struct panel *get_panel_combat(void) {
 	int bth, dam, hit;
 	struct attack_roll aroll;
 	int i;
+	size_t j;
+	static char title[10];
+	int colour;
 
 	/* AC */
 	panel_line(p, COLOUR_L_BLUE, "Armor", "[%d,%+d]",
@@ -748,22 +753,36 @@ static struct panel *get_panel_combat(void) {
 
 	/* Melee */
 	panel_space(p);
-	for (i = 0; player->state.attacks[i].proj_type >= 0; i++) {
-		bool first = i == 0;
-		aroll = player->state.attacks[0];
+	for (i = 0; i < player->state.num_attacks; i++) {
+		aroll = player->state.attacks[i];
 		bth = player->state.skills[aroll.attack_skill] / BTH_PLUS_ADJ + aroll.to_hit;
-		const char * title = first ? "Melee" : "Aux.";
+		//msg("message is %s", aroll.message);
+		my_strcpy(title, aroll.message, sizeof(title));
+		//msg("title is %s", title);
+		my_strcap(title);
+		//msg("capped title is %s", title);
+		for (j = 0; j < N_ELEMENTS(title); j++) {
+			if (title[j] == ' ') {
+				title[j] = '\0';
+				break;
+			}
+		}
+		colour = projections[aroll.proj_type].color;
+		if (aroll.proj_type == PROJ_MISSILE) colour = COLOUR_L_BLUE;
 
 		if (!aroll.ddice || !aroll.dsides)
-			panel_line(p, COLOUR_L_BLUE, title, "%+d; %d", bth, aroll.to_dam);
+			panel_line(p, colour, title, "%+d; %d", bth, aroll.to_dam);
+		else if (aroll.dsides == 1)
+			panel_line(p, colour, title, "%+d; %d", bth, aroll.to_dam + aroll.ddice);
 		else if (aroll.to_dam)
-			panel_line(p, COLOUR_L_BLUE, title, "%+d; %dd%d%+d", bth, aroll.ddice, aroll.dsides, aroll.to_dam);
+			panel_line(p, colour, title, "%+d; %dd%d%+d", bth, aroll.ddice, aroll.dsides, aroll.to_dam);
 		else
-		    panel_line(p, COLOUR_L_BLUE, title, "%+d; %dd%d", bth, aroll.ddice, aroll.dsides);
+		    panel_line(p, colour, title, "%+d; %dd%d", bth, aroll.ddice, aroll.dsides);
+	}
 
-		if (first)
-			panel_line(p, COLOUR_L_BLUE, "Blows", "%d.%d/turn",
-					player->state.num_blows / 100, (player->state.num_blows / 10 % 10));
+	if (i > 0) {
+		panel_line(p, COLOUR_L_BLUE, "Blows", "%d.%d/turn",
+			player->state.num_blows / 100, (player->state.num_blows / 10 % 10));
 	}
 
 	/* Ranged */
@@ -796,8 +815,8 @@ static struct panel *get_panel_skills(void) {
 #define BOUND(x, min, max)		MIN(max, MAX(min, x))
 
 	/* Saving throw */
-	skill = BOUND(player->state.skills[SKILL_SAVE], 0, 100);
-	panel_line(p, colour_table[skill / 10], "Saving Throw", "%d%%", skill);
+	skill = MAX(player->state.skills[SKILL_SAVE], 0);
+	panel_line(p, colour_table[MIN(100, skill) / 10], "Saving Throw", "%d%%", skill);
 
 	/* Stealth */
 	desc = likert(player->state.skills[SKILL_STEALTH], 1, &attr);
