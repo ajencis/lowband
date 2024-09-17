@@ -201,9 +201,9 @@ title:Warlock
 title:Sorcerer
 title:Arch-Mage
 
-magic:1:300:6
+magic:1:300:7
 
-book:magic book:town:[First Spells]:9:arcane
+book:magic book:town:[First Spells]:10:arcane
 book-graphics:?:R
 book-properties:25:40:1 to 100
 equip:magic book:[First Spells]:1:1:none
@@ -278,6 +278,42 @@ effect:TELEPORT
 dice:10
 desc:Teleports you randomly up to 10 squares away.
 school:TELEPORTATION
+
+spell:Nether Bolt:2:1:22:4
+effect:BOLT:NETHER:0:-10
+dice:$Dd$S
+expr:D:PLAYER_LEVEL:- 1 / 5 + 1
+expr:S:PLAYER_LEVEL:- 1 / 10 + 5
+desc:Fires a nether bolt that always hits its target.
+school:NECROMANCY
+
+
+book:magic book:dungeon:[Necromancy]:3:arcane
+book-graphics:?:R
+book-properties:400:40:10 to 100
+
+spell:Nether Ball:20:10:30:10
+effect:BALL:NETHER:3
+dice:$Dd$S
+expr:D:PLAYER_LEVEL:+ 10 / 5
+expr:S:PLAYER_LEVEL:+ 10 / 5
+desc:Shoots a radius-3 nether ball.
+school:NECROMANCY
+
+spell:Summon Skeleton:5:5:10:5
+effect:SUMMON:SKELETON
+dice:1d$N
+expr:N:PLAYER_LEVEL:/ 5
+desc:Summons one or multiple skeletons.
+school:NECROMANCY
+
+spell:Summon Undead:20:20:50:15
+effect:SUMMON:UNDEAD
+dice:1d$N
+expr:N:PLAYER_LEVEL:/ 5
+desc:Summons foul necromantic minions.
+school:NECROMANCY
+
 
 book:magic book:dungeon:[Poison]:3:arcane
 book-graphics:?:R

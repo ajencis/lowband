@@ -248,11 +248,12 @@ struct attack_roll {
 	int to_dam;
 	int mtimed[MON_TMD_MAX];
 	const char *message;
-	int energy;
+	int blows;
 	int proj_type;
 	int attack_skill;	/* which skill it uses to decide accuracy */
 	int accuracy_stat;	/* stat that determines accuracy */
 	int damage_stat;	/* stat that determines damage */
+	const struct object *obj;	/* what weapon is it using */
 };
 
 /**

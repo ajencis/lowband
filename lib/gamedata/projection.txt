@@ -495,6 +495,27 @@ obvious:1
 wake:1
 color:White
 
+code:PIERCING
+type:element
+desc:impales
+blind-desc:something
+obvious:1
+color:Light Blue
+
+code:SLASHING
+type:element
+desc:cuts
+blind-desc:something
+obvious:1
+color:Light Blue
+
+code:BLUDGEONING
+type:element
+desc:bashes
+blind-desc:something
+obvious:1
+color:Light Blue
+
 code:LIGHT_WEAK
 type:environs
 desc:light

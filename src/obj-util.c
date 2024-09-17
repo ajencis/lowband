@@ -1227,24 +1227,24 @@ void mark_artifact_everseen(const struct artifact *art, bool seen)
 #define MIN_MEDIUM_WEIGHT 75
 #define MIN_HEAVY_WEIGHT 150
 
-static bool is_kind_melee_weapon(struct object_kind *obj)
-{
-	if (obj->tval == TV_HAFTED) return true;
-	if (obj->tval == TV_POLEARM) return true;
-	if (obj->tval == TV_SWORD) return true;
-	if (obj->tval == TV_DIGGING) return true;
-	return false;
-}
-
 static void alter_one_weapon(struct object_kind *weap)
 {
-	if (!is_kind_melee_weapon(weap)) return;
+	if (!tval_is_melee_weapon_k(weap)) return;
 
+    int dam = weap->weight / 20 + 5;
 	int ddice = 1;
-	if (weap->weight >= MIN_MEDIUM_WEIGHT) ddice++;
-	if (weap->weight >= MIN_HEAVY_WEIGHT) ddice++;
 
-    int dam = weap->weight / 20 + 5 - ddice;
+	if (weap->weight >= MIN_HEAVY_WEIGHT) {
+		ddice = 3;
+		dam -= 3;
+	}
+	else if (weap->weight >= MIN_MEDIUM_WEIGHT) {
+		ddice = 2;
+		dam += 6;
+	}
+	else {
+		ddice = 1;
+	}
 
 	if (weap->tval == TV_DIGGING) dam /= 2;
 
@@ -1258,11 +1258,10 @@ static void alter_one_weapon(struct object_kind *weap)
 
 void alter_weapon_properties(struct object_kind *objs)
 {
-    struct object_kind *curr = objs;
+    struct object_kind *curr;
 
-    while (curr) {
-		if (is_kind_melee_weapon(curr)) alter_one_weapon(curr);
-		curr = curr->next;
+    for (curr = objs; curr; curr = curr->next) {
+		if (tval_is_melee_weapon_k(curr)) alter_one_weapon(curr);
 	}
 }
 

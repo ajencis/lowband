@@ -772,6 +772,22 @@ static int project_player_handler_MON_POIS(project_player_handler_context_t *con
 	return 0;
 }
 
+static int project_player_handler_PIERCING(project_player_handler_context_t *context)
+{
+	return 0;
+}
+
+static int project_player_handler_SLASHING(project_player_handler_context_t *context)
+{
+	return 0;
+}
+
+static int project_player_handler_BLUDGEONING(project_player_handler_context_t *context)
+{
+	return 0;
+}
+
+
 static const project_player_handler_f player_handlers[] = {
 	#define ELEM(a) project_player_handler_##a,
 	#include "list-elements.h"

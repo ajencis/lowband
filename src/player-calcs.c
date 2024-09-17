@@ -949,11 +949,11 @@ static int adj_dex_ta(int index) {
 }
 
 int adj_str_td(int index) {
-	return (index + 5) * 15 / 20;
+	return (index - 7) * 15 / 8;
 }
 
 int adj_dex_th(int index) {
-	return (index + 5) * 35 / 20;
+	return (index - 7) * 35 / 8;
 }
 
 /*static int adj_str_th(int index) {
@@ -982,7 +982,7 @@ int adj_str_blow(int index) {
 }*/
 
 static int adj_stat_blow(int index) {
-	return (index + 5) * 600 / 20;
+	return (index + 1) * 600 / 16;
 }
 
 int adj_dex_safe(int index) {
@@ -1901,29 +1901,27 @@ int calc_unlocking_chance(const struct player *p, int lock_power,
  * relies on object weight, melee skill, and both str and dex, with
  * the higher of str and dex weighted more heavily
  */
-int calc_blows(struct player *p, int wgt,
+void calc_blows(struct player *p, int wgt, struct attack_roll *aroll,
                struct player_state *state, int extra_blows)
 {
-	int weight = MAX(wgt * 2, 25) + 100;
+	int div = MAX(wgt * 2, 25) + 100;
 
-	struct attack_roll aroll = p->state.attacks[0];
-
-    int sind1 = state->stat_ind[aroll.damage_stat];
-	int sind2 = state->stat_ind[aroll.accuracy_stat];
+    int sind1 = state->stat_ind[aroll->damage_stat];
+	int sind2 = state->stat_ind[aroll->accuracy_stat];
 
 	// max 18
-	int statind = (sind1 > sind2 ? 2 * sind1 + sind2 + 2 : sind1 + 2 * sind2 + 2) / 3;
+	int statind = (sind1 + sind2 + MAX(sind1, sind2)) / 3;
 
 	// max 600
 	int baseblows = adj_stat_blow(statind);
 
 	// max 100
-	int skill = aroll.attack_skill;
+	int skill = aroll->attack_skill;
 
 	// max 600 * 100 / 100 + 100
-	int blows = MAX(0, baseblows) * state->skills[skill] / weight + 100 * state->num_attacks;
+	int blows = MAX(0, baseblows) * state->skills[skill] / div;
 
-	return blows + 100 * extra_blows;
+	aroll->blows = blows + 100 * extra_blows + 100 * state->num_attacks;
 }
 
 #if 0
@@ -2666,22 +2664,22 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		if (state->num_shots < 10) state->num_shots = 10;
 	}
 
-	attacknum = 0;
-	for (attacknum = 0; attacknum < PY_MAX_ATTACKS - 1 && weapon[attacknum]; ++attacknum) {
-		state->attacks[attacknum] = get_weapon_attack(p, weapon[attacknum]);
+
+	for (attacknum = 0; (attacknum < PY_MAX_ATTACKS - 1) && (weapon[attacknum]); ++attacknum) {
+		state->attacks[attacknum] = get_weapon_attack(p, state, weapon[attacknum]);
 	}
 	if (mrace) {
-		attacknum += get_monster_attacks(p,
-										 mrace,
+		attacknum += get_monster_attacks(p, state, mrace,
 										 &state->attacks[attacknum],
 										 PY_MAX_ATTACKS - attacknum);
 	}
 	if (!attacknum) {
-		state->attacks[attacknum] = get_weapon_attack(p, NULL);
+		state->attacks[attacknum] = get_weapon_attack(p, state, NULL);
 		++attacknum;
 	}
 	if (attacknum < PY_MAX_ATTACKS) state->attacks[attacknum].proj_type = -1;
 	state->num_attacks = attacknum;
+
 
 	/* Analyze weapon */
 	state->heavy_wield = false;
@@ -2701,7 +2699,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 		/* Normal weapons */
 		if (!state->heavy_wield) {
-			state->num_blows = calc_blows(p, weapon_weight, state, extra_blows);
+			//state->num_blows = calc_blows(p, weapon_weight, state, extra_blows);
 			state->skills[SKILL_DIGGING] += weapon_weight / 10;
 		}
 
@@ -2715,7 +2713,16 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		}
 	} else {
 		/* Unarmed */
-		state->num_blows = calc_blows(p, 0, state, extra_blows);
+		//state->num_blows = calc_blows(p, 0, state, extra_blows);
+	}
+
+	for (i = 0; i < attacknum; i++) {
+		if (state->heavy_wield) state->attacks[i].blows = 100;
+		else {
+			const struct object *obj = state->attacks[i].obj;
+			int wgt = obj ? object_weight_one(obj) : 0;
+			calc_blows(p, wgt, &state->attacks[i], state, extra_blows);
+		}
 	}
 
 	/* Mana */

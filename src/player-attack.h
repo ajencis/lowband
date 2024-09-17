@@ -20,6 +20,7 @@
 #define PLAYER_ATTACK_H
 
 #include "cmd-core.h"
+#include "player.h"
 
 struct player;
 
@@ -38,6 +39,8 @@ struct hit_types {
 	const char *text;
 };
 
+//extern struct player_state;
+
 /**
  * ranged_attack is a function pointer, used to execute a kind of attack.
  *
@@ -55,8 +58,8 @@ extern void do_cmd_throw(struct command *cmd);
 
 
 /* L: new */
-struct attack_roll get_weapon_attack(struct player *p, struct object *obj);
-int get_monster_attacks(struct player *p, struct monster_race *mr, struct attack_roll *aroll, int maxnum);
+struct attack_roll get_weapon_attack(struct player *p, struct player_state *ps, struct object *obj);
+int get_monster_attacks(struct player *p, struct player_state *ps, struct monster_race *mr, struct attack_roll *aroll, int maxnum);
 
 extern int breakage_chance(const struct object *obj, bool hit_target);
 int chance_of_missile_hit_base(const struct player *p,

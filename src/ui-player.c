@@ -740,7 +740,7 @@ static struct panel *get_panel_midleft(void) {
 static struct panel *get_panel_combat(void) {
 	struct panel *p = panel_allocate(11);
 	struct object *obj;
-	int bth, dam, hit;
+	int bth, dam, hit, blws = 0;
 	struct attack_roll aroll;
 	int i;
 	size_t j;
@@ -756,6 +756,7 @@ static struct panel *get_panel_combat(void) {
 	for (i = 0; i < player->state.num_attacks; i++) {
 		aroll = player->state.attacks[i];
 		bth = player->state.skills[aroll.attack_skill] / BTH_PLUS_ADJ + aroll.to_hit;
+		blws += aroll.blows;
 		//msg("message is %s", aroll.message);
 		my_strcpy(title, aroll.message, sizeof(title));
 		//msg("title is %s", title);
@@ -781,8 +782,9 @@ static struct panel *get_panel_combat(void) {
 	}
 
 	if (i > 0) {
+		blws /= MAX(1, player->state.num_attacks);
 		panel_line(p, COLOUR_L_BLUE, "Blows", "%d.%d/turn",
-			player->state.num_blows / 100, (player->state.num_blows / 10 % 10));
+			blws / 100, (blws / 10 % 10));
 	}
 
 	/* Ranged */

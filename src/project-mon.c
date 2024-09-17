@@ -1015,6 +1015,18 @@ static void project_monster_handler_MON_POIS(project_monster_handler_context_t *
 	context->dam = 0;
 }
 
+static void project_monster_handler_PIERCING(project_monster_handler_context_t *context)
+{
+}
+
+static void project_monster_handler_BLUDGEONING(project_monster_handler_context_t *context)
+{
+}
+
+static void project_monster_handler_SLASHING(project_monster_handler_context_t *context)
+{
+}
+
 static const project_monster_handler_f monster_handlers[] = {
 	#define ELEM(a) project_monster_handler_##a,
 	#include "list-elements.h"

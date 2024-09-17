@@ -678,6 +678,18 @@ static void project_feature_handler_MON_POIS(project_feature_handler_context_t *
 {
 }
 
+static void project_feature_handler_PIERCING(project_feature_handler_context_t *context)
+{
+}
+
+static void project_feature_handler_SLASHING(project_feature_handler_context_t *context)
+{
+}
+
+static void project_feature_handler_BLUDGEONING(project_feature_handler_context_t *context)
+{
+}
+
 static const project_feature_handler_f feature_handlers[] = {
 	#define ELEM(a) project_feature_handler_##a,
 	#include "list-elements.h"

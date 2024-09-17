@@ -127,7 +127,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 void calc_digging_chances(struct player_state *state, int chances[DIGGING_MAX]);
 int calc_unlocking_chance(const struct player *p, int lock_power,
 		bool lock_unseen);
-int calc_blows(struct player *p, int wgt,
+void calc_blows(struct player *p, int wgt, struct attack_roll *aroll,
 			   struct player_state *state, int extra_blows);
 
 void health_track(struct player_upkeep *upkeep, struct monster *mon);
