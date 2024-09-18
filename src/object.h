@@ -169,6 +169,8 @@ struct object_base {
 	int break_perc;
 	int max_stack;
 	int num_svals;
+
+	int proj_type;							/** L: what damage type it does */
 };
 
 extern struct object_base *kb_info;

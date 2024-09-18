@@ -47,7 +47,7 @@ struct monster_lore *l_list;
 
 const char *r_info_flags[] =
 {
-	#define RF(a, b, c) #a,
+	#define RF(a, b, c, d) #a,
 	#include "list-mon-race-flags.h"
 	#undef RF
 	NULL
@@ -178,6 +178,7 @@ static enum parser_error parse_meth_name(struct parser *p) {
 	parser_setpriv(p, meth);
 	meth->name = string_make(name);
 	meth->skill = SKILL_TO_HIT_MELEE;
+	meth->lash_type = PROJ_BLUDGEONING;
 
 	return PARSE_ERROR_NONE;
 }
@@ -318,6 +319,31 @@ static enum parser_error parse_meth_skill(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_meth_lash_type(struct parser *p)
+{
+	const char *type = parser_getsym(p, "type");
+	struct blow_method *meth = parser_priv(p);
+	int projnum;
+
+	if (!meth) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	if (!type) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	
+	projnum = proj_name_to_idx(type);
+	if (projnum == -1) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	meth->lash_type = projnum;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_meth(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -332,6 +358,7 @@ static struct parser *init_parse_meth(void) {
 	parser_reg(p, "desc str desc", parse_meth_desc);
 	parser_reg(p, "slot sym slot", parse_meth_equip_slot);
 	parser_reg(p, "skill sym skill", parse_meth_skill);
+	parser_reg(p, "lash-type sym type", parse_meth_lash_type);
 	return p;
 }
 
@@ -531,10 +558,26 @@ static enum parser_error parse_eff_resist(struct parser *p) {
 static enum parser_error parse_eff_lash_type(struct parser *p) {
 	struct blow_effect *eff = parser_priv(p);
 	int type;
-	assert(eff);
+	const char *typename = parser_getstr(p, "type");
+	if (!eff) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
 
-	type = proj_name_to_idx(parser_getstr(p, "type"));
-	eff->lash_type = type >= 0 ? type : PROJ_MISSILE;
+	if (!typename) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	if (streq(typename, "NONE")) {
+		type = -1;
+	}
+	else {
+		type = proj_name_to_idx(typename);
+		if (type == -1) {
+			return PARSE_ERROR_GENERIC;
+		}
+	}
+
+	eff->lash_type = type;
 	return PARSE_ERROR_NONE;
 }
 
@@ -1845,6 +1888,22 @@ static enum parser_error parse_monster_color_cycle(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_monster_short_name(struct parser *p)
+{
+	struct monster_race *r = parser_priv(p);
+	const char *sn = parser_getstr(p, "short_name");
+
+	if (!r)
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	
+	if (!sn)
+		return PARSE_ERROR_GENERIC;
+
+	r->short_name = string_make(sn);
+
+	return PARSE_ERROR_NONE;
+}
+
 struct parser *init_parse_monster(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -1882,6 +1941,7 @@ struct parser *init_parse_monster(void) {
 	parser_reg(p, "mimic sym tval sym sval", parse_monster_mimic);
 	parser_reg(p, "shape str name", parse_monster_shape);
 	parser_reg(p, "color-cycle sym group sym cycle", parse_monster_color_cycle);
+	parser_reg(p, "short-name str short_name", parse_monster_short_name);
 	return p;
 }
 
@@ -2052,6 +2112,7 @@ static void cleanup_monster(void)
 			mem_free(s);
 			s = sn;
 		}
+		string_free(r->short_name);
 		string_free(r->plural);
 		string_free(r->text);
 		string_free(r->name);

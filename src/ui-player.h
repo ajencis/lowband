@@ -7,8 +7,8 @@
 #define UI_PLAYER_H
 
 void display_player_stat_info(void);
-void display_player_xtra_info(void);
-void display_player(int mode);
+int display_player_xtra_info(void);
+int display_player(int mode);
 void write_character_dump(ang_file *fff);
 bool dump_save(const char *path);
 void do_cmd_change_name(void);

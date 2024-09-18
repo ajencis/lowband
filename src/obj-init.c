@@ -47,7 +47,7 @@
 
 static const char *mon_race_flags[] =
 {
-	#define RF(a, b, c) #a,
+	#define RF(a, b, c, d) #a,
 	#include "list-mon-race-flags.h"
 	#undef RF
 	NULL
@@ -82,6 +82,16 @@ static const char *element_names[] = {
 	#define ELEM(a) #a,
 	#include "list-elements.h"
 	#undef ELEM
+	NULL
+};
+
+static const char *projection_names[] = {
+	#define ELEM(a) #a,
+	#include "list-elements.h"
+	#undef ELEM
+	#define PROJ(a) #a,
+	#include "list-projections.h"
+	#undef PROJ
 	NULL
 };
 
@@ -517,6 +527,30 @@ static enum parser_error parse_object_base_defaults(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_object_base_defaults_sym(struct parser *p) {
+	const char *label;
+	const char *value;
+	struct kb_parsedata *d = parser_priv(p);
+
+	assert(d);
+	label = parser_getsym(p, "label");
+	value = parser_getsym(p, "value");
+	if (streq(label, "dam-type")) {
+		int i;
+		for (i = 0; projection_names[i]; i++) {
+			if (streq(value, projection_names[i]))
+				break;
+		}
+		if (!projection_names[i]) {
+			return PARSE_ERROR_GENERIC;
+		}
+		d->defaults.proj_type = i;
+	} else {
+		return PARSE_ERROR_UNDEFINED_DIRECTIVE;
+	}
+	return PARSE_ERROR_NONE;
+}
+
 static enum parser_error parse_object_base_name(struct parser *p) {
 	struct object_base *kb;
 	struct kb_parsedata *d = parser_priv(p);
@@ -616,18 +650,49 @@ static enum parser_error parse_object_base_flags(struct parser *p) {
 	return t ? PARSE_ERROR_INVALID_FLAG : PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_object_dam_type(struct parser *p) {
+
+	struct kb_parsedata *d = parser_priv(p);
+	struct object_base *kb;
+	char damtype[25];
+	int i;
+
+	assert(d);
+	kb = d->kb;
+	if (!kb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	my_strcpy(damtype, parser_getsym(p, "proj"), sizeof(damtype));
+
+	for (i = 0; projection_names[i]; i++) {
+		if (streq(damtype, projection_names[i])) {
+			break;
+		}
+	}
+
+	if (!projection_names[i]) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	kb->proj_type = i;
+	
+	return PARSE_ERROR_NONE;
+}
+
 struct parser *init_parse_object_base(void) {
 	struct parser *p = parser_new();
 
 	struct kb_parsedata *d = mem_zalloc(sizeof(*d));
 	parser_setpriv(p, d);
 
+	parser_reg(p, "default-sym sym label sym value", parse_object_base_defaults_sym);
 	parser_reg(p, "default sym label int value", parse_object_base_defaults);
 	parser_reg(p, "name sym tval ?str name", parse_object_base_name);
 	parser_reg(p, "graphics sym color", parse_object_base_graphics);
 	parser_reg(p, "break int breakage", parse_object_base_break);
 	parser_reg(p, "max-stack int size", parse_object_base_max_stack);
 	parser_reg(p, "flags str flags", parse_object_base_flags);
+	parser_reg(p, "dam-type sym proj", parse_object_dam_type);
 	return p;
 }
 

@@ -763,6 +763,7 @@ static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
 	aroll->damage_stat = STAT_STR;
 	aroll->message = "punch";
 	aroll->obj = NULL;
+	aroll->proj_type = PROJ_BLUDGEONING;
 }
 
 static void specialization_mod_attack(struct attack_roll *aroll, struct object *obj)
@@ -812,13 +813,13 @@ struct attack_roll get_weapon_attack(struct player *p, struct player_state *ps, 
 		aroll.accuracy_stat = STAT_DEX;
 		aroll.damage_stat = STAT_STR;
 		aroll.obj = obj;
+		aroll.proj_type = obj->kind->base->proj_type;
 	}
 	else {
 		unarmed_get_attack(&aroll, obj);
         unarmed_mod_attack(&aroll, obj);
 	}
 
-	aroll.proj_type = PROJ_MISSILE;
 	aroll.attack_skill = SKILL_TO_HIT_MELEE;
 
 	aroll.to_hit += ps->to_h;
@@ -885,7 +886,11 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 	aroll->message = (const char *)mb->method->fmessage;
 	aroll->to_hit = 0;
 	aroll->to_dam = 0;
-	aroll->proj_type = mb->effect->lash_type;
+	if (mb->effect->lash_type == -1) {
+		aroll->proj_type = mb->method->lash_type;
+	} else {
+		aroll->proj_type = mb->effect->lash_type;
+	}
 	aroll->attack_skill = mb->method->skill;
 	aroll->obj = NULL;
 	aroll->blows = 100;
@@ -993,7 +998,6 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	int splash = 0;
 	bool do_quake = false;
 	bool success = false;
-	bool proj_dam = (aroll.proj_type != PROJ_MISSILE);
 
 	char verb[20];
 	uint32_t msg_type = MSG_HIT;
@@ -1095,12 +1099,6 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	equip_learn_on_melee_attack(p);
 	learn_brand_slay_from_melee(p, obj, mon);
 
-	/* Apply the player damage bonuses */
-	/* L: now handled elsewhere */
-	/*if (!OPT(p, birth_percent_damage)) {
-		dmg += player_damage_bonus(&p->state);
-	}*/
-
 	/* Substitute shape-specific blows for shapechanged players */
 	if (player_is_shapechanged(p)) {
 		int choice = randint0(p->shape->num_blows);
@@ -1121,16 +1119,18 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	for (i = 0; i < N_ELEMENTS(melee_hit_types); i++) {
 		const char *dmg_text = "";
 		const char *proj_text = "";
+		const struct projection *proj = &projections[aroll.proj_type];
 
 		if (msg_type != melee_hit_types[i].msg_type)
 			continue;
 
 		if (OPT(p, show_damage))
 			dmg_text = format(" (%d)", dmg);
-		if (proj_dam) {
-			char proj_name[64] = "";
+
+		if (proj->player_message) {
+			char proj_name[64];
 			monster_desc(proj_name, sizeof(proj_name), mon, MDESC_PRO_VIS | MDESC_OBJE);
-			proj_text = format("; you %s %s", projections[aroll.proj_type].player_message, proj_name);
+			proj_text = format("; you %s %s", proj->player_message, proj_name);
 		}
 
 		if (melee_hit_types[i].text)
@@ -1147,12 +1147,9 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 
 	drain = MIN(mon->hp, dmg);
 
-	if (proj_dam) {
-		stop = proj_melee_attack_mon(mon, p, dmg, aroll.proj_type, fear, NULL);
-	} else {
-		/* Damage, check for hp drain, fear and death */
-		stop = mon_take_hit(mon, p, dmg, fear, NULL);
-	}
+	/* Damage, check for hp drain, fear and death */
+	stop = proj_melee_attack_mon(mon, p, dmg, aroll.proj_type, fear, NULL);
+	
 
 	/* Small chance of bloodlust side-effects */
 	if (p->timed[TMD_BLOODLUST] && one_in_(50)) {

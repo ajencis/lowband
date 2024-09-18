@@ -53,10 +53,10 @@
  * ------------------------------------------------------------------------ */
 static const struct monster_flag monster_flag_table[] =
 {
-	#define RF(a, b, c) { RF_##a, b, c },
+	#define RF(a, b, c, d) { RF_##a, b, c, d },
 	#include "list-mon-race-flags.h"
 	#undef RF
-	{RF_MAX, 0, NULL}
+	{ RF_MAX, 0, 0, NULL }
 };
 
 /**
@@ -1751,22 +1751,32 @@ static void rearrange_monster(struct monster_race *mr)
 	struct monster_blow *cblow;
 	int mintotal, maxtotal;
 	int i, quo;
+	int dam, hp, ac, spe, mag;
+	int powermod = 0;
 
 	// change monster's power based on its flags
-	if (rf_has(mr->flags, RF_UNIQUE)) power = power * 4 / 3 + 5;
-	if (rf_has(mr->flags, RF_MULTIPLY)) power -= 5;
-	if (mr->friends && mr->friends->race->level >= mr->level) power -= 3;
-	if (rf_has(mr->flags, RF_NEVER_MOVE)) power = power * 5 / 4 + 3;
+	for (i = 0; i < RF_MAX; i++) {
+		if (rf_has(mr->flags, i)) {
+			const struct monster_flag *f = &monster_flag_table[i];
+			powermod += f->power_mod;
+		}
+	}
+
+	power += (power + 25) * powermod / 100;
+
 	power = MAX(power, 0);
 	mintotal = power * 5 - 2;
 	maxtotal = power * 5 + 2;
 
 	// randomize different abilities
-	int dam = randint0(power + 2) + randint0(power);
-	int hp  = randint0(power + 2) + randint0(power);
-	int ac  = randint0(power + 2) + randint0(power);
-	int spe = randint0(power + 2) + randint0(power);
-	int mag = randint0(power + 2) + randint0(power);
+	if (mr->is_playable) dam = hp = ac = spe = mag = power;
+	else {
+		dam = randint0(power + 2) + randint0(power);
+		hp  = randint0(power + 2) + randint0(power);
+		ac  = randint0(power + 2) + randint0(power);
+		spe = randint0(power + 2) + randint0(power);
+		mag = randint0(power + 2) + randint0(power);
+	}
 
 	// check if it has no attacks or no spells
 	i = 0;
@@ -1813,6 +1823,7 @@ static void rearrange_monster(struct monster_race *mr)
 	if (dam > 0) mr->freq_spell = 10 * mag / dam;
 	else mr->freq_spell = 100;
 	mr->freq_spell = MIN(40, mr->freq_spell);
+	mr->mexp = power * power;
 
 	// spread damage over its damaging blows
 	quo = blows;

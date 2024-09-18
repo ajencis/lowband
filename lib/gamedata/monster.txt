@@ -2703,6 +2703,7 @@ desc:This hatchling dragon is still soft, its eyes unaccustomed to light and its
 desc: scales a dull black.
 
 name:baby red dragon
+short-name:baby red
 base:dragon
 color:r
 speed:110
@@ -7443,6 +7444,7 @@ desc:It has a form that legends are made of.  Its still-tender scales are a
 desc: tarnished gold hue, and light is reflected from its form.
 
 name:young red dragon
+short-name:young red
 base:dragon
 color:r
 speed:110
@@ -8576,6 +8578,7 @@ friends:80:1d3:Same
 desc:It is a twenty foot tall giant wreathed in clouds.
 
 name:master vampire
+short-name:master
 base:vampire
 color:g
 speed:110
@@ -9800,6 +9803,7 @@ desc: its tribe.  It fears nothing.
 ### Dungeon level 41 ###
 
 name:mature red dragon
+short-name:mature red
 base:dragon
 color:r
 speed:115
@@ -11209,6 +11213,7 @@ spells:BR_ACID
 desc:A huge draconic form.  Pools of acid melt the floor around it.
 
 name:ancient red dragon
+short-name:ancient red
 base:ancient dragon
 color:r
 speed:120
@@ -11973,6 +11978,7 @@ desc: all that defy him.
 ### Dungeon level 59 ###
 
 name:elder vampire
+short-name:elder
 base:vampire
 color:r
 speed:120
@@ -12690,6 +12696,7 @@ desc: of her vampire race.  At first she is charming to meet, but her wings and
 desc: eyes give away her true form.
 
 name:beholder hive-mother
+short-name:hive-mother
 base:eye
 color:b
 speed:120

@@ -217,6 +217,7 @@ struct player_race {
 	struct player_body *body;		/**< Race body */
 
 	int monsters[MAX_RACE_MONSTERS];		/**< L: monster equivalents */
+	char *mon_short_names[MAX_RACE_MONSTERS];	/** L: short names for monsters */
 
 	int r_adj[STAT_MAX];		/**< Stat bonuses */
 

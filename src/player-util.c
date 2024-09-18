@@ -99,18 +99,25 @@ void check_player_monster(struct player *p, bool init)
 	if (!init) player_increase_stat(p);
 }
 
-void player_race_name(struct player *p, char *buf, int bufsize)
+void player_race_name(struct player *p, char *buf, size_t bufsize)
 {
 	struct monster_race *mon = lookup_player_monster(p);
-	unsigned int i;
+	size_t i;
+
 	if (!mon || !character_generated) {
 		my_strcpy(buf, p->race->name, sizeof(buf));
 		return;
 	}
-	my_strcpy(buf, mon->name, bufsize);
-	for (i = 0; i < (bufsize / sizeof(buf[0])); i++) {
-		if (buf[i] == '\0')
-			break;
+
+	const char *src = mon->name;
+	size_t buflen = bufsize / sizeof(buf[0]);
+
+	if ((strlen(mon->name) > buflen - 1) && mon->short_name) {
+		src = mon->short_name;
+	}
+
+	my_strcpy(buf, src, bufsize);
+	for (i = 0; i < (bufsize / sizeof(buf[0])) && buf[i]; i++) {
 		if (i == 0 || buf[i - 1] == ' ')
 			buf[i] = toupper(buf[i]);
 	}

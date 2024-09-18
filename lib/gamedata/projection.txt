@@ -668,6 +668,13 @@ blind-desc:something
 obvious:0
 color:White
 
+code:CHARM_UNDEAD
+type:monster
+desc:attempts to charm undead monsters
+blind-desc:something
+obvious:0
+color:White
+
 code:MON_CLONE
 type:monster
 desc:hastes, heals and magically duplicates monsters

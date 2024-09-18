@@ -175,7 +175,7 @@ static const char *terrain_flags[] =
 
 static const char *mon_race_flags[] =
 {
-	#define RF(a, b, c) #a,
+	#define RF(a, b, c, d) #a,
 	#include "list-mon-race-flags.h"
 	#undef RF
 	NULL
@@ -2841,12 +2841,15 @@ static enum parser_error parse_p_race_monster(struct parser *p) {
 	if (mon == NULL)
 		return PARSE_ERROR_INVALID_MONSTER;
 
+	mon->is_playable = true;
+
 	for (i = 0; i < MAX_RACE_MONSTERS; i++) {
 		if (r->monsters[i] == 0) {
 			r->monsters[i] = mon->ridx;
 			break;
 		}
 	}
+	if (i == MAX_RACE_MONSTERS) return PARSE_ERROR_GENERIC;
 
 	return PARSE_ERROR_NONE;
 }

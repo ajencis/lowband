@@ -123,6 +123,8 @@ static void panel_space(struct panel *p) {
 	p->len++;
 }
 
+static int panel_height = 0;
+
 
 /**
  * Cache the layout of the character sheet, currently only for the resistance
@@ -734,11 +736,13 @@ static struct panel *get_panel_midleft(void) {
 	panel_line(p, attr, "Overweight", "%d.%d lb", -diff / 10, abs(diff) % 10);
 	panel_line(p, COLOUR_L_GREEN, "Max Depth", "%s", show_depth());
 
+	panel_height = MAX(panel_height, 9);
+
 	return p;
 }
 
 static struct panel *get_panel_combat(void) {
-	struct panel *p = panel_allocate(11);
+	struct panel *p = panel_allocate(15);
 	struct object *obj;
 	int bth, dam, hit, blws = 0;
 	struct attack_roll aroll;
@@ -746,13 +750,17 @@ static struct panel *get_panel_combat(void) {
 	size_t j;
 	static char title[10];
 	int colour;
+	int hgt = 0;
+	bool hasrng = false;
 
 	/* AC */
 	panel_line(p, COLOUR_L_BLUE, "Armor", "[%d,%+d]",
 			player->known_state.ac, player->known_state.to_a);
+	++hgt;
 
 	/* Melee */
 	panel_space(p);
+	++hgt;
 	for (i = 0; i < player->state.num_attacks; i++) {
 		aroll = player->state.attacks[i];
 		bth = player->state.skills[aroll.attack_skill] / BTH_PLUS_ADJ + aroll.to_hit;
@@ -779,29 +787,39 @@ static struct panel *get_panel_combat(void) {
 			panel_line(p, colour, title, "%+d; %dd%d%+d", bth, aroll.ddice, aroll.dsides, aroll.to_dam);
 		else
 		    panel_line(p, colour, title, "%+d; %dd%d", bth, aroll.ddice, aroll.dsides);
+		++hgt;
 	}
 
 	if (i > 0) {
 		blws /= MAX(1, player->state.num_attacks);
 		panel_line(p, COLOUR_L_BLUE, "Blows", "%d.%d/turn",
 			blws / 100, (blws / 10 % 10));
+		++hgt;
 	}
 
 	/* Ranged */
-	obj = slot_object(player, slot_by_type(player, EQUIP_BOW, true));
-	bth = (player->state.skills[SKILL_TO_HIT_BOW] * 10) / BTH_PLUS_ADJ;
-	dam = 0;
-	hit = player->known_state.to_h;
-	if (obj) {
-		dam += object_to_dam(obj);
-		hit += object_to_hit(obj);
+	for (i = 0; i < player->body.count && !hasrng; i++) {
+		if (player->body.slots[i].type == EQUIP_BOW) hasrng = true;
+	}
+	if (hasrng) {
+		obj = slot_object(player, slot_by_type(player, EQUIP_BOW, true));
+		bth = (player->state.skills[SKILL_TO_HIT_BOW] * 10) / BTH_PLUS_ADJ;
+		dam = 0;
+		hit = player->known_state.to_h;
+		if (obj) {
+			dam += object_to_dam(obj);
+			hit += object_to_hit(obj);
+		}
+
+		panel_space(p);
+		panel_line(p, COLOUR_L_BLUE, "Shoot to-dam", "%+d", dam);
+		panel_line(p, COLOUR_L_BLUE, "To-hit", "%d,%+d", bth / 10, hit);
+		panel_line(p, COLOUR_L_BLUE, "Shots", "%d.%d/turn",
+				   player->state.num_shots / 10, player->state.num_shots % 10);
+		hgt += 4;
 	}
 
-	panel_space(p);
-	panel_line(p, COLOUR_L_BLUE, "Shoot to-dam", "%+d", dam);
-	panel_line(p, COLOUR_L_BLUE, "To-hit", "%d,%+d", bth / 10, hit);
-	panel_line(p, COLOUR_L_BLUE, "Shots", "%d.%d/turn",
-			   player->state.num_shots / 10, player->state.num_shots % 10);
+	panel_height = MAX(hgt, panel_height);
 
 	return p;
 }
@@ -813,36 +831,44 @@ static struct panel *get_panel_skills(void) {
 	uint8_t attr;
 	const char *desc;
 	int depth = cave ? cave->depth : 0;
+	int hgt = 0;
 
 #define BOUND(x, min, max)		MIN(max, MAX(min, x))
 
 	/* Saving throw */
 	skill = MAX(player->state.skills[SKILL_SAVE], 0);
 	panel_line(p, colour_table[MIN(100, skill) / 10], "Saving Throw", "%d%%", skill);
+	++hgt;
 
 	/* Stealth */
 	desc = likert(player->state.skills[SKILL_STEALTH], 1, &attr);
 	panel_line(p, attr, "Stealth", "%s", desc);
+	++hgt;
 
 	/* Physical disarming: assume we're disarming a dungeon trap */
 	skill = BOUND(player->state.skills[SKILL_DISARM_PHYS] - depth / 5, 2, 100);
 	panel_line(p, colour_table[skill / 10], "Disarm - phys.", "%d%%", skill);
+	++hgt;
 
 	/* Magical disarming */
 	skill = BOUND(player->state.skills[SKILL_DISARM_MAGIC] - depth / 5, 2, 100);
 	panel_line(p, colour_table[skill / 10], "Disarm - magic", "%d%%", skill);
+	++hgt;
 
 	/* Magic devices */
 	skill = player->state.skills[SKILL_DEVICE];
 	panel_line(p, colour_table[skill / 13], "Magic Devices", "%d", skill);
+	++hgt;
 
 	/* Searching ability */
 	skill = BOUND(player->state.skills[SKILL_SEARCH], 0, 100);
 	panel_line(p, colour_table[skill / 10], "Searching", "%d%%", skill);
+	++hgt;
 
 	/* Infravision */
 	panel_line(p, COLOUR_L_GREEN, "Infravision", "%d ft",
 			player->state.see_infra * 10);
+	++hgt;
 
 	/* Speed */
 	skill = player->state.speed;
@@ -850,6 +876,9 @@ static struct panel *get_panel_skills(void) {
 	if (player->timed[TMD_SLOW]) skill += 10;
 	attr = skill < 110 ? COLOUR_L_UMBER : COLOUR_L_GREEN;
 	panel_line(p, attr, "Speed", "%s", show_speed());
+	++hgt;
+
+	panel_height = MAX(hgt, panel_height);
 
 	return p;
 }
@@ -886,7 +915,7 @@ static const struct {
 	{ { 52, 9, 20, 8 }, false, get_panel_skills },
 };
 
-void display_player_xtra_info(void)
+int display_player_xtra_info(void)
 {
 	size_t i;
 	for (i = 0; i < N_ELEMENTS(panels); i++) {
@@ -900,14 +929,14 @@ void display_player_xtra_info(void)
 	text_out_indent = 1;
 
 	/* History */
-	Term_gotoxy(text_out_indent, 19);
+	Term_gotoxy(text_out_indent, 9 + panel_height + 1);
 	text_out_to_screen(COLOUR_WHITE, player->history);
 
 	/* Reset text_out() vars */
 	text_out_wrap = 0;
 	text_out_indent = 0;
 
-	return;
+	return 9 + panel_height + 1 + 3 + 1;
 }
 
 /**
@@ -918,8 +947,10 @@ void display_player_xtra_info(void)
  * Mode 0 = standard display with skills/history
  * Mode 1 = special display with equipment flags
  */
-void display_player(int mode)
+int display_player(int mode)
 {
+	int height;
+
 	if (!have_valid_char_sheet_config()) {
 		configure_char_sheet();
 	}
@@ -928,7 +959,7 @@ void display_player(int mode)
 	clear_from(0);
 
 	/* When not playing, do not display in subwindows */
-	if (Term != angband_term[0] && !player->upkeep->playing) return;
+	if (Term != angband_term[0] && !player->upkeep->playing) return 0;
 
 	/* Stat info */
 	display_player_stat_info();
@@ -943,10 +974,14 @@ void display_player(int mode)
 
 		/* Other flags */
 		display_player_flag_info();
+
+		height = 23;
 	} else {
 		/* Extra info */
-		display_player_xtra_info();
+		height = display_player_xtra_info();
 	}
+
+	return height;
 }
 
 
@@ -1251,6 +1286,7 @@ void do_cmd_change_name(void)
 {
 	ui_event ke;
 	int mode = 0;
+	int height;
 
 	const char *p;
 
@@ -1265,10 +1301,10 @@ void do_cmd_change_name(void)
 	/* Forever */
 	while (more) {
 		/* Display the player */
-		display_player(mode);
+		height = display_player(mode);
 
 		/* Prompt */
-		Term_putstr(2, 23, -1, COLOUR_WHITE, p);
+		Term_putstr(2, height, -1, COLOUR_WHITE, p);
 
 		/* Query */
 		ke = inkey_ex();

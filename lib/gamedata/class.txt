@@ -288,7 +288,7 @@ desc:Fires a nether bolt that always hits its target.
 school:NECROMANCY
 
 
-book:magic book:dungeon:[Necromancy]:3:arcane
+book:magic book:dungeon:[Necromancy]:4:arcane
 book-graphics:?:R
 book-properties:400:40:10 to 100
 
@@ -312,6 +312,14 @@ effect:SUMMON:UNDEAD
 dice:1d$N
 expr:N:PLAYER_LEVEL:/ 5
 desc:Summons foul necromantic minions.
+school:NECROMANCY
+
+spell:Control Undead:10:0:0:0
+effect:PROJECT_LOS:CHARM_UNDEAD
+dice:$Dd$S
+expr:D:PLAYER_LEVEL:+ 10 / 5
+expr:S:PLAYER_LEVEL:+ 10 / 6
+desc:Controls undead.
 school:NECROMANCY
 
 
@@ -342,6 +350,7 @@ expr:D:PLAYER_LEVEL:+ 11 / 2
 expr:S:PLAYER_LEVEL:+ 10 / 2
 desc:Toxic-poisons a monster, causing it to get more poisoned over time.
 school:POISON
+
 
 book:magic book:town:[Attacks and Knowledge]:6:arcane
 book-graphics:?:R

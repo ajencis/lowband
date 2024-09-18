@@ -49,7 +49,7 @@ struct summon *summons;
 
 static const char *mon_race_flags[] =
 {
-	#define RF(a, b, c) #a,
+	#define RF(a, b, c, d) #a,
 	#include "list-mon-race-flags.h"
 	#undef RF
 	NULL

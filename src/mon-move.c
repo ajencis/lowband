@@ -72,6 +72,7 @@ struct opposed_monster_char opposed_chars[] =
 bool mon_will_attack_player(const struct monster *mon, const struct player *p)
 {
 	if (mon->faction == '@') return false;
+	if (mon->m_timed[MON_TMD_CHARMED]) return false;
 
 	struct monster_race *pmonr = lookup_player_monster(p);
 	if (pmonr && pmonr->d_char == mon->faction) return false;
@@ -82,9 +83,11 @@ bool mon_will_attack_player(const struct monster *mon, const struct player *p)
 static bool mon_will_attack_mon(const struct monster *mon, const struct monster *other)
 {
 	int i = 0;
+	bool mpally = mon->faction == '@' || mon->m_timed[MON_TMD_CHARMED];
+	bool opally = other->faction == '@' || other->m_timed[MON_TMD_CHARMED];
 
-	if (mon->faction == '@' && mon_will_attack_player(other, player)) return true;
-	if (other->faction == '@' && mon_will_attack_player(mon, player)) return true;
+	if (mpally && mon_will_attack_player(other, player)) return true;
+	if (opally && mon_will_attack_player(mon, player)) return true;
 
 	while (opposed_chars[i].char1 >= 0) {
 

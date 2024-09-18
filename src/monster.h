@@ -64,7 +64,7 @@ enum
  */
 enum
 {
-	#define RF(a, b, c) RF_##a,
+	#define RF(a, b, c, d) RF_##a,
 	#include "list-mon-race-flags.h"
 	#undef RF
 	RF_MAX
@@ -137,6 +137,7 @@ enum
 struct monster_flag {
 	uint16_t index;			/* the RF_ index */
 	uint16_t type;			/* RFT_ category */
+	int power_mod;			/* L: how powerful a monster with this flag should be */
 	const char *desc;		/* lore description */
 };
 
@@ -371,6 +372,9 @@ struct monster_race {
 
 	struct monster_shape *shapes;
 	int num_shapes;
+
+	bool is_playable;		/* L: can players be one of these potentially */
+	char *short_name;		/* L: if we need to display the name in fewer characters */
 };
 
 

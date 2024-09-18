@@ -15,6 +15,7 @@
 
 default:break-chance:10
 default:max-stack:40
+default-sym:dam-type:BLUDGEONING
 
 name:chest:Chest~
 graphics:slate
@@ -63,12 +64,14 @@ graphics:white
 # max-stack:1
 flags:HATES_ACID | HATES_FIRE
 flags:SHOW_DICE
+dam-type:PIERCING
 
 name:sword:Bladed weapon~
 graphics:white
 # max-stack:1
 flags:HATES_ACID
 flags:SHOW_DICE
+dam-type:SLASHING
 
 name:boots:Boot~
 graphics:light umber

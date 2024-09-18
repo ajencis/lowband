@@ -787,6 +787,11 @@ static int project_player_handler_BLUDGEONING(project_player_handler_context_t *
 	return 0;
 }
 
+static int project_player_handler_CHARM_UNDEAD(project_player_handler_context_t *context)
+{
+	return 0;
+}
+
 
 static const project_player_handler_f player_handlers[] = {
 	#define ELEM(a) project_player_handler_##a,

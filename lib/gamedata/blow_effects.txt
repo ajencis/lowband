@@ -23,7 +23,7 @@ power:10
 eval:0
 desc:attack
 lore-color-base:Light Green
-lash-type:MISSILE
+lash-type:NONE
 
 name:POISON
 power:5
@@ -234,7 +234,7 @@ power:15
 eval:300
 desc:shatter
 lore-color-base:Yellow
-lash-type:SHARDS
+lash-type:SHARD
 
 name:EXP_10
 power:5

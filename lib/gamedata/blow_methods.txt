@@ -22,6 +22,7 @@ act:hits {target}
 fact:hit
 desc:hit
 slot:WEAPON
+lash-type:BLUDGEONING
 
 name:TOUCH
 cut:0
@@ -33,6 +34,7 @@ act:touches {target}
 fact:touch
 desc:touch
 slot:GLOVES
+lash-type:BLUDGEONING
 
 name:PUNCH
 cut:0
@@ -44,6 +46,7 @@ act:punches {target}
 fact:punch
 desc:punch
 slot:WEAPON
+lash-type:BLUDGEONING
 
 name:KICK
 cut:0
@@ -55,6 +58,7 @@ act:kicks {target}
 fact:kick
 desc:kick
 slot:BOOTS
+lash-type:BLUDGEONING
 
 name:CLAW
 cut:1
@@ -66,6 +70,7 @@ act:claws {target}
 fact:claw
 desc:claw
 slot:WEAPON
+lash-type:SLASHING
 
 name:BITE
 cut:1
@@ -77,6 +82,7 @@ act:bites {target}
 fact:bite
 desc:bite
 slot:HAT
+lash-type:PIERCING
 
 name:STING
 cut:0
@@ -88,6 +94,7 @@ act:stings {target}
 fact:sting
 desc:sting
 slot:CLOAK
+lash-type:PIERCING
 
 name:BUTT
 cut:0
@@ -99,6 +106,7 @@ act:butts {target}
 fact:butt
 desc:butt
 slot:HAT
+lash-type:BLUDGEONING
 
 name:CRUSH
 cut:0
@@ -110,6 +118,7 @@ act:crushes {target}
 fact:crush
 desc:crush
 slot:CLOAK
+lash-type:BLUDGEONING
 
 name:ENGULF
 cut:0
@@ -121,6 +130,7 @@ act:engulfs {target}
 fact:engulf
 desc:engulf
 slot:GLOVES
+lash-type:BLUDGEONING
 
 name:CRAWL
 cut:0
@@ -132,6 +142,7 @@ act:crawls on {target}
 fact:crawl on
 desc:crawl on you
 slot:BOOTS
+lash-type:PIERCING
 
 name:DROOL
 cut:0
@@ -143,6 +154,7 @@ act:drools on {target}
 fact:drool on
 desc:drool on you
 slot:HAT
+lash-type:POIS
 
 name:SPIT
 cut:0
@@ -154,6 +166,7 @@ act:spits on {target}
 fact:spit on
 desc:spit
 slot:HAT
+lash-type:ACID
 
 name:GAZE
 cut:0
@@ -166,6 +179,7 @@ fact:gaze at
 desc:gaze
 slot:HAT
 skill:SEARCH
+lash-type:FORCE
 
 name:WAIL
 cut:0
@@ -177,6 +191,7 @@ act:wails at {target}
 fact:wail at
 desc:wail
 slot:HAT
+lash-type:SOUND
 
 name:SPORE
 cut:0
@@ -188,6 +203,7 @@ act:releases spores at {target}
 fact:release spores at
 desc:release spores
 slot:BODY_ARMOR
+lash-type:POIS
 
 name:BEG
 cut:0
@@ -199,6 +215,7 @@ act:begs {target} for money
 fact:beg
 desc:beg
 slot:GLOVES
+lash-type:AWAY_ALL
 
 name:INSULT
 cut:0
@@ -217,6 +234,7 @@ act:moons {target}!!!
 fact:insult
 desc:insult
 slot:HAT
+lash-type:AWAY_ALL
 
 name:MOAN
 cut:0
@@ -235,4 +253,5 @@ act:mumbles something about mushrooms
 fact:moan at
 desc:moan
 slot:HAT
+lash-type:AWAY_ALL
 

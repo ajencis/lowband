@@ -495,6 +495,23 @@ static void project_monster_sleep(project_monster_handler_context_t *context, in
 
 }
 
+static void project_monster_charm(project_monster_handler_context_t *context, int flag)
+{
+	if (context->seen && flag) rf_on(context->lore->flags, flag);
+
+	if (flag && !rf_has(context->mon->race->flags, flag)) {
+		context->skipped = true;
+		context->dam = 0;
+	}
+
+	if (context->charm && rf_has(context->mon->race->flags, RF_ANIMAL)) {
+		context->dam += context->dam / 2;
+	}
+	context->mon_timed[MON_TMD_CHARMED] = context->dam;
+	if (context->dam > 0 && context->seen) context->obvious = true;
+	context->dam = 0;
+}
+
 /* Acid */
 static void project_monster_handler_ACID(project_monster_handler_context_t *context)
 {
@@ -1017,14 +1034,22 @@ static void project_monster_handler_MON_POIS(project_monster_handler_context_t *
 
 static void project_monster_handler_PIERCING(project_monster_handler_context_t *context)
 {
+	project_monster_resist_element(context, RF_RES_PIERCING, 3);
 }
 
 static void project_monster_handler_BLUDGEONING(project_monster_handler_context_t *context)
 {
+	project_monster_resist_element(context, RF_RES_BLUDGEONING, 3);
 }
 
 static void project_monster_handler_SLASHING(project_monster_handler_context_t *context)
 {
+	project_monster_resist_element(context, RF_RES_SLASHING, 3);
+}
+
+static void project_monster_handler_CHARM_UNDEAD(project_monster_handler_context_t *context)
+{
+	project_monster_charm(context, RF_UNDEAD);
 }
 
 static const project_monster_handler_f monster_handlers[] = {
@@ -1480,6 +1505,8 @@ void project_m(struct source origin, int r, struct loc grid, int dam, int typ,
 
 bool proj_melee_attack_mon(struct monster *mon, struct player *p, int dmg, int proj_type, bool *fear, const char *note)
 {
+	bool died;
+
 	project_monster_handler_f monster_handler = monster_handlers[proj_type];
 	project_monster_handler_context_t context = {
 		source_player(),
@@ -1504,6 +1531,10 @@ bool proj_melee_attack_mon(struct monster *mon, struct player *p, int dmg, int p
 
 	monster_handler(&context);
 
-	return mon_take_hit(mon, player, context.dam, fear, note);
+	died = mon_take_hit(mon, player, context.dam, fear, note);
+
+	if (!died && context.hurt_msg) add_monster_message(mon, context.hurt_msg, false);
+
+	return died;
 }
 

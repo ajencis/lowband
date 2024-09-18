@@ -37,6 +37,7 @@ flags:DROP_4
 flags:MOVE_BODY | CLEAR_WEB
 flags:NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
+flags:RES_SLASHING
 desc:Ancient Dragon/Wyrm
 
 # Ainur were the founding spirits of Arda, and could take any form they wished.
@@ -155,6 +156,7 @@ pain:1
 flags:UNDEAD | EVIL | INVISIBLE | COLD_BLOOD | SPIRIT
 flags:PASS_WALL
 flags:IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
+flags:RES_PIERCING | RES_SLASHING | RES_BLUDGEONING
 desc:Ghost
 
 # Giants are big, strong humanoids which hit hard and throw boulders.  They
@@ -248,6 +250,7 @@ flags:UNDEAD | EVIL | COLD_BLOOD | SMART | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
 flags:FORCE_SLEEP
+flags:RES_PIERCING | RES_SLASHING
 desc:Lich
 
 # Weird monsters tha look like floor.
@@ -380,6 +383,7 @@ glyph:s
 pain:9
 flags:UNDEAD | EVIL | COLD_BLOOD | CLEAR_WEB
 flags:IM_COLD | IM_POIS | NO_FEAR | NO_CONF | NO_SLEEP | NO_STUN
+flags:RES_PIERCING | RES_SLASHING
 desc:Skeleton
 
 # Snakes are typically slow, but have high armor class
@@ -413,6 +417,7 @@ glyph:l
 pain:9
 flags:CLEAR_WEB | COLD_BLOOD | REGENERATE
 flags:NO_FEAR | NO_CONF | HURT_FIRE | IM_WATER
+flags:RES_BLUDGEONING | RES_PIERCING
 desc:Tree/Ent
 
 # Trolls are evil, larger than human-size humanoids. They have strong melee
@@ -423,6 +428,7 @@ glyph:T
 pain:1
 flags:TROLL | EVIL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
+flags:RES_PIERCING
 desc:Troll
 
 # Powerful undead which drain experience
@@ -433,6 +439,7 @@ flags:UNDEAD | EVIL | COLD_BLOOD | REGENERATE | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:HURT_LIGHT | HURT_FIRE | IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN
 flags:FORCE_SLEEP
+flags:RES_BLUDGEONING | RES_SLASHING
 desc:Vampire
 
 # Always awake, elemental objects which engulf and breathe their element(s)

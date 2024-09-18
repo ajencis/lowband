@@ -831,10 +831,21 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 		if (!sqinfo_has(sqr->info, SQUARE_GAVE_EXP) && (c->depth > 0)) {
 			c->squares_everseen++;
 			sqinfo_on(sqr->info, SQUARE_GAVE_EXP);
-			int total = MAX(c->depth, 10) * c->depth; // will be divided by 1000 later
-			int freq = MAX(999 / total, 0) + 1;
-			int q = MAX(total * freq / 1000, 1);
-			if (c->squares_everseen > 100 && !(c->squares_everseen % freq)) player_exp_gain(p, q);
+
+			if (c->squares_everseen > 100) {
+				int total = MAX(c->depth, 10) * c->depth * 1000; // in 1/2^16 of a point
+				int q = total / 0x10000;
+				uint32_t new_exp_frac = player->exp_frac + total * (q * 0x10000);
+				if (new_exp_frac >= 0x10000) {
+					player->exp_frac = (uint16_t)(new_exp_frac - 0x10000);
+					++q;
+				}
+				else {
+					player->exp_frac = (uint16_t)new_exp_frac;
+				}
+
+				player_exp_gain(p, q);
+			}
 		}
 	}
 }
