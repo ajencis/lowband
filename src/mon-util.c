@@ -1747,10 +1747,10 @@ static void rearrange_monster(struct monster_race *mr)
 	int power = mr->level + randint0(mr->level / 5 + 1) - randint0(mr->level / 5 + 1);
 	int blows = 0;
 	bool spells = false, breaths = false;
-	int ttdam; // twice total dam
+	int ttdam, tdice, quo; // twice total dam
 	struct monster_blow *cblow;
 	int mintotal, maxtotal;
-	int i, quo;
+	int i;
 	int dam, hp, ac, spe, mag;
 	int powermod = 0;
 
@@ -1781,7 +1781,7 @@ static void rearrange_monster(struct monster_race *mr)
 	// check if it has no attacks or no spells
 	i = 0;
 	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
-		if (mr->blow[i].dice.dice > 0) ++blows;
+		if (mr->blow[i].dice.dice > 0) blows += 5 + mr->blow[i].method->power;
 	}
 	if (!blows) dam /= 2;
 
@@ -1827,23 +1827,26 @@ static void rearrange_monster(struct monster_race *mr)
 
 	// spread damage over its damaging blows
 	quo = blows;
+	tdice = power / 25 + 1;
 	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
 		cblow = &mr->blow[i];
+		int fact = 5 + cblow->method->power;
 
 		if (cblow->dice.dice < 1)
 			continue;
 
-		int ddice = (int)cbrt((double)(ttdam / quo));
+		int ddice = fact * tdice / quo;
 		ddice = MAX(1, MIN(4, ddice));
-		int dsides = (ttdam + quo * ddice - 1) / quo / ddice - 1;
+		int dsides = (ttdam * fact + quo * ddice - 1) / quo / ddice - 1;
 		dsides = MAX(1, dsides);
 
 		cblow->dice.dice = ddice;
 		cblow->dice.sides = dsides;
 
 		ttdam -= ddice * (dsides + 1);
+		tdice = MAX(tdice - ddice, 1);
 
-		quo = MAX(1, quo - 1);
+		quo = MAX(1, quo - fact);
 	}
 }
 

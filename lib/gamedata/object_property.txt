@@ -914,3 +914,37 @@ code:COLD
 power:43
 bindui:resist_ui_compact_0<COLD>:0
 
+name:learning
+type:flag
+subtype:misc ability
+code:POWER_LEARN_1
+power:1
+desc:Learning
+
+name:learning
+type:flag
+subtype:misc ability
+code:POWER_LEARN_2
+power:4
+desc:Learning
+
+name:learning
+type:flag
+subtype:misc ability
+code:POWER_LEARN_3
+power:9
+desc:Learning
+
+name:learning
+type:flag
+subtype:misc ability
+code:POWER_LEARN_4
+power:16
+desc:Learning
+
+name:learning
+type:flag
+subtype:misc ability
+code:POWER_LEARN_5
+power:25
+desc:Learning

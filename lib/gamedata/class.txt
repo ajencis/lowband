@@ -201,7 +201,7 @@ title:Warlock
 title:Sorcerer
 title:Arch-Mage
 
-magic:1:300:7
+magic:1:300:8
 
 book:magic book:town:[First Spells]:10:arcane
 book-graphics:?:R
@@ -211,32 +211,32 @@ equip:magic book:[First Spells]:1:1:none
 spell:Firebolt:1:1:22:4
 effect:BOLT:FIRE:0:-10
 dice:$Dd$S
-expr:D:PLAYER_LEVEL:- 1 / 5 + 1
-expr:S:PLAYER_LEVEL:- 1 / 10 + 5
+expr:D:PLAYER_LEVEL:+ 10 / 5
+expr:S:PLAYER_LEVEL:+ 10 / 10
 desc:Fires a firebolt that always hits its target.
 school:FIRE
 
 spell:Electric Bolt:1:1:22:4
 effect:BOLT:ELEC:0:-10
 dice:$Dd$S
-expr:D:PLAYER_LEVEL:- 1 / 5 + 1
-expr:S:PLAYER_LEVEL:- 1 / 10 + 5
+expr:D:PLAYER_LEVEL:+ 10 / 5
+expr:S:PLAYER_LEVEL:+ 100 / 10
 desc:Fires an electric bolt that always hits its target.
 school:AIR
 
 spell:Cold Bolt:1:1:22:4
 effect:BOLT:COLD:0:-10
 dice:$Dd$S
-expr:D:PLAYER_LEVEL:- 1 / 5 + 1
-expr:S:PLAYER_LEVEL:- 1 / 10 + 5
+expr:D:PLAYER_LEVEL:+ 10 / 5
+expr:S:PLAYER_LEVEL:+ 100 / 10
 desc:Fires a cold bolt that always hits its target.
 school:WATER
 
 spell:Acid Bolt:1:1:22:4
 effect:BOLT:ACID:0:-10
 dice:$Dd$S
-expr:D:PLAYER_LEVEL:- 1 / 5 + 1
-expr:S:PLAYER_LEVEL:- 1 / 10 + 5
+expr:D:PLAYER_LEVEL:+ 10 / 5
+expr:S:PLAYER_LEVEL:+ 100 / 10
 desc:Fires an acid bolt that always hits its target.
 school:EARTH
 
@@ -282,8 +282,8 @@ school:TELEPORTATION
 spell:Nether Bolt:2:1:22:4
 effect:BOLT:NETHER:0:-10
 dice:$Dd$S
-expr:D:PLAYER_LEVEL:- 1 / 5 + 1
-expr:S:PLAYER_LEVEL:- 1 / 10 + 5
+expr:D:PLAYER_LEVEL:+ 10 / 5
+expr:S:PLAYER_LEVEL:+ 100 / 10
 desc:Fires a nether bolt that always hits its target.
 school:NECROMANCY
 
@@ -352,6 +352,19 @@ desc:Toxic-poisons a monster, causing it to get more poisoned over time.
 school:POISON
 
 
+book:magic book:dungeon:[Fire]:1:arcane
+book-graphics:?:R
+book-properties:400:40:10 to 100
+
+spell:Fireball:15:15:22:4
+effect:BALL:FIRE:6
+dice:$Dd$S
+expr:D:PLAYER_LEVEL:+ 10 / 4
+expr:S:PLAYER_LEVEL:+ 10 / 4
+desc:Throws a massive fireball.
+school:FIRE
+
+
 book:magic book:town:[Attacks and Knowledge]:6:arcane
 book-graphics:?:R
 book-properties:400:40:10 to 100
@@ -400,6 +413,7 @@ dice:$Dd8
 expr:D:PLAYER_LEVEL:/ 2
 desc:Sprays acid in a 60-degree cone, hitting all monsters up to 10 grids away.
 
+
 book:magic book:town:[Magical Defences]:6:arcane
 book-graphics:?:R
 book-properties:1600:20:30 to 100
@@ -440,6 +454,7 @@ spell:Mana Channel:25:10:50:20
 effect:TIMED_INC:FASTCAST
 dice:5+1d5
 desc:Increases spellcasting speed by 33% for 5+1d5 turns.
+
 
 book:magic book:dungeon:[Arcane Control]:6:arcane
 book-graphics:?:r
@@ -494,6 +509,7 @@ effect:SHORT_BEAM:FORCE:1:10
 dice:$Dd8
 expr:D:PLAYER_LEVEL:+ 0
 desc:Fires a short range beam of force.
+
 
 book:magic book:dungeon:[Wizard's Tome of Power]:5:arcane
 book-graphics:?:r

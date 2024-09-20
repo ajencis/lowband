@@ -1315,8 +1315,7 @@ void use_store(game_event_type type, game_event_data *data, void *user)
 
 	/* L: hack: train at the dojo instead of entering it */
 	if (store->feat == FEAT_DOJO) {
-		store_train(player);
-		return;
+		if (store_train(player)) return;
 	}
 
 	/*** Display ***/

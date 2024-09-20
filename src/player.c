@@ -317,6 +317,8 @@ void player_exp_gain(struct player *p, int32_t amount)
 
 	if (amount > tolev - p->exp) p->exp = tolev;
 	else p->exp += amount;
+
+	check_learn_powers(p, amount);
 	
 	if (p->exp < p->max_exp)
 		p->max_exp = MIN(amount / 10 + p->max_exp, tolev);

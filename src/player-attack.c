@@ -745,20 +745,16 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 static void unarmed_mod_attack(struct attack_roll *aroll, struct object *obj)
 {
 	if (obj) return;
-	int lev = get_power_scale(player, PP_UNARMED_STRIKE);
-	if (!lev) return;
-    aroll->dsides += (lev * 10 + 49) / 50;
-	aroll->to_hit += (lev * 25 + 49) / 50;
-	aroll->to_dam += (lev * 5 + 49) / 50;
-	aroll->mtimed[MON_TMD_STUN] += (lev * 50 + 49) / 50;
+	aroll->to_hit += get_power_scale(player, PP_UNARMED_STRIKE, 25);
+	aroll->to_dam += get_power_scale(player, PP_UNARMED_STRIKE, 20);
+	aroll->mtimed[MON_TMD_STUN] += get_power_scale(player, PP_UNARMED_STRIKE, 50);
 }
 
 static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
 {
-	int lev = get_power_scale(player, PP_UNARMED_STRIKE);
-	aroll->ddice = lev < 15 ? 1 : lev < 30 ? 2 : 3;
-	aroll->dsides = 1 + (lev * 9 + 49) / 50;
-	aroll->mtimed[MON_TMD_STUN] = (lev * 25 + 49) / 50;
+	aroll->ddice = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 2);
+	aroll->dsides = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 9);
+	aroll->mtimed[MON_TMD_STUN] = get_power_scale(player, PP_UNARMED_STRIKE, 25);
 	aroll->accuracy_stat = STAT_DEX;
 	aroll->damage_stat = STAT_STR;
 	aroll->message = "punch";
@@ -769,30 +765,28 @@ static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
 static void specialization_mod_attack(struct attack_roll *aroll, struct object *obj)
 {
 	if (!obj) return;
-	int lev = 0;
-    if (obj->tval == TV_HAFTED) lev = get_power_scale(player, PP_HAFTED_SPECIALIZATION);
-	if (obj->tval == TV_POLEARM) lev = get_power_scale(player, PP_POLEARM_SPECIALIZATION);
-	if (obj->tval == TV_SWORD) lev = get_power_scale(player, PP_SWORD_SPECIALIZATION);
+	int spec;
+    if (obj->tval == TV_HAFTED) spec = PP_HAFTED_SPECIALIZATION;
+	else if (obj->tval == TV_POLEARM) spec = PP_POLEARM_SPECIALIZATION;
+	else if (obj->tval == TV_SWORD) spec = PP_SWORD_SPECIALIZATION;
+	else return;
 	
-	aroll->to_hit += (lev * 15 + 49) / 50;
-	aroll->to_dam += (lev * 10 + 49) / 50;
-	aroll->dsides += (lev * 10 + 49) / 50;
+	aroll->to_hit += get_power_scale(player, spec, 15);
+	aroll->to_dam += get_power_scale(player, spec, 10);
+	aroll->dsides += get_power_scale(player, spec, 10);
 }
 
 static bool backstab_mod_attack(struct attack_roll *aroll, int power)
 {
 	if (!power) return false;
 	if (aroll->attack_skill != SKILL_TO_HIT_MELEE) return false;
-	int lev = get_power_scale(player, PP_BACKSTAB);
 
-	int dsm = lev + 25 * power;
-	if (dsm <= 25) return false;
+	int nds = aroll->dsides * (get_power_scale(player, PP_BACKSTAB, 50) + power * 25) / 25;
+	if (nds <= aroll->dsides) return false;
 
-	aroll->dsides *= dsm;
-	aroll->dsides += 24;
-	aroll->dsides /= 25;
-	aroll->to_hit += (lev * 10 + 49) / 50;
-	aroll->to_dam += (lev * 10 + 49) / 50;
+	aroll->dsides = nds;
+	aroll->to_hit += get_power_scale(player, PP_BACKSTAB, 10);
+	aroll->to_dam += get_power_scale(player, PP_BACKSTAB, 10);
 	return true;
 }
 

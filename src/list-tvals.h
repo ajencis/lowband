@@ -38,4 +38,6 @@ TV(PRAYER_BOOK, "prayer book")
 TV(NATURE_BOOK, "nature book")
 TV(SHADOW_BOOK, "shadow book")
 TV(OTHER_BOOK, "other book")
+TV(TOME, "tome")
 TV(GOLD, "gold")
+

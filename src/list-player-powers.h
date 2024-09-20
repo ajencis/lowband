@@ -4,16 +4,20 @@
  *
  * Fields:
  * symbol - the flag name
+ * name - the display name
+ * power - the extent to which it uses up additional power slots
+ * weight - its likelihood to appear as a tome
  * additional details in player_property.txt
  */
 
-#define MS(x, a, b) PP(x##_SPECIALIZATION, b, 10)
+#define MS(x, a, b) PP(x##_MAGIC, b, 10, 5)
 #include "list-magic-schools.h"
 #undef MS
-PP(SWORD_SPECIALIZATION, "Swordmastery", 15)
-PP(HAFTED_SPECIALIZATION, "Haftedmastery", 15)
-PP(POLEARM_SPECIALIZATION, "Polearm-mastery", 15)
-PP(BOW_SPECIALIZATION, "Bowmastery", 15)
-PP(UNARMED_STRIKE, "Unarmed Strike", 10)
-PP(UNARMOURED_AGILITY, "Unarmoured Agility", 10)
-PP(BACKSTAB, "Backstabbing", 10)
+/* symbol					name					power	weight*/
+PP(SWORD_SPECIALIZATION,	"Swordmastery",			15,		15)
+PP(HAFTED_SPECIALIZATION,	"Haftedmastery",		15,		15)
+PP(POLEARM_SPECIALIZATION,	"Polearm-mastery",		15,		15)
+PP(BOW_SPECIALIZATION,		"Bowmastery",			15,		15)
+PP(UNARMED_STRIKE,			"Unarmed Strike",		10,		5)
+PP(UNARMOURED_AGILITY,		"Unarmoured Agility",	10,		5)
+PP(BACKSTAB,				"Backstabbing",			10,		10)

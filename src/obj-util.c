@@ -1259,7 +1259,7 @@ static void alter_one_weapon(struct object_kind *weap)
 void alter_weapon_properties(struct object_kind *objs)
 {
     struct object_kind *curr;
-
+	
     for (curr = objs; curr; curr = curr->next) {
 		if (tval_is_melee_weapon_k(curr)) alter_one_weapon(curr);
 	}

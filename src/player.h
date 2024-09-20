@@ -54,7 +54,7 @@ enum
 enum
 {
 	PP_NONE,
-	#define PP(x, a, b) PP_##x,
+	#define PP(x, a, b, c) PP_##x,
 	#include "list-player-powers.h"
 	#undef PP
 	PP_MAX
@@ -666,7 +666,7 @@ struct player {
 
 	uint16_t curr_monster_ridx;			/* L: if the player is a monster */
 
-	int list_extra_powers[PP_MAX];		/* L: if the player gained powers outside of their class */
+	uint16_t extra_powers[PP_MAX];		/* L: if the player gained powers outside of their class */
 
 	int hp_burn;						/* L: temporary reduction of max hp */
 	int sp_burn;						/* L: temporary reduction of max mp */

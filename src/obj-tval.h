@@ -63,6 +63,7 @@ bool tval_is_ring_k(const struct object_kind *obj);
 bool tval_is_rod(const struct object *obj);
 bool tval_is_scroll(const struct object *obj);
 bool tval_is_staff(const struct object *obj);
+bool tval_is_tome(const struct object *obj);
 bool tval_is_useable(const struct object *obj);
 bool tval_is_wand(const struct object *obj);
 bool tval_is_weapon(const struct object *obj);

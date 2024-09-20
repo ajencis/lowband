@@ -1670,7 +1670,6 @@ static enum parser_error parse_act_msg(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
-
 static enum parser_error parse_act_desc(struct parser *p) {
 	struct activation *act = parser_priv(p);
 

@@ -431,8 +431,10 @@ bool object_similar(const struct object *obj1, const struct object *obj2,
 	if (tval_is_chest(obj1)) {
 		/* Chests never stack */
 		return false;
-	}
-	else if (tval_is_edible(obj1) || tval_is_potion(obj1) ||
+	} else if (tval_is_tome(obj1) && (obj1->pval != obj2->pval)) {
+		// Tomes should not stack unless they're the same tome
+		return false;
+	} else if (tval_is_edible(obj1) || tval_is_potion(obj1) ||
 		tval_is_scroll(obj1) || tval_is_rod(obj1)) {
 		/* Food, potions, scrolls and rods all stack nicely,
 		   since the kinds are identical, either both will be

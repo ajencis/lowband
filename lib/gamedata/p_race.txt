@@ -119,7 +119,7 @@ skill-melee:-5
 skill-shoot:15
 skill-throw:15
 skill-dig:0
-power:BOW_SPECIALIZATION:25
+power:BOW_SPECIALIZATION:20
 hitdie:4
 exp:120
 infravision:3
@@ -278,7 +278,7 @@ skill-melee:10
 skill-shoot:25
 skill-throw:25
 skill-dig:0
-power:SWORD_SPECIALIZATION:25
+power:SWORD_SPECIALIZATION:20
 hitdie:5
 exp:145
 infravision:4
@@ -302,8 +302,8 @@ skill-melee:-5
 skill-shoot:10
 skill-throw:10
 skill-dig:0
-power:BACKSTAB:25
-power:POISON_SPECIALIZATION:25
+power:BACKSTAB:20
+power:POISON_MAGIC:20
 hitdie:3
 exp:120
 infravision:5
@@ -326,8 +326,9 @@ skill-melee:5
 skill-shoot:0
 skill-throw:0
 skill-dig:0
-power:BACKSTAB:25
-power:POLEARM_SPECIALIZATION:25
+power:BACKSTAB:20
+power:POLEARM_SPECIALIZATION:20
+power:NECROMANCY_MAGIC:20
 hitdie:4
 exp:150
 infravision:5
@@ -335,6 +336,7 @@ history:1
 age:45:30
 height:37:4
 weight:65:5
+values:RES_POIS[1] | RES_NETHER[1]
 monster:vampire
 monster:master vampire
 monster:vampire lord
@@ -353,7 +355,7 @@ skill-melee:-10
 skill-shoot:0
 skill-throw:0
 skill-dig:-5
-power:DIVINATION_SPECIALIZATION:25
+power:DIVINATION_MAGIC:20
 hitdie:2
 exp:150
 infravision:10
@@ -382,7 +384,7 @@ skill-melee:15
 skill-shoot:0
 skill-throw:0
 skill-dig:10
-power:FIRE_SPECIALIZATION:50
+power:FIRE_MAGIC:40
 hitdie:6
 exp:175
 infravision:5
@@ -408,7 +410,7 @@ skill-melee:10
 skill-shoot:5
 skill-throw:5
 skill-dig:3
-power:FIRE_SPECIALIZATION:25
+power:FIRE_MAGIC:20
 hitdie:6
 exp:150
 infravision:5

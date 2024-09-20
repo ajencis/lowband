@@ -1020,12 +1020,9 @@ int adj_int_lev(int index) {
 
 static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 {
-    int lev = get_power_scale(player, PP_UNARMOURED_AGILITY);
-
-    if (lev <= 0) return 0;
-
-	int wpen = MAX(0, wgt - lev) / 5;
-	int bonus = (lev * 10 + 49) / 50;
+	int wpen = wgt / 5 - get_power_scale(player, PP_UNARMOURED_AGILITY, 10);
+	wpen = MAX(0, wpen);
+	int bonus = get_power_scale(player, PP_UNARMOURED_AGILITY, 10);
 	bonus = MAX(0, bonus - wpen);
 
     s->speed += bonus;
@@ -1034,12 +1031,9 @@ static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 
 static int unarmoured_ac_bonus(struct player_state *s, int wgt)
 {
-    int lev = get_power_scale(player, PP_UNARMOURED_AGILITY);
-
-    if (lev <= 0) return 0;
-
-	int wpen = MAX(0, wgt - lev);
-    int bonus = (lev * 50 + 49) / 50;
+	int wpen = wgt - get_power_scale(player, PP_UNARMOURED_AGILITY, 100);
+	wpen = MAX(0, wpen);
+    int bonus = get_power_scale(player, PP_UNARMOURED_AGILITY, 50);
 	bonus = MAX(0, bonus - wpen);
 
     s->ac += bonus;
@@ -1684,8 +1678,8 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	/* Extract "effective" player level */
 	levels = (p->lev - p->class->magic.spell_first) + 1;
 	if (levels > 0) {
-		msp = 3;
-		msp += adj_mag_mana(average_spell_stat(p, state)) * levels / 100;
+		msp = 1;
+		msp += adj_mag_mana(average_spell_stat(p, state)) * levels * p->lev / 5000;
 	} else {
 		levels = 0;
 		msp = 0;
@@ -1771,8 +1765,7 @@ static void calc_hitpoints(struct player *p)
 
 	/* L: bonus from being a monster */
 	if (mon) {
-		mhp += (int)sqrt((double)(mon->avg_hp * 10));
-		//mhp += stepdown(mon->avg_hp);
+		mhp += (int)cbrt(((double)mon->avg_hp) * mon->avg_hp);
 	}
 
 	/* Always have at least one hitpoint per level */
@@ -2104,26 +2097,26 @@ static bool calc_monster_spell(struct player_state *state, const struct monster_
 			{
 				case ELEM_PLASMA:
 				case ELEM_FIRE:
-					skill = PP_FIRE_SPECIALIZATION;
+					skill = PP_FIRE_MAGIC;
 					break;
 				case ELEM_FORCE:
 				case ELEM_ACID:
 				case ELEM_SHARD:
-					skill = PP_EARTH_SPECIALIZATION;
+					skill = PP_EARTH_MAGIC;
 					break;
 				case ELEM_ICE:
 				case ELEM_COLD:
 				case ELEM_WATER:
-					skill = PP_WATER_SPECIALIZATION;
+					skill = PP_WATER_MAGIC;
 					break;
 				case ELEM_ELEC:
-					skill = PP_AIR_SPECIALIZATION;
+					skill = PP_AIR_MAGIC;
 					break;
 				case ELEM_NETHER:
-					skill = PP_NECROMANCY_SPECIALIZATION;
+					skill = PP_NECROMANCY_MAGIC;
 					break;
 				case ELEM_POIS:
-					skill = PP_POISON_SPECIALIZATION;
+					skill = PP_POISON_MAGIC;
 					break;
 				default:
 					skill = -1;
@@ -2133,7 +2126,7 @@ static bool calc_monster_spell(struct player_state *state, const struct monster_
 		}
 		case EF_MON_HEAL_HP:
 		case EF_MON_HEAL_KIN:
-			skill = PP_HEALING_SPECIALIZATION;
+			skill = PP_HEALING_MAGIC;
 			break;
 		default:
 			skill = -1;
@@ -2251,8 +2244,8 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* L: get powers */
 	for (i = 0; i < PP_MAX; i++) {
-		int scale = p->class->c_powers[i] + p->race->r_powers[i];
-		int minlev = 25 - (scale + 5) / 3;
+		int scale = p->class->c_powers[i] + p->race->r_powers[i] + p->extra_powers[i];
+		int minlev = 5 - (scale + 5) / 7;
 		int efflev = minlev < 0 ? MAX((p->lev + 1) / 2 - minlev    , p->lev) :
 								  MIN((p->lev + 1) * 2 - minlev * 2, p->lev);
 
@@ -2260,10 +2253,10 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			state->powers[i] = 0;
 
 		else if (p->lev > 50)
-			state->powers[i] = p->lev * scale / 100;
+			state->powers[i] = (p->lev * scale + 99) / 100;
 
 		else
-			state->powers[i] = efflev * scale / 100;
+			state->powers[i] = (efflev * scale + 99) / 100;
 	}
 
 	/* Analyze equipment */
@@ -2271,6 +2264,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		int index = 0;
 		struct object *obj = slot_object(p, i);
 		struct curse_data *curse = obj ? obj->curses : NULL;
+		bool obj_is_curse = false;
 
 		while (obj) {
 			int dig = 0;
@@ -2280,7 +2274,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			if (slot_type_is(p, i, EQUIP_BODY_ARMOR))
 			    armwgt = MAX(armwgt, owgt);
 
-			if (slot_type_is(p, i, EQUIP_WEAPON) && obj->tval != TV_SHIELD) {
+			if (slot_type_is(p, i, EQUIP_WEAPON) && obj->tval != TV_SHIELD && !obj_is_curse) {
 				for (j = 0; j < PY_MAX_ATTACKS; j++) {
 					if (!weapon[j]) {
 						weapon[j] = obj;
@@ -2372,6 +2366,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			if (curse) {
 				index++;
 				obj = NULL;
+				obj_is_curse = true;
 				while (index < z_info->curse_max) {
 					if (curse[index].power) {
 						obj = curses[index].obj;

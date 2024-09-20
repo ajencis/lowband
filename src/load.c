@@ -756,6 +756,11 @@ int rd_player(void)
 		player->body.slots[i].name = string_make(buf);
 	}
 
+	// L: extra powers
+	for (i = 0; i < PP_MAX; i++) {
+		rd_u16b(&player->extra_powers[i]);
+	}
+
 	strip_bytes(4);
 
 	rd_s32b(&player->au);

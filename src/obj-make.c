@@ -69,6 +69,16 @@ struct money {
 static struct money *money_type;
 static int num_money_types;
 
+
+static const int power_weights[] = {
+	0,
+	#define PP(x, a, b, c) c,
+	#include "list-player-powers.h"
+	#undef PP
+	0
+};
+
+
 /*
  * Initialize object allocation info
  */
@@ -847,6 +857,23 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 	/* Assign charges (wands/staves only) */
 	if (tval_can_have_charges(obj))
 		obj->pval = randcalc(k->charge, lev, rand_aspect);
+
+	else if (of_has(obj->kind->flags, OF_POWER_LEARN_5) ||
+			 of_has(obj->kind->flags, OF_POWER_LEARN_4) ||
+			 of_has(obj->kind->flags, OF_POWER_LEARN_3) ||
+			 of_has(obj->kind->flags, OF_POWER_LEARN_2) ||
+			 of_has(obj->kind->flags, OF_POWER_LEARN_1)) {
+		int sum = 0, choice;
+		for (i = PP_NONE + 1; i < PP_MAX; i++) {
+			sum += power_weights[i];
+		}
+		choice = randint0(sum);
+		for (i = PP_NONE + 1; i < PP_MAX; i++) {
+			if (power_weights[i] > choice) break;
+			choice -= power_weights[i];
+		}
+		obj->pval = i;
+	}
 
 	/* Assign pval for food, oil and launchers */
 	if (tval_is_edible(obj) || tval_is_potion(obj) || tval_is_fuel(obj) ||

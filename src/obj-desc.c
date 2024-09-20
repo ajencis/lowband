@@ -25,6 +25,17 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 
+
+static const char *power_names[] =
+{
+	"Illegible",
+	#define PP(x, a, b, c) a,
+	#include "list-player-powers.h"
+	#undef PP
+	"Illegible"
+};
+
+
 /**
  * Puts the object base kind's name into buf.
  */
@@ -117,6 +128,7 @@ static const char *obj_desc_get_basename(const struct object *obj, bool aware,
 		case TV_DRAG_ARMOR:
 		case TV_LIGHT:
 		case TV_FOOD:
+		case TV_TOME:
 			return obj->kind->name;
 
 		case TV_AMULET:
@@ -511,6 +523,23 @@ static size_t obj_desc_charges(const struct object *obj, char *buf, size_t max,
 	return end;
 }
 
+static size_t obj_desc_power_learn(const struct object *obj, char *buf, size_t max,
+		size_t end, uint32_t mode)
+{
+	bool aware = object_flavor_is_aware(obj) || (mode & ODESC_STORE);
+	bool flg = of_has(obj->flags, OF_POWER_LEARN_5) ||
+			   of_has(obj->flags, OF_POWER_LEARN_4) ||
+			   of_has(obj->flags, OF_POWER_LEARN_3) ||
+			   of_has(obj->flags, OF_POWER_LEARN_2) ||
+			   of_has(obj->flags, OF_POWER_LEARN_1);
+
+	if (aware && flg && obj->pval > 0 && obj->pval < PP_MAX) {
+		strnfcat(buf, max, &end, " (%s)", power_names[obj->pval]);
+	}
+
+	return end;
+}
+
 /**
  * Add player-defined inscriptions or game-defined descriptions
  */
@@ -659,6 +688,8 @@ size_t object_desc(char *buf, size_t max, const struct object *obj,
 		end = obj_desc_mods(obj->known, buf, max, end);
 
 		end = obj_desc_charges(obj, buf, max, end, mode);
+
+		end = obj_desc_power_learn(obj, buf, max, end, mode);
 
 		if (mode & ODESC_STORE)
 			end = obj_desc_aware(obj, buf, max, end);

@@ -118,7 +118,7 @@ const char *list_obj_flag_names[] = {
 
 static const char *list_player_powers_names[] = {
 	"NONE",
-	#define PP(x, a, b) #x,
+	#define PP(x, a, b, c) #x,
 	#include "list-player-powers.h"
 	#undef PP
 	NULL

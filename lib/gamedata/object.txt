@@ -5219,6 +5219,69 @@ desc: untrammelled yet inextricably intermingled and utterly mastered powers
 desc: elemental and ethereal.
 
 
+##### Tome base objects #####
+
+
+name:& Basic Tome~
+type:tome
+graphics:?:m
+level:0
+weight:15
+cost:1000
+alloc:1:0 to 100
+attack:1d1:0:0
+armor:0:0
+power:10
+flags:POWER_LEARN_1
+
+name:& Tome~
+type:tome
+graphics:?:m
+level:0
+weight:15
+cost:3000
+alloc:1:20 to 100
+attack:1d1:0:0
+armor:0:0
+power:10
+flags:POWER_LEARN_2
+
+name:& Advanced Tome~
+type:tome
+graphics:?:m
+level:0
+weight:15
+cost:10000
+alloc:1:40 to 100
+attack:1d1:0:0
+armor:0:0
+power:10
+flags:POWER_LEARN_3
+
+name:& Expert Tome~
+type:tome
+graphics:?:m
+level:0
+weight:15
+cost:30000
+alloc:1:60 to 100
+attack:1d1:0:0
+armor:0:0
+power:10
+flags:POWER_LEARN_4
+
+name:& Master Tome~
+type:tome
+graphics:?:m
+level:0
+weight:15
+cost:100000
+alloc:1:80 to 100
+attack:1d1:0:0
+armor:0:0
+power:10
+flags:POWER_LEARN_5
+
 
 ##### Gold/gems #####
 

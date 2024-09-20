@@ -344,6 +344,20 @@ static enum parser_error parse_meth_lash_type(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_meth_power(struct parser *p)
+{
+	int power = parser_getint(p, "power");
+	struct blow_method *meth = parser_priv(p);
+
+	if (!meth) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	meth->power = power;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_meth(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -359,6 +373,7 @@ static struct parser *init_parse_meth(void) {
 	parser_reg(p, "slot sym slot", parse_meth_equip_slot);
 	parser_reg(p, "skill sym skill", parse_meth_skill);
 	parser_reg(p, "lash-type sym type", parse_meth_lash_type);
+	parser_reg(p, "power int power", parse_meth_power);
 	return p;
 }
 

@@ -26,6 +26,7 @@
 #include "init.h"
 #include "mon-util.h"
 #include "obj-chest.h"
+#include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
 #include "obj-knowledge.h"
@@ -45,6 +46,14 @@
 #include "target.h"
 #include "trap.h"
 #include "ui-input.h"
+
+static const char *power_names[] = {
+	NULL,
+	#define PP(x, a, b, c) a,
+	#include "list-player-powers.h"
+	#undef PP
+	NULL
+};
 
 /**
  * L: functions for races that are monsters
@@ -155,8 +164,9 @@ bool player_increase_stat(struct player *p)
 	return false;
 }
 
-static bool power_scales_exponentially(int power) {
-	assert(power >= 0);
+static bool power_scales_exponentially(int power)
+{
+	assert(power > 0);
 	assert(power < PP_MAX);
 
 	switch (power)
@@ -168,12 +178,109 @@ static bool power_scales_exponentially(int power) {
 	return false;
 }
 
-int get_power_scale(struct player *p, int power) {
-	assert(power >= 0 && power < PP_MAX);
-	bool expon = power_scales_exponentially(power);
+int get_power_scale(struct player *p, int power, int scaleto)
+{
+	assert(power > 0 && power < PP_MAX);
 
-	if (expon) return (p->lev * p->state.powers[power] + 49) / 50;
-	return p->state.powers[power];
+	int efflev = p->state.powers[power];
+	if (power_scales_exponentially(power))
+		efflev = (efflev * p->lev + 49) / 50;
+
+	if (efflev <= 0) return 0;
+
+	int result = (efflev * scaleto + 33) / 50;
+
+	return MAX(result, 1);
+}
+
+
+static bool player_can_learn_power(struct player *p)
+{
+	int i;
+	int sum = 0;
+	int mx = p->lev * 120 + 6000; // max 12000
+
+	for (i = PP_NONE + 1; i < PP_MAX; i++) {
+		int pwr = p->extra_powers[i];
+		if (pwr > 0) {
+			assert(pwr * pwr < INT_MAX / pwr);
+			// scales to 10000
+			sum += (int)sqrt((double)(pwr * pwr * pwr));
+		}
+	}
+
+	if (sum < mx) return true;
+	return false;
+}
+
+static bool learn_power(struct player *p, int power)
+{
+	assert(power > PP_NONE && power < PP_MAX);
+
+	if (!player_can_learn_power(p)) return false;
+
+	p->extra_powers[power]++;
+
+	p->upkeep->update |= PU_BONUS;
+
+	if (!(p->extra_powers[power] % 5)) {
+		msg("You feel a bit more familiar with %s.", power_names[power]);
+	}
+
+	return true;
+}
+
+static bool learn_power_from_obj(struct player *p, struct object *obj, int xpgain)
+{
+	if (!obj) return false;
+	if (xpgain < 1) return false;
+	if (obj->number < 1) return false;
+
+	int power = obj->pval;
+	if (power <= PP_NONE || power >= PP_MAX) return false;
+
+	int mx;
+	if (of_has(obj->flags, OF_POWER_LEARN_5)) mx = 100; // 1000 ^ (2/3)
+	else if (of_has(obj->flags, OF_POWER_LEARN_4)) mx = (int)cbrt((double)(800 * 800));
+	else if (of_has(obj->flags, OF_POWER_LEARN_3)) mx = (int)cbrt((double)(600 * 600));
+	else if (of_has(obj->flags, OF_POWER_LEARN_2)) mx = (int)cbrt((double)(400 * 400));
+	else if (of_has(obj->flags, OF_POWER_LEARN_1)) mx = (int)cbrt((double)(200 * 200));
+	else return false;
+
+	if (p->extra_powers[power] >= mx) {
+		char buf[80];
+		object_desc(buf, sizeof(buf), obj, ODESC_EXTRA, p);
+		msg("You feel you've learned everything you can from your %s.", buf);
+		return false;
+	}
+
+	int curr = p->class->c_powers[power] + p->race->r_powers[power] + p->extra_powers[power];
+	uint32_t chance = (((uint32_t)1) << MIN(curr / 10, 14)) * mx / xpgain / obj->number;
+	if ((chance <= 1) || one_in_(chance)) {
+		learn_power(p, power);
+		return true;
+	}
+	return false;
+}
+
+bool check_learn_powers(struct player *p, int xpgain)
+{
+	if (!player_can_learn_power(p)) return false;
+	if (xpgain <= 0) return false;
+
+	int i;
+	struct object *tome;
+	bool learned = false;
+
+	for (tome = p->gear; tome; tome = tome->next) {
+		learned = learned || learn_power_from_obj(p, tome, xpgain);
+	}
+
+	for (i = 0; i < p->body.count; i++) {
+		learned = learned || learn_power_from_obj(p, p->body.slots[i].obj, xpgain);
+	}
+
+	return learned;
 }
 
 /**

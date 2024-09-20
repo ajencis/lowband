@@ -304,47 +304,47 @@ value:-1
 
 # L: powers
 type:power
-code:AIR_SPECIALIZATION
-name:Air Specialization
+code:AIR_MAGIC
+name:Air Magic Specialization
 desc:You are particularly good at air magic.
 
 type:power
-code:FIRE_SPECIALIZATION
-name:Fire Specialization
+code:FIRE_MAGIC
+name:Fire Magic Specialization
 desc:You are particularly good at fire magic.
 
 type:power
-code:EARTH_SPECIALIZATION
-name:Earth Specialization
+code:EARTH_MAGIC
+name:Earth Magic Specialization
 desc:You are particularly good at earth magic.
 
 type:power
-code:WATER_SPECIALIZATION
-name:WATER Specialization
+code:WATER_MAGIC
+name:Water Magic Specialization
 desc:You are particularly good at water magic.
 
 type:power
-code:POISON_SPECIALIZATION
-name:Poison Specialization
+code:POISON_MAGIC
+name:Poison Magic Specialization
 desc:You are particularly good at poison magic.
 
 type:power
-code:DIVINATION_SPECIALIZATION
+code:DIVINATION_MAGIC
 name:Divination Specialization
 desc:You are particularly good at divination.
 
 type:power
-code:TELEPORTATION_SPECIALIZATION
+code:TELEPORTATION_MAGIC
 name:Teleportation Specialization
 desc:You are particularly good at teleportation magic.
 
 type:power
-code:NECROMANCY_SPECIALIZATION
+code:NECROMANCY_MAGIC
 name:Necromancy Specialization
 desc:You are particularly good at necromancy.
 
 type:power
-code:HEALING_SPECIALIZATION
+code:HEALING_MAGIC
 name:Healing Specialization
 desc:You are particularly good at healing magic.
 

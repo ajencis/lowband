@@ -44,6 +44,7 @@ struct blow_method {
 	int equip_slot;			/* L: the slot it uses */
 	int skill;				/* L: the skill it uses to hit */
 	int lash_type;			/* L: the damage type it does normally */
+	int power;				/* L: how much damage it does relative to other methods */
 };
 
 extern struct blow_method *blow_methods;

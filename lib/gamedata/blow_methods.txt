@@ -35,6 +35,7 @@ fact:touch
 desc:touch
 slot:GLOVES
 lash-type:BLUDGEONING
+power:-1
 
 name:PUNCH
 cut:0
@@ -47,6 +48,7 @@ fact:punch
 desc:punch
 slot:WEAPON
 lash-type:BLUDGEONING
+power:-1
 
 name:KICK
 cut:0
@@ -83,6 +85,7 @@ fact:bite
 desc:bite
 slot:HAT
 lash-type:PIERCING
+power:5
 
 name:STING
 cut:0
@@ -95,6 +98,7 @@ fact:sting
 desc:sting
 slot:CLOAK
 lash-type:PIERCING
+power:-1
 
 name:BUTT
 cut:0
@@ -119,6 +123,7 @@ fact:crush
 desc:crush
 slot:CLOAK
 lash-type:BLUDGEONING
+power:2
 
 name:ENGULF
 cut:0
@@ -143,6 +148,7 @@ fact:crawl on
 desc:crawl on you
 slot:BOOTS
 lash-type:PIERCING
+power:-1
 
 name:DROOL
 cut:0
@@ -155,6 +161,7 @@ fact:drool on
 desc:drool on you
 slot:HAT
 lash-type:POIS
+power:-1
 
 name:SPIT
 cut:0
@@ -167,6 +174,7 @@ fact:spit on
 desc:spit
 slot:HAT
 lash-type:ACID
+power:-1
 
 name:GAZE
 cut:0
@@ -216,6 +224,7 @@ fact:beg
 desc:beg
 slot:GLOVES
 lash-type:AWAY_ALL
+power:-2
 
 name:INSULT
 cut:0
@@ -235,6 +244,7 @@ fact:insult
 desc:insult
 slot:HAT
 lash-type:AWAY_ALL
+power:-2
 
 name:MOAN
 cut:0
@@ -254,4 +264,5 @@ fact:moan at
 desc:moan
 slot:HAT
 lash-type:AWAY_ALL
+power:-2
 

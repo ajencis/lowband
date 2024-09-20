@@ -111,6 +111,11 @@ bool tval_is_digger(const struct object *obj)
 	return obj->tval == TV_DIGGING;
 }
 
+bool tval_is_tome(const struct object *obj)
+{
+	return obj->tval == TV_TOME;
+}
+
 bool tval_can_have_nourishment(const struct object *obj)
 {
 	return obj->tval == TV_FOOD || obj->tval == TV_POTION ||
