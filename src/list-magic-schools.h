@@ -1,6 +1,6 @@
 /**
- * \file list-kind-flags.h
- * \brief object kind flags
+ * \file list-magic-schools.h
+ * \brief magic schools
  */
 
 MS(AIR, "air", "Air")

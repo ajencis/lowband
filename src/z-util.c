@@ -534,6 +534,23 @@ void my_strcap(char *buf)
 
 
 /**
+ * L: Capitalize all letters in string 'buf' that start the
+ * string or are preceded by a space
+ */
+void my_strcap_full(char *buf)
+{
+	if (!buf) return;
+	int i;
+
+	for (i = 0; buf[i]; i++) {
+		if (i == 0 || buf[i - 1] == ' ') {
+			buf[i] = toupper((unsigned char) buf[i]);
+		}
+	}
+}
+
+
+/**
  * Determine if string "a" is equal to string "b"
  */
 #undef streq

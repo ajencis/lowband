@@ -168,6 +168,7 @@ static bool mon_set_timed(struct monster *mon,
 		* don't leave stale monster -> monster target */
 		if (effect_type == MON_TMD_COMMAND) {
 			mon->target.midx = 0;
+			mon->target.who = TARGET_WHO_NONE;
 		}
 	} else if (old_timer == 0) {
 		/* Turning on, usually mention */

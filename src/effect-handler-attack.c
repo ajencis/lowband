@@ -58,8 +58,9 @@ static void get_target(struct source origin, int dir, struct loc *grid,
 			if (randint1(100) > accuracy) {
 				dir = randint1(9);
 				*grid = loc_sum(monster->grid, ddgrid[dir]);
-			} else if (monster->target.midx > 0) {
+			} else if (monster->target.who == TARGET_WHO_MONSTER) {
 				struct monster *mon = cave_monster(cave, monster->target.midx);
+				assert(mon);
 				*grid = mon->grid;
 			} else {
 				if (monster_is_decoyed(monster)) {
@@ -118,6 +119,90 @@ static bool project_touch(int dam, int rad, int typ, bool aware,
 	int flg = PROJECT_GRID | PROJECT_KILL | PROJECT_HIDE | PROJECT_ITEM | PROJECT_THRU;
 	if (aware) flg |= PROJECT_AWARE;
 	return (project(source_player(), rad, pgrid, dam, typ, flg, 0, 0, obj));
+}
+
+static bool ball_spell(effect_handler_context_t *context, uint8_t diameter_of_source, bool hit_caster)
+{
+	int dam = effect_calculate_value(context, true);
+	int rad = context->radius ? context->radius : 2;
+	struct loc target = loc(-1, -1);
+
+	int flg = PROJECT_THRU | PROJECT_STOP | PROJECT_GRID | PROJECT_ITEM | PROJECT_KILL;
+
+	/* Player or monster? */
+	switch (context->origin.what) {
+		case SRC_MONSTER: {
+			struct monster *mon = cave_monster(cave, context->origin.which.monster);
+			int conf_level, accuracy = 100;
+			struct monster *t_mon = monster_target_monster(context);
+
+			assert(mon);
+
+			conf_level = monster_effect_level(mon, MON_TMD_CONF);
+			while (conf_level) {
+				accuracy *= (100 - CONF_RANDOM_CHANCE);
+				accuracy /= 100;
+				conf_level--;
+			}
+
+			/* Powerful monster */
+			if (monster_is_powerful(mon)) {
+				rad++;
+			}
+
+			flg |= PROJECT_PLAY;
+			flg &= ~(PROJECT_STOP | PROJECT_THRU);
+
+			if (randint1(100) > accuracy) {
+				/* Confused direction */
+				int dir = randint1(9);
+				target = loc_sum(mon->grid, ddgrid[dir]);
+			} else if (t_mon) {
+				/* Target monster */
+				target = t_mon->grid;
+			} else {
+				/* Target player */
+				if (monster_is_decoyed(mon)) {
+					target = cave_find_decoy(cave);
+				} else {
+					target = player->grid;
+				}
+			}
+
+			break;
+		}
+
+		case SRC_TRAP: {
+			struct trap *trap = context->origin.which.trap;
+			flg |= PROJECT_PLAY;
+			target = trap->grid;
+			break;
+		}
+
+		case SRC_PLAYER:
+			/* Ask for a target if no direction given */
+			if (context->dir == DIR_TARGET && target_okay()) {
+				flg &= ~(PROJECT_STOP | PROJECT_THRU);
+				target_get(&target);
+			} else {
+				target = loc_sum(player->grid, ddgrid[context->dir]);
+			}
+
+			if (hit_caster) flg |= PROJECT_PLAY;
+
+			if (context->other) rad += player->lev / context->other;
+			break;
+
+		default:
+			break;
+	}
+
+	/* Aim at the target, explode */
+	if (project(context->origin, rad, target, dam, context->subtype, flg, 0,
+				diameter_of_source, context->obj))
+		context->ident = true;
+
+	return true;
 }
 
 /**
@@ -594,83 +679,13 @@ bool effect_handler_SPHERE(effect_handler_context_t *context)
  */
 bool effect_handler_BALL(effect_handler_context_t *context)
 {
-	int dam = effect_calculate_value(context, true);
-	int rad = context->radius ? context->radius : 2;
-	struct loc target = loc(-1, -1);
+	return ball_spell(context, 0, false);
+}
 
-	int flg = PROJECT_THRU | PROJECT_STOP | PROJECT_GRID | PROJECT_ITEM | PROJECT_KILL;
-
-	/* Player or monster? */
-	switch (context->origin.what) {
-		case SRC_MONSTER: {
-			struct monster *mon = cave_monster(cave, context->origin.which.monster);
-			int conf_level, accuracy = 100;
-			struct monster *t_mon = monster_target_monster(context);
-
-			assert(mon);
-
-			conf_level = monster_effect_level(mon, MON_TMD_CONF);
-			while (conf_level) {
-				accuracy *= (100 - CONF_RANDOM_CHANCE);
-				accuracy /= 100;
-				conf_level--;
-			}
-
-			/* Powerful monster */
-			if (monster_is_powerful(mon)) {
-				rad++;
-			}
-
-			flg |= PROJECT_PLAY;
-			flg &= ~(PROJECT_STOP | PROJECT_THRU);
-
-			if (randint1(100) > accuracy) {
-				/* Confused direction */
-				int dir = randint1(9);
-				target = loc_sum(mon->grid, ddgrid[dir]);
-			} else if (t_mon) {
-				/* Target monster */
-				target = t_mon->grid;
-			} else {
-				/* Target player */
-				if (monster_is_decoyed(mon)) {
-					target = cave_find_decoy(cave);
-				} else {
-					target = player->grid;
-				}
-			}
-
-			break;
-		}
-
-		case SRC_TRAP: {
-			struct trap *trap = context->origin.which.trap;
-			flg |= PROJECT_PLAY;
-			target = trap->grid;
-			break;
-		}
-
-		case SRC_PLAYER:
-			/* Ask for a target if no direction given */
-			if (context->dir == DIR_TARGET && target_okay()) {
-				flg &= ~(PROJECT_STOP | PROJECT_THRU);
-				target_get(&target);
-			} else {
-				target = loc_sum(player->grid, ddgrid[context->dir]);
-			}
-
-			if (context->other) rad += player->lev / context->other;
-			break;
-
-		default:
-			break;
-	}
-
-	/* Aim at the target, explode */
-	if (project(context->origin, rad, target, dam, context->subtype, flg, 0, 0, context->obj))
-		context->ident = true;
-
-	return true;
+bool effect_handler_BALL_NO_DAM_RED(effect_handler_context_t *context)
+{
+	uint8_t dos = MIN(context->radius * 2, UINT8_MAX);
+	return ball_spell(context, dos, true);
 }
 
 /**

@@ -159,6 +159,7 @@ int effect_subtype(int index, const char *type)
 		case EF_SPOT:
 		case EF_SPHERE:
 		case EF_BALL:
+		case EF_BALL_NO_DAM_RED:
 		case EF_BREATH:
 		case EF_ARC:
 		case EF_SHORT_BEAM:

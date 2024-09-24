@@ -463,6 +463,9 @@ void wr_player(void)
 	for (i = 0; i < PP_MAX; i++) {
 		wr_u16b(player->extra_powers[i]);
 	}
+	for (i = 0; i < SKILL_MAX; i++) {
+		wr_u16b(player->extra_skills[i]);
+	}
 
 	/* Padding */
 	wr_u32b(0);

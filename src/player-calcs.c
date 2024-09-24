@@ -1020,9 +1020,9 @@ int adj_int_lev(int index) {
 
 static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 {
-	int wpen = wgt / 5 - get_power_scale(player, PP_UNARMOURED_AGILITY, 10);
+	int wpen = wgt / 5 - get_power_scale(player, PP_DODGING, 10);
 	wpen = MAX(0, wpen);
-	int bonus = get_power_scale(player, PP_UNARMOURED_AGILITY, 10);
+	int bonus = get_power_scale(player, PP_DODGING, 10);
 	bonus = MAX(0, bonus - wpen);
 
     s->speed += bonus;
@@ -1031,10 +1031,10 @@ static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 
 static int unarmoured_ac_bonus(struct player_state *s, int wgt)
 {
-	int wpen = wgt - get_power_scale(player, PP_UNARMOURED_AGILITY, 100);
+	int wpen = wgt - get_power_scale(player, PP_DODGING, 250);
 	wpen = MAX(0, wpen);
-    int bonus = get_power_scale(player, PP_UNARMOURED_AGILITY, 50);
-	bonus = MAX(0, bonus - wpen);
+    int bonus = get_power_scale(player, PP_DODGING, 50);
+	bonus = MAX(bonus / 2, bonus - wpen);
 
     s->ac += bonus;
 	return bonus;
@@ -1755,6 +1755,7 @@ static void calc_hitpoints(struct player *p)
 {
 	long bonus;
 	int mhp;
+	int resil = get_power_scale(p, PP_RESILIENCE, 33);
 	struct monster_race *mon = lookup_player_monster(p);
 
 	/* Get "1/100th hitpoint bonus per level" value */
@@ -1762,6 +1763,9 @@ static void calc_hitpoints(struct player *p)
 
 	/* Calculate hitpoints */
 	mhp = p->player_hp[p->lev-1] + (bonus * p->lev / 100);
+
+	/* L: bonus from resilience power */
+	mhp += (mhp + 100) * resil / 100;
 
 	/* L: bonus from being a monster */
 	if (mon) {
@@ -2090,8 +2094,10 @@ static bool calc_monster_spell(struct player_state *state, const struct monster_
 	switch (mspell->effect->index)
 	{
 		case EF_BALL:
+		case EF_BALL_NO_DAM_RED:
 		case EF_BEAM:
 		case EF_BOLT:
+		case EF_BREATH:
 		{
 			switch (mspell->effect->subtype)
 			{
@@ -2617,8 +2623,13 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	for (i = 0; i < SKILL_MAX; i++)
 		state->skills[i] += (p->class->x_skills[i] * p->lev / 10);
 
+	/* L: add extra skills */
+	for (i = 0; i < SKILL_MAX; i++) {
+		state->skills[i] += p->extra_skills[i];
+	}
+
 	if (state->skills[SKILL_DIGGING] < 1) state->skills[SKILL_DIGGING] = 1;
-	if (state->skills[SKILL_STEALTH] > 30) state->skills[SKILL_STEALTH] = 30;
+	if (state->skills[SKILL_STEALTH] > 150) state->skills[SKILL_STEALTH] = 150;
 	if (state->skills[SKILL_STEALTH] < 0) state->skills[SKILL_STEALTH] = 0;
 	hold = adj_str_hold(state->stat_ind[STAT_STR]);
 

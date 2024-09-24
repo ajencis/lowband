@@ -18,9 +18,6 @@
 #ifndef MONSTER_MOVE_H
 #define MONSTER_MOVE_H
 
-#define MON_TARGET_PLAYER -1
-#define MON_TARGET_NONE -2
-
 struct opposed_monster_char {
 	int char1;
 	int char2;

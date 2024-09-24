@@ -80,7 +80,7 @@ static const char *equip_slot_names[] =
 
 static const char *skill_names[] =
 {
-	#define SKILL(x) #x,
+	#define SKILL(x, a) #x,
 	#include "list-skills.h"
 	#undef SKILL
 	""
@@ -1919,6 +1919,26 @@ static enum parser_error parse_monster_short_name(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_monster_evolution(struct parser *p)
+{
+	struct monster_race *r = parser_priv(p);
+	const char *evn = parser_getstr(p, "evol");
+	struct monster_evolution *me;
+
+	if (!r)
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	
+	if (!evn)
+		return PARSE_ERROR_GENERIC;
+
+	me = mem_zalloc(sizeof(*me));
+	me->name = string_make(evn);
+	me->next = r->evol;
+	r->evol = me;
+
+	return PARSE_ERROR_NONE;
+}
+
 struct parser *init_parse_monster(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -1957,6 +1977,7 @@ struct parser *init_parse_monster(void) {
 	parser_reg(p, "shape str name", parse_monster_shape);
 	parser_reg(p, "color-cycle sym group sym cycle", parse_monster_color_cycle);
 	parser_reg(p, "short-name str short_name", parse_monster_short_name);
+	parser_reg(p, "evolution str evol", parse_monster_evolution);
 	return p;
 }
 
@@ -2040,6 +2061,7 @@ static errr finish_parse_monster(struct parser *p) {
 		struct monster_race *race = &r_info[i];
 		struct monster_friends *f;
 		struct monster_shape *s;
+		struct monster_evolution *e;
 		for (f = race->friends; f; f = f->next) {
 			if (!my_stricmp(f->name, "same")) {
 				f->race = race;
@@ -2061,6 +2083,15 @@ static errr finish_parse_monster(struct parser *p) {
 				}
 			}
 			string_free(s->name);
+		}
+		for (e = race->evol; e; e = e->next) {
+			e->race = lookup_monster(e->name);
+			if (!e->race) {
+					quit_fmt("Couldn't find shape named '%s' for monster '%s'",
+							 e->name, race->name);
+			}
+			string_free(e->name);
+			e->name = NULL;
 		}
 	}
 
@@ -2088,6 +2119,7 @@ static void cleanup_monster(void)
 		struct monster_friends_base *fb;
 		struct monster_mimic *m;
 		struct monster_shape *s;
+		struct monster_evolution *e;
 
 		am = r->spell_msgs;
 		while (am) {
@@ -2126,6 +2158,12 @@ static void cleanup_monster(void)
 			struct monster_shape *sn = s->next;
 			mem_free(s);
 			s = sn;
+		}
+		e = r->evol;
+		while (e) {
+			struct monster_evolution *en = e->next;
+			mem_free(e);
+			e = en;
 		}
 		string_free(r->short_name);
 		string_free(r->plural);

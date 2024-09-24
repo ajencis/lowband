@@ -85,8 +85,8 @@ OP(birth_lose_arts,       "Lose artifacts when leaving level",
 BIRTH, false)
 OP(birth_feelings,        "Show level feelings",
 BIRTH, true)
-OP(birth_no_selling,      "Increase gold drops but disable selling",
-BIRTH, true)
+/*OP(birth_no_selling,      "Increase gold drops but disable selling",
+BIRTH, true)*/
 OP(birth_start_kit,       "Start with a kit of useful gear",
 BIRTH, true)
 OP(birth_ai_learn,        "Monsters learn from their mistakes",
@@ -99,4 +99,3 @@ OP(birth_levels_persist,  "Persistent levels (experimental)",
 BIRTH, false)
 OP(birth_percent_damage,  "To-damage is a percentage of dice (experimental)",
 BIRTH, false)
-

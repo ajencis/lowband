@@ -374,11 +374,13 @@ name:Unarmed Strike
 desc:Your body is a lethal weapon.
 
 type:power
-code:UNARMOURED_AGILITY
-name:Unarmoured Agility
-desc:You are very fast if you aren't weighed down.
+code:DODGING
+name:Dodging
+desc:You are very evasive, especially if you aren't weighed down.
 
 type:power
 code:BACKSTAB
 name:Backstabbing
 desc:You know where to hit where it hurts if your target is distracted.
+
+

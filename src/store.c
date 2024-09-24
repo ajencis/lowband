@@ -529,7 +529,7 @@ static bool store_will_buy(struct store *store, const struct object *obj)
 	if (store->feat == FEAT_HOME) return true;
 
 	/* Ignore apparently worthless items, except no-selling {??} items */
-	if (object_value(obj, 1) <= 0 && !(OPT(player, birth_no_selling) &&
+	if (object_value(obj, 1) <= 0 && !(//OPT(player, birth_no_selling) &&
 									   tval_has_variable_power(obj) &&
 									   !object_runes_known(obj))) {
 		return false;
@@ -633,10 +633,14 @@ int price_item(struct store *store, const struct object *obj,
 			price = price / 2;
 		}
 
+		/* L: don't buy cheap stuff */
+		price -= 100;
+		if (price <= 0) return 0;
+
 		/* Check for no_selling option */
-		if (OPT(player, birth_no_selling)) {
+		/*if (OPT(player, birth_no_selling)) {
 			return 0;
-		}
+		}*/
 	} else {
 		/* Re-evaluate if we're selling */
 		if (tval_can_have_charges(obj)) {
@@ -1951,7 +1955,7 @@ void do_cmd_sell(struct command *cmd)
 		ODESC_PREFIX | ODESC_FULL, player);
 
 	/* Describe the result (in message buffer) */
-	if (OPT(player, birth_no_selling)) {
+	if (price == 0) { //OPT(player, birth_no_selling)) {
 		msg("You had %s (%c).", o_name, label);
 	} else {
 		msg("You sold %s (%c) for %d gold.", o_name, label, price);

@@ -1189,7 +1189,7 @@ static bool place_new_monster_one(struct chunk *c, struct loc grid,
 	mon->energy = (uint8_t)randint0(50);
 
 	/* L: set target to player */
-	mon->target.midx = MON_TARGET_PLAYER;
+	mon->target.who = TARGET_WHO_NONE;
 
 	/* L: give it a faction */
 	mon_give_faction(mon);

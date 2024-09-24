@@ -54,7 +54,7 @@ enum
 enum
 {
 	PP_NONE,
-	#define PP(x, a, b, c) PP_##x,
+	#define PP(x, a, b, c, d, e) PP_##x,
 	#include "list-player-powers.h"
 	#undef PP
 	PP_MAX
@@ -150,11 +150,24 @@ enum {
  * Skill indexes
  */
 enum {
-	#define SKILL(x) SKILL_##x,
+	#define SKILL(x, a) SKILL_##x,
 	#include "list-skills.h"
 	#undef SKILL
 	SKILL_MAX
 };
+
+struct player_power {
+	int index;
+	const char *name;
+	bool expon;
+	int power;
+	int weight;
+	int update;
+};/* player_powers[] = {
+	#define PP(x, a, b, c, d, e) { PP_##x, a, b, c, d, e },
+	#include "list-player-powers.h"
+	#undef PP
+};*/
 
 /**
  * Structure for the "quests"
@@ -667,6 +680,7 @@ struct player {
 	uint16_t curr_monster_ridx;			/* L: if the player is a monster */
 
 	uint16_t extra_powers[PP_MAX];		/* L: if the player gained powers outside of their class */
+	uint16_t extra_skills[SKILL_MAX];	/* L: skills gained outside class/race */
 
 	int hp_burn;						/* L: temporary reduction of max hp */
 	int sp_burn;						/* L: temporary reduction of max mp */

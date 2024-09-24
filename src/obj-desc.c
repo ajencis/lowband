@@ -24,12 +24,13 @@
 #include "obj-knowledge.h"
 #include "obj-tval.h"
 #include "obj-util.h"
+#include "ui-knowledge.h"
 
 
 static const char *power_names[] =
 {
 	"Illegible",
-	#define PP(x, a, b, c) a,
+	#define PP(x, a, b, c, d, e) a,
 	#include "list-player-powers.h"
 	#undef PP
 	"Illegible"
@@ -533,8 +534,15 @@ static size_t obj_desc_power_learn(const struct object *obj, char *buf, size_t m
 			   of_has(obj->flags, OF_POWER_LEARN_2) ||
 			   of_has(obj->flags, OF_POWER_LEARN_1);
 
-	if (aware && flg && obj->pval > 0 && obj->pval < PP_MAX) {
-		strnfcat(buf, max, &end, " (%s)", power_names[obj->pval]);
+	if (aware && flg && obj->pval < PP_MAX) {
+		strnfcat(buf, max, &end, " of %s", power_names[obj->pval]);
+	}
+	else if (aware && flg) {
+		int skill_index = obj->pval - PP_MAX;
+		char sname[80];
+		my_strcpy(sname, skill_index_to_name(skill_index), sizeof(sname));
+		my_strcap_full(sname);
+		strnfcat(buf, max, &end, " of %s", sname);
 	}
 
 	return end;

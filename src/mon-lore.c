@@ -116,7 +116,7 @@ static int spell_color(struct player *p, const struct monster_race *race,
 
 	/* Bolts, balls and breaths */
 	if ((eff->index == EF_BOLT) || (eff->index == EF_BALL) ||
-		(eff->index == EF_BREATH)) {
+		(eff->index == EF_BREATH) || (eff->index == EF_BALL_NO_DAM_RED)) {
 		/* Treat by element */
 		switch (eff->subtype) {
 			/* Special case - sound */

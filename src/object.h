@@ -43,6 +43,17 @@ enum {
 	ORIGIN_MAX
 };
 
+enum {
+	TOME_NONE,
+	#define PP(x, a, b, c, d, e) TOME_PP_##x,
+	#include "list-player-powers.h"
+	#undef PP
+	#define SKILL(x, a) TOME_SKILL_##x,
+	#include "list-skills.h"
+	#undef SKILL
+	TOME_MAX
+};
+
 
 /*** Structures ***/
 

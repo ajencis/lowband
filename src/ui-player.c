@@ -841,7 +841,7 @@ static struct panel *get_panel_skills(void) {
 	++hgt;
 
 	/* Stealth */
-	desc = likert(player->state.skills[SKILL_STEALTH], 1, &attr);
+	desc = likert(player->state.skills[SKILL_STEALTH], 5, &attr);
 	panel_line(p, attr, "Stealth", "%s", desc);
 	++hgt;
 

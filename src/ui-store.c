@@ -407,21 +407,21 @@ static void store_display_help(struct store_context *ctx)
 	text_out(" an item. ");
 
 	if (!ctx->inspect_only) {
-		if (OPT(player, birth_no_selling) && !is_home) {
+		/*if (OPT(player, birth_no_selling) && !is_home) {
 			text_out_c(COLOUR_L_GREEN, "d");
 			text_out(" (or ");
 			text_out_c(COLOUR_L_GREEN, "s");
 			text_out(")");
 			text_out(" gives an item to the store in return for its identification. Some wands and staves will also be recharged. ");
-		} else {
-			text_out_c(COLOUR_L_GREEN, "d");
-			text_out(" (or ");
-			text_out_c(COLOUR_L_GREEN, "s");
-			text_out(")");
-			if (is_home) text_out(" drops");
-			else text_out(" sells");
-			text_out(" an item from your inventory. ");
-		}
+		} else {*/
+		text_out_c(COLOUR_L_GREEN, "d");
+		text_out(" (or ");
+		text_out_c(COLOUR_L_GREEN, "s");
+		text_out(")");
+		if (is_home) text_out(" drops");
+		else text_out(" sells");
+		text_out(" an item from your inventory. ");
+		//}
 	}
 	text_out_c(COLOUR_L_GREEN, "I");
 	text_out(" inspects an item from your inventory. ");
@@ -531,7 +531,7 @@ static bool store_sell(struct store_context *ctx)
 	item_tester tester = NULL;
 
 	const char *reject = "You have nothing that I want. ";
-	const char *prompt = OPT(player, birth_no_selling) ? "Give which item? " : "Sell which item? ";
+	const char *prompt = /*OPT(player, birth_no_selling) ? "Give which item? " :*/ "Sell which item? ";
 
 	assert(store);
 
@@ -593,12 +593,13 @@ static bool store_sell(struct store_context *ctx)
 		screen_save();
 
 		/* Show price */
-		if (!OPT(player, birth_no_selling))
+		//if (!OPT(player, birth_no_selling))
+		if (price > 0)
 			prt(format("Price: %ld", (long)price), 1, 0);
 
 		/* Confirm sale */
 		if (!store_get_check(format("%s %s? [ESC, any other key to accept]",
-				OPT(player, birth_no_selling) ? "Give" : "Sell", o_name))) {
+				price == 0 ? "Give" : "Sell", o_name))) {
 			screen_load();
 			return false;
 		}

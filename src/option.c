@@ -350,7 +350,7 @@ void options_restore_maintainer(struct player_options *opts, int page)
 void init_options(void)
 {
 	int opt, page;
-
+	
 	/* Allocate options to pages */
 	for (page = 0; page < OPT_PAGE_MAX; page++) {
 		int page_opts = 0;

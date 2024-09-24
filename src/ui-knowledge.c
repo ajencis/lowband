@@ -2637,7 +2637,7 @@ static void shape_lore_helper_append_to_list(const char* item,
 }
 
 
-static const char *skill_index_to_name(int i)
+const char *skill_index_to_name(int i)
 {
 	const char *name;
 
@@ -2662,16 +2662,20 @@ static const char *skill_index_to_name(int i)
 		name = "searching";
 		break;
 
+	case SKILL_STEALTH:
+		name = "stealth";
+		break;
+
 	case SKILL_TO_HIT_MELEE:
-		name = "melee to hit";
+		name = "melee";
 		break;
 
 	case SKILL_TO_HIT_BOW:
-		name = "shooting to hit";
+		name = "shooting";
 		break;
 
 	case SKILL_TO_HIT_THROW:
-		name = "throwing to hit";
+		name = "throwing";
 		break;
 
 	case SKILL_DIGGING:

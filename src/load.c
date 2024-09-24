@@ -756,9 +756,12 @@ int rd_player(void)
 		player->body.slots[i].name = string_make(buf);
 	}
 
-	// L: extra powers
+	// L: extra powers and extra skills
 	for (i = 0; i < PP_MAX; i++) {
 		rd_u16b(&player->extra_powers[i]);
+	}
+	for (i = 0; i < SKILL_MAX; i++) {
+		rd_u16b(&player->extra_skills[i]);
 	}
 
 	strip_bytes(4);

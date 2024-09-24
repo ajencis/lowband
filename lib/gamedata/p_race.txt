@@ -91,7 +91,7 @@ skill-disarm-phys:2
 skill-disarm-magic:2
 skill-device:3
 skill-save:3
-skill-stealth:1
+skill-stealth:5
 skill-search:3
 skill-melee:-1
 skill-shoot:5
@@ -113,7 +113,7 @@ skill-disarm-phys:5
 skill-disarm-magic:5
 skill-device:6
 skill-save:6
-skill-stealth:2
+skill-stealth:10
 skill-search:6
 skill-melee:-5
 skill-shoot:15
@@ -137,7 +137,7 @@ skill-disarm-phys:15
 skill-disarm-magic:15
 skill-device:18
 skill-save:18
-skill-stealth:4
+skill-stealth:20
 skill-search:6
 skill-melee:-10
 skill-shoot:20
@@ -160,7 +160,7 @@ skill-disarm-phys:10
 skill-disarm-magic:10
 skill-device:22
 skill-save:12
-skill-stealth:3
+skill-stealth:15
 skill-search:4
 skill-melee:-8
 skill-shoot:12
@@ -183,7 +183,7 @@ skill-disarm-phys:2
 skill-disarm-magic:2
 skill-device:9
 skill-save:9
-skill-stealth:-1
+skill-stealth:-5
 skill-search:2
 skill-melee:15
 skill-shoot:0
@@ -206,7 +206,7 @@ skill-disarm-phys:-3
 skill-disarm-magic:-3
 skill-device:-3
 skill-save:-3
-skill-stealth:-1
+skill-stealth:-5
 skill-search:-3
 skill-melee:12
 skill-shoot:-5
@@ -228,7 +228,7 @@ skill-disarm-phys:-5
 skill-disarm-magic:-5
 skill-device:-8
 skill-save:-8
-skill-stealth:-2
+skill-stealth:-10
 skill-search:-9
 skill-melee:20
 skill-shoot:-10
@@ -250,7 +250,7 @@ skill-disarm-phys:4
 skill-disarm-magic:4
 skill-device:5
 skill-save:5
-skill-stealth:1
+skill-stealth:5
 skill-search:3
 skill-melee:15
 skill-shoot:10
@@ -272,7 +272,7 @@ skill-disarm-phys:4
 skill-disarm-magic:4
 skill-device:20
 skill-save:20
-skill-stealth:2
+skill-stealth:10
 skill-search:10
 skill-melee:10
 skill-shoot:25
@@ -296,7 +296,7 @@ skill-disarm-phys:10
 skill-disarm-magic:10
 skill-device:5
 skill-save:0
-skill-stealth:3
+skill-stealth:15
 skill-search:10
 skill-melee:-5
 skill-shoot:10
@@ -320,7 +320,7 @@ skill-disarm-phys:10
 skill-disarm-magic:10
 skill-device:5
 skill-save:5
-skill-stealth:5
+skill-stealth:25
 skill-search:10
 skill-melee:5
 skill-shoot:0
@@ -338,9 +338,6 @@ height:37:4
 weight:65:5
 values:RES_POIS[1] | RES_NETHER[1]
 monster:vampire
-monster:master vampire
-monster:vampire lord
-monster:elder vampire
 body:Humanoid
 
 name:Eyestalk
@@ -349,7 +346,7 @@ skill-disarm-phys:0
 skill-disarm-magic:5
 skill-device:10
 skill-save:5
-skill-stealth:4
+skill-stealth:20
 skill-search:20
 skill-melee:-10
 skill-shoot:0
@@ -366,19 +363,15 @@ weight:190:20
 obj-flags:SEE_INVIS
 values:RES_DARK[-1]
 monster:floating eye
-monster:spectator
-monster:gauth
-monster:beholder
-monster:beholder hive-mother
 body:Beholder
 
-name:Red Draconian
+name:Draconian
 stats:1:1:-1:-1:1
 skill-disarm-phys:0
 skill-disarm-magic:0
 skill-device:5
 skill-save:10
-skill-stealth:2
+skill-stealth:10
 skill-search:15
 skill-melee:15
 skill-shoot:0
@@ -393,9 +386,10 @@ age:100:50
 height:80:6
 weight:190:20
 monster:baby red dragon
-monster:young red dragon
-monster:mature red dragon
-monster:ancient red dragon
+monster:baby blue dragon
+monster:baby white dragon
+monster:baby green dragon
+monster:baby black dragon
 body:Dragon
 
 name:Tiefling
@@ -404,7 +398,7 @@ skill-disarm-phys:0
 skill-disarm-magic:0
 skill-device:15
 skill-save:10
-skill-stealth:3
+skill-stealth:15
 skill-search:5
 skill-melee:10
 skill-shoot:5
@@ -419,7 +413,4 @@ age:100:50
 height:80:6
 weight:190:20
 monster:bodak
-monster:nalfeshnee
-monster:lesser Balrog
-monster:greater Balrog
 body:Humanoid

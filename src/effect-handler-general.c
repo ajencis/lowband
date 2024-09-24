@@ -98,7 +98,7 @@ struct monster *monster_target_monster(effect_handler_context_t *context)
 	if (context->origin.what == SRC_MONSTER) {
 		struct monster *mon = cave_monster(cave, context->origin.which.monster);
 		if (!mon) return NULL;
-		if (mon->target.midx > 0) {
+		if (mon->target.who == TARGET_WHO_MONSTER) {
 			struct monster *t_mon = cave_monster(cave, mon->target.midx);
 			assert(t_mon);
 			return t_mon;

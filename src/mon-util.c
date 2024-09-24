@@ -1363,7 +1363,7 @@ bool monster_taking_terrain_damage(struct chunk *c, struct monster *mon)
 
 struct object *monster_nearest_takeable_item(struct chunk *c, struct monster *mon) {
     if (!rf_has(mon->race->flags, RF_TAKE_ITEM)) return NULL;
-	int i; int dist = 100;
+	int i; int dist = z_info->max_sight;
 	struct object *obj;
 	struct object *best = NULL;
 
@@ -1373,9 +1373,10 @@ struct object *monster_nearest_takeable_item(struct chunk *c, struct monster *mo
 		if (tval_is_money(obj)) continue;
 		if (obj->mimicking_m_idx) continue;
 		if (react_to_slay(obj, mon)) continue;
-        if (los(cave, mon->grid, obj->grid) && 
-		        distance(mon->grid, obj->grid) < dist) {
+        if (!los(cave, mon->grid, obj->grid)) continue;
+		if (distance(mon->grid, obj->grid) < dist) {
 			best = obj;
+			dist = distance(mon->grid, obj->grid);
 		}
 	}
 	return best;
@@ -1470,7 +1471,7 @@ void steal_monster_item(struct monster *mon, int midx)
 		bool unique = monster_is_unique(mon);
 		int guard = (mon->race->level * (unique ? 4 : 3)) / 4 +
 			mon->mspeed - player->state.speed;
-		int steal_skill = player->state.skills[SKILL_STEALTH] +
+		int steal_skill = player->state.skills[SKILL_STEALTH] / 5 +
 			adj_dex_th(player->state.stat_ind[STAT_DEX]);
 		int monster_reaction;
 
@@ -1499,7 +1500,7 @@ void steal_monster_item(struct monster *mon, int midx)
 
 		/* Try and steal */
 		if (monster_reaction < steal_skill) {
-			int wake = 35 - player->state.skills[SKILL_STEALTH];
+			int wake = 35 - player->state.skills[SKILL_STEALTH] / 5;
 
 			/* Success! */
 			obj->held_m_idx = 0;
@@ -1742,6 +1743,22 @@ bool monster_revert_shape(struct monster *mon)
 }
 
 
+static bool race_has_drops(struct monster_race *mr)
+{
+	assert(mr);
+
+	if (rf_has(mr->flags, RF_DROP_20)) return true;
+	if (rf_has(mr->flags, RF_DROP_40)) return true;
+	if (rf_has(mr->flags, RF_DROP_60)) return true;
+	if (rf_has(mr->flags, RF_DROP_1)) return true;
+	if (rf_has(mr->flags, RF_DROP_2)) return true;
+	if (rf_has(mr->flags, RF_DROP_3)) return true;
+	if (rf_has(mr->flags, RF_DROP_4)) return true;
+	if (mr->drops) return true;
+	
+	return false;
+}
+
 static void rearrange_monster(struct monster_race *mr)
 {
 	int power = mr->level + randint0(mr->level / 5 + 1) - randint0(mr->level / 5 + 1);
@@ -1861,6 +1878,9 @@ void rearrange_monsters(struct monster_race *mraces, uint32_t seed)
 		if (curr->base == pbase) continue;
 		if (curr->level <= 0) continue;
 		rearrange_monster(curr);
+
+		if (race_has_drops(curr))
+			rf_on(curr->flags, RF_TAKE_ITEM);
 	}
 	Rand_quick = false;
 }

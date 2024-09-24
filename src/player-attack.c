@@ -833,24 +833,14 @@ struct attack_roll get_weapon_attack(struct player *p, struct player_state *ps, 
 
 static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow)
 {
-	bool foundempty = false;
+	/*bool foundempty = false;
 	bool foundfull = false;
 	int j;
-	struct object *obj;
+	struct object *obj;*/
 
 	if (blow->method->skill == SKILL_SEARCH) {
 		if (p->timed[TMD_BLIND]) return false;
 	}
-
-	for (j = 0; j < p->body.count; j++) {
-		if (!slot_type_is(p, j, blow->method->equip_slot)) continue;
-
-		obj = slot_object(p, j);
-
-		if (obj) foundfull = true;
-		else foundempty = true;
-	}
-	if (foundfull && !foundempty) return false;
 
 	return true;
 }
@@ -918,26 +908,36 @@ int get_monster_attacks(struct player *p, struct player_state *ps,
 {
 	if (!mr) return 0;
 	if (!mr->blow[0].method) return 0;
-	//struct monster_blow *mb;
-	int mbi, pai = 0;
+	int i, pai = 0;
 
-	/*for (mbi = 0; mbi < z_info->mon_blows_max && mr->blow[mbi].method; mbi++) {
-		mb = &mr->blow[mbi];
-		if (!monster_attack_is_usable(p, mb)) continue;
-		currdam = (mb->dice.sides + 1) * mb->dice.dice;
-		currdam += adj_str_td(p->state.stat_ind[mon_blow_dam_stat(mb, p)]) * 2;
-		if (currdam > bestblowdam) {
-			bestblow = mbi;
-			bestblowdam = currdam;
+	int slotsfull[EQUIP_MAX] = { 0 };
+	int slotsempty[EQUIP_MAX] = { 0 };
+	int availslots[EQUIP_MAX] = { 0 };
+
+	for (i = 0; i < p->body.count; i++) {
+		struct equip_slot *slot = &p->body.slots[i];
+		if (slot->obj) slotsfull[slot->type]++;
+		else slotsempty[slot->type]++;
+	}
+
+	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
+		availslots[mr->blow[i].method->equip_slot]++;
+	}
+
+	for (i = EQUIP_NONE + 1; i < EQUIP_MAX; i++) {
+		if (slotsfull[i] && slotsempty[i]) {
+			availslots[i] *= slotsempty[i];
+			availslots[i] /= slotsempty[i] + slotsfull[i];
 		}
 	}
 
-	if (bestblow >= 0) {
-		if (get_monster_attack(p, mr, aroll, bestblow))	++pai;
-	}*/
+	for (i = 0; i < z_info->mon_blows_max && pai < maxnum && mr->blow[i].method; i++) {
+		struct monster_blow *mb = &mr->blow[i];
+		if (!availslots[mb->method->equip_slot]) continue;
 
-	for (mbi = 0; mbi < z_info->mon_blows_max && pai < maxnum && mr->blow[mbi].method; mbi++) {
-		if (get_monster_attack(p, ps, mr, &aroll[pai], mbi)) ++pai;
+		if (get_monster_attack(p, ps, mr, &aroll[pai], i)) ++pai;
+
+		availslots[mb->method->equip_slot]--;
 	}
 
 	return pai;
@@ -1344,7 +1344,7 @@ void py_attack(struct player *p, struct loc grid)
 	}*/
 
 	if (!slain) {
-		mon->target.midx = MON_TARGET_PLAYER;
+		mon->target.who = TARGET_WHO_PLAYER;
 	}
 
 	/* Hack - delay fear messages */

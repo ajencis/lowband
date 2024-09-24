@@ -112,7 +112,7 @@ static void spell_message(struct monster *mon,
 	}
 
 	/* Get the target monster, if any */
-	if (mon->target.midx > 0) {
+	if (mon->target.who == TARGET_WHO_MONSTER) {
 		t_mon = cave_monster(cave, mon->target.midx);
 	}
 
@@ -216,7 +216,7 @@ static void spell_message(struct monster *mon,
 
 				case SPELL_TAG_TARGET: {
 					char m_name[80];
-					if (mon->target.midx > 0) {
+					if (mon->target.who == TARGET_WHO_MONSTER) {
 						int mdesc_mode = MDESC_TARG;
 
 						if (!strchr(punct, *in_cursor)) {
@@ -348,7 +348,7 @@ void do_mon_spell(int index, struct monster *mon, bool seen)
 
 	bool ident = false;
 	bool hits;
-	int target_midx = mon->target.midx;
+	int target_midx = mon->target.who == TARGET_WHO_MONSTER ? mon->target.midx : 0;
 
 	/* See if it hits */
 	if (spell->hit == 100) {

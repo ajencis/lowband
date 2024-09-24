@@ -22,6 +22,7 @@
 #include "datafile.h"
 #include "monster.h"
 
+const char *skill_index_to_name(int i);
 void textui_browse_object_knowledge(const char *name, int row);
 void textui_knowledge_init(void);
 void textui_knowledge_cleanup(void);

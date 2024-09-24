@@ -893,6 +893,7 @@ bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 
 	if (square_monster(cave, grid) && square_monster(cave, mgrid)) {
 		t_mon->target.midx = mon->midx;
+		t_mon->target.who = TARGET_WHO_MONSTER;
 	}
 
 	/* Blink away */

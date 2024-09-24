@@ -146,6 +146,12 @@ extern size_t my_strcat(char *buf, const char *src, size_t bufsize);
 void my_strcap(char *buf);
 
 /**
+ * L: Capitalize all letters in string 'buf' that start the
+ * string or are preceded by a space
+ */
+void my_strcap_full(char *buf);
+
+/**
  * Test equality, prefix, suffix
  */
 extern bool streq(const char *s, const char *t);

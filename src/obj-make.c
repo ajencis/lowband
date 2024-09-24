@@ -72,9 +72,12 @@ static int num_money_types;
 
 static const int power_weights[] = {
 	0,
-	#define PP(x, a, b, c) c,
+	#define PP(x, a, b, c, d, e) d,
 	#include "list-player-powers.h"
 	#undef PP
+	#define SKILL(x, a) 7,
+	#include "list-skills.h"
+	#undef SKILL
 	0
 };
 
@@ -864,11 +867,11 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 			 of_has(obj->kind->flags, OF_POWER_LEARN_2) ||
 			 of_has(obj->kind->flags, OF_POWER_LEARN_1)) {
 		int sum = 0, choice;
-		for (i = PP_NONE + 1; i < PP_MAX; i++) {
+		for (i = TOME_NONE + 1; i < TOME_MAX; i++) {
 			sum += power_weights[i];
 		}
 		choice = randint0(sum);
-		for (i = PP_NONE + 1; i < PP_MAX; i++) {
+		for (i = TOME_NONE + 1; i < TOME_MAX; i++) {
 			if (power_weights[i] > choice) break;
 			choice -= power_weights[i];
 		}
@@ -1339,7 +1342,7 @@ struct object *make_gold(int lev, const char *coin_type)
 	object_prep(new_gold, money_kind(coin_type, value), lev, RANDOMISE);
 
 	/* If we're playing with no_selling, increase the value */
-	if (OPT(player, birth_no_selling) && player->depth)	{
+	if (/*OPT(player, birth_no_selling) && */player->depth)	{
 		value *= 5;
 	}
 

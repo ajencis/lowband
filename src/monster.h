@@ -306,6 +306,12 @@ struct monster_shape {
 	struct monster_base *base;
 };
 
+struct monster_evolution {
+	struct monster_evolution *next;
+	char *name;
+	struct monster_race *race;
+};
+
 /**
  * Monster "race" information, including racial memories
  *
@@ -375,6 +381,8 @@ struct monster_race {
 
 	bool is_playable;		/* L: can players be one of these potentially */
 	char *short_name;		/* L: if we need to display the name in fewer characters */
+
+	struct monster_evolution *evol;	/* L: monster into which it evolves */
 };
 
 

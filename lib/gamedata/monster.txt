@@ -693,6 +693,7 @@ desc:It is a large slimy mass of worms.
 
 name:floating eye
 base:eye
+evolution:radiation eye
 color:o
 speed:110
 hit-points:11
@@ -1427,6 +1428,7 @@ desc:It is a disgusting mass of poisonous worms.
 
 name:radiation eye
 base:eye
+evolution:disenchanter eye
 color:R
 speed:110
 hit-points:11
@@ -1829,6 +1831,7 @@ desc:It is a smallish, slimy, icky, nasty creature.
 
 name:disenchanter eye
 base:eye
+evolution:bloodshot eye
 color:v
 speed:100
 hit-points:32
@@ -2071,7 +2074,7 @@ rarity:2
 experience:18
 blow:BITE:HURT:1d3
 flags:RAND_25
-flags:IM_FIRE | NO_STUN
+flags:NO_STUN
 innate-freq:10
 spells:BR_SOUN
 desc:Large beating wings support this dazzling insect.  A loud buzzing noise
@@ -2142,6 +2145,7 @@ desc:It scuttles towards you.
 
 name:bloodshot eye
 base:eye
+evolution:evil eye
 color:r
 speed:110
 hit-points:45
@@ -2615,6 +2619,8 @@ spells:BLINK | WOUND | MISSILE
 desc:An orc dressed in skins who gestures wildly.
 
 name:baby blue dragon
+short-name:baby blue
+evolution:young blue dragon
 base:dragon
 color:b
 speed:110
@@ -2637,6 +2643,8 @@ desc:This hatchling dragon is still soft, its eyes unaccustomed to light and its
 desc: scales a pale blue.
 
 name:baby white dragon
+short-name:baby white
+evolution:young white dragon
 base:dragon
 color:w
 speed:110
@@ -2659,6 +2667,8 @@ desc:This hatchling dragon is still soft, its eyes unaccustomed to light and its
 desc: scales a pale white.
 
 name:baby green dragon
+short-name:baby green
+evolution:young green dragon
 base:dragon
 color:g
 speed:110
@@ -2681,6 +2691,8 @@ desc:This hatchling dragon is still soft, its eyes unaccustomed to light and its
 desc: scales a sickly green.
 
 name:baby black dragon
+short-name:baby black
+evolution:young black dragon
 base:dragon
 color:s
 speed:110
@@ -2704,6 +2716,7 @@ desc: scales a dull black.
 
 name:baby red dragon
 short-name:baby red
+evolution:young red dragon
 base:dragon
 color:r
 speed:110
@@ -2781,6 +2794,8 @@ spells:SPIT
 desc:It is a large snake with a hooded face.
 
 name:baby gold dragon
+short-name:baby gold
+evolution:young gold dragon
 base:dragon
 color:y
 speed:110
@@ -3153,6 +3168,8 @@ desc:She is dressed in black and smells of decay.
 ### Dungeon level 11 ###
 
 name:baby multi-hued dragon
+short-name:baby multi
+evolution:young multi-hued dragon
 base:dragon
 color:v
 speed:110
@@ -3351,7 +3368,7 @@ blow:HIT:HURT:1d10
 blow:HIT:HURT:1d10
 flags:UNIQUE | NAME_COMMA
 flags:DROP_2 | DROP_GOOD | ONLY_ITEM
-flags:IM_COLD | IM_ELEC | IM_FIRE
+flags:IM_COLD | IM_ELEC
 friends:50:4d4:snaga:servant
 friends:80:2d7:Warg
 friends:100:5d4:Hill orc:servant
@@ -4152,7 +4169,7 @@ blow:HIT:HURT:1d8
 blow:HIT:HURT:1d8
 flags:COLD_BLOOD
 flags:BASH_DOOR
-flags:HURT_ROCK | IM_COLD | IM_FIRE
+flags:HURT_ROCK | IM_COLD
 desc:It is a massive animated statue made out of hardened clay.
 
 name:giant tan bat
@@ -4214,7 +4231,7 @@ blow:TOUCH:ACID:1d10
 flags:COLD_BLOOD
 flags:DROP_4
 flags:OPEN_DOOR | BASH_DOOR | TAKE_ITEM
-flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE
+flags:IM_ACID | IM_COLD | IM_ELEC
 flags:NO_CONF | NO_SLEEP
 flags-off:HURT_COLD
 desc:It is a strange, vast gelatinous structure that assumes cubic proportions
@@ -4499,7 +4516,7 @@ blow:HIT:HURT:1d8
 blow:HIT:HURT:1d8
 flags:COLD_BLOOD
 flags:RAND_25 | PASS_WALL
-flags:HURT_ROCK | IM_COLD | IM_ELEC | IM_FIRE
+flags:HURT_ROCK | IM_COLD | IM_ELEC
 desc:A whirling form of sentient rock.
 
 ### Dungeon level 18 ###
@@ -4741,6 +4758,7 @@ desc: stench, waking all it nears.
 
 name:evil eye
 base:eye
+evolution:spectator
 color:g
 speed:110
 hit-points:68
@@ -4830,7 +4848,7 @@ blow:HIT:HURT:1d10
 blow:HIT:HURT:1d10
 flags:COLD_BLOOD
 flags:BASH_DOOR
-flags:HURT_ROCK | IM_COLD | IM_FIRE
+flags:HURT_ROCK | IM_COLD
 desc:It is a massive animated statue.
 
 name:red mold
@@ -5421,7 +5439,7 @@ blow:HIT:HURT:3d5
 blow:HIT:HURT:3d5
 flags:UNIQUE | NAME_COMMA | MOVE_BODY
 flags:DROP_1 | DROP_GOOD | ONLY_ITEM
-flags:IM_COLD | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
+flags:IM_COLD | NO_CONF | NO_SLEEP | NO_HOLD
 friends:50:2d4:Half-orc:servant
 friends:80:2d5:Warg
 friends:100:4d4:Uruk:bodyguard
@@ -5709,7 +5727,7 @@ blow:HIT:HURT:3d6
 blow:HIT:DISENCHANT
 flags:UNIQUE | MALE | NAME_COMMA
 flags:DROP_1 | DROP_GOOD | ONLY_ITEM
-flags:IM_COLD | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
+flags:IM_COLD | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:8
 spells:HEAL | SLOW
@@ -5734,7 +5752,7 @@ blow:HIT:HURT:3d6
 blow:HIT:DISENCHANT
 flags:UNIQUE | MALE | NAME_COMMA
 flags:DROP_1 | DROP_GOOD | ONLY_ITEM
-flags:IM_COLD | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
+flags:IM_COLD | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:8
 spells:HEAL | SLOW
@@ -5819,7 +5837,7 @@ blow:HIT:HURT:4d6
 flags:UNIQUE | MALE | EVIL
 flags:DROP_60 | DROP_1 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR
-flags:IM_ELEC | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
+flags:IM_ELEC | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:4
 spells:CONF | SLOW
@@ -5845,7 +5863,7 @@ blow:HIT:HURT:4d6
 flags:UNIQUE | MALE | EVIL
 flags:DROP_60 | DROP_1 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR
-flags:IM_ELEC | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
+flags:IM_ELEC | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:4
 spells:CONF | SLOW
@@ -5985,7 +6003,7 @@ blow:HIT:HURT:1d12
 blow:HIT:HURT:3d6
 flags:COLD_BLOOD
 flags:BASH_DOOR
-flags:HURT_ROCK | IM_COLD | IM_FIRE | IM_POIS
+flags:HURT_ROCK | IM_COLD | IM_POIS
 flags:FORCE_SLEEP
 spell-freq:4
 spells:CONF | SLOW
@@ -6275,7 +6293,7 @@ blow:HIT:HURT:3d8
 blow:HIT:DISENCHANT
 flags:UNIQUE | MALE | NAME_COMMA | EVIL
 flags:DROP_2 | DROP_GOOD | DROP_GREAT | ONLY_ITEM
-flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE | NO_CONF
+flags:IM_ACID | IM_COLD | IM_ELEC | NO_CONF
 flags:NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:6
@@ -6402,6 +6420,7 @@ desc: hound.  Or is it just your imagination?
 
 name:vampire
 base:vampire
+evolution:master vampire
 color:W
 speed:110
 hit-points:163
@@ -6772,6 +6791,7 @@ desc: seeks livelier prey.
 
 name:spectator
 base:eye
+evolution:gauth
 color:B
 speed:110
 hit-points:171
@@ -6962,6 +6982,8 @@ mimic:ring:Free Action
 mimic:ring:See Invisible
 
 name:young blue dragon
+short-name:young blue
+evolution:mature blue dragon
 base:dragon
 color:b
 speed:110
@@ -6986,6 +7008,8 @@ desc:It has a form that legends are made of.  Its still-tender scales are a deep
 desc: blue in hue.  Sparks crackle along its length.
 
 name:young white dragon
+short-name:young white
+evolution:mature white dragon
 base:dragon
 color:w
 speed:110
@@ -7010,6 +7034,8 @@ desc:It has a form that legends are made of.  Its still-tender scales are a
 desc: frosty white in hue.  Icy blasts of cold air come from it as it breathes.
 
 name:young green dragon
+short-name:young green
+evolution:mature green dragon
 base:dragon
 color:g
 speed:110
@@ -7101,7 +7127,7 @@ blow:HIT:HURT:5d5
 flags:COLD_BLOOD | METAL
 flags:DROP_2 | ONLY_GOLD
 flags:BASH_DOOR
-flags:IM_COLD | IM_FIRE
+flags:IM_COLD
 desc:It is a massive statue of purest mithril.  It looks expensive!
 
 name:skeleton troll
@@ -7397,6 +7423,8 @@ blow:WAIL:TERRIFY:5d6
 desc:It is a giant beetle that produces a chilling sound.
 
 name:young black dragon
+short-name:young black
+evolution:mature black dragon
 base:dragon
 color:s
 speed:110
@@ -7421,6 +7449,8 @@ desc:It has a form that legends are made of.  Its still-tender scales are a
 desc: darkest black hue.  Acid drips from its body.
 
 name:young gold dragon
+short-name:young gold
+evolution:mature gold dragon
 base:dragon
 color:y
 speed:110
@@ -7445,6 +7475,7 @@ desc: tarnished gold hue, and light is reflected from its form.
 
 name:young red dragon
 short-name:young red
+evolution:mature red dragon
 base:dragon
 color:r
 speed:110
@@ -7606,6 +7637,8 @@ desc:A mass of green vegetation.  You don't remember seeing anything like it
 desc: before.
 
 name:young multi-hued dragon
+short-name:young multi
+evolution:mature multi-hued dragon
 base:dragon
 color:v
 speed:110
@@ -7838,7 +7871,7 @@ blow:CLAW:HURT:2d4
 blow:BITE:HURT:3d6
 flags:DROP_3 | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR
-flags:IM_FIRE | IM_DISEN | NO_CONF | NO_SLEEP
+flags:IM_DISEN | NO_CONF | NO_SLEEP
 flags:ATTR_MULTI
 innate-freq:12
 spell-freq:13
@@ -7887,7 +7920,7 @@ blow:CLAW:HURT:2d4
 blow:BITE:HURT:3d6
 flags:DROP_3 | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR
-flags:IM_COLD | IM_FIRE | IM_DISEN | NO_CONF | NO_SLEEP | NO_STUN
+flags:IM_COLD | IM_DISEN | NO_CONF | NO_SLEEP | NO_STUN
 innate-freq:9
 spell-freq:12
 spells:CONF | SCARE | SLOW
@@ -7957,7 +7990,7 @@ blow:HIT:HURT:1d10
 blow:HIT:HURT:1d10
 flags:COLD_BLOOD
 flags:RAND_25 | BASH_DOOR | KILL_BODY | KILL_ITEM
-flags:IM_ACID | IM_COLD | IM_FIRE | IM_WATER
+flags:IM_ACID | IM_COLD | IM_WATER
 flags:FORCE_SLEEP
 spell-freq:6
 spells:BO_COLD
@@ -8185,7 +8218,7 @@ blow:HIT:HURT:4d6
 blow:HIT:HURT:4d6
 flags:COLD_BLOOD
 flags:PASS_WALL | KILL_BODY | KILL_ITEM
-flags:HURT_ROCK | IM_COLD | IM_ELEC | IM_FIRE
+flags:HURT_ROCK | IM_COLD | IM_ELEC
 flags:FORCE_SLEEP
 spell-freq:8
 spells:BO_ACID
@@ -8231,7 +8264,7 @@ blow:HIT:HURT:6d6
 flags:COLD_BLOOD
 flags:DROP_2 | ONLY_GOLD
 flags:BASH_DOOR
-flags:IM_COLD | IM_FIRE
+flags:IM_COLD
 desc:It is a massive deep brown statue, striding towards you with an
 desc: all-too-familiar purpose.  Your magic surprisingly feels much less
 desc: powerful now.
@@ -8495,7 +8528,7 @@ blow:GAZE:LOSE_STR
 blow:GAZE:HALLU
 flags:EVIL | COLD_BLOOD
 flags:NEVER_MOVE
-flags:HURT_ROCK | HURT_LIGHT | IM_COLD | IM_FIRE
+flags:HURT_ROCK | HURT_LIGHT | IM_COLD
 innate-freq:10
 spell-freq:6
 spells:CONF | DRAIN_MANA | HOLD | MIND_BLAST | SHRIEK
@@ -8579,6 +8612,7 @@ desc:It is a twenty foot tall giant wreathed in clouds.
 
 name:master vampire
 short-name:master
+evolution:vampire lord
 base:vampire
 color:g
 speed:110
@@ -8619,7 +8653,7 @@ blow:TOUCH:ACID:1d10
 blow:TOUCH:ACID:1d10
 flags:COLD_BLOOD | POWERFUL
 flags:BASH_DOOR | KILL_BODY | KILL_ITEM
-flags:IM_ACID | IM_COLD | IM_FIRE
+flags:IM_ACID | IM_COLD
 flags:FORCE_SLEEP
 spell-freq:5
 spells:BA_ACID
@@ -8663,7 +8697,7 @@ blow:HIT:HURT:1d6
 blow:HIT:HURT:1d6
 blow:HIT:HURT:1d6
 flags:PASS_WALL | KILL_ITEM
-flags:IM_COLD | IM_ELEC | IM_FIRE
+flags:IM_COLD | IM_ELEC
 desc:A huge creature of the element Earth.  Able to merge with its element, it
 desc: has four huge arms protruding from its enormous torso.
 
@@ -8685,7 +8719,7 @@ blow:HIT:HURT:6d6
 blow:HIT:HURT:6d6
 flags:COLD_BLOOD
 flags:BASH_DOOR
-flags:IM_COLD | IM_FIRE
+flags:IM_COLD
 desc:An enormous construct resembling a titan made from stone.  It strides
 desc: purposefully towards you, swinging its slow fists with earth-shattering
 desc: power.
@@ -8710,6 +8744,8 @@ desc: paralyzes them, to be slowly digested later.
 
 name:bodak
 base:minor demon
+evolution:nalfeshnee
+evolution:lesser Balrog
 color:r
 speed:110
 hit-points:193
@@ -8780,7 +8816,7 @@ blow:HIT:HURT:3d8
 flags:UNIQUE | MALE | NAME_COMMA | EVIL
 flags:DROP_2 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR | MOVE_BODY
-flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE | NO_CONF
+flags:IM_ACID | IM_COLD | IM_ELEC | NO_CONF
 flags:NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:4
@@ -8822,6 +8858,7 @@ desc:A figure twisted by evil standing in robes of deepest crimson.
 
 name:gauth
 base:eye
+evolution:beholder
 color:D
 speed:110
 hit-points:264
@@ -9321,6 +9358,8 @@ desc:A man of Harad clad in black and red and carrying a longbow.  His quiver is
 desc: full of red feathered arrows, and carries an insignia of a black serpent.
 
 name:mature white dragon
+short-name:mature white
+evolution:ancient white dragon
 base:dragon
 color:w
 speed:115
@@ -9346,6 +9385,8 @@ friends:50:1d2:Young white dragon
 desc:A large dragon, scales gleaming bright white.
 
 name:mature blue dragon
+short-name:mature blue
+evolution:ancient blue dragon
 base:dragon
 color:b
 speed:115
@@ -9371,6 +9412,8 @@ friends:50:1d2:Young blue dragon
 desc:A large dragon, scales tinted deep blue.
 
 name:mature green dragon
+short-name:mature green
+evolution:ancient green dragon
 base:dragon
 color:g
 speed:115
@@ -9455,6 +9498,7 @@ desc: more than a hatred of all that lives.
 
 name:beholder
 base:eye
+evolution:beholder hive-mother
 color:U
 speed:120
 hit-points:1400
@@ -9649,7 +9693,7 @@ blow:HIT:HURT:3d4
 blow:HIT:HURT:3d4
 flags:DROP_2 | ONLY_GOLD
 flags:PASS_WALL | KILL_ITEM
-flags:IM_COLD | IM_ELEC | IM_FIRE
+flags:IM_COLD | IM_ELEC
 desc:It is a tougher relative of the Xorn.  Its hide glitters with metal ores.
 
 name:giant roc
@@ -9707,7 +9751,6 @@ blow:HIT:HURT:3d4
 blow:CRUSH:HURT:8d12
 blow:CRUSH:HURT:8d12
 flags:DROP_40
-flags:IM_FIRE
 spell-freq:8
 spells:BLIND | CONF
 friends:100:4d4:Same
@@ -9804,6 +9847,7 @@ desc: its tribe.  It fears nothing.
 
 name:mature red dragon
 short-name:mature red
+evolution:ancient red dragon
 base:dragon
 color:r
 speed:115
@@ -9830,6 +9874,8 @@ friends:50:1d2:Young red dragon
 desc:A large dragon, scales tinted deep red.
 
 name:mature gold dragon
+short-name:mature gold
+evolution:ancient gold dragon
 base:dragon
 color:y
 speed:115
@@ -9855,6 +9901,8 @@ friends:50:1d2:Young gold dragon
 desc:A large dragon with scales of gleaming gold.
 
 name:mature black dragon
+short-name:mature black
+evolution:ancient black dragon
 base:dragon
 color:s
 speed:115
@@ -9981,7 +10029,7 @@ blow:HIT:HURT:5d5
 flags:MALE | INVISIBLE
 flags:DROP_2 | ONLY_ITEM
 flags:OPEN_DOOR | TAKE_ITEM
-flags:IM_COLD | IM_ELEC | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
+flags:IM_COLD | IM_ELEC | NO_CONF | NO_SLEEP | NO_HOLD
 innate-freq:2
 spell-freq:5
 spells:ARROW | BLINK | HASTE | HEAL
@@ -10192,6 +10240,8 @@ shape:time vortex
 desc:A servant of Mandos, the summoner of the spirits of the slain.
 
 name:mature multi-hued dragon
+short-name:mature multi
+evolution:ancient multi-hued dragon
 base:dragon
 color:v
 speed:115
@@ -10260,7 +10310,7 @@ blow:HIT:HURT:5d5
 blow:HIT:HURT:5d5
 flags:UNIQUE | NAME_COMMA | COLD_BLOOD | POWERFUL
 flags:RAND_25 | BASH_DOOR | KILL_BODY | KILL_ITEM
-flags:IM_ACID | IM_COLD | IM_FIRE | IM_WATER
+flags:IM_ACID | IM_COLD | IM_WATER
 flags:FORCE_SLEEP
 spell-freq:4
 spells:BA_COLD | BA_WATE
@@ -10283,7 +10333,6 @@ experience:3000
 blow:HIT:HURT:3d4
 blow:HIT:HURT:3d4
 flags:DROP_60
-flags:IM_FIRE
 spell-freq:9
 spells:BO_FIRE
 spells:S_DEMON
@@ -10306,7 +10355,7 @@ blow:HIT:HURT:6d6
 blow:HIT:SHATTER:10d10
 flags:UNIQUE | MALE | NAME_COMMA | COLD_BLOOD | POWERFUL
 flags:PASS_WALL | KILL_BODY | KILL_ITEM
-flags:HURT_ROCK | IM_COLD | IM_ELEC | IM_FIRE
+flags:HURT_ROCK | IM_COLD | IM_ELEC
 flags:FORCE_SLEEP
 spell-freq:6
 spells:BA_ACID | BA_SHAR
@@ -10501,7 +10550,7 @@ blow:GAZE:LOSE_INT:3d6
 blow:BITE:EXP_40:7d6
 flags:UNDEAD | EVIL | COLD_BLOOD | SPIRIT
 flags:BASH_DOOR
-flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE | IM_POIS | NO_CONF
+flags:IM_ACID | IM_COLD | IM_ELEC | IM_POIS | NO_CONF
 flags:NO_SLEEP | NO_STUN
 flags:FORCE_SLEEP
 spell-freq:2
@@ -10622,7 +10671,7 @@ blow:HIT:HURT:9d9
 blow:HIT:HURT:9d9
 flags:DROP_1
 flags:OPEN_DOOR | MOVE_BODY | TAKE_ITEM
-flags:IM_ACID | IM_COLD | IM_FIRE
+flags:IM_ACID | IM_COLD
 flags:FORCE_SLEEP
 innate-freq:8
 spells:BOULDER
@@ -10688,6 +10737,7 @@ desc: frame.
 
 name:vampire lord
 base:vampire
+evolution:elder vampire
 color:b
 speed:120
 hit-points:1400
@@ -10729,7 +10779,6 @@ blow:HIT:HURT:4d6
 blow:HIT:HURT:4d6
 flags:FEMALE
 flags:DROP_1
-flags:IM_FIRE
 spell-freq:9
 spells:BLIND | WOUND
 spells:S_DEMON
@@ -10751,7 +10800,7 @@ blow:SPORE:DISENCHANT:7d7
 blow:SPORE:DISENCHANT:7d7
 blow:SPORE:EXP_80:5d5
 flags:EVIL
-flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE
+flags:IM_ACID | IM_COLD | IM_ELEC
 flags:FORCE_SLEEP | ATTR_FLICKER
 flags-off: HURT_FIRE
 desc:It is the epitome of all that is evil, in a mold.  Its lifeless form draws
@@ -10871,6 +10920,7 @@ desc:It is a twenty-five foot tall giant wreathed in lightning.
 
 name:lesser Balrog
 base:major demon
+evolution:greater Balrog
 color:p
 speed:120
 hit-points:1760
@@ -10936,7 +10986,7 @@ blow:HIT:HURT:3d8
 blow:HIT:HURT:3d8
 flags:UNIQUE | MALE | NAME_COMMA | EVIL | SMART
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
-flags:HURT_LIGHT | IM_COLD | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
+flags:HURT_LIGHT | IM_COLD | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:2
 spells:BLIND | BLINK | WOUND | CONF | DARKNESS | HEAL
@@ -10957,6 +11007,8 @@ desc: Gondolin.
 ### Dungeon level 50 ###
 
 name:ancient blue dragon
+short-name:ancient blue
+evolution:great storm wyrm
 base:ancient dragon
 color:b
 speed:120
@@ -10979,6 +11031,8 @@ spells:BR_ELEC
 desc:A huge draconic form.  Lightning crackles along its length.
 
 name:ancient white dragon
+short-name:ancient white
+evolution:great ice wyrm
 base:ancient dragon
 color:w
 speed:120
@@ -11001,6 +11055,8 @@ spells:BR_COLD
 desc:A huge draconic form.  Frost covers it from head to tail.
 
 name:ancient green dragon
+short-name:ancient green
+evolution:great swamp wyrm
 base:ancient dragon
 color:g
 speed:120
@@ -11119,7 +11175,7 @@ blow:HIT:PARALYZE:15d1
 flags:MALE | INVISIBLE | ATTR_FLICKER
 flags:DROP_2 | ONLY_ITEM
 flags:OPEN_DOOR
-flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE | IM_POIS | NO_CONF
+flags:IM_ACID | IM_COLD | IM_ELEC | IM_POIS | NO_CONF
 flags:NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:3
@@ -11191,6 +11247,8 @@ desc: his fury blisters your skin and melts your flesh!
 ### Dungeon level 51 ###
 
 name:ancient black dragon
+short-name:ancient black
+evolution:great bile wyrm
 base:ancient dragon
 color:s
 speed:120
@@ -11214,6 +11272,7 @@ desc:A huge draconic form.  Pools of acid melt the floor around it.
 
 name:ancient red dragon
 short-name:ancient red
+evolution:great hell wyrm
 base:ancient dragon
 color:r
 speed:120
@@ -11238,6 +11297,8 @@ desc:A huge draconic form.  Wisps of smoke steam from its nostrils and the
 desc: extreme heat surrounding it makes you gasp for breath.
 
 name:ancient gold dragon
+short-name:ancient gold
+evolution:great wyrm of thunder
 base:ancient dragon
 color:y
 speed:120
@@ -11462,7 +11523,7 @@ blow:CLAW:HURT:3d4
 blow:BITE:ACID:3d10
 blow:BITE:BLIND:3d10
 flags:SMART | DROP_1
-flags:IM_FIRE | IM_ACID | NO_FEAR
+flags:IM_ACID | NO_FEAR
 innate-freq:3
 spell-freq:3
 spells:BO_FIRE | BO_ACID
@@ -11474,6 +11535,8 @@ desc: terribly oversized jaws to the stumpy lashing tail, pools of burning
 desc: acid froth and sizzle.
 
 name:ancient multi-hued dragon
+short-name:ancient multi
+evolution:great wyrm of many colours
 base:ancient dragon
 color:v
 speed:120
@@ -11597,7 +11660,7 @@ blow:BITE:POISON:5d10
 blow:BITE:POISON:5d10
 flags:DRAGON | COLD_BLOOD
 flags:OPEN_DOOR | BASH_DOOR
-flags:IM_COLD | IM_FIRE
+flags:IM_COLD
 flags:FORCE_SLEEP
 innate-freq:8
 spell-freq:8
@@ -11792,7 +11855,7 @@ blow:HIT:HURT:8d8
 flags:UNIQUE | MALE | EVIL | SMART | ATTR_FLICKER
 flags:DROP_3 | DROP_GOOD | DROP_GREAT | ONLY_ITEM
 flags:OPEN_DOOR | MOVE_BODY | TAKE_ITEM
-flags:IM_ELEC | IM_FIRE
+flags:IM_ELEC
 flags:FORCE_SLEEP
 spell-freq:6
 spells:HEAL | TELE_AWAY
@@ -11874,7 +11937,7 @@ blow:HIT:PARALYZE:15d1
 flags:MALE | INVISIBLE | ATTR_FLICKER
 flags:DROP_4 | ONLY_ITEM
 flags:OPEN_DOOR
-flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE | IM_POIS | NO_CONF
+flags:IM_ACID | IM_COLD | IM_ELEC | IM_POIS | NO_CONF
 flags:NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:3
@@ -11964,7 +12027,7 @@ blow:HIT:HURT:10d10
 flags:UNIQUE | MALE | EVIL
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:BASH_DOOR
-flags:IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD | NO_STUN
+flags:NO_CONF | NO_SLEEP | NO_HOLD | NO_STUN
 flags:FORCE_SLEEP
 innate-freq:10
 spell-freq:8
@@ -12024,7 +12087,7 @@ blow:HIT:HURT:8d8
 blow:HIT:HURT:8d8
 flags:UNIQUE | MALE
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
-flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE | NO_CONF
+flags:IM_ACID | IM_COLD | IM_ELEC | NO_CONF
 flags:NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:4
@@ -12347,7 +12410,7 @@ blow:CLAW:POISON:4d10
 blow:CLAW:POISON:4d10
 flags:FORCE_SLEEP | SMART | EVIL
 flags:OPEN_DOOR | BASH_DOOR | MOVE_BODY
-flags:IM_COLD | IM_FIRE | IM_NETHER
+flags:IM_COLD | IM_NETHER
 flags:NO_FEAR | NO_CONF | NO_SLEEP
 innate-freq:6
 spell-freq:7
@@ -12518,7 +12581,7 @@ blow:HIT:DRAIN_CHARGES:5d5
 flags:UNIQUE | MALE | EVIL | INVISIBLE | SMART
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR
-flags:IM_COLD | IM_ELEC | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
+flags:IM_COLD | IM_ELEC | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:2
 spells:WOUND | HOLD | TELE_TO | TRAPS
@@ -12548,7 +12611,7 @@ blow:STING:LOSE_STR:5d5
 flags:INVISIBLE | POWERFUL
 flags:DROP_3
 flags:MOVE_BODY
-flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE
+flags:IM_ACID | IM_COLD | IM_ELEC
 spell-freq:6
 spells:SCARE
 spells:BA_COLD | BA_ELEC
@@ -12597,7 +12660,6 @@ rarity:2
 experience:18000
 flags:SMART | ATTR_FLICKER | SPIRIT
 flags:NEVER_BLOW | NEVER_MOVE
-flags:IM_FIRE
 flags:FORCE_SLEEP
 spell-freq:1
 spells:BRAIN_SMASH
@@ -12653,7 +12715,7 @@ blow:BITE:PARALYZE:15d1
 flags:UNIQUE | MALE | NAME_COMMA | INVISIBLE | SPIRIT
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR
-flags:IM_COLD | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
+flags:IM_COLD | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:3
 spells:TELE_TO
@@ -12798,7 +12860,7 @@ blow:HIT:LOSE_STR:6d6
 blow:HIT:LOSE_STR:6d6
 flags:UNDEAD | COLD_BLOOD
 flags:OPEN_DOOR | BASH_DOOR
-flags:IM_COLD | IM_FIRE | NO_STUN
+flags:IM_COLD | NO_STUN
 flags:FORCE_SLEEP
 spell-freq:8
 spells:BRAIN_SMASH | WOUND | DRAIN_MANA | TELE_TO
@@ -12856,7 +12918,7 @@ blow:HIT:CONFUSE:12d12
 blow:HIT:CONFUSE:12d12
 flags:UNIQUE | MALE | NAME_COMMA | SMART | ATTR_FLICKER
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
-flags:TAKE_ITEM | IM_FIRE
+flags:TAKE_ITEM
 flags:FORCE_SLEEP
 innate-freq:6
 spell-freq:4
@@ -12888,7 +12950,7 @@ flags:DROP_2 | ONLY_ITEM
 flags:OPEN_DOOR
 flags:UNDEAD | EVIL | COLD_BLOOD | SPIRIT
 flags:HURT_LIGHT| NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
-flags:IM_FIRE | IM_COLD | IM_POIS | IM_NETHER
+flags:IM_COLD | IM_POIS | IM_NETHER
 flags:FORCE_SLEEP
 flags-off:HURT_COLD
 innate-freq:25
@@ -12941,6 +13003,7 @@ desc: spikes.
 ### Dungeon level 70 ###
 
 name:great storm wyrm
+short-name:storm wyrm
 base:ancient dragon
 color:b
 speed:120
@@ -12970,6 +13033,7 @@ desc: form.  Deep blue scales reflect the flashes and highlight the creature's
 desc: great muscles.  It regards you with contempt.
 
 name:great ice wyrm
+short-name:ice wyrm
 base:ancient dragon
 color:w
 speed:120
@@ -12998,6 +13062,7 @@ desc: extreme cold, or witnessed such an icy stare.  Begone quickly or feel its
 desc: wrath!
 
 name:great swamp wyrm
+short-name:swamp wyrm
 base:ancient dragon
 color:g
 speed:120
@@ -13206,6 +13271,7 @@ desc: squelching step of his approach.
 ### Dungeon level 73 ###
 
 name:great hell wyrm
+short-name:hell wyrm
 base:ancient dragon
 color:r
 speed:120
@@ -13235,6 +13301,7 @@ desc: form.  The air around it scalds you.  Its slightest glance burns you, and
 desc: you truly realize how insignificant you are.
 
 name:great bile wyrm
+short-name:bile wyrm
 base:ancient dragon
 color:s
 speed:120
@@ -13263,6 +13330,7 @@ desc: its form onto the ground.  You shudder when you see the acid eating away
 desc: the very stones of the dungeon - what could it do to you?
 
 name:great wyrm of thunder
+short-name:thunder wyrm
 plural:great wyrms of thunder
 base:ancient dragon
 color:y
@@ -13309,7 +13377,7 @@ blow:HIT:DISENCHANT:8d8
 flags:SMART | ATTR_FLICKER
 flags:DROP_4 | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR
-flags:IM_ELEC | IM_FIRE
+flags:IM_ELEC
 flags:FORCE_SLEEP
 spell-freq:4
 spells:BLIND | BRAIN_SMASH | SCARE
@@ -13338,7 +13406,7 @@ blow:GAZE:LOSE_INT:6d6
 blow:BITE:EXP_80:8d8
 flags:UNIQUE | MALE | NAME_COMMA | EVIL | SMART
 flags:BASH_DOOR
-flags:IM_ACID | IM_COLD | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
+flags:IM_ACID | IM_COLD | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:2
 spells:BLIND | BRAIN_SMASH | CONF | DRAIN_MANA | FORGET | SCARE
@@ -13364,7 +13432,6 @@ rarity:2
 experience:23000
 flags:SMART | ATTR_FLICKER | SPIRIT
 flags:NEVER_BLOW | NEVER_MOVE
-flags:IM_FIRE
 flags:FORCE_SLEEP
 spell-freq:1
 spells:BRAIN_SMASH | WOUND | TRAPS
@@ -13450,7 +13517,7 @@ blow:BITE:HURT:7d14
 blow:BITE:HURT:7d14
 flags:ONLY_ITEM
 flags:BASH_DOOR
-flags:IM_FIRE | IM_DISEN
+flags:IM_DISEN
 flags:ATTR_MULTI
 innate-freq:5
 spell-freq:5
@@ -13849,7 +13916,7 @@ blow:BITE:CONFUSE:5d10
 blow:ENGULF:HALLU:4d10
 flags:FEMALE
 flags:DROP_4 | PASS_WALL
-flags:IM_FIRE | IM_COLD
+flags:IM_COLD
 spell-freq:4
 spells:WOUND | SCARE | BRAIN_SMASH
 spells:BLINK | TELE_SELF_TO
@@ -13874,7 +13941,6 @@ blow:BITE:HURT:7d14
 blow:BITE:HURT:7d14
 flags:ONLY_ITEM
 flags:BASH_DOOR
-flags:IM_FIRE
 flags:ATTR_MULTI
 innate-freq:5
 spell-freq:5
@@ -13928,7 +13994,7 @@ blow:ENGULF:COLD:3d6
 blow:ENGULF:CONFUSE:3d6
 blow:ENGULF:HURT:3d6
 flags:UNIQUE | NAME_COMMA | NEVER_MOVE
-flags:IM_COLD | IM_FIRE | IM_ACID
+flags:IM_COLD | IM_ACID
 flags-off:RAND_50 | BASH_DOOR | CLEAR_WEB
 innate-freq:3
 spell-freq:5
@@ -13988,7 +14054,7 @@ blow:HIT:HURT:8d8
 flags:UNIQUE | MALE | NAME_COMMA | EVIL
 flags:DROP_4 | DROP_GOOD | DROP_GREAT | ONLY_ITEM
 flags:KILL_WALL | MOVE_BODY
-flags:IM_COLD | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
+flags:IM_COLD | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 spell-freq:6
 spells:S_ANIMAL | S_HI_DEMON | S_HI_DRAGON | S_HI_UNDEAD | S_MONSTERS | S_UNIQUE
@@ -14016,7 +14082,6 @@ blow:TOUCH:EXP_40:6d7
 flags:UNIQUE | MALE | INVISIBLE
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR | MOVE_BODY
-flags:IM_FIRE
 flags:FORCE_SLEEP
 spell-freq:3
 spells:BLIND | WOUND | HOLD | SCARE
@@ -14046,7 +14111,7 @@ blow:BITE:HURT:7d14
 flags:ATTR_FLICKER
 flags:ONLY_ITEM
 flags:BASH_DOOR
-flags:IM_COLD | IM_FIRE | IM_DISEN | NO_STUN
+flags:IM_COLD | IM_DISEN | NO_STUN
 innate-freq:5
 spell-freq:5
 spells:BLIND | CONF | SCARE
@@ -14059,6 +14124,7 @@ desc: upstart troublemaker without the wisdom to control your actions.  It will
 desc: destroy you.
 
 name:great wyrm of many colours
+short-name:prismatic wyrm
 plural:great wyrms of many colours
 base:ancient dragon
 color:v
@@ -14102,7 +14168,7 @@ blow:HIT:ELEC:12d12
 blow:HIT:ELEC:12d12
 flags:UNIQUE | MALE | NAME_COMMA | INVISIBLE
 flags:DROP_4 | DROP_GOOD
-flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE
+flags:IM_ACID | IM_COLD | IM_ELEC
 spell-freq:3
 spells:MIND_BLAST
 spells:BA_ELEC
@@ -14218,7 +14284,7 @@ blow:TOUCH:EXP_40:7d7
 flags:UNIQUE | MALE | NAME_COMMA | SMART
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR | MOVE_BODY
-flags:IM_ACID | IM_FIRE
+flags:IM_ACID
 flags:FORCE_SLEEP
 spell-freq:2
 spells:BLIND | WOUND | HOLD | SCARE | TELE_LEVEL
@@ -14246,7 +14312,6 @@ blow:TOUCH:POISON:5d5
 flags:UNIQUE | MALE | NAME_COMMA | SMART | SPIRIT | ATTR_FLICKER
 flags:DROP_4 | DROP_GOOD | DROP_GREAT | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR
-flags:IM_FIRE
 flags:FORCE_SLEEP
 spell-freq:2
 spell-power:110
@@ -14374,7 +14439,7 @@ blow:TOUCH:DRAIN_CHARGES
 flags:UNIQUE | POWERFUL
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR | MOVE_BODY
-flags:IM_COLD | IM_FIRE | IM_DISEN | NO_CONF | NO_SLEEP | NO_HOLD
+flags:IM_COLD | IM_DISEN | NO_CONF | NO_SLEEP | NO_HOLD
 flags:ATTR_MULTI | FORCE_SLEEP
 flags-off:HURT_COLD
 innate-freq:2
@@ -14508,7 +14573,7 @@ blow:BITE:FIRE:9d12
 flags:UNIQUE | MALE | NAME_COMMA | EVIL | SMART | ATTR_FLICKER
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR | MOVE_BODY
-flags:IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD | IM_NETHER
+flags:NO_CONF | NO_SLEEP | NO_HOLD | IM_NETHER
 flags:FORCE_SLEEP
 innate-freq:3
 spell-freq:15
@@ -14537,7 +14602,7 @@ blow:HIT:DRAIN_CHARGES:7d12
 blow:HIT:DRAIN_CHARGES:7d12
 flags:UNIQUE | MALE | NAME_COMMA
 flags:DROP_4 | DROP_GOOD | DROP_GREAT | ONLY_ITEM
-flags:IM_ELEC | IM_FIRE
+flags:IM_ELEC
 spell-freq:2
 spells:BLIND | WOUND | SCARE | TPORT | BRAIN_SMASH
 spells:BA_FIRE | BA_MANA | BA_NETH
@@ -14675,7 +14740,7 @@ blow:CLAW:PARALYZE:6d8
 flags:UNIQUE | MALE | EVIL | REGENERATE
 flags:FORCE_SLEEP | FORCE_DEPTH
 flags:SMART | OPEN_DOOR | BASH_DOOR | MOVE_BODY
-flags:IM_ELEC | IM_FIRE | IM_COLD | IM_NETHER
+flags:IM_ELEC | IM_COLD | IM_NETHER
 flags:NO_CONF | NO_SLEEP | NO_FEAR
 innate-freq:3
 spell-freq:3
@@ -14761,7 +14826,7 @@ blow:TOUCH:DRAIN_CHARGES
 flags:UNIQUE | QUESTOR | MALE | NAME_COMMA | EVIL | SMART | REGENERATE | SPIRIT
 flags:DROP_4 | DROP_GOOD | DROP_GREAT | ONLY_ITEM
 flags:SMASH_WALL | MOVE_BODY | ATTR_FLICKER
-flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE | NO_FEAR
+flags:IM_ACID | IM_COLD | IM_ELEC | NO_FEAR
 flags:NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_DEPTH | FORCE_SLEEP
 spell-freq:3

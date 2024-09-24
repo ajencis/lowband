@@ -694,6 +694,7 @@ static void spell_effect_append_value_info(const struct effect *effect,
 			}
 			break;
 		case EF_BALL:
+		case EF_BALL_NO_DAM_RED:
 			/* Append radius */
 			if (effect->radius) {
 				int rad = effect->radius;

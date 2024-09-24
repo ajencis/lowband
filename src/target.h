@@ -36,9 +36,14 @@
 #define TARGET_GRID   0x08
 #define TARGET_QUIET  0x10
 
+#define TARGET_WHO_NONE 0
+#define TARGET_WHO_PLAYER 1
+#define TARGET_WHO_MONSTER 2
+
 struct target {
 	struct loc grid;
 	int midx;
+	int who;			/** L: are we after player or monster or nobody */
 };
 
 void look_mon_desc(char *buf, size_t max, int m_idx);

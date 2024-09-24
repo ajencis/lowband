@@ -85,10 +85,13 @@ static int32_t borg_price_item(
             price = price / 2;
         }
 
+        price -= 100;
+        if (price <= 0) return 0;
+
         /* Check for no_selling option */
-        if (OPT(player, birth_no_selling)) {
+        /*if (OPT(player, birth_no_selling)) {
             return 0;
-        }
+        }*/
     } else {
         /* Re-evaluate if we're selling */
         if (tval_can_have_charges(obj)) {

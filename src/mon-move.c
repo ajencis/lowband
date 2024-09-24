@@ -120,42 +120,48 @@ static void mon_find_target(struct chunk *c, struct monster *mon)
 		if (!los(c, mon->grid, other->grid)) continue;
 
 		mon->target.midx = i;
+		mon->target.who = TARGET_WHO_MONSTER;
 		score = currscore;
 		found = true;
 	}
-	if (!found)	mon->target.midx = MON_TARGET_PLAYER;
+	if (!found)	{
+		if (mon->faction == '@' || mon_will_attack_player(mon, player))
+			mon->target.who = TARGET_WHO_PLAYER;
+		else
+			mon->target.who = TARGET_WHO_NONE;
+	}
 }
 
 bool mon_check_target(struct chunk *c, struct monster *mon)
 {
 	bool recheck = false;
-	if (mon->target.midx >= 0) {
+	if (mon->target.who == TARGET_WHO_MONSTER) {
 		struct monster *other = &c->monsters[mon->target.midx];
 		if (!other->race) {
-			mon->target.midx = MON_TARGET_NONE;
+			mon->target.who = TARGET_WHO_NONE;
 			recheck = true;
 		}
 		if (!los(c, mon->grid, other->grid)) {
-			mon->target.midx = MON_TARGET_NONE;
+			mon->target.who = TARGET_WHO_NONE;
 			recheck = true;
 		}
 	}
-	else if (mon->target.midx == MON_TARGET_PLAYER) {
+	else if (mon->target.who == TARGET_WHO_PLAYER) {
 		if (!los(c, mon->grid, player->grid)) recheck = true;
 		if (mon->faction == '@') {
-			mon->target.midx = MON_TARGET_NONE;
+			mon->target.who = TARGET_WHO_NONE;
 			recheck = true;
 		}
 	}
 	else {
-		mon->target.midx = MON_TARGET_NONE;
+		mon->target.who = TARGET_WHO_NONE;
 		recheck = true;
 	}
 
 	if (recheck)
 		mon_find_target(c, mon);
 
-	return mon->target.midx != MON_TARGET_NONE;
+	return mon->target.who != TARGET_WHO_NONE;
 }
 
 /**
@@ -210,7 +216,7 @@ static bool monster_can_see_player(struct monster *mon)
 static bool monster_can_hear(struct monster *mon)
 {
 	int base_hearing = mon->race->hearing
-		- player->state.skills[SKILL_STEALTH] / 3;
+		- player->state.skills[SKILL_STEALTH] / 15;
 	if (cave->noise.grids[mon->grid.y][mon->grid.x] == 0) {
 		return false;
 	}
@@ -503,7 +509,7 @@ static bool get_move_advance(struct monster *mon, bool *track)
 		player->grid;
 
 	int base_hearing = mon->race->hearing
-		- player->state.skills[SKILL_STEALTH] / 3;
+		- player->state.skills[SKILL_STEALTH] / 15;
 	int current_noise = base_hearing
 		- cave->noise.grids[mon->grid.y][mon->grid.x];
 	int best_scent = 0;
@@ -956,9 +962,9 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 
 	mon_check_target(cave, mon);
 
-	if (mon->target.midx == MON_TARGET_PLAYER)
+	if (mon->target.who == TARGET_WHO_PLAYER)
 		target = monster_is_decoyed(mon) ? cave_find_decoy(cave) : player->grid;
-	else if (cave->monsters[mon->target.midx].race)
+	else if (mon->target.who == TARGET_WHO_MONSTER && cave_monster(cave, mon->target.midx)->race)
 		target = cave->monsters[mon->target.midx].grid;
 	else
 		target = mon->grid;
@@ -967,10 +973,13 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 	get_move_find_range(mon);
 
 	/* L: Don't assume we're heading towards the player */
-	if (mon->target.midx == MON_TARGET_NONE) {
-		mon->target.grid = mon->grid;
+	if (mon->target.who == TARGET_WHO_NONE) {
+		if (one_in_(5))
+			mon->target.grid = get_move_random(mon);
+		else
+			mon->target.grid = mon->grid;
 		grid = loc_diff(mon->target.grid, mon->grid);
-	} else if (mon->target.midx != MON_TARGET_PLAYER) {
+	} else if (mon->target.who == TARGET_WHO_MONSTER) {
 		mon->target.grid = target;
 		grid = loc_diff(mon->target.grid, mon->grid);
 	} else if (get_move_advance(mon, good)) {
@@ -1008,8 +1017,8 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 		}
 	}
 
-    /* L: pick up items */
-	if (!done && !los(cave, mon->grid, player->grid)) {
+    /* L: pick up items if no immediate danger */
+	if (!done && mon->target.who == TARGET_WHO_NONE) {
 		struct object *obj = monster_nearest_takeable_item(cave, mon);
 		if (obj) {
 			mon->target.grid = obj->grid;
@@ -1764,7 +1773,7 @@ static void monster_turn(struct monster *mon)
 				continue;
 
 			if (!mon_will_attack_player(mon, player) && stagger != CONFUSED_STAGGER) {
-				if (mon->target.midx == MON_TARGET_PLAYER) return;
+				if (mon->target.who == TARGET_WHO_PLAYER) return;
 			    continue;
 			}
 
@@ -1900,7 +1909,7 @@ static void monster_reduce_sleep(struct monster *mon)
 			equip_learn_flag(player, OF_AGGRAVATE);
 		}
 	} else {
-		int stealth = player->state.skills[SKILL_STEALTH];
+		int stealth = player->state.skills[SKILL_STEALTH] / 5;
 		int local_noise = cave->noise.grids[mon->grid.y][mon->grid.x];
 		bool woke_up = false;
 		int curr = mon->m_timed[MON_TMD_SLEEP];
