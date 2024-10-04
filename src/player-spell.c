@@ -34,6 +34,8 @@
 #include "project.h"
 #include "target.h"
 
+const struct player_spell *ref_spell = NULL;
+
 /**
  * Used by get_spell_info() to pass information as it iterates through effects.
  */
@@ -157,15 +159,18 @@ void player_spells_init(struct player *p)
 	if (pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) num_spells = all_spells_num;
 
 	/* None */
-	if (!num_spells) return;
+	if (num_spells) {
 
-	/* Allocate */
-	p->spell_flags = mem_zalloc(num_spells * sizeof(uint8_t));
-	p->spell_order = mem_zalloc(num_spells * sizeof(uint8_t));
+		/* Allocate */
+		p->spell_flags = mem_zalloc(num_spells * sizeof(uint8_t));
+		p->spell_order = mem_zalloc(num_spells * sizeof(uint8_t));
 
-	/* None of the spells have been learned yet */
-	for (i = 0; i < num_spells; i++)
-		p->spell_order[i] = 99;
+		/* None of the spells have been learned yet */
+		for (i = 0; i < num_spells; i++)
+			p->spell_order[i] = 99;
+	}
+
+	p->player_spell_flags = mem_zalloc(z_info->spell_max * sizeof(uint8_t));
 }
 
 /**
@@ -173,8 +178,12 @@ void player_spells_init(struct player *p)
  */
 void player_spells_free(struct player *p)
 {
-	mem_free(p->spell_flags);
-	mem_free(p->spell_order);
+	if (p->spell_flags) {
+		mem_free(p->spell_flags);
+		mem_free(p->spell_order);
+	}
+
+	mem_free(p->player_spell_flags);
 }
 
 /**
@@ -267,11 +276,6 @@ const struct class_spell *spell_by_index(const struct player *p, int index)
 {
 	int book = 0, count = 0;
 
-	if (pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) {
-		if (index < 0 || index >= all_spells_num) return NULL;
-		return &all_spells[index];
-	}
-
 	const struct class_magic *magic = &p->class->magic;
 
 	/* Check index validity */
@@ -291,7 +295,7 @@ const struct class_spell *spell_by_index(const struct player *p, int index)
  * appropriate memory.
  */
 int spell_collect_from_book(const struct player *p, const struct object *obj,
-		int **spells)
+		int **splls)
 {
 	const struct class_book *book = player_object_to_book(p, obj);
 	int i, n_spells = 0;
@@ -305,11 +309,11 @@ int spell_collect_from_book(const struct player *p, const struct object *obj,
 		n_spells++;
 
 	/* Allocate the array */
-	*spells = mem_zalloc(n_spells * sizeof(*spells));
+	*splls = mem_zalloc(n_spells * sizeof(*splls));
 
 	/* Write the spells */
 	for (i = 0; i < book->num_spells; i++)
-		(*spells)[i] = book->spells[i].sidx;
+		(*splls)[i] = book->spells[i].sidx;
 
 	return n_spells;
 }
@@ -367,13 +371,13 @@ int caster_level_bonus(const struct player *p, const struct class_spell *spell)
  */
 bool spell_okay_list(const struct player *p,
 		bool (*spell_test)(const struct player *p, int spell),
-		const int spells[], int n_spells)
+		const int splls[], int n_spells)
 {
 	int i;
 	bool okay = false;
 
 	for (i = 0; i < n_spells; i++)
-		if (spell_test(p, spells[i]))
+		if (spell_test(p, splls[i]))
 			okay = true;
 
 	return okay;
@@ -614,10 +618,85 @@ bool spell_cast(int spell_index, int dir, struct command *cmd)
 }
 
 
+bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
+{
+	bool ident = false;
+	int beam  = beam_chance();
+
+	/* Get the spell */
+	const struct player_spell *spell = player_spell_lookup(spell_index);
+	int mana = player_spell_mana(spell);
+	int chance = player_spell_fail(spell);
+
+	/* L: save the spell for spellpower calc purposes */
+	ref_spell = spell;
+
+	/* Fail or succeed */
+	if (randint0(100) < chance) {
+		event_signal(EVENT_INPUT_FLUSH);
+		msg("You failed to concentrate hard enough!");
+	} else {
+		/* Cast the spell */
+		if (!effect_do(spell->effect, source_player(), NULL, &ident, true, dir,
+					   beam, gener_spell_power(player, spell), cmd)) {
+			ref_spell = NULL;
+			return false;
+		}
+
+		/* Reward COMBAT_REGEN with small HP recovery */
+		if (player_has(player, PF_COMBAT_REGEN)) {
+			convert_mana_to_hp(player, mana << 16);
+		}
+
+		/* A spell was cast */
+		sound(MSG_SPELL);
+	}
+
+	ref_spell = NULL;
+
+	/* Sufficient mana? */
+	if (mana <= player->csp) {
+		/* Use some mana */
+		player->csp -= mana;
+
+		if (one_in_(10)) take_max_sp_dam(player, mana);
+	} else {
+		int oops = mana - player->csp;
+
+		take_max_sp_dam(player, one_in_(10) ? mana : oops);
+
+		/* No mana left */
+		player->csp = 0;
+		player->csp_frac = 0;
+
+		/* Over-exert the player */
+		player_over_exert(player, PY_EXERT_FAINT, 100, 5 * oops + 1);
+		player_over_exert(player, PY_EXERT_CON, 50, 0);
+	}
+
+	/* Redraw mana */
+	player->upkeep->redraw |= (PR_MANA);
+
+	return true;
+}
+
+
+
 bool spell_needs_aim(int spell_index)
 {
 	const struct class_spell *spell = spell_by_index(player, spell_index);
 	assert(spell);
+	return effect_aim(spell->effect);
+}
+
+bool innate_needs_aim(int innate_index)
+{
+	const struct monster_spell *ms = monster_spell_by_index(innate_index);
+	return effect_aim(ms->effect);
+}
+
+bool gener_spell_needs_aim(const struct player_spell *spell)
+{
 	return effect_aim(spell->effect);
 }
 
@@ -792,6 +871,68 @@ int school_find_idx(const char *name)
 int innate_spell_mana(const struct monster_race *mon)
 {
 	int freq = mon->freq_innate;
-	int cost = 11 - freq / 4;
+	int cost = 20 - freq / 2;
 	return MAX(1, cost);
 }
+
+
+int gener_spell_power(const struct player *p, const struct player_spell *s)
+{
+	int numschools = 0;
+	int sumschools = 0;
+	int schoolbonus = 0;
+	int skill = p->state.skills[SKILL_MAGIC];
+	int abil = adj_mag_stat[p->state.stat_ind[STAT_INT]];
+	abil = MIN(abil, skill / 5);
+	int i;
+	for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
+		if (s->school[i]) {
+			++numschools;
+			sumschools += p->state.powers[s->school[i]];
+		}
+	}
+
+	if (numschools > 0)
+		schoolbonus = 3 * sumschools / (2 + numschools);
+
+	schoolbonus = MIN(schoolbonus, skill * 2);
+
+	return skill + schoolbonus - s->slevel + abil;
+}
+
+void gener_spell_learn(struct player *p, const struct player_spell *s)
+{
+	player->player_spell_flags[s->sidx] |= PY_SPELL_LEARNED;
+
+	msg("You have learned the spell %s.", s->name);
+
+	return;
+}
+
+struct player_spell *player_spell_lookup(int index) {
+	struct player_spell *ps;
+	for (ps = spells; ps; ps = ps->next) {
+		if (ps->sidx == index) return ps;
+	}
+	return NULL;
+}
+
+int player_spell_mana(const struct player_spell *ps) {
+	return ps->smana;
+	int base = ps->smana;
+	int power = gener_spell_power(player, ps);
+
+	int result = base - (base + 10) * power / 250;
+
+	return MAX(0, result);
+}
+
+int player_spell_fail(const struct player_spell *ps) {
+	int base = ps->sfail;
+	int power = gener_spell_power(player, ps);
+
+	int result = base - (base + 25) * power / 150;
+
+	return MAX(0, result);
+}
+

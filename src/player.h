@@ -26,6 +26,9 @@
 #include "object.h"
 #include "option.h"
 
+
+extern const struct player_spell *ref_spell;
+
 /**
  * Indexes of the player stats (hard-coded by savefiles).
  */
@@ -133,6 +136,8 @@ enum {
 
 #define MAX_RACE_MONSTERS 5
 
+#define MAX_SPELL_SCHOOLS 3
+
 /**
  * Terrain that the player has a chance of digging through
  */
@@ -163,11 +168,7 @@ struct player_power {
 	int power;
 	int weight;
 	int update;
-};/* player_powers[] = {
-	#define PP(x, a, b, c, d, e) { PP_##x, a, b, c, d, e },
-	#include "list-player-powers.h"
-	#undef PP
-};*/
+};
 
 /**
  * Structure for the "quests"
@@ -342,6 +343,25 @@ struct class_spell {
 };
 
 /**
+ * A structure to hold non-class-dependent information on spells.
+ */
+struct player_spell {
+	char *name;
+	char *text;
+
+	struct player_spell *next;
+
+	struct effect *effect;	/**< The spell's effect */
+
+	int school[MAX_SPELL_SCHOOLS];	/**< L: the school of the spell */
+
+	int sidx;				/**< The index of this spell */
+	int slevel;				/**< Required level (to learn) */
+	int smana;				/**< Required mana (to cast) */
+	int sfail;				/**< Base chance of failure */
+};
+
+/**
  * A structure to hold class-dependent information on spell books.
  */
 struct class_book {
@@ -505,6 +525,10 @@ struct player_state {
 
 	int num_attacks;							/**< L: number of attacks they currently have available */
 	struct attack_roll attacks[PY_MAX_ATTACKS];	/**< L: attacks they currently have available */
+	struct attack_roll ranged_attack;			/**< L: attack with shooter */
+
+	int extra_points_used;	/**< L: number of points the player has spent on extra */
+	int extra_points_max;	/**< L: number of points the character could spend on extra */
 };
 
 #define player_has(p, flag)       (pf_has(p->state.pflags, (flag)))
@@ -684,6 +708,8 @@ struct player {
 
 	int hp_burn;						/* L: temporary reduction of max hp */
 	int sp_burn;						/* L: temporary reduction of max mp */
+
+	uint8_t *player_spell_flags;		/* L: for nonclass spells */
 };
 
 
@@ -698,7 +724,8 @@ extern struct player_shape *shapes;
 extern struct player_class *classes;
 extern struct player_ability *player_abilities;
 extern struct magic_realm *realms;
-extern struct class_spell *all_spells;
+//extern struct class_spell *all_spells;
+extern struct player_spell *spells;
 extern int all_spells_num;
 
 extern const int32_t player_exp[PY_MAX_LEVEL];

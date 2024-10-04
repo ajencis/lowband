@@ -142,9 +142,10 @@ skill-save:9:5
 skill-stealth:0:0
 skill-search:10:12
 skill-melee:10:18
-skill-shoot:55:45
-skill-throw:55:45
+skill-shoot:10:18
+skill-throw:10:18
 skill-dig:0:0
+skill-magic:-10:0
 hitdie:9
 max-attacks:6
 min-weight:30
@@ -178,9 +179,10 @@ skill-save:15:4
 skill-stealth:10:0
 skill-search:10:12
 skill-melee:5:15
-skill-shoot:20:15
-skill-throw:20:15
+skill-shoot:5:15
+skill-throw:5:15
 skill-dig:0:0
+skill-magic:15:17
 hitdie:0
 max-attacks:4
 min-weight:40
@@ -189,6 +191,7 @@ equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
 equip:sword:Rapier:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
+#equip:spellbook:Magic Missile:1:1:none
 player-flags:ZERO_FAIL | BEAM | CHOOSE_SPELLS
 title:Novice
 title:Apprentice
@@ -570,10 +573,11 @@ skill-device:24:10
 skill-save:15:5
 skill-stealth:15:0
 skill-search:12:12
-skill-melee:5:17
-skill-shoot:40:30
-skill-throw:40:30
+skill-melee:5:18
+skill-shoot:5:15
+skill-throw:5:18
 skill-dig:0:0
+skill-magic:0:17
 hitdie:2
 max-attacks:4
 min-weight:35
@@ -811,11 +815,14 @@ skill-device:30:10
 skill-save:16:7
 skill-stealth:10:0
 skill-search:10:14
-skill-melee:5:17
-skill-shoot:35:20
-skill-throw:35:20
+skill-melee:10:15
+skill-shoot:10:12
+skill-throw:10:12
 skill-dig:0:0
-power:HAFTED_SPECIALIZATION:25
+skill-magic:-10:19
+power:HAFTED_SPECIALIZATION:20
+power:DIVINATION_MAGIC:40
+power:HEALING_MAGIC:40
 hitdie:2
 max-attacks:4
 min-weight:35
@@ -1082,9 +1089,11 @@ skill-save:15:4
 skill-stealth:10:0
 skill-search:10:12
 skill-melee:5:15
-skill-shoot:20:15
-skill-throw:20:15
+skill-shoot:5:15
+skill-throw:5:15
 skill-dig:0:0
+skill-magic:10:16
+power:NECROMANCY_MAGIC:40
 hitdie:2
 max-attacks:4
 min-weight:35
@@ -1092,6 +1101,7 @@ strength-multiplier:3
 equip:food:Ration of Food:1:3:none
 equip:sword:Main Gauche:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
+#equip:spellbook:Nether Bolt:1:1:none
 player-flags:ZERO_FAIL | CHOOSE_SPELLS | UNLIGHT | EVIL
 title:Acolyte
 title:Curser
@@ -1349,9 +1359,10 @@ skill-save:13:6
 skill-stealth:0:0
 skill-search:10:12
 skill-melee:10:17
-skill-shoot:50:30
-skill-throw:50:30
+skill-shoot:5:15
+skill-throw:5:15
 skill-dig:0:0
+skill-magic:-10:10
 hitdie:6
 max-attacks:5
 min-weight:30
@@ -1361,7 +1372,6 @@ equip:light:Wooden Torch:1:3:none
 equip:sword:Main Gauche:1:1:none
 equip:scroll:Protection from Evil:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-equip:prayer book:[Novice's Handbook]:1:1:none
 player-flags:BLESS_WEAPON | SHIELD_BASH
 title:Gallant
 title:Keeper
@@ -1510,10 +1520,11 @@ skill-device:32:10
 skill-save:14:5
 skill-stealth:15:5
 skill-search:20:16
-skill-melee:5:18
-skill-shoot:66:30
-skill-throw:72:45
+skill-melee:5:17
+skill-shoot:5:17
+skill-throw:10:17
 skill-dig:0:0
+skill-magic:-10:0
 power:SWORD_SPECIALIZATION:25
 power:BACKSTAB:100
 hitdie:4
@@ -1525,7 +1536,6 @@ equip:light:Wooden Torch:1:3:none
 equip:sword:Dagger:1:1:none
 equip:soft armour:Soft Leather Armour:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-equip:magic book:[First Spells]:1:1:none
 player-flags:CHOOSE_SPELLS | STEAL
 title:Vagabond
 title:Cutpurse
@@ -1619,9 +1629,10 @@ skill-save:16:5
 skill-stealth:15:0
 skill-search:15:15
 skill-melee:5:18
-skill-shoot:72:45
-skill-throw:66:30
+skill-shoot:10:19
+skill-throw:10:17
 skill-dig:0:0
+skill-magic:-10:12
 hitdie:5
 max-attacks:5
 min-weight:35
@@ -1632,7 +1643,6 @@ equip:sword:Main Gauche:1:1:none
 equip:bow:Short Bow:1:1:none
 equip:arrow:Arrow:15:20:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-equip:nature book:[Lesser Charms]:1:1:none
 player-flags:FAST_SHOT | CHOOSE_SPELLS
 title:Runner
 title:Strider
@@ -1729,14 +1739,14 @@ skill-save:9:5
 skill-stealth:-5:-5
 skill-search:8:10
 skill-melee:10:17
-skill-shoot:35:15
-skill-throw:40:30
+skill-shoot:5:16
+skill-throw:5:16
 skill-dig:0:0
+skill-magic:-10:10
 hitdie:8
 max-attacks:5
 min-weight:100
 strength-multiplier:5
-equip:shadow book:[Into the Shadows]:1:1:none
 equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
 equip:sword:Tulwar:1:1:none
@@ -1880,11 +1890,12 @@ skill-save:9:6
 skill-stealth:5:5
 skill-search:10:12
 skill-melee:5:19
-skill-shoot:55:45
-skill-throw:55:45
+skill-shoot:5:16
+skill-throw:5:17
 skill-dig:0:0
+skill-magic:-10:0
 power:UNARMED_STRIKE:100
-power:DODGING:100
+power:AGILITY:100
 hitdie:2
 max-attacks:6
 min-weight:10
@@ -1909,16 +1920,17 @@ title:Lord
 ############### SKILLMASTER ###############
 name:Skillmaster
 #stats:0:0:0:0:0
-skill-disarm-phys:10:5
-skill-disarm-magic:10:5
-skill-device:10:5
-skill-save:10:5
-skill-stealth:10:0
-skill-search:10:5
-skill-melee:10:5
-skill-shoot:10:5
-skill-throw:10:5
+skill-disarm-phys:5:5
+skill-disarm-magic:5:5
+skill-device:5:5
+skill-save:5:5
+skill-stealth:5:0
+skill-search:5:5
+skill-melee:5:5
+skill-shoot:5:5
+skill-throw:5:5
 skill-dig:0:0
+skill-magic:0:0
 hitdie:0
 max-attacks:6
 min-weight:10
@@ -1929,7 +1941,6 @@ equip:light:Wooden Torch:1:3:none
 equip:tome:Basic Tome:1:1:none
 equip:tome:Basic Tome:1:1:none
 equip:tome:Basic Tome:1:1:none
-equip:tome:Tome:1:1:none
 title:Rookie
 title:Soldier
 title:Swordsman

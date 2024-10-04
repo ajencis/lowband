@@ -31,7 +31,7 @@ all: ../$(EXE)
 include Makefile.inc
 
 CFLAGS = -DUSE_GCU -DWIN32_CONSOLE_MODE -DUSE_NCURSES -I$(NCURSES_INC) -static -DNCURSES_STATIC -DMSYS2_ENCODING_WORKAROUND
-LIBS = -s $(NCURSES_LIB)
+LIBS = -s $(NCURSES_LIB) -lm
 IOBJS = $(BASEOBJS) main-gcu.o main.o
 
 NCURSES_INC = /mingw64/include/ncurses

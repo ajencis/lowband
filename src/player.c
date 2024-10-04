@@ -42,7 +42,8 @@ struct player_shape *shapes;
 struct player_class *classes;
 struct player_ability *player_abilities;
 struct magic_realm *realms;
-struct class_spell *all_spells;
+//struct class_spell *all_spells;
+struct player_spell *spells;
 int all_spells_num = 0;
 
 /**
@@ -511,9 +512,7 @@ void player_cleanup_members(struct player *p)
 	if (p->quests) {
 		player_quests_free(p);
 	}
-	if (p->spell_flags) {
-		player_spells_free(p);
-	}
+	player_spells_free(p);
 	if (p->gear) {
 		object_pile_free(NULL, NULL, p->gear);
 		object_pile_free(NULL, NULL, p->gear_k);

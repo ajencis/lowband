@@ -24,6 +24,7 @@
 #include "mon-summon.h"
 #include "obj-gear.h"
 #include "player-history.h"
+#include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
@@ -281,8 +282,11 @@ static int32_t effect_value_base_spell_power(void)
 {
 	int power = 0;
 
+	/* L: check if player is casting */
+	if (ref_spell)
+		power = gener_spell_power(player, ref_spell);
 	/* Check the reference race first */
-	if (ref_race)
+	else if (ref_race)
 	   power = ref_race->spell_power;
 	/* Otherwise the current monster if there is one */
 	else if (cave->mon_current > 0)

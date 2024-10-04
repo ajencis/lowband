@@ -579,3 +579,8 @@ name:RAD_POIS
 desc:poison radiance
 grade:G:10000:RadPois:You radiate poison.
 on-end:You stop radiating poison.
+
+name:CALL_STORM
+desc:storm
+grade:B:10000:Storm:A storm forms around you.
+on-end:The storm around you dissipates.

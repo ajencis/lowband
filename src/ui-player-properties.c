@@ -19,6 +19,7 @@
 
 #include "angband.h"
 #include "player-properties.h"
+#include "player-util.h"
 #include "ui-input.h"
 #include "ui-menu.h"
 #include "ui-player-properties.h"
@@ -46,7 +47,7 @@ static void view_ability_display(struct menu *menu, int oid, bool cursor,
 	switch (choices[oid].group) {
 	case PLAYER_FLAG_POWER:
 	    {
-			strnfmt(buf, sizeof(buf), "Power: %s (level %i)", 
+			strnfmt(buf, sizeof(buf), "Power:  %s (level %i)", 
 			    choices[oid].name, player->state.powers[choices[oid].index]);
 			color = COLOUR_GREEN;
 			break;
@@ -60,7 +61,7 @@ static void view_ability_display(struct menu *menu, int oid, bool cursor,
 		}
 	case PLAYER_FLAG_CLASS:
 		{
-			strnfmt(buf, sizeof(buf), "Class: %s",
+			strnfmt(buf, sizeof(buf), "Class:  %s",
 				choices[oid].name);
 			color = COLOUR_UMBER;
 			break;
@@ -98,9 +99,40 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 	text_out_indent = loc->col - 1;
 	text_out_pad = 1;
 
+	/* L: more info for powers */
+	char extra[128];
+	extra[0] = '\0';
+	if (choices[oid].group == PLAYER_FLAG_POWER) {
+		int cpower = player_class_power(player, choices[oid].index);
+		int rpower = player->race->r_powers[choices[oid].index];
+		int xpower = player->extra_powers[choices[oid].index] / 2;
+		bool any = cpower || rpower || xpower;
+		if (any) {
+			my_strcat(extra, " You gain ", sizeof(extra));
+			bool last = !rpower && !xpower;
+			bool second_last = !rpower || !xpower;
+			if (cpower) {
+				my_strcat(extra, format("%i%% from your class", cpower), sizeof(extra));
+				if (last) my_strcat(extra, ".", sizeof(extra));
+				else if (second_last) my_strcat(extra, " and ", sizeof(extra));
+				else my_strcat(extra, ", ", sizeof(extra));
+			}
+			last = !xpower;
+			if (rpower) {
+				my_strcat(extra, format("%i%% from your race", rpower), sizeof(extra));
+				if (last) my_strcat(extra, ".", sizeof(extra));
+				else my_strcat(extra, ", and ", sizeof(extra));
+			}
+			if (xpower) {
+				my_strcat(extra, format("up to %i points from your learning.", xpower), sizeof(extra));
+			}
+		}
+	}
+
+
 	clear_from(loc->row + loc->page_rows);
 	Term_gotoxy(loc->col, loc->row + loc->page_rows);
-	text_out_c(COLOUR_L_BLUE, "\n%s\n", (char *) choices[oid].desc);
+	text_out_c(COLOUR_L_BLUE, "\n%s%s\n", (char *) choices[oid].desc, extra);
 
 	/* XXX */
 	text_out_pad = 0;

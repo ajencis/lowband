@@ -669,16 +669,19 @@ bool effect_handler_MON_TIMED_INC(effect_handler_context_t *context)
 	struct monster *mon;
 
 	if (context->origin.what == SRC_PLAYER) {
-		struct loc grid = loc(-1, -1);
+		mon = target_get_monster();
+		/*struct loc grid = loc(-1, -1);
 		if (context->dir == DIR_TARGET && target_okay()) {
 			target_get(&grid);
 		} else {
-			/* Use the adjacent grid in the given direction as target */
+			// Use the adjacent grid in the given direction as target
 			grid = loc_sum(player->grid, ddgrid[context->dir]);
 		}
-		mon = square_monster(cave, grid);
-		if (!mon)
+		mon = square_monster(cave, grid);*/
+		if (!mon) {
+			msg("No monster selected!");
 			return false;
+		}
 		if (amount > 0)
 			mon_inc_timed(mon, context->subtype, amount, 0);
 	}

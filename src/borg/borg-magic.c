@@ -131,8 +131,8 @@ static borg_spell_rating borg_spell_ratings_PRIEST[] =
     { "Banish Evil", 85, BANISH_EVIL },
     { "Word of Destruction", 75, WORD_OF_DESTRUCTION },
     { "Holy Word", 85, HOLY_WORD },
-    { "Spear of Orom\xC3\xab", 85, SPEAR_OF_OROME }, /* "Spear of Oromë" */
-    { "Light of Manw\xC3\xab", 85, LIGHT_OF_MANWE } /* "Light of Manwë"*/
+    { "Spear of Orom\xC3\xab", 85, SPEAR_OF_OROME }, /* "Spear of Oromï¿½" */
+    { "Light of Manw\xC3\xab", 85, LIGHT_OF_MANWE } /* "Light of Manwï¿½"*/
 };
 static borg_spell_rating borg_spell_ratings_NECROMANCER[] =
 {
@@ -682,9 +682,9 @@ static int borg_get_book_offset(int index)
 /*
  * initialize the spell data
  */
-static void borg_init_spell(borg_magic *spells, int spell_num)
+static void borg_init_spell(borg_magic *splls, int spell_num)
 {
-    borg_magic               *spell  = &spells[spell_num];
+    borg_magic               *spell  = &splls[spell_num];
     const struct class_spell *cspell = spell_by_index(player, spell_num);
     if (strcmp(cspell->name, borg_spell_ratings[spell_num].name)) {
         borg_note(format("**STARTUP FAILURE** spell definition mismatch. "

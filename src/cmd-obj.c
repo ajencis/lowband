@@ -1038,6 +1038,7 @@ void do_cmd_refill(struct command *cmd)
  * ------------------------------------------------------------------------
  */
 
+#if 0
 /**
  * Cast a spell from a book
  */
@@ -1051,8 +1052,13 @@ void do_cmd_cast(struct command *cmd)
 	}
 
 	/* Check the player can cast spells at all */
-	if (!player_can_cast(player, true))
+	if (player->state.skills[SKILL_MAGIC] > 0) {
+		do_cmd_cast_gener_spell(cmd);
 		return;
+	}
+	if (!player_can_cast(player, true)) {
+		return;
+	}
 
 	/* Get arguments */
 	if (cmd_get_spell(cmd, "spell", player, &spell_index,
@@ -1100,6 +1106,7 @@ void do_cmd_cast(struct command *cmd)
 	}
 	target_release();
 }
+#endif
 
 
 /**
@@ -1168,10 +1175,31 @@ void do_cmd_study_book(struct command *cmd)
 	}
 }
 
+void do_cmd_study(struct command *cmd)
+{
+	if (!player_get_resume_normal_shape(player, cmd)) {
+		return;
+	}
+
+	struct object *spellbook;
+	if (cmd_get_item(cmd, "item", &spellbook,
+			/* Prompt */ "Study which book? ",
+			/* Error  */ "You cannot learn any new spells from the books you have.",
+			/* Filter */ obj_can_study_gener,
+			/* Choice */ USE_INVEN | USE_FLOOR) != CMD_OK)
+		return;
+
+	const struct player_spell *spell = spellbook->kind->spell;
+
+	gener_spell_learn(player, spell);
+}
+
+#if 0
 /**
  * Choose the way to study.  Choose life.  Choose a career.  Choose family.
  * Choose a fucking big monster, choose orc shamans, kobolds, dark elven
  * druids, and Mim, Betrayer of Turin.
+ * L: can no longer choose kobolds
  */
 void do_cmd_study(struct command *cmd)
 {
@@ -1179,11 +1207,14 @@ void do_cmd_study(struct command *cmd)
 		return;
 	}
 
-	if (player_has(player, PF_CHOOSE_SPELLS))
+	if (player->state.skills[SKILL_MAGIC] > 0)
+		do_cmd_learn_gener_spell(cmd);
+	else if (player_has(player, PF_CHOOSE_SPELLS))
 		do_cmd_study_spell(cmd);
 	else
 		do_cmd_study_book(cmd);
 }
+#endif
 
 static bool dummy_innate(const struct player *p, int innate)
 {
@@ -1222,11 +1253,61 @@ void do_cmd_innate(struct command *cmd)
 	
 	ms = monster_spell_by_index(innate_index);
 
-	if (cmd_get_target(cmd, "target", &dir) != CMD_OK) return;
+	if (innate_needs_aim(innate_index)) {
+		if (cmd_get_target(cmd, "target", &dir) == CMD_OK)
+			player_confuse_dir(player, &dir, false);
+		else
+			return;
+	}
 
 	effect_do(ms->effect, source_player(), NULL, &ident, true, dir, 0, 0, cmd);
 
 	take_hit(player, mana, "using an innate power");
 
 	ref_race = NULL;
+}
+
+static bool gener_spell_is_castable(const struct player *p, int spell) {
+	if (spell < 0 || spell >= z_info->spell_max) return false;
+	if (!(p->player_spell_flags[spell] & PY_SPELL_LEARNED)) return false;
+	return true;
+}
+
+void do_cmd_cast(struct command *cmd)
+{
+	int spell_index;
+	int dir;
+	const struct player_spell *ps;
+	const char *fail = "You don't know any spells.";
+
+	if (cmd_get_gener_spell(cmd,
+			"spell",
+			player,
+			&spell_index,
+			gener_spell_is_castable,
+			fail) != CMD_OK)
+		return;
+
+	ps = player_spell_lookup(spell_index);
+	if (!ps) {
+		msg("Invalid spell!");
+		return;
+	}
+	
+	if (player_spell_mana(ps) > player->csp) {
+		msg("You do not have enough mana to cast this spell.");
+		event_signal(EVENT_INPUT_FLUSH);
+		if (!get_check("Attempt it anyway? ")) return;
+	}
+
+	if (gener_spell_needs_aim(ps)) {
+		if (cmd_get_target(cmd, "target", &dir) == CMD_OK)
+			player_confuse_dir(player, &dir, false);
+		else
+			return;
+	}
+
+	if (gener_spell_cast(spell_index, dir, cmd)) {
+		player->upkeep->energy_use = z_info->move_energy;
+	}
 }

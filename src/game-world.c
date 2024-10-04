@@ -22,6 +22,7 @@
 #include "game-world.h"
 #include "generate.h"
 #include "init.h"
+#include "mon-desc.h"
 #include "mon-make.h"
 #include "mon-move.h"
 #include "mon-util.h"
@@ -44,7 +45,7 @@ uint16_t daycount = 0;
 uint32_t seed_randart;		/* Hack -- consistent random artifacts */
 uint32_t seed_flavor;		/* Hack -- consistent object colors */
 uint32_t seed_monsters = 0;	/* L: Hack -- monsters get randomized too */
-int32_t turn;			/* Current game turn */
+int32_t turn;				/* Current game turn */
 bool character_generated;	/* The character exists */
 bool character_dungeon;		/* The character has a dungeon */
 struct level *world;
@@ -598,8 +599,14 @@ void process_world(struct chunk *c)
 
 	if (player->timed[TMD_RAD_POIS]) {
 		struct loc g = player->grid;
-		bool dummy;
-		effect_simple(EF_PROJECT_LOS, source_player(), "2d9", PROJ_MON_POIS, 0, 0, g.y, g.x, &dummy);
+		effect_simple(EF_PROJECT_LOS, source_player(), "2d9", PROJ_MON_POIS, 0, 0, g.y, g.x, NULL);
+	}
+
+	if (player->timed[TMD_CALL_STORM] && !(turn % 50)) {
+		struct loc l = player->grid;
+		char *dam = format("2d%i", (int)sqrt(player->timed[TMD_CALL_STORM]) + 49);
+		int rad = one_in_(3) ? 1 : 0;
+		effect_simple(EF_RANDOM_MON_DAMAGE, source_player(), dam, PROJ_ELEC, rad, 0, l.y, l.x, NULL);
 	}
 
 	/* Take damage from cuts, worse from serious cuts */
@@ -797,7 +804,7 @@ void process_world(struct chunk *c)
 			cmdq_flush();
 
 			/* Determine the level */
-			/* You can go up but you can't go down */
+			/* L: You can go up but you can't go down */
 			if (player->depth) {
 				msgt(MSG_TPLEVEL, "You feel yourself yanked upwards!");
 				dungeon_change_level(player, 0);
@@ -834,9 +841,6 @@ void process_world(struct chunk *c)
 			}
 		}
 	}
-
-
-	/*** L: Monster damage ***/
 }
 
 

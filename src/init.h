@@ -57,6 +57,7 @@ struct angband_constants
 	uint16_t r_max;		/**< Maximum number of monster races */
 	uint16_t mp_max;	/**< Maximum number of monster pain message sets */
 	uint16_t s_max;		/**< Maximum number of magic spells */
+	uint16_t spell_max;	/**< L: max num of non-class spells */
 	uint16_t pit_max;	/**< Maximum number of monster pit types */
 	uint16_t act_max;	/**< Maximum number of activations for randarts */
 	uint8_t curse_max;	/**< Maximum number of curses */
@@ -254,6 +255,7 @@ extern struct parser *init_parse_quest(void);
 /* These are public primarily to facilitate writing test cases */
 extern struct file_parser body_parser;
 extern struct file_parser class_parser;
+extern struct file_parser spell_parser;
 extern struct file_parser constants_parser;
 extern struct file_parser feat_parser;
 extern struct file_parser flavor_parser;

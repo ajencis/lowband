@@ -1992,8 +1992,19 @@ static bool process_monster_timed(struct monster *mon)
 	if (mon->m_timed[MON_TMD_TOXIC]) {
 		mon_dec_timed(mon, MON_TMD_TOXIC, 1, 0);
 		mon_inc_timed(mon, MON_TMD_POISONED, 5, 0);
-	} else if (mon->m_timed[MON_TMD_POISONED])
+	} else if (mon->m_timed[MON_TMD_POISONED]) {
 		mon_dec_timed(mon, MON_TMD_POISONED, 1, 0);
+	}
+
+	if (mon->m_timed[MON_TMD_SUFFOCATING]) {
+		mon_dec_timed(mon, MON_TMD_SUFFOCATING, 1, 0);
+		if (one_in_(3))
+			mon_inc_timed(mon, MON_TMD_SLOW, 5, 0);
+		if (one_in_(3))
+			mon_inc_timed(mon, MON_TMD_STUN, 5, 0);
+		if (one_in_(3))
+			mon_inc_timed(mon, MON_TMD_CONF, 5, 0);
+	}
 
 	/* Always miss turn if held or commanded, one in STUN_MISS_CHANCE chance
 	 * of missing if stunned,  */
@@ -2132,7 +2143,7 @@ void process_monsters(int minimum_energy)
 			 * terrain damage after its turn.
 			 */
 			monster_take_terrain_damage(mon);
-			monster_take_poison_damage(mon, turn_energy(mspeed));
+			monster_take_timed_damage(mon, turn_energy(mspeed));
 
 			/* Monster is no longer current */
 			cave->mon_current = -1;

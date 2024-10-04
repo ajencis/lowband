@@ -744,14 +744,13 @@ static struct panel *get_panel_midleft(void) {
 static struct panel *get_panel_combat(void) {
 	struct panel *p = panel_allocate(15);
 	struct object *obj;
-	int bth, dam, hit, blws = 0;
-	struct attack_roll aroll;
+	int bth, dam, blws = 0;
+	struct attack_roll *aroll;
 	int i;
 	size_t j;
 	static char title[10];
 	int colour;
 	int hgt = 0;
-	bool hasrng = false;
 
 	/* AC */
 	panel_line(p, COLOUR_L_BLUE, "Armor", "[%d,%+d]",
@@ -762,61 +761,60 @@ static struct panel *get_panel_combat(void) {
 	panel_space(p);
 	++hgt;
 	for (i = 0; i < player->state.num_attacks; i++) {
-		aroll = player->state.attacks[i];
-		bth = player->state.skills[aroll.attack_skill] / BTH_PLUS_ADJ + aroll.to_hit;
-		blws += aroll.blows;
-		//msg("message is %s", aroll.message);
-		my_strcpy(title, aroll.message, sizeof(title));
-		//msg("title is %s", title);
-		my_strcap(title);
-		//msg("capped title is %s", title);
-		for (j = 0; j < N_ELEMENTS(title); j++) {
-			if (title[j] == ' ') {
-				title[j] = '\0';
-				break;
-			}
-		}
-		colour = projections[aroll.proj_type].color;
-		if (aroll.proj_type == PROJ_MISSILE) colour = COLOUR_L_BLUE;
+		aroll = &player->state.attacks[i];
+		bth = player->state.skills[aroll->attack_skill] / BTH_PLUS_ADJ + aroll->to_hit;
+		blws += aroll->blows;
 
-		if (!aroll.ddice || !aroll.dsides)
-			panel_line(p, colour, title, "%+d; %d", bth, aroll.to_dam);
-		else if (aroll.dsides == 1)
-			panel_line(p, colour, title, "%+d; %d", bth, aroll.to_dam + aroll.ddice);
-		else if (aroll.to_dam)
-			panel_line(p, colour, title, "%+d; %dd%d%+d", bth, aroll.ddice, aroll.dsides, aroll.to_dam);
+		if (aroll->obj) {
+			int mode = ODESC_BASE | ODESC_CAPITAL | ODESC_NOEGO | ODESC_SINGULAR | ODESC_TERSE;
+			object_desc(title, sizeof(title), aroll->obj, mode, player);
+		} else {
+			my_strcpy(title, aroll->message, sizeof(title));
+			for (j = 0; j < N_ELEMENTS(title); j++) {
+				if (title[j] == ' ') {
+					title[j] = '\0';
+					break;
+				}
+			}
+			my_strcap(title);
+		}
+		
+		colour = projections[aroll->proj_type].color;
+
+		if (!aroll->ddice || !aroll->dsides)
+			panel_line(p, colour, title, "%+d; %d", bth, aroll->to_dam);
+		else if (aroll->dsides == 1)
+			panel_line(p, colour, title, "%+d; %d", bth, aroll->to_dam + aroll->ddice);
+		else if (aroll->to_dam)
+			panel_line(p, colour, title, "%+d; %dd%d%+d", bth, aroll->ddice, aroll->dsides, aroll->to_dam);
 		else
-		    panel_line(p, colour, title, "%+d; %dd%d", bth, aroll.ddice, aroll.dsides);
+		    panel_line(p, colour, title, "%+d; %dd%d", bth, aroll->ddice, aroll->dsides);
 		++hgt;
 	}
 
 	if (i > 0) {
 		blws /= MAX(1, player->state.num_attacks);
 		panel_line(p, COLOUR_L_BLUE, "Blows", "%d.%d/turn",
-			blws / 100, (blws / 10 % 10));
+			blws / 100, (blws / 10) % 10);
 		++hgt;
 	}
 
 	/* Ranged */
-	for (i = 0; i < player->body.count && !hasrng; i++) {
-		if (player->body.slots[i].type == EQUIP_BOW) hasrng = true;
-	}
-	if (hasrng) {
-		obj = slot_object(player, slot_by_type(player, EQUIP_BOW, true));
-		bth = (player->state.skills[SKILL_TO_HIT_BOW] * 10) / BTH_PLUS_ADJ;
-		dam = 0;
-		hit = player->known_state.to_h;
-		if (obj) {
-			dam += object_to_dam(obj);
-			hit += object_to_hit(obj);
-		}
+	aroll = &player->state.ranged_attack;
+	if (aroll->obj) {
+		int mode = ODESC_BASE | ODESC_CAPITAL | ODESC_NOEGO | ODESC_SINGULAR | ODESC_TERSE;
+		object_desc(title, sizeof(title), aroll->obj, mode, player);
+		
+		bth = player->state.skills[aroll->attack_skill] + aroll->to_hit * BTH_PLUS_ADJ;
+		dam = aroll->to_dam;
 
 		panel_space(p);
-		panel_line(p, COLOUR_L_BLUE, "Shoot to-dam", "%+d", dam);
-		panel_line(p, COLOUR_L_BLUE, "To-hit", "%d,%+d", bth / 10, hit);
+		panel_line(p, COLOUR_L_BLUE, title, "%+d; %ddX%+d", bth, aroll->ddice, dam);
+		//panel_line(p, COLOUR_L_BLUE, "To-hit", "%d", bth);
 		panel_line(p, COLOUR_L_BLUE, "Shots", "%d.%d/turn",
-				   player->state.num_shots / 10, player->state.num_shots % 10);
-		hgt += 4;
+				   aroll->blows / 100, (aroll->blows / 10) % 10);
+		
+		hgt += 3;
 	}
 
 	panel_height = MAX(hgt, panel_height);
@@ -825,7 +823,7 @@ static struct panel *get_panel_combat(void) {
 }
 
 static struct panel *get_panel_skills(void) {
-	struct panel *p = panel_allocate(8);
+	struct panel *p = panel_allocate(9);
 
 	int skill;
 	uint8_t attr;
@@ -834,6 +832,13 @@ static struct panel *get_panel_skills(void) {
 	int hgt = 0;
 
 #define BOUND(x, min, max)		MIN(max, MAX(min, x))
+
+	/* L: Magic */
+	skill = player->state.skills[SKILL_MAGIC];
+	if (skill > 0) {
+		panel_line(p, colour_table[BOUND(skill, 0, 100) / 10], "Magic", "%d", skill);
+		++hgt;
+	}
 
 	/* Saving throw */
 	skill = MAX(player->state.skills[SKILL_SAVE], 0);
@@ -856,7 +861,7 @@ static struct panel *get_panel_skills(void) {
 	++hgt;
 
 	/* Magic devices */
-	skill = player->state.skills[SKILL_DEVICE];
+	skill = BOUND(player->state.skills[SKILL_DEVICE], 0, 130);
 	panel_line(p, colour_table[skill / 13], "Magic Devices", "%d", skill);
 	++hgt;
 
@@ -866,9 +871,11 @@ static struct panel *get_panel_skills(void) {
 	++hgt;
 
 	/* Infravision */
-	panel_line(p, COLOUR_L_GREEN, "Infravision", "%d ft",
-			player->state.see_infra * 10);
-	++hgt;
+	if (player->state.see_infra > 0) {
+		panel_line(p, COLOUR_L_GREEN, "Infravision", "%d ft",
+				player->state.see_infra * 10);
+		++hgt;
+	}
 
 	/* Speed */
 	skill = player->state.speed;

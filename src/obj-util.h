@@ -27,6 +27,7 @@
 
 struct player;
 
+void spell_to_obj(const struct player_spell *ps, struct object_kind *k);
 void flavor_init(void);
 void flavor_set_all_aware(void);
 int16_t object_weight_one(const struct object *obj);
@@ -57,6 +58,7 @@ bool obj_kind_can_browse(const struct object_kind *kind);
 bool obj_can_browse(const struct object *obj);
 bool obj_can_cast_from(const struct object *obj);
 bool obj_can_study(const struct object *obj);
+bool obj_can_study_gener(const struct object *obj);
 bool obj_can_takeoff(const struct object *obj);
 bool obj_can_throw(const struct object *obj);
 bool obj_can_wear(const struct object *obj);

@@ -851,6 +851,25 @@ int cmd_get_innate(struct command *cmd, const char *arg, struct player *p,
 	return CMD_ARG_ABORTED;
 }
 
+int cmd_get_gener_spell(struct command *cmd, const char *arg, struct player *p,
+		int *spell, bool (*gener_spell_filter)(const struct player *p, int innate),
+		const char *error)
+{
+	if (cmd_get_arg_choice(cmd, arg, spell) == CMD_OK) {
+		if (!gener_spell_filter || gener_spell_filter(p, *spell))
+			return CMD_OK;
+	}
+
+	*spell = get_gener_spell(p, error, gener_spell_filter);
+
+	if (*spell >= 0) {
+		cmd_set_arg_choice(cmd, arg, *spell);
+		return CMD_OK;
+	}
+
+	return CMD_ARG_ABORTED;
+}
+
 /**
  * Choose an effect from a list, first try the command but then prompt
  * \param cmd is the command to use.
@@ -1137,7 +1156,7 @@ int cmd_get_item(struct command *cmd, const char *arg, struct object **obj,
 				 const char *prompt, const char *reject, item_tester filter,
 				 int mode)
 {
-	if ((cmd_get_arg_item(cmd, arg, obj) == CMD_OK) && (!filter|| filter(*obj)))
+	if ((cmd_get_arg_item(cmd, arg, obj) == CMD_OK) && (!filter || filter(*obj)))
 		return CMD_OK;
 
 	/* Shapechanged players can only access the floor */

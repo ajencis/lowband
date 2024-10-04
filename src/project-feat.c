@@ -327,7 +327,8 @@ static void project_feature_handler_FIRE(project_feature_handler_context_t *cont
 
 	/* Can create lava if extremely powerful. */
 	if ((context->dam > randint1(1800) + 600) &&
-		square_isfloor(cave, context->grid)) {
+			square_isfloor(cave, context->grid) &&
+			one_in_(2)) {
 		/* Forget the floor, make lava. */
 		square_unmark(cave, context->grid);
 		square_set_feat(cave, context->grid, FEAT_LAVA);

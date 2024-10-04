@@ -8,7 +8,7 @@
  * text         - the message text
  */
 
-/* id						MSG_GENERIC,	text */
+/* id						msg				omit	text */
 MON_MSG(NONE,				MSG_GENERIC,	false,	"[is|are] hurt.")
 MON_MSG(DIE,				MSG_KILL,		false,	"die[s].")
 MON_MSG(DESTROYED,			MSG_KILL,		false,	"[is|are] destroyed.")
@@ -39,7 +39,7 @@ MON_MSG(CONFUSED,			MSG_GENERIC,	false,	"look[s] confused.")
 MON_MSG(NOT_CONFUSED,		MSG_GENERIC,	false,	"[is|are] no longer confused.")
 MON_MSG(MORE_SLOWED,		MSG_GENERIC,	false,	"look[s] more slowed.")
 MON_MSG(SLOWED,				MSG_GENERIC,	false,	"look[s] slowed.")
-MON_MSG(NOT_SLOWED	,		MSG_GENERIC,	false,	"speed[s] up.")
+MON_MSG(NOT_SLOWED,			MSG_GENERIC,	false,	"speed[s] up.")
 MON_MSG(MORE_HASTED,		MSG_GENERIC,	false,	"look[s] even faster!")
 MON_MSG(HASTED,				MSG_GENERIC,	false,	"start[s] moving faster.")
 MON_MSG(NOT_HASTED,			MSG_GENERIC,	false,	"slow[s] down.")
@@ -53,6 +53,8 @@ MON_MSG(NOT_DISEN,			MSG_GENERIC,    false,  "seem[s] magical again.")
 MON_MSG(COMMAND,			MSG_GENERIC,    false,  "falls under your spell!")
 MON_MSG(NOT_COMMAND,		MSG_GENERIC,    false,  "is no longer under your control.")
 MON_MSG(POISON,				MSG_GENERIC,	false,	"[is|are] poisoned.")
+MON_MSG(SUFFOCATE,			MSG_GENERIC,	false,	"gasps futilely for air.")
+MON_MSG(NOT_SUFFOCATE,		MSG_GENERIC,	false,	"takes a deep breath.")
 MON_MSG(SHAPE_FAIL,			MSG_GENERIC,    false,  "shimmers for a moment.")
 MON_MSG(MORIA_DEATH,		MSG_KILL,		true,	"You hear [a|several] scream[|s] of agony!")
 MON_MSG(DISINTEGRATES,		MSG_KILL,		false,	"disintegrate[s]!")
@@ -65,7 +67,7 @@ MON_MSG(APPEAR,				MSG_GENERIC,	false,	"appear[s]!")
 MON_MSG(HIT_AND_RUN,		MSG_GENERIC,	true,	"There is a puff of smoke!")
 MON_MSG(QUAKE_DEATH,		MSG_KILL,		false,	"[is|are] embedded in rock!")
 MON_MSG(QUAKE_HURT,			MSG_GENERIC,	false,	"wail[s] out in pain!")
-MON_MSG(DEATH_POIS,			MSG_KILL,		false,	"collapse[s].")
+MON_MSG(COLLAPSE,			MSG_KILL,		false,	"collapse[s].")
 /* Dummy messages for monster pain - we use edit file info instead. */
 MON_MSG(95,					MSG_GENERIC,	false,	"")
 MON_MSG(75,					MSG_GENERIC,	false,	"")

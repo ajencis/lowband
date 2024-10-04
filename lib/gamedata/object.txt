@@ -1197,7 +1197,7 @@ name:& Short Bow~
 type:bow
 graphics:}:U
 level:3
-weight:30
+weight:40
 cost:50
 alloc:20:3 to 100
 flags:SHOOTS_ARROWS
@@ -1208,7 +1208,7 @@ name:& Long Bow~
 type:bow
 graphics:}:U
 level:10
-weight:40
+weight:75
 cost:120
 alloc:20:10 to 100
 flags:SHOOTS_ARROWS
@@ -1220,7 +1220,7 @@ name:& Light Crossbow~
 type:bow
 graphics:}:s
 level:15
-weight:110
+weight:100
 cost:140
 alloc:20:15 to 100
 flags:SHOOTS_BOLTS

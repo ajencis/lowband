@@ -248,6 +248,8 @@ struct object_kind {
 
 	struct flavor *flavor;	/**< Special object flavor (or zero) */
 
+	const struct player_spell *spell;	/**< L: the spell it contains */
+
 	/** Also saved in savefile **/
 
 	quark_t note_aware; 	/**< Autoinscription quark number */

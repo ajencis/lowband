@@ -288,24 +288,24 @@ static bool summon_possible(struct loc grid)
 int choose_attack_spell(bitflag *f, bool innate, bool non_innate)
 {
 	int num = 0;
-	uint8_t spells[RSF_MAX];
+	uint8_t mspells[RSF_MAX];
 
 	int i;
 
 	/* Paranoid initialization */
 	for (i = 0; i < RSF_MAX; i++) {
-		spells[i] = 0;
+		mspells[i] = 0;
 	}
 
 	/* Extract spells, filtering as necessary */
 	for (i = FLAG_START, num = 0; i < RSF_MAX; i++) {
 		if (!innate && mon_spell_is_innate(i)) continue;
 		if (!non_innate && !mon_spell_is_innate(i)) continue;
-		if (rsf_has(f, i)) spells[num++] = i;
+		if (rsf_has(f, i)) mspells[num++] = i;
 	}
 
 	/* Pick at random */
-	return (spells[randint0(num)]);
+	return (mspells[randint0(num)]);
 }
 
 /**

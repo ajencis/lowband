@@ -136,16 +136,18 @@ owner:15000:Ludwig the Humble (Human)
 owner:20000:Gunnar the Paladin (Human)
 owner:25000:Delilah the Pure (Elf)
 owner:30000:Bosk the Wise (Dwarf)
-slots:0:2
+slots:3:6
 turnover:0
 always:prayer book
 always:magic book
 always:nature book
 always:shadow book
+always:spellbook
 buy:magic book
 buy:prayer book
 buy:nature book
 buy:shadow book
+buy:spellbook
 
 # Mushroomer, was Alchemist
 store:STORE_ALCHEMY

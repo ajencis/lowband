@@ -1723,6 +1723,7 @@ void textui_input_init(void)
 	get_spell_from_book_hook = textui_get_spell_from_book;
 	get_spell_hook = textui_get_spell;
 	get_innate_hook = textui_get_innate;
+	get_gener_spell_hook = textui_get_gener_spell;
 	get_effect_from_list_hook = textui_get_effect_from_list;
 	get_item_hook = textui_get_item;
 	get_curse_hook = textui_get_curse;

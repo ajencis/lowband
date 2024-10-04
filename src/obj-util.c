@@ -786,6 +786,52 @@ bool obj_can_study(const struct object *obj)
 		spell_book_count_spells(player, obj, spell_okay_to_study) > 0;
 }
 
+static bool gener_spell_can_study(const struct player_spell *spell)
+{
+	if (!spell) {
+		return false;
+	}
+	if (player->player_spell_flags[spell->sidx] & PY_SPELL_LEARNED) {
+		return false;
+	}
+	int spell_power = gener_spell_power(player, spell);
+	if (spell_power <= 0) {
+		return false;
+	}
+	return true;
+}
+
+bool obj_can_study_gener(const struct object *obj)
+{
+	const struct player_spell *s = obj->kind->spell;
+	
+	if (!s) {
+		return false;
+	}
+	return gener_spell_can_study(s);
+}
+
+
+void spell_to_obj(const struct player_spell *ps, struct object_kind *k)
+{
+	int lev = ps->slevel;
+
+	k->d_char = '?';
+	k->d_attr = COLOUR_L_UMBER;
+	k->dd = 1;
+	k->ds = 1;
+
+	k->alloc_max = 100;
+	k->alloc_min = lev * 3 / 2;
+	k->alloc_prob = 5;
+	k->cost = lev * lev * 100;
+	k->weight = 30 + lev / 3;
+
+	k->spell = ps;
+
+	kf_union(k->kind_flags, kb_info[k->tval].kind_flags);
+}
+
 
 /* Can only take off non-cursed items */
 bool obj_can_takeoff(const struct object *obj)
@@ -1227,7 +1273,7 @@ void mark_artifact_everseen(const struct artifact *art, bool seen)
 #define MIN_MEDIUM_WEIGHT 75
 #define MIN_HEAVY_WEIGHT 150
 
-static void alter_one_weapon(struct object_kind *weap)
+static void alter_one_melee_weapon(struct object_kind *weap)
 {
 	if (!tval_is_melee_weapon_k(weap)) return;
 
@@ -1236,14 +1282,9 @@ static void alter_one_weapon(struct object_kind *weap)
 
 	if (weap->weight >= MIN_HEAVY_WEIGHT) {
 		ddice = 3;
-		dam -= 3;
 	}
 	else if (weap->weight >= MIN_MEDIUM_WEIGHT) {
 		ddice = 2;
-		dam += 6;
-	}
-	else {
-		ddice = 1;
 	}
 
 	if (weap->tval == TV_DIGGING) dam /= 2;
@@ -1255,13 +1296,28 @@ static void alter_one_weapon(struct object_kind *weap)
 	weap->ds = dsides;
 }
 
+static void alter_one_missile_weapon(struct object_kind *launcher)
+{
+	if (!tval_is_launcher_k(launcher)) return;
+
+	int ddice = 1;
+	if (launcher->weight >= MIN_HEAVY_WEIGHT) ddice = 3;
+	else if (launcher->weight >= MIN_MEDIUM_WEIGHT) ddice = 2;
+
+	launcher->pval.base = ddice;
+	launcher->pval.dice = 0;
+	launcher->pval.m_bonus = 0;
+	launcher->pval.sides = 0;
+}
+
 
 void alter_weapon_properties(struct object_kind *objs)
 {
     struct object_kind *curr;
 	
     for (curr = objs; curr; curr = curr->next) {
-		if (tval_is_melee_weapon_k(curr)) alter_one_weapon(curr);
+		if (tval_is_melee_weapon_k(curr)) alter_one_melee_weapon(curr);
+		if (tval_is_launcher_k(curr)) alter_one_missile_weapon(curr);
 	}
 }
 

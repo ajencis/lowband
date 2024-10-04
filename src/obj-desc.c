@@ -80,7 +80,7 @@ static const char *obj_desc_get_modstr(const struct object_kind *kind)
 	if (tval_can_have_flavor_k(kind))
 		return kind->flavor ? kind->flavor->text : "";
 
-	if (tval_is_book_k(kind))
+	if (tval_is_book_k(kind) || kind->tval == TV_BOOK)
 		return kind->name;
 
 	return "";
@@ -176,6 +176,12 @@ static const char *obj_desc_get_basename(const struct object *obj, bool aware,
 				return "& Tome~ #";
 			else
 				return "& Necromantic Tome~ #";
+
+		case TV_BOOK:
+			if (terse)
+				return "& Book~";
+			else
+				return "& Spellbook~";
 
 		case TV_OTHER_BOOK:
 			if (terse)
@@ -344,7 +350,7 @@ static size_t obj_desc_name(char *buf, size_t max, size_t end,
 	else if ((obj->known->ego && !(mode & ODESC_NOEGO)) || (obj->ego && store))
 		strnfcat(buf, max, &end, " %s", obj->ego->name);
 	else if (aware && !obj->artifact &&
-			 (obj->kind->flavor || obj->kind->tval == TV_SCROLL)) {
+			(obj->kind->flavor || obj->kind->tval == TV_SCROLL || obj->kind->tval == TV_BOOK)) {
 		if (terse)
 			strnfcat(buf, max, &end, " '%s'", obj->kind->name);
 		else

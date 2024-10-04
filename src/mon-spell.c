@@ -275,13 +275,11 @@ static void spell_message(struct monster *mon,
 
 const struct monster_spell *monster_spell_by_index(int index)
 {
-	const struct monster_spell *spell = monster_spells;
-	while (spell) {
-		if (spell->index == index)
-			break;
-		spell = spell->next;
+	const struct monster_spell *spell;
+	for (spell = monster_spells; spell; spell = spell->next) {
+		if (spell->index == index) return spell;
 	}
-	return spell;
+	return NULL;
 }
 
 /**
@@ -467,7 +465,7 @@ void ignore_spells(bitflag *f, int types)
  * \param el is what we know about the player's elemental resists
  * \param race is the monster type we're operating on
  */
-void unset_spells(bitflag *spells, bitflag *flags, bitflag *pflags,
+void unset_spells(bitflag *mspells, bitflag *flags, bitflag *pflags,
 				  struct element_info *el, const struct monster *mon)
 {
 	const struct mon_spell_info *info;
@@ -479,7 +477,7 @@ void unset_spells(bitflag *spells, bitflag *flags, bitflag *pflags,
 
 		/* Ignore missing spells */
 		if (!spell) continue;
-		if (!rsf_has(spells, info->index)) continue;
+		if (!rsf_has(mspells, info->index)) continue;
 
 		/* Get the effect */
 		effect = spell->effect;
@@ -489,7 +487,7 @@ void unset_spells(bitflag *spells, bitflag *flags, bitflag *pflags,
 			int element = effect->subtype;
 			int learn_chance = el[element].res_level * (smart ? 50 : 25);
 			if (randint0(100) < learn_chance) {
-				rsf_off(spells, info->index);
+				rsf_off(mspells, info->index);
 			}
 		} else {
 			/* Now others with resisted effects */
@@ -555,7 +553,7 @@ void unset_spells(bitflag *spells, bitflag *flags, bitflag *pflags,
 				effect = effect->next;
 			}
 			if (effect)
-				rsf_off(spells, info->index);
+				rsf_off(mspells, info->index);
 		}
 	}
 }

@@ -344,8 +344,9 @@ static void prt_sp(int row, int col)
 	uint8_t color = player_sp_attr(player);
 
 	/* Do not show mana unless we should have some */
-	if (!player->class->magic.total_spells
-			|| (player->lev < player->class->magic.spell_first)) {
+	if ((!player->class->magic.total_spells
+			|| (player->lev < player->class->magic.spell_first)) &&
+			(player->state.skills[SKILL_MAGIC] <= 0)) {
 		/*
 		 * But clear if experience drain may have left no points after
 		 * having points.
@@ -1304,6 +1305,18 @@ static size_t prt_unignore(int row, int col)
 	return 0;
 }
 
+static size_t prt_learn(int row, int col)
+{
+	int pts = player->state.extra_points_max - player->state.extra_points_used;
+	if (pts > 0) {
+		char *str = format("Lrn %i", pts);
+		put_str(str, row, col);
+		return strlen(str) + 1;
+	}
+
+	return 0;
+}
+
 /**
  * Descriptive typedef for status handlers
  */
@@ -1311,7 +1324,8 @@ typedef size_t status_f(int row, int col);
 
 static status_f *status_handlers[] =
 { prt_level_feeling, prt_light, prt_moves, prt_unignore, prt_recall,
-  prt_descent, prt_state, prt_study, prt_tmd, prt_dtrap, prt_terrain };
+  prt_descent, prt_state, prt_study, prt_tmd, prt_dtrap, prt_terrain,
+  prt_learn };
 
 
 static void update_statusline_aux(int row, int col)

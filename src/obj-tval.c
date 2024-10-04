@@ -76,9 +76,9 @@ bool tval_is_light_k(const struct object_kind *kind)
 	return kind->tval == TV_LIGHT;
 }
 
-bool tval_is_ring_k(const struct object_kind *obj)
+bool tval_is_ring_k(const struct object_kind *kind)
 {
-	return obj->tval == TV_RING;
+	return kind->tval == TV_RING;
 }
 
 bool tval_is_ring(const struct object *obj)
@@ -132,9 +132,9 @@ bool tval_can_have_timeout(const struct object *obj)
 	return obj->tval == TV_ROD;
 }
 
-bool tval_is_body_armor_k(const struct object_kind *obj)
+bool tval_is_body_armor_k(const struct object_kind *kind)
 {
-	switch (obj->tval) {
+	switch (kind->tval) {
 		case TV_SOFT_ARMOR:
 		case TV_HARD_ARMOR:
 		case TV_DRAG_ARMOR:
@@ -154,9 +154,9 @@ bool tval_is_head_armor(const struct object *obj)
 	return obj->tval == TV_HELM || obj->tval == TV_CROWN;
 }
 
-bool tval_is_head_armor_k(const struct object_kind *obj)
+bool tval_is_head_armor_k(const struct object_kind *kind)
 {
-	return obj->tval == TV_HELM || obj->tval == TV_CROWN;
+	return kind->tval == TV_HELM || kind->tval == TV_CROWN;
 }
 
 bool tval_is_ammo(const struct object *obj)
@@ -187,9 +187,14 @@ bool tval_is_bolt(const struct object *obj)
 	return obj->tval == TV_BOLT;
 }
 
+bool tval_is_launcher_k(const struct object_kind *kind)
+{
+	return kind->tval == TV_BOW;
+}
+
 bool tval_is_launcher(const struct object *obj)
 {
-	return obj->tval == TV_BOW;
+	return tval_is_launcher_k(obj->kind);
 }
 
 bool tval_is_useable(const struct object *obj)
@@ -260,9 +265,9 @@ bool tval_is_armor(const struct object *obj)
 	}
 }
 
-bool tval_is_melee_weapon_k(const struct object_kind *obj)
+bool tval_is_melee_weapon_k(const struct object_kind *kind)
 {
-	switch (obj->tval) {
+	switch (kind->tval) {
 		case TV_SWORD:
 		case TV_HAFTED:
 		case TV_POLEARM:
@@ -307,9 +312,9 @@ bool tval_has_variable_power(const struct object *obj)
 	}
 }
 
-bool tval_is_wearable_k(const struct object_kind *obj)
+bool tval_is_wearable_k(const struct object_kind *kind)
 {
-	switch (obj->tval) {
+	switch (kind->tval) {
 		case TV_BOW:
 		case TV_DIGGING:
 		case TV_HAFTED:

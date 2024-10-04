@@ -22,6 +22,7 @@
 #include "effects.h"
 #include "effects-info.h"
 #include "game-input.h"
+#include "init.h"
 #include "monster.h"
 #include "mon-spell.h"
 #include "obj-tval.h"
@@ -56,9 +57,9 @@ struct spell_menu_data {
 static int spell_menu_valid(struct menu *m, int oid)
 {
 	struct spell_menu_data *d = menu_priv(m);
-	int *spells = d->spells;
+	int *splls = d->spells;
 
-	return d->is_valid(player, spells[oid]);
+	return d->is_valid(player, splls[oid]);
 }
 
 /**
@@ -440,43 +441,15 @@ static void innate_menu_display(struct menu *m, int oid, bool cursor,
 	const struct monster_spell *innate = monster_spell_by_index(innate_index);
 	const struct monster_race *mrace = lookup_player_monster(player);
 
-	//char help[30];
 	char out[80];
 	char name[80];
 	get_mon_spell_name(name, sizeof(name), innate_index, mrace);
 	int mana = innate_spell_mana(mrace);
 
 	int attr = COLOUR_WHITE;
-	//const char *illegible = NULL;
-	//const char *comment = "";
 	size_t u8len;
 
 	if (!innate) return;
-
-	/*if (spell->slevel >= 99) {
-		illegible = "(illegible)";
-		attr = COLOUR_L_DARK;
-	} else if (player->spell_flags[spell_index] & PY_SPELL_FORGOTTEN) {
-		comment = " forgotten";
-		attr = COLOUR_YELLOW;
-	} else if (player->spell_flags[spell_index] & PY_SPELL_LEARNED) {
-		if (player->spell_flags[spell_index] & PY_SPELL_WORKED) {
-			// Get extra info 
-			get_spell_info(spell_index, help, sizeof(help));
-			comment = help;
-			attr = COLOUR_WHITE;
-			if (player->state.powers[spell->school]) attr = COLOUR_L_WHITE;
-		} else {
-			comment = " untried";
-			attr = COLOUR_L_GREEN;
-		}
-	} else if (spell->slevel <= (player->lev + caster_level_bonus(player, spell))) {
-		comment = " unknown";
-		attr = COLOUR_L_BLUE;
-	} else {
-		comment = " difficult";
-		attr = COLOUR_RED;
-	}*/
 
 	/* Dump the spell --(-- */
 	u8len = utf8_strlen(name);
@@ -493,8 +466,6 @@ static void innate_menu_display(struct menu *m, int oid, bool cursor,
 		string_free(name_copy);
 	}
 	my_strcat(out, format("%i", mana), sizeof(out));
-	//my_strcat(out, format("%2d %4d %3d%%%s", spell->slevel, spell->smana,
-	//	spell_chance(spell_index), comment), sizeof(out));
 	c_prt(attr, out, row, col);
 }
 
@@ -628,7 +599,7 @@ static struct menu *innate_menu_new(const struct monster_race *monr,
 	menu_setpriv(m, d->n_innates, d);
 
 	/* Set flags */
-	m->header = "Name                             Cost";
+	m->header = "Name                             Lv";
 	m->flags = MN_CASELESS_TAGS;
 	m->selections = all_letters_nohjkl;
 	m->browse_hook = innate_menu_browser;
@@ -681,6 +652,271 @@ int textui_get_innate(struct player *p,
 		int innate_index = innate_menu_select(m);
 		innate_menu_destroy(m);
 		return innate_index;
+	} else if (error) {
+		msg("%s", error);
+	}
+
+	return -1;
+}
+
+
+
+
+
+
+
+/**
+ * Innate menu data struct
+ */
+struct gener_spell_menu_data {
+	int *splls;
+	int n_splls;
+
+	bool browse;
+	bool (*is_valid)(const struct player *p, int spell_index);
+	bool show_description;
+
+	int selected_spell;
+};
+
+static int gener_spell_menu_valid(struct menu *m, int oid)
+{
+	//plog("entering gsmv");
+	struct gener_spell_menu_data *d = menu_priv(m);
+	int *splls = d->splls;
+
+	return d->is_valid(player, splls[oid]);
+}
+
+static void gener_spell_menu_display(struct menu *m, int oid, bool cursor,
+		int row, int col, int wid)
+{
+	//plog("entering gsmd");
+	struct gener_spell_menu_data *d = menu_priv(m);
+	int spell_index = d->splls[oid];
+
+	const struct player_spell *spell = player_spell_lookup(spell_index);
+
+	assert(spell);
+
+	if (!spell) return;
+
+	char out[80];
+	char name[80];
+	my_strcpy(name, spell->name, sizeof(name));
+	int level = gener_spell_power(player, spell);
+	int mana = player_spell_mana(spell);
+	int fail = player_spell_fail(spell);
+
+	int attr = COLOUR_WHITE;
+	size_t u8len;
+
+	/* Dump the spell --(-- */
+	u8len = utf8_strlen(name);
+	if (u8len < 30) {
+		strnfmt(out, sizeof(out), "%s%*s", name,
+			(int)(30 - u8len), " ");
+	} else {
+		char *name_copy = string_make(name);
+
+		if (u8len > 30) {
+			utf8_clipto(name_copy, 30);
+		}
+		my_strcpy(out, name_copy, sizeof(out));
+		string_free(name_copy);
+	}
+	my_strcat(out, format("%3i %4i %3i%%", level, mana, fail), sizeof(out));
+	c_prt(attr, out, row, col);
+	//plog("done gsmd");
+}
+
+static bool gener_spell_menu_handler(struct menu *m, const ui_event *e, int oid)
+{
+	//plog("entering gsmh");
+	struct gener_spell_menu_data *d = menu_priv(m);
+
+	if (e->type == EVT_SELECT) {
+		d->selected_spell = d->splls[oid];
+		return d->browse ? true : false;
+	}
+	else if (e->type == EVT_KBRD) {
+		if (e->key.code == '?') {
+			d->show_description = !d->show_description;
+		}
+	}
+
+	return false;
+}
+
+static void gener_spell_menu_browser(int oid, void *data, const region *loc)
+{
+	struct gener_spell_menu_data *d = data;
+	int spell_index = d->splls[oid];
+	const struct player_spell *spell = player_spell_lookup(spell_index);
+
+	if (d->show_description) {
+		// Redirect output to the screen 
+		text_out_hook = text_out_to_screen;
+		text_out_wrap = 0;
+		text_out_indent = loc->col - 1;
+		text_out_pad = 1;
+
+		Term_gotoxy(loc->col, loc->row + loc->page_rows);
+		// Spell description 
+		text_out("\n%s", spell->text);
+
+		// To summarize average damage, count the damaging effects 
+		int num_damaging = 0;
+		for (struct effect *e = spell->effect; e != NULL; e = effect_next(e)) {
+			if (effect_damages(e)) {
+				num_damaging++;
+			}
+		}
+		// Now enumerate the effects' damage and type if not forgotten 
+		if (num_damaging > 0
+			&& (player->player_spell_flags[spell_index] & PY_SPELL_WORKED)
+			&& !(player->player_spell_flags[spell_index] & PY_SPELL_FORGOTTEN)) {
+			dice_t *shared_dice = NULL;
+			int i = 0;
+
+			text_out("  Inflicts an average of");
+			for (struct effect *e = spell->effect; e != NULL; e = effect_next(e)) {
+				if (e->index == EF_SET_VALUE) {
+					shared_dice = e->dice;
+				} else if (e->index == EF_CLEAR_VALUE) {
+					shared_dice = NULL;
+				}
+				if (effect_damages(e)) {
+					if (num_damaging > 2 && i > 0) {
+						text_out(",");
+					}
+					if (num_damaging > 1 && i == num_damaging - 1) {
+						text_out(" and");
+					}
+					text_out_c(COLOUR_L_GREEN, " %d", effect_avg_damage(e, shared_dice));
+					const char *projection = effect_projection(e);
+					if (strlen(projection) > 0) {
+						text_out(" %s", projection);
+					}
+					i++;
+				}
+			}
+			text_out(" damage.");
+		}
+		
+		text_out("\n\n");
+
+		// XXX 
+		text_out_pad = 0;
+		text_out_indent = 0;
+	}
+}
+
+static const menu_iter gener_spell_menu_iter = {
+	NULL,	/* get_tag = NULL, just use lowercase selections */
+	gener_spell_menu_valid,
+	gener_spell_menu_display,
+	gener_spell_menu_handler,
+	NULL	/* no resize hook */
+};
+
+static struct menu *gener_spell_menu_new(struct player *p, 
+		bool (*is_valid)(const struct player *p, int innate_index),
+		bool show_description)
+{
+	//plog("entering gsmn");
+	struct menu *m = menu_new(MN_SKIN_SCROLL, &gener_spell_menu_iter);
+	struct gener_spell_menu_data *d = mem_alloc(sizeof *d);
+	size_t width = MAX(0, MIN(Term->wid - 15, 80));
+
+	int max_splls = 25;
+	struct object *spellbook;
+
+	region loc = { 0 - width, 1, width, -99 };
+
+	/* collect spells from books */
+	d->n_splls = 0;
+	d->splls = mem_zalloc(max_splls * sizeof(int));
+	for (spellbook = p->gear; spellbook && d->n_splls < max_splls; spellbook = spellbook->next) {
+		const struct player_spell *spell = spellbook->kind->spell;
+		if (spell) {
+			d->splls[d->n_splls] = spell->sidx;
+			d->n_splls++;
+		}
+	}
+
+	if (d->n_splls == 0) {
+		mem_free(m);
+		mem_free(d->splls);
+		mem_free(d);
+		return NULL;
+	}
+
+	/* Copy across private data */
+	d->is_valid = is_valid;
+	d->selected_spell = -1;
+	d->browse = false;
+	d->show_description = show_description;
+
+	menu_setpriv(m, d->n_splls, d);
+
+	/* Set flags */
+	m->header = "Name                             Lv  Mana Fail";
+	m->flags = MN_CASELESS_TAGS;
+	m->selections = all_letters_nohjkl;
+	m->browse_hook = gener_spell_menu_browser;
+	m->cmd_keys = "?";
+
+	/* Set size */
+	loc.page_rows = d->n_splls + 1;
+	menu_layout(m, &loc);
+
+	//plog("done gsmn");
+	return m;
+}
+
+static void gener_spell_menu_destroy(struct menu *m)
+{
+	struct gener_spell_menu_data *d = menu_priv(m);
+	mem_free(d->splls);
+	mem_free(d);
+	mem_free(m);
+}
+
+static int gener_spell_menu_select(struct menu *m)
+{
+	//plog("entering gsms");
+	struct gener_spell_menu_data *d = menu_priv(m);
+	char buf[80];
+
+	screen_save();
+	region_erase_bordered(&m->active);
+
+	/* Format, capitalise and display */
+	strnfmt(buf, sizeof buf, "Cast which spell?");
+	my_strcap(buf);
+	prt(buf, 0, 0);
+
+	menu_select(m, 0, true);
+	screen_load();
+
+	//plog("done gsms");
+	return d->selected_spell;
+}
+
+int textui_get_gener_spell(struct player *p, const char *error,
+	bool (*spell_filter)(const struct player *p, int innate_index))
+{
+	//plog("entering tggs");
+	struct menu *m;
+
+	handle_stuff(p);
+
+	m = gener_spell_menu_new(p, spell_filter, false);
+	if (m) {
+		int spell_index = gener_spell_menu_select(m);
+		gener_spell_menu_destroy(m);
+		return spell_index;
 	} else if (error) {
 		msg("%s", error);
 	}

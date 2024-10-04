@@ -212,10 +212,20 @@ static enum parser_error parse_always(struct parser *p) {
 
 		/* Run across all the books for this type, add the town books */
 		for (i = 1; i <= book_base->num_svals; i++) {
-			const struct class_book *book = NULL;
+			bool skip = true;
 			kind = lookup_kind(tval, i);
-			book = object_kind_to_book(kind);
-			if (!book->dungeon) {
+
+			if (tval == TV_BOOK) {
+				if (kind->spell && kind->spell->slevel <= 5)
+					skip = false;
+			} else {
+				const struct class_book *book = NULL;
+				book = object_kind_to_book(kind);
+				if (!book->dungeon) 
+					skip = false;
+			}
+
+			if (!skip) {
 				/* Expand if necessary */
 				if (!s->always_num) {
 					s->always_size = 8;
@@ -633,9 +643,10 @@ int price_item(struct store *store, const struct object *obj,
 			price = price / 2;
 		}
 
-		/* L: don't buy cheap stuff */
-		price -= 100;
-		if (price <= 0) return 0;
+		/* L: don't buy cheap stuff, especially lategame */
+		int day = turn / 10 / z_info->day_length;
+		day = MIN(day, 10) + 5;
+		if (price <= day * day * 4) return 0;
 
 		/* Check for no_selling option */
 		/*if (OPT(player, birth_no_selling)) {

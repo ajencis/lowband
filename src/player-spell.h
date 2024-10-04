@@ -38,12 +38,21 @@ bool spell_okay_to_browse(const struct player *p, int spell_index);
 int16_t spell_chance(int spell_index);
 void spell_learn(int spell_index);
 bool spell_cast(int spell_index, int dir, struct command *cmd);
+bool gener_spell_cast(int spell_index, int dir, struct command *cmd);
 
 int school_find_idx(const char *name);
 
 extern void get_spell_info(int index, char *buf, size_t len);
 extern bool cast_spell(int tval, int index, int dir);
 extern bool spell_needs_aim(int spell_index);
+extern bool innate_needs_aim(int innate_index);
+extern bool gener_spell_needs_aim(const struct player_spell *spell);
 
 int innate_spell_mana(const struct monster_race *mon);
+
+int gener_spell_power(const struct player *p, const struct player_spell *s);
+void gener_spell_learn(struct player *p, const struct player_spell *s);
+struct player_spell *player_spell_lookup(int index);
+int player_spell_mana(const struct player_spell *ps);
+int player_spell_fail(const struct player_spell *ps);
 

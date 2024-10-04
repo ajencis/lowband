@@ -377,7 +377,6 @@ skill-melee:15
 skill-shoot:0
 skill-throw:0
 skill-dig:10
-power:FIRE_MAGIC:40
 hitdie:6
 exp:175
 infravision:5

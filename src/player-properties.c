@@ -92,6 +92,11 @@ static void view_abilities(void)
 		}
 	}
 
+	if (num_abilities == 0) {
+		msg("You have no abilities.");
+		return;
+	}
+
 	/* View choices until user exits */
 	view_ability_menu(ability_list, num_abilities);
 

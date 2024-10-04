@@ -47,6 +47,19 @@
 #include "project.h"
 #include "trap.h"
 
+
+void mark_mon_as_playable(struct monster_race *mr)
+{
+	struct monster_race *curr = mr;
+
+	while (curr) {
+		curr->is_playable = true;
+		if (!curr->evol || !curr->evol->race) break;
+		curr = curr->evol->race;
+	}
+}
+
+
 /**
  * ------------------------------------------------------------------------
  * Lore utilities
@@ -1336,14 +1349,20 @@ void monster_take_terrain_damage(struct monster *mon)
 	}
 }
 
-void monster_take_poison_damage(struct monster *mon, int energy)
+void monster_take_timed_damage(struct monster *mon, int energy)
 {
 	if (mon->m_timed[MON_TMD_POISONED] > 0) {
 		int pois1 = (mon->m_timed[MON_TMD_POISONED] + 3) / 4;
 		int pois2 = (mon->m_timed[MON_TMD_POISONED] + 5) / 4;
 		int pdam = (pois1 * pois2 + energy - 1) / energy;
-		if (pdam <= 0) return;
-		mon_take_nonplayer_hit(pdam, mon, MON_MSG_NONE, MON_MSG_DEATH_POIS, true);
+		if (pdam > 0)
+			mon_take_nonplayer_hit(pdam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true);
+	}
+	if (mon->m_timed[MON_TMD_SUFFOCATING] > 0) {
+		int suff = mon->m_timed[MON_TMD_SUFFOCATING] * 2;
+		int sdam = (suff + 50 + energy - 1) / energy;
+		if (sdam > 0)
+			mon_take_nonplayer_hit(sdam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true);
 	}
 }
 
@@ -1763,7 +1782,7 @@ static void rearrange_monster(struct monster_race *mr)
 {
 	int power = mr->level + randint0(mr->level / 5 + 1) - randint0(mr->level / 5 + 1);
 	int blows = 0;
-	bool spells = false, breaths = false;
+	bool mspells = false, breaths = false;
 	int ttdam, tdice, quo; // twice total dam
 	struct monster_blow *cblow;
 	int mintotal, maxtotal;
@@ -1802,8 +1821,8 @@ static void rearrange_monster(struct monster_race *mr)
 	}
 	if (!blows) dam /= 2;
 
-	if (!rsf_is_empty(mr->spell_flags)) spells = true;
-	if (!spells) mag /= 2;
+	if (!rsf_is_empty(mr->spell_flags)) mspells = true;
+	if (!mspells) mag /= 2;
 
 	// if it breathes give it better hp at expense of magic
 	if (test_spells(mr->spell_flags, RST_BREATH)) breaths = true;
@@ -1820,7 +1839,7 @@ static void rearrange_monster(struct monster_race *mr)
 		hp += inc;
 		ac += inc;
 		spe += inc;
-		if (spells) mag += inc;
+		if (mspells) mag += inc;
 	}
 	while (dam + hp + ac + spe + mag > maxtotal) {
 		int dec = (dam + hp + ac + spe + mag - maxtotal + 4) / 5;
@@ -1844,7 +1863,7 @@ static void rearrange_monster(struct monster_race *mr)
 
 	// spread damage over its damaging blows
 	quo = blows;
-	tdice = power / 25 + 1;
+	tdice = power * (blows + 1) / 25 + 1;
 	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
 		cblow = &mr->blow[i];
 		int fact = 5 + cblow->method->power;

@@ -22,6 +22,7 @@
 #include "monster.h"
 #include "mon-msg.h"
 
+void mark_mon_as_playable(struct monster_race *mr);
 const char *describe_race_flag(int flag);
 void create_mon_flag_mask(bitflag *f, ...);
 struct monster_race *lookup_monster(const char *name);
@@ -47,7 +48,7 @@ bool mon_take_hit(struct monster *mon, struct player *p, int dam, bool *fear,
 	const char *note);
 void kill_arena_monster(struct monster *mon);
 void monster_take_terrain_damage(struct monster *mon);
-void monster_take_poison_damage(struct monster *mon, int energy);
+void monster_take_timed_damage(struct monster *mon, int energy);
 bool monster_taking_terrain_damage(struct chunk *c, struct monster *mon);
 struct object *monster_nearest_takeable_item(struct chunk *c, struct monster *mon);
 struct monster *get_commanded_monster(void);

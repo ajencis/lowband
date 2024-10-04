@@ -39,8 +39,6 @@ struct hit_types {
 	const char *text;
 };
 
-//extern struct player_state;
-
 /**
  * ranged_attack is a function pointer, used to execute a kind of attack.
  *
@@ -58,7 +56,9 @@ extern void do_cmd_throw(struct command *cmd);
 
 
 /* L: new */
-struct attack_roll get_weapon_attack(struct player *p, struct player_state *ps, struct object *obj);
+struct attack_roll get_melee_weapon_attack(struct player *p, struct player_state *ps, struct object *obj);
+struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_state *ps,
+												struct object *shooter);
 int get_monster_attacks(struct player *p, struct player_state *ps, struct monster_race *mr, struct attack_roll *aroll, int maxnum);
 
 extern int breakage_chance(const struct object *obj, bool hit_target);

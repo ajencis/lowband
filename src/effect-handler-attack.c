@@ -22,6 +22,7 @@
 #include "init.h"
 #include "mon-desc.h"
 #include "mon-make.h"
+#include "mon-move.h"
 #include "mon-spell.h"
 #include "mon-util.h"
 #include "obj-desc.h"
@@ -679,7 +680,7 @@ bool effect_handler_SPHERE(effect_handler_context_t *context)
  */
 bool effect_handler_BALL(effect_handler_context_t *context)
 {
-	return ball_spell(context, 0, false);
+	return ball_spell(context, context->other, false);
 }
 
 bool effect_handler_BALL_NO_DAM_RED(effect_handler_context_t *context)
@@ -1999,6 +2000,43 @@ bool effect_handler_SWEEP(effect_handler_context_t *context)
 
 	/* Should return some energy if all enemies killed and blows remain? */
 	return true;
+}
+
+bool effect_handler_RANDOM_MON_DAMAGE(effect_handler_context_t *context)
+{
+	if (context->origin.what != SRC_PLAYER) return false;
+
+	int dam = effect_calculate_value(context, false);
+	int count = 0;
+	int i;
+	struct monster *choice = NULL;
+
+	for (i = 0; i < cave_monster_max(cave); i++) {
+		struct monster *mon = cave_monster(cave, i);
+		if (mon && mon->race && los(cave, player->grid, mon->grid) &&
+				mon_will_attack_player(mon, player)) {
+			++count;
+			if (one_in_(count)) choice = mon;
+		}
+	}
+
+	if (choice) {
+		struct loc l = choice->grid;
+		char desc[80];
+		int flgs = PROJECT_KILL | PROJECT_JUMP;
+		monster_desc(desc, sizeof(desc), choice, MDESC_IND_HID);
+
+		project(context->origin, context->radius, l, dam, context->subtype, flgs, 0, 0, context->obj);
+
+		if (context->subtype == PROJ_ELEC)
+			msg("A bolt of lightning strikes %s.", desc);
+		else
+			msg("%s strikes %s.", projections[context->subtype].desc, desc);
+
+		return true;
+	}
+
+	return false;
 }
 
 /**

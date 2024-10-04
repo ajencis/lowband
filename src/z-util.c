@@ -543,7 +543,7 @@ void my_strcap_full(char *buf)
 	int i;
 
 	for (i = 0; buf[i]; i++) {
-		if (i == 0 || buf[i - 1] == ' ') {
+		if (i == 0 || buf[i - 1] == ' ' || buf[i - 1] == '-') {
 			buf[i] = toupper((unsigned char) buf[i]);
 		}
 	}

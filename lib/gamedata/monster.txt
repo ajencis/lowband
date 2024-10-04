@@ -1427,6 +1427,7 @@ flags:ATTR_CLEAR
 desc:It is a disgusting mass of poisonous worms.
 
 name:radiation eye
+short-name:rad. eye
 base:eye
 evolution:disenchanter eye
 color:R
@@ -1830,6 +1831,7 @@ flags:EMPTY_MIND
 desc:It is a smallish, slimy, icky, nasty creature.
 
 name:disenchanter eye
+short-name:disen. eye
 base:eye
 evolution:bloodshot eye
 color:v
@@ -2144,6 +2146,7 @@ friends:100:2d7:Same
 desc:It scuttles towards you.
 
 name:bloodshot eye
+short-name:bloodsh. eye
 base:eye
 evolution:evil eye
 color:r

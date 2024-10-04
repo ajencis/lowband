@@ -12,15 +12,17 @@
  * additional details in player_property.txt
  */
 
-#define MS(x, a, b) PP(x##_MAGIC, b, false, 10, 5, 0)
+#define MS(x, a, b) PP(x##_MAGIC, b, false, 100, 5, 0)
 #include "list-magic-schools.h"
 #undef MS
 /* symbol					name				expon	power	weight	update*/
-PP(SWORD_SPECIALIZATION,	"Swordmastery",		false,	15,		15,		PU_BONUS)
-PP(HAFTED_SPECIALIZATION,	"Haftedmastery",	false,	15,		15,		PU_BONUS)
-PP(POLEARM_SPECIALIZATION,	"Polearm-mastery",	false,	15,		15,		PU_BONUS)
-PP(BOW_SPECIALIZATION,		"Bowmastery",		false,	15,		15,		PU_BONUS)
-PP(UNARMED_STRIKE,			"Unarmed Strike",	true,	10,		5,		PU_BONUS)
-PP(DODGING,					"Dodging",			false,	10,		10,		PU_BONUS)
-PP(BACKSTAB,				"Backstabbing",		false,	10,		10,		0)
-PP(RESILIENCE,				"Resilience",		false,	15,		5,		PU_HP)
+PP(SWORD_SPECIALIZATION,	"Swordmastery",		false,	150,	15,		PU_BONUS)
+PP(HAFTED_SPECIALIZATION,	"Haftedmastery",	false,	150,	10,		PU_BONUS)
+PP(POLEARM_SPECIALIZATION,	"Polearm-mastery",	false,	150,	10,		PU_BONUS)
+PP(BOW_SPECIALIZATION,		"Bowmastery",		false,	100,	10,		PU_BONUS)
+PP(CROSSBOW_SPECIALIZATION,	"Crossbowmastery",	false,	100,	5,		PU_BONUS)
+PP(SLING_SPECIALIZATION,	"Slingmastery",		false,	100,	5,		PU_BONUS)
+PP(UNARMED_STRIKE,			"Unarmed Strike",	true,	100,	5,		PU_BONUS)
+PP(AGILITY,					"Agility",			false,	100,	10,		PU_BONUS)
+PP(BACKSTAB,				"Backstabbing",		false,	100,	10,		PU_BONUS)
+PP(RESILIENCE,				"Resilience",		false,	150,	5,		PU_BONUS | PU_HP)

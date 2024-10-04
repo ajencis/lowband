@@ -293,6 +293,39 @@ static enum parser_error write_book_kind(struct class_book *book,
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error write_gener_book_kind(struct player_spell *spell)
+{
+	struct object_kind *temp, *kind;
+
+	z_info->k_max++;
+	z_info->ordinary_kind_max++;
+	temp = mem_realloc(k_info, (z_info->k_max + 1) * sizeof(*temp));
+	
+	/* Copy if no errors */
+	if (!temp) {
+		return PARSE_ERROR_INTERNAL;
+	} else {
+		k_info = temp;
+	}
+
+	kind = &k_info[z_info->k_max - 1];
+	memset(kind, 0, sizeof(*kind));
+	
+	/* Copy the tval and base */
+	kind->tval = TV_BOOK;
+	kind->base = &kb_info[kind->tval];
+	
+	kind->name = string_make(spell->name);
+	kind->kidx = z_info->k_max - 1;
+
+	kb_info[TV_BOOK].num_svals++;
+	kind->sval = kb_info[TV_BOOK].num_svals;
+
+	spell_to_obj(spell, kind);
+
+	return PARSE_ERROR_NONE;
+}
+
 /**
  * Find the default paths to all of our important sub-directories.
  *
@@ -2841,7 +2874,7 @@ static enum parser_error parse_p_race_monster(struct parser *p) {
 	if (mon == NULL)
 		return PARSE_ERROR_INVALID_MONSTER;
 
-	mon->is_playable = true;
+	mark_mon_as_playable(mon);
 
 	for (i = 0; i < MAX_RACE_MONSTERS; i++) {
 		if (r->monsters[i] == 0) {
@@ -3433,6 +3466,246 @@ struct file_parser shape_parser = {
 	cleanup_shape
 };
 
+
+/**
+ * ------------------------------------------------------------------------
+ * L: Initialize generic spells
+ * ------------------------------------------------------------------------*/
+
+static enum parser_error parse_spell_name(struct parser *p) {
+	struct player_spell *s = parser_priv(p);
+	struct player_spell *spell = mem_zalloc(sizeof *spell);
+
+	spell->name = string_make(parser_getsym(p, "name"));
+	spell->slevel = parser_getint(p, "level");
+	spell->smana = parser_getint(p, "mana");
+	spell->sfail = parser_getint(p, "fail");
+	
+	spell->next = s;
+
+	spell->sidx = z_info->spell_max;
+	++z_info->spell_max;
+
+	parser_setpriv(p, spell);
+
+	return PARSE_ERROR_NONE;
+}
+
+
+static enum parser_error parse_spell_effect(struct parser *p) {
+	struct player_spell *s = parser_priv(p);
+	struct effect *effect, *new_effect;
+
+	/* Go to the next vacant effect and set it to the new one  */
+	new_effect = mem_zalloc(sizeof(*effect));
+	if (s->effect) {
+		effect = s->effect;
+		while (effect->next) effect = effect->next;
+		effect->next = new_effect;
+	} else {
+		s->effect = new_effect;
+	}
+
+	/* Fill in the detail */
+	return grab_effect_data(p, new_effect);
+}
+
+static enum parser_error parse_spell_effect_yx(struct parser *p) {
+	struct player_spell *s = parser_priv(p);
+	struct effect *effect;
+
+	/* If there is no effect, assume that this is human and not parser error. */
+	effect = s->effect;
+	if (effect == NULL) {
+		return PARSE_ERROR_NONE;
+	}
+	while (effect->next) effect = effect->next;
+	effect->y = parser_getint(p, "y");
+	effect->x = parser_getint(p, "x");
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_spell_dice(struct parser *p) {
+	struct player_spell *s = parser_priv(p);
+	struct effect *effect;
+	dice_t *dice;
+	const char *string;
+
+	/* If there is no effect, assume that this is human and not parser error. */
+	effect = s->effect;
+	if (effect == NULL) {
+		return PARSE_ERROR_NONE;
+	}
+	while (effect->next) effect = effect->next;
+
+	dice = dice_new();
+	if (dice == NULL) {
+		return PARSE_ERROR_INVALID_DICE;
+	}
+
+	string = parser_getstr(p, "dice");
+	if (dice_parse_string(dice, string)) {
+		dice_free(effect->dice);
+		effect->dice = dice;
+	} else {
+		dice_free(dice);
+		return PARSE_ERROR_INVALID_DICE;
+	}
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_spell_expr(struct parser *p) {
+	struct player_spell *s = parser_priv(p);
+	struct effect *effect;
+	expression_t *expression;
+	expression_base_value_f function;
+	const char *name;
+	const char *base;
+	const char *expr;
+	enum parser_error result;
+
+	/* If there is no effect, assume that this is human and not parser error. */
+	effect = s->effect;
+	if (effect == NULL) {
+		return PARSE_ERROR_NONE;
+	}
+	while (effect->next) effect = effect->next;
+
+	/* If there are no dice, assume that this is human and not parser error. */
+	if (effect->dice == NULL) {
+		return PARSE_ERROR_NONE;
+	}
+	name = parser_getsym(p, "name");
+	base = parser_getsym(p, "base");
+	expr = parser_getstr(p, "expr");
+	expression = expression_new();
+
+	if (expression == NULL) {
+		return PARSE_ERROR_INVALID_EXPRESSION;
+	}
+	function = effect_value_base_by_name(base);
+	expression_set_base_value(expression, function);
+
+	if (expression_add_operations_string(expression, expr) < 0) {
+		result = PARSE_ERROR_BAD_EXPRESSION_STRING;
+	} else if (dice_bind_expression(effect->dice, name, expression) < 0) {
+		result = PARSE_ERROR_UNBOUND_EXPRESSION;
+	} else {
+		result = PARSE_ERROR_NONE;
+	}
+
+	/* The dice object makes a deep copy of the expression, so we can free it */
+	expression_free(expression);
+
+	return result;
+}
+
+static enum parser_error parse_spell_effect_msg(struct parser *p) {
+	struct player_spell *s = parser_priv(p);
+	struct effect *effect;
+
+	/* If there is no effect, assume that this is human and not parser error. */
+	effect = s->effect;
+	if (effect == NULL) {
+		return PARSE_ERROR_NONE;
+	}
+	while (effect->next) effect = effect->next;
+
+	effect->msg = string_append(effect->msg, parser_getstr(p, "text"));
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_spell_desc(struct parser *p) {
+	struct player_spell *s = parser_priv(p);
+
+	s->text = string_append(s->text, parser_getstr(p, "desc"));
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_spell_school(struct parser *p) {
+	struct player_spell *s = parser_priv(p);
+	const char *school_name;
+	int school_idx;
+	int i;
+
+	school_name = parser_getsym(p, "school");
+
+	school_idx = 0;
+	for (i = 0; list_school_names[i]; i++) {
+		if (streq(school_name, list_school_names[i])) {
+			school_idx = i;
+		}
+	}
+
+	if (school_idx == 0) return PARSE_ERROR_GENERIC;
+
+	for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
+		if (s->school[i] == 0) {
+			s->school[i] = school_idx;
+			break;
+		}
+	}
+
+	return PARSE_ERROR_NONE;
+}
+
+static struct parser *init_parse_spell(void) {
+	struct parser *p = parser_new();
+	z_info->spell_max = 0;
+	parser_setpriv(p, NULL);
+	parser_reg(p, "spell sym name int level int mana int fail", parse_spell_name);
+	parser_reg(p, "effect sym eff ?sym type ?int radius ?int other", parse_spell_effect);
+	parser_reg(p, "effect-yx int y int x", parse_spell_effect_yx);
+	parser_reg(p, "dice str dice", parse_spell_dice);
+	parser_reg(p, "expr sym name sym base str expr", parse_spell_expr);
+	parser_reg(p, "effect-msg str text", parse_spell_effect_msg);
+	parser_reg(p, "desc str desc", parse_spell_desc);
+	parser_reg(p, "school sym school", parse_spell_school);
+	return p;
+}
+
+static errr run_parse_spell(struct parser *p) {
+	return parse_file_quit_not_found(p, "p_spell");
+}
+
+static errr finish_parse_spell(struct parser *p) {
+	spells = parser_priv(p);
+	parser_destroy(p);
+	struct player_spell *ps;
+
+	for (ps = spells; ps; ps = ps->next) {
+		write_gener_book_kind(ps);
+	}
+	
+	return 0;
+}
+
+static void cleanup_spell(void)
+{
+	struct player_spell *spell = spells;
+	struct player_spell *next;
+
+	while (spell) {
+		next = spell->next;
+		string_free(spell->name);
+		string_free(spell->text);
+		free_effect(spell->effect);
+		mem_free(spell);
+		spell = next;
+	}
+}
+
+struct file_parser spell_parser = {
+	"spell",
+	init_parse_spell,
+	run_parse_spell,
+	finish_parse_spell,
+	cleanup_spell
+};
+
+
 /**
  * ------------------------------------------------------------------------
  * Initialize player classes
@@ -3556,6 +3829,15 @@ static enum parser_error parse_class_skill_dig(struct parser *p) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	c->c_skills[SKILL_DIGGING] = parser_getint(p, "base");
 	c->x_skills[SKILL_DIGGING] = parser_getint(p, "incr");
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_class_skill_magic(struct parser *p) {
+	struct player_class *c = parser_priv(p);
+	if (!c)
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	c->c_skills[SKILL_MAGIC] = parser_getint(p, "base");
+	c->x_skills[SKILL_MAGIC] = parser_getint(p, "incr");
 	return PARSE_ERROR_NONE;
 }
 
@@ -3794,7 +4076,7 @@ static enum parser_error parse_class_magic(struct parser *p) {
 
 static enum parser_error parse_class_book(struct parser *p) {
 	struct player_class *c = parser_priv(p);
-	int tval, spells;
+	int tval, splls;
 	const char *name, *quality;
 	struct class_book *b;
 
@@ -3825,9 +4107,9 @@ static enum parser_error parse_class_book(struct parser *p) {
 	name = parser_getsym(p, "name");
 	write_book_kind(b, name);
 
-	spells = parser_getuint(p, "spells");
-	b->spells = mem_zalloc(spells * sizeof(struct class_spell));
-	book_max_spells = spells;
+	splls = parser_getuint(p, "spells");
+	b->spells = mem_zalloc(splls * sizeof(struct class_spell));
+	book_max_spells = splls;
 	b->realm = lookup_realm(parser_getstr(p, "realm"));
 	++c->magic.num_books;
 
@@ -4248,6 +4530,7 @@ static struct parser *init_parse_class(void) {
 	parser_reg(p, "skill-shoot int base int incr", parse_class_skill_shoot);
 	parser_reg(p, "skill-throw int base int incr", parse_class_skill_throw);
 	parser_reg(p, "skill-dig int base int incr", parse_class_skill_dig);
+	parser_reg(p, "skill-magic int base int incr", parse_class_skill_magic);
 	parser_reg(p, "power sym name int value", parse_class_power);
 	parser_reg(p, "hitdie int mhp", parse_class_hitdie);
 	parser_reg(p, "exp int exp", parse_class_exp);
@@ -4284,8 +4567,8 @@ static errr run_parse_class(struct parser *p) {
 
 static errr finish_parse_class(struct parser *p) {
 	struct player_class *c;
-	int bi, si;
-	int spell_num = 0;
+	//int bi, si;
+	//int spell_num = 0;
 	int num = 0;
 	classes = parser_priv(p);
 	for (c = classes; c; c = c->next) num++;
@@ -4294,6 +4577,7 @@ static errr finish_parse_class(struct parser *p) {
 		c->cidx = num - 1;
 	}
 
+	/*
 	all_spells_num = 0;
 	for (c = classes; c; c = c->next) {
 		for (bi = 0; bi < c->magic.num_books; bi++) {
@@ -4308,15 +4592,16 @@ static errr finish_parse_class(struct parser *p) {
 			for (si = 0; si < c->magic.books[bi].num_spells; si++) {
 				struct class_spell curr = c->magic.books[bi].spells[si];
 				all_spells[spell_num] = curr;
-				/*all_spells[spell_num].name = string_make(curr.name);
-				all_spells[spell_num].text = string_make(curr.text);
-				all_spells[spell_num].effect = mem_zalloc(sizeof(struct effect));
-				memcpy(all_spells[spell_num].effect, curr.effect; sizeof(struct effect));*/
+				//all_spells[spell_num].name = string_make(curr.name);
+				//all_spells[spell_num].text = string_make(curr.text);
+				//all_spells[spell_num].effect = mem_zalloc(sizeof(struct effect));
+				//memcpy(all_spells[spell_num].effect, curr.effect; sizeof(struct effect));
 				spell_num++;
 			}
 		}
 	}
 	assert(spell_num == all_spells_num);
+	*/
 
 	parser_destroy(p);
 	return 0;
@@ -4359,7 +4644,7 @@ static void cleanup_class(void)
 		c = next;
 	}
 
-	mem_free(all_spells);
+	//mem_free(all_spells);
 }
 
 struct file_parser class_parser = {
@@ -4557,6 +4842,7 @@ static struct {
 	{ "bodies", &body_parser },
 	{ "magic realms", &realm_parser },
 	{ "player classes", &class_parser },
+	{ "player spells", &spell_parser },
 	{ "artifacts", &artifact_parser },
 	{ "object properties", &object_property_parser },
 	{ "timed effects", &player_timed_parser },
@@ -4564,7 +4850,7 @@ static struct {
 	{ "blow effects", &eff_parser },
 	{ "monster spells", &mon_spell_parser },
 	{ "monsters", &monster_parser },
-	{ "player races", &p_race_parser },
+	{ "player races", &p_race_parser }, /* L: must be after monsters */
 	{ "monster pits" , &pit_parser },
 	{ "monster lore" , &lore_parser },
 	{ "traps", &trap_parser },

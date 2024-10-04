@@ -769,9 +769,12 @@ static void specialization_mod_attack(struct attack_roll *aroll, struct object *
     if (obj->tval == TV_HAFTED) spec = PP_HAFTED_SPECIALIZATION;
 	else if (obj->tval == TV_POLEARM) spec = PP_POLEARM_SPECIALIZATION;
 	else if (obj->tval == TV_SWORD) spec = PP_SWORD_SPECIALIZATION;
+	else if (kf_has(obj->kind->kind_flags, KF_SHOOTS_ARROWS)) spec = PP_BOW_SPECIALIZATION;
+	else if (kf_has(obj->kind->kind_flags, KF_SHOOTS_BOLTS)) spec = PP_CROSSBOW_SPECIALIZATION;
+	else if (kf_has(obj->kind->kind_flags, KF_SHOOTS_SHOTS)) spec = PP_SLING_SPECIALIZATION;
 	else return;
 	
-	aroll->to_hit += get_power_scale(player, spec, 15);
+	aroll->to_hit += get_power_scale(player, spec, 20);
 	aroll->to_dam += get_power_scale(player, spec, 10);
 	aroll->dsides += get_power_scale(player, spec, 10);
 }
@@ -794,7 +797,7 @@ static bool backstab_mod_attack(struct attack_roll *aroll, int power)
 /**
  * L: get a weapon attack
  */
-struct attack_roll get_weapon_attack(struct player *p, struct player_state *ps, struct object *obj)
+struct attack_roll get_melee_weapon_attack(struct player *p, struct player_state *ps, struct object *obj)
 {
 	struct attack_roll aroll = { 0 };
 	if (obj) {
@@ -831,13 +834,98 @@ struct attack_roll get_weapon_attack(struct player *p, struct player_state *ps, 
 	return aroll;
 }
 
+struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_state *ps,
+												struct object *shooter)
+{
+	struct attack_roll aroll = { 0 };
+	assert(shooter);
+
+	aroll.ddice = shooter->pval;
+	aroll.to_hit = object_to_hit(shooter);
+	aroll.dsides = object_to_dam(shooter);
+	
+	aroll.message = "hit";
+	aroll.accuracy_stat = STAT_DEX;
+	aroll.damage_stat = STAT_DEX;
+	aroll.attack_skill = SKILL_TO_HIT_BOW;
+
+	aroll.obj = shooter;
+	aroll.to_hit += ps->to_h;
+	aroll.dsides += player_damage_bonus(ps);
+	aroll.ddice = aroll.ddice * (ps->skills[aroll.attack_skill] + 33) / 33;
+	
+	aroll.to_hit += adj_dex_th(ps->stat_ind[aroll.accuracy_stat]);
+	aroll.dsides += adj_str_td(ps->stat_ind[aroll.damage_stat]);
+	
+	specialization_mod_attack(&aroll, shooter);
+
+	aroll.dsides = MAX(aroll.dsides, 1);
+	aroll.ddice = MAX(aroll.ddice, 1);
+
+	//calc_blows(p, shooter->weight, &aroll, ps, shooter->modifiers[OBJ_MOD_SHOTS]);
+
+	return aroll;
+}
+
+static bool get_shooter_ranged_attack(struct player *p, struct object *ammo, 
+								struct attack_roll *aroll)
+{
+	struct attack_roll *shooter_roll = &p->state.ranged_attack;
+	if (!shooter_roll->obj) return false;
+	
+	memcpy(aroll, shooter_roll, sizeof(*shooter_roll));
+
+	assert(ammo);
+	
+	aroll->to_hit += object_to_hit(ammo);
+	aroll->dsides += ammo->ds;
+	aroll->to_dam += object_to_dam(ammo);
+
+	aroll->proj_type = ammo->kind->base->proj_type;
+
+	return true;
+}
+
+static struct attack_roll get_thrown_ranged_attack(struct player *p, struct object *thrown)
+{
+	struct attack_roll aroll = { 0 };
+
+	assert(thrown);
+
+	aroll.ddice = thrown->dd;
+	aroll.dsides = thrown->ds;
+	aroll.to_hit = object_to_hit(thrown);
+	aroll.to_dam = object_to_dam(thrown);
+
+	aroll.message = "hit";
+	aroll.accuracy_stat = STAT_STR;
+	aroll.damage_stat = STAT_DEX;
+	aroll.attack_skill = SKILL_TO_HIT_THROW;
+
+	aroll.obj = thrown;
+	
+	aroll.to_hit += adj_dex_th(p->state.stat_ind[aroll.accuracy_stat]);
+	aroll.dsides += adj_str_td(p->state.stat_ind[aroll.damage_stat]);
+
+	if (of_has(thrown->flags, OF_THROWING)) {
+		aroll.to_hit += p->state.to_h;
+		aroll.to_dam += player_damage_bonus(&p->state);
+
+		specialization_mod_attack(&aroll, thrown);
+		
+		aroll.ddice = aroll.ddice * (p->state.skills[aroll.attack_skill] + 33) / 33;
+	}
+
+	aroll.dsides = MAX(aroll.dsides, 1);
+	aroll.ddice = MAX(aroll.ddice, 1);
+	
+	calc_blows(p, thrown->weight, &aroll, &player->state, 0);
+
+	return aroll;
+}
+
 static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow)
 {
-	/*bool foundempty = false;
-	bool foundfull = false;
-	int j;
-	struct object *obj;*/
-
 	if (blow->method->skill == SKILL_SEARCH) {
 		if (p->timed[TMD_BLIND]) return false;
 	}
@@ -889,7 +977,6 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 
 	aroll->to_hit += ps->to_h;
 	aroll->dsides += player_damage_bonus(ps);
-	//aroll->ddice = aroll->ddice * (p->state.skills[aroll->attack_skill] + 33) / 33;
 	
 	aroll->to_hit += adj_dex_th(ps->stat_ind[aroll->accuracy_stat]);
 	aroll->dsides += adj_str_td(ps->stat_ind[aroll->damage_stat]);
@@ -1334,23 +1421,11 @@ void py_attack(struct player *p, struct loc grid)
 		p->upkeep->energy_use += blow_energy;
 	}
 
-	/*for (i = 1; (i < PY_MAX_ATTACKS) && !slain && (p->state.attacks[i].proj_type >= 0); i++) {
-		if (randint0(z_info->move_energy) < p->upkeep->energy_use) {
-			aroll = p->state.attacks[i];
-			if (backstab)
-				backstab_mod_attack(&aroll, backstab);
-			slain = py_attack_real(p, grid, &fear, aroll);
-		}
-	}*/
-
 	if (!slain) {
 		mon->target.who = TARGET_WHO_PLAYER;
 	}
 
-	/* Hack - delay fear messages */
-	/*if (fear && monster_is_visible(mon)) {
-		add_monster_message(mon, MON_MSG_FLEE_IN_TERROR, true);
-	}*/
+	/* Hack - delay timed messages */
 	for (i = 0; i < MON_TMD_MAX; i++) {
 		if (monster_is_visible(mon)) {
 			add_mon_timed_message(mon, i, true, pretimed[i], (int)mon->m_timed[i]);
@@ -1379,7 +1454,7 @@ static const struct hit_types ranged_hit_types[] = {
  * kind of attack.
  */
 static void ranged_helper(struct player *p,	struct object *obj, int dir,
-						  int range, int shots, ranged_attack attack,
+						  int range, int shots, struct attack_roll *aroll,
 						  const struct hit_types *hit_types, int num_types)
 {
 	int i, j;
@@ -1417,7 +1492,7 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 	sound(MSG_SHOOT);
 
 	/* Actually "fire" the object -- Take a partial turn */
-	p->upkeep->energy_use = (z_info->move_energy * 10 / shots);
+	p->upkeep->energy_use = z_info->move_energy * 100 / aroll->blows;
 
 	/* Calculate the path */
 	path_n = project_path(cave, path_g, range, grid, target, 0);
@@ -1455,14 +1530,14 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 			const char *note_dies = monster_is_destroyed(mon) ? 
 				" is destroyed." : " dies.";
 
-			struct attack_result result = attack(p, obj, grid);
-			int dmg = result.dmg;
-			uint32_t msg_type = result.msg_type;
+			int dmg = get_attack_dam(aroll, mon, 0, 0);
+			int chance = chance_of_melee_hit(p, aroll, mon);
+			bool hit = test_hit(chance, mon->race->ac);
+			uint32_t msg_type = 0;
 			char hit_verb[20];
-			my_strcpy(hit_verb, result.hit_verb, sizeof(hit_verb));
-			mem_free(result.hit_verb);
+			my_strcpy(hit_verb, aroll->message, sizeof(hit_verb));
 
-			if (result.success) {
+			if (hit) {
 				char o_name[80];
 
 				hit_target = true;
@@ -1645,6 +1720,8 @@ void do_cmd_fire(struct command *cmd) {
 
 	ranged_attack attack = make_ranged_shot;
 
+	struct attack_roll aroll;
+
 	struct object *bow = slot_object(player, slot_by_type(player, EQUIP_BOW, true));
 	struct object *obj;
 
@@ -1683,8 +1760,10 @@ void do_cmd_fire(struct command *cmd) {
 		player_confuse_dir(player, &dir, false);
 	else
 		return;
+	
+	if (!get_shooter_ranged_attack(player, obj, &aroll)) return;
 
-	ranged_helper(player, obj, dir, range, shots, attack, ranged_hit_types,
+	ranged_helper(player, obj, dir, range, shots, &aroll, ranged_hit_types,
 				  (int) N_ELEMENTS(ranged_hit_types));
 }
 
@@ -1698,6 +1777,7 @@ void do_cmd_throw(struct command *cmd) {
 	int shots = 10;
 	int str = adj_str_blow(player->state.stat_ind[STAT_STR]);
 	ranged_attack attack = make_ranged_throw;
+	struct attack_roll aroll;
 
 	int weight;
 	int range;
@@ -1735,7 +1815,9 @@ void do_cmd_throw(struct command *cmd) {
 	weight = MAX(object_weight_one(obj), 10);
 	range = MIN(((str + 20) * 10) / weight, 10);
 
-	ranged_helper(player, obj, dir, range, shots, attack, ranged_hit_types,
+	aroll = get_thrown_ranged_attack(player, obj);
+
+	ranged_helper(player, obj, dir, range, shots, &aroll, ranged_hit_types,
 				  (int) N_ELEMENTS(ranged_hit_types));
 }
 

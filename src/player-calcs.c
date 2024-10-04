@@ -966,7 +966,7 @@ static int adj_str_wgt(int index) {
 }
 
 int adj_str_hold(int index) {
-	return stat_scale(index, 200, true);
+	return stat_scale(index, 200, true) + 50;
 }
 
 static int adj_str_dig(int index) {
@@ -1020,9 +1020,9 @@ int adj_int_lev(int index) {
 
 static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 {
-	int wpen = wgt / 5 - get_power_scale(player, PP_DODGING, 10);
+	int wpen = wgt / 5 - get_power_scale(player, PP_AGILITY, 10);
 	wpen = MAX(0, wpen);
-	int bonus = get_power_scale(player, PP_DODGING, 10);
+	int bonus = get_power_scale(player, PP_AGILITY, 10);
 	bonus = MAX(0, bonus - wpen);
 
     s->speed += bonus;
@@ -1031,9 +1031,9 @@ static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 
 static int unarmoured_ac_bonus(struct player_state *s, int wgt)
 {
-	int wpen = wgt - get_power_scale(player, PP_DODGING, 250);
+	int wpen = wgt - get_power_scale(player, PP_AGILITY, 250);
 	wpen = MAX(0, wpen);
-    int bonus = get_power_scale(player, PP_DODGING, 50);
+    int bonus = get_power_scale(player, PP_AGILITY, 50);
 	bonus = MAX(bonus / 2, bonus - wpen);
 
     s->ac += bonus;
@@ -1664,22 +1664,29 @@ static void calc_spells(struct player *p)
  */
 static void calc_mana(struct player *p, struct player_state *state, bool update)
 {
-	int i, msp, levels, cur_wgt, max_wgt;
+	int i, msp, levels, cur_wgt, max_wgt, ass;
 	struct monster_race *monr = lookup_player_monster(p);
 
 	/* Must be literate */
-	if (!p->class->magic.total_spells && !pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) {
+	if (!p->class->magic.total_spells && state->skills[SKILL_MAGIC] <= 0) {
 		p->msp = 0;
 		p->csp = 0;
 		p->csp_frac = 0;
 		return;
 	}
 
+	if (state->skills[SKILL_MAGIC] > 0) {
+		levels = state->skills[SKILL_MAGIC];
+		ass = state->stat_ind[STAT_INT];
+	}
 	/* Extract "effective" player level */
-	levels = (p->lev - p->class->magic.spell_first) + 1;
+	else {
+		levels = (p->lev - p->class->magic.spell_first) + 1;
+		ass = average_spell_stat(p, state);
+	}
 	if (levels > 0) {
 		msp = 1;
-		msp += adj_mag_mana(average_spell_stat(p, state)) * levels * p->lev / 5000;
+		msp += adj_mag_mana(ass) * levels * p->lev / 5000;
 	} else {
 		levels = 0;
 		msp = 0;
@@ -1706,7 +1713,10 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	}
 
 	/* Determine the weight allowance */
-	max_wgt = p->class->magic.spell_weight;
+	if (state->skills[SKILL_MAGIC] > 0)
+		max_wgt = 1000;
+	else
+		max_wgt = p->class->magic.spell_weight;
 
 	/* Heavy armor penalizes mana */
 	if (((cur_wgt - max_wgt) / 10) > 0) {
@@ -1755,17 +1765,17 @@ static void calc_hitpoints(struct player *p)
 {
 	long bonus;
 	int mhp;
-	int resil = get_power_scale(p, PP_RESILIENCE, 33);
+	int resil = get_power_scale(p, PP_RESILIENCE, 50);
 	struct monster_race *mon = lookup_player_monster(p);
 
 	/* Get "1/100th hitpoint bonus per level" value */
 	bonus = adj_con_mhp(p->state.stat_ind[STAT_CON]);
 
 	/* Calculate hitpoints */
-	mhp = p->player_hp[p->lev-1] + (bonus * p->lev / 100);
+	mhp = p->player_hp[p->lev - 1] + (bonus * p->lev / 100);
 
 	/* L: bonus from resilience power */
-	mhp += (mhp + 100) * resil / 100;
+	mhp += (mhp + p->lev * 2) * resil / 100;
 
 	/* L: bonus from being a monster */
 	if (mon) {
@@ -1918,7 +1928,7 @@ void calc_blows(struct player *p, int wgt, struct attack_roll *aroll,
 	// max 600 * 100 / 100 + 100
 	int blows = MAX(0, baseblows) * state->skills[skill] / div;
 
-	aroll->blows = blows + 100 * extra_blows + 100 * state->num_attacks;
+	aroll->blows = blows + 100 * extra_blows + 100;
 }
 
 #if 0
@@ -2085,7 +2095,7 @@ static void calc_shapechange(struct player_state *state, bool vuln[ELEM_MAX],
 	}
 }
 
-static bool calc_monster_spell(struct player_state *state, const struct monster_spell *mspell)
+static bool calc_monster_spell(int *counts, const struct monster_spell *mspell)
 {
 	if (!mspell) return false;
 
@@ -2139,7 +2149,7 @@ static bool calc_monster_spell(struct player_state *state, const struct monster_
 			break;
 	}
 	if (skill > -1) {
-		state->powers[skill] += 3;
+		counts[skill] += 1;
 		return true;
 	}
 	return false;
@@ -2154,6 +2164,8 @@ static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
 	if (!mrace) return;
 	int i;
 	const struct monster_spell *mspell;
+	int *spell_counts = mem_zalloc((size_t)PP_MAX * sizeof(int));
+	int numcounts = 0, totalbonus;
 
 	i = 0;
 	while (elem_matches[i].mval != RF_NONE) {
@@ -2172,8 +2184,19 @@ static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
 	{
 		if (!rsf_has(mrace->spell_flags, i)) continue;
 		mspell = monster_spell_by_index(i);
-		calc_monster_spell(state, mspell);
+		if (calc_monster_spell(spell_counts, mspell))
+			numcounts++;
 	}
+
+	if (numcounts > 0) {
+		totalbonus = mrace->spell_power * (2 + numcounts) / (5 + numcounts);
+		for (i = 0; i < PP_MAX; i++)
+		{
+			state->powers[i] += spell_counts[i] * totalbonus / numcounts;
+		}
+	}
+
+	mem_free(spell_counts);
 }
 
 /**
@@ -2229,7 +2252,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	/* Extract race/class info */
 	state->see_infra = p->race->infra;
 	for (i = 0; i < SKILL_MAX; i++) {
-		state->skills[i] = p->race->r_skills[i]	+ p->class->c_skills[i];
+		state->skills[i] = p->race->r_skills[i]	+ player_class_c_skill(p, i);
 	}
 	for (i = 0; i < ELEM_MAX; i++) {
 		vuln[i] = false;
@@ -2250,7 +2273,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* L: get powers */
 	for (i = 0; i < PP_MAX; i++) {
-		int scale = p->class->c_powers[i] + p->race->r_powers[i] + p->extra_powers[i];
+		int scale = player_class_power(p, i) + p->race->r_powers[i];
 		int minlev = 5 - (scale + 5) / 7;
 		int efflev = minlev < 0 ? MAX((p->lev + 1) / 2 - minlev    , p->lev) :
 								  MIN((p->lev + 1) * 2 - minlev * 2, p->lev);
@@ -2263,7 +2286,11 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 		else
 			state->powers[i] = (efflev * scale + 99) / 100;
+
+		state->powers[i] += MIN(p->extra_powers[i] / 2, p->lev * 3);
 	}
+
+	calc_extra_points(p, state);
 
 	/* Analyze equipment */
 	for (i = 0; i < p->body.count; i++) {
@@ -2425,8 +2452,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
         /* L: Class doesn't affect stats any more, race affects them elsewhere */
 		add = state->stat_add[i];
-		//add += p->race->r_adj[i] + p->class->c_adj[i];
-		state->stat_top[i] =  modify_stat_value(p->stat_max[i], add);
+		state->stat_top[i] = modify_stat_value(p->stat_max[i], add);
 		use = modify_stat_value(p->stat_cur[i], add);
 
 		state->stat_use[i] = use;
@@ -2604,15 +2630,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* Apply modifier bonuses (Un-inflate stat bonuses) */
 	state->to_a += adj_dex_ta(state->stat_ind[STAT_DEX]);
-	//state->to_d += adj_str_td(state->stat_ind[STAT_STR]);
-	//state->to_h += adj_dex_th(state->stat_ind[STAT_DEX]);
-	//state->to_h += adj_str_th(state->stat_ind[STAT_STR]);
-
-	
 
 	/* L: change expfact based on int */
 	state->expfact = p->race->r_exp + p->class->c_exp + adj_int_xp(state->stat_ind[STAT_INT]);
-
 
 	/* Modify skills */
 	state->skills[SKILL_DISARM_PHYS] += adj_dex_dis(state->stat_ind[STAT_DEX]);
@@ -2620,12 +2640,13 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	state->skills[SKILL_DEVICE] += adj_int_dev(state->stat_ind[STAT_INT]);
 	state->skills[SKILL_SAVE] += adj_wis_sav(state->stat_ind[STAT_WIS]);
 	state->skills[SKILL_DIGGING] += adj_str_dig(state->stat_ind[STAT_STR]);
-	for (i = 0; i < SKILL_MAX; i++)
-		state->skills[i] += (p->class->x_skills[i] * p->lev / 10);
+	for (i = 0; i < SKILL_MAX; i++) {
+		state->skills[i] += (player_class_x_skill(p, i) * p->lev / 10);
+	}
 
 	/* L: add extra skills */
 	for (i = 0; i < SKILL_MAX; i++) {
-		state->skills[i] += p->extra_skills[i];
+		state->skills[i] += MIN(p->extra_skills[i], p->lev * 3);
 	}
 
 	if (state->skills[SKILL_DIGGING] < 1) state->skills[SKILL_DIGGING] = 1;
@@ -2670,30 +2691,21 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		if (state->num_shots < 10) state->num_shots = 10;
 	}
 
-
-	for (attacknum = 0; (attacknum < PY_MAX_ATTACKS - 1) && (weapon[attacknum]); ++attacknum) {
-		state->attacks[attacknum] = get_weapon_attack(p, state, weapon[attacknum]);
-	}
-	if (mrace) {
-		attacknum += get_monster_attacks(p, state, mrace,
-										 &state->attacks[attacknum],
-										 PY_MAX_ATTACKS - attacknum);
-	}
-	if (!attacknum) {
-		state->attacks[attacknum] = get_weapon_attack(p, state, NULL);
-		++attacknum;
-	}
-	if (attacknum < PY_MAX_ATTACKS) state->attacks[attacknum].proj_type = -1;
-	state->num_attacks = attacknum;
-
-
 	/* Analyze weapon */
 	state->heavy_wield = false;
 	state->bless_wield = false;
 	if (weapon[0]) {
 		int16_t weapon_weight = 0;
+		bool all_hafted = true;
+		bool any_hafted = false;
 		for (i = 0; weapon[i]; i++) {
 			int currwgt = object_weight_one(weapon[i]);
+			if (weapon[i]->tval == TV_HAFTED) {
+				any_hafted = true;
+			}
+			else {
+				all_hafted = false;
+			}
 			weapon_weight = MAX(weapon_weight, currwgt);
 		}
 
@@ -2711,23 +2723,41 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 		/* Divine weapon bonus for blessed weapons */
 		if (pf_has(state->pflags, PF_BLESS_WEAPON)
-				&& (weapon[0]->tval == TV_HAFTED
+				&& ((any_hafted && all_hafted)
 				|| of_has(state->flags, OF_BLESSED))) {
 			state->to_h += 2;
 			state->to_d += 2;
 			state->bless_wield = true;
 		}
-	} else {
-		/* Unarmed */
-		//state->num_blows = calc_blows(p, 0, state, extra_blows);
 	}
 
+	/* L: get melee attacks */
+	for (attacknum = 0; (attacknum < PY_MAX_ATTACKS - 1) && (weapon[attacknum]); ++attacknum) {
+		state->attacks[attacknum] = get_melee_weapon_attack(p, state, weapon[attacknum]);
+	}
+	if (mrace) {
+		attacknum += get_monster_attacks(p, state, mrace,
+										 &state->attacks[attacknum],
+										 PY_MAX_ATTACKS - attacknum);
+	}
+	if (!attacknum) {
+		state->attacks[attacknum] = get_melee_weapon_attack(p, state, NULL);
+		++attacknum;
+	}
+	state->num_attacks = attacknum;
+
+	if (launcher) {
+		state->ranged_attack = get_shooter_weapon_attack(p, state, launcher);
+		calc_blows(p, launcher->weight, &state->ranged_attack, state, launcher->modifiers[OBJ_MOD_SHOTS]);
+	}
+
+	/* L: give attacks blow numbers */
 	for (i = 0; i < attacknum; i++) {
 		if (state->heavy_wield) state->attacks[i].blows = 100;
 		else {
 			const struct object *obj = state->attacks[i].obj;
 			int wgt = obj ? object_weight_one(obj) : 0;
-			calc_blows(p, wgt, &state->attacks[i], state, extra_blows);
+			calc_blows(p, wgt, &state->attacks[i], state, extra_blows + attacknum - 1);
 		}
 	}
 
@@ -3012,9 +3042,9 @@ void update_stuff(struct player *p)
 
 	if (p->upkeep->update & (PU_SPELLS)) {
 		p->upkeep->update &= ~(PU_SPELLS);
-		if (p->class->magic.total_spells > 0 || pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) {
-			calc_spells(p);
-		}
+		//if (p->class->magic.total_spells > 0 || pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) {
+		calc_spells(p);
+		//}
 	}
 
 	/* Character is not ready yet, no map updates */
