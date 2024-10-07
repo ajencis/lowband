@@ -56,7 +56,7 @@ extern int (*get_innate_hook)(struct player *p,
 	struct monster_race *monr, const char *error,
 	bool (*innate_filter)(const struct player *p, int innate_index));
 extern int (*get_gener_spell_hook)(struct player *p, const char *error,
-	bool (*innate_filter)(const struct player *p, int innate_index));
+	int (*spell_filter)(const struct player *p, int spell_index));
 extern bool (*get_item_hook)(struct object **choice, const char *pmt,
 							 const char *str, cmd_code cmd, item_tester tester,
 							 int mode);
@@ -87,7 +87,7 @@ int get_spell(struct player *p, const char *verb,
 int get_innate(struct player *p, struct monster_race *monr, const char *error,
 		bool (*innate_filter)(const struct player *p, int innate));
 int get_gener_spell(struct player *p, const char *error,
-		bool (*innate_filter)(const struct player *p, int innate));
+		int (*spell_filter)(const struct player *p, int spell));
 bool get_item(struct object **choice, const char *pmt, const char *str,
 			  cmd_code cmd, item_tester tester, int mode);
 bool get_curse(int *choice, struct object *obj, char *dice_string);

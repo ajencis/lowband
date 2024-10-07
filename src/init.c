@@ -3042,6 +3042,20 @@ static enum parser_error parse_realm_book_noun(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_realm_weight(struct parser *p) 
+{
+	int weight = parser_getint(p, "weight");
+	struct magic_realm *realm = parser_priv(p);
+
+	if (!realm) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	realm->weight = weight;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_realm(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -3050,6 +3064,7 @@ static struct parser *init_parse_realm(void) {
 	parser_reg(p, "verb str verb", parse_realm_verb);
 	parser_reg(p, "spell-noun str spell", parse_realm_spell_noun);
 	parser_reg(p, "book-noun str book", parse_realm_book_noun);
+	parser_reg(p, "weight int weight", parse_realm_weight);
 	return p;
 }
 
@@ -3951,12 +3966,16 @@ static enum parser_error parse_class_equip(struct parser *p) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 
 	tval = tval_find_idx(parser_getsym(p, "tval"));
-	if (tval < 0)
+	if (tval < 0) {
+		plog("unknown tval");
 		return PARSE_ERROR_UNRECOGNISED_TVAL;
+	}
 
 	sval = lookup_sval(tval, parser_getsym(p, "sval"));
-	if (sval < 0)
+	if (sval < 0) {
+		plog("unknown sval");
 		return PARSE_ERROR_UNRECOGNISED_SVAL;
+	}
 
 	eopts = string_make(parser_getsym(p, "eopts"));
 	einds = NULL;
@@ -4512,6 +4531,29 @@ static enum parser_error parse_class_school(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_class_realm(struct parser *p)
+{
+	struct player_class *c = parser_priv(p);
+	const char *name = parser_getsym(p, "realm");
+	struct magic_realm *realm;
+
+	if (!c) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	for (realm = realms; realm; realm = realm->next) {
+		if (streq(realm->name, name)) {
+			c->realm = realm;
+		}
+	}
+
+	if (!c->realm) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_class(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -4558,6 +4600,7 @@ static struct parser *init_parse_class(void) {
 	parser_reg(p, "effect-msg str text", parse_class_effect_msg);
 	parser_reg(p, "desc str desc", parse_class_desc);
 	parser_reg(p, "school sym school", parse_class_school);
+	parser_reg(p, "realm sym realm", parse_class_realm);
 	return p;
 }
 
@@ -4567,41 +4610,14 @@ static errr run_parse_class(struct parser *p) {
 
 static errr finish_parse_class(struct parser *p) {
 	struct player_class *c;
-	//int bi, si;
-	//int spell_num = 0;
 	int num = 0;
+
 	classes = parser_priv(p);
 	for (c = classes; c; c = c->next) num++;
 	for (c = classes; c; c = c->next, num--) {
 		assert(num);
 		c->cidx = num - 1;
 	}
-
-	/*
-	all_spells_num = 0;
-	for (c = classes; c; c = c->next) {
-		for (bi = 0; bi < c->magic.num_books; bi++) {
-			all_spells_num += c->magic.books[bi].num_spells;
-		}
-	}
-
-	all_spells = mem_zalloc(sizeof(struct class_spell) * all_spells_num);
-
-	for (c = classes; c; c = c->next) {
-		for (bi = 0; bi < c->magic.num_books; bi++) {
-			for (si = 0; si < c->magic.books[bi].num_spells; si++) {
-				struct class_spell curr = c->magic.books[bi].spells[si];
-				all_spells[spell_num] = curr;
-				//all_spells[spell_num].name = string_make(curr.name);
-				//all_spells[spell_num].text = string_make(curr.text);
-				//all_spells[spell_num].effect = mem_zalloc(sizeof(struct effect));
-				//memcpy(all_spells[spell_num].effect, curr.effect; sizeof(struct effect));
-				spell_num++;
-			}
-		}
-	}
-	assert(spell_num == all_spells_num);
-	*/
 
 	parser_destroy(p);
 	return 0;
@@ -4643,8 +4659,6 @@ static void cleanup_class(void)
 		mem_free(c);
 		c = next;
 	}
-
-	//mem_free(all_spells);
 }
 
 struct file_parser class_parser = {
@@ -4841,8 +4855,8 @@ static struct {
 	{ "history charts", &history_parser },
 	{ "bodies", &body_parser },
 	{ "magic realms", &realm_parser },
-	{ "player classes", &class_parser },
 	{ "player spells", &spell_parser },
+	{ "player classes", &class_parser },
 	{ "artifacts", &artifact_parser },
 	{ "object properties", &object_property_parser },
 	{ "timed effects", &player_timed_parser },

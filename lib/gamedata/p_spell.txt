@@ -47,8 +47,9 @@ school:POISON
 
 spell:Sleep:3:1:3
 effect:MON_TIMED_INC:SLEEP
-dice:$Dd10
+dice:$Dd$S
 expr:D:SPELL_POWER:+ 3 / 4
+expr:S:SPELL_POWER:+ 0
 desc:Puts a monster to sleep.
 school:ENCHANTMENT
 

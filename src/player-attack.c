@@ -862,8 +862,6 @@ struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_sta
 	aroll.dsides = MAX(aroll.dsides, 1);
 	aroll.ddice = MAX(aroll.ddice, 1);
 
-	//calc_blows(p, shooter->weight, &aroll, ps, shooter->modifiers[OBJ_MOD_SHOTS]);
-
 	return aroll;
 }
 
@@ -1630,7 +1628,7 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 	drop_near(cave, &missile, breakage_chance(missile, hit_target), grid, true, false);
 }
 
-
+#if 0
 /**
  * Helper function used with ranged_helper by do_cmd_fire.
  */
@@ -1708,6 +1706,7 @@ struct attack_result make_ranged_throw(struct player *p,
 
 	return result;
 }
+#endif
 
 
 /**
@@ -1718,7 +1717,7 @@ void do_cmd_fire(struct command *cmd) {
 	int range = MIN(6 + 2 * player->state.ammo_mult, z_info->max_range);
 	int shots = player->state.num_shots;
 
-	ranged_attack attack = make_ranged_shot;
+	//ranged_attack attack = make_ranged_shot;
 
 	struct attack_roll aroll;
 
@@ -1776,7 +1775,7 @@ void do_cmd_throw(struct command *cmd) {
 	int dir;
 	int shots = 10;
 	int str = adj_str_blow(player->state.stat_ind[STAT_STR]);
-	ranged_attack attack = make_ranged_throw;
+	//ranged_attack attack = make_ranged_throw;
 	struct attack_roll aroll;
 
 	int weight;

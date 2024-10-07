@@ -317,6 +317,7 @@ struct magic_realm {
 	char *code;
 	char *name;
 	int stat;
+	int weight;			/**< L: weight allowance */
 	char *verb;
 	char *spell_noun;
 	char *book_noun;
@@ -414,6 +415,7 @@ struct player_class {
 	struct start_item *start_items; /**< Starting inventory */
 
 	struct class_magic magic;	/**< Magic spells */
+	struct magic_realm *realm;	/**< L: realm it casts with */
 };
 
 /**
@@ -710,6 +712,7 @@ struct player {
 	int sp_burn;						/* L: temporary reduction of max mp */
 
 	uint8_t *player_spell_flags;		/* L: for nonclass spells */
+	struct magic_realm *realm;			/* L: how the player casts */
 };
 
 

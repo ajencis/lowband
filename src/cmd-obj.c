@@ -1267,10 +1267,10 @@ void do_cmd_innate(struct command *cmd)
 	ref_race = NULL;
 }
 
-static bool gener_spell_is_castable(const struct player *p, int spell) {
-	if (spell < 0 || spell >= z_info->spell_max) return false;
-	if (!(p->player_spell_flags[spell] & PY_SPELL_LEARNED)) return false;
-	return true;
+static int gener_spell_is_castable(const struct player *p, int spell) {
+	if (spell < 0 || spell >= z_info->spell_max) return 2;
+	if (!(p->player_spell_flags[spell] & PY_SPELL_LEARNED)) return 2;
+	return 1;
 }
 
 void do_cmd_cast(struct command *cmd)

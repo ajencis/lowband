@@ -12,7 +12,7 @@
  */
 /* slot				acid_v	name	mention				heavy decribe	describe */
 EQUIP(NONE,			false,	false,	"",					"",				"")
-EQUIP(WEAPON,		false,	true,	"Wielding in %s",	"just lifting",	"attacking monsters with")
+EQUIP(WEAPON,		false,	true,	"In %s",			"just lifting",	"attacking monsters with")
 EQUIP(BOW,			false,	false,	"Shooting",			"just holding",	"shooting missiles with")
 EQUIP(RING,			false,	true,	"On %s",			"",				"wearing on your %s")
 EQUIP(AMULET,		false,	true,	"Around %s",		"",				"wearing around your %s")

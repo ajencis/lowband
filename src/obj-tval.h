@@ -33,6 +33,7 @@ bool tval_can_have_nourishment(const struct object *obj);
 bool tval_can_have_timeout(const struct object *obj);
 int tval_find_idx(const char *name);
 const char *tval_find_name(int tval);
+bool tval_is_ammo_k(const struct object_kind *kind);
 bool tval_is_ammo(const struct object *obj);
 bool tval_is_sharp_missile(const struct object *obj);
 bool tval_is_bolt(const struct object *obj);

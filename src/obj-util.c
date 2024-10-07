@@ -822,9 +822,9 @@ void spell_to_obj(const struct player_spell *ps, struct object_kind *k)
 	k->ds = 1;
 
 	k->alloc_max = 100;
-	k->alloc_min = lev * 3 / 2;
-	k->alloc_prob = 5;
-	k->cost = lev * lev * 100;
+	k->alloc_min = lev * 2 / 3;
+	k->alloc_prob = MAX(1, 10 - lev / 10);
+	k->cost = lev * (lev + 1) * 150;
 	k->weight = 30 + lev / 3;
 
 	k->spell = ps;

@@ -34,6 +34,7 @@ int textui_get_innate(struct player *p,
 	struct monster_race *monr, const char *error,
 	bool (*innate_filter)(const struct player *p, int innate_index));
 int textui_get_gener_spell(struct player *p, const char *error,
-	bool (*innate_filter)(const struct player *p, int innate_index));
+	int (*spell_filter)(const struct player *p, int spell_index));
+void textui_gener_spell_browse(void);
 
 #endif /* INCLUDED_UI_SPELL_H */

@@ -94,7 +94,7 @@ static void spell_menu_display(struct menu *m, int oid, bool cursor,
 			get_spell_info(spell_index, help, sizeof(help));
 			comment = help;
 			attr = COLOUR_WHITE;
-			if (player->state.powers[spell->school]) attr = COLOUR_L_WHITE;
+			//if (player->state.powers[spell->school]) attr = COLOUR_L_WHITE;
 		} else {
 			comment = " untried";
 			attr = COLOUR_L_GREEN;
@@ -669,11 +669,11 @@ int textui_get_innate(struct player *p,
  * Innate menu data struct
  */
 struct gener_spell_menu_data {
-	int *splls;
+	const struct player_spell **spells;
 	int n_splls;
 
 	bool browse;
-	bool (*is_valid)(const struct player *p, int spell_index);
+	int (*is_valid)(const struct player *p, int spell_index);
 	bool show_description;
 
 	int selected_spell;
@@ -683,9 +683,8 @@ static int gener_spell_menu_valid(struct menu *m, int oid)
 {
 	//plog("entering gsmv");
 	struct gener_spell_menu_data *d = menu_priv(m);
-	int *splls = d->splls;
 
-	return d->is_valid(player, splls[oid]);
+	return d->is_valid(player, d->spells[oid]->sidx);
 }
 
 static void gener_spell_menu_display(struct menu *m, int oid, bool cursor,
@@ -693,9 +692,8 @@ static void gener_spell_menu_display(struct menu *m, int oid, bool cursor,
 {
 	//plog("entering gsmd");
 	struct gener_spell_menu_data *d = menu_priv(m);
-	int spell_index = d->splls[oid];
-
-	const struct player_spell *spell = player_spell_lookup(spell_index);
+	const struct player_spell *spell = d->spells[oid];
+	int spell_index = spell->sidx;
 
 	assert(spell);
 
@@ -703,13 +701,37 @@ static void gener_spell_menu_display(struct menu *m, int oid, bool cursor,
 
 	char out[80];
 	char name[80];
+	const char *comment = "";
+	char desc[30];
 	my_strcpy(name, spell->name, sizeof(name));
 	int level = gener_spell_power(player, spell);
 	int mana = player_spell_mana(spell);
 	int fail = player_spell_fail(spell);
+	fail = MIN(100, fail);
 
 	int attr = COLOUR_WHITE;
 	size_t u8len;
+
+	if (player->player_spell_flags[spell_index] & PY_SPELL_FORGOTTEN) {
+		comment = " forgotten";
+		attr = COLOUR_YELLOW;
+	} else if (player->player_spell_flags[spell_index] & PY_SPELL_LEARNED) {
+		if (player->player_spell_flags[spell_index] & PY_SPELL_WORKED) {
+			/* Get extra info */
+			get_player_spell_info(spell_index, desc, sizeof(desc));
+			comment = desc;
+			attr = COLOUR_WHITE;
+		} else {
+			comment = " untried";
+			attr = COLOUR_L_GREEN;
+		}
+	} else if (level > 0) {
+		comment = " unknown";
+		attr = COLOUR_L_BLUE;
+	} else {
+		comment = " difficult";
+		attr = COLOUR_RED;
+	}
 
 	/* Dump the spell --(-- */
 	u8len = utf8_strlen(name);
@@ -725,7 +747,8 @@ static void gener_spell_menu_display(struct menu *m, int oid, bool cursor,
 		my_strcpy(out, name_copy, sizeof(out));
 		string_free(name_copy);
 	}
-	my_strcat(out, format("%3i %4i %3i%%", level, mana, fail), sizeof(out));
+
+	my_strcat(out, format("%3i %4i %3i%%%s", level, mana, fail, comment), sizeof(out));
 	c_prt(attr, out, row, col);
 	//plog("done gsmd");
 }
@@ -736,7 +759,7 @@ static bool gener_spell_menu_handler(struct menu *m, const ui_event *e, int oid)
 	struct gener_spell_menu_data *d = menu_priv(m);
 
 	if (e->type == EVT_SELECT) {
-		d->selected_spell = d->splls[oid];
+		d->selected_spell = d->spells[oid]->sidx;
 		return d->browse ? true : false;
 	}
 	else if (e->type == EVT_KBRD) {
@@ -751,8 +774,8 @@ static bool gener_spell_menu_handler(struct menu *m, const ui_event *e, int oid)
 static void gener_spell_menu_browser(int oid, void *data, const region *loc)
 {
 	struct gener_spell_menu_data *d = data;
-	int spell_index = d->splls[oid];
-	const struct player_spell *spell = player_spell_lookup(spell_index);
+	const struct player_spell *spell = d->spells[oid];
+	int spell_index = spell->sidx;
 
 	if (d->show_description) {
 		// Redirect output to the screen 
@@ -767,17 +790,22 @@ static void gener_spell_menu_browser(int oid, void *data, const region *loc)
 
 		// To summarize average damage, count the damaging effects 
 		int num_damaging = 0;
+		int num_schools = 0;
+		int i;
+
+		ref_spell = spell;
+
 		for (struct effect *e = spell->effect; e != NULL; e = effect_next(e)) {
 			if (effect_damages(e)) {
 				num_damaging++;
 			}
 		}
 		// Now enumerate the effects' damage and type if not forgotten 
-		if (num_damaging > 0
-			&& (player->player_spell_flags[spell_index] & PY_SPELL_WORKED)
-			&& !(player->player_spell_flags[spell_index] & PY_SPELL_FORGOTTEN)) {
+		if (num_damaging > 0 &&
+				(player->player_spell_flags[spell_index] & PY_SPELL_WORKED) &&
+				!(player->player_spell_flags[spell_index] & PY_SPELL_FORGOTTEN)) {
 			dice_t *shared_dice = NULL;
-			int i = 0;
+			i = 0;
 
 			text_out("  Inflicts an average of");
 			for (struct effect *e = spell->effect; e != NULL; e = effect_next(e)) {
@@ -803,6 +831,37 @@ static void gener_spell_menu_browser(int oid, void *data, const region *loc)
 			}
 			text_out(" damage.");
 		}
+
+		ref_spell = NULL;
+
+		for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
+			if (spell->school[i]) ++num_schools;
+		}
+
+		if (num_schools > 0) {
+			int numremaining = num_schools;
+			text_out("\nIt is a");
+			for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
+				if (spell->school[i]) {
+					--numremaining;
+					const char *name = school_idx_to_name(spell->school[i]);
+					bool add_n = (numremaining + 1 == num_schools) && is_a_vowel(name[0]);
+					text_out("%s %s", add_n ? "n" : "", name);
+					if (num_schools > 2 && numremaining >= 1) {
+						text_out(",");
+					}
+					if (numremaining == 1) {
+						text_out(" and");
+					}
+				}
+			}
+			
+			text_out(" spell.");
+		}
+
+		else {
+			text_out("\nIt is an universal spell.");
+		}
 		
 		text_out("\n\n");
 
@@ -820,14 +879,60 @@ static const menu_iter gener_spell_menu_iter = {
 	NULL	/* no resize hook */
 };
 
+static int spell_compare_name(const void *a, const void *b)
+{
+	assert(a && b);
+	int i;
+	const struct player_spell *ps1 = *((struct player_spell **)a);
+	const struct player_spell *ps2 = *((struct player_spell **)b);
+	assert(ps1 && ps2);
+
+	const char *name1 = ps1->name;
+	const char *name2 = ps2->name;
+
+	i = 0;
+	while (name1[i] || name2[i]) {
+		if (!name1[i]) return -1;
+		if (!name2[i]) return 1;
+		if (name1[i] < name2[i]) return -1;
+		if (name2[i] < name1[i]) return 1;
+	}
+
+	return 0;
+}
+
+static int spell_compare_level(const void *a, const void *b)
+{
+	assert(a && b);
+	const struct player_spell *ps1 = *((struct player_spell **)a);
+	const struct player_spell *ps2 = *((struct player_spell **)b);
+	assert(ps1 && ps2);
+
+	int lev1 = gener_spell_power(player, ps1);
+	int lev2 = gener_spell_power(player, ps2);
+
+	if (lev1 > lev2) return -1;
+	if (lev2 > lev1) return 1;
+
+	return 0;
+}
+
+static int spell_compare_standard(const void *a, const void *b)
+{
+	int result = spell_compare_level(a, b);
+	return result ? result : spell_compare_name(a, b);
+}
+
 static struct menu *gener_spell_menu_new(struct player *p, 
-		bool (*is_valid)(const struct player *p, int innate_index),
+		int (*is_valid)(const struct player *p, int spell_index),
 		bool show_description)
 {
 	//plog("entering gsmn");
 	struct menu *m = menu_new(MN_SKIN_SCROLL, &gener_spell_menu_iter);
 	struct gener_spell_menu_data *d = mem_alloc(sizeof *d);
 	size_t width = MAX(0, MIN(Term->wid - 15, 80));
+	bool repeat;
+	int i;
 
 	int max_splls = 25;
 	struct object *spellbook;
@@ -836,21 +941,29 @@ static struct menu *gener_spell_menu_new(struct player *p,
 
 	/* collect spells from books */
 	d->n_splls = 0;
-	d->splls = mem_zalloc(max_splls * sizeof(int));
+	d->spells = mem_zalloc(max_splls * sizeof(struct player_spell *));
 	for (spellbook = p->gear; spellbook && d->n_splls < max_splls; spellbook = spellbook->next) {
 		const struct player_spell *spell = spellbook->kind->spell;
+		repeat = false;
 		if (spell) {
-			d->splls[d->n_splls] = spell->sidx;
-			d->n_splls++;
+			for (i = 0; i < d->n_splls; i++) {
+				if (spell->sidx == d->spells[i]->sidx) repeat = true;
+			}
+			if (!repeat && (is_valid(player, spell->sidx) != 2)) {
+				d->spells[d->n_splls] = spell;
+				d->n_splls++;
+			}
 		}
 	}
 
 	if (d->n_splls == 0) {
 		mem_free(m);
-		mem_free(d->splls);
+		mem_free(d->spells);
 		mem_free(d);
 		return NULL;
 	}
+
+	sort(d->spells, d->n_splls, sizeof(d->spells[0]), spell_compare_standard);
 
 	/* Copy across private data */
 	d->is_valid = is_valid;
@@ -861,7 +974,7 @@ static struct menu *gener_spell_menu_new(struct player *p,
 	menu_setpriv(m, d->n_splls, d);
 
 	/* Set flags */
-	m->header = "Name                             Lv  Mana Fail";
+	m->header = "Name                             Lvl Mana Fail Info";
 	m->flags = MN_CASELESS_TAGS;
 	m->selections = all_letters_nohjkl;
 	m->browse_hook = gener_spell_menu_browser;
@@ -878,7 +991,7 @@ static struct menu *gener_spell_menu_new(struct player *p,
 static void gener_spell_menu_destroy(struct menu *m)
 {
 	struct gener_spell_menu_data *d = menu_priv(m);
-	mem_free(d->splls);
+	mem_free(d->spells);
 	mem_free(d);
 	mem_free(m);
 }
@@ -904,8 +1017,26 @@ static int gener_spell_menu_select(struct menu *m)
 	return d->selected_spell;
 }
 
+/**
+ * Run the spell menu, without selections.
+ */
+static void gener_spell_menu_browse(struct menu *m)
+{
+	struct gener_spell_menu_data *d = menu_priv(m);
+
+	screen_save();
+
+	region_erase_bordered(&m->active);
+	prt("Browsing spells. ('?' to toggle description)", 0, 0);
+
+	d->browse = true;
+	menu_select(m, 0, true);
+
+	screen_load();
+}
+
 int textui_get_gener_spell(struct player *p, const char *error,
-	bool (*spell_filter)(const struct player *p, int innate_index))
+	int (*spell_filter)(const struct player *p, int spell_index))
 {
 	//plog("entering tggs");
 	struct menu *m;
@@ -922,4 +1053,22 @@ int textui_get_gener_spell(struct player *p, const char *error,
 	}
 
 	return -1;
+}
+
+static int dummy_gener_spell_filter(const struct player *p, int spell_index)
+{
+	return 1;
+}
+
+void textui_gener_spell_browse(void)
+{
+	struct menu *m;
+
+	m = gener_spell_menu_new(player, dummy_gener_spell_filter, true);
+	if (m) {
+		gener_spell_menu_browse(m);
+		gener_spell_menu_destroy(m);
+	} else {
+		msg("You have nothing to browse.");
+	}
 }

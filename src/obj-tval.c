@@ -159,9 +159,9 @@ bool tval_is_head_armor_k(const struct object_kind *kind)
 	return kind->tval == TV_HELM || kind->tval == TV_CROWN;
 }
 
-bool tval_is_ammo(const struct object *obj)
+bool tval_is_ammo_k(const struct object_kind *kind)
 {
-	switch (obj->tval) {
+	switch (kind->tval) {
 		case TV_SHOT:
 		case TV_ARROW:
 		case TV_BOLT:
@@ -169,6 +169,11 @@ bool tval_is_ammo(const struct object *obj)
 		default:
 			return false;
 	}
+}
+
+bool tval_is_ammo(const struct object *obj)
+{
+	return tval_is_ammo_k(obj->kind);
 }
 
 bool tval_is_sharp_missile(const struct object *obj)

@@ -104,6 +104,7 @@ static const int adj_mag_fail[STAT_RANGE] =
 	0	/* 18/220+ */
 };
 
+#if 0
 /**
  * Stat Table (INT/WIS) -- failure rate adjustment
  */
@@ -148,6 +149,7 @@ static const int adj_mag_stat[STAT_RANGE] =
 	54	/* 18/210-18/219 */,
 	57	/* 18/220+ */
 };
+#endif
 
 /**
  * Initialise player spells
@@ -416,7 +418,7 @@ bool spell_okay_to_browse(const struct player *p, int spell_index)
 static int fail_adjust(struct player *p, const struct class_spell *spell)
 {
 	int stat = spell->realm->stat;
-	return adj_mag_stat[p->state.stat_ind[stat]];
+	return adj_mag_stat(p->state.stat_ind[stat]);
 }
 
 /**
@@ -625,6 +627,7 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 
 	/* Get the spell */
 	const struct player_spell *spell = player_spell_lookup(spell_index);
+	assert(spell);
 	int mana = player_spell_mana(spell);
 	int chance = player_spell_fail(spell);
 
@@ -647,6 +650,8 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 		if (player_has(player, PF_COMBAT_REGEN)) {
 			convert_mana_to_hp(player, mana << 16);
 		}
+
+		player->player_spell_flags[spell_index] |= PY_SPELL_WORKED;
 
 		/* A spell was cast */
 		sound(MSG_SPELL);
@@ -692,11 +697,13 @@ bool spell_needs_aim(int spell_index)
 bool innate_needs_aim(int innate_index)
 {
 	const struct monster_spell *ms = monster_spell_by_index(innate_index);
+	assert(ms);
 	return effect_aim(ms->effect);
 }
 
 bool gener_spell_needs_aim(const struct player_spell *spell)
 {
+	assert(spell);
 	return effect_aim(spell->effect);
 }
 
@@ -868,6 +875,12 @@ int school_find_idx(const char *name)
 	return -1;
 }
 
+const char *school_idx_to_name(int idx)
+{
+	assert(idx > MS_NONE && idx < MS_MAX);
+	return school_names[idx].name;
+}
+
 int innate_spell_mana(const struct monster_race *mon)
 {
 	int freq = mon->freq_innate;
@@ -882,8 +895,6 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 	int sumschools = 0;
 	int schoolbonus = 0;
 	int skill = p->state.skills[SKILL_MAGIC];
-	int abil = adj_mag_stat[p->state.stat_ind[STAT_INT]];
-	abil = MIN(abil, skill / 5);
 	int i;
 	for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
 		if (s->school[i]) {
@@ -897,7 +908,7 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 
 	schoolbonus = MIN(schoolbonus, skill * 2);
 
-	return skill + schoolbonus - s->slevel + abil;
+	return skill + schoolbonus - s->slevel + 1;
 }
 
 void gener_spell_learn(struct player *p, const struct player_spell *s)
@@ -905,6 +916,8 @@ void gener_spell_learn(struct player *p, const struct player_spell *s)
 	player->player_spell_flags[s->sidx] |= PY_SPELL_LEARNED;
 
 	msg("You have learned the spell %s.", s->name);
+
+	player->upkeep->update |= PU_SPELLS;
 
 	return;
 }
@@ -918,11 +931,10 @@ struct player_spell *player_spell_lookup(int index) {
 }
 
 int player_spell_mana(const struct player_spell *ps) {
-	return ps->smana;
 	int base = ps->smana;
 	int power = gener_spell_power(player, ps);
 
-	int result = base - (base + 10) * power / 250;
+	int result = base - (base + 10) * power / 1000;
 
 	return MAX(0, result);
 }
@@ -931,8 +943,39 @@ int player_spell_fail(const struct player_spell *ps) {
 	int base = ps->sfail;
 	int power = gener_spell_power(player, ps);
 
-	int result = base - (base + 25) * power / 150;
+	int result = base - (base + 25) * power / 200;
 
 	return MAX(0, result);
+}
+
+void get_player_spell_info(int spell_index, char *p, size_t len)
+{
+	struct player_spell *spell = player_spell_lookup(spell_index);
+	struct effect *effect = spell->effect;
+	struct spell_info_iteration_state ist = {
+		NULL, "", { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, false };
+
+	p[0] = '\0';
+
+	ref_spell = spell;
+
+	while (effect) {
+		spell_effect_append_value_info(effect, p, len, &ist);
+		effect = effect->next;
+	}
+
+	ref_spell = NULL;
+}
+
+
+struct magic_realm *get_player_realm(const struct player *p)
+{
+	if (p->realm) return p->realm;
+	// return the first realm in the file if they don't currently have one
+	struct magic_realm *realm = realms;
+	while (realm->next) {
+		realm = realm->next;
+	}
+	return realm;
 }
 

@@ -1044,6 +1044,9 @@ void player_generate(struct player *p, const struct player_race *r,
 	/* Initial hitpoints */
 	p->mhp = p->player_hp[p->lev - 1];
 
+	/* L: copy realm over */
+	p->realm = c->realm;
+
 	/* Roll for age/height/weight */
 	get_ahw(p);
 
@@ -1296,6 +1299,13 @@ void do_cmd_accept_character(struct command *cmd)
 	player->obj_k->to_a = 1;
 	player->obj_k->to_h = 1;
 	player->obj_k->to_d = 1;
+
+	/* L: hack: player knows learning runes */
+	player->obj_k->flags[OF_POWER_LEARN_1] = 1;
+	player->obj_k->flags[OF_POWER_LEARN_2] = 1;
+	player->obj_k->flags[OF_POWER_LEARN_3] = 1;
+	player->obj_k->flags[OF_POWER_LEARN_4] = 1;
+	player->obj_k->flags[OF_POWER_LEARN_5] = 1;
 
 	/* Initialise the stores, dungeon */
 	store_reset();

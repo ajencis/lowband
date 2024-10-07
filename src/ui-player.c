@@ -743,7 +743,6 @@ static struct panel *get_panel_midleft(void) {
 
 static struct panel *get_panel_combat(void) {
 	struct panel *p = panel_allocate(15);
-	struct object *obj;
 	int bth, dam, blws = 0;
 	struct attack_roll *aroll;
 	int i;

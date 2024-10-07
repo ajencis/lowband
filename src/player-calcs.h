@@ -111,6 +111,7 @@ int adj_con_fix(int index);
 int adj_str_hold(int index);
 int adj_int_xp(int index);
 int adj_int_lev(int index);
+int adj_mag_stat(int index);
 
 bool earlier_object(struct object *orig, struct object *new, bool store);
 int equipped_item_slot(struct player_body body, struct object *obj);

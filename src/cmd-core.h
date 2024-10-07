@@ -412,7 +412,7 @@ int cmd_get_innate(struct command *cmd, const char *arg, struct player *p,
 		int *innate, bool (*innate_filter)(const struct player *p, int innate),
 		const char *error);
 int cmd_get_gener_spell(struct command *cmd, const char *arg, struct player *p,
-		int *spell, bool (*gener_spell_filter)(const struct player *p, int innate),
+		int *spell, int (*gener_spell_filter)(const struct player *p, int innate),
 		const char *error);
 int cmd_get_effect_from_list(struct command *cmd, const char *arg, int *choice,
 	const char *prompt, struct effect *effect, int count,

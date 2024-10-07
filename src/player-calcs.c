@@ -1013,6 +1013,10 @@ int adj_int_lev(int index) {
 	return index - 7;
 }
 
+int adj_mag_stat(int index) {
+	return index - 7;
+}
+
 
 /**
  * L: monk agility bonuses
@@ -1422,6 +1426,7 @@ void calc_inventory(struct player *p)
 	mem_free(old_quiver);
 }
 
+#if 0
 /**
  * Average of the player's spell stats across all the realms they can cast
  * from, rounded up
@@ -1442,6 +1447,7 @@ static int average_spell_stat(struct player *p, struct player_state *state)
 	}
 	return (sum + count - 1) / count;
 }
+#endif
 
 /**
  * Calculate number of spells player should have, and forget,
@@ -1452,16 +1458,13 @@ static int average_spell_stat(struct player *p, struct player_state *state)
  */
 static void calc_spells(struct player *p)
 {
-	int i, j, k;
-	int num_allowed, num_known, num_total = p->class->magic.total_spells;
-	if (pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) num_total = all_spells_num;
+	int j, k;
+	int num_allowed, num_known;
+	struct magic_realm *realm = get_player_realm(p);
 
-	const struct class_spell *spell;
+	const struct player_spell *spell;
 
 	int16_t old_spells;
-
-	/* Hack -- must be literate */
-	if (!p->class->magic.total_spells && !pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) return;
 
 	/* Hack -- wait for creation */
 	if (!character_generated) return;
@@ -1479,7 +1482,7 @@ static void calc_spells(struct player *p)
 	//if (levels < 0) levels = 0;
 
 	/* Number of 1/100 spells per level (or something - needs clarifying) */
-	num_allowed = adj_mag_study(average_spell_stat(p, &p->state));
+	num_allowed = adj_mag_study(realm->stat);
 
 	/* Extract total allowed spells (rounded up) */
 	//num_allowed = (((percent_spells * levels) + 50) / 100);
@@ -1487,124 +1490,128 @@ static void calc_spells(struct player *p)
 	/* Assume none known */
 	num_known = 0;
 
-	/* Count the number of spells we know */
-	for (j = 0; j < num_total; j++)
-		if (p->spell_flags[j] & PY_SPELL_LEARNED)
-			num_known++;
+	/* Count num we know */
+	for (j = 0; j < z_info->spell_max; j++) {
+		if (p->player_spell_flags[j] & PY_SPELL_LEARNED)
+			++num_known;
+	}
 
 	/* See how many spells we must forget or may learn */
 	p->upkeep->new_spells = num_allowed - num_known;
 
-	/* Forget spells which are too hard */
+	/*
+	// Forget spells which are too hard 
 	for (i = num_total - 1; i >= 0; i--) {
-		/* Get the spell */
+		// Get the spell
 		j = p->spell_order[i];
 
-		/* Skip non-spells */
+		// Skip non-spells
 		if (j >= 99) continue;
 
-		/* Get the spell */
+		// Get the spell
 		spell = spell_by_index(p, j);
 
-		/* Skip spells we are allowed to know */
+		// Skip spells we are allowed to know
 		if (spell->slevel <= (p->lev + caster_level_bonus(p, spell))) continue;
 
-		/* Is it known? */
+		// Is it known?
 		if (p->spell_flags[j] & PY_SPELL_LEARNED) {
-			/* Mark as forgotten */
+			// Mark as forgotten
 			p->spell_flags[j] |= PY_SPELL_FORGOTTEN;
 
-			/* No longer known */
+			// No longer known
 			p->spell_flags[j] &= ~PY_SPELL_LEARNED;
 
-			/* Message */
+			// Message
 			msg("You have forgotten the %s of %s.", spell->realm->spell_noun,
 				spell->name);
 
-			/* One more can be learned */
+			// One more can be learned
 			p->upkeep->new_spells++;
 		}
 	}
+	
 
-	/* Forget spells if we know too many spells */
+	// Forget spells if we know too many spells
 	for (i = num_total - 1; i >= 0; i--) {
-		/* Stop when possible */
+		// Stop when possible
 		if (p->upkeep->new_spells >= 0) break;
 
-		/* Get the (i+1)th spell learned */
+		// Get the (i+1)th spell learned
 		j = p->spell_order[i];
 
-		/* Skip unknown spells */
+		// Skip unknown spells
 		if (j >= 99) continue;
 
-		/* Get the spell */
+		// Get the spell
 		spell = spell_by_index(p, j);
 
-		/* Forget it (if learned) */
+		// Forget it (if learned)
 		if (p->spell_flags[j] & PY_SPELL_LEARNED) {
-			/* Mark as forgotten */
+			// Mark as forgotten
 			p->spell_flags[j] |= PY_SPELL_FORGOTTEN;
 
-			/* No longer known */
+			// No longer known
 			p->spell_flags[j] &= ~PY_SPELL_LEARNED;
 
-			/* Message */
+			// Message 
 			msg("You have forgotten the %s of %s.", spell->realm->spell_noun,
 				spell->name);
 
-			/* One more can be learned */
+			// One more can be learned
 			p->upkeep->new_spells++;
 		}
 	}
 
-	/* Check for spells to remember */
+	// Check for spells to remember
 	for (i = 0; i < num_total; i++) {
-		/* None left to remember */
+		// None left to remember
 		if (p->upkeep->new_spells <= 0) break;
 
-		/* Get the next spell we learned */
+		// Get the next spell we learned
 		j = p->spell_order[i];
 
-		/* Skip unknown spells */
+		// Skip unknown spells
 		if (j >= 99) break;
 
-		/* Get the spell */
+		// Get the spell
 		spell = spell_by_index(p, j);
 
-		/* Skip spells we cannot remember */
+		// Skip spells we cannot remember
 		if (spell->slevel > p->lev) continue;
 
-		/* First set of spells */
+		// First set of spells
 		if (p->spell_flags[j] & PY_SPELL_FORGOTTEN) {
-			/* No longer forgotten */
+			// No longer forgotten
 			p->spell_flags[j] &= ~PY_SPELL_FORGOTTEN;
 
-			/* Known once more */
+			// Known once more
 			p->spell_flags[j] |= PY_SPELL_LEARNED;
 
-			/* Message */
+			// Message
 			msg("You have remembered the %s of %s.", spell->realm->spell_noun,
 				spell->name);
 
-			/* One less can be learned */
+			// One less can be learned
 			p->upkeep->new_spells--;
 		}
 	}
+	*/
 
 	/* Assume no spells available */
 	k = 0;
 
 	/* Count spells that can be learned */
-	for (j = 0; j < num_total; j++) {
+	for (j = 0; j < z_info->spell_max; j++) {
 		/* Get the spell */
-		spell = spell_by_index(p, j);
+		spell = player_spell_lookup(j);
 
 		/* Skip spells we cannot remember or don't exist */
 		if (!spell) continue;
-		if (spell->slevel > (p->lev + caster_level_bonus(p, spell)) || spell->slevel == 0) continue;
+		if (gener_spell_power(p, spell) <= 0 || spell->slevel == 0) continue;
 
 		/* Skip spells we already know */
-		if (p->spell_flags[j] & PY_SPELL_LEARNED)
+		if (p->player_spell_flags[j] & PY_SPELL_LEARNED)
 			continue;
 
 		/* Count it */
@@ -1617,6 +1624,7 @@ static void calc_spells(struct player *p)
 	/* Spell count changed */
 	if (old_spells != p->upkeep->new_spells) {
 		/* Message if needed */
+		/*
 		if (p->upkeep->new_spells) {
 			int count;
 			struct magic_realm *r = class_magic_realms(p->class, &count), *r1;
@@ -1646,8 +1654,18 @@ static void calc_spells(struct player *p)
 					r = r1;
 				}
 			}
-			/* Message */
+			
+
+			// Message
 			msg("You can learn %d more %s.", p->upkeep->new_spells, buf);
+		}
+		*/
+
+		if (p->upkeep->new_spells) {
+			msg("You can learn %d new %s%s.",
+					p->upkeep->new_spells,
+					realm->spell_noun,
+					PLURAL(p->upkeep->new_spells));
 		}
 
 		/* Redraw Study Status */
@@ -1668,22 +1686,18 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	struct monster_race *monr = lookup_player_monster(p);
 
 	/* Must be literate */
-	if (!p->class->magic.total_spells && state->skills[SKILL_MAGIC] <= 0) {
+	if (/*!p->class->magic.total_spells && */state->skills[SKILL_MAGIC] <= 0) {
 		p->msp = 0;
 		p->csp = 0;
 		p->csp_frac = 0;
 		return;
 	}
 
-	if (state->skills[SKILL_MAGIC] > 0) {
-		levels = state->skills[SKILL_MAGIC];
-		ass = state->stat_ind[STAT_INT];
-	}
+	
+	levels = state->skills[SKILL_MAGIC];
+	ass = state->stat_ind[STAT_INT];
+
 	/* Extract "effective" player level */
-	else {
-		levels = (p->lev - p->class->magic.spell_first) + 1;
-		ass = average_spell_stat(p, state);
-	}
 	if (levels > 0) {
 		msp = 1;
 		msp += adj_mag_mana(ass) * levels * p->lev / 5000;
@@ -1713,10 +1727,7 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	}
 
 	/* Determine the weight allowance */
-	if (state->skills[SKILL_MAGIC] > 0)
-		max_wgt = 1000;
-	else
-		max_wgt = p->class->magic.spell_weight;
+	max_wgt = 1000;
 
 	/* Heavy armor penalizes mana */
 	if (((cur_wgt - max_wgt) / 10) > 0) {
@@ -1928,7 +1939,7 @@ void calc_blows(struct player *p, int wgt, struct attack_roll *aroll,
 	// max 600 * 100 / 100 + 100
 	int blows = MAX(0, baseblows) * state->skills[skill] / div;
 
-	aroll->blows = blows + 100 * extra_blows + 100;
+	aroll->blows = blows + 100 * extra_blows;
 }
 
 #if 0
@@ -2654,6 +2665,14 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	if (state->skills[SKILL_STEALTH] < 0) state->skills[SKILL_STEALTH] = 0;
 	hold = adj_str_hold(state->stat_ind[STAT_STR]);
 
+	/* L: magic gets a special bonus from its ability score */
+	if (state->skills[SKILL_MAGIC] > 0) {
+		int stat = get_player_realm(p)->stat;
+		int adj = adj_mag_stat(state->stat_ind[stat]);
+		state->skills[SKILL_MAGIC] += MIN(adj, state->skills[SKILL_MAGIC]);
+	} else {
+		state->skills[SKILL_MAGIC] = 0;
+	}
 
 	/* Analyze launcher */
 	state->heavy_shoot = false;
@@ -2748,7 +2767,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	if (launcher) {
 		state->ranged_attack = get_shooter_weapon_attack(p, state, launcher);
-		calc_blows(p, launcher->weight, &state->ranged_attack, state, launcher->modifiers[OBJ_MOD_SHOTS]);
+		calc_blows(p, launcher->weight, &state->ranged_attack, state, extra_shots);
 	}
 
 	/* L: give attacks blow numbers */
@@ -2757,7 +2776,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		else {
 			const struct object *obj = state->attacks[i].obj;
 			int wgt = obj ? object_weight_one(obj) : 0;
-			calc_blows(p, wgt, &state->attacks[i], state, extra_blows + attacknum - 1);
+			calc_blows(p, wgt, &state->attacks[i], state, extra_blows + attacknum);
 		}
 	}
 
@@ -3042,9 +3061,7 @@ void update_stuff(struct player *p)
 
 	if (p->upkeep->update & (PU_SPELLS)) {
 		p->upkeep->update &= ~(PU_SPELLS);
-		//if (p->class->magic.total_spells > 0 || pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) {
 		calc_spells(p);
-		//}
 	}
 
 	/* Character is not ready yet, no map updates */
