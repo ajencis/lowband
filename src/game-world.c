@@ -670,18 +670,22 @@ void process_world(struct chunk *c)
 	/* Digest */
 	if (!player_timed_grade_eq(player, TMD_FOOD, "Full")) {
 		/* Digest normally */
-		if (!(turn % 100)) {
+		if (!(turn & 127)) {
 			/* Basic digestion rate based on speed */
 			i = turn_energy(player->state.speed);
 
 			/* Adjust for food value */
-			i = (i * 100) / z_info->food_value;
+			i = (i * 128) / z_info->food_value;
 
 			/* Regeneration takes more food */
 			if (player_of_has(player, OF_REGEN)) i *= 2;
 
 			/* Slow digestion takes less food */
 			if (player_of_has(player, OF_SLOW_DIGEST)) i /= 2;
+
+			/* L: if you're healing you digest faster */
+			if (player->chp < player->mhp)
+				i += i * (player->mhp - player->chp) / player->mhp + i / 3;
 
 			/* Minimal digestion */
 			if (i < 1) i = 1;
@@ -767,7 +771,7 @@ void process_world(struct chunk *c)
 	recharge_objects();
 
 	/* Notice things after time */
-	if (!(turn % 100))
+	if (!(turn & 127))
 		equip_learn_after_time(player);
 
 	/* Decrease trap timeouts */

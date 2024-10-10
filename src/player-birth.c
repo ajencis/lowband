@@ -335,7 +335,7 @@ static void get_bonuses(void)
 
 	/* L: check monster */
 	player->curr_monster_ridx = 0;
-	check_player_monster(player, true);
+	check_player_monster(player, true, 0);
 
 	/* Calculate the bonuses and hitpoints */
 	player->upkeep->update |= (PU_BONUS | PU_HP);

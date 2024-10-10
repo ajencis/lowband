@@ -80,7 +80,7 @@ static const char *equip_slot_names[] =
 
 static const char *skill_names[] =
 {
-	#define SKILL(x, a) #x,
+	#define SKILL(x, a, b) #x,
 	#include "list-skills.h"
 	#undef SKILL
 	""
@@ -358,6 +358,16 @@ static enum parser_error parse_meth_power(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_meth_player_usable(struct parser *p) {
+	struct blow_method *meth = parser_priv(p);
+	int val;
+	assert(meth);
+
+	val = parser_getuint(p, "usable");
+	meth->player_usable = val ? true : false;
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_meth(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -374,6 +384,7 @@ static struct parser *init_parse_meth(void) {
 	parser_reg(p, "skill sym skill", parse_meth_skill);
 	parser_reg(p, "lash-type sym type", parse_meth_lash_type);
 	parser_reg(p, "power int power", parse_meth_power);
+	parser_reg(p, "player-usable uint usable", parse_meth_player_usable);
 	return p;
 }
 

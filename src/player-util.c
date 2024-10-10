@@ -54,7 +54,7 @@
 static const struct player_power_data {
 	int index;
 	const char *name;
-	bool expon;
+	int scale;
 	int power;
 	int weight;
 	int update;
@@ -70,7 +70,7 @@ static const int tome_factors[] = {
 	#define PP(x, a, b, c, d, e) c,
 	#include "list-player-powers.h"
 	#undef PP
-	#define SKILL(x, a) a,
+	#define SKILL(x, a, b) a,
 	#include "list-skills.h"
 	#undef SKILL
 	0
@@ -101,22 +101,19 @@ struct monster_race *lookup_player_monster(const struct player *p)
 static void change_player_monster(struct player *p, struct monster_race *mon, bool verbose)
 {
 	assert(mon);
-	if (is_a_vowel(mon->name[0]) && verbose)
-		msg("You transform into an %s.", mon->name);
-	else if (verbose)
-		msg("You transform into a %s.", mon->name);
+	if (verbose)
+		msg("You transform into a%s %s.", is_a_vowel(mon->name[0]) ? "n" : "", mon->name);
 
 	p->curr_monster_ridx = mon->ridx;
 	player->upkeep->redraw |= (PR_MAP | PR_MISC);
 	player->upkeep->update |= (PU_BONUS | PU_HP);
 }
 
-void check_player_monster(struct player *p, bool init)
+void check_player_monster(struct player *p, bool init, int xp)
 {
 	struct monster_race *curr = lookup_player_monster(p);
 	struct monster_race *selected = NULL;
-	int numevols = 0;
-	int numpossible = 0;
+	int numevols = 0, numpossible = 0;
 	int maxlev;
 
 	if (curr) {
@@ -126,7 +123,9 @@ void check_player_monster(struct player *p, bool init)
 			++numevols;
 			if (me->race->level <= maxlev) {
 				++numpossible;
-				if (numpossible < 2 || one_in_(numpossible)) selected = me->race;
+				if (numpossible < 2 || one_in_(numpossible)) {
+					selected = me->race;
+				}
 			}
 		}
 	}
@@ -150,22 +149,20 @@ void check_player_monster(struct player *p, bool init)
 		}
 	}
 
-	if (!selected) {
-		return;
+	if (selected && (!init || numevols <= 1)) {
+
+		uint32_t chance = (((uint32_t)1) << MIN(20, selected->level / 5)) * 125;
+
+		if (init ||	(randint1(chance) > xp && get_check(format("Evolve into a %s? ", selected->name)))) {
+
+			change_player_monster(p, selected, !init);
+
+			if (!init) {
+				player_increase_stat(p);
+			}
+		}
 	}
-
-	if (numevols > 1) {
-		if (init)
-			return;
-		if (!get_check(format("Evolve into a %s? ", selected->name)))
-			return;
-	}
-
-	change_player_monster(p, selected, !init);
-
-	if (!init) player_increase_stat(p);
 }
-
 
 void player_race_name(struct player *p, char *buf, size_t bufsize)
 {
@@ -219,25 +216,28 @@ bool player_increase_stat(struct player *p)
 	return false;
 }
 
-static bool power_scales_exponentially(int power)
-{
-	assert(power > 0);
-	assert(power < PP_MAX);
-
-	return player_powers[power].expon;
-}
-
 int get_power_scale(struct player *p, int power, int scaleto)
 {
 	assert(power > 0 && power < PP_MAX);
 
-	int efflev = p->state.powers[power];
-	if (power_scales_exponentially(power))
-		efflev = (efflev * p->lev + 49) / 50;
+	int scaling = player_powers[power].scale;
+	double efflev, div;
+	if (scaling == PP_SCALE_LINEAR) {
+		efflev = (double)p->state.powers[power];
+		div = (double)50;
+	}
+	else if (scaling == PP_SCALE_SQUARE) {
+		efflev = (double)p->state.powers[power] * p->lev;
+		div = (double)50 * 50;
+	}
+	else if (scaling == PP_SCALE_SQRT) {
+		efflev = (double)p->state.powers[power] / sqrt((double)p->lev);
+		div = sqrt((double)50);
+	}
 
 	if (efflev <= 0) return 0;
 
-	int result = (efflev * scaleto + 33) / 50;
+	int result = (int)floor((efflev * scaleto + div * 2 / 3) / div);
 
 	return MAX(result, 1);
 }
@@ -245,18 +245,20 @@ int get_power_scale(struct player *p, int power, int scaleto)
 
 
 
-static int btc_scale(int bonus)
+static double btc_scale(int bonus)
 {
 	if (bonus <= 0) return 0;
 	assert(bonus * bonus < INT_MAX / bonus);
-	return (int)ceil(sqrt((double)(bonus * bonus * bonus)));
+	int result = sqrt((double)(bonus * bonus * bonus));
+	return result;
 }
 
 static int bonus_to_cost_base(int bonus, int factor)
 {
 	int scaleto = 10;
-	int scalefrom = btc_scale(50);
-	return (btc_scale(bonus) * scaleto * factor + 100 * scalefrom - 1) / 100 / scalefrom;
+	double scalefrom = btc_scale(50);
+	int result = (int)ceil(btc_scale(bonus) * scaleto * factor  / 100 / scalefrom);
+	return result;
 }
 
 static int bonus_to_cost(int bonus, int tome_ind)
@@ -271,21 +273,23 @@ static int cost_to_bonus_base(int cost, int factor)
 	int i;
 	for (i = 0; i < 100; i++) {
 		int tcost = bonus_to_cost_base(i, factor);
-		if (tcost >= cost) return i;
+		if (tcost > cost) return i - 1;
 	}
 	return i;
 }
 
 static int tome_max_skill(struct object *obj)
 {
-	if (!obj) return 0;
-	if (of_has(obj->flags, OF_POWER_LEARN_5)) return cost_to_bonus_base(10, 100);
-	if (of_has(obj->flags, OF_POWER_LEARN_4)) return cost_to_bonus_base(8, 100);
-	if (of_has(obj->flags, OF_POWER_LEARN_3)) return cost_to_bonus_base(6, 100);
-	if (of_has(obj->flags, OF_POWER_LEARN_2)) return cost_to_bonus_base(4, 100);
-	if (of_has(obj->flags, OF_POWER_LEARN_1)) return cost_to_bonus_base(2, 100);
+	int result = 0;
+	if (obj) {
+		if (of_has(obj->flags, OF_POWER_LEARN_5)) result = cost_to_bonus_base(10, 100);
+		if (of_has(obj->flags, OF_POWER_LEARN_4)) result = cost_to_bonus_base(8, 100);
+		if (of_has(obj->flags, OF_POWER_LEARN_3)) result = cost_to_bonus_base(6, 100);
+		if (of_has(obj->flags, OF_POWER_LEARN_2)) result = cost_to_bonus_base(4, 100);
+		if (of_has(obj->flags, OF_POWER_LEARN_1)) result = cost_to_bonus_base(2, 100);
+	}
 
-	return 0;
+	return result;
 }
 
 
@@ -338,7 +342,7 @@ static bool learn_extra(struct player *p, int index)
 
 	if (index < PP_MAX) {
 		p->extra_powers[index]++;
-		if (!(p->extra_powers[index] % 5)) {
+		if (!(p->extra_powers[index] & 3)) {
 			msg("You feel a bit more familiar with %s.", player_powers[index].name);
 		}
 		p->upkeep->update |= player_powers[index].update;
@@ -346,7 +350,7 @@ static bool learn_extra(struct player *p, int index)
 	else {
 		int skill_index = index - PP_MAX;
 		p->extra_skills[skill_index]++;
-		if (!(p->extra_skills[skill_index] % 5)) {
+		if (!(p->extra_skills[skill_index] & 3)) {
 			char buf[80];
 			my_strcpy(buf, skill_index_to_name(skill_index), sizeof(buf));
 			my_strcap_full(buf);
@@ -622,12 +626,10 @@ static void take_max_hp_dam(struct player *p, int dam)
 {
 	if (p->is_dead) return;
 	if (dam <= 5) return;
-	int quantity;
-	for (quantity = 0; quantity < 100; quantity++) {
-		if (quantity * quantity > dam - 5) break;
-	}
+	int quantity = (int)sqrt((double)(dam - 5));
 
 	p->hp_burn += quantity;
+	msg("You are wounded.");
 
 	p->upkeep->update |= PU_HP;
 }
@@ -735,12 +737,10 @@ void take_max_sp_dam(struct player *p, int dam)
 {
 	if (p->is_dead) return;
 	if (dam <= 5) return;
-	int quantity;
-	for (quantity = 0; quantity < 100; quantity++) {
-		if (quantity * quantity > dam - 5) break;
-	}
+	int quantity = (int)sqrt((double)dam - 5);
 
 	p->sp_burn += quantity;
+	msg("You feel weaker.");
 
 	p->upkeep->update |= PU_MANA;
 }
@@ -970,7 +970,8 @@ void player_regen_mana(struct player *p)
 
 	/* L: Limited abount of mana per floor */
 	percent *= p->floor_mana;
-	percent /= 5;
+	percent += 25;
+	percent /= 25;
 
 	/* Various things speed up regeneration, but shouldn't punish healthy BGs */
 	if (!(player_has(p, PF_COMBAT_REGEN) && p->chp > p->mhp / 2)) {

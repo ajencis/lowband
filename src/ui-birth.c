@@ -55,17 +55,6 @@
 
 
 /**
- * List of { tval, name } pairs.
- */
-/*static const power_name pnames[] =
-{
-	{ PP_NONE, "none" },
-	#define PP(a, b) { PP_##a, b },
-	#include "list-player-powers.h"
-	#undef PP
-};*/
-
-/**
  * A local-to-this-file global to hold the most important bit of state
  * between calls to the game proper.  Probably not strictly necessary,
  * but reduces complexity a bit. */
@@ -237,8 +226,9 @@ static void skill_help(const int r_skills[], const int c_skills[], int mhp, int 
 	for (i = 0; i < SKILL_MAX ; ++i)
 		skills[i] = (r_skills ? r_skills[i] : 0 ) + (c_skills ? c_skills[i] : 0);
 
-	text_out_e("Hit/Shoot/Throw: %+d/%+d/%+d\n", skills[SKILL_TO_HIT_MELEE],
+	text_out_e("Hit/Shoot/Throw: %+d/%+d/%+d     \n", skills[SKILL_TO_HIT_MELEE],
 			   skills[SKILL_TO_HIT_BOW], skills[SKILL_TO_HIT_THROW]);
+	text_out_e("Magic:       %+d\n", skills[SKILL_MAGIC]);
 	text_out_e("Hit die: %2d   XP mod: %d%%\n", mhp, exp);
 	text_out_e("Disarm: %+3d/%+3d   Devices: %+3d\n", skills[SKILL_DISARM_PHYS],
 			   skills[SKILL_DISARM_MAGIC], skills[SKILL_DEVICE]);

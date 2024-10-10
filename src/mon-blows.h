@@ -45,6 +45,7 @@ struct blow_method {
 	int skill;				/* L: the skill it uses to hit */
 	int lash_type;			/* L: the damage type it does normally */
 	int power;				/* L: how much damage it does relative to other methods */
+	bool player_usable;		/* L: can the player use it? */
 };
 
 extern struct blow_method *blow_methods;

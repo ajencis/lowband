@@ -75,7 +75,7 @@ static const int power_weights[] = {
 	#define PP(x, a, b, c, d, e) d,
 	#include "list-player-powers.h"
 	#undef PP
-	#define SKILL(x, a) 7,
+	#define SKILL(x, a, b) b,
 	#include "list-skills.h"
 	#undef SKILL
 	0

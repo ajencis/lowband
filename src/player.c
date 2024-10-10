@@ -42,9 +42,7 @@ struct player_shape *shapes;
 struct player_class *classes;
 struct player_ability *player_abilities;
 struct magic_realm *realms;
-//struct class_spell *all_spells;
 struct player_spell *spells;
-int all_spells_num = 0;
 
 /**
  * Base experience levels, may be adjusted up for race and/or class
@@ -229,7 +227,7 @@ bool player_at_max_level(struct player *p)
 	
     if (p->lev >= (50 + adj_int_lev(p->state.stat_ind[STAT_INT]))) return true;
 
-	if (player_exp[p->lev-1] >= PY_MAX_EXP) return true;
+	if (player_exp[p->lev-1] > PY_MAX_EXP) return true;
 
 	return false;
 }
@@ -320,6 +318,7 @@ void player_exp_gain(struct player *p, int32_t amount)
 	else p->exp += amount;
 
 	check_learn_powers(p, amount);
+	check_player_monster(p, false, amount);
 	
 	if (p->exp < p->max_exp)
 		p->max_exp = MIN(amount / 10 + p->max_exp, tolev);

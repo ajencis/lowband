@@ -1281,7 +1281,8 @@ static size_t prt_tmd(int row, int col)
 
 			/* Food meter */
 			if (i == TMD_FOOD) {
-				char *meter = format("%d %%", player->timed[i] / 100);
+				// 100% is not yet overfull
+				char *meter = format("%d %%", player->timed[i] * 101 / PY_FOOD_FULL);
 				c_put_str(grade->color, meter, row, col + len);
 				len += strlen(meter) + 1;
 			}
@@ -2522,17 +2523,14 @@ static void show_splashscreen(game_event_type type, game_event_data *data,
  * ------------------------------------------------------------------------ */
 static void refresh(game_event_type type, game_event_data *data, void *user)
 {
-	//if (character_generated) msg("entering refresh;");
 	/* Place cursor on player/target */
 	if (OPT(player, show_target) && target_sighted()) {
 		struct loc target;
 		target_get(&target);
 		move_cursor_relative(target.y, target.x);
 	}
-	//if (character_generated) msg("refreshing term;");
 
 	Term_fresh();
-	//if (character_generated) msg("leaving refresh");
 }
 
 static void repeated_command_display(game_event_type type,

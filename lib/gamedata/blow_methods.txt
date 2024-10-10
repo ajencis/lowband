@@ -17,6 +17,7 @@ cut:1
 stun:1
 miss:1
 phys:1
+player-usable:0
 msg:MON_HIT
 act:hits {target}
 fact:hit
@@ -29,6 +30,7 @@ cut:0
 stun:0
 miss:1
 phys:0
+player-usable:1
 msg:MON_TOUCH
 act:touches {target}
 fact:touch
@@ -42,6 +44,7 @@ cut:0
 stun:1
 miss:1
 phys:1
+player-usable:1
 msg:MON_PUNCH
 act:punches {target}
 fact:punch
@@ -55,6 +58,7 @@ cut:0
 stun:1
 miss:1
 phys:1
+player-usable:1
 msg:MON_KICK
 act:kicks {target}
 fact:kick
@@ -67,6 +71,7 @@ cut:1
 stun:0
 miss:1
 phys:1
+player-usable:1
 msg:MON_CLAW
 act:claws {target}
 fact:claw
@@ -79,6 +84,7 @@ cut:1
 stun:0
 miss:1
 phys:1
+player-usable:1
 msg:MON_BITE
 act:bites {target}
 fact:bite
@@ -92,6 +98,7 @@ cut:0
 stun:0
 miss:1
 phys:1
+player-usable:1
 msg:MON_STING
 act:stings {target}
 fact:sting
@@ -105,6 +112,7 @@ cut:0
 stun:1
 miss:1
 phys:1
+player-usable:1
 msg:MON_BUTT
 act:butts {target}
 fact:butt
@@ -117,6 +125,7 @@ cut:0
 stun:1
 miss:1
 phys:1
+player-usable:1
 msg:MON_CRUSH
 act:crushes {target}
 fact:crush
@@ -130,6 +139,7 @@ cut:0
 stun:0
 miss:1
 phys:0
+player-usable:1
 msg:MON_ENGULF
 act:engulfs {target}
 fact:engulf
@@ -142,6 +152,7 @@ cut:0
 stun:0
 miss:0
 phys:0
+player-usable:1
 msg:MON_CRAWL
 act:crawls on {target}
 fact:crawl on
@@ -155,6 +166,7 @@ cut:0
 stun:0
 miss:0
 phys:0
+player-usable:1
 msg:MON_DROOL
 act:drools on {target}
 fact:drool on
@@ -168,6 +180,7 @@ cut:0
 stun:0
 miss:0
 phys:0
+player-usable:1
 msg:MON_SPIT
 act:spits on {target}
 fact:spit on
@@ -181,6 +194,7 @@ cut:0
 stun:0
 miss:0
 phys:0
+player-usable:1
 msg:MON_GAZE
 act:gazes at {target}
 fact:gaze at
@@ -194,6 +208,7 @@ cut:0
 stun:0
 miss:0
 phys:0
+player-usable:1
 msg:MON_WAIL
 act:wails at {target}
 fact:wail at
@@ -206,6 +221,7 @@ cut:0
 stun:0
 miss:0
 phys:0
+player-usable:1
 msg:MON_SPORE
 act:releases spores at {target}
 fact:release spores at
@@ -218,6 +234,7 @@ cut:0
 stun:0
 miss:0
 phys:0
+player-usable:1
 msg:MON_BEG
 act:begs {target} for money
 fact:beg
@@ -231,6 +248,7 @@ cut:0
 stun:0
 miss:0
 phys:0
+player-usable:1
 msg:MON_INSULT
 act:insults {target}!
 act:insults {oftarget} mother!
@@ -251,6 +269,7 @@ cut:0
 stun:0
 miss:0
 phys:0
+player-usable:1
 msg:MON_MOAN
 act:wants his mushrooms back
 act:tells {target} to get off his land

@@ -61,7 +61,7 @@ enum
 #define REST_REQUIRED_FOR_REGEN 5
 
 struct monster_race *lookup_player_monster(const struct player *p);
-void check_player_monster(struct player *p, bool init);
+void check_player_monster(struct player *p, bool init, int xp);
 void player_race_name(struct player *p, char *buf, size_t bufsize);
 bool player_increase_stat(struct player *p);
 int get_power_scale(struct player *p, int power, int scaleto);

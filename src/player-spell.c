@@ -156,21 +156,21 @@ static const int adj_mag_stat[STAT_RANGE] =
  */
 void player_spells_init(struct player *p)
 {
+	/*
 	int i, num_spells = p->class->magic.total_spells;
 
-	if (pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) num_spells = all_spells_num;
-
-	/* None */
+	// None
 	if (num_spells) {
 
-		/* Allocate */
+		// Allocate
 		p->spell_flags = mem_zalloc(num_spells * sizeof(uint8_t));
 		p->spell_order = mem_zalloc(num_spells * sizeof(uint8_t));
 
-		/* None of the spells have been learned yet */
+		// None of the spells have been learned yet 
 		for (i = 0; i < num_spells; i++)
 			p->spell_order[i] = 99;
 	}
+	*/
 
 	p->player_spell_flags = mem_zalloc(z_info->spell_max * sizeof(uint8_t));
 }
@@ -511,7 +511,6 @@ void spell_learn(int spell_index)
 	int i;
 	const struct class_spell *spell = spell_by_index(player, spell_index);
 	int maxi = player->class->magic.total_spells;
-	if (pf_has(player->class->flags, PF_GETS_ALL_SPELLS)) maxi = all_spells_num;
 
 	/* Learn the spell */
 	player->spell_flags[spell_index] |= PY_SPELL_LEARNED;
@@ -641,7 +640,7 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 	} else {
 		/* Cast the spell */
 		if (!effect_do(spell->effect, source_player(), NULL, &ident, true, dir,
-					   beam, gener_spell_power(player, spell), cmd)) {
+					beam, gener_spell_power(player, spell), cmd)) {
 			ref_spell = NULL;
 			return false;
 		}
@@ -934,7 +933,7 @@ int player_spell_mana(const struct player_spell *ps) {
 	int base = ps->smana;
 	int power = gener_spell_power(player, ps);
 
-	int result = base - (base + 10) * power / 1000;
+	int result = base - (base + 10) * power / 500;
 
 	return MAX(0, result);
 }

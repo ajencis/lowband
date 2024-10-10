@@ -201,7 +201,7 @@ player:max-range:20
 player:start-gold:600
 
 # Number of turns that 1% of player food capacity feeds them for
-player:food-value:100
+player:food-value:32
 
 #---------------------------------------------------------------------
 # Constants for non-O critical calculations

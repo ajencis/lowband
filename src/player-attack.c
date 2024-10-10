@@ -928,6 +928,10 @@ static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow
 		if (p->timed[TMD_BLIND]) return false;
 	}
 
+	if (!blow->method->player_usable) {
+		return false;
+	}
+
 	return true;
 }
 

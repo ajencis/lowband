@@ -51,6 +51,14 @@ enum
 	PF_MAX
 };
 
+enum
+{
+	PP_SCALE_NONE,
+	PP_SCALE_LINEAR,
+	PP_SCALE_SQUARE,
+	PP_SCALE_SQRT
+};
+
 /**
  * L: Player race and class powers
  */
@@ -155,7 +163,7 @@ enum {
  * Skill indexes
  */
 enum {
-	#define SKILL(x, a) SKILL_##x,
+	#define SKILL(x, a, b) SKILL_##x,
 	#include "list-skills.h"
 	#undef SKILL
 	SKILL_MAX
@@ -727,9 +735,7 @@ extern struct player_shape *shapes;
 extern struct player_class *classes;
 extern struct player_ability *player_abilities;
 extern struct magic_realm *realms;
-//extern struct class_spell *all_spells;
 extern struct player_spell *spells;
-extern int all_spells_num;
 
 extern const int32_t player_exp[PY_MAX_LEVEL];
 extern struct player *player;
