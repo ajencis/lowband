@@ -1213,6 +1213,7 @@ void do_cmd_study(struct command *cmd)
 		do_cmd_study_spell(cmd);
 	else
 		do_cmd_study_book(cmd);
+
 }
 #endif
 
@@ -1281,18 +1282,16 @@ void do_cmd_cast(struct command *cmd)
 	const char *fail = "You don't know any spells.";
 
 	if (cmd_get_gener_spell(cmd,
-			"spell",
-			player,
-			&spell_index,
-			gener_spell_is_castable,
-			fail) != CMD_OK)
-		return;
-
-	ps = player_spell_lookup(spell_index);
-	if (!ps) {
-		msg("Invalid spell!");
+				"spell",
+				player,
+				&spell_index,
+				gener_spell_is_castable,
+				fail) != CMD_OK) {
 		return;
 	}
+
+	ps = player_spell_lookup(spell_index);
+	assert(ps);
 	
 	if (player_spell_mana(ps) > player->csp) {
 		msg("You do not have enough mana to cast this spell.");

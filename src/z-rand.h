@@ -68,21 +68,24 @@ typedef enum {
 	RANDOMISE
 } aspect;
 
-
+bool verify_rand(uint32_t num, const wchar_t *msg, const wchar_t *file, unsigned int line);
 /**
  * Generates a random signed long integer X where "0 <= X < M" holds.
  *
  * The integer X falls along a uniform distribution.
  */
-#define randint0(M) ((int32_t) Rand_div(M))
-
+#define randint0(M) (verify_rand((M), (_CRT_WIDE(#M)), (_CRT_WIDE(__FILE__)), (unsigned)(__LINE__))\
+					? ((int32_t) Rand_div(M)) : false)
 
 /**
  * Generates a random signed long integer X where "1 <= X <= M" holds.
  *
  * The integer X falls along a uniform distribution.
  */
-#define randint1(M) ((int32_t) Rand_div(M) + 1)
+
+#define randint1(M) (verify_rand((M), (_CRT_WIDE(#M)), (_CRT_WIDE(__FILE__)), (unsigned)(__LINE__))\
+					? ((int32_t) Rand_div(M) + 1) : false)
+//#define randint1(M) (verify_rand((M), _CRT_WIDE(__FILE__)) ? ((int32_t) Rand_div(M) + 1) : false)
 
 /**
  * Generate a random signed long integer X where "A - D <= X <= A + D" holds.

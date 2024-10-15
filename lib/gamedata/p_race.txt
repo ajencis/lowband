@@ -337,6 +337,7 @@ age:45:30
 height:37:4
 weight:65:5
 values:RES_POIS[1] | RES_NETHER[1]
+player-flags:UNLIGHT
 monster:vampire
 body:Humanoid
 
@@ -389,6 +390,14 @@ monster:baby blue dragon
 monster:baby white dragon
 monster:baby green dragon
 monster:baby black dragon
+monster:baby gold dragon
+monster:baby multi-hued dragon
+monster:shadow drake
+monster:chaos drake
+monster:law drake
+monster:balance drake
+monster:aethereal drake
+monster:crystal drake
 body:Dragon
 
 name:Tiefling

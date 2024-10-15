@@ -57,6 +57,7 @@ struct store {
 	size_t normal_size;
 	size_t normal_num;
 	struct object_kind **normal_table;
+	int normal_max;		// L: number of possible different normal items
 
 	/* Buy these items */
 	struct object_buy *buy;

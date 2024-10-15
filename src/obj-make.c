@@ -252,7 +252,6 @@ static int get_new_attr(bitflag flags[OF_SIZE], bitflag newf[OF_SIZE])
 	{
 		/* skip this one if the flag is already present */
 		if (of_has(flags, i)) continue;
-
 		/* each time we find a new possible option, we have a 1-in-N chance of
 		 * choosing it and an (N-1)-in-N chance of keeping a previous one */
 		if (one_in_(++options)) flag = i;
@@ -382,6 +381,9 @@ static struct ego_item *ego_find_random(struct object *obj, int level)
 	}
 
 	if (total) {
+		if (obj->kind->base->tval == TV_TOME || obj->kind->base->tval == TV_BOOK) {
+			plog(format("found some egos for a %s", obj->kind->name));
+		}
 		long value = randint0(total);
 		for (i = 0; i < alloc_ego_size; i++) {
 			/* Found the entry */
@@ -413,10 +415,16 @@ void ego_apply_magic(struct object *obj, int level)
 	/* Extra powers */
 	if (kf_has(obj->ego->kind_flags, KF_RAND_SUSTAIN)) {
 		create_obj_flag_mask(newf, false, OFT_SUST, OFT_MAX);
-		of_on(obj->flags, get_new_attr(obj->flags, newf));
+		int newa = get_new_attr(obj->flags, newf);
+		if (newa) {
+			of_on(obj->flags, newa);
+		}
 	} else if (kf_has(obj->ego->kind_flags, KF_RAND_POWER) || (pick == 1)) {
 		create_obj_flag_mask(newf, false, OFT_PROT, OFT_MISC, OFT_MAX);
-		of_on(obj->flags, get_new_attr(obj->flags, newf));
+		int newa = get_new_attr(obj->flags, newf);
+		if (newa) {
+			of_on(obj->flags, newa);
+		}
 	} else if (kf_has(obj->ego->kind_flags, KF_RAND_BASE_RES) || (pick > 1)) {
 		/* Get a base resist if available, mark it as random */
 		if (random_base_resist(obj, &resist)) {
@@ -970,9 +978,11 @@ int apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 	 * are created deeper. 
 	 * This change is meant to go in conjunction with the changes
 	 * to ego item allocation levels. (-fizzix)
+	 * 
+	 * L: reduced to 3% plus 1% chance per 20 levels
 	 */
-	int good_chance = (randint0(33) + lev) / 33;
-	int great_chance = 10;
+	int good_chance = (randint0(20) + lev) / 20 + 3;
+	int great_chance = 25;
 
 	/* Roll for "good" */
 	if (good || (randint0(100) < good_chance)) {

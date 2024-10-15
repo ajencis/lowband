@@ -41,6 +41,7 @@
 #include "obj-ignore.h"
 #include "obj-knowledge.h"
 #include "obj-pile.h"
+#include "obj-power.h"
 #include "obj-slays.h"
 #include "obj-tval.h"
 #include "obj-util.h"
@@ -69,100 +70,6 @@ struct opposed_monster_char opposed_chars[] =
 	{-1, -1}
 };
 
-bool mon_will_attack_player(const struct monster *mon, const struct player *p)
-{
-	if (mon->faction == '@') return false;
-	if (mon->m_timed[MON_TMD_CHARMED]) return false;
-
-	struct monster_race *pmonr = lookup_player_monster(p);
-	if (pmonr && pmonr->d_char == mon->faction) return false;
-
-	return true;
-}
-
-static bool mon_will_attack_mon(const struct monster *mon, const struct monster *other)
-{
-	int i = 0;
-	bool mpally = mon->faction == '@' || mon->m_timed[MON_TMD_CHARMED];
-	bool opally = other->faction == '@' || other->m_timed[MON_TMD_CHARMED];
-
-	if (mpally && mon_will_attack_player(other, player)) return true;
-	if (opally && mon_will_attack_player(mon, player)) return true;
-
-	while (opposed_chars[i].char1 >= 0) {
-
-		if (mon->faction == opposed_chars[i].char1 &&
-		    other->faction == opposed_chars[i].char2)
-			return true;
-
-		if (other->faction == opposed_chars[i].char1 &&
-		    mon->faction == opposed_chars[i].char2)
-			return true;
-
-		i++;
-	}
-
-    return false;
-}
-
-static void mon_find_target(struct chunk *c, struct monster *mon)
-{
-    int i;
-	bool found = false;
-	int score = 0;
-
-	for (i = 0; i < c->mon_max; i++) {
-		struct monster *other = &c->monsters[i];
-		if (!other->race) continue;
-		if (!mon_will_attack_mon(mon, other)) continue;
-		int currscore = other->race->level / 5 + distance(mon->grid, other->grid);
-		if (found && currscore >= score) continue;
-		if (!los(c, mon->grid, other->grid)) continue;
-
-		mon->target.midx = i;
-		mon->target.who = TARGET_WHO_MONSTER;
-		score = currscore;
-		found = true;
-	}
-	if (!found)	{
-		if (mon->faction == '@' || mon_will_attack_player(mon, player))
-			mon->target.who = TARGET_WHO_PLAYER;
-		else
-			mon->target.who = TARGET_WHO_NONE;
-	}
-}
-
-bool mon_check_target(struct chunk *c, struct monster *mon)
-{
-	bool recheck = false;
-	if (mon->target.who == TARGET_WHO_MONSTER) {
-		struct monster *other = &c->monsters[mon->target.midx];
-		if (!other->race) {
-			mon->target.who = TARGET_WHO_NONE;
-			recheck = true;
-		}
-		if (!los(c, mon->grid, other->grid)) {
-			mon->target.who = TARGET_WHO_NONE;
-			recheck = true;
-		}
-	}
-	else if (mon->target.who == TARGET_WHO_PLAYER) {
-		if (!los(c, mon->grid, player->grid)) recheck = true;
-		if (mon->faction == '@') {
-			mon->target.who = TARGET_WHO_NONE;
-			recheck = true;
-		}
-	}
-	else {
-		mon->target.who = TARGET_WHO_NONE;
-		recheck = true;
-	}
-
-	if (recheck)
-		mon_find_target(c, mon);
-
-	return mon->target.who != TARGET_WHO_NONE;
-}
 
 /**
  * ------------------------------------------------------------------------
@@ -305,6 +212,152 @@ static bool monster_hates_grid(struct monster *mon, struct loc grid)
 		return true;
 	}
 	return false;
+}
+
+
+bool mon_will_attack_player(const struct monster *mon, const struct player *p)
+{
+	if (mon->faction == '@') return false;
+	if (mon->m_timed[MON_TMD_CHARMED]) return false;
+
+	struct monster_race *pmonr = lookup_player_monster(p);
+	if (pmonr && pmonr->d_char == mon->faction) return false;
+
+	return true;
+}
+
+static bool mon_will_attack_mon(const struct monster *mon, const struct monster *other)
+{
+	int i = 0;
+	bool mpally = mon->faction == '@' || mon->m_timed[MON_TMD_CHARMED];
+	bool opally = other->faction == '@' || other->m_timed[MON_TMD_CHARMED];
+
+	if (mpally && mon_will_attack_player(other, player)) return true;
+	if (opally && mon_will_attack_player(mon, player)) return true;
+
+	while (opposed_chars[i].char1 >= 0) {
+
+		if (mon->faction == opposed_chars[i].char1 &&
+		    other->faction == opposed_chars[i].char2)
+			return true;
+
+		if (other->faction == opposed_chars[i].char1 &&
+		    mon->faction == opposed_chars[i].char2)
+			return true;
+
+		i++;
+	}
+
+    return false;
+}
+
+static bool object_can_be_targeted_by_mon(struct chunk *c, struct monster *mon, struct object *obj)
+{
+	if (!mon || !mon->race) return false;
+	if (!obj) return false;
+	if (!c) return false;
+
+	if (loc_is_zero(obj->grid)) return false;
+	if (obj->held_m_idx) return false;
+	if (obj->mimicking_m_idx) return false;
+	if (!los(c, mon->grid, obj->grid)) return false;
+
+	return true;
+}
+
+static void mon_find_target(struct chunk *c, struct monster *mon)
+{
+    int i;
+	bool found = false;
+	int score = 0;
+
+	for (i = 0; i < c->mon_max; i++) {
+		struct monster *other = &c->monsters[i];
+		if (!other->race) continue;
+		if (!mon_will_attack_mon(mon, other)) continue;
+		if (!los(c, mon->grid, other->grid)) continue;
+
+		int currscore = 100 / (distance(mon->grid, other->grid) + 1) + other->race->level / 5;
+		if (found && currscore <= score) continue;
+
+		mon->target.midx = i;
+		mon->target.who = TARGET_WHO_MONSTER;
+		score = currscore;
+		found = true;
+	}
+	for (i = 0; i < c->obj_max; i++) {
+		struct object *obj = c->objects[i];
+		if (!obj) continue;
+		if (!object_can_be_targeted_by_mon(c, mon, obj)) continue;
+
+		int dist = distance(mon->grid, obj->grid) + 1;
+		dist = MAX(1, dist);
+		int ignore = mon->race->level * 10 * (mon->maxhp - mon->hp) / mon->maxhp;
+		int currscore = object_value_real(obj, obj->number) / (dist * dist) - ignore;
+		if (found && currscore <= score) continue;
+
+		mon->target.oidx = i;
+		mon->target.who = TARGET_WHO_OBJECT;
+		score = currscore;
+		found = true;
+	}
+	if (mon_will_attack_player(mon, player) &&
+			(monster_can_see_player(mon) || monster_can_hear(mon) || monster_can_smell(mon))) {
+		int currscore = 100 / (distance(mon->grid, player->grid) + 1) + player->lev / 4;
+		if (!found || currscore >= score) {
+			mon->target.who = TARGET_WHO_PLAYER;
+			score = currscore;
+			found = true;
+		}
+	}
+	if (!found)	{
+		if (mon->faction == '@')
+			mon->target.who = TARGET_WHO_PLAYER;
+		else
+			mon->target.who = TARGET_WHO_NONE;
+	}
+}
+
+bool mon_check_target(struct chunk *c, struct monster *mon)
+{
+	bool recheck = false;
+	if (mon->target.who == TARGET_WHO_MONSTER) {
+		struct monster *other = &c->monsters[mon->target.midx];
+		if (!other->race) {
+			mon->target.who = TARGET_WHO_NONE;
+			recheck = true;
+		}
+		if (!los(c, mon->grid, other->grid)) {
+			mon->target.who = TARGET_WHO_NONE;
+			recheck = true;
+		}
+	}
+	else if (mon->target.who == TARGET_WHO_PLAYER) {
+		if (!los(c, mon->grid, player->grid)) {
+			recheck = true;
+			if (!monster_can_hear(mon) && !monster_can_smell(mon))
+				mon->target.who = TARGET_WHO_NONE;
+		}
+		if (mon->faction == '@') {
+			recheck = true;
+		}
+	}
+	else if (mon->target.who == TARGET_WHO_OBJECT) {
+		struct object *obj = c->objects[mon->target.oidx];
+		if (!obj ||	!object_can_be_targeted_by_mon(c, mon, obj)) {
+			mon->target.who = TARGET_WHO_NONE;
+			recheck = true;
+		}
+	}
+	else {
+		mon->target.who = TARGET_WHO_NONE;
+		recheck = true;
+	}
+
+	if (recheck)
+		mon_find_target(c, mon);
+
+	return mon->target.who != TARGET_WHO_NONE;
 }
 
 /**
@@ -949,7 +1002,7 @@ static int get_move_choose_direction(struct loc offset)
  */
 static bool get_move(struct monster *mon, int *dir, bool *good)
 {
-	struct loc target;
+	//struct loc target;
 	bool group_ai = rf_has(mon->race->flags, RF_GROUP_AI);
 
 	/* Offset to current position to move toward */
@@ -959,15 +1012,21 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 	int flee_range = z_info->max_sight + z_info->flee_range;
 
 	bool done = false;
+	bool attacking = false;
 
 	mon_check_target(cave, mon);
 
+	/*
 	if (mon->target.who == TARGET_WHO_PLAYER)
 		target = monster_is_decoyed(mon) ? cave_find_decoy(cave) : player->grid;
 	else if (mon->target.who == TARGET_WHO_MONSTER && cave_monster(cave, mon->target.midx)->race)
 		target = cave->monsters[mon->target.midx].grid;
+	else if (mon->target.who == TARGET_WHO_OBJECT &&
+			object_can_be_targeted_by_mon(cave, mon, cave->objects[mon->target.oidx]))
+		target = cave->objects[mon->target.oidx]->grid;
 	else
 		target = mon->grid;
+	*/
 
 	/* Calculate range */
 	get_move_find_range(mon);
@@ -980,12 +1039,17 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 			mon->target.grid = mon->grid;
 		grid = loc_diff(mon->target.grid, mon->grid);
 	} else if (mon->target.who == TARGET_WHO_MONSTER) {
-		mon->target.grid = target;
+		mon->target.grid = cave->monsters[mon->target.midx].grid;
+		grid = loc_diff(mon->target.grid, mon->grid);
+		attacking = true;
+	} else if (mon->target.who == TARGET_WHO_OBJECT) {
+		mon->target.grid = cave->objects[mon->target.oidx]->grid;
 		grid = loc_diff(mon->target.grid, mon->grid);
 	} else if (get_move_advance(mon, good)) {
 		/* We have a good move, use it */
 		grid = loc_diff(mon->target.grid, mon->grid);
 		mflag_on(mon->mflag, MFLAG_TRACKING);
+		attacking = true;
 	} else {
 		/* Try to follow someone who knows where they're going */
 		struct monster *tracker = group_monster_tracking(cave, mon);
@@ -1017,25 +1081,15 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 		}
 	}
 
-    /* L: pick up items if no immediate danger */
-	if (!done && mon->target.who == TARGET_WHO_NONE) {
-		struct object *obj = monster_nearest_takeable_item(cave, mon);
-		if (obj) {
-			mon->target.grid = obj->grid;
-			grid = loc_diff(mon->target.grid, mon->grid);
-			done = true;
-		}
-	}
-
 	/* Normal animal packs try to get the player out of corridors. */
-	if (!done && group_ai && !monster_passes_walls(mon)) {
+	if (!done && group_ai && !monster_passes_walls(mon) && attacking) {
 		int i, open = 0;
 
 		/* Count empty grids next to player */
 		for (i = 0; i < 8; i++) {
 			/* Check grid around the player for room interior (room walls count)
 			 * or other empty space */
-			struct loc test = loc_sum(target, ddgrid_ddd[i]);
+			struct loc test = loc_sum(mon->target.grid, ddgrid_ddd[i]);
 			if (square_ispassable(cave, test) || square_isroom(cave, test)) {
 				/* One more open grid */
 				open++;
@@ -1073,7 +1127,7 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 	}
 
 	/* Monster groups try to surround the player if they're in sight */
-	if (!done && group_ai && square_isview(cave, mon->grid)) {
+	if (!done && group_ai && square_isview(cave, mon->grid) && attacking) {
 		int i;
 		struct loc grid1 = mon->target.grid;
 
@@ -1083,7 +1137,7 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 			int tmp = randint0(8);
 			for (i = 0; i < 8; i++) {
 				/* Pick squares near player (pseudo-randomly) */
-				grid1 = loc_sum(target, ddgrid_ddd[(tmp + i) % 8]);
+				grid1 = loc_sum(mon->target.grid, ddgrid_ddd[(tmp + i) % 8]);
 
 				/* Ignore filled grids */
 				if (!square_isempty(cave, grid1)) continue;
@@ -1542,10 +1596,10 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 		struct object *next = obj->next;
 
 		/* Skip gold */
-		if (tval_is_money(obj)) {
+		/*if (tval_is_money(obj)) {
 			obj = next;
 			continue;
-		}
+		}*/
 
 		/* Skip mimicked objects */
 		if (obj->mimicking_m_idx) {
@@ -1845,31 +1899,32 @@ static void monster_turn(struct monster *mon)
  */
 static bool monster_check_active(struct monster *mon)
 {
-	if (mon->faction == '@' && distance(mon->grid, player->grid) < 5 && player_is_resting(player)) {
-		/* L: resting alongside the player */
-		mflag_off(mon->mflag, MFLAG_ACTIVE);
-	} else if ((mon->cdis <= mon->race->hearing) && monster_passes_walls(mon)) {
+	// is the monster resting alongside the player?
+	bool rwp = mon->faction == '@' &&
+			distance(mon->grid, player->grid) < 5 &&
+			player_is_resting(player);
+	bool ht = mon->target.who != TARGET_WHO_NONE;
+	
+	if (ht && (mon->cdis <= mon->race->hearing) && monster_passes_walls(mon) &&	!rwp) {
 		/* Character is inside scanning range, monster can go straight there */
 		mflag_on(mon->mflag, MFLAG_ACTIVE);
 	} else if (mon->hp < mon->maxhp) {
 		/* Monster is hurt */
 		mflag_on(mon->mflag, MFLAG_ACTIVE);
-	} else if (square_isview(cave, mon->grid)) {
+	} else if (square_isview(cave, mon->grid) && !rwp) {
 		/* Monster can "see" the player (checked backwards) */
 		mflag_on(mon->mflag, MFLAG_ACTIVE);
-	} else if (monster_can_hear(mon)) {
+	//} else if (ht && monster_can_hear(mon) && !rwp) {
 		/* Monster can hear the player */
-		mflag_on(mon->mflag, MFLAG_ACTIVE);
-	} else if (monster_can_smell(mon)) {
+		//mflag_on(mon->mflag, MFLAG_ACTIVE);
+	//} else if (ht && monster_can_smell(mon) && !rwp) {
 		/* Monster can smell the player */
-		mflag_on(mon->mflag, MFLAG_ACTIVE);
+		//mflag_on(mon->mflag, MFLAG_ACTIVE);
 	} else if (monster_taking_terrain_damage(cave, mon)) {
 		/* Monster is taking damage from the terrain */
 		mflag_on(mon->mflag, MFLAG_ACTIVE);
-	} else if (monster_nearest_takeable_item(cave, mon)) {
-		/* L: Monster has an item to pick up */
-		mflag_on(mon->mflag, MFLAG_ACTIVE);
 	} else if (mon->m_timed[MON_TMD_POISONED] || mon->m_timed[MON_TMD_TOXIC]) {
+		// L: monster is taking ongoing damage
 		mflag_on(mon->mflag, MFLAG_ACTIVE);
 	} else {
 		/* Otherwise go passive */
@@ -1911,9 +1966,10 @@ static void monster_reduce_sleep(struct monster *mon)
 	} else {
 		int stealth = player->state.skills[SKILL_STEALTH] / 5;
 		int local_noise = cave->noise.grids[mon->grid.y][mon->grid.x];
+		int local_smell = cave->scent.grids[mon->grid.y][mon->grid.x];
 		bool woke_up = false;
 		int curr = mon->m_timed[MON_TMD_SLEEP];
-		int distfact = MAX(0, 20 - local_noise) / 2;
+		int distfact = MAX(0, 20 - local_noise - local_smell / 2) / 2;
 		int16_t sred = 1 << MIN(14, distfact) / MAX(stealth + 1, 1);
 
 		/* Note a complete wakeup */
@@ -1921,8 +1977,8 @@ static void monster_reduce_sleep(struct monster *mon)
 		if (curr <= sred) {
 			woke_up = true;
 		} else if (((curr & 0xf) < sred) &&
-		           (curr - sred <= 64) &&
-				   monster_is_obvious(mon)) {
+		        (curr - sred <= 64) &&
+				monster_is_obvious(mon)) {
 			msg("%s stirs.", m_name);
 		}
 
@@ -2071,10 +2127,16 @@ void process_monsters(int minimum_energy)
 
 	/* Only process some things every so often */
 	bool regen = false;
+	bool targcheck = false;
 
-	/* Regenerate hitpoints and mana every 100 game turns */
-	if (turn % 100 == 0)
+	/* Regenerate hitpoints and mana every 127 game turns */
+	if ((turn & 0x7f) == 0) {
 		regen = true;
+		// Recheck monsters' targets every 2000ish turns
+		if ((turn & 0x7ff) == 0) {
+			targcheck = true;
+		}
+	}
 
 	/* Process the monsters (backwards) */
 	for (i = cave_monster_max(cave) - 1; i >= 1; i--) {
@@ -2089,8 +2151,14 @@ void process_monsters(int minimum_energy)
 		if (!mon->race) continue;
 
 		/* Ignore monsters that have already been handled */
-		if (mflag_has(mon->mflag, MFLAG_HANDLED))
+		if (mflag_has(mon->mflag, MFLAG_HANDLED)) {
 			continue;
+		}
+
+		// L: recheck targets every so often
+		if (targcheck) {
+			mon_check_target(cave, mon);
+		}
 
 		/* Not enough energy to move yet */
 		if (mon->energy < minimum_energy) continue;
@@ -2102,8 +2170,9 @@ void process_monsters(int minimum_energy)
 		mflag_on(mon->mflag, MFLAG_HANDLED);
 
 		/* Handle monster regeneration if requested */
-		if (regen)
+		if (regen) {
 			regen_monster(mon, 1);
+		}
 
 		/* Calculate the net speed */
 		mspeed = mon->mspeed;
@@ -2118,8 +2187,9 @@ void process_monsters(int minimum_energy)
 		mon->energy += turn_energy(mspeed);
 
 		/* End the turn of monsters without enough energy to move */
-		if (!moving)
+		if (!moving) {
 			continue;
+		}
 
 		/* Use up "some" energy */
 		mon->energy -= z_info->move_energy;

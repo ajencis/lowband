@@ -36,6 +36,7 @@
 #include "obj-ignore.h"
 #include "obj-knowledge.h"
 #include "obj-pile.h"
+#include "obj-power.h"
 #include "obj-slays.h"
 #include "obj-tval.h"
 #include "obj-util.h"
@@ -50,12 +51,14 @@
 
 void mark_mon_as_playable(struct monster_race *mr)
 {
-	struct monster_race *curr = mr;
+	if (!mr || !mr->evol || !mr->evol->race) return;
 
-	while (curr) {
-		curr->is_playable = true;
-		if (!curr->evol || !curr->evol->race) break;
-		curr = curr->evol->race;
+	struct monster_evolution *me;
+	
+	mr->is_playable = true;
+
+	for (me = mr->evol; me && me->race; me = me->next) {
+		mark_mon_as_playable(me->race);
 	}
 }
 
@@ -1380,22 +1383,27 @@ bool monster_taking_terrain_damage(struct chunk *c, struct monster *mon)
 }
 
 
-struct object *monster_nearest_takeable_item(struct chunk *c, struct monster *mon) {
+struct object *monster_best_takeable_item(struct chunk *c, struct monster *mon, int danger) {
     if (!rf_has(mon->race->flags, RF_TAKE_ITEM)) return NULL;
-	int i; int dist = z_info->max_sight;
+	int i, score, dist, bestscore;
 	struct object *obj;
 	struct object *best = NULL;
 
 	for (i = 0; i < c->obj_max; i++) {
 		obj = c->objects[i];
         if (!obj) continue;
-		if (tval_is_money(obj)) continue;
+		//if (tval_is_money(obj)) continue;
 		if (obj->mimicking_m_idx) continue;
 		if (react_to_slay(obj, mon)) continue;
         if (!los(cave, mon->grid, obj->grid)) continue;
-		if (distance(mon->grid, obj->grid) < dist) {
+
+		dist = distance(mon->grid, obj->grid) + 1;
+		dist = MAX(dist, 1);
+		score = object_value_real(obj, obj->number) * 2 / (dist * dist + dist) - danger - mon->race->level;
+
+		if (score > bestscore) {
+			bestscore = score;
 			best = obj;
-			dist = distance(mon->grid, obj->grid);
 		}
 	}
 	return best;

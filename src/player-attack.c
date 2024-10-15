@@ -717,7 +717,7 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 		int flgs = MON_TMD_FLG_NOMESSAGE | MON_TMD_FLG_GETS_SAVE;
 		for (i = 0; i < MON_TMD_MAX; i++) {
 			if (!aroll->mtimed[i]) continue;
-			int power = randint1(aroll->mtimed[i]);
+			int power = randint0(aroll->mtimed[i] + 1) + aroll->mtimed[i] / 2;
 			if (power > 25)
 				mon_inc_timed(mon, i, power, flgs);
 		}

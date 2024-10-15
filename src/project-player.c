@@ -47,10 +47,12 @@
 int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 			   int resist, bool actual)
 {
-	int i, denom = 0, sav;
+	int i, denom = 0;
+	uint32_t sav;
 
 	/* L: saving throw reduces damage */
-	sav = p->state.skills[SKILL_SAVE];
+	sav = (uint32_t)MAX(p->state.skills[SKILL_SAVE], 0);
+
 	dam = dam * (100 - sav / 3 - randint0(sav / 3)) / 100;
 	dam = MAX(dam, 0);
 

@@ -64,6 +64,7 @@
 #          3 - vulnerability
 #          4 - player flag
 #          5 - presence of timed effect
+#          6 - saving throw (L)
 #        param two:
 #          the actual flag that causes the failure; for an object flag, the
 #          flag must match the first argument to one of the OF() macros in

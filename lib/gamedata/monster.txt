@@ -7739,6 +7739,7 @@ desc:It is eighteen feet tall and looking at you.
 
 name:shadow drake
 base:dragon
+evolution:death drake
 color:G
 speed:110
 hit-points:264
@@ -7860,6 +7861,7 @@ desc:It is the animated form of a massive two-headed troll.
 
 name:chaos drake
 base:dragon
+evolution:great wyrm of chaos
 color:v
 speed:110
 hit-points:440
@@ -7885,6 +7887,7 @@ desc: as its form shimmers and changes in front of your eyes.
 
 name:law drake
 base:dragon
+evolution:great wyrm of law
 color:B
 speed:110
 hit-points:440
@@ -7909,6 +7912,7 @@ desc: disturb it.
 
 name:balance drake
 base:dragon
+evolution:great wyrm of balance
 color:P
 speed:110
 hit-points:528
@@ -7931,8 +7935,9 @@ spells:BR_CHAO | BR_DISE | BR_SHAR | BR_SOUN
 desc:A mighty dragon, the balance drake seeks to maintain the Cosmic Balance,
 desc: and despises your feeble efforts to destroy evil.
 
-name:ethereal drake
+name:aethereal drake
 base:dragon
+evolution:aethereal dragon
 color:o
 speed:110
 hit-points:352
@@ -7953,7 +7958,7 @@ innate-freq:12
 spell-freq:13
 spells:CONF | SCARE | SLOW
 spells:BR_DARK | BR_LIGHT
-desc:A dragon of great power, with control over light and dark, the ethereal
+desc:A dragon of great power, with control over light and dark, the aethereal
 desc: drake's eyes glare with white hatred from the shadows.
 
 name:fire elemental
@@ -8001,6 +8006,7 @@ desc:It is a towering tempest of water.
 
 name:crystal drake
 base:dragon
+evolution:great crystal drake
 color:u
 speed:110
 hit-points:396
@@ -11108,6 +11114,7 @@ desc:It is a dragon-like form wrapped in darkness.  You cannot make out its true
 desc: form but you sense its evil.
 
 name:great crystal drake
+short-name:crystal wyrm
 base:ancient dragon
 color:u
 speed:120
@@ -11135,7 +11142,8 @@ desc:A huge crystalline dragon.  Its claws could cut you to shreds and its teeth
 desc: are razor sharp.  Strange colours ripple through it as it moves in the
 desc: light.
 
-name:ethereal dragon
+name:aethereal dragon
+short-name:ethereal wyrm
 base:ancient dragon
 color:o
 speed:120
@@ -11697,7 +11705,7 @@ spells:BLIND | BLINK | WOUND | CONF | BRAIN_SMASH
 spells:DRAIN_MANA | FORGET | HEAL | HOLD | SCARE | TELE_TO
 spells:TPORT
 spells:S_DEMON | S_UNDEAD
-desc:A lich who is partially immaterial, on its way to a new, ethereal form.
+desc:A lich who is partially immaterial, on its way to a new, aethereal form.
 
 name:dreadmaster
 base:ghost
@@ -13503,6 +13511,7 @@ desc: uncertain all of a sudden.
 ### Dungeon level 75 ###
 
 name:great wyrm of chaos
+short-name:chaos wyrm
 plural:great wyrms of chaos
 base:ancient dragon
 color:v
@@ -13532,6 +13541,7 @@ desc: then foul.  Its body is twisted by chaotic forces as it strives to stay
 desc: real.  Its very existence distorts the universe around it.
 
 name:great wyrm of law
+short-name:law wyrm
 plural:great wyrms of law
 base:ancient dragon
 color:B
@@ -14096,6 +14106,7 @@ desc: Sauron's power.
 ### Dungeon level 82 ###
 
 name:great wyrm of balance
+short-name:balance wyrm
 plural:great wyrms of balance
 base:ancient dragon
 color:P

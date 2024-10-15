@@ -151,9 +151,17 @@ void check_player_monster(struct player *p, bool init, int xp)
 
 	if (selected && (!init || numevols <= 1)) {
 
-		uint32_t chance = (((uint32_t)1) << MIN(20, selected->level / 5)) * 125;
+		uint32_t chance = (((uint32_t)1) << MIN(20, MAX(selected->level / 5, 1))) * 125 / 4;
+		//int min = selected->level * (selected->level - 10);
+		//min = MAX(0, min);
+		assert(chance <= 0x10000000);
+		int32_t roll = randint0(chance);
 
-		if (init ||	(randint1(chance) > xp && get_check(format("Evolve into a %s? ", selected->name)))) {
+		if (init ||	(xp > 0 &&
+					roll < xp &&
+					get_check(format("Evolve into a%s %s? ",
+						is_a_vowel(selected->name[0]) ? "n" : "",
+						selected->name)))) {
 
 			change_player_monster(p, selected, !init);
 
@@ -195,13 +203,15 @@ bool player_increase_stat(struct player *p)
 	for (i = 0; i < STAT_MAX; i++) {
 		if (p->stat_max[i] < p->stat_max_max[i]) {
 			++num;
-			if (one_in_(num))
+			if (one_in_(num)) {
 				choice = i;
+			}
 		}
 		if (p->stat_cur[i] < p->stat_max_max[i]) {
 			++backup_num;
-			if (one_in_(backup_num))
+			if (one_in_(backup_num)) {
 				backup_choice = i;
+			}
 		}
 	}
 
@@ -232,7 +242,7 @@ int get_power_scale(struct player *p, int power, int scaleto)
 	}
 	else if (scaling == PP_SCALE_SQRT) {
 		efflev = (double)p->state.powers[power] / sqrt((double)p->lev);
-		div = sqrt((double)50);
+		div = (double)50 / sqrt((double)50);
 	}
 
 	if (efflev <= 0) return 0;
@@ -321,16 +331,23 @@ void calc_extra_points(struct player *p, struct player_state *ps)
 static bool player_can_learn_from_tome(struct player *p, int index)
 {
 	assert(index > TOME_NONE && index < TOME_MAX);
-	if (p->state.extra_points_max > p->state.extra_points_used) return true;
 	int cpwr;
-	if (index < PP_MAX)
+	char name[80];
+	if (index < PP_MAX) {
 		cpwr = p->extra_powers[index];
-	else
+		my_strcpy(name, player_powers[index].name, sizeof(name));
+	}
+	else {
 		cpwr = p->extra_skills[index - PP_MAX];
+		my_strcpy(name, skill_index_to_name(index - PP_MAX), sizeof(name));
+		my_strcap_full(name);
+	}
 	int currcost = bonus_to_cost(cpwr, index);
 	int nextcost = bonus_to_cost(cpwr + 1, index);
 
 	if (nextcost <= currcost) return true;
+	if (p->state.extra_points_max <= p->state.extra_points_used) return false;
+	if (one_in_(33) && get_check(format("Learn %s? ", name))) return true;
 	return false;
 }
 
@@ -398,6 +415,7 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	if (power < PP_MAX) {
 		int curr = player_class_power(p, power) + p->race->r_powers[power] + p->extra_powers[power];
 		uint32_t chance = (((uint32_t)1) << MIN(curr / 10, 25)) * mx / xpgain / obj->number;
+		chance = MIN(chance, (uint32_t)0x10000000);
 		if (chance <= 1 || one_in_(chance)) {
 			learned = learn_extra(p, power);
 			if (p->extra_powers[power] >= mx) {
@@ -409,6 +427,7 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 		int skill_index = power - PP_MAX;
 		int curr = p->state.skills[skill_index];
 		uint32_t chance = (((uint32_t)1) << MIN(curr / 10, 25)) * mx / xpgain / obj->number;
+		chance = MIN(chance, (uint32_t)0x10000000);
 		if (chance <= 1 || one_in_(chance)) {
 			learned = learn_extra(p, power);
 			if (p->extra_skills[skill_index] >= mx) {
@@ -622,7 +641,7 @@ int player_apply_damage_reduction(struct player *p, int dam)
 }
 
 
-static void take_max_hp_dam(struct player *p, int dam)
+/*static void take_max_hp_dam(struct player *p, int dam)
 {
 	if (p->is_dead) return;
 	if (dam <= 5) return;
@@ -632,7 +651,7 @@ static void take_max_hp_dam(struct player *p, int dam)
 	msg("You are wounded.");
 
 	p->upkeep->update |= PU_HP;
-}
+}*/
 
 /**
  * Decreases players hit points and sets death flag if necessary
@@ -730,7 +749,7 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 		event_signal(EVENT_MESSAGE_FLUSH);
 	}
 
-	if (one_in_(10)) take_max_hp_dam(p, dam);
+	//if (one_in_(10)) take_max_hp_dam(p, dam);
 }
 
 void take_max_sp_dam(struct player *p, int dam)

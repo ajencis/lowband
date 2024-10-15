@@ -44,7 +44,7 @@
 #include "debug.h"
 
 
-static void store_maint(struct store *s);
+static void store_maint(struct store *s, bool reset);
 
 /**
  * ------------------------------------------------------------------------
@@ -178,6 +178,12 @@ static enum parser_error parse_normal(struct parser *p) {
 	}
 
 	s->normal_table[s->normal_num++] = kind;
+	if (kind->tval == TV_TOME) {
+		s->normal_max += TOME_MAX;
+	}
+	else {
+		s->normal_max++;
+	}
 
 	return PARSE_ERROR_NONE;
 }
@@ -323,6 +329,7 @@ static errr run_parse_stores(struct parser *p) {
 
 static errr finish_parse_stores(struct parser *p) {
 	parser_destroy(p);
+
 	return 0;
 }
 
@@ -362,7 +369,7 @@ void store_reset(void) {
 		if (s->feat == FEAT_HOME)
 			continue;
 		for (j = 0; j < 10; j++)
-			store_maint(s);
+			store_maint(s, true);
 	}
 }
 
@@ -635,18 +642,22 @@ int price_item(struct store *store, const struct object *obj,
 			adjust = 100;
 		}
 
-		/* Shops now pay 2/3 of true value */
-		price = price * 2 / 3;
+		// L: let starting equipment sell for full
+		if (obj->origin != ORIGIN_BIRTH) {
 
-		/* Black market sucks */
-		if (store->feat == FEAT_STORE_BLACK) {
-			price = price / 2;
+			/* Shops now pay 2/3 of true value */
+			price = price * 2 / 3;
+
+			/* Black market sucks */
+			if (store->feat == FEAT_STORE_BLACK) {
+				price = price / 2;
+			}
+
+			/* L: don't buy cheap stuff, especially lategame */
+			int day = turn / 10 / z_info->day_length;
+			day = MIN(day, 10) + 5;
+			if (price <= day * day * 4) return 0;
 		}
-
-		/* L: don't buy cheap stuff, especially lategame */
-		int day = turn / 10 / z_info->day_length;
-		day = MIN(day, 10) + 5;
-		if (price <= day * day * 4) return 0;
 
 		/* Check for no_selling option */
 		/*if (OPT(player, birth_no_selling)) {
@@ -1176,15 +1187,15 @@ static bool store_create_random(struct store *store)
 
 	/* Decide min/max levels */
 	if (store->feat == FEAT_STORE_BLACK) {
-		min_level = player->max_depth + 5;
-		max_level = player->max_depth + 20;
+		min_level = player->max_depth / 4 + 10;
+		max_level = player->max_depth / 2 + 40;
 	} else {
 		min_level = 1;
-		max_level = z_info->store_magic_level + MAX(player->max_depth - 20, 0);
+		max_level = z_info->store_magic_level + player->max_depth / 2;
 	}
 
-	if (min_level > 55) min_level = 55;
-	if (max_level > 70) max_level = 70;
+	//if (min_level > 55) min_level = 55;
+	//if (max_level > 70) max_level = 70;
 
 	/* Consider up to six items */
 	for (tries = 0; tries < 6; tries++) {
@@ -1306,7 +1317,7 @@ static struct object *store_create_item(struct store *store,
 /**
  * Maintain the inventory at the stores.
  */
-static void store_maint(struct store *s)
+static void store_maint(struct store *s, bool reset)
 {
 	/* Ignore home */
 	if (s->feat == FEAT_HOME)
@@ -1346,7 +1357,7 @@ static void store_maint(struct store *s)
 	 * dramatically.
 	 */
 
-	if (s->turnover) {
+	if (s->turnover && !reset) {
 		int restock_attempts = 100000;
 		int stock = s->stock_num - randint1(s->turnover);
 
@@ -1418,16 +1429,23 @@ static void store_maint(struct store *s)
 		if (stock > max) stock = max;
 		if (stock < min) stock = min;
 
+		// L: shops start with full inventories
+		if (reset) {
+			stock = MIN(s->normal_max + s->always_num, s->stock_size) - randint1(randint1(6));
+		}
+
 		/* For the rest, we just choose items randomlyish */
 		/* The (huge) restock_attempts will only go to zero (otherwise
 		 * infinite loop) if stores don't have enough items they can stock! */
-		while (s->stock_num < stock && --restock_attempts)
+		while (s->stock_num < stock && --restock_attempts) {
 			store_create_random(s);
+		}
 
-		if (!restock_attempts)
+		if (!restock_attempts) {
 			quit_fmt("Unable to (re-)stock %s. Please report this bug",
 				(f_info[s->feat].name) ? f_info[s->feat].name :
 				format("store %d", f_info[s->feat].shopnum));
+		}
 	}
 }
 
@@ -1446,7 +1464,7 @@ void store_update(void)
 			if (stores[n].feat == FEAT_HOME) continue;
 
 			/* Maintain */
-			store_maint(&stores[n]);
+			store_maint(&stores[n], false);
 		}
 
 		/* Sometimes, shuffle the shop-keepers */
@@ -1783,7 +1801,7 @@ void do_cmd_buy(struct command *cmd)
 
 			/* New inventory */
 			for (i = 0; i < 10; ++i)
-				store_maint(store);
+				store_maint(store, false);
 		}
 	}
 

@@ -182,7 +182,10 @@ static enum parser_error parse_player_timed_fail(struct parser *p)
 {
 	struct timed_effect_parse_state *ps =
 		(struct timed_effect_parse_state*) parser_priv(p);
-	const char *name = parser_getstr(p, "flag");
+	const char *name = NULL;
+	if (parser_hasval(p, "flag")) {
+		name = parser_getstr(p, "flag");
+	}
 	struct timed_failure *f;
 	int code, idx;
 
@@ -226,6 +229,9 @@ static enum parser_error parse_player_timed_fail(struct parser *p)
 				&idx)) {
 			return PARSE_ERROR_INVALID_FLAG;
 		}
+		break;
+
+	case TMD_FAIL_SAVE:
 		break;
 
 	default:
@@ -623,7 +629,7 @@ static struct parser *init_parse_player_timed(void)
 	parser_reg(p, "on-increase str text", parse_player_timed_increase_message);
 	parser_reg(p, "on-decrease str text", parse_player_timed_decrease_message);
 	parser_reg(p, "msgt sym type", parse_player_timed_message_type);
-	parser_reg(p, "fail uint code str flag", parse_player_timed_fail);
+	parser_reg(p, "fail uint code ?str flag", parse_player_timed_fail);
 	parser_reg(p, "grade sym color int max sym name sym up_msg ?sym down_msg", parse_player_timed_grade);
 	parser_reg(p, "resist sym elem", parse_player_timed_resist);
 	parser_reg(p, "brand sym name", parse_player_timed_brand);
@@ -1009,6 +1015,12 @@ bool player_inc_check(struct player *p, int idx, bool lore)
 			 */
 			assert(f->idx >= 0 && f->idx < TMD_MAX);
 			if (p->timed[f->idx]) {
+				return false;
+			}
+			break;
+		
+		case TMD_FAIL_SAVE:
+			if (randint0(100) < p->state.skills[SKILL_SAVE]) {
 				return false;
 			}
 			break;

@@ -676,13 +676,24 @@ static void melee_effect_handler_POISON(melee_effect_handler_context_t *context)
 {
 	melee_effect_elemental(context, PROJ_POIS, false);
 
-	/* Player is dead or not attacked */
-	if (!context->p || context->p->is_dead)
+	/* Player is dead */
+	if (context->p->is_dead)
 		return;
 
+	if (!context->p) {
+		assert(context->t_mon);
+		mon_inc_timed(context->t_mon, MON_TMD_POISONED, 10 + randint1(context->rlev), 0);
+		context->obvious = true;
+		return;
+	}
+
+	if (randint0(100) < player->state.skills[SKILL_SAVE]) {
+		msg("You are nauseous for a moment, but the feeling passes");
+	}
+
 	/* Take "poison" effect */
-	if (player_inc_timed(context->p, TMD_POISONED,
-			5 + randint1(context->rlev), true, true, true)) {
+	else if (player_inc_timed(context->p, TMD_POISONED, 
+				5 + randint1(context->rlev), true, true, true)) {
 		context->obvious = true;
 	}
 
@@ -991,7 +1002,7 @@ static void melee_effect_handler_COLD(melee_effect_handler_context_t *context)
 static void melee_effect_handler_BLIND(melee_effect_handler_context_t *context)
 {
 	melee_effect_timed(context, TMD_BLIND, 10 + randint1(context->rlev),
-					   OF_PROT_BLIND, false, NULL);
+					   OF_PROT_BLIND, true, NULL);
 }
 
 /**
@@ -1000,7 +1011,7 @@ static void melee_effect_handler_BLIND(melee_effect_handler_context_t *context)
 static void melee_effect_handler_CONFUSE(melee_effect_handler_context_t *context)
 {
 	melee_effect_timed(context, TMD_CONFUSED, 3 + randint1(context->rlev),
-					   OF_PROT_CONF, false, NULL);
+					   OF_PROT_CONF, true, NULL);
 }
 
 /**
@@ -1178,8 +1189,14 @@ static void melee_effect_handler_BLACK_BREATH(melee_effect_handler_context_t *co
 	/* Take damage */
 	if (monster_damage_target(context, true)) return;
 
+	if (!one_in_(5)) {
+	}
+	else if (randint0(250) < player->state.skills[SKILL_SAVE]) {
+		// L: difficult save
+		msg("You feel a shadow pass over you, then leave.");
+	}
 	/* Increase Black Breath counter a *small* amount, maybe */
-	if (one_in_(5) && player_inc_timed(context->p, TMD_BLACKBREATH,
+	else if (player_inc_timed(context->p, TMD_BLACKBREATH,
 			context->damage / 10, true, true, false)) {
 		context->obvious = true;
 	}

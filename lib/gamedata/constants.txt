@@ -155,7 +155,7 @@ carry-cap:floor-size:23
 store:inven-max:24
 
 # Number of turns between turnovers
-store:turns:1000
+store:turns:500
 
 # 1/Chance (per day) of an owner changing
 store:shuffle:25

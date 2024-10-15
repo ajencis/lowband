@@ -50,7 +50,7 @@ void kill_arena_monster(struct monster *mon);
 void monster_take_terrain_damage(struct monster *mon);
 void monster_take_timed_damage(struct monster *mon, int energy);
 bool monster_taking_terrain_damage(struct chunk *c, struct monster *mon);
-struct object *monster_nearest_takeable_item(struct chunk *c, struct monster *mon);
+struct object *monster_best_takeable_item(struct chunk *c, struct monster *mon, int danger);
 struct monster *get_commanded_monster(void);
 struct object *get_random_monster_object(struct monster *mon);
 void steal_monster_item(struct monster *mon, int midx);

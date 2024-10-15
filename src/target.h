@@ -39,10 +39,12 @@
 #define TARGET_WHO_NONE 0
 #define TARGET_WHO_PLAYER 1
 #define TARGET_WHO_MONSTER 2
+#define TARGET_WHO_OBJECT 3
 
 struct target {
 	struct loc grid;
 	int midx;
+	int oidx;
 	int who;			/** L: are we after player or monster or nobody */
 };
 

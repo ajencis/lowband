@@ -1301,11 +1301,11 @@ void do_cmd_accept_character(struct command *cmd)
 	player->obj_k->to_d = 1;
 
 	/* L: hack: player knows learning runes */
-	player->obj_k->flags[OF_POWER_LEARN_1] = 1;
-	player->obj_k->flags[OF_POWER_LEARN_2] = 1;
-	player->obj_k->flags[OF_POWER_LEARN_3] = 1;
-	player->obj_k->flags[OF_POWER_LEARN_4] = 1;
-	player->obj_k->flags[OF_POWER_LEARN_5] = 1;
+	of_on(player->obj_k->flags, OF_POWER_LEARN_1);
+	of_on(player->obj_k->flags, OF_POWER_LEARN_2);
+	of_on(player->obj_k->flags, OF_POWER_LEARN_3);
+	of_on(player->obj_k->flags, OF_POWER_LEARN_4);
+	of_on(player->obj_k->flags, OF_POWER_LEARN_5);
 
 	/* Initialise the stores, dungeon */
 	store_reset();

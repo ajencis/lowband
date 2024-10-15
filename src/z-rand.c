@@ -154,6 +154,14 @@ void Rand_init(void)
 }
 
 
+bool verify_rand(uint32_t num, const wchar_t *msg, const wchar_t *file, unsigned int line)
+{
+	if (num <= 0x10000000) return true;
+	_wassert(msg, file, line);
+	return false;
+}
+
+
 /**
  * Extract a "random" number from 0 to m - 1, via division.
  *
@@ -395,6 +403,7 @@ int rand_range(int A, int B)
 {
 	if (A == B) return A;
 	assert(A < B);
+	assert((1 + B - A) <= 0x10000000);
 
 	return A + (int32_t)Rand_div(1 + B - A);
 }
