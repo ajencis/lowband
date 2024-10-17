@@ -201,7 +201,7 @@ fact:gaze at
 desc:gaze
 slot:HAT
 skill:SEARCH
-lash-type:FORCE
+lash-type:PIERCING
 
 name:WAIL
 cut:0

@@ -604,7 +604,7 @@ void process_world(struct chunk *c)
 
 	if (player->timed[TMD_CALL_STORM] && !(turn % 50)) {
 		struct loc l = player->grid;
-		char *dam = format("2d%i", (int)sqrt(player->timed[TMD_CALL_STORM]) + 49);
+		char *dam = format("2d%i", (int)my_sqrt(player->timed[TMD_CALL_STORM]) + 49);
 		int rad = one_in_(3) ? 1 : 0;
 		effect_simple(EF_RANDOM_MON_DAMAGE, source_player(), dam, PROJ_ELEC, rad, 0, l.y, l.x, NULL);
 	}

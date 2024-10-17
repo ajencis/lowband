@@ -2614,7 +2614,7 @@ static enum parser_error parse_p_race_name(struct parser *p) {
 	r->next = h;
 	r->name = string_make(parser_getstr(p, "name"));
 	/* Default body is humanoid */
-	r->body = &bodies[0];
+	r->body = bodies;
 	parser_setpriv(p, r);
 	return PARSE_ERROR_NONE;
 }
@@ -4845,7 +4845,8 @@ static struct {
 	{ "slays", &slay_parser },
 	{ "brands", &brand_parser },
 	{ "monster pain messages", &pain_parser },
-	{ "monster bases", &mon_base_parser },
+	{ "bodies", &body_parser },
+	{ "monster bases", &mon_base_parser }, /* L: must be after bodies */
 	{ "summons", &summon_parser },
 	{ "curses", &curse_parser },
 	{ "player shapes", &shape_parser },
@@ -4853,7 +4854,6 @@ static struct {
 	{ "activations", &act_parser },
 	{ "ego-items", &ego_parser },
 	{ "history charts", &history_parser },
-	{ "bodies", &body_parser },
 	{ "magic realms", &realm_parser },
 	{ "player spells", &spell_parser },
 	{ "player classes", &class_parser },

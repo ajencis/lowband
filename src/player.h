@@ -689,10 +689,10 @@ struct player {
 	int16_t player_hp[PY_MAX_LEVEL];	/* HP gained per level */
 
 	/* Saved values for quickstart */
-	int32_t au_birth;			/* Birth gold when option birth_money is false */
+	int32_t au_birth;					/* Birth gold when option birth_money is false */
 	int16_t stat_birth[STAT_MAX];		/* Birth "natural" stat values */
-	int16_t ht_birth;			/* Birth Height */
-	int16_t wt_birth;			/* Birth Weight */
+	int16_t ht_birth;					/* Birth Height */
+	int16_t wt_birth;					/* Birth Weight */
 
 	struct player_options opts;			/* Player options */
 	struct player_history hist;			/* Player history (see player-history.c) */

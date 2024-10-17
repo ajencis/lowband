@@ -76,19 +76,6 @@ static const int tome_factors[] = {
 	0
 };
 
-/*static const struct tome_maximum_data_entry {
-	int cost;
-	int power;
-	int index;
-} tome_maxima[] = {
-	{  2, 17, OF_POWER_LEARN_1 },
-	{  4, 27, OF_POWER_LEARN_2 },
-	{  6, 35, OF_POWER_LEARN_3 },
-	{  8, 43, OF_POWER_LEARN_4 },
-	{ 10, 50, OF_POWER_LEARN_5 },
-	{  0,  0,                0 },
-};*/
-
 /**
  * L: functions for races that are monsters
  */
@@ -98,11 +85,83 @@ struct monster_race *lookup_player_monster(const struct player *p)
 	return &r_info[p->curr_monster_ridx];
 }
 
-static void change_player_monster(struct player *p, struct monster_race *mon, bool verbose)
+static void change_player_body(struct player *p, struct player_body *new)
+{
+	char buf[80];
+	int i;
+	struct object *equipped_pile = NULL;
+	struct object *equipped;
+
+	// unequip all items, store them in equipped_pile
+	if (p->body.slots) {
+		for (i = 0; i < p->body.count; i++) {
+			struct object *obj = p->body.slots[i].obj;
+			if (!obj) continue;
+
+			bool anyleft;
+			p->body.slots[i].obj = NULL;
+			p->upkeep->equip_cnt--;
+
+			p->upkeep->update |= (PU_BONUS | PU_INVEN | PU_UPDATE_VIEW);
+			p->upkeep->notice |= (PN_IGNORE);
+
+			obj = gear_object_for_use(p, obj, obj->number, false, &anyleft);
+
+			pile_insert(&equipped_pile, obj);
+		}
+	}
+
+	assert(!p->upkeep->equip_cnt);
+
+	// delete the player's body
+	if (p->body.slots) {
+		for (i = 0; i < p->body.count; i++) {
+			string_free(p->body.slots[i].name);
+		}
+		mem_free(p->body.slots);
+		p->body.slots = NULL;
+	}
+	
+	// remake the player's new body
+	memcpy(&p->body, new, sizeof(p->body));
+	my_strcpy(buf, new->name, sizeof(buf));
+	p->body.name = string_make(buf);
+	p->body.slots = mem_zalloc(p->body.count * sizeof(struct equip_slot));
+	for (i = 0; i < p->body.count; i++) {
+		p->body.slots[i].type = new->slots[i].type;
+		my_strcpy(buf, new->slots[i].name, sizeof(buf));
+		p->body.slots[i].name = string_make(buf);
+	}
+
+	// reequip the items or f we can't just put them in the inventory
+	equipped = pile_last_item(equipped_pile);
+	while (equipped) {
+		pile_excise(&equipped_pile, equipped);
+		int slot = wield_slot(equipped);
+		if (slot >= 0 && !slot_object(p, slot)) {
+			inven_carry(p, equipped, false, false);
+			inven_wield(equipped, slot);
+		}
+		else {
+			inven_carry(p, equipped, true, false);
+			combine_pack(p);
+			pack_overflow(equipped);
+		}
+		equipped = pile_last_item(equipped_pile);
+	}
+
+	assert(!equipped_pile);
+}
+
+static void change_player_monster(struct player *p, struct monster_race *mon, bool init)
 {
 	assert(mon);
-	if (verbose)
+	if (!init)
 		msg("You transform into a%s %s.", is_a_vowel(mon->name[0]) ? "n" : "", mon->name);
+
+	if (!init && mon->body && !streq(mon->body->name, p->body.name)) {
+		change_player_body(p, mon->body);
+	}
 
 	p->curr_monster_ridx = mon->ridx;
 	player->upkeep->redraw |= (PR_MAP | PR_MISC);
@@ -163,7 +222,8 @@ void check_player_monster(struct player *p, bool init, int xp)
 						is_a_vowel(selected->name[0]) ? "n" : "",
 						selected->name)))) {
 
-			change_player_monster(p, selected, !init);
+			disturb(p);
+			change_player_monster(p, selected, init);
 
 			if (!init) {
 				player_increase_stat(p);
@@ -241,13 +301,13 @@ int get_power_scale(struct player *p, int power, int scaleto)
 		div = (double)50 * 50;
 	}
 	else if (scaling == PP_SCALE_SQRT) {
-		efflev = (double)p->state.powers[power] / sqrt((double)p->lev);
-		div = (double)50 / sqrt((double)50);
+		efflev = (double)p->state.powers[power] / my_sqrt((double)p->lev);
+		div = (double)50 / my_sqrt((double)50);
 	}
 
 	if (efflev <= 0) return 0;
 
-	int result = (int)floor((efflev * scaleto + div * 2 / 3) / div);
+	int result = (int)((efflev * scaleto + div * 2 / 3) / div);
 
 	return MAX(result, 1);
 }
@@ -259,7 +319,7 @@ static double btc_scale(int bonus)
 {
 	if (bonus <= 0) return 0;
 	assert(bonus * bonus < INT_MAX / bonus);
-	int result = sqrt((double)(bonus * bonus * bonus));
+	int result = my_sqrt((double)(bonus * bonus * bonus));
 	return result;
 }
 
@@ -267,7 +327,7 @@ static int bonus_to_cost_base(int bonus, int factor)
 {
 	int scaleto = 10;
 	double scalefrom = btc_scale(50);
-	int result = (int)ceil(btc_scale(bonus) * scaleto * factor  / 100 / scalefrom);
+	int result = (int)((btc_scale(bonus) * scaleto * factor + 100 * scalefrom - 1)  / 100 / scalefrom);
 	return result;
 }
 
@@ -320,7 +380,7 @@ void calc_extra_points(struct player *p, struct player_state *ps)
 	for (i = 0; i < SKILL_MAX; i++) {
 		int skl = p->extra_skills[i];
 		if (skl > 0) {
-			sum += bonus_to_cost(skl, i + SKILL_MAX);
+			sum += bonus_to_cost(skl, i + PP_MAX);
 		}
 	}
 	
@@ -347,7 +407,11 @@ static bool player_can_learn_from_tome(struct player *p, int index)
 
 	if (nextcost <= currcost) return true;
 	if (p->state.extra_points_max <= p->state.extra_points_used) return false;
-	if (one_in_(33) && get_check(format("Learn %s? ", name))) return true;
+
+	msg("You feel like you're ready to learn something...");
+	event_signal(EVENT_MESSAGE_FLUSH);
+	if (get_check(format("Learn %s? ", name))) return true;
+
 	return false;
 }
 
@@ -359,15 +423,16 @@ static bool learn_extra(struct player *p, int index)
 
 	if (index < PP_MAX) {
 		p->extra_powers[index]++;
-		if (!(p->extra_powers[index] & 3)) {
+		if (!(p->extra_powers[index] & 3) || true) {
 			msg("You feel a bit more familiar with %s.", player_powers[index].name);
 		}
 		p->upkeep->update |= player_powers[index].update;
 	}
 	else {
 		int skill_index = index - PP_MAX;
+		assert(skill_index < SKILL_MAX && skill_index >= 0);
 		p->extra_skills[skill_index]++;
-		if (!(p->extra_skills[skill_index] & 3)) {
+		if (!(p->extra_skills[skill_index] & 3) || true) {
 			char buf[80];
 			my_strcpy(buf, skill_index_to_name(skill_index), sizeof(buf));
 			my_strcap_full(buf);
@@ -416,6 +481,9 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 		int curr = player_class_power(p, power) + p->race->r_powers[power] + p->extra_powers[power];
 		uint32_t chance = (((uint32_t)1) << MIN(curr / 10, 25)) * mx / xpgain / obj->number;
 		chance = MIN(chance, (uint32_t)0x10000000);
+		int currcost = bonus_to_cost(curr, power);
+		int nextcost = bonus_to_cost(curr + 1, power);
+		if (nextcost > currcost) chance = MAX(chance, 100);
 		if (chance <= 1 || one_in_(chance)) {
 			learned = learn_extra(p, power);
 			if (p->extra_powers[power] >= mx) {
@@ -428,6 +496,9 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 		int curr = p->state.skills[skill_index];
 		uint32_t chance = (((uint32_t)1) << MIN(curr / 10, 25)) * mx / xpgain / obj->number;
 		chance = MIN(chance, (uint32_t)0x10000000);
+		int currcost = bonus_to_cost(curr, power);
+		int nextcost = bonus_to_cost(curr + 1, power);
+		if (nextcost > currcost) chance = MAX(chance, 100);
 		if (chance <= 1 || one_in_(chance)) {
 			learned = learn_extra(p, power);
 			if (p->extra_skills[skill_index] >= mx) {
@@ -756,7 +827,7 @@ void take_max_sp_dam(struct player *p, int dam)
 {
 	if (p->is_dead) return;
 	if (dam <= 5) return;
-	int quantity = (int)sqrt((double)dam - 5);
+	int quantity = (int)my_sqrt((double)dam - 5);
 
 	p->sp_burn += quantity;
 	msg("You feel weaker.");
@@ -1751,6 +1822,8 @@ bool player_can_refuel(struct player *p, bool show_msg)
 bool player_can_cast_prereq(void)
 {
 	if (player->state.skills[SKILL_MAGIC] > 0) return true;
+	msg("You do not know magic.");
+	return false;
 	return player_can_cast(player, true);
 }
 

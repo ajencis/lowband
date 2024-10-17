@@ -1181,6 +1181,11 @@ void do_cmd_study(struct command *cmd)
 		return;
 	}
 
+	if (player->state.skills[SKILL_MAGIC] <= 0) {
+		msg("You do not know magic.");
+		return;
+	}
+
 	struct object *spellbook;
 	if (cmd_get_item(cmd, "item", &spellbook,
 			/* Prompt */ "Study which book? ",
@@ -1280,6 +1285,11 @@ void do_cmd_cast(struct command *cmd)
 	int dir;
 	const struct player_spell *ps;
 	const char *fail = "You don't know any spells.";
+
+	if (player->state.skills[SKILL_MAGIC] <= 0) {
+		msg("You do not know magic.");
+		return;
+	}
 
 	if (cmd_get_gener_spell(cmd,
 				"spell",

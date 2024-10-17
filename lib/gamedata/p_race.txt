@@ -364,7 +364,7 @@ weight:190:20
 obj-flags:SEE_INVIS
 values:RES_DARK[-1]
 monster:floating eye
-body:Beholder
+body:Humanoid
 
 name:Draconian
 stats:1:1:-1:-1:1
@@ -398,7 +398,7 @@ monster:law drake
 monster:balance drake
 monster:aethereal drake
 monster:crystal drake
-body:Dragon
+body:Humanoid
 
 name:Tiefling
 stats:1:0:-1:-1:2

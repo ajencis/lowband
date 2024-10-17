@@ -1967,10 +1967,11 @@ static void monster_reduce_sleep(struct monster *mon)
 		int stealth = player->state.skills[SKILL_STEALTH] / 5;
 		int local_noise = cave->noise.grids[mon->grid.y][mon->grid.x];
 		int local_smell = cave->scent.grids[mon->grid.y][mon->grid.x];
+		bool visible = monster_can_see_player(mon);
 		bool woke_up = false;
 		int curr = mon->m_timed[MON_TMD_SLEEP];
-		int distfact = MAX(0, 20 - local_noise - local_smell / 2) / 2;
-		int16_t sred = 1 << MIN(14, distfact) / MAX(stealth + 1, 1);
+		int distfact = MAX(0, 40 - local_noise * 2 - local_smell - stealth) / 4;
+		int16_t sred = 1 << MIN(14, distfact) / MAX(stealth + visible ? 1 : 11, 1);
 
 		/* Note a complete wakeup */
 		/* L: also note getting close to wakeup */

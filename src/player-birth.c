@@ -397,16 +397,24 @@ static void player_embody(struct player *p)
 {
 	char buf[80];
 	int i;
+	struct player_body *body;
+	struct monster_race *mr = lookup_player_monster(p);
+
+	if (mr && mr->body) {
+		body = mr->body;
+	} else {
+		body = p->race->body;
+	}
 
 	assert(p->race);
 
-	memcpy(&p->body, p->race->body, sizeof(p->body));
-	my_strcpy(buf, p->race->body->name, sizeof(buf));
+	memcpy(&p->body, body, sizeof(p->body));
+	my_strcpy(buf, body->name, sizeof(buf));
 	p->body.name = string_make(buf);
 	p->body.slots = mem_zalloc(p->body.count * sizeof(struct equip_slot));
 	for (i = 0; i < p->body.count; i++) {
-		p->body.slots[i].type = p->race->body->slots[i].type;
-		my_strcpy(buf, p->race->body->slots[i].name, sizeof(buf));
+		p->body.slots[i].type = body->slots[i].type;
+		my_strcpy(buf, body->slots[i].name, sizeof(buf));
 		p->body.slots[i].name = string_make(buf);
 	}
 }

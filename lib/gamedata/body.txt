@@ -36,7 +36,6 @@ slot:LIGHT:light
 slot:CLOAK:back
 slot:HAT:head
 
-
 body:Dragon
 slot:WEAPON:claw
 slot:WEAPON:claw

@@ -154,6 +154,18 @@ static int mtimed_index_by_name(const char *name)
 	return -1;
 }
 
+static struct player_body *player_body_by_name(const char *name)
+{
+	assert(bodies);
+	struct player_body *body;
+	for (body = bodies; body; body = body->next) {
+		if (streq(name, body->name)) {
+			return body;
+		}
+	}
+	return NULL;
+}
+
 /**
  * ------------------------------------------------------------------------
  * Initialize monster blow methods
@@ -332,7 +344,6 @@ static enum parser_error parse_meth_lash_type(struct parser *p)
 	if (!type) {
 		return PARSE_ERROR_GENERIC;
 	}
-
 	
 	projnum = proj_name_to_idx(type);
 	if (projnum == -1) {
@@ -1277,6 +1288,29 @@ static enum parser_error parse_mon_base_desc(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_mon_base_body(struct parser *p)
+{
+	struct monster_base *rb = parser_priv(p);
+	struct player_body *body;
+	char *body_name;
+
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	body_name = string_make(parser_getstr(p, "body"));
+	body = player_body_by_name(body_name);
+	string_free(body_name);
+
+	if (!body) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	rb->body = body;
+
+	return PARSE_ERROR_NONE;
+}
+
 
 static struct parser *init_parse_mon_base(void) {
 	struct parser *p = parser_new();
@@ -1287,6 +1321,7 @@ static struct parser *init_parse_mon_base(void) {
 	parser_reg(p, "pain uint pain", parse_mon_base_pain);
 	parser_reg(p, "flags ?str flags", parse_mon_base_flags);
 	parser_reg(p, "desc str desc", parse_mon_base_desc);
+	parser_reg(p, "body str body", parse_mon_base_body);
 	return p;
 }
 
@@ -1346,6 +1381,9 @@ static enum parser_error parse_monster_base(struct parser *p) {
 
 	/* The template sets the default display character */
 	r->d_char = r->base->d_char;
+
+	// L: template gives default body as well
+	r->body = r->base->body;
 
 	/* Give the monster its default flags */
 	rf_union(r->flags, r->base->flags);
@@ -1950,6 +1988,31 @@ static enum parser_error parse_monster_evolution(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_monster_body(struct parser *p)
+{
+	struct monster_race *r = parser_priv(p);
+	const char *body_name = parser_getstr(p, "body");
+	struct player_body *body;
+
+	if (!r) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	if (!body_name) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	body = player_body_by_name(body_name);
+
+	if (!body) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	r->body = body;
+
+	return PARSE_ERROR_NONE;
+}
+
 struct parser *init_parse_monster(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -1989,6 +2052,7 @@ struct parser *init_parse_monster(void) {
 	parser_reg(p, "color-cycle sym group sym cycle", parse_monster_color_cycle);
 	parser_reg(p, "short-name str short_name", parse_monster_short_name);
 	parser_reg(p, "evolution str evol", parse_monster_evolution);
+	parser_reg(p, "body str body", parse_monster_body);
 	return p;
 }
 

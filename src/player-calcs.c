@@ -959,7 +959,7 @@ static void calc_hitpoints(struct player *p)
 
 	/* L: bonus from being a monster */
 	if (mon) {
-		mhp += (int)cbrt(((double)mon->avg_hp) * mon->avg_hp);
+		mhp += (int)my_cbrt((double)mon->avg_hp * mon->avg_hp);
 	}
 
 	/* Always have at least one hitpoint per level */
@@ -2010,6 +2010,12 @@ static void update_bonuses(struct player *p)
 	/* L: update exp if needed */
 	if (state.expfact != p->state.expfact)
 		p->upkeep->redraw |= PR_EXP;
+
+	// L: redraw status if learning ability changed
+	if (state.extra_points_max != p->state.extra_points_max ||
+			state.extra_points_used != p->state.extra_points_used) {
+		p->upkeep->redraw |= PR_STATUS;
+	}
 
 
 	/* Hack -- Telepathy Change */

@@ -263,4 +263,10 @@ struct my_rational my_rational_product(const struct my_rational *a,
 struct my_rational my_rational_sum(const struct my_rational *a,
 		const struct my_rational *b);
 
+/**
+ * L: more math
+ */
+double my_sqrt(double num);
+double my_cbrt(double num);
+
 #endif /* INCLUDED_Z_UTIL_H */

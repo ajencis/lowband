@@ -2800,6 +2800,7 @@ name:baby gold dragon
 short-name:baby gold
 evolution:young gold dragon
 base:dragon
+body:Dragon
 color:y
 speed:110
 hit-points:88

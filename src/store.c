@@ -355,7 +355,7 @@ void store_init(void)
 }
 
 void store_reset(void) {
-	int i, j;
+	int i;//, j;
 	struct store *s;
 
 	for (i = 0; i < z_info->store_max; i++) {
@@ -368,8 +368,8 @@ void store_reset(void) {
 		s->stock = NULL;
 		if (s->feat == FEAT_HOME)
 			continue;
-		for (j = 0; j < 10; j++)
-			store_maint(s, true);
+		//for (j = 0; j < 10; j++)
+		store_maint(s, true);
 	}
 }
 
@@ -607,18 +607,21 @@ int price_item(struct store *store, const struct object *obj,
 	proprietor = store->owner;
 
 	/* Get the value of the stack of wands, or a single item */
+	// L: will now pay full even for unknown items
 	if (tval_can_have_charges(obj)) {
 		if (store_buying) {
-			price = MIN(object_value_real(obj, qty),
-				object_value(obj, qty));
+			/*price = MIN(object_value_real(obj, qty),
+				object_value(obj, qty));*/
+			price = object_value_real(obj, qty);
 		} else {
 			price = MAX(object_value_real(obj, qty),
 				object_value(obj, qty));
 		}
 	} else {
 		if (store_buying) {
-			price = MIN(object_value_real(obj, 1),
-				object_value(obj, 1));
+			/*price = MIN(object_value_real(obj, 1),
+				object_value(obj, 1));*/
+			price = object_value_real(obj, 1);
 		} else {
 			price = MAX(object_value_real(obj, 1),
 				object_value(obj, 1));
@@ -1429,9 +1432,10 @@ static void store_maint(struct store *s, bool reset)
 		if (stock > max) stock = max;
 		if (stock < min) stock = min;
 
-		// L: shops start with full inventories
+		// L: shops start with nearly full inventories
 		if (reset) {
-			stock = MIN(s->normal_max + s->always_num, s->stock_size) - randint1(randint1(6));
+			stock = MIN((unsigned)s->normal_max + s->always_num, (unsigned)s->stock_size);
+			stock -= randint1(randint1(stock / 3));
 		}
 
 		/* For the rest, we just choose items randomlyish */

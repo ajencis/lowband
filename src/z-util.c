@@ -2071,3 +2071,47 @@ uint32_t djb2_hash(const char *str)
 	return hash;
 }
 
+
+static double inverse_binary_search(double num, double (*f)(double), double lowbound, double highbound)
+{
+	double low = lowbound, high = highbound;
+	double mid = (low + high) / 2, result;
+	int tries;
+
+	for (tries = 0; tries < 256; tries++) {
+		result = f(mid);
+
+		if (result == num) return mid;
+
+		else if (result > num) high = mid;
+		else if (result < num) low = mid;
+
+		mid = (low + high) / 2;
+	}
+
+	return mid;
+}
+
+
+static double square(double num)
+{
+	return num * num;
+}
+
+double my_sqrt(double num)
+{
+	assert(num >= 0);
+	return inverse_binary_search(num, square, MIN(num, 1), MAX(num, 1));
+}
+
+static double cube(double num)
+{
+	return num * num * num;
+}
+
+double my_cbrt(double num)
+{
+	assert(num >= 0);
+	return inverse_binary_search(num, cube, MIN(num, 1), MAX(num, 1));
+}
+

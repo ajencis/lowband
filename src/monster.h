@@ -226,6 +226,8 @@ struct monster_base {
 	bitflag flags[RF_SIZE];         /* Flags */
 	wchar_t d_char;			/* Default monster character */
 	struct monster_pain *pain;	/* Pain messages */
+
+	struct player_body *body;	/* L: default body */
 };
 
 
@@ -381,6 +383,7 @@ struct monster_race {
 
 	bool is_playable;		/* L: can players be one of these potentially */
 	char *short_name;		/* L: if we need to display the name in fewer characters */
+	struct player_body *body;	/* L: its body if it's a player */
 
 	struct monster_evolution *evol;	/* L: monster into which it evolves */
 };

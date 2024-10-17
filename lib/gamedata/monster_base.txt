@@ -39,6 +39,7 @@ flags:NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 flags:RES_SLASHING
 desc:Ancient Dragon/Wyrm
+body:Dragon
 
 # Ainur were the founding spirits of Arda, and could take any form they wished.
 # Ainur in Angband typically have shapechanges and many possibe other spells,
@@ -52,6 +53,7 @@ flags:OPEN_DOOR | BASH_DOOR | TAKE_ITEM | CLEAR_WEB
 flags:IM_COLD | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 desc:Ainu/maia
+body:Humanoid
 
 # Ants have lowish HP but highish armor class, and powerful melee for their
 # depth
@@ -112,6 +114,7 @@ pain:1
 flags:DRAGON | EVIL | SPIRIT
 flags:FORCE_SLEEP | CLEAR_WEB
 desc:Dragon
+body:Dragon
 
 # Early, weak breathers which move quickly and erratically
 name:dragon fly
@@ -131,6 +134,7 @@ glyph:e
 pain:1
 flags:CLEAR_WEB
 desc:Floating Eye
+body:Beholder
 
 # Creatures (mostly) embodying a single element, mostly with lowish HP
 name:elemental
@@ -177,12 +181,14 @@ flags:EMPTY_MIND | CLEAR_WEB | IM_POIS
 flags:IM_ELEC | NO_FEAR | NO_CONF | NO_SLEEP
 flags:NONLIVING
 desc:Golem
+body:Humanoid
 
 name:humanoid
 glyph:h
 pain:1
 flags:OPEN_DOOR | BASH_DOOR | SPIRIT | CLEAR_WEB
 desc:Hobbit/Elf/Dwarf
+body:Humanoid
 
 # Weird legendary stuff, mostly without spells, sometimes with breath
 name:hybrid
@@ -241,6 +247,7 @@ pain:1
 flags:EVIL
 flags:OPEN_DOOR | BASH_DOOR | SPIRIT | CLEAR_WEB
 desc:Kobold
+body:Humanoid
 
 # Powerful undead spellcasters, tending to drain dexterity and charges in melee
 name:lich
@@ -252,6 +259,7 @@ flags:IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
 flags:FORCE_SLEEP
 flags:RES_PIERCING | RES_SLASHING
 desc:Lich
+body:Humanoid
 
 # Weird monsters tha look like floor.
 name:lurker
@@ -273,6 +281,7 @@ flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 desc:Major Demon
+body:Humanoid
 
 # Monsters which pretend to be objects.  They don't move but do cast spells,
 # and attack if the player steps next to them.
@@ -294,6 +303,7 @@ flags:DEMON | EVIL | SPIRIT
 flags:CLEAR_WEB
 flags:IM_FIRE
 desc:Minor Demon
+body:Humanoid
 
 # Non-moving growths which release spores when stepped next to
 name:mold
@@ -327,6 +337,7 @@ pain:1
 flags:GIANT | EVIL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 desc:Ogre
+body:Humanoid
 
 # Orcs are the foot-soldiers of Morgoth.  They melee and use archery, but 
 # mostly don't use magic.  They tend to appear in groups.
@@ -336,12 +347,14 @@ pain:1
 flags:MALE | ORC | EVIL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 desc:Orc
+body:Humanoid
 
 name:person
 glyph:p
 pain:1
 flags:BASH_DOOR | SPIRIT | CLEAR_WEB
 desc:Person/Human
+body:Humanoid
 
 # A grab-bag of four-legged things with no real defining quality
 name:quadruped
@@ -385,6 +398,7 @@ flags:UNDEAD | EVIL | COLD_BLOOD | CLEAR_WEB
 flags:IM_COLD | IM_POIS | NO_FEAR | NO_CONF | NO_SLEEP | NO_STUN
 flags:RES_PIERCING | RES_SLASHING
 desc:Skeleton
+body:Humanoid
 
 # Snakes are typically slow, but have high armor class
 name:snake
@@ -410,6 +424,7 @@ glyph:t
 pain:4
 flags:SPIRIT | CLEAR_WEB
 desc:Townsfolk
+body:Humanoid
 
 # High hitpoints and armor class
 name:tree
@@ -430,6 +445,7 @@ flags:TROLL | EVIL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:RES_PIERCING
 desc:Troll
+body:Humanoid
 
 # Powerful undead which drain experience
 name:vampire
@@ -441,6 +457,7 @@ flags:HURT_LIGHT | HURT_FIRE | IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN
 flags:FORCE_SLEEP
 flags:RES_BLUDGEONING | RES_SLASHING
 desc:Vampire
+body:Humanoid
 
 # Always awake, elemental objects which engulf and breathe their element(s)
 name:vortex
@@ -469,6 +486,7 @@ pain:1
 flags:UNDEAD | EVIL | COLD_BLOOD | SPIRIT | CLEAR_WEB
 flags:HURT_LIGHT | IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
 desc:Wight/Wraith
+body:Humanoid
 
 # Strange part rock beings which can destroy or pass through walls
 name:xorn
@@ -486,6 +504,7 @@ flags:ANIMAL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:IM_ACID
 desc:Yeek
+body:Humanoid
 
 # Yetis are a couple of niche monsters, big furry bear-like creatures
 name:yeti
@@ -495,6 +514,7 @@ flags:ANIMAL
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:IM_COLD
 desc:Yeti
+body:Humanoid
 
 # Zephyr hounds come in packs and (with a couple of exceptions) breathe a
 # single element, with melee that matches where possible.  Simple.
@@ -513,6 +533,7 @@ flags:UNDEAD | EVIL | COLD_BLOOD
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:IM_COLD | IM_POIS | HURT_FIRE | NO_CONF | NO_SLEEP | NO_STUN
 desc:Zombie/Mummy
+body:Humanoid
 
 ##### Special templates #####
 
@@ -520,8 +541,10 @@ name:player
 glyph:@
 pain:1
 desc:You
+body:Humanoid
 
 name:Morgoth
 glyph:P
 pain:12
 desc:Morgoth
+body:Humanoid

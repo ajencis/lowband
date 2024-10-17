@@ -221,9 +221,6 @@ owner:30000:The Pit
 slots:5:15
 turnover:5
 normal:tome:Basic Tome
-normal:tome:Basic Tome
-normal:tome:Basic Tome
-normal:tome:Tome
 normal:tome:Tome
 normal:tome:Advanced Tome
 buy:tome

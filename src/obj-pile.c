@@ -573,7 +573,7 @@ void object_origin_combine(struct object *obj1, const struct object *obj2)
  * In both these cases, we can simply use the existing note, unless the
  * blending object has a note, in which case we use that note.
  *
-* These assumptions are enforced by the "object_mergeable()" code.
+ * These assumptions are enforced by the "object_mergeable()" code.
  */
 static void object_absorb_merge(struct object *obj1, const struct object *obj2)
 {
