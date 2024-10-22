@@ -239,6 +239,7 @@ struct player_race {
 	struct player_body *body;		/**< Race body */
 
 	int monsters[MAX_RACE_MONSTERS];		/**< L: monster equivalents */
+	struct evolution *evol;		/**< L: evolutions */
 
 	int r_adj[STAT_MAX];		/**< Stat bonuses */
 
@@ -720,6 +721,8 @@ struct player {
 
 	uint8_t *player_spell_flags;		/* L: for nonclass spells */
 	struct magic_realm *realm;			/* L: how the player casts */
+
+	int32_t xp_this_turn;				/* L: how much xp was gained between turns */
 };
 
 

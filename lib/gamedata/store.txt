@@ -138,15 +138,7 @@ owner:25000:Delilah the Pure (Elf)
 owner:30000:Bosk the Wise (Dwarf)
 slots:3:6
 turnover:0
-always:prayer book
-always:magic book
-always:nature book
-always:shadow book
 always:spellbook
-buy:magic book
-buy:prayer book
-buy:nature book
-buy:shadow book
 buy:spellbook
 
 # Mushroomer, was Alchemist
@@ -157,7 +149,7 @@ owner:15000:Ga-nat the Greedy (Gnome)
 owner:15000:Vella the Slender (Human)
 slots:3:6
 turnover:1
-always:mushroom:Fast Recovery
+normal:mushroom:Fast Recovery
 normal:mushroom:Clear Mind
 normal:mushroom:Emergency
 normal:mushroom:Terror
@@ -219,7 +211,7 @@ owner:20000:The Training Room
 owner:25000:The Gym
 owner:30000:The Pit
 slots:5:15
-turnover:5
+turnover:1
 normal:tome:Basic Tome
 normal:tome:Tome
 normal:tome:Advanced Tome

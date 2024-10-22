@@ -1266,8 +1266,10 @@ static int textui_get_quantity(const char *prompt, int max)
  * The "prompt" should take the form "Query? "
  *
  * Note that "[y/n]" is appended to the prompt.
+ * 
+ * L: now gives the option to force player to make a choice
  */
-static bool textui_get_check(const char *prompt)
+static bool textui_get_check_base(const char *prompt, bool force_answer)
 {
 	ui_event ke;
 
@@ -1282,24 +1284,41 @@ static bool textui_get_check(const char *prompt)
 	/* Paranoia */
 	event_signal(EVENT_MESSAGE_FLUSH);
 
-	/* Prompt for it */
-	prt(buf, 0, 0);
-	ke = inkey_m();
+	/* Keep going until we have an answer if desired */
+	do {
+		/* Prompt for it */
+		prt(buf, 0, 0);
+		ke = inkey_m();
 
-	/* Erase the prompt */
-	prt("", 0, 0);
+		/* Erase the prompt */
+		prt("", 0, 0);
 
-	/* Normal negation */
-	if (ke.type == EVT_MOUSE) {
-		if ((ke.mouse.button != 1) && (ke.mouse.y != 0))
-			return (false);
-	} else {
-		if ((ke.key.code != 'Y') && (ke.key.code != 'y'))
-			return (false);
-	}
+		if (ke.type == EVT_MOUSE) {
+			if ((ke.mouse.button != 1) && (ke.mouse.y != 0))
+				return (false);
+			return (true);
+		} else {
+			if ((ke.key.code == 'Y') || (ke.key.code == 'y')) {
+				return (true);
+			} else if ((ke.key.code == 'N') || (ke.key.code == 'n')) {
+			    return (false);
+			}
+		}
+	} while (force_answer);
 
-	/* Success */
-	return (true);
+	/* No proper choice made, default to false */
+	return (false);
+}
+
+static bool textui_get_check(const char *prompt)
+{
+	return textui_get_check_base(prompt, false);
+}
+
+static bool textui_get_forced_check(const char *prompt)
+{
+	// similar to get_check but doesn't default
+	return textui_get_check_base(prompt, true);
 }
 
 /* TODO: refactor get_check() in terms of get_char() */
@@ -1717,6 +1736,7 @@ void textui_input_init(void)
 	get_string_hook = textui_get_string;
 	get_quantity_hook = textui_get_quantity;
 	get_check_hook = textui_get_check;
+	get_forced_check_hook = textui_get_forced_check;
 	get_com_hook = textui_get_com;
 	get_rep_dir_hook = textui_get_rep_dir;
 	get_aim_dir_hook = textui_get_aim_dir;

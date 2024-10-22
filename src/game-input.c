@@ -25,6 +25,7 @@
 bool (*get_string_hook)(const char *prompt, char *buf, size_t len);
 int (*get_quantity_hook)(const char *prompt, int max);
 bool (*get_check_hook)(const char *prompt);
+bool (*get_forced_check_hook)(const char *prompt);
 bool (*get_com_hook)(const char *prompt, char *command);
 bool (*get_rep_dir_hook)(int *dir, bool allow_none);
 bool (*get_aim_dir_hook)(int *dir);
@@ -101,6 +102,13 @@ bool get_check(const char *prompt)
 		return get_check_hook(prompt);
 	else
 		return false;
+}
+
+bool get_forced_check(const char *prompt)
+{
+	if (get_forced_check_hook)
+		return get_forced_check_hook(prompt);
+	return false;
 }
 
 /**

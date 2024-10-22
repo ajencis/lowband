@@ -745,16 +745,15 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 static void unarmed_mod_attack(struct attack_roll *aroll, struct object *obj)
 {
 	if (obj) return;
-	aroll->to_hit += get_power_scale(player, PP_UNARMED_STRIKE, 25);
-	aroll->to_dam += get_power_scale(player, PP_UNARMED_STRIKE, 20);
-	aroll->mtimed[MON_TMD_STUN] += get_power_scale(player, PP_UNARMED_STRIKE, 50);
+	aroll->to_hit += get_power_scale(player, PP_UNARMED_STRIKE, 25, PP_SCALE_LINEAR);
+	aroll->to_dam += get_power_scale(player, PP_UNARMED_STRIKE, 20, PP_SCALE_LINEAR);
 }
 
 static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
 {
-	aroll->ddice = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 2);
-	aroll->dsides = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 9);
-	aroll->mtimed[MON_TMD_STUN] = get_power_scale(player, PP_UNARMED_STRIKE, 25);
+	aroll->ddice = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 2, PP_SCALE_LINEAR);
+	aroll->dsides = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 9, PP_SCALE_SQRT);
+	aroll->mtimed[MON_TMD_STUN] = get_power_scale(player, PP_UNARMED_STRIKE, 100, PP_SCALE_SQUARE);
 	aroll->accuracy_stat = STAT_DEX;
 	aroll->damage_stat = STAT_STR;
 	aroll->message = "punch";
@@ -774,9 +773,9 @@ static void specialization_mod_attack(struct attack_roll *aroll, struct object *
 	else if (kf_has(obj->kind->kind_flags, KF_SHOOTS_SHOTS)) spec = PP_SLING_SPECIALIZATION;
 	else return;
 	
-	aroll->to_hit += get_power_scale(player, spec, 20);
-	aroll->to_dam += get_power_scale(player, spec, 10);
-	aroll->dsides += get_power_scale(player, spec, 10);
+	aroll->to_hit += get_power_scale(player, spec, 20, PP_SCALE_LINEAR);
+	aroll->to_dam += get_power_scale(player, spec, 10, PP_SCALE_LINEAR);
+	aroll->dsides += get_power_scale(player, spec, 10, PP_SCALE_LINEAR);
 }
 
 static bool backstab_mod_attack(struct attack_roll *aroll, int power)
@@ -784,12 +783,12 @@ static bool backstab_mod_attack(struct attack_roll *aroll, int power)
 	if (!power) return false;
 	if (aroll->attack_skill != SKILL_TO_HIT_MELEE) return false;
 
-	int nds = aroll->dsides * (get_power_scale(player, PP_BACKSTAB, 50) + power * 25) / 25;
+	int nds = aroll->dsides * (get_power_scale(player, PP_BACKSTAB, 50, PP_SCALE_SQRT) + power * 25) / 25;
 	if (nds <= aroll->dsides) return false;
 
 	aroll->dsides = nds;
-	aroll->to_hit += get_power_scale(player, PP_BACKSTAB, 10);
-	aroll->to_dam += get_power_scale(player, PP_BACKSTAB, 10);
+	aroll->to_hit += get_power_scale(player, PP_BACKSTAB, 25, PP_SCALE_LINEAR) + 25;
+	aroll->to_dam += get_power_scale(player, PP_BACKSTAB, 10, PP_SCALE_LINEAR);
 	return true;
 }
 
@@ -803,6 +802,7 @@ struct attack_roll get_melee_weapon_attack(struct player *p, struct player_state
 	if (obj) {
 		int td = object_to_dam(obj);
 		aroll.ddice = obj->dd;
+		// half the weapon to-dam boosts the dice and the other boosts the raw damage
 		aroll.dsides = obj->ds + td / 2;
 		aroll.to_dam = (td + 1) / 2;
 		aroll.to_hit = object_to_hit(obj);
@@ -821,7 +821,6 @@ struct attack_roll get_melee_weapon_attack(struct player *p, struct player_state
 
 	aroll.to_hit += ps->to_h;
 	aroll.dsides += player_damage_bonus(&p->state);
-	aroll.ddice = aroll.ddice * (ps->skills[aroll.attack_skill] + 33) / 33;
 
 	aroll.to_hit += adj_dex_th(ps->stat_ind[aroll.accuracy_stat]);
 	aroll.dsides += adj_str_td(ps->stat_ind[aroll.damage_stat]);
@@ -852,7 +851,6 @@ struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_sta
 	aroll.obj = shooter;
 	aroll.to_hit += ps->to_h;
 	aroll.dsides += player_damage_bonus(ps);
-	aroll.ddice = aroll.ddice * (ps->skills[aroll.attack_skill] + 33) / 33;
 	
 	aroll.to_hit += adj_dex_th(ps->stat_ind[aroll.accuracy_stat]);
 	aroll.dsides += adj_str_td(ps->stat_ind[aroll.damage_stat]);
@@ -925,6 +923,7 @@ static struct attack_roll get_thrown_ranged_attack(struct player *p, struct obje
 static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow)
 {
 	if (blow->method->skill == SKILL_SEARCH) {
+		// can't gaze while you're blind
 		if (p->timed[TMD_BLIND]) return false;
 	}
 
@@ -986,8 +985,10 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 	aroll->dsides = MAX(minsides, aroll->dsides);
 	aroll->ddice = MAX(mindice, aroll->ddice);
 
-	if (aroll->attack_skill == SKILL_TO_HIT_MELEE)
+	if (aroll->attack_skill == SKILL_TO_HIT_MELEE) {
+		// martial arts don't affect stuff like gaze attacks
 		unarmed_mod_attack(aroll, NULL);
+	}
 
 	return true;
 }
@@ -1003,18 +1004,22 @@ int get_monster_attacks(struct player *p, struct player_state *ps,
 	int slotsempty[EQUIP_MAX] = { 0 };
 	int availslots[EQUIP_MAX] = { 0 };
 
+	// count slots of each type full and empty
 	for (i = 0; i < p->body.count; i++) {
 		struct equip_slot *slot = &p->body.slots[i];
 		if (slot->obj) slotsfull[slot->type]++;
 		else slotsempty[slot->type]++;
 	}
 
+	// base permissible blows for each slot is number of blows we have for it
 	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
 		availslots[mr->blow[i].method->equip_slot]++;
 	}
 
 	for (i = EQUIP_NONE + 1; i < EQUIP_MAX; i++) {
-		if (slotsfull[i] && slotsempty[i]) {
+		if (slotsfull[i] || slotsempty[i]) {
+			// number of actual usable attacks is a fraction of total attacks
+			// equal to the ratio of empty slots to total slots
 			availslots[i] *= slotsempty[i];
 			availslots[i] /= slotsempty[i] + slotsfull[i];
 		}
@@ -1026,6 +1031,7 @@ int get_monster_attacks(struct player *p, struct player_state *ps,
 
 		if (get_monster_attack(p, ps, mr, &aroll[pai], i)) ++pai;
 
+		// take up the slot
 		availslots[mb->method->equip_slot]--;
 	}
 
@@ -1377,10 +1383,6 @@ void py_attack(struct player *p, struct loc grid)
 
 	for (i = 0; i < MON_TMD_MAX; i++)
 		pretimed[i] = (int)mon->m_timed[i];
-
-	/*for (i = 0; i < p->state.num_attacks; i++) {
-		sumblows += p->state.attacks[i].blows;
-	}*/
 
 	/* Disturb the player */
 	disturb(p);

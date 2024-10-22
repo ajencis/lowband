@@ -963,6 +963,9 @@ void process_player(void)
 
 		/* Assume free turn */
 		player->upkeep->energy_use = 0;
+		
+		// L: start-of-turn upkeep
+		player_start_turn(player);
 
 		/* Dwarves detect treasure */
 		if (player_has(player, PF_SEE_ORE)) {
@@ -985,7 +988,6 @@ void process_player(void)
 
 		/* Prepare for the next command */
 		if (cmd_get_nrepeats() > 0) {
-			//if (character_generated) msg("signaling repeats;");
 			event_signal(EVENT_COMMAND_REPEAT);
 		} else {
 			/* Check monster recall */

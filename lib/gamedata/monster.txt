@@ -245,7 +245,7 @@ color:D
 speed:110
 hit-points:3
 hearing:4
-armor-class:1
+armor-class:-25
 sleepiness:40
 depth:0
 rarity:2
@@ -266,7 +266,7 @@ speed:110
 hit-points:2
 hearing:30
 smell:30
-armor-class:1
+armor-class:-25
 sleepiness:10
 depth:0
 rarity:3
@@ -282,7 +282,7 @@ speed:110
 hit-points:2
 hearing:20
 smell:50
-armor-class:1
+armor-class:-25
 sleepiness:5
 depth:0
 rarity:3
@@ -298,7 +298,7 @@ speed:110
 hit-points:350
 light:2
 hearing:40
-armor-class:12
+armor-class:-10
 sleepiness:3
 depth:0
 rarity:4
@@ -318,7 +318,7 @@ color:W
 speed:110
 hit-points:2
 hearing:6
-armor-class:1
+armor-class:-25
 sleepiness:50
 depth:0
 rarity:1
@@ -335,7 +335,7 @@ color:g
 speed:110
 hit-points:2
 hearing:6
-armor-class:1
+armor-class:-25
 sleepiness:50
 depth:0
 rarity:1
@@ -351,7 +351,7 @@ color:G
 speed:120
 hit-points:10
 hearing:6
-armor-class:1
+armor-class:-25
 sleepiness:50
 depth:0
 rarity:1
@@ -367,7 +367,7 @@ color:U
 speed:110
 hit-points:3
 hearing:10
-armor-class:1
+armor-class:-25
 sleepiness:40
 depth:0
 rarity:1
@@ -383,7 +383,7 @@ color:u
 speed:110
 hit-points:1
 hearing:10
-armor-class:1
+armor-class:-25
 sleepiness:50
 depth:0
 rarity:1
@@ -399,7 +399,7 @@ color:b
 speed:110
 hit-points:9
 hearing:10
-armor-class:9
+armor-class:-15
 sleepiness:99
 depth:0
 rarity:1
@@ -418,7 +418,7 @@ speed:110
 hit-points:4
 light:2
 hearing:10
-armor-class:1
+armor-class:-25
 sleepiness:0
 depth:0
 rarity:1
@@ -436,7 +436,7 @@ speed:110
 hit-points:6
 light:2
 hearing:10
-armor-class:1
+armor-class:-25
 sleepiness:255
 depth:0
 rarity:1
@@ -457,7 +457,7 @@ speed:110
 hit-points:23
 light:2
 hearing:10
-armor-class:24
+armor-class:0
 sleepiness:250
 depth:0
 rarity:1
@@ -475,7 +475,7 @@ speed:110
 hit-points:32
 light:2
 hearing:10
-armor-class:36
+armor-class:10
 sleepiness:250
 depth:0
 rarity:1
@@ -4294,6 +4294,7 @@ desc:A short and swarthy Easterling.
 
 name:quasit
 base:minor demon
+evolution:death quasit
 color:o
 speed:110
 hit-points:27
@@ -4385,6 +4386,8 @@ desc: now they seek to alert other evil creatures to your presence.
 name:imp
 base:minor demon
 color:g
+evolution:pit fiend
+evolution:barbazu
 speed:110
 hit-points:27
 hearing:20
@@ -9768,6 +9771,14 @@ desc:It is a demon with a long neck and raking claws.
 
 name:death quasit
 base:minor demon
+evolution:glabrezu
+evolution:marilith
+evolution:hezrou
+evolution:barbazu
+evolution:bile demon
+evolution:osyluth
+evolution:gelugon
+evolution:horned reaper
 color:D
 speed:130
 hit-points:387
@@ -14341,6 +14352,7 @@ desc: underworld.  Flee his wrath!
 ### Dungeon level 85 ###
 
 name:greater Balrog
+short-name:g. Balrog
 base:major demon
 color:P
 speed:130

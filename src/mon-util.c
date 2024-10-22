@@ -31,6 +31,7 @@
 #include "mon-summon.h"
 #include "mon-timed.h"
 #include "mon-util.h"
+#include "monster.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
@@ -53,7 +54,7 @@ void mark_mon_as_playable(struct monster_race *mr)
 {
 	if (!mr || !mr->evol || !mr->evol->race) return;
 
-	struct monster_evolution *me;
+	struct evolution *me;
 	
 	mr->is_playable = true;
 
@@ -1797,6 +1798,7 @@ static void rearrange_monster(struct monster_race *mr)
 	int i;
 	int dam, hp, ac, spe, mag;
 	int powermod = 0;
+	struct monster_base *rb = mr->base;
 
 	// change monster's power based on its flags
 	for (i = 0; i < RF_MAX; i++) {
@@ -1815,11 +1817,11 @@ static void rearrange_monster(struct monster_race *mr)
 	// randomize different abilities
 	if (mr->is_playable) dam = hp = ac = spe = mag = power;
 	else {
-		dam = randint0(power + 2) + randint0(power);
-		hp  = randint0(power + 2) + randint0(power);
-		ac  = randint0(power + 2) + randint0(power);
-		spe = randint0(power + 2) + randint0(power);
-		mag = randint0(power + 2) + randint0(power);
+		dam = randint0(power * 3 / 2 + 2) + randint0(power / 2);
+		hp  = randint0(power * 3 / 2 + 2) + randint0(power / 2);
+		ac  = randint0(power * 3 / 2 + 2) + randint0(power / 2);
+		spe = randint0(power * 3 / 2 + 2) + randint0(power / 2);
+		mag = randint0(power * 3 / 2 + 2) + randint0(power / 2);
 	}
 
 	// check if it has no attacks or no spells
@@ -1858,10 +1860,23 @@ static void rearrange_monster(struct monster_race *mr)
 		mag = MAX(mag - dec, 0);
 	}
 
+	// give it bonuses for its base's strengths and weaknesses
+	dam += rb->attributes[MA_DAMAGE] * (dam + power) / 10;
+	hp  += rb->attributes[MA_HP]     * (hp  + power) / 10;
+	ac  += rb->attributes[MA_AC]     * (ac  + power) / 10;
+	spe += rb->attributes[MA_SPEED]  * (spe + power) / 10;
+	mag += rb->attributes[MA_MAGIC]  * (mag + power) / 10;
+
+	dam = MAX(0, dam);
+	hp  = MAX(0, hp );
+	ac  = MAX(0, ac );
+	spe = MAX(0, spe);
+	mag = MAX(0, mag);
+
 	// calculate its stats based on power
 	mr->avg_hp = MAX(hp / 2 + 5, hp) * MAX((hp + 1) / 2 + 10, hp) / 10; // 1000ish for level 100
-	mr->ac = ac; // 100ish for level 100
-	mr->speed = 108 + (spe * 27 + 49) / 100; // 135ish for level 100
+	mr->ac = ac - 25 + MIN(ac * 2, 25); // 100ish for level 100
+	mr->speed = 105 + (spe * 30 + 49) / 100; // 135ish for level 100
 	mr->spell_power = mag; // 100ish for level 100
 	ttdam = MAX(dam + 4, dam * 3 / 2);
 	if (dam > 0) mr->freq_spell = 10 * mag / dam;
@@ -1871,6 +1886,7 @@ static void rearrange_monster(struct monster_race *mr)
 
 	// spread damage over its damaging blows
 	quo = blows;
+	// gets a total number of dice for its attacks based on its level and number of attacks
 	tdice = power * (blows + 1) / 25 + 1;
 	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
 		cblow = &mr->blow[i];
@@ -1906,8 +1922,10 @@ void rearrange_monsters(struct monster_race *mraces, uint32_t seed)
 		if (curr->level <= 0) continue;
 		rearrange_monster(curr);
 
-		if (race_has_drops(curr))
+		// most monsters will pick up items
+		if (race_has_drops(curr)) {
 			rf_on(curr->flags, RF_TAKE_ITEM);
+		}
 	}
 	Rand_quick = false;
 }

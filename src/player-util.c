@@ -77,7 +77,7 @@ static const int tome_factors[] = {
 };
 
 /**
- * L: functions for races that are monsters
+ * L: functions for players that are monsters
  */
 struct monster_race *lookup_player_monster(const struct player *p)
 {
@@ -133,7 +133,7 @@ static void change_player_body(struct player *p, struct player_body *new)
 		p->body.slots[i].name = string_make(buf);
 	}
 
-	// reequip the items or f we can't just put them in the inventory
+	// reequip the items or if we can't just put them in the inventory
 	equipped = pile_last_item(equipped_pile);
 	while (equipped) {
 		pile_excise(&equipped_pile, equipped);
@@ -168,57 +168,54 @@ static void change_player_monster(struct player *p, struct monster_race *mon, bo
 	player->upkeep->update |= (PU_BONUS | PU_HP);
 }
 
-void check_player_monster(struct player *p, bool init, int xp)
+bool check_player_monster(struct player *p, bool init, int xp)
 {
 	struct monster_race *curr = lookup_player_monster(p);
 	struct monster_race *selected = NULL;
 	int numevols = 0, numpossible = 0;
 	int maxlev;
+	struct evolution *e;
 
 	if (curr) {
 		maxlev = p->lev * 3 / 2;
-		struct monster_evolution *me;
-		for (me = curr->evol; me; me = me->next) {
-			++numevols;
-			if (me->race->level <= maxlev) {
-				++numpossible;
-				if (numpossible < 2 || one_in_(numpossible)) {
-					selected = me->race;
-				}
-			}
-		}
+		e = curr->evol;
 	}
 	else {
-		maxlev = MAX(3, p->lev);
-		struct monster_race *mr;
-		int i;
+		// double the level if we haven't evolved yet but only
+		// up to the first evolution
+		maxlev = MAX(2, p->lev);
 		int minevolev = 0;
-		for (i = 0; i < MAX_RACE_MONSTERS && p->race->monsters[i]; i++) {
-			if (!numevols || minevolev > r_info[p->race->monsters[i]].level)
-				minevolev = r_info[p->race->monsters[i]].level;
-			++numevols;
+		bool found = false;
+		for (e = p->race->evol; e; e = e->next) {
+			if (!found || minevolev < e->race->level)
+				minevolev = e->race->level;
 		}
-		maxlev += MIN(minevolev, maxlev);
-		for (i = 0; i < MAX_RACE_MONSTERS && p->race->monsters[i]; i++) {
-			mr = &r_info[p->race->monsters[i]];
-			if (mr->level <= maxlev) {
-				++numpossible;
-				if (numpossible < 2 || one_in_(numpossible)) selected = mr;
+		if (found) maxlev += MIN(minevolev, maxlev);
+
+		e = p->race->evol;
+	}
+	
+	while (e) {
+		++numevols;
+		if (e->race->level <= maxlev) {
+			++numpossible;
+			if (numpossible < 2 || one_in_(numpossible)) {
+				selected = e->race;
 			}
 		}
+
+		e = e->next;
 	}
 
 	if (selected && (!init || numevols <= 1)) {
 
 		uint32_t chance = (((uint32_t)1) << MIN(20, MAX(selected->level / 5, 1))) * 125 / 4;
-		//int min = selected->level * (selected->level - 10);
-		//min = MAX(0, min);
 		assert(chance <= 0x10000000);
 		int32_t roll = randint0(chance);
 
 		if (init ||	(xp > 0 &&
 					roll < xp &&
-					get_check(format("Evolve into a%s %s? ",
+					get_forced_check(format("Evolve into a%s %s? ",
 						is_a_vowel(selected->name[0]) ? "n" : "",
 						selected->name)))) {
 
@@ -228,8 +225,12 @@ void check_player_monster(struct player *p, bool init, int xp)
 			if (!init) {
 				player_increase_stat(p);
 			}
+
+			return true;
 		}
 	}
+
+	return false;
 }
 
 void player_race_name(struct player *p, char *buf, size_t bufsize)
@@ -286,11 +287,14 @@ bool player_increase_stat(struct player *p)
 	return false;
 }
 
-int get_power_scale(struct player *p, int power, int scaleto)
+int get_power_scale(struct player *p, int power, int scaleto, int scaling)
 {
 	assert(power > 0 && power < PP_MAX);
 
-	int scaling = player_powers[power].scale;
+	if (p->state.powers[power] <= 0) return 0;
+
+	// scale linearly by power level then adjust by character level so value
+	// of increasing your power is linear
 	double efflev, div;
 	if (scaling == PP_SCALE_LINEAR) {
 		efflev = (double)p->state.powers[power];
@@ -305,11 +309,9 @@ int get_power_scale(struct player *p, int power, int scaleto)
 		div = (double)50 / my_sqrt((double)50);
 	}
 
-	if (efflev <= 0) return 0;
-
 	int result = (int)((efflev * scaleto + div * 2 / 3) / div);
 
-	return MAX(result, 1);
+	return MAX(result, 0);
 }
 
 
@@ -348,7 +350,7 @@ static int cost_to_bonus_base(int cost, int factor)
 	return i;
 }
 
-static int tome_max_skill(struct object *obj)
+static int tome_max_skill(const struct object *obj)
 {
 	int result = 0;
 	if (obj) {
@@ -367,7 +369,7 @@ void calc_extra_points(struct player *p, struct player_state *ps)
 {
 	int i;
 	int sum = 0;
-	int mx = 25;
+	int mx = (p->lev + 1) / 2;
 
 	for (i = PP_NONE + 1; i < PP_MAX; i++) {
 		int pwr = p->extra_powers[i];
@@ -405,14 +407,15 @@ static bool player_can_learn_from_tome(struct player *p, int index)
 	int currcost = bonus_to_cost(cpwr, index);
 	int nextcost = bonus_to_cost(cpwr + 1, index);
 
+	// if we're not spending any points to learn then learn
 	if (nextcost <= currcost) return true;
+	// if we don't have any points left then we can't
 	if (p->state.extra_points_max <= p->state.extra_points_used) return false;
 
-	msg("You feel like you're ready to learn something...");
-	event_signal(EVENT_MESSAGE_FLUSH);
-	if (get_check(format("Learn %s? ", name))) return true;
+	// ask the player if they're willing to spend points
+	if (!get_forced_check(format("Learn %s? ", name))) return false;
 
-	return false;
+	return true;
 }
 
 static bool learn_extra(struct player *p, int index)
@@ -424,6 +427,7 @@ static bool learn_extra(struct player *p, int index)
 	if (index < PP_MAX) {
 		p->extra_powers[index]++;
 		if (!(p->extra_powers[index] & 3) || true) {
+			// tell the player when they've learned something
 			msg("You feel a bit more familiar with %s.", player_powers[index].name);
 		}
 		p->upkeep->update |= player_powers[index].update;
@@ -433,6 +437,7 @@ static bool learn_extra(struct player *p, int index)
 		assert(skill_index < SKILL_MAX && skill_index >= 0);
 		p->extra_skills[skill_index]++;
 		if (!(p->extra_skills[skill_index] & 3) || true) {
+			// tell the player when they've learned something
 			char buf[80];
 			my_strcpy(buf, skill_index_to_name(skill_index), sizeof(buf));
 			my_strcap_full(buf);
@@ -446,7 +451,7 @@ static bool learn_extra(struct player *p, int index)
 	return true;
 }
 
-static bool obj_can_learn_extra_from(struct object *obj)
+bool obj_can_learn_extra_from(const struct object *obj)
 {
 	int maxs = tome_max_skill(obj);
 	int power = obj->pval;
@@ -466,51 +471,53 @@ static bool obj_can_learn_extra_from(struct object *obj)
 static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 {
 	if (!obj) return false;
-	if (xpgain < 1) return false;
 	if (obj->number < 1) return false;
 	if (!obj_can_learn_extra_from(obj)) return false;
+	if (xpgain <= 0) return false;
 
 	int power = obj->pval;
+	uint16_t *currlearned; // pointer so we can track changes
 	bool learned = false;
-	bool do_message = false;
+	uint32_t chance; // one_in_(chance) to learn
+	char buf[80];
+	object_desc(buf, sizeof(buf), obj, ODESC_EXTRA, p);
+
 	if (power <= TOME_NONE || power >= TOME_MAX) return false;
 
 	int mx = tome_max_skill(obj);
 
 	if (power < PP_MAX) {
-		int curr = player_class_power(p, power) + p->race->r_powers[power] + p->extra_powers[power];
-		uint32_t chance = (((uint32_t)1) << MIN(curr / 10, 25)) * mx / xpgain / obj->number;
-		chance = MIN(chance, (uint32_t)0x10000000);
-		int currcost = bonus_to_cost(curr, power);
-		int nextcost = bonus_to_cost(curr + 1, power);
-		if (nextcost > currcost) chance = MAX(chance, 100);
-		if (chance <= 1 || one_in_(chance)) {
-			learned = learn_extra(p, power);
-			if (p->extra_powers[power] >= mx) {
-				do_message = true;
-			}
-		}
+		assert(power > PP_NONE && power < PP_MAX);
+		chance = p->state.powers[power];
+		chance *= chance;
+		currlearned = &p->extra_powers[power];
 	}
 	else {
 		int skill_index = power - PP_MAX;
-		int curr = p->state.skills[skill_index];
-		uint32_t chance = (((uint32_t)1) << MIN(curr / 10, 25)) * mx / xpgain / obj->number;
-		chance = MIN(chance, (uint32_t)0x10000000);
-		int currcost = bonus_to_cost(curr, power);
-		int nextcost = bonus_to_cost(curr + 1, power);
-		if (nextcost > currcost) chance = MAX(chance, 100);
-		if (chance <= 1 || one_in_(chance)) {
-			learned = learn_extra(p, power);
-			if (p->extra_skills[skill_index] >= mx) {
-				do_message = true;
-			}
-		}
+		assert(skill_index >= 0 && skill_index < SKILL_MAX);
+		chance = p->state.skills[skill_index];
+		chance *= chance;
+		currlearned = &p->extra_skills[skill_index];
 	}
 
-	if (do_message) {
-		char buf[80];
-		object_desc(buf, sizeof(buf), obj, ODESC_EXTRA, p);
-		msg("You feel you've learned everything you can from your %s.", buf);
+	// higher-level tomes are more complicated
+	chance *= mx;
+	// harder to learn the more you know
+	chance *= *currlearned;
+	chance /= xpgain;
+	// easier to learn if you have more info
+	chance /= obj->number * obj->number * 1000;
+	// paranoia
+	chance = MIN(chance, 0x10000000U);
+	/* minimum chance */
+	chance += 50;
+
+	if (one_in_(chance)) {
+		learned = learn_extra(p, power);
+		if (*currlearned >= mx) {
+			// after learning we're at the max
+			msg("You feel you've learned everything you can from your %s.", buf);
+		}
 	}
 
 	return learned;
@@ -518,16 +525,16 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 
 bool check_learn_powers(struct player *p, int xpgain)
 {
-	if (xpgain <= 0) return false;
-
 	int i;
 	struct object *obj;
 	bool learned = false;
+	if (xpgain <= 0) return false;
 
 	int maxtomes = p->body.count + z_info->pack_size;
 	struct object **tomes = mem_zalloc((maxtomes) * sizeof(*tomes));
 	int tind = 0;
 
+	// collect tomes from inventory
 	for (obj = p->gear; obj && (tind < maxtomes); obj = obj->next) {
 		if (obj_can_learn_extra_from(obj)) {
 			tomes[tind] = obj;
@@ -535,6 +542,7 @@ bool check_learn_powers(struct player *p, int xpgain)
 		}
 	}
 
+	// collect tomes from equipment
 	for (i = 0; (i < p->body.count) && (tind < maxtomes); i++) {
 		obj = p->body.slots[i].obj;
 		if (obj && obj_can_learn_extra_from(obj)) {
@@ -544,6 +552,7 @@ bool check_learn_powers(struct player *p, int xpgain)
 	}
 
 	if (tind > 0) {
+		// if we've found something try to learn a couple times
 		int tries = (tind + 1) / 2;
 		for (i = 0; i < tries && !learned; i++) {
 			int choice = randint0(tind);
@@ -560,6 +569,7 @@ int player_class_power(struct player *p, int power)
 {
 	assert(power >= 0 && power < PP_MAX);
 	int base = p->class->c_powers[power];
+	// extra-learning makes class reflect learned powers
 	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
 		base = MAX(base, p->extra_powers[power]);
 	}
@@ -570,6 +580,7 @@ int player_class_x_skill(struct player *p, int skill)
 {
 	assert(skill >= 0 && skill < SKILL_MAX);
 	int xtra = p->class->x_skills[skill];
+	// extra-learning makes class reflect known skills
 	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
 		xtra = MAX(xtra, p->extra_skills[skill] * 3 / 4 / 5);
 	}
@@ -580,6 +591,7 @@ int player_class_c_skill(struct player *p, int skill)
 {
 	assert(skill >= 0 && skill < SKILL_MAX);
 	int base = p->class->c_skills[skill];
+	// extra-learning makes class reflect known skills
 	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
 		base = MAX(base, p->extra_skills[skill] * 1 / 4);
 	}
@@ -2291,5 +2303,20 @@ void search(struct player *p)
 				}
 			}
 		}
+	}
+}
+
+/**
+ * L: upkeep at start of player's turn
+ * is done then rather than when xp is gained to avoid, say,
+ * messages while the map is being drawn
+ */
+void player_start_turn(struct player *p)
+{
+	if (p->xp_this_turn) {
+		check_learn_powers(p, p->xp_this_turn);
+		check_player_monster(p, false, p->xp_this_turn);
+
+		p->xp_this_turn = 0;
 	}
 }

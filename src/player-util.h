@@ -61,12 +61,13 @@ enum
 #define REST_REQUIRED_FOR_REGEN 5
 
 struct monster_race *lookup_player_monster(const struct player *p);
-void check_player_monster(struct player *p, bool init, int xp);
+bool check_player_monster(struct player *p, bool init, int xp);
 void player_race_name(struct player *p, char *buf, size_t bufsize);
 bool player_increase_stat(struct player *p);
-int get_power_scale(struct player *p, int power, int scaleto);
+int get_power_scale(struct player *p, int power, int scaleto, int scaling);
 void calc_extra_points(struct player *p, struct player_state *ps);
 bool check_learn_powers(struct player *p, int xpgain);
+bool obj_can_learn_extra_from(const struct object *obj);
 int player_class_power(struct player *p, int power);
 int player_class_x_skill(struct player *p, int skill);
 int player_class_c_skill(struct player *p, int skill);
@@ -131,5 +132,6 @@ void player_handle_post_move(struct player *p, bool eval_trap,
 		bool is_involuntary);
 void disturb(struct player *p);
 void search(struct player *p);
+void player_start_turn(struct player *p);
 
 #endif /* !PLAYER_UTIL_H */

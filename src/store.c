@@ -84,6 +84,20 @@ struct store *store_at(struct chunk *c, struct loc grid)
 
 
 /**
+ * L: will an object be stocked in a store at game start?
+ */
+static bool object_kind_stockable_on_reset(struct object_kind *objk)
+{
+	if (of_has(objk->flags, OF_POWER_LEARN_2)) return false;
+	if (of_has(objk->flags, OF_POWER_LEARN_3)) return false;
+	if (of_has(objk->flags, OF_POWER_LEARN_4)) return false;
+	if (of_has(objk->flags, OF_POWER_LEARN_5)) return false;
+
+	return true;
+}
+
+
+/**
  * Get rid of stores at cleanup. Gets rid of everything.
  */
 static void cleanup_stores(void)
@@ -178,7 +192,9 @@ static enum parser_error parse_normal(struct parser *p) {
 	}
 
 	s->normal_table[s->normal_num++] = kind;
-	if (kind->tval == TV_TOME) {
+	if (!object_kind_stockable_on_reset(kind)) {
+	}
+	else if (kind->tval == TV_TOME) {
 		s->normal_max += TOME_MAX;
 	}
 	else {
@@ -1182,7 +1198,7 @@ static struct object_kind *store_get_choice(struct store *store)
 /**
  * Creates a random object and gives it to store 'store'
  */
-static bool store_create_random(struct store *store)
+static bool store_create_random(struct store *store, bool reset)
 {
 	int tries, level;
 
@@ -1218,6 +1234,8 @@ static bool store_create_random(struct store *store)
 
 		/* No chests in stores XXX */
 		if (kind->tval == TV_CHEST) continue;
+
+		if (reset && !object_kind_stockable_on_reset(kind)) continue;
 
 		/*** Generate the item ***/
 
@@ -1432,17 +1450,16 @@ static void store_maint(struct store *s, bool reset)
 		if (stock > max) stock = max;
 		if (stock < min) stock = min;
 
-		// L: shops start with nearly full inventories
+		// L: shops start with full inventories
 		if (reset) {
 			stock = MIN((unsigned)s->normal_max + s->always_num, (unsigned)s->stock_size);
-			stock -= randint1(randint1(stock / 3));
 		}
 
 		/* For the rest, we just choose items randomlyish */
 		/* The (huge) restock_attempts will only go to zero (otherwise
 		 * infinite loop) if stores don't have enough items they can stock! */
 		while (s->stock_num < stock && --restock_attempts) {
-			store_create_random(s);
+			store_create_random(s, reset);
 		}
 
 		if (!restock_attempts) {

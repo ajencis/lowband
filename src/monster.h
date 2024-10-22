@@ -129,6 +129,18 @@ enum
 #define RSF_SIZE               FLAG_SIZE(RSF_MAX)
 
 
+/**
+ * L: monster strengths and weaknesses
+ */
+enum
+{
+	#define MA(x) MA_##x,
+	#include "list-mon-attributes.h"
+	#undef MA
+	MA_MAX
+};
+
+
 /** Structures **/
 
 /**
@@ -221,13 +233,15 @@ struct monster_altmsg {
 struct monster_base {
 	struct monster_base *next;
 
-	char *name;			/* Name for recognition in code */
-	char *text;			/* In-game name */
-	bitflag flags[RF_SIZE];         /* Flags */
-	wchar_t d_char;			/* Default monster character */
+	char *name;					/* Name for recognition in code */
+	char *text;					/* In-game name */
+	bitflag flags[RF_SIZE];		/* Flags */
+	wchar_t d_char;				/* Default monster character */
 	struct monster_pain *pain;	/* Pain messages */
 
 	struct player_body *body;	/* L: default body */
+
+	int attributes[MA_MAX];		/* L: strengths and weaknesses*/
 };
 
 
@@ -308,8 +322,8 @@ struct monster_shape {
 	struct monster_base *base;
 };
 
-struct monster_evolution {
-	struct monster_evolution *next;
+struct evolution {
+	struct evolution *next;
 	char *name;
 	struct monster_race *race;
 };
@@ -381,11 +395,11 @@ struct monster_race {
 	struct monster_shape *shapes;
 	int num_shapes;
 
-	bool is_playable;		/* L: can players be one of these potentially */
-	char *short_name;		/* L: if we need to display the name in fewer characters */
+	bool is_playable;			/* L: can players be one of these potentially */
+	char *short_name;			/* L: if we need to display the name in fewer (than 13) characters */
 	struct player_body *body;	/* L: its body if it's a player */
 
-	struct monster_evolution *evol;	/* L: monster into which it evolves */
+	struct evolution *evol;		/* L: monster into which it evolves */
 };
 
 

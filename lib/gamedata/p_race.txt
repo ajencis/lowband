@@ -421,4 +421,6 @@ age:100:50
 height:80:6
 weight:190:20
 monster:bodak
+monster:quasit
+monster:imp
 body:Humanoid

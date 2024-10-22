@@ -2074,22 +2074,21 @@ uint32_t djb2_hash(const char *str)
 
 static double inverse_binary_search(double num, double (*f)(double), double lowbound, double highbound)
 {
-	double low = lowbound, high = highbound;
-	double mid = (low + high) / 2, result;
+	double low = lowbound, high = highbound, mid, result;
 	int tries;
 
 	for (tries = 0; tries < 256; tries++) {
+		mid = (low + high) / 2;
+
 		result = f(mid);
 
 		if (result == num) return mid;
 
 		else if (result > num) high = mid;
 		else if (result < num) low = mid;
-
-		mid = (low + high) / 2;
 	}
 
-	return mid;
+	return (low + high) / 2;
 }
 
 

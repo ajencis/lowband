@@ -144,8 +144,9 @@ static bool object_list_should_ignore_object(const struct player *p,
 	if (!is_unknown(base_obj) && ignore_known_item_ok(p, obj))
 		return true;
 
-	if (tval_is_money(base_obj))
-		return true;
+	// L: no longer ignore money
+	/*if (tval_is_money(base_obj))
+		return true;*/
 
 	return false;
 }

@@ -24,6 +24,7 @@
 #include "obj-knowledge.h"
 #include "obj-tval.h"
 #include "obj-util.h"
+#include "player-util.h"
 #include "ui-knowledge.h"
 
 
@@ -549,6 +550,11 @@ static size_t obj_desc_power_learn(const struct object *obj, char *buf, size_t m
 		my_strcpy(sname, skill_index_to_name(skill_index), sizeof(sname));
 		my_strcap_full(sname);
 		strnfcat(buf, max, &end, " of %s", sname);
+	}
+
+	// L: append notifier of possible learning
+	if (obj_can_learn_extra_from(obj)) {
+		strncat(buf, " (!)", max);
 	}
 
 	return end;

@@ -2865,7 +2865,7 @@ static enum parser_error parse_p_race_monster(struct parser *p) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	const char *s = parser_getsym(p, "monster");
 	struct monster_race *mon;
-	int i;
+	struct evolution *e;
 	
 	if (!s)
 		return PARSE_ERROR_GENERIC;
@@ -2876,13 +2876,10 @@ static enum parser_error parse_p_race_monster(struct parser *p) {
 
 	mark_mon_as_playable(mon);
 
-	for (i = 0; i < MAX_RACE_MONSTERS; i++) {
-		if (r->monsters[i] == 0) {
-			r->monsters[i] = mon->ridx;
-			break;
-		}
-	}
-	if (i == MAX_RACE_MONSTERS) return PARSE_ERROR_GENERIC;
+	e = mem_zalloc(sizeof(*e));
+	e->race = mon;
+	e->next = r->evol;
+	r->evol = e;
 
 	return PARSE_ERROR_NONE;
 }
@@ -2961,10 +2958,17 @@ static void cleanup_p_race(void)
 {
 	struct player_race *p = races;
 	struct player_race *next;
+	struct evolution *e;
 
 	while (p) {
 		next = p->next;
 		string_free((char *)p->name);
+		e = p->evol;
+		while (e) {
+			struct evolution *en = e->next;
+			mem_free(e);
+			e = en;
+		}
 		mem_free(p);
 		p = next;
 	}

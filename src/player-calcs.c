@@ -193,9 +193,9 @@ int adj_mag_stat(int index) {
 
 static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 {
-	int wpen = wgt / 5 - get_power_scale(player, PP_AGILITY, 10);
+	int wpen = wgt / 5 - get_power_scale(player, PP_AGILITY, 10, PP_SCALE_SQUARE);
 	wpen = MAX(0, wpen);
-	int bonus = get_power_scale(player, PP_AGILITY, 10);
+	int bonus = get_power_scale(player, PP_AGILITY, 10, PP_SCALE_SQUARE);
 	bonus = MAX(0, bonus - wpen);
 
     s->speed += bonus;
@@ -204,9 +204,9 @@ static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 
 static int unarmoured_ac_bonus(struct player_state *s, int wgt)
 {
-	int wpen = wgt - get_power_scale(player, PP_AGILITY, 250);
+	int wpen = wgt - get_power_scale(player, PP_AGILITY, 250, PP_SCALE_LINEAR);
 	wpen = MAX(0, wpen);
-    int bonus = get_power_scale(player, PP_AGILITY, 50);
+    int bonus = get_power_scale(player, PP_AGILITY, 50, PP_SCALE_SQRT);
 	bonus = MAX(bonus / 2, bonus - wpen);
 
     s->ac += bonus;
@@ -945,7 +945,7 @@ static void calc_hitpoints(struct player *p)
 {
 	long bonus;
 	int mhp;
-	int resil = get_power_scale(p, PP_RESILIENCE, 50);
+	int resil = get_power_scale(p, PP_RESILIENCE, 50, PP_SCALE_LINEAR);
 	struct monster_race *mon = lookup_player_monster(p);
 
 	/* Get "1/100th hitpoint bonus per level" value */

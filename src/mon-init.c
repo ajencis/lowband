@@ -94,6 +94,14 @@ static const char *mtimed_names[] =
 	""
 };
 
+static const char *mattr_names[] =
+{
+	#define MA(x) #x,
+	#include "list-mon-attributes.h"
+	#undef MA
+	""
+};
+
 /**
  * Return the index of a flag from its name.
  */
@@ -164,6 +172,17 @@ static struct player_body *player_body_by_name(const char *name)
 		}
 	}
 	return NULL;
+}
+
+static int monster_attribute_by_name(const char *name)
+{
+	size_t i;
+	for (i = 0; i < N_ELEMENTS(mattr_names); i++) {
+		if (streq(name, mattr_names[i])) {
+			return i;
+		}
+	}
+	return -1;
 }
 
 /**
@@ -1311,6 +1330,21 @@ static enum parser_error parse_mon_base_body(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_mon_base_attribute(struct parser *p)
+{
+	struct monster_base *rb = parser_priv(p);
+	int index = monster_attribute_by_name(parser_getsym(p, "which"));
+	int power = parser_getint(p, "power");
+
+	if (index == -1) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	rb->attributes[index] = power;
+
+	return PARSE_ERROR_NONE;
+}
+
 
 static struct parser *init_parse_mon_base(void) {
 	struct parser *p = parser_new();
@@ -1322,6 +1356,7 @@ static struct parser *init_parse_mon_base(void) {
 	parser_reg(p, "flags ?str flags", parse_mon_base_flags);
 	parser_reg(p, "desc str desc", parse_mon_base_desc);
 	parser_reg(p, "body str body", parse_mon_base_body);
+	parser_reg(p, "attr sym which int power", parse_mon_base_attribute);
 	return p;
 }
 
@@ -1972,7 +2007,7 @@ static enum parser_error parse_monster_evolution(struct parser *p)
 {
 	struct monster_race *r = parser_priv(p);
 	const char *evn = parser_getstr(p, "evol");
-	struct monster_evolution *me;
+	struct evolution *me;
 
 	if (!r)
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2136,7 +2171,7 @@ static errr finish_parse_monster(struct parser *p) {
 		struct monster_race *race = &r_info[i];
 		struct monster_friends *f;
 		struct monster_shape *s;
-		struct monster_evolution *e;
+		struct evolution *e;
 		for (f = race->friends; f; f = f->next) {
 			if (!my_stricmp(f->name, "same")) {
 				f->race = race;
@@ -2194,7 +2229,7 @@ static void cleanup_monster(void)
 		struct monster_friends_base *fb;
 		struct monster_mimic *m;
 		struct monster_shape *s;
-		struct monster_evolution *e;
+		struct evolution *e;
 
 		am = r->spell_msgs;
 		while (am) {
@@ -2236,7 +2271,7 @@ static void cleanup_monster(void)
 		}
 		e = r->evol;
 		while (e) {
-			struct monster_evolution *en = e->next;
+			struct evolution *en = e->next;
 			mem_free(e);
 			e = en;
 		}

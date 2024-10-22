@@ -221,8 +221,10 @@ bool mon_will_attack_player(const struct monster *mon, const struct player *p)
 	if (mon->m_timed[MON_TMD_CHARMED]) return false;
 
 	struct monster_race *pmonr = lookup_player_monster(p);
+	// monsters are by default allied to similar monsters even if the similar monster is the player
 	if (pmonr && pmonr->d_char == mon->faction) return false;
 
+	// assume enemy for now
 	return true;
 }
 
@@ -232,6 +234,7 @@ static bool mon_will_attack_mon(const struct monster *mon, const struct monster 
 	bool mpally = mon->faction == '@' || mon->m_timed[MON_TMD_CHARMED];
 	bool opally = other->faction == '@' || other->m_timed[MON_TMD_CHARMED];
 
+	// if one is an enemy of the player and the other is a pet they'll fight
 	if (mpally && mon_will_attack_player(other, player)) return true;
 	if (opally && mon_will_attack_player(mon, player)) return true;
 
@@ -257,9 +260,11 @@ static bool object_can_be_targeted_by_mon(struct chunk *c, struct monster *mon, 
 	if (!obj) return false;
 	if (!c) return false;
 
+	if (!rf_has(mon->race->flags, RF_TAKE_ITEM)) return false;
 	if (loc_is_zero(obj->grid)) return false;
 	if (obj->held_m_idx) return false;
 	if (obj->mimicking_m_idx) return false;
+	if (react_to_slay(obj, mon)) return false;
 	if (!los(c, mon->grid, obj->grid)) return false;
 
 	return true;
@@ -271,39 +276,52 @@ static void mon_find_target(struct chunk *c, struct monster *mon)
 	bool found = false;
 	int score = 0;
 
-	for (i = 0; i < c->mon_max; i++) {
-		struct monster *other = &c->monsters[i];
-		if (!other->race) continue;
+	for (i = 1; i < c->mon_max; i++) {
+		struct monster *other = cave_monster(c, i);
+		// check if the monster exists and is an enemy and is visible
+		if (!other || !other->race) continue;
 		if (!mon_will_attack_mon(mon, other)) continue;
 		if (!los(c, mon->grid, other->grid)) continue;
 
-		int currscore = 100 / (distance(mon->grid, other->grid) + 1) + other->race->level / 5;
+		// better target if it's closer or more threatening
+		int dist = distance(mon->grid, other->grid) + 1;
+		assert(dist > 0);
+		int currscore = 100 / dist + other->race->level / 5;
 		if (found && currscore <= score) continue;
 
+		// best so far, target
 		mon->target.midx = i;
 		mon->target.who = TARGET_WHO_MONSTER;
 		score = currscore;
 		found = true;
 	}
 	for (i = 0; i < c->obj_max; i++) {
+		// check if the object exists and is a legitimate target
 		struct object *obj = c->objects[i];
 		if (!obj) continue;
 		if (!object_can_be_targeted_by_mon(c, mon, obj)) continue;
 
+		// closer and more valuable objects are better
 		int dist = distance(mon->grid, obj->grid) + 1;
-		dist = MAX(1, dist);
+		assert(dist > 0);
+		assert(mon->maxhp > 0);
 		int ignore = mon->race->level * 10 * (mon->maxhp - mon->hp) / mon->maxhp;
 		int currscore = object_value_real(obj, obj->number) / (dist * dist) - ignore;
 		if (found && currscore <= score) continue;
 
+		// best so far, target
 		mon->target.oidx = i;
 		mon->target.who = TARGET_WHO_OBJECT;
 		score = currscore;
 		found = true;
 	}
+	// player has to be an enemy and either sensable or known
 	if (mon_will_attack_player(mon, player) &&
-			(monster_can_see_player(mon) || monster_can_hear(mon) || monster_can_smell(mon))) {
-		int currscore = 100 / (distance(mon->grid, player->grid) + 1) + player->lev / 4;
+			(monster_can_see_player(mon) || monster_can_hear(mon) || monster_can_smell(mon) ||
+				mflag_has(mon->mflag, MFLAG_AWARE))) {
+		int dist = distance(mon->grid, player->grid) + 1;
+		assert(dist > 0);
+		int currscore = 100 / dist + player->lev / 4;
 		if (!found || currscore >= score) {
 			mon->target.who = TARGET_WHO_PLAYER;
 			score = currscore;
@@ -311,6 +329,7 @@ static void mon_find_target(struct chunk *c, struct monster *mon)
 		}
 	}
 	if (!found)	{
+		// if we have no foes but we're a player ally cluster around the player
 		if (mon->faction == '@')
 			mon->target.who = TARGET_WHO_PLAYER;
 		else
@@ -322,34 +341,47 @@ bool mon_check_target(struct chunk *c, struct monster *mon)
 {
 	bool recheck = false;
 	if (mon->target.who == TARGET_WHO_MONSTER) {
-		struct monster *other = &c->monsters[mon->target.midx];
-		if (!other->race) {
+		struct monster *other = cave_monster(c, mon->target.midx);
+		if (!other || !other->race) {
+			// target doesn't exist anymore
 			mon->target.who = TARGET_WHO_NONE;
 			recheck = true;
 		}
 		if (!los(c, mon->grid, other->grid)) {
-			mon->target.who = TARGET_WHO_NONE;
+			// can't see their target
 			recheck = true;
 		}
 	}
 	else if (mon->target.who == TARGET_WHO_PLAYER) {
-		if (!los(c, mon->grid, player->grid)) {
-			recheck = true;
-			if (!monster_can_hear(mon) && !monster_can_smell(mon))
-				mon->target.who = TARGET_WHO_NONE;
+		if (monster_can_see_player(mon)) {
+			// if we're targeting the player we know they exist
+			mflag_on(mon->mflag, MFLAG_AWARE);
 		}
+		else {
+			// if we can't see the player we should see if we have better targets
+			recheck = true;
+			if (!monster_can_hear(mon) && !monster_can_smell(mon)) {
+				// if we can't sense the player at all we have no idea where they've gone
+				mon->target.who = TARGET_WHO_NONE;
+				mflag_off(mon->mflag, MFLAG_AWARE);
+			}
+		}
+
 		if (mon->faction == '@') {
+			// if we're on the player's side we should see if there's someone we want to attack
 			recheck = true;
 		}
 	}
 	else if (mon->target.who == TARGET_WHO_OBJECT) {
 		struct object *obj = c->objects[mon->target.oidx];
 		if (!obj ||	!object_can_be_targeted_by_mon(c, mon, obj)) {
+			// object is gone or no longer legitimate
 			mon->target.who = TARGET_WHO_NONE;
 			recheck = true;
 		}
 	}
 	else {
+		// don't have a target, should see if one has appeared
 		mon->target.who = TARGET_WHO_NONE;
 		recheck = true;
 	}
@@ -1970,7 +2002,9 @@ static void monster_reduce_sleep(struct monster *mon)
 		bool visible = monster_can_see_player(mon);
 		bool woke_up = false;
 		int curr = mon->m_timed[MON_TMD_SLEEP];
+		// L: monster wakes up faster if it's louder or they can smell but not if they can see
 		int distfact = MAX(0, 40 - local_noise * 2 - local_smell - stealth) / 4;
+		// L: sleep reduction increases exponentially
 		int16_t sred = 1 << MIN(14, distfact) / MAX(stealth + visible ? 1 : 11, 1);
 
 		/* Note a complete wakeup */
@@ -2011,12 +2045,12 @@ static bool process_monster_timed(struct monster *mon)
 	if (mon->m_timed[MON_TMD_SLEEP]) {
 		monster_reduce_sleep(mon);
 		return true;
-	} else {
-		/* Awake, active monsters may become aware */
+	}/* else {
+		// Awake, active monsters may become aware
 		if (one_in_(10) && mflag_has(mon->mflag, MFLAG_ACTIVE)) {
 			mflag_on(mon->mflag, MFLAG_AWARE);
 		}
-	}
+	}*/
 
 	if (mon->m_timed[MON_TMD_FAST])
 		mon_dec_timed(mon, MON_TMD_FAST, 1, 0);

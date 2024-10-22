@@ -47,3 +47,24 @@ slot:AMULET:neck
 slot:LIGHT:light
 slot:CLOAK:back
 slot:HAT:head
+
+body:Marilith
+slot:WEAPON:hand
+slot:WEAPON:offhand
+slot:WEAPON:hand
+slot:WEAPON:offhand
+slot:WEAPON:hand
+slot:WEAPON:offhand
+slot:RING:right hand
+slot:RING:left hand
+slot:RING:right hand
+slot:RING:left hand
+slot:RING:right hand
+slot:RING:left hand
+slot:AMULET:neck
+slot:LIGHT:light
+slot:CLOAK:back
+slot:HAT:head
+slot:GLOVES:hands
+slot:GLOVES:hands
+slot:GLOVES:hands
