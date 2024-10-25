@@ -36,10 +36,13 @@
 #define TARGET_GRID   0x08
 #define TARGET_QUIET  0x10
 
-#define TARGET_WHO_NONE 0
-#define TARGET_WHO_PLAYER 1
-#define TARGET_WHO_MONSTER 2
-#define TARGET_WHO_OBJECT 3
+enum {
+	TARGET_WHO_NONE = 0,
+	TARGET_WHO_PLAYER,
+	TARGET_WHO_MONSTER,
+	TARGET_WHO_OBJECT,
+	TARGET_WHO_GRID,
+};
 
 struct target {
 	struct loc grid;

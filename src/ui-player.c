@@ -448,7 +448,7 @@ static void display_player_flag_info(void)
 
 /**
  * Special display, part 2b
- * L: no more stats from class
+ * L: no more stats from class or race
  */
 void display_player_stat_info(void)
 {
@@ -461,12 +461,10 @@ void display_player_stat_info(void)
 	row = 2;
 
 	/* Column */
-	col = 42;
+	col = 45;
 
 	/* Print out the labels for the columns */
 	c_put_str(COLOUR_WHITE, "  Self", row-1, col+5);
-	//c_put_str(COLOUR_WHITE, " RB", row-1, col+12);
-	//c_put_str(COLOUR_WHITE, " CB", row-1, col+16);
 	c_put_str(COLOUR_WHITE, " EB", row-1, col+12);
 	c_put_str(COLOUR_WHITE, " Best", row-1, col+16);
 	c_put_str(COLOUR_WHITE, "  Max", row-1, col+22);
@@ -490,14 +488,6 @@ void display_player_stat_info(void)
 		cnv_stat(player->stat_max[i], buf, sizeof(buf));
 		c_put_str(COLOUR_L_GREEN, buf, row+i, col+5);
 
-		/* Race Bonus */
-		//strnfmt(buf, sizeof(buf), "%+3d", player->race->r_adj[i]);
-		//c_put_str(COLOUR_L_BLUE, buf, row+i, col+12);
-
-		/* Class Bonus */
-		//strnfmt(buf, sizeof(buf), "%+3d", player->class->c_adj[i]);
-		//c_put_str(COLOUR_L_BLUE, buf, row+i, col+16);
-
 		/* Equipment Bonus */
 		strnfmt(buf, sizeof(buf), "%+3d", player->state.stat_add[i]);
 		c_put_str(COLOUR_L_BLUE, buf, row+i, col+12);
@@ -508,7 +498,6 @@ void display_player_stat_info(void)
 
 		/* L: maxima */
         maxmax = player->stat_max_max[i];
-		//maxmax = modify_stat_value(maxmax, player->race->r_adj[i]);
 		maxmax = modify_stat_value(maxmax, player->state.stat_add[i]);
 		cnv_stat(maxmax, buf, sizeof(buf));
 		c_put_str(COLOUR_L_GREEN, buf, row+i, col+21);
@@ -705,7 +694,7 @@ static const uint8_t colour_table[] =
 
 static struct panel *get_panel_topleft(void) {
 	struct panel *p = panel_allocate(6);
-	char buf[13];
+	char buf[15];
 	player_race_name(player, buf, sizeof(buf));
 
 	panel_line(p, COLOUR_L_BLUE, "Name", "%s", player->full_name);
@@ -915,7 +904,7 @@ static const struct {
 {
 	/*   x  y wid rows */
 	{ {  1, 1, 40, 7 }, true,  get_panel_topleft },	/* Name, Class, ... */
-	{ { 21, 1, 18, 3 }, false, get_panel_misc },	/* Age, ht, wt, ... */
+	{ { 24, 1, 18, 3 }, false, get_panel_misc },	/* Age, ht, wt, ... */
 	{ {  1, 9, 24, 9 }, false, get_panel_midleft },	/* Cur Exp, Max Exp, ... */
 	{ { 29, 9, 19, 9 }, false, get_panel_combat },
 	{ { 52, 9, 20, 8 }, false, get_panel_skills },

@@ -404,3 +404,58 @@ name:Resilience
 desc:You're particularly tough.
 
 
+# L: skills
+type:skill
+code:DISARM_PHYS
+name:Physical Disarming
+desc:You can disarm mundane traps.
+
+type:skill
+code:DISARM_MAGIC
+name:Magical Disarming
+desc:You can disarm magical traps.
+
+type:skill
+code:DEVICE
+name:Magic Devices
+desc:You can use magical devices.
+
+type:skill
+code:SAVE
+name:Saving Throw
+desc:You can avoid extraordinary attack forms.
+
+type:skill
+code:SEARCH
+name:Perception
+desc:You can spot things.
+
+type:skill
+code:STEALTH
+name:Stealth
+desc:You can avoid notice.
+
+type:skill
+code:TO_HIT_MELEE
+name:Melee Weapon Skill
+desc:You can use melee weapons.
+
+type:skill
+code:TO_HIT_BOW
+name:Ranged Weapon Skill
+desc:You can use shooters.
+
+type:skill
+code:TO_HIT_THROW
+name:Throwing
+desc:You can throw objects.
+
+type:skill
+code:DIGGING
+name:Digging
+desc:You can dig into walls.
+
+type:skill
+code:MAGIC
+name:Magic
+desc:You can cast magic.

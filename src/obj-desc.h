@@ -47,6 +47,7 @@ enum {
 
 
 extern const char *inscrip_text[];
+extern const char *power_names[];
 
 void object_base_name(char *buf, size_t max, int tval, bool plural);
 void object_kind_name(char *buf, size_t max, const struct object_kind *kind,
@@ -55,5 +56,6 @@ size_t obj_desc_name_format(char *buf, size_t max, size_t end, const char *fmt,
 							const char *modstr, bool pluralise);
 size_t object_desc(char *buf, size_t max, const struct object *obj,
 	uint32_t mode, const struct player *p);
+const char *get_obj_power_name(const struct object *obj);
 
 #endif /* OBJECT_DESC_H */

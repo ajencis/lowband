@@ -546,7 +546,6 @@ void cmd_cancel(struct command *cmd)
  */
 void cmd_cancel_repeat(void)
 {
-	//struct command *cmd = &cmd_queue[prev_cmd_idx(cmd_tail)];
 	int i;
 	for (i = cmd_tail; i != cmd_head; i = (i + 1) % CMD_QUEUE_SIZE) {
 		if (cmd_queue[i].nrepeats > 0) cmd_cancel(&cmd_queue[i]);
@@ -558,9 +557,9 @@ void cmd_cancel_repeat(void)
 	else if (last_command.code != CMD_NULL)
 		last = &last_command;
 	
-	if (!last) return;
-	last->nrepeats = 0;
-	return;
+	if (last) {
+		cmd_cancel(last);
+	}
 
 	/*last->nrepeats = 0;
 	if (cmd_head != cmd_tail && last == &cmd_queue[cmd_tail])

@@ -625,10 +625,12 @@ void object_short_name(char *buf, size_t max, const char *name)
  */
 static int compare_types(const struct object *o1, const struct object *o2)
 {
-	if (o1->tval == o2->tval)
-		return CMP(o1->sval, o2->sval);
-	else
+	if (o1->tval != o2->tval) {
 		return CMP(o1->tval, o2->tval);
+	} else if (o1->sval != o2->sval) {
+		return CMP(o1->sval, o2->sval);
+	}
+	return 0;
 }	
 
 
@@ -642,6 +644,8 @@ static int compare_types(const struct object *o1, const struct object *o2)
  */
 int compare_items(const struct object *o1, const struct object *o2)
 {
+	int ct = compare_types(o1, o2);
+
 	/* unknown objects go at the end, order doesn't matter */
 	if (is_unknown(o1)) {
 		return (is_unknown(o2)) ? 0 : 1;
@@ -665,9 +669,15 @@ int compare_items(const struct object *o1, const struct object *o2)
 	if (o1->kind->cost == 0 && o2->kind->cost != 0) return 1;
 	if (o1->kind->cost != 0 && o2->kind->cost == 0) return -1;
 
+	// L: tomes get ordered by pval
+	if (o1->tval == TV_TOME && ct == 0) {
+		int compared = my_stricmp(o1->kind->name, o2->kind->name);
+		return compared < 0 ? -1 : (compared > 0 ? 1 : 0);
+	}
+
 	/* otherwise, just compare tvals and svals */
 	/* NOTE: arguably there could be a better order than this */
-	return compare_types(o1, o2);
+	return ct;
 }
 
 

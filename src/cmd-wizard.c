@@ -428,11 +428,11 @@ void do_cmd_wiz_advance(struct command *cmd)
 	player->au = 1000000L;
 
 	/* Level 50 */
-	player_exp_gain(player, PY_MAX_EXP);
+	player_exp_gain(player, PY_MAX_EXP, 0);
 	while (player_can_level_up(player)) {
 		player_level_up_one(player, true);
 		//check_player_monster(player, false);
-		player_exp_gain(player, PY_MAX_EXP);
+		player_exp_gain(player, PY_MAX_EXP, 0);
 	}
 
 	/* Heal the player */
@@ -1199,7 +1199,7 @@ void do_cmd_wiz_edit_player_exp(struct command *cmd)
 	newv = MIN(PY_MAX_EXP, MAX(0, newv));
 
 	if (newv > player->exp) {
-		player_exp_gain(player, newv - player->exp);
+		player_exp_gain(player, newv - player->exp, 0);
 	} else {
 		player_exp_lose(player, player->exp - newv, false);
 	}
@@ -1365,7 +1365,7 @@ void do_cmd_wiz_increase_exp(struct command *cmd)
 	}
 
 	if (n < 1) n = 1;
-	player_exp_gain(player, n);
+	player_exp_gain(player, n, 0);
 }
 
 

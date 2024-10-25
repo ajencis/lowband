@@ -912,7 +912,7 @@ bool effect_handler_RESTORE_EXP(effect_handler_context_t *context)
 		/* Message */
 		if (context->origin.what != SRC_NONE)
 			msg("You feel your life energies returning.");
-		player_exp_gain(player, player->max_exp - player->exp);
+		player_exp_gain(player, player->max_exp - player->exp, 0);
 
 		/* Recalculate max. hitpoints */
 		update_stuff(player);
@@ -930,7 +930,7 @@ bool effect_handler_GAIN_EXP(effect_handler_context_t *context)
 	int amount = effect_calculate_value(context, true);
 	if (player->exp < PY_MAX_EXP) {
 		msg("You feel more experienced.");
-		player_exp_gain(player, amount / 2);
+		player_exp_gain(player, amount / 2, 0);
 	}
 	context->ident = true;
 

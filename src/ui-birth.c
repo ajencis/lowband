@@ -294,6 +294,8 @@ static void race_help(int i, void *db, const region *l)
 		} else if (streq(ability->type, "power") &&
 		           (!r->r_powers[ability->index])) {
             continue;
+		} else if (streq(ability->type, "skill")) {
+			continue;
 		}
 
 		if (streq(ability->type, "power"))
@@ -330,24 +332,6 @@ static void class_help(int i, void *db, const region *l)
 	/* Indent output */
 	text_out_indent = CLASS_AUX_COL;
 	Term_gotoxy(CLASS_AUX_COL, TABLE_ROW);
-
-    /* L: class doesn't affect stats any more */
-	/*for (j = 0; j < len; j++) {  
-		const char *name = stat_names_reduced[j];
-		int adj = c->c_adj[j] + r->r_adj[j];
-
-		text_out_e("%s%+3d", name, adj);
-
-		if (j*2 + 1 < STAT_MAX) {
-			name = stat_names_reduced[j + len];
-			adj = c->c_adj[j + len] + r->r_adj[j + len];
-			text_out_e("  %s%+3d", name, adj);
-		}
-
-		text_out("\n");
-	}*/
-
-	//text_out_e("\n");
 	
 	skill_help(r->r_skills, c->c_skills, r->r_mhp + c->c_mhp,
 			   r->r_exp + c->c_exp, -1);
@@ -391,6 +375,8 @@ static void class_help(int i, void *db, const region *l)
 		} else if (streq(ability->type, "power") &&
 		           !c->c_powers[ability->index]) {
             continue;
+		} else if (streq(ability->type, "skill")) {
+			continue;
 		}
 
 		if (streq(ability->type, "power"))
@@ -1036,8 +1022,8 @@ static enum birth_stage roller_command(bool first_call)
 
 /* The locations of the "costs" area on the birth screen. */
 #define COSTS_ROW 2
-#define COSTS_COL (42 + 28)
-#define TOTAL_COL (42 + 12)
+#define COSTS_COL (44 + 29)
+#define TOTAL_COL (44 + 13)
 
 /*
  * Remember what's possible for a given stat.  0 means can't buy or sell.

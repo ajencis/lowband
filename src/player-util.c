@@ -70,7 +70,7 @@ static const int tome_factors[] = {
 	#define PP(x, a, b, c, d, e) c,
 	#include "list-player-powers.h"
 	#undef PP
-	#define SKILL(x, a, b) a,
+	#define SKILL(x, a, b, c) a,
 	#include "list-skills.h"
 	#undef SKILL
 	0
@@ -475,8 +475,8 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	if (!obj_can_learn_extra_from(obj)) return false;
 	if (xpgain <= 0) return false;
 
-	int power = obj->pval;
-	uint16_t *currlearned; // pointer so we can track changes
+	int power = obj->pval, currcost, nextcost;
+	uint16_t currlearned;
 	bool learned = false;
 	uint32_t chance; // one_in_(chance) to learn
 	char buf[80];
@@ -490,31 +490,38 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 		assert(power > PP_NONE && power < PP_MAX);
 		chance = p->state.powers[power];
 		chance *= chance;
-		currlearned = &p->extra_powers[power];
+		currlearned = p->extra_powers[power];
 	}
 	else {
 		int skill_index = power - PP_MAX;
 		assert(skill_index >= 0 && skill_index < SKILL_MAX);
 		chance = p->state.skills[skill_index];
 		chance *= chance;
-		currlearned = &p->extra_skills[skill_index];
+		currlearned = p->extra_skills[skill_index];
 	}
+	
+	currcost = bonus_to_cost(currlearned, power);
+	nextcost = bonus_to_cost(currlearned + 1, power);
 
 	// higher-level tomes are more complicated
 	chance *= mx;
 	// harder to learn the more you know
-	chance *= *currlearned;
+	chance *= currlearned;
 	chance /= xpgain;
 	// easier to learn if you have more info
 	chance /= obj->number * obj->number * 1000;
+	// minimum chance
+	chance += 25;
+	if (nextcost > currcost) {
+		// avoid asking player too often in case they don't want to learn
+		chance += 25;
+	}
 	// paranoia
 	chance = MIN(chance, 0x10000000U);
-	/* minimum chance */
-	chance += 50;
 
 	if (one_in_(chance)) {
 		learned = learn_extra(p, power);
-		if (*currlearned >= mx) {
+		if (learned && nextcost >= mx) {
 			// after learning we're at the max
 			msg("You feel you've learned everything you can from your %s.", buf);
 		}
@@ -2236,7 +2243,8 @@ void player_handle_post_move(struct player *p, bool eval_trap,
 void disturb(struct player *p)
 {
 	/* Cancel repeated commands */
-	cmd_cancel_repeat();
+	//cmd_cancel_repeat();
+	cmdq_flush();
 
 	/* Cancel Resting */
 	if (player_is_resting(p)) {

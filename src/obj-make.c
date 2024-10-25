@@ -75,7 +75,7 @@ static const int power_weights[] = {
 	#define PP(x, a, b, c, d, e) d,
 	#include "list-player-powers.h"
 	#undef PP
-	#define SKILL(x, a, b) b,
+	#define SKILL(x, a, b, c) b,
 	#include "list-skills.h"
 	#undef SKILL
 	0
@@ -776,8 +776,8 @@ static void apply_magic_weapon(struct object *obj, int level, int power)
 	if (power <= 0)
 		return;
 
-	obj->to_h += randint1(5) + m_bonus(5, level);
-	obj->to_d += randint1(5) + m_bonus(5, level);
+	obj->to_h += randint1(5) + m_bonus(5, level) + 5;
+	obj->to_d += randint1(5) + m_bonus(5, level) + 5;
 
 	if (power > 1) {
 		obj->to_h += m_bonus(10, level);
@@ -826,7 +826,7 @@ static void apply_magic_armour(struct object *obj, int level, int power)
 	if (power <= 0)
 		return;
 
-	obj->to_a += randint1(5) + m_bonus(5, level);
+	obj->to_a += randint1(5) + m_bonus(5, level) + 5;
 	if (power > 1)
 		obj->to_a += m_bonus(10, level);
 }

@@ -623,21 +623,18 @@ int price_item(struct store *store, const struct object *obj,
 	proprietor = store->owner;
 
 	/* Get the value of the stack of wands, or a single item */
-	// L: will now pay full even for unknown items
 	if (tval_can_have_charges(obj)) {
 		if (store_buying) {
-			/*price = MIN(object_value_real(obj, qty),
-				object_value(obj, qty));*/
-			price = object_value_real(obj, qty);
+			price = MIN(object_value_real(obj, qty),
+				object_value(obj, qty) * 2);
 		} else {
 			price = MAX(object_value_real(obj, qty),
 				object_value(obj, qty));
 		}
 	} else {
 		if (store_buying) {
-			/*price = MIN(object_value_real(obj, 1),
-				object_value(obj, 1));*/
-			price = object_value_real(obj, 1);
+			price = MIN(object_value_real(obj, 1),
+				object_value(obj, 1) * 2);
 		} else {
 			price = MAX(object_value_real(obj, 1),
 				object_value(obj, 1));
@@ -665,7 +662,8 @@ int price_item(struct store *store, const struct object *obj,
 		if (obj->origin != ORIGIN_BIRTH) {
 
 			/* Shops now pay 2/3 of true value */
-			price = price * 2 / 3;
+			// L: 1/2 now
+			price = price / 2;
 
 			/* Black market sucks */
 			if (store->feat == FEAT_STORE_BLACK) {
@@ -675,7 +673,9 @@ int price_item(struct store *store, const struct object *obj,
 			/* L: don't buy cheap stuff, especially lategame */
 			int day = turn / 10 / z_info->day_length;
 			day = MIN(day, 10) + 5;
-			if (price <= day * day * 4) return 0;
+			int minprice = day * day * 4;
+			if (tval_is_ammo(obj)) minprice /= 10;
+			if (price <= minprice) return 0;
 		}
 
 		/* Check for no_selling option */
@@ -1213,9 +1213,6 @@ static bool store_create_random(struct store *store, bool reset)
 		max_level = z_info->store_magic_level + player->max_depth / 2;
 	}
 
-	//if (min_level > 55) min_level = 55;
-	//if (max_level > 70) max_level = 70;
-
 	/* Consider up to six items */
 	for (tries = 0; tries < 6; tries++) {
 		struct object_kind *kind;
@@ -1244,7 +1241,9 @@ static bool store_create_random(struct store *store, bool reset)
 		object_prep(obj, kind, level, RANDOMISE);
 
 		/* Apply some "low-level" magic (no artifacts) */
-		apply_magic(obj, level, false, false, false, false);
+		if (!reset) {
+			apply_magic(obj, level, false, false, false, false);
+		}
 		assert(!obj->artifact);
 
 		/* Reject if item is 'damaged' (negative combat mods, curses) */

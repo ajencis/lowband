@@ -80,7 +80,7 @@ static const char *equip_slot_names[] =
 
 static const char *skill_names[] =
 {
-	#define SKILL(x, a, b) #x,
+	#define SKILL(x, a, b, c) #x,
 	#include "list-skills.h"
 	#undef SKILL
 	""
@@ -2197,7 +2197,7 @@ static errr finish_parse_monster(struct parser *p) {
 		for (e = race->evol; e; e = e->next) {
 			e->race = lookup_monster(e->name);
 			if (!e->race) {
-					quit_fmt("Couldn't find shape named '%s' for monster '%s'",
+					quit_fmt("Couldn't find evolution named '%s' for monster '%s'",
 							 e->name, race->name);
 			}
 			string_free(e->name);

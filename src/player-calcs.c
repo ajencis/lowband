@@ -29,6 +29,7 @@
 #include "mon-spell.h"
 #include "mon-util.h"
 #include "obj-curse.h"
+#include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
 #include "obj-knowledge.h"
@@ -354,6 +355,15 @@ bool earlier_object(struct object *orig, struct object *new, bool store)
 			return false;
 		if (object_value(orig, 1) <	object_value(new, 1))
 			return true;
+	}
+
+	// L: tomes sort by display name
+	if (orig->tval == TV_TOME) {
+		const char *pnameo = get_obj_power_name(orig);
+		const char *pnamen = get_obj_power_name(new);
+		int compared = my_stricmp(pnameo, pnamen);
+		if (compared > 0) return true;
+		if (compared < 0) return false;
 	}
 
 	/* No preference */
@@ -854,15 +864,6 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	int i, msp, levels, cur_wgt, max_wgt, ass;
 	struct monster_race *monr = lookup_player_monster(p);
 
-	/* Must be literate */
-	if (/*!p->class->magic.total_spells && */state->skills[SKILL_MAGIC] <= 0) {
-		p->msp = 0;
-		p->csp = 0;
-		p->csp_frac = 0;
-		return;
-	}
-
-	
 	levels = state->skills[SKILL_MAGIC];
 	ass = state->stat_ind[STAT_INT];
 
@@ -871,8 +872,10 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 		msp = 1;
 		msp += adj_mag_mana(ass) * levels * p->lev / 5000;
 	} else {
-		levels = 0;
-		msp = 0;
+		p->msp = 0;
+		p->csp = 0;
+		p->csp_frac = 0;
+		return;
 	}
 
 	/* Assume player not encumbered by armor */
@@ -896,7 +899,7 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	}
 
 	/* Determine the weight allowance */
-	max_wgt = 1000;
+	max_wgt = get_player_realm(p)->weight;
 
 	/* Heavy armor penalizes mana */
 	if (((cur_wgt - max_wgt) / 10) > 0) {
@@ -1275,7 +1278,7 @@ static void calc_shapechange(struct player_state *state, bool vuln[ELEM_MAX],
 	}
 }
 
-static bool calc_monster_spell(int *counts, const struct monster_spell *mspell)
+static bool calc_monster_spell(int counts[PP_MAX], const struct monster_spell *mspell)
 {
 	if (!mspell) return false;
 
@@ -1335,6 +1338,34 @@ static bool calc_monster_spell(int *counts, const struct monster_spell *mspell)
 	return false;
 }
 
+void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX])
+{
+	int i, totalbonus, numcounts = 0;
+	const struct monster_spell *mspell;
+	int spell_counts[PP_MAX];
+
+	for (i = 0; i < PP_MAX; i++) {
+		powers[i] = 0;
+	}
+
+	for (i = 0; i < RSF_MAX; i++)
+	{
+		if (!rsf_has(mrace->spell_flags, i)) continue;
+		mspell = monster_spell_by_index(i);
+		if (calc_monster_spell(spell_counts, mspell)) {
+			numcounts++;
+		}
+	}
+
+	if (numcounts > 0) {
+		totalbonus = mrace->spell_power * (2 + numcounts) / (5 + numcounts);
+		for (i = 0; i < PP_MAX; i++)
+		{
+			powers[i] = spell_counts[i] * totalbonus / numcounts;
+		}
+	}
+}
+
 /**
  * L: calculate the effects of being a monster on player state
  */
@@ -1344,8 +1375,7 @@ static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
 	if (!mrace) return;
 	int i;
 	const struct monster_spell *mspell;
-	int *spell_counts = mem_zalloc((size_t)PP_MAX * sizeof(int));
-	int numcounts = 0, totalbonus;
+	int powers[PP_MAX] = { 0 };
 
 	i = 0;
 	while (elem_matches[i].mval != RF_NONE) {
@@ -1356,27 +1386,15 @@ static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
 	}
 
 	state->speed += mrace->speed / 2 - 55;
-	state->ac = MAX(state->ac, mrace->ac);
+	state->ac = MAX(state->ac, mrace->ac) + MIN(state->ac, mrace->ac) / 2;
 
 	if (rf_has(mrace->flags, RF_NEVER_MOVE)) *moves -= 2;
 
-	for (i = 0; i < RSF_MAX; i++)
-	{
-		if (!rsf_has(mrace->spell_flags, i)) continue;
-		mspell = monster_spell_by_index(i);
-		if (calc_monster_spell(spell_counts, mspell))
-			numcounts++;
-	}
+	calc_monster_powers(mrace, powers);
 
-	if (numcounts > 0) {
-		totalbonus = mrace->spell_power * (2 + numcounts) / (5 + numcounts);
-		for (i = 0; i < PP_MAX; i++)
-		{
-			state->powers[i] += spell_counts[i] * totalbonus / numcounts;
-		}
+	for (i = 0; i < PP_MAX; ++i) {
+		state->powers[i] += powers[i];
 	}
-
-	mem_free(spell_counts);
 }
 
 /**

@@ -1426,6 +1426,7 @@ void py_attack(struct player *p, struct loc grid)
 	}
 
 	if (!slain) {
+		mflag_on(mon->mflag, MFLAG_AWARE);
 		mon->target.who = TARGET_WHO_PLAYER;
 	}
 

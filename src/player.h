@@ -36,7 +36,6 @@ enum {
 	#define STAT(a) STAT_##a,
 	#include "list-stats.h"
 	#undef STAT
-
 	STAT_MAX
 };
 
@@ -163,7 +162,7 @@ enum {
  * Skill indexes
  */
 enum {
-	#define SKILL(x, a, b) SKILL_##x,
+	#define SKILL(x, a, b, c) SKILL_##x,
 	#include "list-skills.h"
 	#undef SKILL
 	SKILL_MAX
@@ -753,7 +752,7 @@ bool player_stat_inc(struct player *p, int stat);
 bool player_stat_dec(struct player *p, int stat, bool permanent);
 bool player_at_max_level(struct player *p);
 bool player_can_level_up(struct player *p);
-void player_exp_gain(struct player *p, int32_t amount);
+void player_exp_gain(struct player *p, int32_t amount, uint32_t fract);
 void player_exp_lose(struct player *p, int32_t amount, bool permanent);
 void player_level_up_one(struct player *p, bool verbose);
 void check_level(struct player *p);

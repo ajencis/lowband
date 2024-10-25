@@ -56,7 +56,7 @@ bool race_has_ability(const struct player_race *race,
 	return false;
 }
 
-
+#define MAX_ABILITIES 32
 /**
  * Browse known abilities -BR-
  */
@@ -64,10 +64,10 @@ static void view_abilities(void)
 {
 	struct player_ability *ability;
 	int num_abilities = 0;
-	struct player_ability ability_list[32];
+	struct player_ability ability_list[MAX_ABILITIES];
 
 	/* Count the number of class powers we have */
-	for (ability = player_abilities; ability; ability = ability->next) {
+	for (ability = player_abilities; ability && num_abilities < MAX_ABILITIES; ability = ability->next) {
 		if (class_has_ability(player->class, ability)) {
 			memcpy(&ability_list[num_abilities], ability,
 				   sizeof(struct player_ability));
@@ -76,7 +76,7 @@ static void view_abilities(void)
 	}
 
 	/* Count the number of race powers we have */
-	for (ability = player_abilities; ability; ability = ability->next) {
+	for (ability = player_abilities; ability && num_abilities < MAX_ABILITIES; ability = ability->next) {
 		if (race_has_ability(player->race, ability)) {
 			memcpy(&ability_list[num_abilities], ability,
 				   sizeof(struct player_ability));
@@ -84,11 +84,20 @@ static void view_abilities(void)
 		}
 	}
 
-	for (ability = player_abilities; ability; ability = ability->next) {
-		if (player->state.powers[ability->index] && streq(ability->type, "power")) {
+	// L: powers get listed
+	for (ability = player_abilities; ability && num_abilities < MAX_ABILITIES; ability = ability->next) {
+		if (streq(ability->type, "power") && player->state.powers[ability->index] > 0) {
 			memcpy(&ability_list[num_abilities], ability,
 				   sizeof(struct player_ability));
 			ability_list[num_abilities++].group = PLAYER_FLAG_POWER;
+		}
+	}
+
+	// L: skills get listed too!
+	for (ability = player_abilities; ability && num_abilities < MAX_ABILITIES; ability = ability->next) {
+		if (streq(ability->type, "skill") && player->state.skills[ability->index] > 0) {
+			memcpy(&ability_list[num_abilities], ability, sizeof(ability_list[0]));
+			ability_list[num_abilities++].group = PLAYER_FLAG_SKILL;
 		}
 	}
 

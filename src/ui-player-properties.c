@@ -45,13 +45,6 @@ static void view_ability_display(struct menu *menu, int oid, bool cursor,
 	struct player_ability *choices = menu->menu_data;
 
 	switch (choices[oid].group) {
-	case PLAYER_FLAG_POWER:
-	    {
-			strnfmt(buf, sizeof(buf), "Power:  %s (level %i)", 
-			    choices[oid].name, player->state.powers[choices[oid].index]);
-			color = COLOUR_GREEN;
-			break;
-		}
 	case PLAYER_FLAG_SPECIAL:
 		{
 			strnfmt(buf, sizeof(buf), "Specialty Ability: %s",
@@ -73,6 +66,20 @@ static void view_ability_display(struct menu *menu, int oid, bool cursor,
 			color = COLOUR_ORANGE;
 			break;
 		}
+	case PLAYER_FLAG_POWER:
+		{
+			strnfmt(buf, sizeof(buf), "Power:  %s (level %i)", 
+				choices[oid].name, player->state.powers[choices[oid].index]);
+			color = COLOUR_GREEN;
+			break;
+		}
+	case PLAYER_FLAG_SKILL:
+		{
+			strnfmt(buf, sizeof(buf), "Skill:  %s (level %i)",
+				choices[oid].name, player->state.skills[choices[oid].index]);
+			color = COLOUR_L_BLUE;
+			break;
+		}
 	default:
 		{
 			my_strcpy(buf, "Mysterious", sizeof(buf));
@@ -83,6 +90,31 @@ static void view_ability_display(struct menu *menu, int oid, bool cursor,
 	/* Print it */
 	c_put_str(cursor ? COLOUR_WHITE : color, buf, row, col);
 
+}
+
+
+static void add_scaling_desc(char *buf, const char *name, int base, int scale, int numleft, size_t bufsize)
+{
+	if (!base && !scale) return;
+	if (base) {
+		my_strcat(buf, format("%i", base), bufsize);
+	}
+	if (base && scale) {
+		my_strcat(buf, " + ", bufsize);
+	}
+	if (scale) {
+		my_strcat(buf, format("%i%%", scale), bufsize);
+	}
+	my_strcat(buf, format(" from your %s", name), bufsize);
+	if (numleft > 2) {
+		my_strcat(buf, ", ", bufsize);
+	}
+	else if (numleft == 2) {
+		my_strcat(buf, ", and ", bufsize);
+	}
+	else {
+		my_strcat(buf, ".", bufsize);
+	}
 }
 
 
@@ -99,32 +131,41 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 	text_out_indent = loc->col - 1;
 	text_out_pad = 1;
 
-	/* L: more info for powers */
+	/* L: more info for powers and skills */
 	char extra[128];
 	extra[0] = '\0';
-	if (choices[oid].group == PLAYER_FLAG_POWER) {
-		int cpower = player_class_power(player, choices[oid].index);
-		int rpower = player->race->r_powers[choices[oid].index];
-		int xpower = player->extra_powers[choices[oid].index] / 2;
-		bool any = cpower || rpower || xpower;
-		if (any) {
+	if (choices[oid].group == PLAYER_FLAG_POWER || choices[oid].group == PLAYER_FLAG_SKILL) {
+		int cbase, cxtra, rbase, rxtra, tome;
+		if (choices[oid].group == PLAYER_FLAG_POWER) {
+			cbase = 0;
+			cxtra = player_class_power(player, choices[oid].index);
+			rbase = 0;
+			rxtra = player->race->r_powers[choices[oid].index];
+			tome = player->extra_powers[choices[oid].index] / 2;
+		}
+		else {
+			cbase = player_class_c_skill(player, choices[oid].index);
+			cxtra = player_class_x_skill(player, choices[oid].index) * 100 / 5;
+			rbase = player->race->r_skills[choices[oid].index];
+			rxtra = 0;
+			tome = player->extra_skills[choices[oid].index];
+		}
+		int numleft = ((rxtra || rbase) ? 1 : 0) +
+				((cxtra || cbase) ? 1 : 0) +
+				(tome ? 1 : 0);
+		if (numleft > 0) {
 			my_strcat(extra, " You gain ", sizeof(extra));
-			bool last = !rpower && !xpower;
-			bool second_last = !rpower || !xpower;
-			if (cpower) {
-				my_strcat(extra, format("%i%% from your class", cpower), sizeof(extra));
-				if (last) my_strcat(extra, ".", sizeof(extra));
-				else if (second_last) my_strcat(extra, " and ", sizeof(extra));
-				else my_strcat(extra, ", ", sizeof(extra));
+			if (cbase || cxtra) {
+ 				add_scaling_desc(extra, "class", cbase, cxtra, numleft, sizeof(extra));
+				--numleft;
 			}
-			last = !xpower;
-			if (rpower) {
-				my_strcat(extra, format("%i%% from your race", rpower), sizeof(extra));
-				if (last) my_strcat(extra, ".", sizeof(extra));
-				else my_strcat(extra, ", and ", sizeof(extra));
+			if (rbase || rxtra) {
+				add_scaling_desc(extra, "race", rbase, rxtra, numleft, sizeof(extra));
+				--numleft;
 			}
-			if (xpower) {
-				my_strcat(extra, format("up to %i points from your learning.", xpower), sizeof(extra));
+			if (tome) {
+				add_scaling_desc(extra, "learning", tome, 0, numleft, sizeof(extra));
+				--numleft;
 			}
 		}
 	}

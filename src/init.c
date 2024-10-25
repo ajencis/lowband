@@ -124,6 +124,13 @@ static const char *list_player_powers_names[] = {
 	NULL
 };
 
+static const char *list_player_skill_names[] = {
+	#define SKILL(x, a, b, c) #x,
+	#include "list-skills.h"
+	#undef SKILL
+	NULL
+};
+
 static const char *list_school_names[] = {
 	"NONE",
 	#define MS(x, a, b) #x,
@@ -1272,6 +1279,8 @@ static enum parser_error parse_player_prop_code(struct parser *p) {
 		index = code_index_in_array(list_obj_flag_names, code);
 	} else if (streq(embryo->ability.type, "power")) {
 		index = code_index_in_array(list_player_powers_names, code);
+	} else if (streq(embryo->ability.type, "skill")) {
+		index = code_index_in_array(list_player_skill_names, code);
 	}
 	if (index >= 0) {
 		embryo->ability.index = index;

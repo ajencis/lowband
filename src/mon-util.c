@@ -1090,15 +1090,7 @@ static void player_kill_monster(struct monster *mon, struct player *p,
 
 	/* Handle fractional experience */
 	new_exp_frac = ((((long)mon->race->mexp * mon->race->level) % div)
-					* 0x10000L / div) + p->exp_frac;
-
-	/* Keep track of experience */
-	if (new_exp_frac >= 0x10000L) {
-		new_exp++;
-		p->exp_frac = (uint16_t)(new_exp_frac - 0x10000L);
-	} else {
-		p->exp_frac = (uint16_t)new_exp_frac;
-	}
+					* 0x10000L / div);
 
 	/* When the player kills a Unique, it stays dead */
 	if (monster_is_unique(mon)) {
@@ -1119,7 +1111,7 @@ static void player_kill_monster(struct monster *mon, struct player *p,
 	}
 
 	/* Gain experience */
-	player_exp_gain(p, new_exp);
+	player_exp_gain(p, new_exp, new_exp_frac);
 
 	/* Generate treasure */
 	monster_death(mon, p, false);
@@ -1875,7 +1867,7 @@ static void rearrange_monster(struct monster_race *mr)
 
 	// calculate its stats based on power
 	mr->avg_hp = MAX(hp / 2 + 5, hp) * MAX((hp + 1) / 2 + 10, hp) / 10; // 1000ish for level 100
-	mr->ac = ac - 25 + MIN(ac * 2, 25); // 100ish for level 100
+	mr->ac = ac - 33 + MIN(ac * 2, 33); // 100ish for level 100
 	mr->speed = 105 + (spe * 30 + 49) / 100; // 135ish for level 100
 	mr->spell_power = mag; // 100ish for level 100
 	ttdam = MAX(dam + 4, dam * 3 / 2);

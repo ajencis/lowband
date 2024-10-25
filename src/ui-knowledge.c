@@ -64,6 +64,15 @@
 #include "wizard.h"
 #include "z-util.h"
 
+
+const char *skill_descriptions[] = {
+	#define SKILL(x, a, b, c) c,
+	#include "list-skills.h"
+	#undef SKILL
+	NULL
+};
+
+
 /**
  * The first part of this file contains the knowledge menus.  Generic display
  * routines are followed  by sections which implement "subclasses" of the
@@ -2641,7 +2650,10 @@ static void shape_lore_helper_append_to_list(const char* item,
 
 const char *skill_index_to_name(int i)
 {
-	const char *name;
+	assert (i >= 0 && i < SKILL_MAX);
+	return skill_descriptions[i];
+
+	/*const char *name;
 
 	switch (i) {
 	case SKILL_DISARM_PHYS:
@@ -2693,7 +2705,7 @@ const char *skill_index_to_name(int i)
 		break;
 	}
 
-	return name;
+	return name;*/
 }
 
 

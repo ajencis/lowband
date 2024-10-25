@@ -585,7 +585,7 @@ bool spell_cast(int spell_index, int dir, struct command *cmd)
 			player->spell_flags[spell_index] |= PY_SPELL_WORKED;
 
 			/* Gain experience */
-			player_exp_gain(player, e * spell->slevel);
+			player_exp_gain(player, e * spell->slevel, 0);
 
 			/* Redraw object recall */
 			player->upkeep->redraw |= (PR_OBJECT);

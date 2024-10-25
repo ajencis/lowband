@@ -303,27 +303,45 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 	if (levelup) handle_stuff(p);
 }
 
-void player_exp_gain(struct player *p, int32_t amount)
+void player_exp_gain(struct player *p, int32_t amount, uint32_t fract)
 {
-	int32_t tolev;
+	uint32_t tolev;
+	uint32_t new_fract, extra_fract, new_amt;
 
-	if (p->max_lev == PY_MAX_LEVEL) tolev = PY_MAX_EXP;
+	if (p->max_lev >= PY_MAX_LEVEL) tolev = PY_MAX_EXP;
 	else tolev = player_exp[p->max_lev-1];
 
-	amount *= 100;
-	amount += p->state.expfact - 1;
-	amount /= p->state.expfact;
+	new_amt = amount * 100;
+	new_amt /= p->state.expfact;
 
-	if (amount > tolev - p->exp) p->exp = tolev;
-	else p->exp += amount;
+	new_fract = 100 * fract;
+	new_fract /= p->state.expfact;
 
-	p->xp_this_turn += amount;
+	extra_fract = (amount * 100 - new_amt * p->state.expfact) * UINT16_MAX;
+	extra_fract /= p->state.expfact;
 
-	//check_learn_powers(p, amount);
-	//check_player_monster(p, false, amount);
+	new_fract += extra_fract;
+	new_fract += p->exp_frac;
+
+	while (new_fract > UINT16_MAX) {
+		++new_amt;
+		new_fract -= UINT16_MAX;
+	}
+
+	if (new_amt > tolev - p->exp) {
+		p->exp = tolev;
+		p->exp_frac = UINT16_MAX;
+	}
+	else {
+		p->exp += new_amt;
+		p->exp_frac = new_fract;
+	}
+
+	p->xp_this_turn += new_amt;
 	
-	if (p->exp < p->max_exp)
-		p->max_exp = MIN(amount / 10 + p->max_exp, tolev);
+	if (p->exp < p->max_exp) {
+		p->max_exp = MIN(amount / 10 + p->max_exp, (int)tolev);
+	}
 
 	adjust_level(p, true, false);
 }

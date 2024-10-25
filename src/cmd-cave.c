@@ -861,7 +861,7 @@ static bool do_cmd_disarm_aux(struct loc grid)
 	/* Two chances - one to disarm, one not to set the trap off */
 	if (randint0(100) < chance) {
 		msgt(MSG_DISARM, "You have disarmed the %s.", trap->kind->name);
-		player_exp_gain(player, 1 + power);
+		player_exp_gain(player, 1 + power, 0);
 
 		/* Trap is gone */
 		if (!square_remove_trap(cave, grid, trap, true)) {
@@ -1615,7 +1615,7 @@ void do_cmd_explore(struct command *cmd)
 
 	assert(!player->upkeep->steps);
 	player->upkeep->step_count = path_nearest_unknown(player, player->grid,
-		&player->upkeep->path_dest, &player->upkeep->steps);
+		&player->upkeep->path_dest, &player->upkeep->steps);	
 
 	if (count_neighbors(NULL, cave, player->grid, square_isknown, true) < 9) {
 		// don't keep exploring if we're not getting new knowledge

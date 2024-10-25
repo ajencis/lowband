@@ -266,6 +266,7 @@ static bool object_can_be_targeted_by_mon(struct chunk *c, struct monster *mon, 
 	if (obj->mimicking_m_idx) return false;
 	if (react_to_slay(obj, mon)) return false;
 	if (!los(c, mon->grid, obj->grid)) return false;
+	if (square(c, obj->grid)->mon > 0) return false;
 
 	return true;
 }
@@ -323,6 +324,7 @@ static void mon_find_target(struct chunk *c, struct monster *mon)
 		assert(dist > 0);
 		int currscore = 100 / dist + player->lev / 4;
 		if (!found || currscore >= score) {
+			mflag_on(mon->mflag, MFLAG_AWARE);
 			mon->target.who = TARGET_WHO_PLAYER;
 			score = currscore;
 			found = true;
@@ -330,10 +332,12 @@ static void mon_find_target(struct chunk *c, struct monster *mon)
 	}
 	if (!found)	{
 		// if we have no foes but we're a player ally cluster around the player
-		if (mon->faction == '@')
+		if (mon->faction == '@') {
+			mflag_on(mon->mflag, MFLAG_AWARE);
 			mon->target.who = TARGET_WHO_PLAYER;
-		else
+		} else {
 			mon->target.who = TARGET_WHO_NONE;
+		}
 	}
 }
 
@@ -348,22 +352,18 @@ bool mon_check_target(struct chunk *c, struct monster *mon)
 			recheck = true;
 		}
 		if (!los(c, mon->grid, other->grid)) {
-			// can't see their target
+			// can't see their target, go to where we last saw them
+			mon->target.who = TARGET_WHO_GRID;
 			recheck = true;
 		}
 	}
 	else if (mon->target.who == TARGET_WHO_PLAYER) {
-		if (monster_can_see_player(mon)) {
-			// if we're targeting the player we know they exist
-			mflag_on(mon->mflag, MFLAG_AWARE);
-		}
-		else {
+		if (!monster_can_see_player(mon)) {
 			// if we can't see the player we should see if we have better targets
 			recheck = true;
 			if (!monster_can_hear(mon) && !monster_can_smell(mon)) {
-				// if we can't sense the player at all we have no idea where they've gone
-				mon->target.who = TARGET_WHO_NONE;
-				mflag_off(mon->mflag, MFLAG_AWARE);
+				// if we can't sense the player at all go to last known location
+				mon->target.who = TARGET_WHO_GRID;
 			}
 		}
 
@@ -380,6 +380,12 @@ bool mon_check_target(struct chunk *c, struct monster *mon)
 			recheck = true;
 		}
 	}
+	else if (mon->target.who == TARGET_WHO_GRID) {
+		if (loc_eq(mon->grid, mon->target.grid)) {
+			mon->target.who = TARGET_WHO_NONE;
+		}
+		recheck = true;
+	}
 	else {
 		// don't have a target, should see if one has appeared
 		mon->target.who = TARGET_WHO_NONE;
@@ -388,6 +394,12 @@ bool mon_check_target(struct chunk *c, struct monster *mon)
 
 	if (recheck)
 		mon_find_target(c, mon);
+
+	if (mon->target.who != TARGET_WHO_PLAYER && mon->target.who != TARGET_WHO_GRID &&
+			!monster_can_see_player(mon) && !monster_can_smell(mon) && !monster_can_hear(mon)) {
+		// can't sense the player at all, maybe they've vanished entirely
+		mflag_off(mon->mflag, MFLAG_AWARE);
+	}
 
 	return mon->target.who != TARGET_WHO_NONE;
 }
@@ -1046,6 +1058,7 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 	bool done = false;
 	bool attacking = false;
 
+	// check its objective before moving
 	mon_check_target(cave, mon);
 
 	/*
@@ -1069,6 +1082,9 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 			mon->target.grid = get_move_random(mon);
 		else
 			mon->target.grid = mon->grid;
+		grid = loc_diff(mon->target.grid, mon->grid);
+	} else if (mon->target.who == TARGET_WHO_GRID) {
+		// we're heading towards a grid so keep the grid intact
 		grid = loc_diff(mon->target.grid, mon->grid);
 	} else if (mon->target.who == TARGET_WHO_MONSTER) {
 		mon->target.grid = cave->monsters[mon->target.midx].grid;
@@ -1935,10 +1951,9 @@ static bool monster_check_active(struct monster *mon)
 	bool rwp = mon->faction == '@' &&
 			distance(mon->grid, player->grid) < 5 &&
 			player_is_resting(player);
-	bool ht = mon->target.who != TARGET_WHO_NONE;
 	
-	if (ht && (mon->cdis <= mon->race->hearing) && monster_passes_walls(mon) &&	!rwp) {
-		/* Character is inside scanning range, monster can go straight there */
+	if (mon->target.who != TARGET_WHO_NONE && !rwp) {
+		// L: monster is currently doing something
 		mflag_on(mon->mflag, MFLAG_ACTIVE);
 	} else if (mon->hp < mon->maxhp) {
 		/* Monster is hurt */

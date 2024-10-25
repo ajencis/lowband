@@ -835,19 +835,15 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 			if (c->squares_everseen > 100) {
 				uint32_t factor = MAX(c->depth, 10) * c->depth;
 				uint32_t total;
-				if (factor > UINT32_MAX / 1000)
+				if (factor > UINT32_MAX / 1000) {
 					total = UINT32_MAX;
-				else
+				} else {
 					total = factor * 1000; // in 1/2^16 of a point
-				uint32_t q = total / UINT16_MAX;
-				uint32_t new_exp_frac = p->exp_frac + total - (q * 0x10000);
-				while (new_exp_frac >= UINT16_MAX) {
-					new_exp_frac -= UINT16_MAX;
-					++q;
 				}
-				player->exp_frac = (uint16_t)(new_exp_frac);
+				uint32_t q = total / UINT16_MAX;
+				uint32_t q_frac = total - (q * UINT16_MAX);
 
-				player_exp_gain(p, q);
+				player_exp_gain(p, q, q_frac);
 			}
 		}
 	}

@@ -2533,7 +2533,7 @@ type:scroll
 graphics:?:w
 level:1
 weight:5
-cost:15
+cost:150
 alloc:5:1 to 100
 pile:100:2d3
 power:5
@@ -2545,7 +2545,7 @@ type:scroll
 graphics:?:w
 level:10
 weight:5
-cost:40
+cost:400
 alloc:4:10 to 100
 pile:25:2
 power:6
@@ -2557,7 +2557,7 @@ type:scroll
 graphics:?:w
 level:20
 weight:5
-cost:800
+cost:8000
 alloc:1:20 to 100
 pile:10:2
 power:15
@@ -2571,7 +2571,7 @@ type:scroll
 graphics:?:w
 level:5
 weight:5
-cost:65
+cost:650
 alloc:5:5 to 100
 pile:70:1d3
 power:10
@@ -2583,7 +2583,7 @@ type:scroll
 graphics:?:w
 level:0
 weight:5
-cost:70
+cost:700
 alloc:5:0 to 70
 pile:40:1d5
 power:6
@@ -2599,7 +2599,7 @@ type:scroll
 graphics:?:w
 level:1
 weight:5
-cost:15
+cost:150
 alloc:5:1 to 70
 pile:70:1d3
 power:6
@@ -2611,7 +2611,7 @@ type:scroll
 graphics:?:w
 level:1
 weight:5
-cost:200
+cost:2000
 alloc:5:5 to 100
 pile:70:1d4
 power:6
@@ -2624,7 +2624,7 @@ type:scroll
 graphics:?:w
 level:15
 weight:5
-cost:125
+cost:1250
 alloc:4:15 to 70
 pile:25:2
 power:15
@@ -2636,7 +2636,7 @@ type:scroll
 graphics:?:w
 level:15
 weight:5
-cost:125
+cost:1250
 alloc:4:15 to 70
 pile:25:2
 power:20
@@ -2648,7 +2648,7 @@ type:scroll
 graphics:?:w
 level:15
 weight:5
-cost:125
+cost:1250
 alloc:4:15 to 70
 pile:25:2
 power:12
@@ -2660,7 +2660,7 @@ type:scroll
 graphics:?:w
 level:50
 weight:5
-cost:500
+cost:5000
 alloc:4:50 to 100
 pile:25:2
 power:22
@@ -2673,7 +2673,7 @@ type:scroll
 graphics:?:w
 level:50
 weight:5
-cost:500
+cost:5000
 alloc:4:50 to 100
 pile:25:2
 power:15
@@ -2686,7 +2686,7 @@ type:scroll
 graphics:?:w
 level:10
 weight:5
-cost:100
+cost:1000
 alloc:1:10 to 100
 pile:25:2
 power:8
@@ -2699,7 +2699,7 @@ type:scroll
 graphics:?:w
 level:50
 weight:5
-cost:8000
+cost:80000
 alloc:1:50 to 100
 pile:25:2
 power:20
@@ -2713,7 +2713,7 @@ type:scroll
 graphics:?:w
 level:1
 weight:5
-cost:0
+cost:1000
 alloc:1:1 to 100
 pile:70:1d3
 power:0
@@ -2725,7 +2725,7 @@ type:scroll
 graphics:?:w
 level:15
 weight:5
-cost:0
+cost:1000
 alloc:1:15 to 100
 pile:70:1d3
 power:0
@@ -2737,7 +2737,7 @@ type:scroll
 graphics:?:w
 level:20
 weight:5
-cost:5000
+cost:50000
 alloc:1:20 to 100
 power:20000
 effect:ACQUIRE
@@ -2748,7 +2748,7 @@ type:scroll
 graphics:?:w
 level:60
 weight:5
-cost:10000
+cost:100000
 alloc:1:60 to 100
 power:20000
 effect:ACQUIRE
@@ -2762,7 +2762,7 @@ type:scroll
 graphics:?:w
 level:40
 weight:5
-cost:200
+cost:2000
 alloc:4:40 to 100
 pile:25:2
 power:9
@@ -2774,7 +2774,7 @@ type:scroll
 graphics:?:w
 level:40
 weight:5
-cost:2500
+cost:25000
 alloc:2:40 to 100
 power:20
 effect:BANISH
@@ -2784,7 +2784,7 @@ type:scroll
 graphics:?:w
 level:50
 weight:5
-cost:3000
+cost:30000
 alloc:2:50 to 100
 power:25
 effect:MASS_BANISH
@@ -2797,7 +2797,7 @@ type:scroll
 graphics:?:w
 level:5
 weight:5
-cost:10
+cost:100
 alloc:1:5 to 100
 pile:100:2d3
 power:7
@@ -2809,7 +2809,7 @@ type:scroll
 graphics:?:w
 level:0
 weight:5
-cost:15
+cost:150
 alloc:5:0 to 60
 pile:35:2d3
 power:4
@@ -2833,7 +2833,7 @@ type:scroll
 graphics:?:w
 level:40
 weight:5
-cost:200
+cost:2000
 alloc:4:40 to 100
 pile:12:2d3
 power:11
@@ -2845,7 +2845,7 @@ type:scroll
 graphics:?:w
 level:10
 weight:5
-cost:50
+cost:500
 alloc:4:10 to 60
 pile:25:2d3
 power:6
@@ -2856,7 +2856,7 @@ type:scroll
 graphics:?:w
 level:10
 weight:5
-cost:250
+cost:2500
 alloc:2:1 to 100
 pile:20:2
 power:19
@@ -2870,7 +2870,7 @@ type:scroll
 graphics:?:w
 level:1
 weight:5
-cost:15
+cost:150
 alloc:5:1 to 50
 pile:70:1d3
 power:6
@@ -2882,7 +2882,7 @@ type:scroll
 graphics:?:w
 level:10
 weight:5
-cost:40
+cost:400
 alloc:4:10 to 70
 pile:25:2
 power:7
@@ -2894,7 +2894,7 @@ type:scroll
 graphics:?:w
 level:25
 weight:5
-cost:80
+cost:800
 alloc:4:50 to 100
 pile:25:2
 power:8
@@ -2906,7 +2906,7 @@ type:scroll
 graphics:?:w
 level:30
 weight:5
-cost:50
+cost:500
 alloc:4:30 to 100
 pile:25:2
 power:6
@@ -2922,7 +2922,7 @@ type:scroll
 graphics:?:w
 level:5
 weight:5
-cost:30
+cost:300
 alloc:1:5 to 60
 pile:25:2
 power:8
@@ -2934,7 +2934,7 @@ type:scroll
 graphics:?:w
 level:60
 weight:5
-cost:500
+cost:5000
 alloc:3:70 to 100
 power:20
 effect:GLYPH:WARDING
@@ -2944,7 +2944,7 @@ type:scroll
 graphics:?:w
 level:40
 weight:5
-cost:1000
+cost:10000
 alloc:3:40 to 100
 power:12
 effect:DESTRUCTION:LIGHT:15
@@ -3024,7 +3024,7 @@ type:potion
 graphics:!:d
 level:30
 weight:4
-cost:8000
+cost:80000
 alloc:3:30 to 100
 pile:10:2
 power:20000
@@ -3036,7 +3036,7 @@ type:potion
 graphics:!:d
 level:30
 weight:4
-cost:8000
+cost:80000
 alloc:3:30 to 100
 pile:10:2
 power:20000
@@ -3048,7 +3048,7 @@ type:potion
 graphics:!:d
 level:30
 weight:4
-cost:8000
+cost:80000
 alloc:3:30 to 100
 pile:10:2
 power:20000
@@ -3060,7 +3060,7 @@ type:potion
 graphics:!:d
 level:30
 weight:4
-cost:8000
+cost:80000
 alloc:3:30 to 100
 pile:10:2
 power:20000
@@ -3072,7 +3072,7 @@ type:potion
 graphics:!:d
 level:30
 weight:4
-cost:8000
+cost:80000
 alloc:3:30 to 100
 pile:10:2
 power:20000
@@ -3084,7 +3084,7 @@ type:potion
 graphics:!:d
 level:40
 weight:4
-cost:50000
+cost:500000
 alloc:2:40 to 100
 attack:1d1:0:0
 armor:0:0
@@ -3105,7 +3105,7 @@ type:potion
 graphics:!:d
 level:65
 weight:4
-cost:25000
+cost:250000
 alloc:5:65 to 100
 power:20000
 effect:GAIN_EXP
@@ -3118,7 +3118,7 @@ type:potion
 graphics:!:d
 level:0
 weight:4
-cost:20
+cost:200
 alloc:8:1 to 15
 pile:90:2d3
 power:3
@@ -3137,7 +3137,7 @@ type:potion
 graphics:!:d
 level:3
 weight:4
-cost:70
+cost:700
 alloc:8:5 to 40
 pile:80:2d3
 power:6
@@ -3154,7 +3154,7 @@ type:potion
 graphics:!:d
 level:5
 weight:4
-cost:200
+cost:2000
 alloc:8:12 to 100
 pile:70:2d3
 power:9
@@ -3174,7 +3174,7 @@ type:potion
 graphics:!:d
 level:15
 weight:4
-cost:800
+cost:8000
 alloc:6:30 to 100
 pile:25:2
 power:12
@@ -3194,7 +3194,7 @@ type:potion
 graphics:!:d
 level:40
 weight:4
-cost:1500
+cost:15000
 alloc:4:40 to 100
 attack:1d1:0:0
 armor:0:0
@@ -3213,7 +3213,7 @@ type:potion
 graphics:!:d
 level:60
 weight:4
-cost:5000
+cost:50000
 alloc:2:60 to 100
 attack:1d1:0:0
 armor:0:0
@@ -3240,7 +3240,7 @@ type:potion
 graphics:!:d
 level:5
 weight:4
-cost:75
+cost:750
 alloc:6:1 to 35
 pile:25:2
 power:1
@@ -3251,7 +3251,7 @@ type:potion
 graphics:!:d
 level:25
 weight:4
-cost:350
+cost:3500
 alloc:6:15 to 100
 pile:25:2
 power:20
@@ -3267,7 +3267,7 @@ type:potion
 graphics:!:d
 level:40
 weight:4
-cost:400
+cost:4000
 alloc:4:30 to 100
 pile:25:2
 power:8
@@ -3281,7 +3281,7 @@ type:potion
 graphics:!:d
 level:3
 weight:4
-cost:1000
+cost:10000
 alloc:3:20 to 40
 pile:10:2
 power:30
@@ -3294,7 +3294,7 @@ type:potion
 graphics:!:d
 level:20
 weight:4
-cost:1000
+cost:10000
 alloc:3:20 to 40
 pile:10:2
 power:25
@@ -3307,7 +3307,7 @@ type:potion
 graphics:!:d
 level:20
 weight:4
-cost:1000
+cost:10000
 alloc:3:20 to 40
 pile:10:2
 power:25
@@ -3320,7 +3320,7 @@ type:potion
 graphics:!:d
 level:5
 weight:4
-cost:1000
+cost:10000
 alloc:3:20 to 40
 pile:10:2
 power:25
@@ -3333,7 +3333,7 @@ type:potion
 graphics:!:d
 level:10
 weight:4
-cost:1000
+cost:10000
 alloc:3:20 to 40
 pile:10:2
 power:30
@@ -3349,7 +3349,7 @@ type:potion
 graphics:!:d
 level:25
 weight:4
-cost:800
+cost:8000
 alloc:4:25 to 100
 pile:25:2
 power:22
@@ -3361,7 +3361,7 @@ type:potion
 graphics:!:d
 level:70
 weight:4
-cost:12000
+cost:120000
 alloc:1:70 to 100
 attack:1d1:0:0
 armor:0:0
@@ -3391,7 +3391,7 @@ type:potion
 graphics:!:d
 level:1
 weight:4
-cost:75
+cost:750
 alloc:4:1 to 100
 pile:25:2
 power:10
@@ -3403,7 +3403,7 @@ type:potion
 graphics:!:d
 level:1
 weight:4
-cost:25
+cost:250
 alloc:4:1 to 100
 pile:25:2
 power:7
@@ -3418,7 +3418,7 @@ type:potion
 graphics:!:d
 level:3
 weight:4
-cost:80
+cost:800
 alloc:4:3 to 100
 pile:25:2
 power:8
@@ -3433,7 +3433,7 @@ type:potion
 graphics:!:d
 level:1
 weight:4
-cost:8
+cost:80
 alloc:4:1 to 90
 pile:25:2
 power:2
@@ -3444,7 +3444,7 @@ type:potion
 graphics:!:d
 level:30
 weight:4
-cost:30
+cost:300
 alloc:4:30 to 100
 pile:25:2
 power:4
@@ -3456,7 +3456,7 @@ type:potion
 graphics:!:d
 level:30
 weight:4
-cost:30
+cost:300
 alloc:4:30 to 100
 pile:25:2
 power:4
@@ -3468,7 +3468,7 @@ type:potion
 graphics:!:d
 level:20
 weight:4
-cost:30
+cost:300
 alloc:4:20 to 100
 pile:25:2
 power:4
@@ -3481,7 +3481,7 @@ type:potion
 graphics:!:d
 level:3
 weight:4
-cost:50
+cost:500
 alloc:4:3 to 40
 pile:25:2
 power:7
@@ -3494,7 +3494,7 @@ type:potion
 graphics:!:d
 level:3
 weight:4
-cost:20
+cost:200
 alloc:4:3 to 40
 pile:25:2
 power:5
@@ -3635,7 +3635,7 @@ type:potion
 graphics:!:d
 level:0
 weight:4
-cost:100
+cost:1000
 pile:100:1d2
 alloc:2:40 to 100
 pile:70:1d3

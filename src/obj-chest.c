@@ -606,7 +606,7 @@ bool do_cmd_open_chest(struct loc grid, struct object *obj)
 		/* Success -- May still have traps */
 		if (randint0(100) < j) {
 			msgt(MSG_LOCKPICK, "You have picked the lock.");
-			player_exp_gain(player, 1);
+			player_exp_gain(player, 1, 0);
 			flag = true;
 		} else {
 			/* We may continue repeating */
@@ -707,7 +707,7 @@ bool do_cmd_disarm_chest(struct object *obj)
 	} else if (randint0(100) < diff) {
 		/* Success (get a lot of experience) */
 		msgt(MSG_DISARM, "You have disarmed the chest.");
-		player_exp_gain(player, obj->pval);
+		player_exp_gain(player, obj->pval, 0);
 		obj->pval = (0 - obj->pval);
 	} else if (randint0(100) < diff) {
 		/* Failure -- Keep trying */

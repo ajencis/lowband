@@ -28,7 +28,7 @@
 #include "ui-knowledge.h"
 
 
-static const char *power_names[] =
+const char *power_names[] =
 {
 	"Illegible",
 	#define PP(x, a, b, c, d, e) a,
@@ -531,6 +531,24 @@ static size_t obj_desc_charges(const struct object *obj, char *buf, size_t max,
 	return end;
 }
 
+const char *get_obj_power_name(const struct object *obj)
+{
+	bool flg = of_has(obj->flags, OF_POWER_LEARN_5) ||
+			   of_has(obj->flags, OF_POWER_LEARN_4) ||
+			   of_has(obj->flags, OF_POWER_LEARN_3) ||
+			   of_has(obj->flags, OF_POWER_LEARN_2) ||
+			   of_has(obj->flags, OF_POWER_LEARN_1);
+
+	if (flg && obj->pval < PP_MAX) {
+		return power_names[obj->pval];
+	}
+	else if (flg) {
+		return skill_index_to_name(obj->pval - PP_MAX);
+	}
+
+	return NULL;
+}
+
 static size_t obj_desc_power_learn(const struct object *obj, char *buf, size_t max,
 		size_t end, uint32_t mode)
 {
@@ -541,18 +559,14 @@ static size_t obj_desc_power_learn(const struct object *obj, char *buf, size_t m
 			   of_has(obj->flags, OF_POWER_LEARN_2) ||
 			   of_has(obj->flags, OF_POWER_LEARN_1);
 
-	if (aware && flg && obj->pval < PP_MAX) {
-		strnfcat(buf, max, &end, " of %s", power_names[obj->pval]);
-	}
-	else if (aware && flg) {
-		int skill_index = obj->pval - PP_MAX;
+	if (aware && flg) {
 		char sname[80];
-		my_strcpy(sname, skill_index_to_name(skill_index), sizeof(sname));
+		my_strcpy(sname, get_obj_power_name(obj), sizeof(sname));
 		my_strcap_full(sname);
 		strnfcat(buf, max, &end, " of %s", sname);
 	}
 
-	// L: append notifier of possible learning
+	// append notifier of possible learning
 	if (obj_can_learn_extra_from(obj)) {
 		strncat(buf, " (!)", max);
 	}
