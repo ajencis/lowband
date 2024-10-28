@@ -34,6 +34,7 @@
 #include "obj-util.h"
 #include "option.h"
 #include "player.h"
+#include "player-util.h"
 #include "savefile.h"
 #include "store.h"
 #include "obj-util.h"
@@ -418,6 +419,7 @@ void wr_quests(void)
 void wr_player(void)
 {
 	int i;
+	struct monster_race *mr = lookup_player_monster(player);
 
 	wr_string(player->full_name);
 
@@ -427,7 +429,12 @@ void wr_player(void)
 
 	/* Race/Class/Gender/Spells */
 	wr_string(player->race->name);
-	wr_u16b(player->curr_monster_ridx);
+	if (mr) {
+		wr_u32b(mr->ridx);
+	}
+	else {
+		wr_u32b(0);
+	}
 	wr_string(player->shape->name);
 	wr_string(player->class->name);
 	wr_byte(player->opts.name_suffix);

@@ -979,26 +979,25 @@ int apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 	 * This change is meant to go in conjunction with the changes
 	 * to ego item allocation levels. (-fizzix)
 	 * 
-	 * L: reduced to 3% plus 1% chance per 20 levels
+	 * L: good reduced to 0.5% plus 0.1% chance per 5 levels
+	 * L: great now 50% + 0.5% per level
 	 */
-	int good_chance = (randint0(20) + lev) / 20 + 3;
-	int great_chance = 25;
+	int good_chance = lev / 5 + 5;
+	int great_chance = 500 + lev * 5;
 
 	/* Roll for "good" */
-	if (good || (randint0(100) < good_chance)) {
+	if (good || (randint0(1000) < good_chance)) {
 		power = 1;
 
 		/* Roll for "great" */
-		if (great || (randint0(100) < great_chance))
+		if (great || (randint0(1000) < great_chance)) {
 			power = 2;
+		}
 	}
 
 	/* Roll for artifact creation */
-	if (allow_artifacts && one_in_(100)) {
-		int rolls = 0;
-
-		/* Get one roll if excellent */
-		if (power >= 2) rolls = 1;
+	if (allow_artifacts && power >= 2 && one_in_(25)) {
+		int rolls = 1;
 
 		/* Get two rolls if forced great */
 		if (great) rolls = 2;
@@ -1007,13 +1006,15 @@ int apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 		if (extra_roll) rolls += 2;
 
 		/* Roll for artifacts if allowed */
-		for (i = 0; i < rolls; i++)
+		for (i = 0; i < rolls; i++) {
 			if (make_artifact(obj)) return 3;
+		}
 	}
 
 	/* Try to make an ego item */
-	if (power == 2)
+	if (power == 2) {
 		make_ego_item(obj, lev);
+	}
 
 	/* Give it a chance to be cursed */
 	if (one_in_(20) && tval_is_wearable(obj)) {

@@ -20,6 +20,7 @@
 #include "cmd-core.h"
 #include "game-input.h"
 #include "player.h"
+#include "player-util.h"
 #include "ui-spell.h"
 
 bool (*get_string_hook)(const char *prompt, char *buf, size_t len);
@@ -106,6 +107,7 @@ bool get_check(const char *prompt)
 
 bool get_forced_check(const char *prompt)
 {
+	disturb(player);
 	if (get_forced_check_hook)
 		return get_forced_check_hook(prompt);
 	return false;

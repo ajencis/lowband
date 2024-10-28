@@ -329,7 +329,7 @@ skill-dig:0
 power:BACKSTAB:20
 power:POLEARM_SPECIALIZATION:20
 power:NECROMANCY_MAGIC:20
-hitdie:4
+hitdie:3
 exp:150
 infravision:5
 history:1
@@ -378,7 +378,7 @@ skill-melee:15
 skill-shoot:0
 skill-throw:0
 skill-dig:10
-hitdie:6
+hitdie:4
 exp:175
 infravision:5
 history:1
@@ -412,8 +412,7 @@ skill-melee:10
 skill-shoot:5
 skill-throw:5
 skill-dig:3
-power:FIRE_MAGIC:20
-hitdie:6
+hitdie:4
 exp:150
 infravision:5
 history:1
@@ -423,4 +422,27 @@ weight:190:20
 monster:bodak
 monster:quasit
 monster:imp
+body:Humanoid
+
+name:Reptilian
+stats:1:1:-1:-1:1
+skill-disarm-phys:0
+skill-disarm-magic:0
+skill-device:-5
+skill-save:5
+skill-stealth:5
+skill-search:5
+skill-melee:10
+skill-shoot:5
+skill-throw:5
+skill-dig:5
+power:POISON_MAGIC:20
+hitdie:4
+exp:150
+infravision:5
+history:1
+age:100:50
+height:80:6
+weight:190:20
+monster:2-headed hydra
 body:Humanoid

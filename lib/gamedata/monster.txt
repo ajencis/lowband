@@ -2800,7 +2800,6 @@ name:baby gold dragon
 short-name:baby gold
 evolution:young gold dragon
 base:dragon
-body:Dragon
 color:y
 speed:110
 hit-points:88
@@ -4455,7 +4454,10 @@ desc: ragged clothes, he seems to have fixed on you as a convenient target to
 desc: vent his anger.
 
 name:2-headed hydra
+short-name:2H Hydra
 base:hydra
+evolution:3-headed hydra
+body:Hydra2
 color:u
 speed:110
 hit-points:200
@@ -4977,7 +4979,10 @@ desc:A large and powerful orc, he looks just like his father.  He is tall and
 desc: fast, but fortunately blessed with orcish brains.
 
 name:3-headed hydra
+short-name:3H Hydra
 base:hydra
+evolution:4-headed hydra
+body:Hydra3
 color:o
 speed:120
 hit-points:300
@@ -5768,7 +5773,10 @@ desc:One of the last of the Petty-Dwarves.  Khîm is a tricky sorcerous little
 desc: being, full of mischief.
 
 name:4-headed hydra
+short-name:4H Hydra
 base:hydra
+evolution:5-headed hydra
+body:Hydra4
 color:y
 speed:120
 hit-points:350
@@ -6568,7 +6576,10 @@ drop-base:prayer book:5:1:1
 desc:A wraithly snake-like form with the torso of a beautiful woman.
 
 name:5-headed hydra
+short-name:5H Hydra
 base:hydra
+evolution:6-headed hydra
+body:Hydra5
 color:g
 speed:120
 hit-points:450
@@ -9452,7 +9463,10 @@ friends:50:1d2:Young green dragon
 desc:A large dragon, scales tinted deep green.
 
 name:6-headed hydra
+short-name:6H Hydra
 base:hydra
+evolution:7-headed hydra
+body:Hydra6
 color:G
 speed:120
 hit-points:550
@@ -9597,7 +9611,10 @@ desc:An unholy creature of darkness, the aura emanating from this evil being
 desc: saps your very soul.
 
 name:7-headed hydra
+short-name:7H Hydra
 base:hydra
+evolution:8-headed hydra
+body:Hydra7
 color:r
 speed:120
 hit-points:650
@@ -10437,7 +10454,10 @@ desc:Shimmering in rainbow hues, this hound is beautiful and deadly.
 ### Dungeon level 44 ###
 
 name:8-headed hydra
+short-name:8H Hydra
 base:hydra
+evolution:9-headed hydra
+body:Hydra8
 color:R
 speed:120
 hit-points:950
@@ -11995,7 +12015,9 @@ desc:A skeletal hand floating in the air, motionless except for its flexing
 desc: fingers.
 
 name:9-headed hydra
+short-name:9H Hydra
 base:hydra
+body:Hydra9
 color:P
 speed:120
 hit-points:1200

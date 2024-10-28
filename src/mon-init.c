@@ -391,10 +391,27 @@ static enum parser_error parse_meth_power(struct parser *p)
 static enum parser_error parse_meth_player_usable(struct parser *p) {
 	struct blow_method *meth = parser_priv(p);
 	int val;
-	assert(meth);
+	
+	if (!meth) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
 
 	val = parser_getuint(p, "usable");
 	meth->player_usable = val ? true : false;
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_meth_ranged(struct parser *p)
+{
+	struct blow_method *meth = parser_priv(p);
+	int val;
+	
+	if (!meth) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	val = parser_getuint(p, "ranged");
+	meth->ranged = val ? true : false;
 	return PARSE_ERROR_NONE;
 }
 
@@ -415,6 +432,7 @@ static struct parser *init_parse_meth(void) {
 	parser_reg(p, "lash-type sym type", parse_meth_lash_type);
 	parser_reg(p, "power int power", parse_meth_power);
 	parser_reg(p, "player-usable uint usable", parse_meth_player_usable);
+	parser_reg(p, "ranged uint ranged", parse_meth_ranged);
 	return p;
 }
 

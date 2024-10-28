@@ -181,6 +181,7 @@ stun:0
 miss:0
 phys:0
 player-usable:1
+ranged:1
 msg:MON_SPIT
 act:spits on {target}
 fact:spit on
@@ -195,6 +196,7 @@ stun:0
 miss:0
 phys:0
 player-usable:1
+ranged:1
 msg:MON_GAZE
 act:gazes at {target}
 fact:gaze at
@@ -209,6 +211,7 @@ stun:0
 miss:0
 phys:0
 player-usable:1
+ranged:1
 msg:MON_WAIL
 act:wails at {target}
 fact:wail at
@@ -222,6 +225,7 @@ stun:0
 miss:0
 phys:0
 player-usable:1
+ranged:1
 msg:MON_SPORE
 act:releases spores at {target}
 fact:release spores at
@@ -249,6 +253,7 @@ stun:0
 miss:0
 phys:0
 player-usable:1
+ranged:1
 msg:MON_INSULT
 act:insults {target}!
 act:insults {oftarget} mother!
@@ -270,6 +275,7 @@ stun:0
 miss:0
 phys:0
 player-usable:1
+ranged:1
 msg:MON_MOAN
 act:wants his mushrooms back
 act:tells {target} to get off his land

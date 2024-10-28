@@ -57,6 +57,18 @@
  * to remove attacks or spells before using them. 
  */
 
+int monster_melee_attack_range(struct monster *mon)
+{
+	int ap_count;
+	for (ap_count = 0; ap_count < z_info->mon_blows_max; ++ap_count) {
+		struct blow_method *meth = mon->race->blow[ap_count].method;
+		if (!meth) return 0;
+		if (meth->ranged) break;
+	}
+
+	return mon->race->level / 25 + 2;
+}
+
 /**
  * Given the monster, *mon, and cave *c, set *dist to the distance to the
  * monster's target and *grid to the target's location.  Accounts for a player
@@ -66,21 +78,30 @@
 static void monster_get_target_dist_grid(struct monster *mon, int *dist,
 										 struct loc *grid)
 {
-	if (monster_is_decoyed(mon)) {
-		struct loc decoy = cave_find_decoy(cave);
-		if (dist) {
-			*dist = distance(mon->grid, decoy);
-		}
-		if (grid) {
-			*grid = decoy;
-		}
+	int who = mon->target.who;
+	struct loc targ_grid;
+	if (who == TARGET_WHO_PLAYER && monster_is_decoyed(mon)) {
+		targ_grid = cave_find_decoy(cave);
+	} else if (who == TARGET_WHO_PLAYER) {
+		targ_grid = player->grid;
+	} else if (who == TARGET_WHO_MONSTER) {
+		targ_grid = cave_monster(cave, mon->target.midx)->grid;
+	} else if (who == TARGET_WHO_OBJECT) {
+		targ_grid = cave->objects[mon->target.oidx]->grid;
+	} else if (who == TARGET_WHO_GRID) {
+		targ_grid = mon->target.grid;
 	} else {
-		if (dist) {
-			*dist = mon->cdis;
-		}
-		if (grid) {
-			*grid = player->grid;
-		}
+		targ_grid = mon->grid;
+	}
+
+	assert(square_in_bounds(cave, targ_grid));
+	assert(!loc_is_zero(targ_grid));
+
+	if (dist) {
+		*dist = distance(mon->grid, targ_grid);
+	}
+	if (grid) {
+		*grid = targ_grid;
 	}
 }
 
@@ -406,15 +427,33 @@ bool make_ranged_attack(struct monster *mon)
 	char m_name[80];
 	bool seen = (player->timed[TMD_BLIND] == 0) && monster_is_visible(mon);
 	bool innate = false;
+	int melee_dist = monster_melee_attack_range(mon);
+	int target_dist;
+	struct loc target_grid;
+
+	if (mon->target.who != TARGET_WHO_MONSTER && mon->target.who != TARGET_WHO_PLAYER) {
+		return false;
+	}
+
+	monster_get_target_dist_grid(mon, &target_dist, &target_grid);
 
 	/* Check for cast this turn, non-innate and then innate */
-	if (!monster_can_cast(mon, false)) {
-		if (!monster_can_cast(mon, true)) {
-			return false;
-		} else {
-			/* We're casting an innate "spell" */
-			innate = true;
+	// L: check for ranged melee attacks too
+	if (monster_can_cast(mon, false)) {
+		innate = false;
+	} else if (monster_can_cast(mon, true)) {
+		innate = true;
+	} else if (target_dist <= melee_dist) {
+		if (los(cave, mon->grid, target_grid)) {
+			if (mon->target.who == TARGET_WHO_MONSTER) {
+				struct monster *t_mon = cave_monster(cave, mon->target.midx);
+				return monster_attack_monster(mon, t_mon);
+			}
+			else if (mon->target.who == TARGET_WHO_PLAYER) {
+				return make_attack_normal(mon, player);
+			}
 		}
+		return false;
 	}
 
 	/* Extract the racial spell flags */
@@ -560,6 +599,8 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 	char m_name[80];
 	char ddesc[80];
 	bool blinked = false;
+	bool at_range = distance(mon->grid, player->grid) > 1;
+	bool did_attack = false;
 
 	/* Not allowed to attack */
 	if (rf_has(mon->race->flags, RF_NEVER_BLOW)) return (false);
@@ -588,8 +629,13 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 		/* No more attacks */
 		if (!method) break;
 
+		// L: only some attacks work at range
+		if (at_range && !method->ranged) continue;
+
 		/* Handle "leaving" */
 		if (p->is_dead || p->upkeep->generate_level) break;
+
+		did_attack = true;
 
 		/* Monster hits player */
 		assert(effect);
@@ -763,7 +809,7 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 	lore_update(mon->race, lore);
 
 	/* Assume we attacked */
-	return (true);
+	return did_attack;
 }
 
 /**
@@ -779,6 +825,8 @@ bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 	bool blinked = false;
 	struct loc grid = t_mon->grid;
 	struct loc mgrid = mon->grid;
+	bool at_range = distance(mon->grid, t_mon->grid) > 1;
+	bool did_attack = false;
 
 	/* Not allowed to attack */
 	if (rf_has(mon->race->flags, RF_NEVER_BLOW)) return (false);
@@ -802,6 +850,11 @@ bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 
 		/* No more attacks */
 		if (!method) break;
+
+		// L: not all attacks can be used at range
+		if (at_range && !method->ranged) continue;
+
+		did_attack = true;
 
 		/* Monster hits monster */
 		assert(effect);
@@ -911,5 +964,5 @@ bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 	lore_update(mon->race, lore);
 
 	/* Assume we attacked */
-	return (true);
+	return did_attack;
 }

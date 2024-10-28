@@ -115,6 +115,7 @@ int adj_mag_stat(int index);
 
 bool earlier_object(struct object *orig, struct object *new, bool store);
 int equipped_item_slot(struct player_body body, struct object *obj);
+void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX]);
 void calc_inventory(struct player *p);
 void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 				  bool update);

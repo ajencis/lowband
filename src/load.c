@@ -653,6 +653,7 @@ int rd_player(void)
 	int i;
 	uint8_t tmp8u, num;
 	uint8_t stat_max = 0;
+	uint32_t tmp32u;
 	char buf[80];
 	struct player_race *r;
 	struct player_shape *s;
@@ -679,7 +680,19 @@ int rd_player(void)
 	}
 
 	/* L: current monster */
-	rd_u16b(&player->curr_monster_ridx);
+	rd_u32b(&tmp32u);
+	if (tmp32u) {
+		if (tmp32u > z_info->r_max) {
+			note(format("Invalid monster race (%i).", tmp32u));
+			return -1;
+		}
+		player->curr_monster_race = mem_zalloc(sizeof(struct monster_race));
+		memcpy(player->curr_monster_race, &r_info[tmp32u], sizeof(*player->curr_monster_race));
+		rearrange_monster(player->curr_monster_race, true);
+	}
+	else {
+		player->curr_monster_race = NULL;
+	}
 
 	/* Player shape */
 	rd_string(buf, sizeof(buf));

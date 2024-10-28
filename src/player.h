@@ -139,9 +139,7 @@ enum {
 #define NOSCORE_BORG		0x0020
 #endif
 
-#define PY_MAX_ATTACKS 10
-
-#define MAX_RACE_MONSTERS 15
+#define PY_MAX_ATTACKS 15
 
 #define MAX_SPELL_SCHOOLS 3
 
@@ -237,7 +235,6 @@ struct player_race {
 
 	struct player_body *body;		/**< Race body */
 
-	int monsters[MAX_RACE_MONSTERS];		/**< L: monster equivalents */
 	struct evolution *evol;		/**< L: evolutions */
 
 	int r_adj[STAT_MAX];		/**< Stat bonuses */
@@ -275,7 +272,7 @@ struct attack_roll {
 	int attack_skill;	/* which skill it uses to decide accuracy */
 	int accuracy_stat;	/* stat that determines accuracy */
 	int damage_stat;	/* stat that determines damage */
-	const struct object *obj;	/* what weapon is it using */
+	struct object *obj;	/* what weapon is it using */
 };
 
 /**
@@ -533,6 +530,7 @@ struct player_state {
 	struct element_info el_info[ELEM_MAX];	/**< Resists from race and items */
 
 	int num_attacks;							/**< L: number of attacks they currently have available */
+	bool has_ranged_attack;						/**< L: whether they have a ranged attack */
 	struct attack_roll attacks[PY_MAX_ATTACKS];	/**< L: attacks they currently have available */
 	struct attack_roll ranged_attack;			/**< L: attack with shooter */
 
@@ -710,7 +708,7 @@ struct player {
 	struct player_state known_state;	/* What the player can know of the above */
 	struct player_upkeep *upkeep;		/* Temporary player-related values */
 
-	uint16_t curr_monster_ridx;			/* L: if the player is a monster */
+	struct monster_race *curr_monster_race;	/* L: if the player is a monster */
 
 	uint16_t extra_powers[PP_MAX];		/* L: if the player gained powers outside of their class */
 	uint16_t extra_skills[SKILL_MAX];	/* L: skills gained outside class/race */

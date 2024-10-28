@@ -1018,7 +1018,7 @@ static size_t prt_state(int row, int col)
 		else if (n == REST_SOME_POINTS)
 			text[5] = text[6] = text[7] = text[8] = text[9] = '!';
 
-	} else if (cmd_get_nrepeats()) {
+	} else if (cmd_get_nrepeats() > 0) {
 		int nrepeats = cmd_get_nrepeats();
 
 		if (nrepeats > 999)

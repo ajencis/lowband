@@ -1614,14 +1614,25 @@ void do_cmd_explore(struct command *cmd)
 	}
 
 	assert(!player->upkeep->steps);
+
+	player->upkeep->step_count = path_nearest_known(player, player->grid,
+			square_hasunknownitem, &player->upkeep->path_dest, &player->upkeep->steps);
+			
+	if (player->upkeep->step_count > 0) {
+		player->upkeep->running = player->upkeep->step_count;
+		/* Calculate torch radius */
+		player->upkeep->update |= (PU_TORCH);
+		run_step(0);
+		return;
+	}
+
 	player->upkeep->step_count = path_nearest_unknown(player, player->grid,
-		&player->upkeep->path_dest, &player->upkeep->steps);	
+		&player->upkeep->path_dest, &player->upkeep->steps);
 
 	if (count_neighbors(NULL, cave, player->grid, square_isknown, true) < 9) {
 		// don't keep exploring if we're not getting new knowledge
 		cmd_cancel_repeat();
 	}
-
 
 	if (count_neighbors(NULL, cave, player->upkeep->path_dest, square_isknown, true) >= 9) {
 		// don't keep exploring if we're not going anywhere new

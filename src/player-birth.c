@@ -152,7 +152,7 @@ static int birth_stat(struct player *p, int stat)
 	int use = p->stat_max_max[stat];
 	if (use > 18) use = (use - 18) / 10 + 18;
 	use -= p->race->r_adj[stat];
-	use += p->race->monsters[0] ? 0 : 1;
+	use += p->race->evol ? 0 : 1;
 
 	return MIN(p->stat_max_max[stat], use / 2 + 5);
 }
@@ -334,7 +334,8 @@ static void get_bonuses(void)
 	init_monsters();
 
 	/* L: check monster */
-	player->curr_monster_ridx = 0;
+	mem_free(player->curr_monster_race);
+	player->curr_monster_race = NULL;
 	check_player_monster(player, true, 0);
 
 	/* Calculate the bonuses and hitpoints */

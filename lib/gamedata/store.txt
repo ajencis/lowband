@@ -149,7 +149,7 @@ owner:10000:Mauser the Herbalist (Half-Elf)
 owner:10000:Wizzle the Chaotic (Hobbit)
 owner:15000:Ga-nat the Greedy (Gnome)
 owner:15000:Vella the Slender (Human)
-slots:3:6
+slots:2:6
 turnover:1
 normal:mushroom:Fast Recovery
 normal:mushroom:Clear Mind
@@ -212,8 +212,8 @@ owner:15000:The Dojo
 owner:20000:The Training Room
 owner:25000:The Gym
 owner:30000:The Pit
-slots:5:15
-turnover:1
+slots:0:1
+turnover:5
 normal:tome:Basic Tome
 normal:tome:Tome
 normal:tome:Advanced Tome

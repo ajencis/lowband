@@ -501,15 +501,15 @@ title:Lord
 
 ############### SKILLMASTER ###############
 name:Skillmaster
-skill-disarm-phys:5:5
-skill-disarm-magic:5:5
-skill-device:5:5
-skill-save:5:5
-skill-stealth:5:0
-skill-search:5:5
-skill-melee:5:5
-skill-shoot:5:5
-skill-throw:5:5
+skill-disarm-phys:10:0
+skill-disarm-magic:10:0
+skill-device:10:0
+skill-save:10:0
+skill-stealth:10:0
+skill-search:10:0
+skill-melee:10:0
+skill-shoot:10:0
+skill-throw:10:0
 skill-dig:0:0
 skill-magic:0:0
 hitdie:0

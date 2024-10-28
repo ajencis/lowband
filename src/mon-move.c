@@ -1058,9 +1058,6 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 	bool done = false;
 	bool attacking = false;
 
-	// check its objective before moving
-	mon_check_target(cave, mon);
-
 	/*
 	if (mon->target.who == TARGET_WHO_PLAYER)
 		target = monster_is_decoyed(mon) ? cave_find_decoy(cave) : player->grid;
@@ -1800,6 +1797,9 @@ static void monster_turn(struct monster *mon)
 		}
 	}
 
+	// L: check our target
+	mon_check_target(cave, mon);
+
 	/* Let other group monsters know about the player */
 	monster_group_rouse(cave, mon);
 
@@ -2014,18 +2014,18 @@ static void monster_reduce_sleep(struct monster *mon)
 		int stealth = player->state.skills[SKILL_STEALTH] / 5;
 		int local_noise = cave->noise.grids[mon->grid.y][mon->grid.x];
 		int local_smell = cave->scent.grids[mon->grid.y][mon->grid.x];
-		bool visible = monster_can_see_player(mon);
 		bool woke_up = false;
 		int curr = mon->m_timed[MON_TMD_SLEEP];
 		// L: monster wakes up faster if it's louder or they can smell but not if they can see
 		int distfact = MAX(0, 40 - local_noise * 2 - local_smell - stealth) / 4;
 		// L: sleep reduction increases exponentially
-		int16_t sred = 1 << MIN(14, distfact) / MAX(stealth + visible ? 1 : 11, 1);
+		int16_t sred = 1 << MIN(14, distfact) / MAX(stealth + 1, 1);
 
 		/* Note a complete wakeup */
 		/* L: also note getting close to wakeup */
 		if (curr <= sred) {
 			woke_up = true;
+			mon_check_target(cave, mon);
 		} else if (((curr & 0xf) < sred) &&
 		        (curr - sred <= 64) &&
 				monster_is_obvious(mon)) {

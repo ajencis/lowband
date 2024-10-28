@@ -25,6 +25,7 @@
 #include "mon-list.h"
 #include "mon-lore.h"
 #include "mon-make.h"
+#include "mon-move.h"
 #include "mon-msg.h"
 #include "mon-predicate.h"
 #include "mon-spell.h"
@@ -55,8 +56,6 @@ void mark_mon_as_playable(struct monster_race *mr)
 	if (!mr || !mr->evol || !mr->evol->race) return;
 
 	struct evolution *me;
-	
-	mr->is_playable = true;
 
 	for (me = mr->evol; me && me->race; me = me->next) {
 		mark_mon_as_playable(me->race);
@@ -707,6 +706,7 @@ void monster_wake(struct monster *mon, bool notify, int aware_chance)
 	if (randint0(100) < aware_chance) {
 		mflag_on(mon->mflag, MFLAG_AWARE);
 	}
+	mon_check_target(cave, mon);
 }
 
 /**
@@ -1779,9 +1779,10 @@ static bool race_has_drops(struct monster_race *mr)
 	return false;
 }
 
-static void rearrange_monster(struct monster_race *mr)
+void rearrange_monster(struct monster_race *mr, bool is_player)
 {
-	int power = mr->level + randint0(mr->level / 5 + 1) - randint0(mr->level / 5 + 1);
+	int power = mr->level;
+	if (!is_player) power += randint0(mr->level / 5 + 1) - randint0(mr->level / 5 + 1);
 	int blows = 0;
 	bool mspells = false, breaths = false;
 	int ttdam, tdice, quo; // twice total dam
@@ -1807,8 +1808,9 @@ static void rearrange_monster(struct monster_race *mr)
 	maxtotal = power * 5 + 2;
 
 	// randomize different abilities
-	if (mr->is_playable) dam = hp = ac = spe = mag = power;
-	else {
+	if (is_player) {
+		dam = hp = ac = spe = mag = power;
+	} else {
 		dam = randint0(power * 3 / 2 + 2) + randint0(power / 2);
 		hp  = randint0(power * 3 / 2 + 2) + randint0(power / 2);
 		ac  = randint0(power * 3 / 2 + 2) + randint0(power / 2);
@@ -1877,9 +1879,13 @@ static void rearrange_monster(struct monster_race *mr)
 	mr->mexp = power * power;
 
 	// spread damage over its damaging blows
-	quo = blows;
+	quo = 0;
+	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
+		quo += 5 + mr->blow[i].method->power;
+	}
 	// gets a total number of dice for its attacks based on its level and number of attacks
-	tdice = power * (blows + 1) / 25 + 1;
+	tdice = dam * (blows + 1) / 25 + 1;
+
 	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
 		cblow = &mr->blow[i];
 		int fact = 5 + cblow->method->power;
@@ -1912,7 +1918,7 @@ void rearrange_monsters(struct monster_race *mraces, uint32_t seed)
 	for (curr = mraces; curr; curr = curr->next) {
 		if (curr->base == pbase) continue;
 		if (curr->level <= 0) continue;
-		rearrange_monster(curr);
+		rearrange_monster(curr, false);
 
 		// most monsters will pick up items
 		if (race_has_drops(curr)) {

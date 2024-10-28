@@ -18,6 +18,7 @@
  */
 
 #include "angband.h"
+#include "player-calcs.h"
 #include "player-properties.h"
 #include "player-util.h"
 #include "ui-input.h"
@@ -124,6 +125,8 @@ static void add_scaling_desc(char *buf, const char *name, int base, int scale, i
 static void view_ability_menu_browser(int oid, void *data, const region *loc)
 {
 	struct player_ability *choices = data;
+	int monster_powers[PP_MAX] = { 0 };
+	struct monster_race *mrace = lookup_player_monster(player);
 
 	/* Redirect output to the screen */
 	text_out_hook = text_out_to_screen;
@@ -134,12 +137,15 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 	/* L: more info for powers and skills */
 	char extra[128];
 	extra[0] = '\0';
+	if (mrace) {
+		calc_monster_powers(mrace, monster_powers);
+	}
 	if (choices[oid].group == PLAYER_FLAG_POWER || choices[oid].group == PLAYER_FLAG_SKILL) {
 		int cbase, cxtra, rbase, rxtra, tome;
 		if (choices[oid].group == PLAYER_FLAG_POWER) {
 			cbase = 0;
 			cxtra = player_class_power(player, choices[oid].index);
-			rbase = 0;
+			rbase = monster_powers[choices[oid].index];
 			rxtra = player->race->r_powers[choices[oid].index];
 			tome = player->extra_powers[choices[oid].index] / 2;
 		}
@@ -197,7 +203,7 @@ void textui_view_ability_menu(struct player_ability *ability_list,
 
 	/* Prompt choices */
 	strnfmt(buf, sizeof(buf),
-		"Race and class abilities (%c-%c, ESC=exit): ",
+		"Abilities, powers, and skills (%c-%c, ESC=exit): ",
 		all_letters_nohjkl[0], all_letters_nohjkl[num_abilities - 1]);
 
 	/* Set up the menu */

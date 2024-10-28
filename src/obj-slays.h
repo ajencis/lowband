@@ -35,7 +35,7 @@ bool player_has_temporary_brand(const struct player *p, int idx);
 bool player_has_temporary_slay(const struct player *p, int idx);
 int get_monster_brand_multiplier(const struct monster *mon,
 	const struct brand *b, bool is_o_combat);
-void improve_attack_modifier(struct player *p, struct object *obj,
+void improve_attack_modifier(struct player *p, const struct object *obj,
 	const struct monster *mon, int *brand_used, int *slay_used, char *verb,
 	bool range);
 bool react_to_slay(struct object *obj, const struct monster *mon);

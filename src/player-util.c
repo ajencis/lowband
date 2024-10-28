@@ -81,8 +81,7 @@ static const int tome_factors[] = {
  */
 struct monster_race *lookup_player_monster(const struct player *p)
 {
-	if (!p->curr_monster_ridx) return NULL;
-	return &r_info[p->curr_monster_ridx];
+	return p->curr_monster_race;
 }
 
 static void change_player_body(struct player *p, struct player_body *new)
@@ -156,14 +155,20 @@ static void change_player_body(struct player *p, struct player_body *new)
 static void change_player_monster(struct player *p, struct monster_race *mon, bool init)
 {
 	assert(mon);
-	if (!init)
+	disturb(p);
+	if (!init) {
 		msg("You transform into a%s %s.", is_a_vowel(mon->name[0]) ? "n" : "", mon->name);
+	}
 
 	if (!init && mon->body && !streq(mon->body->name, p->body.name)) {
 		change_player_body(p, mon->body);
 	}
 
-	p->curr_monster_ridx = mon->ridx;
+	mem_free(p->curr_monster_race);
+	p->curr_monster_race = mem_zalloc(sizeof(struct monster_race));
+	memcpy(p->curr_monster_race, mon, sizeof(*p->curr_monster_race));
+	rearrange_monster(p->curr_monster_race, true);
+
 	player->upkeep->redraw |= (PR_MAP | PR_MISC);
 	player->upkeep->update |= (PU_BONUS | PU_HP);
 }
@@ -181,14 +186,16 @@ bool check_player_monster(struct player *p, bool init, int xp)
 		e = curr->evol;
 	}
 	else {
-		// double the level if we haven't evolved yet but only
-		// up to the first evolution
-		maxlev = MAX(2, p->lev);
+		/* double the level if we haven't evolved yet but only
+		   up to the first evolution */
+		maxlev = MAX(4, p->lev);
 		int minevolev = 0;
 		bool found = false;
 		for (e = p->race->evol; e; e = e->next) {
-			if (!found || minevolev < e->race->level)
+			if (!found || minevolev < e->race->level) {
 				minevolev = e->race->level;
+				found = true;
+			}
 		}
 		if (found) maxlev += MIN(minevolev, maxlev);
 
@@ -208,8 +215,8 @@ bool check_player_monster(struct player *p, bool init, int xp)
 	}
 
 	if (selected && (!init || numevols <= 1)) {
-
-		uint32_t chance = (((uint32_t)1) << MIN(20, MAX(selected->level / 5, 1))) * 125 / 4;
+		uint32_t chance = (uint32_t)(selected->level * selected->level) + 50;
+		//uint32_t chance = (((uint32_t)1) << MIN(20, MAX(selected->level / 5, 1))) * 125 / 4;
 		assert(chance <= 0x10000000);
 		int32_t roll = randint0(chance);
 
@@ -219,7 +226,6 @@ bool check_player_monster(struct player *p, bool init, int xp)
 						is_a_vowel(selected->name[0]) ? "n" : "",
 						selected->name)))) {
 
-			disturb(p);
 			change_player_monster(p, selected, init);
 
 			if (!init) {
@@ -287,31 +293,36 @@ bool player_increase_stat(struct player *p)
 	return false;
 }
 
-int get_power_scale(struct player *p, int power, int scaleto, int scaling)
+int get_power_scale_state(struct player_state *ps, int power, int scaleto, int scaling, int level)
 {
 	assert(power > 0 && power < PP_MAX);
 
-	if (p->state.powers[power] <= 0) return 0;
+	if (ps->powers[power] <= 0) return 0;
 
 	// scale linearly by power level then adjust by character level so value
 	// of increasing your power is linear
 	double efflev, div;
 	if (scaling == PP_SCALE_LINEAR) {
-		efflev = (double)p->state.powers[power];
+		efflev = (double)ps->powers[power];
 		div = (double)50;
 	}
 	else if (scaling == PP_SCALE_SQUARE) {
-		efflev = (double)p->state.powers[power] * p->lev;
+		efflev = (double)ps->powers[power] * level;
 		div = (double)50 * 50;
 	}
 	else if (scaling == PP_SCALE_SQRT) {
-		efflev = (double)p->state.powers[power] / my_sqrt((double)p->lev);
+		efflev = (double)ps->powers[power] / my_sqrt((double)level);
 		div = (double)50 / my_sqrt((double)50);
 	}
 
 	int result = (int)((efflev * scaleto + div * 2 / 3) / div);
 
 	return MAX(result, 0);
+}
+
+int get_power_scale(struct player *p, int power, int scaleto, int scaling)
+{
+	return get_power_scale_state(&p->state, power, scaleto, scaling, p->lev);
 }
 
 
@@ -447,6 +458,8 @@ static bool learn_extra(struct player *p, int index)
 
 	p->upkeep->update |= PU_BONUS;
 	p->upkeep->redraw |= PR_STATUS;
+
+	disturb(p);
 
 	return true;
 }
@@ -1800,12 +1813,11 @@ bool player_can_read(const struct player *p, bool show_msg)
  */
 bool player_can_fire(struct player *p, bool show_msg)
 {
-	struct object *obj = slot_object(p, slot_by_type(p, EQUIP_BOW, true));
-
-	/* Require a usable launcher */
-	if (!obj || !p->state.ammo_tval) {
-		if (show_msg)
+	// L: keep track of this when calcing bonuses
+	if (!p->state.has_ranged_attack) {
+		if (show_msg) {
 			msg("You have nothing to fire with.");
+		}
 		return false;
 	}
 
@@ -2243,8 +2255,8 @@ void player_handle_post_move(struct player *p, bool eval_trap,
 void disturb(struct player *p)
 {
 	/* Cancel repeated commands */
-	//cmd_cancel_repeat();
-	cmdq_flush();
+	cmd_cancel_repeat();
+	//cmdq_flush();
 
 	/* Cancel Resting */
 	if (player_is_resting(p)) {

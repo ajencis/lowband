@@ -549,6 +549,7 @@ void player_cleanup_members(struct player *p)
 		cave_free(p->cave);
 		p->cave = NULL;
 	}
+	mem_free(p->curr_monster_race);
 }
 
 

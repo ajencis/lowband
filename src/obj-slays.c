@@ -347,7 +347,7 @@ int get_monster_brand_multiplier(const struct monster *mon,
  * \param verb is the verb used in the attack ("smite", etc)
  * \param range is whether or not this is a ranged attack
  */
-void improve_attack_modifier(struct player *p, struct object *obj,
+void improve_attack_modifier(struct player *p, const struct object *obj,
 	const struct monster *mon, int *brand_used, int *slay_used,
 	char *verb, bool range)
 {

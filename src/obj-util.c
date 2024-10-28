@@ -977,6 +977,16 @@ bool obj_can_fail(const struct object *o)
 }
 
 
+bool obj_is_unvisited(const struct object *o)
+{
+	if (o->notice & OBJ_NOTICE_IGNORE) return false;
+	if (tval_is_money(o)) return true;
+	if (!(o->notice & OBJ_NOTICE_ASSESSED)) return true;
+
+	return false;
+}
+
+
 /**
  * Failure rate for magic devices.
  * This has been rewritten for 4.2.3 following the discussions in the thread

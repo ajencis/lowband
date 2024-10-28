@@ -72,6 +72,7 @@ bool obj_is_useable(const struct object *obj);
 struct effect *object_effect(const struct object *obj);
 bool obj_needs_aim(const struct object *obj);
 bool obj_can_fail(const struct object *o);
+bool obj_is_unvisited(const struct object *o);
 
 int get_use_device_chance(const struct object *obj);
 void distribute_charges(struct object *source, struct object *dest, int amt);

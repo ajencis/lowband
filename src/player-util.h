@@ -64,6 +64,7 @@ struct monster_race *lookup_player_monster(const struct player *p);
 bool check_player_monster(struct player *p, bool init, int xp);
 void player_race_name(struct player *p, char *buf, size_t bufsize);
 bool player_increase_stat(struct player *p);
+int get_power_scale_state(struct player_state *ps, int power, int scaleto, int scaling, int level);
 int get_power_scale(struct player *p, int power, int scaleto, int scaling);
 void calc_extra_points(struct player *p, struct player_state *ps);
 bool check_learn_powers(struct player *p, int xpgain);

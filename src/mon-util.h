@@ -56,6 +56,7 @@ struct object *get_random_monster_object(struct monster *mon);
 void steal_monster_item(struct monster *mon, int midx);
 bool monster_change_shape(struct monster *mon);
 bool monster_revert_shape(struct monster *mon);
+void rearrange_monster(struct monster_race *mr, bool is_player);
 void rearrange_monsters(struct monster_race *mraces, uint32_t seed);
 
 #endif /* MONSTER_UTILITIES_H */

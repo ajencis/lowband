@@ -410,6 +410,16 @@ bool square_ismemorybad(struct chunk *c, struct loc grid) {
 		|| square(player->cave, grid)->feat != square(cave, grid)->feat;
 }
 
+bool square_hasunknownitem(struct chunk *c, struct loc grid)
+{
+	assert(square_in_bounds(c, grid));
+	struct object *obj;
+	for (obj = square(player->cave, grid)->obj; obj; obj = obj->next) {
+		if (obj_is_unvisited(obj)) return true;
+	}
+	return false;
+}
+
 /**
  * SQUARE INFO PREDICATES
  *

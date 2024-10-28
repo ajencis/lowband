@@ -30,5 +30,6 @@ bool check_hit(struct player *p, int to_hit);
 int adjust_dam_armor(int damage, int ac);
 bool make_attack_normal(struct monster *mon, struct player *p);
 bool monster_attack_monster(struct monster *mon, struct monster *t_mon);
+int monster_melee_attack_range(struct monster *mon);
 
 #endif /* !MONSTER_ATTACK_H */

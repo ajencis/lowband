@@ -321,6 +321,7 @@ bool square_isno_esp(struct chunk *c, struct loc grid);
 bool square_isproject(struct chunk *c, struct loc grid);
 bool square_isdtrap(struct chunk *c, struct loc grid);
 bool square_isno_stairs(struct chunk *c, struct loc grid);
+bool square_hasunknownitem(struct chunk *c, struct loc grid);
 
 /* SQUARE BEHAVIOR PREDICATES */
 bool square_isopen(struct chunk *c, struct loc grid);

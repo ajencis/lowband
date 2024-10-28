@@ -346,7 +346,7 @@ struct evolution {
 struct monster_race {
 	struct monster_race *next;
 
-	unsigned int ridx;
+	uint32_t ridx;
 
 	char *name;
 	char *text;
@@ -395,7 +395,6 @@ struct monster_race {
 	struct monster_shape *shapes;
 	int num_shapes;
 
-	bool is_playable;			/* L: can players be one of these potentially */
 	char *short_name;			/* L: if we need to display the name in fewer (than 13) characters */
 	struct player_body *body;	/* L: its body if it's a player */
 
