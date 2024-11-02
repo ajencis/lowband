@@ -3540,6 +3540,17 @@ bool effect_handler_COMMAND(effect_handler_context_t *context)
 	return true;
 }
 
+bool effect_handler_TRANSFORM(effect_handler_context_t *context)
+{
+	int ridx = context->other;
+	assert(ridx >= 0 && ridx < z_info->r_max);
+	struct monster_race *monr = &r_info[ridx];
+
+	change_player_monster(player, monr, false);
+
+	return true;
+}
+
 /**
  * One Ring activation
  */

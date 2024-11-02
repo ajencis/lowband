@@ -46,7 +46,8 @@ struct blow_method {
 	int lash_type;			/* L: the damage type it does normally */
 	int power;				/* L: how much damage it does relative to other methods */
 	bool player_usable;		/* L: can the player use it? */
-	bool ranged;			/* L: can the monster do it at range? */
+	int range;				/* L: can the monster do it at range? */
+	bool unarmed;			/* L: is it equivalent to an unarmed attack? */
 };
 
 extern struct blow_method *blow_methods;

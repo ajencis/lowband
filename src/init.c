@@ -262,6 +262,7 @@ static enum parser_error write_book_kind(struct class_book *book,
 	/* Copy the tval and base */
 	kind->tval = book->tval;
 	kind->base = &kb_info[kind->tval];
+	assert(kind->base);
 
 	/* Make the name and index */
 	kind->name = string_make(name);
@@ -321,6 +322,7 @@ static enum parser_error write_gener_book_kind(struct player_spell *spell)
 	/* Copy the tval and base */
 	kind->tval = TV_BOOK;
 	kind->base = &kb_info[kind->tval];
+	assert(kind->base);
 	
 	kind->name = string_make(spell->name);
 	kind->kidx = z_info->k_max - 1;
@@ -3554,6 +3556,29 @@ static enum parser_error parse_spell_effect_yx(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_spell_effect_monster(struct parser *p) {
+	struct player_spell *s = parser_priv(p);
+	struct effect *effect;
+	const char *mon_name;
+
+	/* If there is no effect, assume that this is human and not parser error. */
+	effect = s->effect;
+	if (effect == NULL) {
+		return PARSE_ERROR_NONE;
+	}
+	while (effect->next) effect = effect->next;
+
+	mon_name = parser_getstr(p, "mon-name");
+
+	if (!mon_name) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	effect->monster = string_make(mon_name);
+
+	return PARSE_ERROR_NONE;
+}
+
 static enum parser_error parse_spell_dice(struct parser *p) {
 	struct player_spell *s = parser_priv(p);
 	struct effect *effect;
@@ -3686,6 +3711,7 @@ static struct parser *init_parse_spell(void) {
 	parser_reg(p, "spell sym name int level int mana int fail", parse_spell_name);
 	parser_reg(p, "effect sym eff ?sym type ?int radius ?int other", parse_spell_effect);
 	parser_reg(p, "effect-yx int y int x", parse_spell_effect_yx);
+	parser_reg(p, "monster str mon-name", parse_spell_effect_monster);
 	parser_reg(p, "dice str dice", parse_spell_dice);
 	parser_reg(p, "expr sym name sym base str expr", parse_spell_expr);
 	parser_reg(p, "effect-msg str text", parse_spell_effect_msg);
@@ -3704,7 +3730,10 @@ static errr finish_parse_spell(struct parser *p) {
 	struct player_spell *ps;
 
 	for (ps = spells; ps; ps = ps->next) {
-		write_gener_book_kind(ps);
+		errr error = write_gener_book_kind(ps);
+		if (error != PARSE_ERROR_NONE) {
+			return error;
+		}
 	}
 	
 	return 0;
@@ -4755,6 +4784,7 @@ static errr run_parse_flavor(struct parser *p) {
 static errr finish_parse_flavor(struct parser *p) {
 	flavors = parser_priv(p);
 	parser_destroy(p);
+
 	return 0;
 }
 
@@ -4859,25 +4889,25 @@ static struct {
 	{ "brands", &brand_parser },
 	{ "monster pain messages", &pain_parser },
 	{ "bodies", &body_parser },
-	{ "monster bases", &mon_base_parser }, /* L: must be after bodies */
+	{ "monster bases", &mon_base_parser }, // L: must be after bodies
 	{ "summons", &summon_parser },
 	{ "curses", &curse_parser },
 	{ "player shapes", &shape_parser },
-	{ "objects", &object_parser },
+	{ "objects", &object_parser }, // L: must be after player shapes
+	{ "player spells", &spell_parser }, // L: must be after objects
+	{ "magic realms", &realm_parser },
+	{ "player classes", &class_parser }, // L: must be after spells and realms
 	{ "activations", &act_parser },
 	{ "ego-items", &ego_parser },
 	{ "history charts", &history_parser },
-	{ "magic realms", &realm_parser },
-	{ "player spells", &spell_parser },
-	{ "player classes", &class_parser },
 	{ "artifacts", &artifact_parser },
 	{ "object properties", &object_property_parser },
 	{ "timed effects", &player_timed_parser },
 	{ "blow methods", &meth_parser },
 	{ "blow effects", &eff_parser },
 	{ "monster spells", &mon_spell_parser },
-	{ "monsters", &monster_parser },
-	{ "player races", &p_race_parser }, /* L: must be after monsters */
+	{ "monsters", &monster_parser }, // L: must be after player spells
+	{ "player races", &p_race_parser }, // L: must be after monsters
 	{ "monster pits" , &pit_parser },
 	{ "monster lore" , &lore_parser },
 	{ "traps", &trap_parser },
@@ -4982,9 +5012,11 @@ bool init_angband(void)
 	init_game_constants();
 
 	/* Initialise modules */
-	for (i = 0; modules[i]; i++)
-		if (modules[i]->init)
+	for (i = 0; modules[i]; i++) {
+		if (modules[i]->init) {
 			modules[i]->init();
+		}
+	}
 
 	/* Initialize some other things */
 	event_signal_message(EVENT_INITSTATUS, 0, "Initializing other stuff...");
@@ -4996,6 +5028,14 @@ bool init_angband(void)
 	/* Initialise RNG */
 	event_signal_message(EVENT_INITSTATUS, 0, "Getting the dice rolling...");
 	Rand_init();
+
+	for (i = 0; i < z_info->r_max; i++) {
+		struct monster_mimic *mm;
+		for (mm = r_info[i].mimic_kinds; mm; mm = mm->next) {
+			assert(mm->kind);
+			assert(mm->kind->kidx < z_info->k_max * 2);
+		}
+	}
 
 	return true;
 }

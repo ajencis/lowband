@@ -210,6 +210,8 @@ static enum parser_error parse_meth_name(struct parser *p) {
 	meth->name = string_make(name);
 	meth->skill = SKILL_TO_HIT_MELEE;
 	meth->lash_type = PROJ_BLUDGEONING;
+	meth->range = 1;
+	meth->unarmed = false;
 
 	return PARSE_ERROR_NONE;
 }
@@ -251,6 +253,16 @@ static enum parser_error parse_meth_phys(struct parser *p) {
 
 	val = parser_getuint(p, "phys");
 	meth->phys = val ? true : false;
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_meth_unarmed(struct parser *p) {
+	struct blow_method *meth = parser_priv(p);
+	int val;
+	assert(meth);
+
+	val = parser_getuint(p, "unarmed");
+	meth->unarmed = val ? true : false;
 	return PARSE_ERROR_NONE;
 }
 
@@ -411,7 +423,7 @@ static enum parser_error parse_meth_ranged(struct parser *p)
 	}
 
 	val = parser_getuint(p, "ranged");
-	meth->ranged = val ? true : false;
+	meth->range = val;
 	return PARSE_ERROR_NONE;
 }
 
@@ -423,6 +435,7 @@ static struct parser *init_parse_meth(void) {
 	parser_reg(p, "stun uint stun", parse_meth_stun);
 	parser_reg(p, "miss uint miss", parse_meth_miss);
 	parser_reg(p, "phys uint phys", parse_meth_phys);
+	parser_reg(p, "unarmed uint unarmed", parse_meth_unarmed);
 	parser_reg(p, "msg ?str msg", parse_meth_message_type);
 	parser_reg(p, "act str act", parse_meth_act_msg);
 	parser_reg(p, "fact str fact", parse_meth_fact_msg);
@@ -2117,6 +2130,7 @@ static errr finish_parse_monster(struct parser *p) {
 	struct monster_race *r, *n;
 	size_t i;
 	int ridx;
+	struct player_spell *ps;
 
 	/* Scan the list for the max id and max blows */
 	z_info->r_max = 0;
@@ -2220,6 +2234,20 @@ static errr finish_parse_monster(struct parser *p) {
 			}
 			string_free(e->name);
 			e->name = NULL;
+		}
+	}
+
+	// L: turn spell effect monster names into ids
+	for (ps = spells; ps; ps = ps->next) {
+		struct effect *e;
+		for (e = ps->effect; e; e = e->next) {
+			if (e->monster) {
+				struct monster_race *mr = lookup_monster(e->monster);
+				assert(mr);
+				e->other = mr->ridx;
+				string_free(e->monster);
+				e->monster = NULL;
+			}
 		}
 	}
 

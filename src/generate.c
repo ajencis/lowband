@@ -1126,7 +1126,6 @@ static struct chunk *cave_generate(struct player *p, int height, int width)
 			dun->persist = false;
 		}
 
-
 		/* Choose a profile and build the level */
 		dun->profile = choose_profile(p);
 		event_signal_string(EVENT_GEN_LEVEL_START, dun->profile->name);
@@ -1522,7 +1521,6 @@ void prepare_next_level(struct player *p)
 		if (persist) {
 			cave_illuminate(cave, is_daytime());
 		}
-
 	}
 
 	/* The dungeon is ready */

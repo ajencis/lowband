@@ -842,6 +842,8 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 
 	/* Clean slate */
 	memset(obj, 0, sizeof(*obj));
+	assert(k);
+	assert(k->base); 
 
 	/* Assign the kind and copy across data */
 	obj->kind = k;
@@ -862,12 +864,14 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 	of_copy(obj->flags, k->flags);
 
 	/* Assign modifiers */
-	for (i = 0; i < OBJ_MOD_MAX; i++)
+	for (i = 0; i < OBJ_MOD_MAX; i++) {
 		obj->modifiers[i] = randcalc(k->modifiers[i], lev, rand_aspect);
-
+	}
+	
 	/* Assign charges (wands/staves only) */
-	if (tval_can_have_charges(obj))
+	if (tval_can_have_charges(obj)) {
 		obj->pval = randcalc(k->charge, lev, rand_aspect);
+	}
 
 	else if (of_has(obj->kind->flags, OF_POWER_LEARN_5) ||
 			 of_has(obj->kind->flags, OF_POWER_LEARN_4) ||
@@ -887,13 +891,14 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 	}
 
 	/* Assign pval for food, oil and launchers */
-	if (tval_is_edible(obj) || tval_is_potion(obj) || tval_is_fuel(obj) ||
-		tval_is_launcher(obj))
+	else if (tval_is_edible(obj) || tval_is_potion(obj) || tval_is_fuel(obj) ||
+		tval_is_launcher(obj)) {
 		obj->pval
 			= randcalc(k->pval, lev, rand_aspect);
+	}
 
 	/* Default fuel */
-	if (tval_is_light(obj)) {
+	else if (tval_is_light(obj)) {
 		if (of_has(obj->flags, OF_BURNS_OUT))
 			obj->timeout = z_info->fuel_torch;
 		else if (of_has(obj->flags, OF_TAKES_FUEL))
@@ -1029,8 +1034,9 @@ int apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 	} else if (tval_is_ring(obj)) {
 		if (obj->sval == lookup_sval(obj->tval, "Speed")) {
 			/* Super-charge the ring */
-			while (one_in_(2))
+			while (one_in_(2)) {
 				obj->modifiers[OBJ_MOD_SPEED]++;
+			}
 		}
 	} else if (tval_is_chest(obj)) {
 		/* Get a random, level-dependent set of chest traps */
@@ -1340,14 +1346,15 @@ struct object_kind *money_kind(const char *name, int value)
 struct object *make_gold(int lev, const char *coin_type)
 {
 	/* This average is 16 at dlev0, 80 at dlev40, 176 at dlev100. */
-	int avg = (16 * lev)/10 + 16;
+	int avg = (int)(16 * lev * my_sqrt((double)lev) / 10) + 16;
 	int spread = lev + 10;
 	int value = rand_spread(avg, spread);
 	struct object *new_gold = mem_zalloc(sizeof(*new_gold)); 
 
 	/* Increase the range to infinite, moving the average to 110% */
-	while (one_in_(100) && value * 10 <= SHRT_MAX)
-		value *= 10;
+	while (one_in_(10) && value * 2 <= SHRT_MAX) {
+		value += (value + 1) / 2;
+	}
 
 	/* Prepare a gold object */
 	object_prep(new_gold, money_kind(coin_type, value), lev, RANDOMISE);

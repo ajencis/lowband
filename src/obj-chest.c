@@ -261,6 +261,7 @@ static errr run_parse_chest_trap(struct parser *p) {
 
 static errr finish_parse_chest_trap(struct parser *p) {
 	parser_destroy(p);
+
 	return 0;
 }
 

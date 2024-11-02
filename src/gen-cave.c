@@ -79,19 +79,6 @@
 
 
 /**
- * L: Get alterations to size for earlier levels
- * uses a very basic sqrt
- */
-static int sqrt_size_percent(int depth)
-{
-	int i;
-	int target = 33 + depth * 67 / 100;
-	for (i = 33; i*i < target*100 && i < 100; i++) {};
-	return i;
-}
-
-
-/**
  * Check whether a square has one of the tunnelling helper flags
  * \param c is the current chunk
  * \param y are the co-ordinates
@@ -1152,21 +1139,12 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	int i, j, k;
 	int by, bx = 0, tby, tbx, key, rarity, built;
 	int num_rooms;
-	int ssp = sqrt_size_percent(p->depth);
+	int sp = p->depth / 2 + 50;
+	int ssp = (int)my_sqrt((float)(sp * 100));
 	int dun_unusual = dun->profile->dun_unusual;
 
 	bool **blocks_tried;
 	struct chunk *c;
-
-	/* This code currently does nothing - see comments below */
-	/*i = randint1(10) + p->depth / 24;
-	if (dun->quest) size_percent = 100;
-	else if (i < 2) size_percent = 75;
-	else if (i < 3) size_percent = 80;
-	else if (i < 4) size_percent = 85;
-	else if (i < 5) size_percent = 90;
-	else if (i < 6) size_percent = 95;
-	else size_percent = 100;*/
 
 	/* scale the various generation variables */
 	num_rooms = dun->profile->dun_rooms;
@@ -1211,7 +1189,6 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	 * and room generation is always terminated by having tried all blocks */
 	built = 0;
 	while(built < num_rooms) {
-
 		/* Count the room blocks we haven't tried yet. */
 		j = 0;
 		tby = 0;
@@ -1224,7 +1201,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 					tby = by;
 					tbx = bx;
 				}
-			} 
+			}
 		}
 		bx = tbx;
 		by = tby;
@@ -1258,8 +1235,12 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 		 * a room that we can build successfully or we exhaust the profiles. */
 		for (i = 0; i < dun->profile->n_room_profiles; i++) {
 			struct room_profile profile = dun->profile->room_profiles[i];
-			if (profile.rarity > rarity) continue;
-			if (profile.cutoff <= key) continue;
+			if (profile.rarity > rarity)  {
+				continue;
+			}
+			if (profile.cutoff <= key) {
+				continue;
+			}
 			
 			if (room_build(c, by, bx, profile, false)) {
 				built++;
@@ -1268,7 +1249,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 		}
 	}
 
-	for (i = 0; i < dun->row_blocks; i++){
+	for (i = 0; i < dun->row_blocks; i++) {
 		mem_free(blocks_tried[i]);
 		mem_free(dun->room_map[i]);
 	}
@@ -1314,7 +1295,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	}
 
 	/* Pick a base number of monsters */
-	i = (z_info->level_monster_min + randint1(8) + k) * ssp / 100;
+	i = (z_info->level_monster_min + randint1(8) + k) * sp / 100;
 
 	/* Put some monsters in the dungeon */
 	for (; i > 0; i--) {
@@ -1323,13 +1304,13 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 
 	/* Put some objects in rooms */
 	alloc_objects(c, SET_ROOM, TYP_OBJECT,
-		Rand_normal(z_info->room_item_av * ssp / 100, 3), c->depth, ORIGIN_FLOOR);
+		Rand_normal(z_info->room_item_av * sp / 100, 3), c->depth, ORIGIN_FLOOR);
 
 	/* Put some objects/gold in the dungeon */
 	alloc_objects(c, SET_BOTH, TYP_OBJECT,
-		Rand_normal(z_info->both_item_av * ssp / 100, 3), c->depth, ORIGIN_FLOOR);
+		Rand_normal(z_info->both_item_av * sp / 100, 3), c->depth, ORIGIN_FLOOR);
 	alloc_objects(c, SET_BOTH, TYP_GOLD,
-		Rand_normal(z_info->both_gold_av * ssp / 100, 3), c->depth, ORIGIN_FLOOR);
+		Rand_normal(z_info->both_gold_av * sp / 100, 3), c->depth, ORIGIN_FLOOR);
 
 	return c;
 }
@@ -2181,7 +2162,7 @@ struct chunk *cavern_gen(struct player *p, int min_height, int min_width,
 {
 	int i, k;
 
-	int ssp = sqrt_size_percent(p->depth);
+	int ssp = (int)(my_sqrt(p->depth) * 5) + 50;
 	int avgh = z_info->dungeon_hgt * ssp / 100;
 	int avgw = z_info->dungeon_wid * ssp / 100;
 
@@ -2890,17 +2871,7 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 	int size_percent, y_size, x_size;
 	struct chunk *c;
 
-	/* Scale the level */
-	/*i = randint1(10) + p->depth / 24;
-	if (dun->quest) size_percent = 100;
-	else if (i < 2) size_percent = 75;
-	else if (i < 3) size_percent = 80;
-	else if (i < 4) size_percent = 85;
-	else if (i < 5) size_percent = 90;
-	else if (i < 6) size_percent = 95;
-	else size_percent = 100;*/
-
-	size_percent = sqrt_size_percent(p->depth);
+	size_percent = (int)(my_sqrt(p->depth) * 5) + 50;
 	y_size = z_info->dungeon_hgt * size_percent / 100;
 	x_size = z_info->dungeon_wid * size_percent / 100;
 
@@ -3130,16 +3101,7 @@ struct chunk *moria_gen(struct player *p, int min_height, int min_width,
 	int size_percent, y_size, x_size;
 	struct chunk *c;
 
-	/* Scale the level */
-	/*i = randint1(10) + p->depth / 24;
-	if (dun->quest) size_percent = 100;
-	else if (i < 2) size_percent = 75;
-	else if (i < 3) size_percent = 80;
-	else if (i < 4) size_percent = 85;
-	else if (i < 5) size_percent = 90;
-	else if (i < 6) size_percent = 95;
-	else size_percent = 100;*/
-    size_percent = sqrt_size_percent(p->depth);
+    size_percent = (int)(my_sqrt(p->depth) * 5) + 50;
 
 	y_size = z_info->dungeon_hgt * (size_percent - 5 + randint0(10)) / 100;
 	x_size = z_info->dungeon_wid * (size_percent - 5 + randint0(10)) / 100;
@@ -3570,7 +3532,7 @@ struct chunk *lair_gen(struct player *p, int min_height, int min_width,
 	else if (i < 5) size_percent = 90;
 	else if (i < 6) size_percent = 95;
 	else size_percent = 100;*/
-    size_percent = sqrt_size_percent(p->depth);
+    size_percent = (int)(my_sqrt(p->depth) * 5) + 50;
 
 	y_size = z_info->dungeon_hgt * (size_percent - 5 + randint0(10)) / 100;
 	x_size = z_info->dungeon_wid * (size_percent - 5 + randint0(10)) / 100;

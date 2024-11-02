@@ -100,6 +100,7 @@ typedef enum cmd_code {
 	CMD_ALTER,
 	CMD_STEAL,
 	CMD_SLEEP,
+	CMD_MELEE,
 
 	/* Store commands */
 	CMD_SELL,

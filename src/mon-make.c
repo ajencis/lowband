@@ -893,6 +893,7 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 		droploc = mon->grid;
 
 		drop_find_grid(player, c, obj, false, &droploc);
+		assert(square_in_bounds_fully(c, droploc));
 
 		/* Try to carry */
 		if (floor_carry(c, droploc, obj, &dummy)) {
@@ -932,10 +933,14 @@ void mon_create_mimicked_object(struct chunk *c, struct monster *mon, int index)
 		}
 	}
 
+	assert(kind);
+
 	if (tval_is_money_k(kind)) {
 		obj = make_gold(c->depth, kind->name);
 	} else {
+		plog(format("kidx is %i", kind->kidx));
 		obj = object_new();
+		assert(obj);
 		object_prep(obj, kind, mon->race->level, RANDOMISE);
 		apply_magic(obj, mon->race->level, true, false, false, false);
 		obj->number = 1;
@@ -1017,7 +1022,7 @@ int mon_hp(const struct monster_race *race, aspect hp_aspect)
  */
 int16_t place_monster(struct chunk *c, struct loc grid, struct monster *mon,
 		uint8_t origin)
-{
+{	
 	int16_t m_idx;
 	struct monster *new_mon;
 	struct monster_group_info *info = mon->group_info;
@@ -1061,10 +1066,12 @@ int16_t place_monster(struct chunk *c, struct loc grid, struct monster *mon,
 	else new_mon->race->cur_num++;
 
 	/* Create the monster's drop, if any */
-	if (origin)
+	if (origin) {
 		(void)mon_create_drop(c, new_mon, origin);
+	}
 
 	/* Make mimics start mimicking */
+	assert(new_mon && new_mon->race);
 	if (origin && new_mon->race->mimic_kinds) {
 		mon_create_mimicked_object(c, new_mon, m_idx);
 	}
@@ -1408,6 +1415,7 @@ bool place_new_monster(struct chunk *c, struct loc grid,
 
 	/* We're done unless the group flag is set */
 	if (!group_ok) return (true);
+
 
 	/* Go through friends flags */
 	for (friends = race->friends; friends; friends = friends->next) {

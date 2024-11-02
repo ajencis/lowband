@@ -151,7 +151,8 @@ struct cmd_info cmd_action[] =
 	{ "Fire at nearest target", { 'h', KC_TAB }, CMD_NULL, do_cmd_fire_at_nearest, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Throw an item", { 'v' }, CMD_THROW, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Walk into a trap", { 'W', '-' }, CMD_JUMP, NULL, NULL, 0, NULL, NULL, NULL, 0 },
-	{ "Use an innnate power", { 'U' }, CMD_INNATE, NULL, NULL, 0, NULL, NULL, NULL, 0 },
+	{ "Use an innate power", { 'U' }, CMD_INNATE, NULL, NULL, 0, NULL, NULL, NULL, 0 },
+	{ "Make a melee attack", { 'j' }, CMD_MELEE, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 };
 
 /**

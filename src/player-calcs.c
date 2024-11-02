@@ -1434,6 +1434,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	bitflag collect_f[OF_SIZE];
 	bool vuln[ELEM_MAX];
 	struct monster_race *mrace = lookup_player_monster(p);
+	int avail_hands;
 
 	/* Hack to allow calculating hypothetical blows for extra STR, DEX - NRM */
 	int str_ind = state->stat_ind[STAT_STR];
@@ -1931,15 +1932,31 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	}
 
 	/* L: get melee attacks */
-	for (attacknum = 0; attacknum < num_weapons; ++attacknum) {
-		state->attacks[attacknum] = get_melee_weapon_attack(p, state, weapons[attacknum]);
+	avail_hands = 0;
+	attacknum = 0;
+	for (i = 0; i < num_weapons; ++i) {
+		assert(i < PY_MAX_ATTACKS && attacknum < PY_MAX_ATTACKS);
+		if (weapons[i]) {
+			state->attacks[attacknum] = get_melee_weapon_attack(p, state, weapons[i]);
+			++attacknum;
+		}
+		else {
+			++avail_hands;
+		}
 	}
 	if (mrace) {
-		attacknum += get_monster_attacks(p, state, mrace,
-										 &state->attacks[attacknum],
-										 PY_MAX_ATTACKS - attacknum,
-										 false);
+		avail_hands -= get_monster_attacks(p, state, mrace,
+										   state->attacks,
+										   PY_MAX_ATTACKS,
+										   &attacknum,
+										   false);
 	}
+	while (avail_hands > 0 && attacknum < PY_MAX_ATTACKS) {
+		state->attacks[attacknum] = get_melee_weapon_attack(p, state, NULL);
+		++attacknum;
+		--avail_hands;
+	}
+
 	state->num_attacks = attacknum;
 
 	assert(attacknum <= PY_MAX_ATTACKS);
@@ -1950,18 +1967,11 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		calc_blows(p, launcher->weight, &state->ranged_attack, state, extra_shots);
 		state->has_ranged_attack = true;
 	}
-	else if (mrace) {
-		if (get_monster_attacks(p, state, mrace,
-							&state->ranged_attack,
-							1,
-							true)) {
-
-			calc_blows(p, 0, &state->ranged_attack, state, extra_shots);
-			state->has_ranged_attack = true;
-		}
+	else {
+		state->ranged_attack.obj = NULL;
 	}
 
-	/* L: give attacks blow numbers */
+	/* L: give attacks blows */
 	for (i = 0; i < attacknum; i++) {
 		if (state->heavy_wield) {
 			state->attacks[i].blows = 100;

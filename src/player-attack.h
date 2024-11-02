@@ -53,6 +53,7 @@ typedef struct attack_result (*ranged_attack) (struct player *p,
 extern void do_cmd_fire(struct command *cmd);
 extern void do_cmd_fire_at_nearest(void);
 extern void do_cmd_throw(struct command *cmd);
+extern void do_cmd_melee(struct command *cmd);
 
 
 /* L: new */
@@ -60,7 +61,7 @@ struct attack_roll get_melee_weapon_attack(struct player *p, struct player_state
 struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_state *ps,
 												struct object *shooter);
 int get_monster_attacks(struct player *p, struct player_state *ps, struct monster_race *mr,
-		struct attack_roll *aroll, int maxnum, bool ranged);
+		struct attack_roll *aroll, int maxnum, int *attacknum, bool ranged);
 
 extern int breakage_chance(const struct object *obj, bool hit_target);
 int chance_of_missile_hit_base(const struct player *p,

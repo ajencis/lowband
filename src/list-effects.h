@@ -118,6 +118,7 @@ EFFECT(MOVE_ATTACK,					true,	"blows",	1,		EFINFO_DICE,	"moves the player up to 
 EFFECT(SINGLE_COMBAT,				true,	NULL,		0,		EFINFO_NONE,	"engages a monster in single combat",	"engage in single combat")
 EFFECT(MELEE_BLOWS,					true,	"blows",	1,		EFINFO_DICE,	"strikes %d blows against an adjacent monster",	"pummel")
 EFFECT(SWEEP,						false,	"blows",	1,		EFINFO_DICE,	"strikes %d blows against all adjacent monsters",	"sweep")
+EFFECT(TRANSFORM,					false,	NULL,		0,		EFINFO_NONE,	"transforms you", "transform")
 EFFECT(BIZARRE,						true,	NULL,		0,		EFINFO_NONE,	"does bizarre things",	"do bizarre things")
 EFFECT(WONDER,						true,	NULL,		0,		EFINFO_NONE,	"creates random and unpredictable effects",	"create random effects")
 EFFECT(SELECT,						false,	NULL,		0,		EFINFO_NONE,	"selects one of ",	"")

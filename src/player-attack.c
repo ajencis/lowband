@@ -760,6 +760,7 @@ static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
 	aroll->message = "punch";
 	aroll->obj = NULL;
 	aroll->proj_type = PROJ_BLUDGEONING;
+	aroll->range = 1;
 }
 
 static void specialization_mod_attack(struct attack_roll *aroll, struct object *obj)
@@ -812,6 +813,7 @@ struct attack_roll get_melee_weapon_attack(struct player *p, struct player_state
 		aroll.damage_stat = STAT_STR;
 		aroll.obj = obj;
 		aroll.proj_type = obj->kind->base->proj_type;
+		aroll.range = obj->tval == TV_POLEARM ? 2 : 1;
 	}
 	else {
 		unarmed_get_attack(&aroll, obj);
@@ -927,10 +929,6 @@ static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow
 		// can't gaze while you're blind
 		if (p->timed[TMD_BLIND]) return false;
 	}
-	
-	if (ranged && !blow->method->ranged) {
-		return false;
-	}
 
 	if (!blow->method->player_usable) {
 		return false;
@@ -951,20 +949,25 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 							   struct monster_race *mr, struct attack_roll *aroll,
 							   int aind, bool ranged)
 {
-	int j;
+	int j, range;
 	struct monster_blow *mb = &mr->blow[aind];
 	if (!mb->method) return false;
 	if (!monster_attack_is_usable(p, mb, ranged)) return false;
 
-	int mindice = 1;
-	int minsides = mb->dice.sides ? 1 : 0;
+	if (mb->method->unarmed) {
+		unarmed_get_attack(aroll, NULL);
+	}
+	else {
+		memset(aroll, 0, sizeof(*aroll));
+	}
 
-	aroll->ddice = mb->dice.dice;
-	aroll->dsides = (mb->dice.sides + 1) / 2;
+	int mindice = 1;
+	int minsides = MAX(mb->dice.sides, aroll->dsides) > 0 ? 1 : 0;
+
+	aroll->ddice = MAX(mb->dice.dice, aroll->ddice);
+	aroll->dsides = MAX(mb->dice.sides, aroll->dsides) + MIN(mb->dice.sides + 2, aroll->dsides + 2) / 3;
 	aroll->blows = 100;
 	aroll->message = (const char *)mb->method->fmessage;
-	aroll->to_hit = 0;
-	aroll->to_dam = 0;
 	if (mb->effect->lash_type == -1) {
 		aroll->proj_type = mb->method->lash_type;
 	} else {
@@ -974,10 +977,9 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 	aroll->obj = NULL;
 	aroll->blows = 100;
 	for (j = 0; j < MON_TMD_MAX; j++) {
-		if (mb->effect->mtimed == j)
-			aroll->mtimed[j] = 50 + mr->level;
-		else
-			aroll->mtimed[j] = 0;
+		if (mb->effect->mtimed == j) {
+			aroll->mtimed[j] += 50 + mr->level;
+		}
 	}
 	aroll->accuracy_stat = STAT_DEX;
 	aroll->damage_stat = mon_blow_dam_stat(mb, ps);
@@ -991,6 +993,9 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 	aroll->dsides = MAX(minsides, aroll->dsides);
 	aroll->ddice = MAX(mindice, aroll->ddice);
 
+	range = monster_melee_attack_range(mr->level, mb);
+	aroll->range = MAX(range, aroll->range);
+
 	if (aroll->attack_skill == SKILL_TO_HIT_MELEE) {
 		// martial arts don't affect stuff like gaze attacks
 		unarmed_mod_attack(aroll, NULL);
@@ -1001,11 +1006,11 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 
 int get_monster_attacks(struct player *p, struct player_state *ps,
 						struct monster_race *mr, struct attack_roll *aroll,
-						int maxnum, bool ranged)
+						int maxnum, int *attacknum, bool ranged)
 {
 	if (!mr) return 0;
 	if (!mr->blow[0].method) return 0;
-	int i, pai = 0;
+	int i, hands_used = 0;
 
 	int slotsfull[EQUIP_MAX] = { 0 };
 	int slotsempty[EQUIP_MAX] = { 0 };
@@ -1025,24 +1030,26 @@ int get_monster_attacks(struct player *p, struct player_state *ps,
 
 	for (i = EQUIP_NONE + 1; i < EQUIP_MAX; i++) {
 		if (slotsfull[i] || slotsempty[i]) {
-			// number of actual usable attacks is a fraction of total attacks
-			// equal to the ratio of empty slots to total slots
+			/* number of actual usable attacks is a fraction of total attacks
+			   equal to the ratio of empty slots to total slots 
+			   if we have no slots at all of that type treat as if they're all empty */
 			availslots[i] *= slotsempty[i];
 			availslots[i] /= slotsempty[i] + slotsfull[i];
 		}
 	}
 
-	for (i = 0; i < z_info->mon_blows_max && pai < maxnum && mr->blow[i].method; i++) {
+	for (i = 0; i < z_info->mon_blows_max && (*attacknum) < maxnum && mr->blow[i].method; i++) {
 		struct monster_blow *mb = &mr->blow[i];
 		if (!availslots[mb->method->equip_slot]) continue;
 
-		if (get_monster_attack(p, ps, mr, &aroll[pai], i, false)) ++pai;
+		if (get_monster_attack(p, ps, mr, &aroll[*attacknum], i, false)) ++(*attacknum);
 
 		// take up the slot
 		availslots[mb->method->equip_slot]--;
+		if (mb->method->equip_slot == EQUIP_WEAPON) ++hands_used;
 	}
 
-	return pai;
+	return hands_used;
 }
 
 static int get_attack_dam(struct attack_roll *aroll, struct monster *mon, int b, int s) {
@@ -1377,7 +1384,8 @@ void py_attack(struct player *p, struct loc grid)
 	int pretimed[MON_TMD_MAX];
 	int backstab = 0;
 	bool backstab_msg = false;
-	//int sumblows = 0;
+	int dist = distance(p->grid, grid);
+	bool can_attack = false;
 
 	if (mon->m_timed[MON_TMD_SLEEP] || mon->m_timed[MON_TMD_HOLD]) backstab = 2;
 	else if (mon->m_timed[MON_TMD_SLOW] || mon->m_timed[MON_TMD_FEAR] || mon->m_timed[MON_TMD_STUN]) backstab = 1;
@@ -1404,6 +1412,23 @@ void py_attack(struct player *p, struct loc grid)
 		if (attempt_shield_bash(p, mon, &fear)) return;
 	}
 
+	// L: check to see if we have a sufficiently ranged attack
+	i = 0;
+	while (!can_attack) {
+		if (i >= p->state.num_attacks) {
+			msg("You can't attack that far");
+			return;
+		}
+
+		aroll = p->state.attacks[i];
+
+		if (aroll.range >= dist) {
+			can_attack = true;
+		}
+
+		++i;
+	}
+
 	/* Attack until the next attack would exceed energy available or
 	 * a full turn or until the enemy dies. We limit energy use
 	 * to avoid giving monsters a possible double move. */
@@ -1411,9 +1436,14 @@ void py_attack(struct player *p, struct loc grid)
 		int which = randint0(p->state.num_attacks);
 		aroll = p->state.attacks[which];
 
+		if (aroll.range < dist) {
+			continue;
+		}
+
 		blow_energy = 100 * z_info->move_energy / aroll.blows;
-		if (blow_energy + p->upkeep->energy_use >= avail_energy)
+		if (blow_energy + p->upkeep->energy_use >= avail_energy) {
 			break;
+		}
 
 		if (backstab && backstab_mod_attack(&aroll, backstab) && !backstab_msg) {
 			backstab_msg = true;
@@ -1751,25 +1781,57 @@ struct attack_result make_ranged_throw(struct player *p,
 }
 #endif
 
-static void do_cmd_innate_ranged(struct command *cmd)
+void do_cmd_melee(struct command *cmd)
 {
-	int dir, range;
-	struct monster_race *mon = lookup_player_monster(player);
+	int dir, range = 0, i;
+	struct monster *foe = NULL;
+	struct loc target;
 
 	struct attack_roll *aroll = &player->state.ranged_attack;
-
-	if (mon) {
-		range = 2 + mon->level / 25;
-	}
-	else {
-		range = 2 + player->lev / 25;
-	}
 	
 	if (cmd_get_target(cmd, "target", &dir) == CMD_OK) {
 		player_confuse_dir(player, &dir, false);
 	} else {
 		return;
 	}
+
+	for (i = 0; i < player->state.num_attacks; i++) {
+		range = MAX(range, player->state.attacks[i].range);
+	}
+
+	if (dir == DIR_TARGET) {
+		if (target_okay()) {
+			target_get(&target);
+			foe = square_monster(cave, target);
+		}
+	}
+	else if (dir != DIR_UNKNOWN) {
+		struct loc direction = loc_sum(player->grid, loc(range * ddx[dir], range * ddy[dir]));
+		int path_n;
+		struct loc path_g[256];
+		path_n = project_path(cave, path_g, range, player->grid, direction, 0);
+		for (i = 0; i < path_n; i++) {
+			target = path_g[i];
+			foe = square_monster(cave, target);
+			if (foe) {
+				break;
+			}
+		}
+	}
+
+	if (!foe) {
+		msg("There's nobody there.");
+		return;
+	}
+	if (distance(player->grid, target) > range) {
+		msg("You can't attack that far.");
+		return;
+	}
+
+
+	py_attack(player, target);
+
+	return;
 
 	ranged_helper(player,
 				NULL,
@@ -1794,11 +1856,6 @@ void do_cmd_fire(struct command *cmd) {
 	struct object *bow = aroll.obj;// slot_object(player, slot_by_type(player, EQUIP_BOW, true));
 	struct object *obj = NULL;
 
-	if (!bow) {
-		do_cmd_innate_ranged(cmd);
-		return;
-	}
-
 	if (!player_get_resume_normal_shape(player, cmd)) {
 		return;
 	}
@@ -1819,10 +1876,10 @@ void do_cmd_fire(struct command *cmd) {
 	}
 
 	/* Require a usable launcher */
-	/*if (!bow || !player->state.ammo_tval) {
+	if (!bow || !player->state.ammo_tval) {
 		msg("You have nothing to fire with.");
 		return;
-	}*/
+	}
 
 	/* Check the item being fired is usable by the player. */
 	if (!item_is_available(obj)) {

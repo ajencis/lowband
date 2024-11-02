@@ -798,7 +798,6 @@ static struct panel *get_panel_combat(void) {
 
 		panel_space(p);
 		panel_line(p, COLOUR_L_BLUE, title, "%+d; %ddX%+d", bth, aroll->ddice, dam);
-		//panel_line(p, COLOUR_L_BLUE, "To-hit", "%d", bth);
 		panel_line(p, COLOUR_L_BLUE, "Shots", "%d.%d/turn",
 				   aroll->blows / 100, (aroll->blows / 10) % 10);
 		

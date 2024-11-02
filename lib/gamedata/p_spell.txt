@@ -133,6 +133,12 @@ desc:  You take 1d4 points of damage for every monster removed.
 school:NECROMANCY
 school:TELEPORTATION
 
+spell:Descension:80:80:80
+effect:TRANSFORM
+monster:lich
+desc:Transforms you into a lich.
+school:NECROMANCY
+
 
 spell:Envenom Monsters:10:10:10
 effect:PROJECT_LOS:MON_POIS

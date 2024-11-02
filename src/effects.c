@@ -75,6 +75,9 @@ void free_effect(struct effect *source)
 		if (e->msg) {
 			string_free(e->msg);
 		}
+		if (e->monster) {
+			string_free(e->monster);
+		}
 		mem_free(e);
 		e = e_next;
 	}

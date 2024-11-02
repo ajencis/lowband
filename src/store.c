@@ -675,11 +675,6 @@ int price_item(struct store *store, const struct object *obj,
 			if (tval_is_ammo(obj)) minprice /= 10;
 			if (price <= minprice) return 0;
 		}
-
-		/* Check for no_selling option */
-		/*if (OPT(player, birth_no_selling)) {
-			return 0;
-		}*/
 	} else {
 		/* Re-evaluate if we're selling */
 		if (tval_can_have_charges(obj)) {

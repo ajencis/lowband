@@ -152,7 +152,7 @@ static void change_player_body(struct player *p, struct player_body *new)
 	assert(!equipped_pile);
 }
 
-static void change_player_monster(struct player *p, struct monster_race *mon, bool init)
+void change_player_monster(struct player *p, struct monster_race *mon, bool init)
 {
 	assert(mon);
 	disturb(p);
@@ -180,6 +180,7 @@ bool check_player_monster(struct player *p, bool init, int xp)
 	int numevols = 0, numpossible = 0;
 	int maxlev;
 	struct evolution *e;
+	bool do_change = false;
 
 	if (curr) {
 		maxlev = p->lev * 3 / 2;
@@ -197,7 +198,7 @@ bool check_player_monster(struct player *p, bool init, int xp)
 				found = true;
 			}
 		}
-		if (found) maxlev += MIN(minevolev, maxlev);
+		if (found) maxlev += MIN(minevolev, maxlev + 1);
 
 		e = p->race->evol;
 	}
@@ -214,29 +215,32 @@ bool check_player_monster(struct player *p, bool init, int xp)
 		e = e->next;
 	}
 
-	if (selected && (!init || numevols <= 1)) {
-		uint32_t chance = (uint32_t)(selected->level * selected->level) + 50;
-		//uint32_t chance = (((uint32_t)1) << MIN(20, MAX(selected->level / 5, 1))) * 125 / 4;
+	if (!selected) {
+	}
+	else if (init && numevols > 1) {
+	}
+	else if (init) {
+		do_change = true;
+	}
+	else if (xp > 0) {
+		uint32_t chance = (uint32_t)(selected->level * selected->level) / xp + 50;
 		assert(chance <= 0x10000000);
-		int32_t roll = randint0(chance);
-
-		if (init ||	(xp > 0 &&
-					roll < xp &&
-					get_forced_check(format("Evolve into a%s %s? ",
-						is_a_vowel(selected->name[0]) ? "n" : "",
-						selected->name)))) {
-
-			change_player_monster(p, selected, init);
-
-			if (!init) {
-				player_increase_stat(p);
-			}
-
-			return true;
+		char *prompt = format("Evolve into a%s %s? ",
+				is_a_vowel(selected->name[0]) ? "n" : "",
+				selected->name);
+		if (one_in_(chance) && get_forced_check(prompt)) {
+			do_change = true;
 		}
 	}
 
-	return false;
+	if (do_change) {
+		change_player_monster(p, selected, init);
+		if (!init) {
+			player_increase_stat(p);
+		}
+	}
+
+	return do_change;
 }
 
 void player_race_name(struct player *p, char *buf, size_t bufsize)
@@ -299,20 +303,20 @@ int get_power_scale_state(struct player_state *ps, int power, int scaleto, int s
 
 	if (ps->powers[power] <= 0) return 0;
 
-	// scale linearly by power level then adjust by character level so value
-	// of increasing your power is linear
+	/* scale linearly by power level then adjust by character level so value
+	   of increasing your power is linear */
 	double efflev, div;
 	if (scaling == PP_SCALE_LINEAR) {
 		efflev = (double)ps->powers[power];
 		div = (double)50;
 	}
 	else if (scaling == PP_SCALE_SQUARE) {
-		efflev = (double)ps->powers[power] * level;
+		efflev = (double)ps->powers[power] * (double)level;
 		div = (double)50 * 50;
 	}
 	else if (scaling == PP_SCALE_SQRT) {
 		efflev = (double)ps->powers[power] / my_sqrt((double)level);
-		div = (double)50 / my_sqrt((double)50);
+		div = my_sqrt((double)50);
 	}
 
 	int result = (int)((efflev * scaleto + div * 2 / 3) / div);

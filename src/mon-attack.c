@@ -57,16 +57,10 @@
  * to remove attacks or spells before using them. 
  */
 
-int monster_melee_attack_range(struct monster *mon)
+int monster_melee_attack_range(int level, struct monster_blow *mblow)
 {
-	int ap_count;
-	for (ap_count = 0; ap_count < z_info->mon_blows_max; ++ap_count) {
-		struct blow_method *meth = mon->race->blow[ap_count].method;
-		if (!meth) return 0;
-		if (meth->ranged) break;
-	}
-
-	return mon->race->level / 25 + 2;
+	assert(mblow->method);
+	return MIN(level / 10 + 1, mblow->method->range);
 }
 
 /**
@@ -427,12 +421,18 @@ bool make_ranged_attack(struct monster *mon)
 	char m_name[80];
 	bool seen = (player->timed[TMD_BLIND] == 0) && monster_is_visible(mon);
 	bool innate = false;
-	int melee_dist = monster_melee_attack_range(mon);
+	int melee_dist = 1;
 	int target_dist;
 	struct loc target_grid;
+	int i;
 
 	if (mon->target.who != TARGET_WHO_MONSTER && mon->target.who != TARGET_WHO_PLAYER) {
 		return false;
+	}
+
+	for (i = 0; i < z_info->mon_blows_max && mon->race->blow[i].method; i++) {
+		int blow_range = monster_melee_attack_range(mon->race->level, &mon->race->blow[i]);
+		melee_dist = MAX(melee_dist, blow_range);
 	}
 
 	monster_get_target_dist_grid(mon, &target_dist, &target_grid);
@@ -630,7 +630,7 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 		if (!method) break;
 
 		// L: only some attacks work at range
-		if (at_range && !method->ranged) continue;
+		if (at_range && !method->range) continue;
 
 		/* Handle "leaving" */
 		if (p->is_dead || p->upkeep->generate_level) break;
@@ -825,7 +825,7 @@ bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 	bool blinked = false;
 	struct loc grid = t_mon->grid;
 	struct loc mgrid = mon->grid;
-	bool at_range = distance(mon->grid, t_mon->grid) > 1;
+	int dist = distance(mon->grid, t_mon->grid);
 	bool did_attack = false;
 
 	/* Not allowed to attack */
@@ -852,7 +852,7 @@ bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 		if (!method) break;
 
 		// L: not all attacks can be used at range
-		if (at_range && !method->ranged) continue;
+		if (dist > method->range) continue;
 
 		did_attack = true;
 

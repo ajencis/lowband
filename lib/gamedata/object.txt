@@ -250,7 +250,7 @@ graphics:,:R
 level:0
 weight:4
 cost:3
-alloc:40:0 to 20
+alloc:5:0 to 20
 pile:10:1d2
 power:0
 msg:That tastes good.
@@ -264,7 +264,7 @@ graphics:,:u
 level:0
 weight:3
 cost:3
-alloc:40:0 to 50
+alloc:5:0 to 50
 power:0
 msg:That tastes good.
 effect:NOURISH:INC_BY
@@ -278,7 +278,7 @@ graphics:,:g
 level:1
 weight:2
 cost:2
-alloc:40:30 to 100
+alloc:5:30 to 100
 pile:100:2d3
 power:0
 msg:That tastes better than nothing.
@@ -293,7 +293,7 @@ graphics:,:U
 level:0
 weight:8
 cost:3
-alloc:40:0 to 50
+alloc:0:0 to 50
 pile:100:1d5
 power:0
 msg:That tastes good.
@@ -309,7 +309,7 @@ graphics:,:s
 level:0
 weight:5
 cost:0
-alloc:30:50 to 100
+alloc:5:50 to 100
 pile:50:1d3
 power:0
 msg:That tastes disgusting.
@@ -335,7 +335,7 @@ graphics:,:W
 level:0
 weight:10
 cost:3
-alloc:30:10 to 50
+alloc:5:10 to 50
 pile:50:1d3
 power:0
 msg:That tastes good.
@@ -350,7 +350,7 @@ graphics:,:y
 level:5
 weight:10
 cost:10
-alloc:30:20 to 70
+alloc:5:20 to 70
 pile:40:1d3
 power:1
 msg:Delicious!
@@ -366,7 +366,7 @@ graphics:,:B
 level:5
 weight:3
 cost:10
-alloc:20:30 to 100
+alloc:3:30 to 100
 pile:10:1d3
 power:4
 msg:That tastes great.
@@ -412,7 +412,7 @@ graphics:,:w
 level:0
 weight:2
 cost:100
-alloc:20:10 to 50
+alloc:2:10 to 50
 power:0
 msg:You feel your heart warm.
 effect:NOURISH:INC_BY
@@ -428,7 +428,7 @@ graphics:,:m
 level:0
 weight:2
 cost:1
-alloc:20:20 to 100
+alloc:2:20 to 100
 pile:10:1d3
 power:0
 msg:It burns your throat.
@@ -446,7 +446,7 @@ graphics:,:w
 level:0
 weight:10
 cost:2000
-alloc:10:60 to 100
+alloc:1:60 to 100
 power:0
 msg:Refreshing!
 effect:NOURISH:INC_TO
@@ -3605,7 +3605,6 @@ effect:RANDOM
 dice:5
 effect:TIMED_INC:SCRAMBLE
 dice:20+1d20
-effect:SHAPECHANGE:bat
 effect:DRAIN_STAT:INT
 effect:DRAIN_STAT:WIS
 effect:TIMED_INC:STONESKIN
@@ -5228,7 +5227,7 @@ graphics:?:m
 level:0
 weight:15
 cost:1000
-alloc:1:0 to 100
+alloc:3:0 to 100
 attack:1d1:0:0
 armor:0:0
 power:10
@@ -5240,7 +5239,7 @@ graphics:?:m
 level:0
 weight:15
 cost:3000
-alloc:1:20 to 100
+alloc:3:20 to 100
 attack:1d1:0:0
 armor:0:0
 power:10
@@ -5252,7 +5251,7 @@ graphics:?:m
 level:0
 weight:15
 cost:10000
-alloc:1:40 to 100
+alloc:3:40 to 100
 attack:1d1:0:0
 armor:0:0
 power:10
@@ -5264,7 +5263,7 @@ graphics:?:m
 level:0
 weight:15
 cost:30000
-alloc:1:60 to 100
+alloc:3:60 to 100
 attack:1d1:0:0
 armor:0:0
 power:10
@@ -5276,7 +5275,7 @@ graphics:?:m
 level:0
 weight:15
 cost:100000
-alloc:1:80 to 100
+alloc:3:80 to 100
 attack:1d1:0:0
 armor:0:0
 power:10

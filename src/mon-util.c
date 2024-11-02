@@ -1855,11 +1855,11 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 	}
 
 	// give it bonuses for its base's strengths and weaknesses
-	dam += rb->attributes[MA_DAMAGE] * (dam + power) / 10;
-	hp  += rb->attributes[MA_HP]     * (hp  + power) / 10;
-	ac  += rb->attributes[MA_AC]     * (ac  + power) / 10;
-	spe += rb->attributes[MA_SPEED]  * (spe + power) / 10;
-	mag += rb->attributes[MA_MAGIC]  * (mag + power) / 10;
+	dam += rb->attributes[MA_DAMAGE] * (dam + power) / 5;
+	hp  += rb->attributes[MA_HP]     * (hp  + power) / 5;
+	ac  += rb->attributes[MA_AC]     * (ac  + power) / 5;
+	spe += rb->attributes[MA_SPEED]  * (spe + power) / 5;
+	mag += rb->attributes[MA_MAGIC]  * (mag + power) / 5;
 
 	dam = MAX(0, dam);
 	hp  = MAX(0, hp );

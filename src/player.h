@@ -273,6 +273,7 @@ struct attack_roll {
 	int accuracy_stat;	/* stat that determines accuracy */
 	int damage_stat;	/* stat that determines damage */
 	struct object *obj;	/* what weapon is it using */
+	int range;			/* how far it can go (eg for a gaze) */
 };
 
 /**

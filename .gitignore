@@ -74,3 +74,4 @@ angband.INI
 src/win/angband.res
 build/*
 .vscode/*
+lib/user/*.log

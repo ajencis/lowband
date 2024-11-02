@@ -2268,6 +2268,7 @@ static errr finish_parse_object(struct parser *p) {
 		} else {
 			k_info[kidx].next = NULL;
 		}
+		assert(k_info[kidx].base);
 		mem_free(k);
 	}
 	z_info->k_max += 1;

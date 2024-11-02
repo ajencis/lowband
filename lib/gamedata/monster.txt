@@ -8205,6 +8205,7 @@ desc: pay of Morgoth.
 name:lich
 plural:liches
 base:lich
+evolution:master lich
 color:o
 speed:110
 hit-points:264
@@ -9997,6 +9998,8 @@ desc:  Power seems to crackle from his stocky frame.
 name:master lich
 plural:master liches
 base:lich
+evolution:demilich
+evolution:black reaver
 color:r
 speed:120
 hit-points:1584
@@ -11718,6 +11721,7 @@ desc: little intelligence, but it has been instructed to destroy all it meets.
 name:demilich
 plural:demiliches
 base:lich
+evolution:archlich
 color:U
 speed:120
 hit-points:2816
