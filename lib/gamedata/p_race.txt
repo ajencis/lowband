@@ -315,76 +315,15 @@ values:RES_POIS[1]
 body:Humanoid
 
 name:Dhampir
-stats:1:1:-2:2:-1
-skill-disarm-phys:10
-skill-disarm-magic:10
-skill-device:5
-skill-save:5
-skill-stealth:25
-skill-search:10
-skill-melee:5
-skill-shoot:0
-skill-throw:0
-skill-dig:0
-power:BACKSTAB:20
-power:POLEARM_SPECIALIZATION:20
-power:NECROMANCY_MAGIC:20
-hitdie:3
 exp:150
-infravision:5
-history:1
-age:45:30
-height:37:4
-weight:65:5
-values:RES_POIS[1] | RES_NETHER[1]
-player-flags:UNLIGHT
 monster:vampire
-body:Humanoid
 
 name:Eyestalk
-stats:-2:2:1:0:0
-skill-disarm-phys:0
-skill-disarm-magic:5
-skill-device:10
-skill-save:5
-skill-stealth:20
-skill-search:20
-skill-melee:-10
-skill-shoot:0
-skill-throw:0
-skill-dig:-5
-power:DIVINATION_MAGIC:20
-hitdie:2
 exp:150
-infravision:10
-history:1
-age:5:2
-height:80:6
-weight:190:20
-obj-flags:SEE_INVIS
-values:RES_DARK[-1]
 monster:floating eye
-body:Humanoid
 
 name:Draconian
-stats:1:1:-1:-1:1
-skill-disarm-phys:0
-skill-disarm-magic:0
-skill-device:5
-skill-save:10
-skill-stealth:10
-skill-search:15
-skill-melee:15
-skill-shoot:0
-skill-throw:0
-skill-dig:10
-hitdie:4
 exp:175
-infravision:5
-history:1
-age:100:50
-height:80:6
-weight:190:20
 monster:baby red dragon
 monster:baby blue dragon
 monster:baby white dragon
@@ -398,51 +337,13 @@ monster:law drake
 monster:balance drake
 monster:aethereal drake
 monster:crystal drake
-body:Humanoid
 
 name:Tiefling
-stats:1:0:-1:-1:2
-skill-disarm-phys:0
-skill-disarm-magic:0
-skill-device:15
-skill-save:10
-skill-stealth:15
-skill-search:5
-skill-melee:10
-skill-shoot:5
-skill-throw:5
-skill-dig:3
-hitdie:4
 exp:150
-infravision:5
-history:1
-age:100:50
-height:80:6
-weight:190:20
 monster:bodak
 monster:quasit
 monster:imp
-body:Humanoid
 
 name:Reptilian
-stats:1:1:-1:-1:1
-skill-disarm-phys:0
-skill-disarm-magic:0
-skill-device:-5
-skill-save:5
-skill-stealth:5
-skill-search:5
-skill-melee:10
-skill-shoot:5
-skill-throw:5
-skill-dig:5
-power:POISON_MAGIC:20
-hitdie:4
-exp:150
-infravision:5
-history:1
-age:100:50
-height:80:6
-weight:190:20
+exp:135
 monster:2-headed hydra
-body:Humanoid

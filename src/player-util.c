@@ -173,63 +173,71 @@ void change_player_monster(struct player *p, struct monster_race *mon, bool init
 	player->upkeep->update |= (PU_BONUS | PU_HP);
 }
 
-bool check_player_monster(struct player *p, bool init, int xp)
+bool check_player_monster(struct player *p, bool init)
 {
 	struct monster_race *curr = lookup_player_monster(p);
 	struct monster_race *selected = NULL;
 	int numevols = 0, numpossible = 0;
-	int maxlev;
-	struct evolution *e;
+	struct evolution *e = curr ? curr->evol : p->race->evol;
 	bool do_change = false;
-
-	if (curr) {
-		maxlev = p->lev * 3 / 2;
-		e = curr->evol;
-	}
-	else {
-		/* double the level if we haven't evolved yet but only
-		   up to the first evolution */
-		maxlev = MAX(4, p->lev);
-		int minevolev = 0;
-		bool found = false;
-		for (e = p->race->evol; e; e = e->next) {
-			if (!found || minevolev < e->race->level) {
-				minevolev = e->race->level;
-				found = true;
-			}
-		}
-		if (found) maxlev += MIN(minevolev, maxlev + 1);
-
-		e = p->race->evol;
-	}
+	uint32_t xpneed;
+	int currxp = init ? player_exp[4] : (int)p->monster_xp / 3;
 	
 	while (e) {
 		++numevols;
-		if (e->race->level <= maxlev) {
+
+		int32_t currxpneed;
+		if (e->race->level < PY_MAX_LEVEL) {
+			// monster is in the table
+			currxpneed = player_exp[e->race->level];
+		}
+		else if (player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL < PY_MAX_EXP / e->race->level) {
+			/* monster is out of the table but linear scaling of the highest value
+			   in the table is less than the maximum possible */
+			currxpneed = player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL * e->race->level;
+		}
+		else {
+			/* monster is out of the table and would need more than the max possible
+			   xp to choose */
+			currxpneed = PY_MAX_EXP;
+		}
+
+		if (currxpneed <= currxp) {
 			++numpossible;
 			if (numpossible < 2 || one_in_(numpossible)) {
 				selected = e->race;
+				xpneed = currxpneed;
 			}
 		}
 
 		e = e->next;
 	}
 
-	if (!selected) {
-	}
-	else if (init && numevols > 1) {
-	}
-	else if (init) {
-		do_change = true;
-	}
-	else if (xp > 0) {
-		uint32_t chance = (uint32_t)(selected->level * selected->level) / xp + 50;
-		assert(chance <= 0x10000000);
-		char *prompt = format("Evolve into a%s %s? ",
-				is_a_vowel(selected->name[0]) ? "n" : "",
-				selected->name);
-		if (one_in_(chance) && get_forced_check(prompt)) {
+	if (selected && (!init || numevols <= 1)) {
+		if (init) {
 			do_change = true;
+		}
+		else if (currxp > 0) {
+			uint32_t chance;
+			if (xpneed < UINT32_MAX / 1000) {
+				chance = xpneed * 1000 / currxp;
+			}
+			else {
+				chance = UINT32_MAX / currxp;
+			}
+			chance = MIN(chance, 0x10000000);
+			char *prompt = format("Evolve into a%s %s? ",
+					is_a_vowel(selected->name[0]) ? "n" : "",
+					selected->name);
+			if (one_in_(chance)) {
+				if (get_forced_check(prompt)) {
+					player->monster_xp = 0;
+					do_change = true;
+				}
+				else {
+					player->monster_xp /= 3;
+				}
+			}
 		}
 	}
 
@@ -301,22 +309,31 @@ int get_power_scale_state(struct player_state *ps, int power, int scaleto, int s
 {
 	assert(power > 0 && power < PP_MAX);
 
-	if (ps->powers[power] <= 0) return 0;
+	int powerlev = ps->powers[power];
+
+	if (powerlev <= 0) return 0;
+	if (powerlev > level) {
+		powerlev = (powerlev - level) / 2 + level;
+	}
 
 	/* scale linearly by power level then adjust by character level so value
 	   of increasing your power is linear */
 	double efflev, div;
 	if (scaling == PP_SCALE_LINEAR) {
-		efflev = (double)ps->powers[power];
+		efflev = (double)powerlev;
 		div = (double)50;
 	}
 	else if (scaling == PP_SCALE_SQUARE) {
-		efflev = (double)ps->powers[power] * (double)level;
+		efflev = (double)powerlev * (double)level;
 		div = (double)50 * 50;
 	}
 	else if (scaling == PP_SCALE_SQRT) {
-		efflev = (double)ps->powers[power] / my_sqrt((double)level);
+		efflev = (double)powerlev / my_sqrt((double)level);
 		div = my_sqrt((double)50);
+	}
+	else {
+		efflev = 0.0;
+		div = 50.0;
 	}
 
 	int result = (int)((efflev * scaleto + div * 2 / 3) / div);
@@ -496,8 +513,6 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	uint16_t currlearned;
 	bool learned = false;
 	uint32_t chance; // one_in_(chance) to learn
-	char buf[80];
-	object_desc(buf, sizeof(buf), obj, ODESC_EXTRA, p);
 
 	if (power <= TOME_NONE || power >= TOME_MAX) return false;
 
@@ -505,14 +520,14 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 
 	if (power < PP_MAX) {
 		assert(power > PP_NONE && power < PP_MAX);
-		chance = p->state.powers[power];
+		chance = p->state.powers[power] + 10;
 		chance *= chance;
 		currlearned = p->extra_powers[power];
 	}
 	else {
 		int skill_index = power - PP_MAX;
 		assert(skill_index >= 0 && skill_index < SKILL_MAX);
-		chance = p->state.skills[skill_index];
+		chance = p->state.skills[skill_index] + 10;
 		chance *= chance;
 		currlearned = p->extra_skills[skill_index];
 	}
@@ -523,15 +538,14 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	// higher-level tomes are more complicated
 	chance *= mx;
 	// harder to learn the more you know
-	chance *= currlearned;
+	chance *= (currlearned + 10);
 	chance /= xpgain;
 	// easier to learn if you have more info
 	chance /= obj->number * obj->number * 1000;
-	// minimum chance
-	chance += 25;
 	if (nextcost > currcost) {
 		// avoid asking player too often in case they don't want to learn
-		chance += 25;
+		chance *= 2;
+		chance += 10;
 	}
 	// paranoia
 	chance = MIN(chance, 0x10000000U);
@@ -539,6 +553,8 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	if (one_in_(chance)) {
 		learned = learn_extra(p, power);
 		if (learned && nextcost >= mx) {
+			char buf[80];
+			object_desc(buf, sizeof(buf), obj, ODESC_EXTRA, p);
 			// after learning we're at the max
 			msg("You feel you've learned everything you can from your %s.", buf);
 		}
@@ -2339,7 +2355,7 @@ void player_start_turn(struct player *p)
 {
 	if (p->xp_this_turn) {
 		check_learn_powers(p, p->xp_this_turn);
-		check_player_monster(p, false, p->xp_this_turn);
+		check_player_monster(p, false);
 
 		p->xp_this_turn = 0;
 	}

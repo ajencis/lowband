@@ -248,7 +248,7 @@ const struct class_book *object_kind_to_book(const struct object_kind *kind)
 
 		for (i = 0; i < class->magic.num_books; i++)
 		if ((kind->tval == class->magic.books[i].tval) &&
-			(kind->sval == class->magic.books[i].sval)) {
+				(kind->sval == class->magic.books[i].sval)) {
 			return &class->magic.books[i];
 		}
 		class = class->next;
@@ -268,7 +268,7 @@ const struct class_book *player_object_to_book(const struct player *p,
 
 	for (i = 0; i < p->class->magic.num_books; i++)
 		if ((obj->tval == p->class->magic.books[i].tval) &&
-			(obj->sval == p->class->magic.books[i].sval))
+				(obj->sval == p->class->magic.books[i].sval))
 			return &p->class->magic.books[i];
 
 	return NULL;
@@ -884,7 +884,21 @@ int innate_spell_mana(const struct monster_race *mon)
 {
 	int freq = mon->freq_innate;
 	int cost = 20 - freq / 2;
-	return MAX(1, cost);
+	return MIN(mon->level, MAX(1, cost));
+}
+
+void get_innate_info(int innate_index, char *p, size_t len)
+{
+	struct effect *effect = monster_spell_by_index(innate_index)->effect;
+	struct spell_info_iteration_state ist = {
+		NULL, "", { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, false };
+
+	p[0] = '\0';
+
+	while (effect) {
+		spell_effect_append_value_info(effect, p, len, &ist);
+		effect = effect->next;
+	}
 }
 
 

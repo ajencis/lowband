@@ -57,15 +57,16 @@ extern void do_cmd_melee(struct command *cmd);
 
 
 /* L: new */
-struct attack_roll get_melee_weapon_attack(struct player *p, struct player_state *ps, struct object *obj);
+bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct object *obj,
+		struct attack_roll *aroll);
 struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_state *ps,
 												struct object *shooter);
 int get_monster_attacks(struct player *p, struct player_state *ps, struct monster_race *mr,
 		struct attack_roll *aroll, int maxnum, int *attacknum, bool ranged);
 
 extern int breakage_chance(const struct object *obj, bool hit_target);
-int chance_of_missile_hit_base(const struct player *p,
-	const struct object *missile, const struct object *launcher);
+/*int chance_of_missile_hit_base(const struct player *p,
+	const struct object *missile, const struct object *launcher);*/
 int chance_of_melee_hit_base(const struct player *p,
 	struct attack_roll *aroll);
 extern bool test_hit(int to_hit, int ac);

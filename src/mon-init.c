@@ -102,6 +102,15 @@ static const char *mattr_names[] =
 	""
 };
 
+static const char *power_names[] =
+{
+	"",
+	#define PP(x, a, b, c, d, e) #x,
+	#include "list-player-powers.h"
+	#undef PP
+	""
+};
+
 /**
  * Return the index of a flag from its name.
  */
@@ -179,6 +188,17 @@ static int monster_attribute_by_name(const char *name)
 	size_t i;
 	for (i = 0; i < N_ELEMENTS(mattr_names); i++) {
 		if (streq(name, mattr_names[i])) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+static int power_index_by_name(const char *name)
+{
+	size_t i;
+	for (i = 0; i < N_ELEMENTS(power_names); i++) {
+		if (streq(name, power_names[i])) {
 			return i;
 		}
 	}
@@ -910,8 +930,9 @@ static enum parser_error parse_mon_spell_effect(struct parser *p) {
 	/* Go to the next vacant effect and set it to the new one  */
 	if (s->effect) {
 		effect = s->effect;
-		while (effect->next)
+		while (effect->next) {
 			effect = effect->next;
+		}
 		effect->next = new_effect;
 	} else {
 		s->effect = new_effect;
@@ -1275,6 +1296,7 @@ static enum parser_error parse_mon_base_name(struct parser *p) {
 	struct monster_base *rb = mem_zalloc(sizeof *rb);
 	rb->next = h;
 	rb->name = string_make(parser_getstr(p, "name"));
+
 	parser_setpriv(p, rb);
 	return PARSE_ERROR_NONE;
 }
@@ -1367,11 +1389,55 @@ static enum parser_error parse_mon_base_attribute(struct parser *p)
 	int index = monster_attribute_by_name(parser_getsym(p, "which"));
 	int power = parser_getint(p, "power");
 
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
 	if (index == -1) {
 		return PARSE_ERROR_GENERIC;
 	}
 
 	rb->attributes[index] = power;
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_stat(struct parser *p)
+{
+	struct monster_base *rb = parser_priv(p);
+
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	
+	rb->stats[STAT_STR] = parser_getint(p, "str");
+	rb->stats[STAT_INT] = parser_getint(p, "int");
+	rb->stats[STAT_WIS] = parser_getint(p, "wis");
+	rb->stats[STAT_DEX] = parser_getint(p, "dex");
+	rb->stats[STAT_CON] = parser_getint(p, "con");
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_power(struct parser *p)
+{
+	struct monster_base *rb = parser_priv(p);
+	char pname[80];
+	int pind;
+
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	my_strcpy(pname, parser_getsym(p, "power"), sizeof(pname));
+
+	pind = power_index_by_name(pname);
+
+	if (pind < 0 || pind >= PP_MAX) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	rb->powers[pind] = parser_getint(p, "amount");
 
 	return PARSE_ERROR_NONE;
 }
@@ -1388,6 +1454,8 @@ static struct parser *init_parse_mon_base(void) {
 	parser_reg(p, "desc str desc", parse_mon_base_desc);
 	parser_reg(p, "body str body", parse_mon_base_body);
 	parser_reg(p, "attr sym which int power", parse_mon_base_attribute);
+	parser_reg(p, "stats int str int int int wis int dex int con", parse_mon_base_stat);
+	parser_reg(p, "power sym power int amount", parse_mon_base_power);
 	return p;
 }
 

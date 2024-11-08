@@ -195,10 +195,10 @@ static enum parser_error parse_normal(struct parser *p) {
 	if (!object_kind_stockable_on_reset(kind)) {
 	}
 	else if (kind->tval == TV_TOME) {
-		s->normal_max += TOME_MAX;
+		s->normal_max += TOME_MAX - 1;
 	}
 	else {
-		s->normal_max++;
+		++s->normal_max;
 	}
 
 	return PARSE_ERROR_NONE;

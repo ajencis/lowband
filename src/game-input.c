@@ -108,8 +108,9 @@ bool get_check(const char *prompt)
 bool get_forced_check(const char *prompt)
 {
 	disturb(player);
-	if (get_forced_check_hook)
+	if (get_forced_check_hook) {
 		return get_forced_check_hook(prompt);
+	}
 	return false;
 }
 

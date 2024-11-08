@@ -11832,6 +11832,7 @@ desc: feed her voracious appetite.
 
 name:dracolich
 plural:dracoliches
+evolution:demidracolich
 base:ancient dragon
 color:G
 speed:120
@@ -11840,7 +11841,7 @@ hearing:25
 armor-class:144
 sleepiness:80
 depth:55
-rarity:2
+rarity:10
 experience:18000
 blow:CLAW:HURT:6d12
 blow:CLAW:HURT:6d12
@@ -12555,6 +12556,34 @@ spells:BA_NETH
 spells:S_DEMON | S_HI_UNDEAD
 desc:A lich who has reached its ultimate evolutionary stage: a completely
 desc: immaterial state.
+
+name:demidracolich
+plural:demidracoliches
+evolution:archdracolich
+base:ancient dragon
+color:G
+speed:120
+hit-points:3080
+hearing:25
+armor-class:144
+sleepiness:80
+depth:85
+rarity:10
+experience:18000
+blow:CLAW:HURT:6d12
+blow:CLAW:HURT:6d12
+blow:BITE:EXP_80:7d14
+flags:UNDEAD | COLD_BLOOD
+flags:ONLY_ITEM
+flags:BASH_DOOR | TAKE_ITEM
+flags:IM_COLD | IM_POIS | NO_STUN | IM_NETHER
+innate-freq:10
+spell-freq:12
+spells:CONF | SCARE
+spells:BR_COLD | BR_NETH
+desc:The spectral form of the skull of a once-great dragon, enchanted by magic most
+desc: perilous.  It strikes with speed and drains life from its
+desc: prey to satisfy its hunger.
 
 ### Dungeon level 65 ###
 
@@ -14470,6 +14499,33 @@ friends:100:1d1:Smaug the Golden
 friends:100:1d1:Glaurung, Father of the Dragons
 desc:"Rushing Jaws" is his name, and death is his game; the greatest and most
 desc: terrible of all dragonkind, his power dismayed even the Valar for a time.
+
+name:archdracolich
+plural:archdracoliches
+base:ancient dragon
+color:G
+speed:120
+hit-points:3080
+hearing:25
+armor-class:144
+sleepiness:80
+depth:85
+rarity:10
+experience:18000
+blow:CLAW:HURT:6d12
+blow:CLAW:HURT:6d12
+blow:BITE:EXP_80:7d14
+flags:UNDEAD | COLD_BLOOD
+flags:ONLY_ITEM | PASS_WALL
+flags:BASH_DOOR | TAKE_ITEM
+flags:IM_COLD | IM_POIS | NO_STUN | IM_NETHER
+innate-freq:10
+spell-freq:12
+spells:CONF | SCARE
+spells:BR_COLD | BR_NETH
+desc:The spectral form of a once-great dragon, enchanted by magic most
+desc: perilous.  It strikes with speed and drains life from its
+desc: prey to satisfy its hunger.
 
 ### Dungeon level 86 ###
 

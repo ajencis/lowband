@@ -338,6 +338,11 @@ void player_exp_gain(struct player *p, int32_t amount, uint32_t fract)
 	}
 
 	p->xp_this_turn += new_amt;
+	if (p->monster_xp < UINT32_MAX - new_amt) {
+		p->monster_xp += new_amt;
+	} else {
+		p->monster_xp = UINT32_MAX;
+	}
 	
 	if (p->exp < p->max_exp) {
 		p->max_exp = MIN(amount / 10 + p->max_exp, (int)tolev);

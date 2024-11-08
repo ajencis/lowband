@@ -286,14 +286,17 @@ static int32_t effect_value_base_spell_power(void)
 	int power = 0;
 
 	/* L: check if player is casting */
-	if (ref_spell)
+	if (ref_spell) {
 		power = gener_spell_power(player, ref_spell);
+	}
 	/* Check the reference race first */
-	else if (ref_race)
+	else if (ref_race) {
 	   power = ref_race->spell_power;
+	}
 	/* Otherwise the current monster if there is one */
-	else if (cave->mon_current > 0)
+	else if (cave->mon_current > 0) {
 		power = cave_monster(cave, cave->mon_current)->race->spell_power;
+	}
 
 	return power;
 }
@@ -335,6 +338,21 @@ static int32_t effect_value_base_monster_percent_hp_gone(void)
 	return mon ? (((mon->maxhp - mon->hp) * 100) / mon->maxhp) : 0;
 }
 
+static int32_t effect_value_base_caster_hp(void)
+{
+	int power = 0;
+
+	// Use the current monster if there is one
+	if (cave->mon_current > 0) {
+		return cave_monster(cave, cave->mon_current)->hp;
+	}
+	// Else assume the player is casting
+	else {
+		return player->chp;
+	}
+
+	return power;
+}
 expression_base_value_f effect_value_base_by_name(const char *name)
 {
 	static const struct value_base_s {
@@ -349,6 +367,7 @@ expression_base_value_f effect_value_base_by_name(const char *name)
 		{ "PLAYER_HP", effect_value_base_player_hp },
 		{ "MONSTER_PERCENT_HP_GONE",
 		  effect_value_base_monster_percent_hp_gone },
+		{ "CASTER_HP", effect_value_base_caster_hp },
 		{ NULL, NULL },
 	};
 	const struct value_base_s *current = value_bases;

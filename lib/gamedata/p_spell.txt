@@ -134,7 +134,7 @@ school:NECROMANCY
 school:TELEPORTATION
 
 spell:Descension:80:80:80
-effect:TRANSFORM
+effect:LICH_TRANSFORM
 monster:lich
 desc:Transforms you into a lich.
 school:NECROMANCY

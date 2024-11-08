@@ -428,6 +428,7 @@ static bool describe_brands(textblock *tb, const struct object *obj)
 	return true;
 }
 
+#if 0
 /**
  * Sum over the critical levels for O-combat to get the expected number of
  * dice added when a critical happens.
@@ -457,6 +458,7 @@ static struct my_rational sum_o_criticals(const struct o_critical_level *head)
 
 	return added_dice;
 }
+#endif
 
 /**
  * Account for criticals in the calculation of melee prowess
@@ -712,6 +714,7 @@ static void calculate_missile_crits(struct player_state *state, int weight,
 	}
 }
 
+#if 0
 /**
  * Missile crits follow the same approach as melee crits.
  *
@@ -790,6 +793,7 @@ static void o_calculate_missile_crits(struct player_state *state,
 		*frac_dice = my_rational_construct(0, 1);
 	}
 }
+#endif
 
 /**
  * Get the object flags the player should know about for the given object/
@@ -1241,6 +1245,7 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 }
 
 
+#if 0
 /**
  * Gets information about the average damage/turn that can be inflicted if
  * the player uses the given weapon.  Uses the OAngband damage calculations.
@@ -1523,6 +1528,7 @@ bool o_obj_known_damage(const struct object *obj, int *normal_damage,
 	mem_free(total_slays);
 	return has_brands_or_slays;
 }
+#endif
 
 
 /**
@@ -1537,9 +1543,9 @@ static bool describe_damage(textblock *tb, const struct object *obj, bool throw)
 	int *slay_damage = mem_zalloc(z_info->slay_max * sizeof(int));
 
 	/* Collect brands and slays */
-	bool has_brands_or_slays = OPT(player, birth_percent_damage) ?
+	bool has_brands_or_slays =/* OPT(player, birth_percent_damage) ?
 		o_obj_known_damage(obj, &normal_damage, brand_damage, slay_damage,
-						   &nonweap_slay, throw) :
+						   &nonweap_slay, throw) :*/
 		obj_known_damage(obj, &normal_damage, brand_damage, slay_damage,
 						 &nonweap_slay, throw);
 

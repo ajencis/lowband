@@ -212,7 +212,7 @@ owner:15000:The Dojo
 owner:20000:The Training Room
 owner:25000:The Gym
 owner:30000:The Pit
-slots:0:1
+slots:1:3
 turnover:5
 normal:tome:Basic Tome
 normal:tome:Tome

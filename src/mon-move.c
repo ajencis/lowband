@@ -108,7 +108,7 @@ static bool monster_near_permwall(const struct monster *mon)
 /**
  * Check if the monster can see the player
  */
-static bool monster_can_see_player(struct monster *mon)
+bool monster_can_see_player(struct monster *mon)
 {
 	if (!square_isview(cave, mon->grid)) return false;
 	if (player->timed[TMD_COVERTRACKS] && (mon->cdis > z_info->max_sight / 4)) {
@@ -228,7 +228,7 @@ bool mon_will_attack_player(const struct monster *mon, const struct player *p)
 	return true;
 }
 
-static bool mon_will_attack_mon(const struct monster *mon, const struct monster *other)
+bool mon_will_attack_mon(const struct monster *mon, const struct monster *other)
 {
 	int i = 0;
 	bool mpally = mon->faction == '@' || mon->m_timed[MON_TMD_CHARMED];

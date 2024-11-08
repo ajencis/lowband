@@ -43,6 +43,7 @@ body:Dragon
 attr:AC:3
 attr:HP:2
 attr:SPEED:-2
+stats:1:1:-1:-1:1
 
 # Ainur were the founding spirits of Arda, and could take any form they wished.
 # Ainur in Angband typically have shapechanges and many possibe other spells,
@@ -62,6 +63,7 @@ attr:SPEED:-1
 attr:DAMAGE:-1
 attr:AC:1
 attr:HP:1
+stats:1:1:1:1:1
 
 # Ants have lowish HP but highish armor class, and powerful melee for their
 # depth
@@ -135,6 +137,7 @@ body:Dragon
 attr:AC:2
 attr:HP:1
 attr:SPEED:-1
+stats:1:0:-1:0:1
 
 # Early, weak breathers which move quickly and erratically
 name:dragon fly
@@ -160,6 +163,8 @@ body:Beholder
 attr:MAGIC:2
 attr:DAMAGE:-1
 attr:SPEED:-1
+stats:-2:1:1:1:0
+power:DIVINATION_MAGIC:20
 
 # Creatures (mostly) embodying a single element, mostly with lowish HP
 name:elemental
@@ -251,6 +256,7 @@ attr:SPEED:1
 attr:DAMAGE:1
 attr:HP:-1
 attr:AC:-1
+stats:1:-1:-1:1:1
 
 # Non-descript early monsters that demonstrate some stuff but are mostly filler
 name:icky thing
@@ -313,6 +319,8 @@ body:Humanoid
 attr:MAGIC:2
 attr:AC:1
 attr:HP:-3
+stats:-2:2:0:1:0
+power:NECROMANCY_MAGIC:20
 
 # Weird monsters tha look like floor.
 name:lurker
@@ -339,6 +347,7 @@ attr:DAMAGE:3
 attr:MAGIC:2
 attr:HP:-1
 attr:AC:-3
+stats:2:1:-3:0:1
 
 # Monsters which pretend to be objects.  They don't move but do cast spells,
 # and attack if the player steps next to them.
@@ -364,6 +373,7 @@ body:Humanoid
 attr:DAMAGE:3
 attr:HP:-1
 attr:AC:-3
+stats:2:0:-3:1:1
 
 # Non-moving growths which release spores when stepped next to
 name:mold
@@ -554,6 +564,9 @@ attr:AC:1
 attr:HP:-2
 attr:MAGIC:1
 attr:DAMAGE:-1
+stats:1:1:-2:2:-1
+power:POLEARM_SPECIALIZATION:20
+power:BACKSTAB:20
 
 # Always awake, elemental objects which engulf and breathe their element(s)
 name:vortex

@@ -91,7 +91,8 @@ int breakage_chance(const struct object *obj, bool hit_target) {
 int chance_of_melee_hit_base(const struct player *p, struct attack_roll *aroll)
 {
 	int bonus = aroll->to_hit;
-	return p->state.skills[aroll->attack_skill] + bonus * BTH_PLUS_ADJ;
+	int total = p->state.skills[aroll->attack_skill] + bonus * BTH_PLUS_ADJ;
+	return MAX(total, 0);
 }
 
 /**
@@ -110,6 +111,7 @@ static int chance_of_melee_hit(const struct player *p,
 	return monster_is_visible(mon) ? chance : chance / 2;
 }
 
+#if 0
 /**
  * Calculate the player's base missile to-hit value without regard to a specific
  * monster.
@@ -164,6 +166,7 @@ static int chance_of_missile_hit(const struct player *p,
 	/* Non-visible targets have a to-hit penalty of 50% */
 	return monster_is_obvious(mon) ? chance : chance / 2;
 }
+#endif
 
 /**
  * Determine if a hit roll is successful against the target AC.
@@ -226,15 +229,16 @@ void hit_chance(random_chance *chance, int to_hit, int ac)
 {
 	const int ALWAYS_HIT = 12;
 	const int ALWAYS_MISS = 5;
+	int denom = MIN(to_hit + 40, 100);
 
-	chance->denominator = 100;
+	chance->denominator = denom;
 
-    int scaleto = chance->denominator - ALWAYS_HIT - ALWAYS_MISS;
+    int scaleto = (100 - ALWAYS_HIT - ALWAYS_MISS) * denom / 100;
 
 	chance->numerator = scaleto / 2 + (to_hit - ac) * 5 / 3;
 	chance->numerator = MAX(chance->numerator, 0);
 	chance->numerator = MIN(chance->numerator, scaleto);
-	chance->numerator += ALWAYS_HIT;
+	chance->numerator += ALWAYS_HIT * denom / 100;
 }
 
 /**
@@ -363,6 +367,7 @@ static int critical_shot(const struct player *p,
 	return new_dam;
 }
 
+#if 0
 /**
  * Determine O-combat damage for critical hits from shooting.
  */
@@ -408,6 +413,7 @@ static int o_critical_shot(const struct player *p,
 
 	return add_dice;
 }
+#endif
 
 /**
  * Determine damage for critical hits from melee.
@@ -573,6 +579,7 @@ static int o_melee_damage(struct player *p, const struct monster *mon,
 }
 #endif
 
+#if 0
 /**
  * Determine standard ranged damage.
  *
@@ -677,6 +684,7 @@ static int o_ranged_damage(struct player *p, const struct monster *mon,
 
 	return dmg;
 }
+#endif
 
 /**
  * Apply the player damage bonuses
@@ -798,40 +806,44 @@ static bool backstab_mod_attack(struct attack_roll *aroll, int power)
 /**
  * L: get a weapon attack
  */
-struct attack_roll get_melee_weapon_attack(struct player *p, struct player_state *ps, struct object *obj)
+bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct object *obj,
+		struct attack_roll *aroll)
 {
-	struct attack_roll aroll = { 0 };
-	if (obj) {
+	memset(aroll, 0, sizeof(*aroll));
+	if (obj && obj->kind->tval == TV_SHIELD) {
+		return false;
+	}
+	else if (obj) {
 		int td = object_to_dam(obj);
-		aroll.ddice = obj->dd;
+		aroll->ddice = obj->dd;
 		// half the weapon to-dam boosts the dice and the other boosts the raw damage
-		aroll.dsides = obj->ds + td / 2;
-		aroll.to_dam = (td + 1) / 2;
-		aroll.to_hit = object_to_hit(obj);
-		aroll.message = "hit";
-		aroll.accuracy_stat = STAT_DEX;
-		aroll.damage_stat = STAT_STR;
-		aroll.obj = obj;
-		aroll.proj_type = obj->kind->base->proj_type;
-		aroll.range = obj->tval == TV_POLEARM ? 2 : 1;
+		aroll->dsides = obj->ds + td / 2;
+		aroll->to_dam = (td + 1) / 2;
+		aroll->to_hit = object_to_hit(obj);
+		aroll->message = "hit";
+		aroll->accuracy_stat = STAT_DEX;
+		aroll->damage_stat = STAT_STR;
+		aroll->obj = obj;
+		aroll->proj_type = obj->kind->base->proj_type;
+		aroll->range = obj->tval == TV_POLEARM ? 2 : 1;
 	}
 	else {
-		unarmed_get_attack(&aroll, obj);
-        unarmed_mod_attack(&aroll, obj);
+		unarmed_get_attack(aroll, obj);
+        unarmed_mod_attack(aroll, obj);
 	}
 
-	aroll.attack_skill = SKILL_TO_HIT_MELEE;
+	aroll->attack_skill = SKILL_TO_HIT_MELEE;
 
-	aroll.to_hit += ps->to_h;
-	aroll.dsides += player_damage_bonus(&p->state);
+	aroll->to_hit += ps->to_h;
+	aroll->dsides += player_damage_bonus(&p->state);
 
-	aroll.to_hit += adj_dex_th(ps->stat_ind[aroll.accuracy_stat]);
-	aroll.dsides += adj_str_td(ps->stat_ind[aroll.damage_stat]);
+	aroll->to_hit += adj_dex_th(ps->stat_ind[aroll->accuracy_stat]);
+	aroll->dsides += adj_str_td(ps->stat_ind[aroll->damage_stat]);
 
-	specialization_mod_attack(&aroll, obj);
+	specialization_mod_attack(aroll, obj);
 
-	aroll.dsides = MAX(aroll.dsides, 1);
-	aroll.ddice = MAX(aroll.ddice, 1);
+	aroll->dsides = MAX(aroll->dsides, 1);
+	aroll->ddice = MAX(aroll->ddice, 1);
 
 	return aroll;
 }
@@ -1108,10 +1120,11 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	int j, b, s, weight, dmg;
 
 	/* Default to punching / kicking */
-	if (one_in_(3))
+	if (one_in_(3)) {
 	    my_strcpy(verb, "kick", sizeof(verb));
-	else
+	} else {
     	my_strcpy(verb, "punch", sizeof(verb));
+	}
 
 	/* Extract monster name (or "it") */
 	monster_desc(m_name, sizeof(m_name), mon, MDESC_TARG);
@@ -1387,11 +1400,17 @@ void py_attack(struct player *p, struct loc grid)
 	int dist = distance(p->grid, grid);
 	bool can_attack = false;
 
+	if (p->state.num_attacks <= 0) {
+		msg("You don't have any way to attack!");
+		return;
+	}
+
 	if (mon->m_timed[MON_TMD_SLEEP] || mon->m_timed[MON_TMD_HOLD]) backstab = 2;
 	else if (mon->m_timed[MON_TMD_SLOW] || mon->m_timed[MON_TMD_FEAR] || mon->m_timed[MON_TMD_STUN]) backstab = 1;
 
-	for (i = 0; i < MON_TMD_MAX; i++)
+	for (i = 0; i < MON_TMD_MAX; i++) {
 		pretimed[i] = (int)mon->m_timed[i];
+	}
 
 	/* Disturb the player */
 	disturb(p);

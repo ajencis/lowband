@@ -116,6 +116,9 @@ static bool monster_can_cast(struct monster *mon, bool innate)
 	/* L: friendly monsters won't cast spells at the player */
 	if (!mon_will_attack_player(mon, player) && target_is_player) return false;
 
+	// L: have to be able to see whom we're targeting
+	if (!los(cave, mon->grid, tgrid)) return false;
+
 	/* Cannot cast spells when nice */
 	if (mflag_has(mon->mflag, MFLAG_NICE)) return false;
 
@@ -425,6 +428,7 @@ bool make_ranged_attack(struct monster *mon)
 	int target_dist;
 	struct loc target_grid;
 	int i;
+	struct monster *t_mon;
 
 	if (mon->target.who != TARGET_WHO_MONSTER && mon->target.who != TARGET_WHO_PLAYER) {
 		return false;
@@ -437,6 +441,24 @@ bool make_ranged_attack(struct monster *mon)
 
 	monster_get_target_dist_grid(mon, &target_dist, &target_grid);
 
+	t_mon = square_monster(cave, target_grid);
+	if (t_mon) {
+		if (!mon_will_attack_mon(mon, t_mon)) {
+			return false;
+		}
+		if (!los(cave, mon->grid, t_mon->grid)) {
+			return false;
+		}
+	}
+	if (mon->target.who == TARGET_WHO_PLAYER) {
+		if (!mon_will_attack_player(mon, player)) {
+			return false;
+		}
+		if (!monster_can_see_player(mon)) {
+			return false;
+		}
+	}
+
 	/* Check for cast this turn, non-innate and then innate */
 	// L: check for ranged melee attacks too
 	if (monster_can_cast(mon, false)) {
@@ -445,8 +467,7 @@ bool make_ranged_attack(struct monster *mon)
 		innate = true;
 	} else if (target_dist <= melee_dist) {
 		if (los(cave, mon->grid, target_grid)) {
-			if (mon->target.who == TARGET_WHO_MONSTER) {
-				struct monster *t_mon = cave_monster(cave, mon->target.midx);
+			if (mon->target.who == TARGET_WHO_MONSTER && t_mon) {
 				return monster_attack_monster(mon, t_mon);
 			}
 			else if (mon->target.who == TARGET_WHO_PLAYER) {

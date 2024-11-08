@@ -30,6 +30,8 @@ enum monster_stagger {
 };
 
 bool mon_will_attack_player(const struct monster *mon, const struct player *player);
+bool mon_will_attack_mon(const struct monster *mon, const struct monster *other);
+bool monster_can_see_player(struct monster *mon);
 bool mon_check_target(struct chunk *c, struct monster *mon);
 bool multiply_monster(const struct monster *mon);
 void process_monsters(int minimum_energy);

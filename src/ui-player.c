@@ -751,6 +751,7 @@ static struct panel *get_panel_combat(void) {
 	for (i = 0; i < player->state.num_attacks; i++) {
 		aroll = &player->state.attacks[i];
 		bth = player->state.skills[aroll->attack_skill] / BTH_PLUS_ADJ + aroll->to_hit;
+		bth = MAX(0, bth);
 		blws += aroll->blows;
 
 		if (aroll->obj) {

@@ -721,6 +721,7 @@ struct player {
 	struct magic_realm *realm;			/* L: how the player casts */
 
 	int32_t xp_this_turn;				/* L: how much xp was gained between turns */
+	uint32_t monster_xp;				/* L: XP progression towards evolution */
 };
 
 

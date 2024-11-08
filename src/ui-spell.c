@@ -488,37 +488,53 @@ static bool innate_menu_handler(struct menu *m, const ui_event *e, int oid)
 
 static void innate_menu_browser(int oid, void *data, const region *loc)
 {
-	/*struct innate_menu_data *d = data;
+	struct innate_menu_data *d = data;
 	int innate_index = d->innates[oid];
-	const struct monster_spell *innate = monster_spell_by_index(innate_index);*/
+	const struct monster_spell *innate = monster_spell_by_index(innate_index);
 
-	/*if (d->show_description) {
-		// Redirect output to the screen 
-		text_out_hook = text_out_to_screen;
-		text_out_wrap = 0;
-		text_out_indent = loc->col - 1;
-		text_out_pad = 1;
+	if (d->show_description) {
+		int w, h, i;
+		struct effect *e;
+		textblock *tb;
+		region tbloc = *loc;
+		bool has_effect_desc = true;
 
-		Term_gotoxy(loc->col, loc->row + loc->page_rows);
-		// Spell description 
-		text_out("\n%s", spell->text);
+		Term_get_size(&w, &h);
+		tbloc.row += 1 + tbloc.page_rows;
+		tbloc.page_rows = 10;
+		tbloc.width = MAX(5, w - tbloc.col - 5);
+
+		cave->mon_current = 0;
+
+		tb = effect_describe(innate->effect, "It ", 0, false);
+
+		if (!tb) {
+			has_effect_desc = false;
+			tb = textblock_new();
+		}
+		
+		if (has_effect_desc) {
+			textblock_append(tb, ".");
+		}
 
 		// To summarize average damage, count the damaging effects 
 		int num_damaging = 0;
-		for (struct effect *e = spell->effect; e != NULL; e = effect_next(e)) {
+		for (e = innate->effect; e; e = effect_next(e)) {
 			if (effect_damages(e)) {
 				num_damaging++;
 			}
 		}
 		// Now enumerate the effects' damage and type if not forgotten 
-		if (num_damaging > 0
-			&& (player->spell_flags[spell_index] & PY_SPELL_WORKED)
-			&& !(player->spell_flags[spell_index] & PY_SPELL_FORGOTTEN)) {
+		if (num_damaging > 0) {
 			dice_t *shared_dice = NULL;
-			int i = 0;
+			i = 0;
 
-			text_out("  Inflicts an average of");
-			for (struct effect *e = spell->effect; e != NULL; e = effect_next(e)) {
+			if (has_effect_desc) {
+				textblock_append(tb, "\n");
+			}
+
+			textblock_append(tb, "Inflicts an average of");
+			for (e = innate->effect; e != NULL; e = effect_next(e)) {
 				if (e->index == EF_SET_VALUE) {
 					shared_dice = e->dice;
 				} else if (e->index == EF_CLEAR_VALUE) {
@@ -526,28 +542,43 @@ static void innate_menu_browser(int oid, void *data, const region *loc)
 				}
 				if (effect_damages(e)) {
 					if (num_damaging > 2 && i > 0) {
-						text_out(",");
+						textblock_append(tb, ",");
 					}
 					if (num_damaging > 1 && i == num_damaging - 1) {
-						text_out(" and");
+						textblock_append(tb, " and");
 					}
-					text_out_c(COLOUR_L_GREEN, " %d", effect_avg_damage(e, shared_dice));
+					textblock_append_c(tb, COLOUR_L_GREEN, " %d", effect_avg_damage(e, shared_dice));
 					const char *projection = effect_projection(e);
 					if (strlen(projection) > 0) {
-						text_out(" %s", projection);
+						textblock_append(tb, " %s", projection);
 					}
 					i++;
 				}
 			}
-			text_out(" damage.");
+			textblock_append(tb, " damage.");
 		}
 		
-		text_out("\n\n");
+		textblock_append(tb, "\n\n");
 
-		// XXX 
-		text_out_pad = 0;
-		text_out_indent = 0;
-	}*/
+		assert(textblock_text(tb));
+
+		size_t *line_starts = NULL, *line_lengths = NULL;
+		size_t n_lines = textblock_calculate_lines(tb,
+				&line_starts, &line_lengths, tbloc.width);
+
+		n_lines = MIN(n_lines, (size_t)tbloc.page_rows);
+
+		mem_free(line_starts);
+		mem_free(line_lengths);
+
+		for (i = tbloc.row - 1; i < tbloc.row + (int)n_lines + 1; i++) {
+			Term_erase(tbloc.col - 1, i, tbloc.width + 2);
+		}
+
+		textui_textblock_place(tb, tbloc, NULL);
+
+		textblock_free(tb);
+	}
 }
 
 static const menu_iter innate_menu_iter = {
@@ -599,7 +630,7 @@ static struct menu *innate_menu_new(const struct monster_race *monr,
 	menu_setpriv(m, d->n_innates, d);
 
 	/* Set flags */
-	m->header = "Name                             Lv";
+	m->header = "Name                             Cost";
 	m->flags = MN_CASELESS_TAGS;
 	m->selections = all_letters_nohjkl;
 	m->browse_hook = innate_menu_browser;
@@ -666,7 +697,7 @@ int textui_get_innate(struct player *p,
 
 
 /**
- * Innate menu data struct
+ * Spell menu data struct
  */
 struct gener_spell_menu_data {
 	const struct player_spell **spells;
@@ -780,7 +811,7 @@ static void gener_spell_menu_browser(int oid, void *data, const region *loc)
 	if (d->show_description) {
 		// Redirect output to the screen 
 		text_out_hook = text_out_to_screen;
-		text_out_wrap = 0;
+		text_out_wrap = SCREEN_WID - 5;
 		text_out_indent = loc->col - 1;
 		text_out_pad = 1;
 

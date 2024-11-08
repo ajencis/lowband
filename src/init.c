@@ -2429,8 +2429,9 @@ static errr finish_parse_body(struct parser *p) {
 	/* Scan the list for the max slots */
 	z_info->equip_slots_max = 0;
 	for (b = bodies; b; b = b->next) {
-		if (b->count > z_info->equip_slots_max)
+		if (b->count > z_info->equip_slots_max) {
 			z_info->equip_slots_max = b->count;
+		}
 	}
 
 	/* Allocate the slot list and copy */
@@ -2621,11 +2622,24 @@ struct file_parser history_parser = {
 static enum parser_error parse_p_race_name(struct parser *p) {
 	struct player_race *h = parser_priv(p);
 	struct player_race *r = mem_zalloc(sizeof *r);
+	struct player_race *or;
+
+	// L: default to first race parsed
+	or = h;
+	while (or && or->next)  {
+		or = or->next;
+	}
+	if (or) {
+		memcpy(r, or, sizeof(*or));
+	}
 
 	r->next = h;
 	r->name = string_make(parser_getstr(p, "name"));
 	/* Default body is humanoid */
 	r->body = bodies;
+	while (r->body->next) {
+		r->body = r->body->next;
+	}
 	parser_setpriv(p, r);
 	return PARSE_ERROR_NONE;
 }

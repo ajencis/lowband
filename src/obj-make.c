@@ -1022,7 +1022,7 @@ int apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 	}
 
 	/* Give it a chance to be cursed */
-	if (one_in_(20) && tval_is_wearable(obj)) {
+	if (one_in_(2) && tval_is_wearable(obj) && power > 0) {
 		lev = apply_curse(obj, lev);
 	}
 
@@ -1254,15 +1254,18 @@ struct object *make_object(struct chunk *c, int lev, bool good, bool great,
 	apply_magic(new_obj, lev, true, good, great, extra_roll);
 
 	/* Generate multiple items */
-	if (!new_obj->artifact && kind->gen_mult_prob >= randint1(100))
+	if (!new_obj->artifact && kind->gen_mult_prob >= randint1(100)) {
 		new_obj->number = randcalc(kind->stack_size, lev, RANDOMISE);
+	}
 
-	if (new_obj->number > new_obj->kind->base->max_stack)
+	if (new_obj->number > new_obj->kind->base->max_stack) {
 		new_obj->number = new_obj->kind->base->max_stack;
+	}
 
 	/* Get the value */
-	if (value)
+	if (value) {
 		*value = object_value_real(new_obj, new_obj->number);
+	}
 
 	/* Boost of 20% per level OOD for uncursed objects */
 	if ((!new_obj->curses) && (kind->alloc_min > c->depth) && value) {

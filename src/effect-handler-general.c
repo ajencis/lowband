@@ -3551,6 +3551,28 @@ bool effect_handler_TRANSFORM(effect_handler_context_t *context)
 	return true;
 }
 
+bool effect_handler_LICH_TRANSFORM(effect_handler_context_t *context)
+{
+	struct monster_race *monr;
+	const char *body_name = player->body.name;
+
+	if (streq(body_name, "Dragon")) {
+		monr = lookup_monster("dracolich");
+	}
+	else if (streq(body_name, "Humanoid")) {
+		monr = lookup_monster("lich");
+	}
+	else {
+		msg("Your body type cannot become a lich.");
+		return false;
+	}
+
+	change_player_monster(player, monr, false);
+
+	return true;
+}
+
+
 /**
  * One Ring activation
  */

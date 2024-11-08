@@ -1294,19 +1294,29 @@ static bool textui_get_check_base(const char *prompt, bool force_answer)
 		prt("", 0, 0);
 
 		if (ke.type == EVT_MOUSE) {
-			if ((ke.mouse.button != 1) && (ke.mouse.y != 0))
+			if ((ke.mouse.button != 1) && (ke.mouse.y != 0)) {
+				message_add(format("%s  [%c]", buf, 'n'), MSG_GENERIC);
 				return (false);
+			}
+			message_add(format("%s  [%c]", buf, 'y'), MSG_GENERIC);
 			return (true);
 		} else {
 			if ((ke.key.code == 'Y') || (ke.key.code == 'y')) {
+				message_add(format("%s  [%c]", buf, ke.key.code), MSG_GENERIC);
 				return (true);
 			} else if ((ke.key.code == 'N') || (ke.key.code == 'n')) {
+				message_add(format("%s  [%c]", buf, ke.key.code), MSG_GENERIC);
 			    return (false);
 			}
 		}
 	} while (force_answer);
 
 	/* No proper choice made, default to false */
+	if (ke.type == EVT_MOUSE) {
+		message_add(format("%s  [%c]", buf, 'n'), MSG_GENERIC);
+	} else {
+		message_add(format("%s  [%c]", buf, ke.key.code), MSG_GENERIC);
+	}
 	return (false);
 }
 

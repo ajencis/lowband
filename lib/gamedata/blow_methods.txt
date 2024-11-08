@@ -31,6 +31,7 @@ stun:0
 miss:1
 phys:0
 player-usable:1
+unarmed:1
 msg:MON_TOUCH
 act:touches {target}
 fact:touch
@@ -44,7 +45,8 @@ cut:0
 stun:1
 miss:1
 phys:1
-player-usable:1
+player-usable:0
+unarmed:1
 msg:MON_PUNCH
 act:punches {target}
 fact:punch
@@ -58,7 +60,8 @@ cut:0
 stun:1
 miss:1
 phys:1
-player-usable:1
+player-usable:0
+unarmed:1
 msg:MON_KICK
 act:kicks {target}
 fact:kick

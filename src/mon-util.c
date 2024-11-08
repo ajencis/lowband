@@ -1821,7 +1821,9 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 	// check if it has no attacks or no spells
 	i = 0;
 	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
-		if (mr->blow[i].dice.dice > 0) blows += 5 + mr->blow[i].method->power;
+		if (mr->blow[i].dice.dice > 0) {
+			blows++;
+		}
 	}
 	if (!blows) dam /= 2;
 
@@ -1869,14 +1871,14 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 
 	// calculate its stats based on power
 	mr->avg_hp = MAX(hp / 2 + 5, hp) * MAX((hp + 1) / 2 + 10, hp) / 10; // 1000ish for level 100
-	mr->ac = ac - 33 + MIN(ac * 2, 33); // 100ish for level 100
+	mr->ac = ac; // 100ish for level 100
 	mr->speed = 105 + (spe * 30 + 49) / 100; // 135ish for level 100
 	mr->spell_power = mag; // 100ish for level 100
 	ttdam = MAX(dam + 4, dam * 3 / 2);
-	if (dam > 0) mr->freq_spell = 10 * mag / dam;
+	if (dam > 0) mr->freq_spell = 40 * mag / dam;
 	else mr->freq_spell = 100;
-	mr->freq_spell = MIN(40, mr->freq_spell);
-	mr->mexp = power * power;
+	mr->freq_spell = MIN(75, mr->freq_spell);
+	mr->mexp = rf_has(mr->flags, RF_UNIQUE) ? power * power * 10 : 0;
 
 	// spread damage over its damaging blows
 	quo = 0;
@@ -1884,17 +1886,19 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 		quo += 5 + mr->blow[i].method->power;
 	}
 	// gets a total number of dice for its attacks based on its level and number of attacks
-	tdice = dam * (blows + 1) / 25 + 1;
+	tdice = dam * (blows + 4) / 50 + 1;
 
 	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
 		cblow = &mr->blow[i];
 		int fact = 5 + cblow->method->power;
 
-		if (cblow->dice.dice < 1)
+		if (cblow->dice.dice < 1) {
 			continue;
+		}
 
 		int ddice = fact * tdice / quo;
 		ddice = MAX(1, MIN(4, ddice));
+
 		int dsides = (ttdam * fact + quo * ddice - 1) / quo / ddice - 1;
 		dsides = MAX(1, dsides);
 

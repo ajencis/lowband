@@ -1260,10 +1260,11 @@ void do_cmd_innate(struct command *cmd)
 	ms = monster_spell_by_index(innate_index);
 
 	if (innate_needs_aim(innate_index)) {
-		if (cmd_get_target(cmd, "target", &dir) == CMD_OK)
+		if (cmd_get_target(cmd, "target", &dir) == CMD_OK) {
 			player_confuse_dir(player, &dir, false);
-		else
+		} else {
 			return;
+		}
 	}
 
 	effect_do(ms->effect, source_player(), NULL, &ident, true, dir, 0, 0, cmd);

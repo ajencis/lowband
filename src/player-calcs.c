@@ -214,6 +214,14 @@ static int unarmoured_ac_bonus(struct player_state *s, int wgt)
 	return bonus;
 }
 
+static int monster_modify_stat(int which, struct monster_race *mr)
+{
+	int curr = mr->base->stats[which];
+	int actual = (mr->level * curr + 33) / 50;
+	if (actual < 0) actual = MAX(actual, curr);
+	return actual;
+}
+
 
 #if 0
 /**
@@ -956,11 +964,10 @@ static void calc_hitpoints(struct player *p)
 
 	/* Calculate hitpoints */
 	mhp = p->hitdie + p->hitdie * p->lev / 5 + bonus * p->lev / 100;
-	//mhp = p->player_hp[p->lev - 1] + (bonus * p->lev / 100);
 
 	/* L: bonus from being a monster */
 	if (mon) {
-		mhp += (int)my_cbrt((double)mon->avg_hp * mon->avg_hp);
+		mhp = MAX(mhp, mon->avg_hp);
 	}
 
 	/* L: bonus from resilience power */
@@ -1340,27 +1347,58 @@ static bool calc_monster_spell(int counts[PP_MAX], const struct monster_spell *m
 	return true;
 }
 
+static bool calc_monster_blow(int counts[PP_MAX], const struct monster_blow *mb)
+{
+	bool effect = false;
+
+	if (!mb->method->player_usable && mb->method->unarmed) {
+		counts[PP_UNARMED_STRIKE]++;
+		effect = true;
+	}
+
+	return effect;
+}
+
 void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX])
 {
-	int i, totalbonus, numcounts = 0;
+	int i, totalbonus, numcounts = 0, numblows = 0;
 	const struct monster_spell *mspell;
+	const struct monster_blow *mblow;
 	int spell_counts[PP_MAX] = { 0 };
+	int blow_counts[PP_MAX] = { 0 };
 
 	for (i = 0; i < RSF_MAX; i++)
 	{
 		if (!rsf_has(mrace->spell_flags, i)) continue;
 		mspell = monster_spell_by_index(i);
 		if (calc_monster_spell(spell_counts, mspell)) {
-			numcounts++;
+			++numcounts;
 		}
 	}
 
 	if (numcounts > 0) {
 		totalbonus = mrace->spell_power * (2 + numcounts) / (5 + numcounts);
-		for (i = 0; i < PP_MAX; i++)
-		{
-			powers[i] = spell_counts[i] * totalbonus / numcounts;
+		for (i = 0; i < PP_MAX; i++) {
+			powers[i] += spell_counts[i] * totalbonus / numcounts;
 		}
+	}
+
+	for (i = 0; i < z_info->mon_blows_max && mrace->blow[i].method; i++) {
+		mblow = &mrace->blow[i];
+		if (calc_monster_blow(blow_counts, mblow)) {
+			++numblows;
+		}
+	}
+
+	if (numblows > 0) {
+		totalbonus = mrace->level * (2 + numblows) / (5 + numblows);
+		for (i = 0; i < PP_MAX; i++) {
+			powers[i] += blow_counts[i] * totalbonus / numblows;
+		}
+	}
+
+	for (i = 0; i < PP_MAX; i++) {
+		powers[i] += (mrace->base->powers[i] * mrace->level + 50) / 100;
 	}
 }
 
@@ -1646,6 +1684,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		add = state->stat_add[i];
 		state->stat_top[i] = modify_stat_value(p->stat_max[i], add);
 		use = modify_stat_value(p->stat_cur[i], add);
+		if (mrace) {
+			use = modify_stat_value(use, monster_modify_stat(i, mrace));
+		}
 
 		state->stat_use[i] = use;
 
@@ -1937,8 +1978,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	for (i = 0; i < num_weapons; ++i) {
 		assert(i < PY_MAX_ATTACKS && attacknum < PY_MAX_ATTACKS);
 		if (weapons[i]) {
-			state->attacks[attacknum] = get_melee_weapon_attack(p, state, weapons[i]);
-			++attacknum;
+			if (get_melee_weapon_attack(p, state, weapons[i], &state->attacks[attacknum])) {
+				++attacknum;
+			}
 		}
 		else {
 			++avail_hands;
@@ -1952,8 +1994,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 										   false);
 	}
 	while (avail_hands > 0 && attacknum < PY_MAX_ATTACKS) {
-		state->attacks[attacknum] = get_melee_weapon_attack(p, state, NULL);
-		++attacknum;
+		if (get_melee_weapon_attack(p, state, NULL, &state->attacks[attacknum])) {
+			++attacknum;
+		}
 		--avail_hands;
 	}
 
