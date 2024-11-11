@@ -1122,7 +1122,7 @@ int rd_player_spells(void)
 	
 	/* Read the number of spells */
 	rd_u16b(&tmp16u);
-	if (tmp16u > player->class->magic.total_spells) {
+	if (tmp16u > z_info->spell_max) {
 		note(format("Too many player spells (%d).", tmp16u));
 		return (-1);
 	}
@@ -1131,12 +1131,14 @@ int rd_player_spells(void)
 	player_spells_init(player);
 	
 	/* Read the spell flags */
-	for (i = 0; i < tmp16u; i++)
-		rd_byte(&player->spell_flags[i]);
+	for (i = 0; i < tmp16u; i++) {
+		rd_byte(&player->player_spell_flags[i]);
+	}
 	
 	/* Read the spell order */
-	for (i = 0, cnt = 0; i < tmp16u; i++, cnt++)
-		rd_byte(&player->spell_order[cnt]);
+	for (i = 0, cnt = 0; i < tmp16u; i++, cnt++) {
+		rd_byte(&player->player_spell_order[cnt]);
+	}
 	
 	/* Success */
 	return (0);

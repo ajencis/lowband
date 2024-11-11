@@ -653,7 +653,7 @@ static int average_spell_stat(struct player *p, struct player_state *state)
  */
 static void calc_spells(struct player *p)
 {
-	int j, k;
+	int i, j, k;
 	int num_allowed, num_known;
 	struct magic_realm *realm = get_player_realm(p);
 
@@ -687,39 +687,39 @@ static void calc_spells(struct player *p)
 
 	/* Count num we know */
 	for (j = 0; j < z_info->spell_max; j++) {
-		if (p->player_spell_flags[j] & PY_SPELL_LEARNED)
+		if (p->player_spell_flags[j] & PY_SPELL_LEARNED) {
 			++num_known;
+		}
 	}
 
 	/* See how many spells we must forget or may learn */
 	p->upkeep->new_spells = num_allowed - num_known;
 
-	/*
+	
 	// Forget spells which are too hard 
-	for (i = num_total - 1; i >= 0; i--) {
+	for (i = z_info->spell_max - 1; i >= 0; i--) {
 		// Get the spell
-		j = p->spell_order[i];
+		j = p->player_spell_order[i];
 
 		// Skip non-spells
 		if (j >= 99) continue;
 
 		// Get the spell
-		spell = spell_by_index(p, j);
+		spell = player_spell_lookup(j);
 
 		// Skip spells we are allowed to know
-		if (spell->slevel <= (p->lev + caster_level_bonus(p, spell))) continue;
+		if (gener_spell_power(p, spell) > 0) continue;
 
 		// Is it known?
-		if (p->spell_flags[j] & PY_SPELL_LEARNED) {
+		if (p->player_spell_flags[j] & PY_SPELL_LEARNED) {
 			// Mark as forgotten
-			p->spell_flags[j] |= PY_SPELL_FORGOTTEN;
+			p->player_spell_flags[j] |= PY_SPELL_FORGOTTEN;
 
 			// No longer known
-			p->spell_flags[j] &= ~PY_SPELL_LEARNED;
+			p->player_spell_flags[j] &= ~PY_SPELL_LEARNED;
 
 			// Message
-			msg("You have forgotten the %s of %s.", spell->realm->spell_noun,
-				spell->name);
+			msg("You have forgotten the spell of %s.", spell->name);
 
 			// One more can be learned
 			p->upkeep->new_spells++;
@@ -728,30 +728,29 @@ static void calc_spells(struct player *p)
 	
 
 	// Forget spells if we know too many spells
-	for (i = num_total - 1; i >= 0; i--) {
+	for (i = z_info->spell_max - 1; i >= 0; i--) {
 		// Stop when possible
 		if (p->upkeep->new_spells >= 0) break;
 
 		// Get the (i+1)th spell learned
-		j = p->spell_order[i];
+		j = p->player_spell_order[i];
 
 		// Skip unknown spells
 		if (j >= 99) continue;
 
 		// Get the spell
-		spell = spell_by_index(p, j);
+		spell = player_spell_lookup(j);
 
 		// Forget it (if learned)
-		if (p->spell_flags[j] & PY_SPELL_LEARNED) {
+		if (p->player_spell_flags[j] & PY_SPELL_LEARNED) {
 			// Mark as forgotten
-			p->spell_flags[j] |= PY_SPELL_FORGOTTEN;
+			p->player_spell_flags[j] |= PY_SPELL_FORGOTTEN;
 
 			// No longer known
-			p->spell_flags[j] &= ~PY_SPELL_LEARNED;
+			p->player_spell_flags[j] &= ~PY_SPELL_LEARNED;
 
 			// Message 
-			msg("You have forgotten the %s of %s.", spell->realm->spell_noun,
-				spell->name);
+			msg("You have forgotten the spell of %s.", spell->name);
 
 			// One more can be learned
 			p->upkeep->new_spells++;
@@ -759,39 +758,37 @@ static void calc_spells(struct player *p)
 	}
 
 	// Check for spells to remember
-	for (i = 0; i < num_total; i++) {
+	for (i = 0; i < z_info->spell_max; i++) {
 		// None left to remember
 		if (p->upkeep->new_spells <= 0) break;
 
 		// Get the next spell we learned
-		j = p->spell_order[i];
+		j = p->player_spell_order[i];
 
 		// Skip unknown spells
 		if (j >= 99) break;
 
 		// Get the spell
-		spell = spell_by_index(p, j);
+		spell = player_spell_lookup(j);
 
 		// Skip spells we cannot remember
 		if (spell->slevel > p->lev) continue;
 
 		// First set of spells
-		if (p->spell_flags[j] & PY_SPELL_FORGOTTEN) {
+		if (p->player_spell_flags[j] & PY_SPELL_FORGOTTEN) {
 			// No longer forgotten
-			p->spell_flags[j] &= ~PY_SPELL_FORGOTTEN;
+			p->player_spell_flags[j] &= ~PY_SPELL_FORGOTTEN;
 
 			// Known once more
-			p->spell_flags[j] |= PY_SPELL_LEARNED;
+			p->player_spell_flags[j] |= PY_SPELL_LEARNED;
 
 			// Message
-			msg("You have remembered the %s of %s.", spell->realm->spell_noun,
-				spell->name);
+			msg("You have remembered the spell of %s.", spell->name);
 
 			// One less can be learned
 			p->upkeep->new_spells--;
 		}
 	}
-	*/
 
 	/* Assume no spells available */
 	k = 0;
@@ -819,42 +816,6 @@ static void calc_spells(struct player *p)
 	/* Spell count changed */
 	if (old_spells != p->upkeep->new_spells) {
 		/* Message if needed */
-		/*
-		if (p->upkeep->new_spells) {
-			int count;
-			struct magic_realm *r = class_magic_realms(p->class, &count), *r1;
-			char buf[120];
-
-			my_strcpy(buf, r->spell_noun, sizeof(buf));
-			if (p->upkeep->new_spells > 1) {
-				my_strcat(buf, "s", sizeof(buf));
-			}
-			r1 = r->next;
-			mem_free(r);
-			r = r1;
-			if (count > 1) {
-				while (r) {
-					count--;
-					if (count) {
-						my_strcat(buf, ", ", sizeof(buf));
-					} else {
-						my_strcat(buf, " or ", sizeof(buf));
-					}
-					my_strcat(buf, r->spell_noun, sizeof(buf));
-					if (p->upkeep->new_spells > 1) {
-						my_strcat(buf, "s", sizeof(buf));
-					}
-					r1 = r->next;
-					mem_free(r);
-					r = r1;
-				}
-			}
-			
-
-			// Message
-			msg("You can learn %d more %s.", p->upkeep->new_spells, buf);
-		}
-		*/
 
 		if (p->upkeep->new_spells) {
 			msg("You can learn %d new %s%s.",

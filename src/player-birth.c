@@ -1264,8 +1264,9 @@ void do_cmd_choose_history(struct command *cmd)
 	const char *str;
 
 	/* Forget the old history */
-	if (player->history)
+	if (player->history) {
 		string_free(player->history);
+	}
 
 	/* Get the new history */
 	cmd_get_arg_string(cmd, "history", &str);
@@ -1274,6 +1275,8 @@ void do_cmd_choose_history(struct command *cmd)
 
 void do_cmd_accept_character(struct command *cmd)
 {
+	int i;
+
 	options_init_cheat();
 
 	roll_hp();
@@ -1299,10 +1302,14 @@ void do_cmd_accept_character(struct command *cmd)
 
 	/* Initialise the spells */
 	player_spells_init(player);
+	for (i = 0; i < z_info->spell_max; ++i) {
+		player->player_spell_order[i] = 99;
+	}
 
 	/* Know all runes for ID on walkover */
-	if (OPT(player, birth_know_runes))
+	if (OPT(player, birth_know_runes)) {
 		player_learn_all_runes(player);
+	}
 
 	/* Hack - player knows all combat runes.  Maybe make them not runes? NRM */
 	player->obj_k->to_a = 1;
@@ -1343,8 +1350,9 @@ void do_cmd_accept_character(struct command *cmd)
 	flavor_init();
 
 	/* Know all flavors for auto-ID of consumables */
-	if (OPT(player, birth_know_flavors))
+	if (OPT(player, birth_know_flavors)) {
 		flavor_set_all_aware();
+	}
 
 	/* Outfit the player, if they can sell the stuff */
 	player_outfit(player);

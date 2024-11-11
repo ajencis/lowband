@@ -156,23 +156,8 @@ static const int adj_mag_stat[STAT_RANGE] =
  */
 void player_spells_init(struct player *p)
 {
-	/*
-	int i, num_spells = p->class->magic.total_spells;
-
-	// None
-	if (num_spells) {
-
-		// Allocate
-		p->spell_flags = mem_zalloc(num_spells * sizeof(uint8_t));
-		p->spell_order = mem_zalloc(num_spells * sizeof(uint8_t));
-
-		// None of the spells have been learned yet 
-		for (i = 0; i < num_spells; i++)
-			p->spell_order[i] = 99;
-	}
-	*/
-
 	p->player_spell_flags = mem_zalloc(z_info->spell_max * sizeof(uint8_t));
+	p->player_spell_order = mem_zalloc(z_info->spell_max * sizeof(uint8_t));
 }
 
 /**
@@ -180,12 +165,8 @@ void player_spells_init(struct player *p)
  */
 void player_spells_free(struct player *p)
 {
-	if (p->spell_flags) {
-		mem_free(p->spell_flags);
-		mem_free(p->spell_order);
-	}
-
 	mem_free(p->player_spell_flags);
+	mem_free(p->player_spell_order);
 }
 
 /**
@@ -350,8 +331,9 @@ int caster_level_bonus(const struct player *p, const struct class_spell *spell)
 	int bonus = 0;
 	struct monster_race *mon = lookup_player_monster(p);
 
-	if (p->state.powers[spell->school] > 0) 
+	if (p->state.powers[spell->school] > 0) {
 		bonus += (p->state.powers[spell->school] * 50 + 49) / 50;
+	}
 
 	if (mon) {
 		int monspells = 0;
@@ -516,8 +498,9 @@ void spell_learn(int spell_index)
 	player->spell_flags[spell_index] |= PY_SPELL_LEARNED;
 
 	/* Find the next open entry in "spell_order[]" */
-	for (i = 0; i < maxi; i++)
+	for (i = 0; i < maxi; i++) {
 		if (player->spell_order[i] == 99) break;
+	}
 
 	/* Add the spell to the known list */
 	player->spell_order[i] = spell_index;
@@ -927,11 +910,23 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 
 void gener_spell_learn(struct player *p, const struct player_spell *s)
 {
-	player->player_spell_flags[s->sidx] |= PY_SPELL_LEARNED;
+	int i;
+	bool found_order;
 
-	msg("You have learned the spell %s.", s->name);
+	p->player_spell_flags[s->sidx] |= PY_SPELL_LEARNED;
 
-	player->upkeep->update |= PU_SPELLS;
+	for (i = 0; i < z_info->spell_max && !found_order; i++) {
+		if (p->player_spell_order[i] == 99) {
+			p->player_spell_order[i] = s->sidx;
+			found_order = true;
+		}
+	}
+
+	assert(found_order);
+
+	msg("You have learned the spell of %s.", s->name);
+
+	p->upkeep->update |= PU_SPELLS;
 
 	return;
 }
