@@ -1588,6 +1588,7 @@ cost:20
 alloc:20:3 to 100
 attack:0d0:0:0
 armor:8:0
+values:MOVES[-1]
 desc:A cuirass of pliable leather, with a thicker leather jack.
 
 name:Studded Leather Armour~
@@ -1599,6 +1600,7 @@ cost:100
 alloc:20:5 to 100
 attack:1d1:-1:0
 armor:12:0
+values:MOVES[-2]
 desc:A cuirass of pliable leather studded with metal rivets.
 
 name:Hard Leather Armour~
@@ -1610,6 +1612,7 @@ cost:150
 alloc:20:10 to 100
 attack:1d2:-1:0
 armor:16:0
+values:MOVES[-2]
 desc:A boiled leather cuirass and shoulder plates.
 
 name:Leather Scale Mail~
@@ -1621,6 +1624,7 @@ cost:370
 alloc:20:15 to 100
 attack:1d1:-1:0
 armor:20:0
+values:MOVES[-2]
 desc:A tunic and skirt sewn with thick, overlapping scales of hardened
 desc: leather.
 
@@ -1633,6 +1637,7 @@ cost:550
 alloc:20:25 to 100
 attack:1d4:-2:0
 armor:38:0
+values:MOVES[-3]
 desc:A heavy shirt of overlapping steel scales backed by leather, with
 desc: matching skirt and sleeves.
 
@@ -1645,6 +1650,7 @@ cost:750
 alloc:20:20 to 100
 attack:1d4:-2:0
 armor:32:0
+values:MOVES[-3]
 desc:A hauberk, leggings, and sleeves of interlocking steel rings, well padded
 desc: with leather.
 
@@ -1657,6 +1663,7 @@ cost:900
 alloc:20:35 to 100
 attack:1d4:-2:0
 armor:42:0
+values:MOVES[-3]
 desc:A hauberk, leggings, and sleeves of interlocking steel rings,
 desc: strategically reinforced at vital locations with a second layer
 desc: of chain, all over a layer of heavy padding.
@@ -1670,6 +1677,7 @@ cost:950
 alloc:20:40 to 100
 attack:1d4:-2:0
 armor:45:0
+values:MOVES[-4]
 desc:A hauberk, leggings, and sleeves of interlocking steel rings,
 desc: reinforced around the shoulders with segmented plates of steel,
 desc: all over a layer of heavy padding.
@@ -1683,6 +1691,7 @@ cost:1100
 alloc:20:45 to 100
 attack:1d4:-3:0
 armor:48:0
+values:MOVES[-4]
 desc:A stiff suit of armour composed of small metal plates sewn to an
 desc: inner layer of heavy canvas, and covered with a second layer of
 desc: cloth.
@@ -1696,6 +1705,7 @@ cost:1200
 alloc:20:30 to 100
 attack:1d6:-3:0
 armor:40:0
+values:MOVES[-4]
 desc:A steel corselet and vambraces over a skirt and leggings of chain.
 
 name:Metal Lamellar Armour~
@@ -1707,6 +1717,7 @@ cost:1250
 alloc:20:50 to 100
 attack:1d6:-3:0
 armor:58:0
+values:MOVES[-4]
 desc:This unusual armour is a surprisingly light suit of laced and
 desc: overlapping metal plates.
 
@@ -1719,6 +1730,7 @@ cost:1350
 alloc:15:55 to 100
 attack:2d4:-3:0
 armor:62:0
+values:MOVES[-5]
 desc:A full suit of carefully fitted plates, with hinged joints backed
 desc: by chain, and light padding underneath.
 
@@ -1731,6 +1743,7 @@ cost:1500
 alloc:15:60 to 100
 attack:2d4:-3:0
 armor:66:0
+values:MOVES[-5]
 desc:A full suit of finely fitted metal armour consisting of steel plates
 desc: reinforced ridging.
 
@@ -1744,6 +1757,7 @@ alloc:10:55 to 100
 attack:1d4:-1:0
 armor:28:0
 flags:IGNORE_ACID
+values:MOVES[-1]
 desc:This wondrous suit of fine-linked chain shimmers as though of pure silver.
 
 name:Mithril Plate Mail~
@@ -1754,8 +1768,9 @@ weight:300
 cost:15000
 alloc:10:65 to 100
 attack:2d4:-3:0
-armor:60:0
+armor:50:0
 flags:IGNORE_ACID
+values:MOVES[-2]
 desc:A shimmering suit of true-silver, forged long ago by dwarven smiths of
 desc: legend.  It gleams with purest white as you gaze upon it.
 
@@ -1767,8 +1782,9 @@ weight:420
 cost:20000
 alloc:10:75 to 100
 attack:2d4:-4:0
-armor:80:0
+armor:90:0
 flags:IGNORE_ACID
+values:MOVES[-7]
 desc:An exquisite suit of nearly impenetrable adamantite.
 
 ### Cloaks ###

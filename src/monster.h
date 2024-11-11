@@ -244,6 +244,7 @@ struct monster_base {
 	int attributes[MA_MAX];		/* L: strengths and weaknesses */
 	int stats[STAT_MAX];		/* L: stat bonuses for players */
 	int powers[PP_MAX];			/* L: power bonuses for players */
+	int skills[SKILL_MAX];		/* L: skill bonuses for players */
 };
 
 

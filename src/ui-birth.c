@@ -21,6 +21,7 @@
 #include "cmd-core.h"
 #include "game-event.h"
 #include "game-input.h"
+#include "monster.h"
 #include "obj-tval.h"
 #include "player.h"
 #include "player-birth.h"
@@ -223,8 +224,9 @@ static void skill_help(const int r_skills[], const int c_skills[], int mhp, int 
 	int16_t skills[SKILL_MAX];
 	unsigned i;
 
-	for (i = 0; i < SKILL_MAX ; ++i)
+	for (i = 0; i < SKILL_MAX ; ++i) {
 		skills[i] = (r_skills ? r_skills[i] : 0 ) + (c_skills ? c_skills[i] : 0);
+	}
 
 	text_out_e("Hit/Shoot/Throw: %+d/%+d/%+d     \n", skills[SKILL_TO_HIT_MELEE],
 			   skills[SKILL_TO_HIT_BOW], skills[SKILL_TO_HIT_THROW]);
@@ -246,7 +248,7 @@ static void race_help(int i, void *db, const region *l)
 {
 	int j;
 	struct player_race *r = player_id2race(i);
-	int len = (STAT_MAX + 1) / 2;
+	//int len = (STAT_MAX + 1) / 2;
 
 	struct player_ability *ability;
 	int n_flags = 0;
@@ -261,19 +263,39 @@ static void race_help(int i, void *db, const region *l)
 	text_out_indent = RACE_AUX_COL;
 	Term_gotoxy(RACE_AUX_COL, TABLE_ROW);
 
-	for (j = 0; j < len; j++) {  
-		const char *name = stat_names_reduced[j];
-		int adj = r->r_adj[j];
+	for (j = 0; j < STAT_MAX; j++) {
+		int sind = j & 1 ? j / 2 + (STAT_MAX + 1) / 2 : j / 2;
 
-		text_out_e("%s%+3d", name, adj);
+		const char *name = stat_names_reduced[sind];
+		int adj = r->r_adj[sind];
+		char out[5];
 
-		if (j * 2 + 1 < STAT_MAX) {
+		if (r->evol) {
+			const struct monster_race *mr = r->evol->race;
+			while (mr->evol) {
+				mr = mr->evol->race;
+			}
+			int bonus = mr->base->stats[sind];
+			strnfmt(out, sizeof(out), "(%+1d)", bonus);
+		}
+		else {
+			strnfmt(out, sizeof(out), " %+1d ", adj);
+		}
+
+		text_out_e("%s %s", name, out);
+
+		/*if (j * 2 + 1 < STAT_MAX) {
 			name = stat_names_reduced[j + len];
 			adj = r->r_adj[j + len];
 			text_out_e("  %s%+3d", name, adj);
-		}
+		}*/
 
-		text_out("\n");
+		if (j & 1 || j + 1 == STAT_MAX) {
+			text_out("\n");
+		}
+		else {
+			text_out("  ");
+		}
 	}
 	
 	text_out_e("\n");

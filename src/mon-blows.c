@@ -421,9 +421,10 @@ static void melee_effect_elemental(melee_effect_handler_context_t *context,
 	enum mon_messages hurt_msg = MON_MSG_NONE;
 	enum mon_messages die_msg = MON_MSG_DIE;
 
-	if (pure_element)
+	if (pure_element) {
 		/* Obvious */
 		context->obvious = true;
+	}
 
 	if (context->p) {
 		switch (type) {
@@ -479,6 +480,9 @@ static void melee_effect_elemental(melee_effect_handler_context_t *context,
 			(void) mon_take_nonplayer_hit(context->damage,
 				context->t_mon, hurt_msg, die_msg, false);
 		}
+	}
+	else {
+		message_add("context->damage is 0", MSG_GENERIC);
 	}
 
 	/* Learn about the player */
@@ -677,8 +681,9 @@ static void melee_effect_handler_POISON(melee_effect_handler_context_t *context)
 	melee_effect_elemental(context, PROJ_POIS, false);
 
 	/* Player is dead */
-	if (context->p->is_dead)
+	if (context->p->is_dead) {
 		return;
+	}
 
 	if (!context->p) {
 		assert(context->t_mon);
@@ -1190,10 +1195,11 @@ static void melee_effect_handler_BLACK_BREATH(melee_effect_handler_context_t *co
 	if (monster_damage_target(context, true)) return;
 
 	if (!one_in_(5)) {
+		return;
 	}
 	else if (randint0(250) < player->state.skills[SKILL_SAVE]) {
 		// L: difficult save
-		msg("You feel a shadow pass over you, then leave.");
+		msg("You feel a shadow pass over you  -  then leave.");
 	}
 	/* Increase Black Breath counter a *small* amount, maybe */
 	else if (player_inc_timed(context->p, TMD_BLACKBREATH,

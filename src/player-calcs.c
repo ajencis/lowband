@@ -59,6 +59,14 @@ struct mon_player_match elem_matches[] = {
 	{ RF_NONE, -1 }
 };
 
+int power_scalings[] = {
+	PP_SCALE_NONE,
+	#define PP(x, a, b, c, d, e) b,
+	#include "list-player-powers.h"
+	#undef PP
+	PP_SCALE_NONE
+};
+
 /*struct mon_player_match flag_matches[] = {
 	{ RF_NO_FEAR, OF_PROT_FEAR },
 	{ RF_NO_STUN, OF_PROT_STUN },
@@ -131,7 +139,7 @@ int adj_dex_th(int index) {
 }*/
 
 static int adj_str_wgt(int index) {
-	int ret = stat_scale(index, 250, false) + 100;
+	int ret = stat_scale(index, 250, true);
 	return MAX(ret, 25);
 }
 
@@ -194,9 +202,9 @@ int adj_mag_stat(int index) {
 
 static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 {
-	int wpen = wgt / 5 - get_power_scale_state(s, PP_AGILITY, 10, PP_SCALE_SQUARE, player->lev);
+	int wpen = wgt / 5 - get_power_scale_state(s, PP_AGILITY, 10, player->lev);
 	wpen = MAX(0, wpen);
-	int bonus = get_power_scale_state(s, PP_AGILITY, 10, PP_SCALE_SQUARE, player->lev);
+	int bonus = get_power_scale_state(s, PP_AGILITY, 10, player->lev);
 	bonus = MAX(0, bonus - wpen);
 
     s->speed += bonus;
@@ -205,12 +213,12 @@ static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 
 static int unarmoured_ac_bonus(struct player_state *s, int wgt)
 {
-	int wpen = wgt - get_power_scale_state(s, PP_AGILITY, 250, PP_SCALE_LINEAR, player->lev);
+	int wpen = wgt - get_power_scale_state(s, PP_AGILITY, 250, player->lev);
 	wpen = MAX(0, wpen);
-    int bonus = get_power_scale_state(s, PP_AGILITY, 50, PP_SCALE_SQRT, player->lev);
+    int bonus = get_power_scale_state(s, PP_AGILITY, 50, player->lev);
 	bonus = MAX(bonus / 2, bonus - wpen);
 
-    s->ac += bonus;
+    s->to_a += bonus;
 	return bonus;
 }
 
@@ -956,19 +964,22 @@ static void calc_hitpoints(struct player *p)
 {
 	long bonus;
 	int mhp;
-	int resil = get_power_scale(p, PP_RESILIENCE, 50, PP_SCALE_LINEAR);
+	int resil = get_power_scale(p, PP_RESILIENCE, 50);
 	struct monster_race *mon = lookup_player_monster(p);
 
 	/* Get "1/100th hitpoint bonus per level" value */
 	bonus = adj_con_mhp(p->state.stat_ind[STAT_CON]);
 
 	/* Calculate hitpoints */
-	mhp = p->hitdie + p->hitdie * p->lev / 5 + bonus * p->lev / 100;
+	mhp = p->hitdie + p->hitdie * (p->lev > 1 ? p->lev : 0) / 5;
 
 	/* L: bonus from being a monster */
 	if (mon) {
-		mhp = MAX(mhp, mon->avg_hp);
+		int mon_hp = (int)my_cbrt((double)mon->avg_hp * mon->avg_hp * mon->avg_hp);
+		mhp = (mhp + mon_hp) / 2;
 	}
+
+	mhp += bonus * p->lev / 100;
 
 	/* L: bonus from resilience power */
 	mhp += (mhp + p->lev) * resil / 100;
@@ -1122,53 +1133,6 @@ void calc_blows(struct player *p, int wgt, struct attack_roll *aroll,
 	aroll->blows = blows + 100 * extra_blows;
 }
 
-#if 0
-/**
- * Calculate the blows a player would get.
- *
- * \param obj is the object for which we are calculating blows
- * \param state is the player state for which we are calculating blows
- * \param extra_blows is the number of +blows available from this object and
- * this state
- *
- * N.B. state->num_blows is now 100x the number of blows.
- */
-int calc_blows_old(struct player *p, const struct object *obj,
-			   struct player_state *state, int extra_blows)
-{
-	int blows;
-	int str_index, dex_index;
-	int div;
-	int blow_energy;
-
-	int weight = (obj == NULL) ? 0 : object_weight_one(obj);
-	int min_weight = p->class->min_weight;
-
-	/* Enforce a minimum "weight" (tenth pounds) */
-	div = (weight < min_weight) ? min_weight : weight;
-
-	/* Get the strength vs weight */
-	str_index = adj_str_blow(state->stat_ind[STAT_STR]) *
-			p->class->att_multiply / div;
-
-	/* Maximal value */
-	if (str_index > 11) str_index = 11;
-
-	/* Index by dexterity */
-	dex_index = MIN(adj_dex_blow(state->stat_ind[STAT_DEX]), 11);
-
-	/* Use the blows table to get energy per blow */
-	blow_energy = blows_table[str_index][dex_index];
-
-	blows = MIN((10000 / blow_energy), (100 * p->class->max_attacks));
-
-	/* Require at least one blow, two for O-combat */
-	return MAX(blows + (100 * extra_blows),
-			   OPT(p, birth_percent_damage) ? 200 : 100);
-}
-#endif
-
-
 /**
  * Computes current weight limit.
  */
@@ -1177,7 +1141,7 @@ static int weight_limit(struct player_state *state)
 	int i;
 
 	/* Weight limit based only on strength */
-	i = adj_str_wgt(state->stat_ind[STAT_STR]) * 10;
+	i = adj_str_wgt(state->stat_ind[STAT_STR]) * 10 + 100;
 
 	/* Return the result */
 	return (i);
@@ -1192,7 +1156,7 @@ int weight_remaining(struct player *p)
 	int i;
 
 	/* Weight limit based only on strength */
-	i = 6 * adj_str_wgt(p->state.stat_ind[STAT_STR])
+	i = 5 * adj_str_wgt(p->state.stat_ind[STAT_STR]) + 50
 		- p->upkeep->total_weight - 1;
 
 	/* Return the result */
@@ -1402,6 +1366,15 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX])
 	}
 }
 
+void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX])
+{
+	int i;
+
+	for (i = 0; i < SKILL_MAX; i++) {
+		skills[i] += mrace->base->skills[i] * mrace->level / 10;
+	}
+}
+
 /**
  * L: calculate the effects of being a monster on player state
  */
@@ -1411,6 +1384,7 @@ static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
 	if (!mrace) return;
 	int i;
 	int powers[PP_MAX] = { 0 };
+	int skills[SKILL_MAX] = { 0 };
 
 	i = 0;
 	while (elem_matches[i].mval != RF_NONE) {
@@ -1424,12 +1398,18 @@ static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
 	state->speed += mrace->speed / 2 - 55;
 	state->ac = MAX(state->ac, mrace->ac) + MIN(state->ac, mrace->ac) / 2;
 
-	if (rf_has(mrace->flags, RF_NEVER_MOVE)) *moves -= 2;
+	if (rf_has(mrace->flags, RF_NEVER_MOVE)) *moves -= 25;
 
 	calc_monster_powers(mrace, powers);
 
 	for (i = 0; i < PP_MAX; ++i) {
 		state->powers[i] += powers[i];
+	}
+
+	calc_monster_skills(mrace, skills);
+
+	for (i = 0; i < SKILL_MAX; i++) {
+		state->skills[i] += skills[i];
 	}
 }
 
@@ -1514,14 +1494,29 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		int efflev = minlev < 0 ? MAX((p->lev + 1) / 2 - minlev    , p->lev) :
 								  MIN((p->lev + 1) * 2 - minlev * 2, p->lev);
 
-		if ((scale <= 0) || (efflev <= 0))
+		if ((scale <= 0) || (efflev <= 0)) {
 			state->powers[i] = 0;
+		}
 
-		else if (p->lev > 50)
+		else if (p->lev > 50) {
 			state->powers[i] = (p->lev * scale + 99) / 100;
+		}
 
-		else
+		else if (power_scalings[i] == PP_SCALE_SQUARE) {
+			int fact = efflev * efflev;
+			int div = 100 * 50;
+			state->powers[i] = (scale * fact + div - 1) / div;
+		}
+
+		else if (power_scalings[i] == PP_SCALE_SQRT) {
+			int fact = my_int_sqrt(efflev);
+			int div = (int)(100.0 / my_sqrt((double)50));
+			state->powers[i] = (scale * fact + div - 1) / div;
+		}
+
+		else {
 			state->powers[i] = (efflev * scale + 99) / 100;
+		}
 
 		state->powers[i] += MIN(p->extra_powers[i] / 2, p->lev * 3);
 	}
@@ -1544,11 +1539,13 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			int owgt = object_weight_one(obj);
 
 			/* L: track armour weight */
-			if (slot_type_is(p, i, EQUIP_BODY_ARMOR))
+			if (slot_type_is(p, i, EQUIP_BODY_ARMOR)) {
 			    armwgt = MAX(armwgt, owgt);
+			}
 
-			if (!launcher && slot_type_is(p, i, EQUIP_BOW))
+			if (!launcher && slot_type_is(p, i, EQUIP_BOW)) {
 				launcher = obj;
+			}
 
 			/* Extract the item flags */
 			if (known_only) {
@@ -2031,6 +2028,8 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	if (!p->msp) {
 		pf_on(state->pflags, PF_NO_MANA);
 	}
+
+	extra_moves += get_power_scale_state(state, PP_RUNNING, 10, p->lev);
 
 	/* Movement speed */
 	state->num_moves = extra_moves;

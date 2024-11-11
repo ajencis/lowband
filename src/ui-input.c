@@ -1274,6 +1274,9 @@ static bool textui_get_check_base(const char *prompt, bool force_answer)
 	ui_event ke;
 
 	char buf[80];
+	char button = '\0';
+	bool answer = false;
+	bool got_answer = false;
 
 	/*
 	 * Hack -- Build a "useful" prompt; do this first so prompts built by
@@ -1285,7 +1288,7 @@ static bool textui_get_check_base(const char *prompt, bool force_answer)
 	event_signal(EVENT_MESSAGE_FLUSH);
 
 	/* Keep going until we have an answer if desired */
-	do {
+	while (!got_answer) {
 		/* Prompt for it */
 		prt(buf, 0, 0);
 		ke = inkey_m();
@@ -1295,29 +1298,35 @@ static bool textui_get_check_base(const char *prompt, bool force_answer)
 
 		if (ke.type == EVT_MOUSE) {
 			if ((ke.mouse.button != 1) && (ke.mouse.y != 0)) {
-				message_add(format("%s  [%c]", buf, 'n'), MSG_GENERIC);
-				return (false);
+				answer = false;
+				got_answer = true;
 			}
-			message_add(format("%s  [%c]", buf, 'y'), MSG_GENERIC);
-			return (true);
+			else {
+				answer = true;
+				got_answer = true;
+			}
 		} else {
 			if ((ke.key.code == 'Y') || (ke.key.code == 'y')) {
-				message_add(format("%s  [%c]", buf, ke.key.code), MSG_GENERIC);
-				return (true);
+				button = ke.key.code;
+				answer = true;
+				got_answer = true;
 			} else if ((ke.key.code == 'N') || (ke.key.code == 'n')) {
-				message_add(format("%s  [%c]", buf, ke.key.code), MSG_GENERIC);
-			    return (false);
+				button = ke.key.code;
+			    answer = false;
+				got_answer = true;
+			} else {
+				got_answer = !force_answer;
 			}
 		}
-	} while (force_answer);
-
-	/* No proper choice made, default to false */
-	if (ke.type == EVT_MOUSE) {
-		message_add(format("%s  [%c]", buf, 'n'), MSG_GENERIC);
-	} else {
-		message_add(format("%s  [%c]", buf, ke.key.code), MSG_GENERIC);
 	}
-	return (false);
+
+	if (button == '\0') {
+		button = answer ? 'y' : 'n';
+	}
+
+	if (character_generated) message_add(format("%s  [%c]", buf, button), MSG_GENERIC);
+
+	return answer;
 }
 
 static bool textui_get_check(const char *prompt)

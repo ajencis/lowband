@@ -99,10 +99,12 @@ int get_quantity(const char *prompt, int max)
 bool get_check(const char *prompt)
 {
 	/* Ask the UI for it */
-	if (get_check_hook)
+	if (get_check_hook) {
 		return get_check_hook(prompt);
-	else
+	}
+	else {
 		return false;
+	}
 }
 
 bool get_forced_check(const char *prompt)

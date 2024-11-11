@@ -219,8 +219,8 @@ bool check_player_monster(struct player *p, bool init)
 		}
 		else if (currxp > 0) {
 			uint32_t chance;
-			if (xpneed < UINT32_MAX / 1000) {
-				chance = xpneed * 1000 / currxp;
+			if (xpneed < UINT32_MAX / 250) {
+				chance = xpneed * 250 / currxp;
 			}
 			else {
 				chance = UINT32_MAX / currxp;
@@ -305,7 +305,7 @@ bool player_increase_stat(struct player *p)
 	return false;
 }
 
-int get_power_scale_state(struct player_state *ps, int power, int scaleto, int scaling, int level)
+int get_power_scale_state(struct player_state *ps, int power, int scaleto, int level)
 {
 	assert(power > 0 && power < PP_MAX);
 
@@ -318,7 +318,7 @@ int get_power_scale_state(struct player_state *ps, int power, int scaleto, int s
 
 	/* scale linearly by power level then adjust by character level so value
 	   of increasing your power is linear */
-	double efflev, div;
+	/*double efflev, div;
 	if (scaling == PP_SCALE_LINEAR) {
 		efflev = (double)powerlev;
 		div = (double)50;
@@ -334,16 +334,16 @@ int get_power_scale_state(struct player_state *ps, int power, int scaleto, int s
 	else {
 		efflev = 0.0;
 		div = 50.0;
-	}
+	}*/
 
-	int result = (int)((efflev * scaleto + div * 2 / 3) / div);
+	int result = (powerlev * scaleto + 50 * 2 / 3) / 50;
 
 	return MAX(result, 0);
 }
 
-int get_power_scale(struct player *p, int power, int scaleto, int scaling)
+int get_power_scale(struct player *p, int power, int scaleto)
 {
-	return get_power_scale_state(&p->state, power, scaleto, scaling, p->lev);
+	return get_power_scale_state(&p->state, power, scaleto, p->lev);
 }
 
 
@@ -353,7 +353,7 @@ static double btc_scale(int bonus)
 {
 	if (bonus <= 0) return 0;
 	assert(bonus * bonus < INT_MAX / bonus);
-	int result = my_sqrt((double)(bonus * bonus * bonus));
+	int result = my_int_sqrt(bonus * bonus * bonus);
 	return result;
 }
 
@@ -370,6 +370,22 @@ static int bonus_to_cost(int bonus, int tome_ind)
 	assert(tome_ind > TOME_NONE && tome_ind < TOME_MAX);
 	int factor = tome_factors[tome_ind];
 	return bonus_to_cost_base(bonus, factor);
+}
+
+static int player_bonus_to_cost(int bonus, int tome_ind, struct player *p)
+{
+	int base = bonus_to_cost(bonus, tome_ind);
+	int discount = 0; // in percent
+
+	if ((of_has(p->class->pflags, PF_EXTRA_LEARNING) || 
+				of_has(p->race->pflags, PF_EXTRA_LEARNING)) &&
+			tome_ind >= PP_MAX) {
+		discount += 35;
+	}
+
+	base = (base * (100 - discount) + 99) / 100;
+
+	return base;
 }
 
 static int cost_to_bonus_base(int cost, int factor)
@@ -407,14 +423,14 @@ void calc_extra_points(struct player *p, struct player_state *ps)
 		int pwr = p->extra_powers[i];
 		if (pwr > 0) {
 			// scales to 10 for normal power
-			sum += bonus_to_cost(pwr, i);
+			sum += player_bonus_to_cost(pwr, i, p);
 		}
 	}
 
 	for (i = 0; i < SKILL_MAX; i++) {
 		int skl = p->extra_skills[i];
 		if (skl > 0) {
-			sum += bonus_to_cost(skl, i + PP_MAX);
+			sum += player_bonus_to_cost(skl, i + PP_MAX, p);
 		}
 	}
 	
@@ -436,8 +452,8 @@ static bool player_can_learn_from_tome(struct player *p, int index)
 		my_strcpy(name, skill_index_to_name(index - PP_MAX), sizeof(name));
 		my_strcap_full(name);
 	}
-	int currcost = bonus_to_cost(cpwr, index);
-	int nextcost = bonus_to_cost(cpwr + 1, index);
+	int currcost = player_bonus_to_cost(cpwr, index, p);
+	int nextcost = player_bonus_to_cost(cpwr + 1, index, p);
 
 	// if we're not spending any points to learn then learn
 	if (nextcost <= currcost) return true;
@@ -532,8 +548,8 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 		currlearned = p->extra_skills[skill_index];
 	}
 	
-	currcost = bonus_to_cost(currlearned, power);
-	nextcost = bonus_to_cost(currlearned + 1, power);
+	currcost = player_bonus_to_cost(currlearned, power, p);
+	nextcost = player_bonus_to_cost(currlearned + 1, power, p);
 
 	// higher-level tomes are more complicated
 	chance *= mx;
@@ -937,7 +953,17 @@ int energy_per_move(struct player *p)
 	int num = p->state.num_moves;
 	int energy = z_info->move_energy;
 
-	int result =  (energy * (1 + ABS(num) - num)) / (1 + ABS(num));
+	/*
+	   old         new
+	-3 -> 7/4   -3 -> 16/13
+	-2 -> 5/3   -2 -> 14/12
+	-1 -> 3/2   -1 -> 12/11
+	 0 -> 1/1    0 -> 10/10
+	 1 -> 1/2    1 -> 10/11
+	 2 -> 1/3    2 -> 10/12
+	 3 -> 1/4    3 -> 10/13
+	*/
+	int result =  (energy * (10 + ABS(num) - num)) / (10 + ABS(num));
 	return result;
 }
 

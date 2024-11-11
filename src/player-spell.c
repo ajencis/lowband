@@ -882,9 +882,10 @@ const char *school_idx_to_name(int idx)
 
 int innate_spell_mana(const struct monster_race *mon)
 {
-	int freq = mon->freq_innate;
-	int cost = 20 - freq / 2;
-	return MIN(mon->level, MAX(1, cost));
+	int freq = MAX(0, 40 - mon->freq_innate);
+	int cost = mon->avg_hp * freq / 4;
+
+	return cost;
 }
 
 void get_innate_info(int innate_index, char *p, size_t len)

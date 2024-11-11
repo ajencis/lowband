@@ -44,6 +44,7 @@ attr:AC:3
 attr:HP:2
 attr:SPEED:-2
 stats:1:1:-1:-1:1
+skill-melee:5
 
 # Ainur were the founding spirits of Arda, and could take any form they wished.
 # Ainur in Angband typically have shapechanges and many possibe other spells,
@@ -64,6 +65,7 @@ attr:DAMAGE:-1
 attr:AC:1
 attr:HP:1
 stats:1:1:1:1:1
+skill-save:10
 
 # Ants have lowish HP but highish armor class, and powerful melee for their
 # depth
@@ -138,6 +140,7 @@ attr:AC:2
 attr:HP:1
 attr:SPEED:-1
 stats:1:0:-1:0:1
+skill-melee:5
 
 # Early, weak breathers which move quickly and erratically
 name:dragon fly
@@ -165,6 +168,8 @@ attr:DAMAGE:-1
 attr:SPEED:-1
 stats:-2:1:1:1:0
 power:DIVINATION_MAGIC:20
+skill-magic:5
+skill-search:5
 
 # Creatures (mostly) embodying a single element, mostly with lowish HP
 name:elemental
@@ -257,6 +262,7 @@ attr:DAMAGE:1
 attr:HP:-1
 attr:AC:-1
 stats:1:-1:-1:1:1
+skill-melee:5
 
 # Non-descript early monsters that demonstrate some stuff but are mostly filler
 name:icky thing
@@ -321,6 +327,7 @@ attr:AC:1
 attr:HP:-3
 stats:-2:2:0:1:0
 power:NECROMANCY_MAGIC:20
+skill-magic:5
 
 # Weird monsters tha look like floor.
 name:lurker
@@ -348,6 +355,7 @@ attr:MAGIC:2
 attr:HP:-1
 attr:AC:-3
 stats:2:1:-3:0:1
+skill-melee:5
 
 # Monsters which pretend to be objects.  They don't move but do cast spells,
 # and attack if the player steps next to them.
@@ -567,6 +575,7 @@ attr:DAMAGE:-1
 stats:1:1:-2:2:-1
 power:POLEARM_SPECIALIZATION:20
 power:BACKSTAB:20
+skill-stealth:10
 
 # Always awake, elemental objects which engulf and breathe their element(s)
 name:vortex

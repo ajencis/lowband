@@ -63,7 +63,7 @@ name:normal
 name:fox
 combat:-3:-3:3
 obj-flags:FEATHER | FREE_ACT
-values:STR[-3] | STEALTH[5] | BLOWS[1] | MOVES[1]
+values:STR[-3] | STEALTH[5] | BLOWS[1] | MOVES[10]
 blow:bite
 blow:claw
 

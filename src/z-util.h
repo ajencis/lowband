@@ -268,5 +268,7 @@ struct my_rational my_rational_sum(const struct my_rational *a,
  */
 double my_sqrt(double num);
 double my_cbrt(double num);
+int my_int_sqrt(int num);
+int my_int_cbrt(int num);
 
 #endif /* INCLUDED_Z_UTIL_H */

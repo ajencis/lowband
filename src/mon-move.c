@@ -110,7 +110,10 @@ static bool monster_near_permwall(const struct monster *mon)
  */
 bool monster_can_see_player(struct monster *mon)
 {
-	if (!square_isview(cave, mon->grid)) return false;
+	//if (!square_isview(cave, mon->grid)) return false;
+	if (!los(cave, mon->grid, player->grid)) {
+		return false;
+	}
 	if (player->timed[TMD_COVERTRACKS] && (mon->cdis > z_info->max_sight / 4)) {
 		return false;
 	}

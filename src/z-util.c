@@ -2118,6 +2118,11 @@ double my_cbrt(double num)
 
 int my_int_sqrt(int num)
 {
-	return (int)inverse_binary_search((double)num, square, MIN(num, 1.0), MAX(num, 1.0), 0.1);
+	return (int)my_sqrt((double)num);
+}
+
+int my_int_cbrt(int num)
+{
+	return (int)my_cbrt((double)num);
 }
 

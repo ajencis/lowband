@@ -1140,7 +1140,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	int by, bx = 0, tby, tbx, key, rarity, built;
 	int num_rooms;
 	int sp = p->depth / 2 + 50;
-	int ssp = (int)my_sqrt((float)(sp * 100));
+	int ssp = my_int_sqrt(sp * 100);
 	int dun_unusual = dun->profile->dun_unusual;
 
 	bool **blocks_tried;
@@ -2162,7 +2162,7 @@ struct chunk *cavern_gen(struct player *p, int min_height, int min_width,
 {
 	int i, k;
 
-	int ssp = (int)(my_sqrt(p->depth) * 5) + 50;
+	int ssp = my_int_sqrt(p->depth) * 5 + 50;
 	int avgh = z_info->dungeon_hgt * ssp / 100;
 	int avgw = z_info->dungeon_wid * ssp / 100;
 
@@ -2871,7 +2871,7 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 	int size_percent, y_size, x_size;
 	struct chunk *c;
 
-	size_percent = (int)(my_sqrt(p->depth) * 5) + 50;
+	size_percent = my_int_sqrt(p->depth) * 5 + 50;
 	y_size = z_info->dungeon_hgt * size_percent / 100;
 	x_size = z_info->dungeon_wid * size_percent / 100;
 
@@ -3101,7 +3101,7 @@ struct chunk *moria_gen(struct player *p, int min_height, int min_width,
 	int size_percent, y_size, x_size;
 	struct chunk *c;
 
-    size_percent = (int)(my_sqrt(p->depth) * 5) + 50;
+    size_percent = my_int_sqrt(p->depth) * 5 + 50;
 
 	y_size = z_info->dungeon_hgt * (size_percent - 5 + randint0(10)) / 100;
 	x_size = z_info->dungeon_wid * (size_percent - 5 + randint0(10)) / 100;
@@ -3532,7 +3532,7 @@ struct chunk *lair_gen(struct player *p, int min_height, int min_width,
 	else if (i < 5) size_percent = 90;
 	else if (i < 6) size_percent = 95;
 	else size_percent = 100;*/
-    size_percent = (int)(my_sqrt(p->depth) * 5) + 50;
+    size_percent = my_sqrt(p->depth) * 5 + 50;
 
 	y_size = z_info->dungeon_hgt * (size_percent - 5 + randint0(10)) / 100;
 	x_size = z_info->dungeon_wid * (size_percent - 5 + randint0(10)) / 100;

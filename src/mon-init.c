@@ -1442,6 +1442,105 @@ static enum parser_error parse_mon_base_power(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_mon_base_skill_disarm_phys(struct parser *p) {
+	struct monster_base *rb = parser_priv(p);
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	rb->skills[SKILL_DISARM_PHYS] = parser_getint(p, "disarm");
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_skill_disarm_magic(struct parser *p) {
+	struct monster_base *rb = parser_priv(p);
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	rb->skills[SKILL_DISARM_MAGIC] = parser_getint(p, "disarm");
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_skill_device(struct parser *p) {
+	struct monster_base *rb = parser_priv(p);
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	rb->skills[SKILL_DEVICE] = parser_getint(p, "device");
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_skill_save(struct parser *p) {
+	struct monster_base *rb = parser_priv(p);
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	rb->skills[SKILL_SAVE] = parser_getint(p, "save");
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_skill_stealth(struct parser *p) {
+	struct monster_base *rb = parser_priv(p);
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	rb->skills[SKILL_STEALTH] = parser_getint(p, "stealth");
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_skill_search(struct parser *p) {
+	struct monster_base *rb = parser_priv(p);
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	rb->skills[SKILL_SEARCH] = parser_getint(p, "search");
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_skill_melee(struct parser *p) {
+	struct monster_base *rb = parser_priv(p);
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	rb->skills[SKILL_TO_HIT_MELEE] = parser_getint(p, "melee");
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_skill_shoot(struct parser *p) {
+	struct monster_base *rb = parser_priv(p);
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	rb->skills[SKILL_TO_HIT_BOW] = parser_getint(p, "shoot");
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_skill_throw(struct parser *p) {
+	struct monster_base *rb = parser_priv(p);
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	rb->skills[SKILL_TO_HIT_THROW] = parser_getint(p, "throw");
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_skill_dig(struct parser *p) {
+	struct monster_base *rb = parser_priv(p);
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	rb->skills[SKILL_DIGGING] = parser_getint(p, "dig");
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_skill_magic(struct parser *p) {
+	struct monster_base *rb = parser_priv(p);
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	rb->skills[SKILL_DIGGING] = parser_getint(p, "magic");
+	return PARSE_ERROR_NONE;
+}
+
 
 static struct parser *init_parse_mon_base(void) {
 	struct parser *p = parser_new();
@@ -1456,6 +1555,17 @@ static struct parser *init_parse_mon_base(void) {
 	parser_reg(p, "attr sym which int power", parse_mon_base_attribute);
 	parser_reg(p, "stats int str int int int wis int dex int con", parse_mon_base_stat);
 	parser_reg(p, "power sym power int amount", parse_mon_base_power);
+	parser_reg(p, "skill-disarm-phys int disarm", parse_mon_base_skill_disarm_phys);
+	parser_reg(p, "skill-disarm-magic int disarm", parse_mon_base_skill_disarm_magic);
+	parser_reg(p, "skill-device int device", parse_mon_base_skill_device);
+	parser_reg(p, "skill-save int save", parse_mon_base_skill_save);
+	parser_reg(p, "skill-stealth int stealth", parse_mon_base_skill_stealth);
+	parser_reg(p, "skill-search int search", parse_mon_base_skill_search);
+	parser_reg(p, "skill-melee int melee", parse_mon_base_skill_melee);
+	parser_reg(p, "skill-shoot int shoot", parse_mon_base_skill_shoot);
+	parser_reg(p, "skill-throw int throw", parse_mon_base_skill_throw);
+	parser_reg(p, "skill-dig int dig", parse_mon_base_skill_dig);
+	parser_reg(p, "skill-magic int magic", parse_mon_base_skill_magic);
 	return p;
 }
 

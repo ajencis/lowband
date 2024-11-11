@@ -126,6 +126,7 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 {
 	struct player_ability *choices = data;
 	int monster_powers[PP_MAX] = { 0 };
+	int monster_skills[SKILL_MAX] = { 0 };
 	struct monster_race *mrace = lookup_player_monster(player);
 
 	/* Redirect output to the screen */
@@ -139,6 +140,7 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 	extra[0] = '\0';
 	if (mrace) {
 		calc_monster_powers(mrace, monster_powers);
+		calc_monster_skills(mrace, monster_skills);
 	}
 	if (choices[oid].group == PLAYER_FLAG_POWER || choices[oid].group == PLAYER_FLAG_SKILL) {
 		int cbase, cxtra, rbase, rxtra, tome;
@@ -152,7 +154,7 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 		else {
 			cbase = player_class_c_skill(player, choices[oid].index);
 			cxtra = player_class_x_skill(player, choices[oid].index) * 100 / 5;
-			rbase = player->race->r_skills[choices[oid].index];
+			rbase = player->race->r_skills[choices[oid].index] + monster_skills[choices[oid].index];
 			rxtra = 0;
 			tome = player->extra_skills[choices[oid].index];
 		}

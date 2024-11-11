@@ -60,7 +60,10 @@
 int monster_melee_attack_range(int level, struct monster_blow *mblow)
 {
 	assert(mblow->method);
-	return MIN(level / 10 + 1, mblow->method->range);
+	int brng = mblow->method->range;
+	int result = level / 10 + (brng + 1) / 2;
+
+	return MAX(1, MIN(brng, result));
 }
 
 /**
@@ -79,9 +82,13 @@ static void monster_get_target_dist_grid(struct monster *mon, int *dist,
 	} else if (who == TARGET_WHO_PLAYER) {
 		targ_grid = player->grid;
 	} else if (who == TARGET_WHO_MONSTER) {
-		targ_grid = cave_monster(cave, mon->target.midx)->grid;
+		struct monster *target_mon = cave_monster(cave, mon->target.midx);
+		assert(target_mon && target_mon->race);
+		targ_grid = target_mon->grid;
 	} else if (who == TARGET_WHO_OBJECT) {
-		targ_grid = cave->objects[mon->target.oidx]->grid;
+		struct object *target_object = cave->objects[mon->target.oidx];
+		assert(target_object && !target_object->held_m_idx);
+		targ_grid = target_object->grid;
 	} else if (who == TARGET_WHO_GRID) {
 		targ_grid = mon->target.grid;
 	} else {
@@ -428,7 +435,8 @@ bool make_ranged_attack(struct monster *mon)
 	int target_dist;
 	struct loc target_grid;
 	int i;
-	struct monster *t_mon;
+	struct monster *t_mon = NULL;
+	struct player *t_player = NULL;
 
 	if (mon->target.who != TARGET_WHO_MONSTER && mon->target.who != TARGET_WHO_PLAYER) {
 		return false;
@@ -439,25 +447,31 @@ bool make_ranged_attack(struct monster *mon)
 		melee_dist = MAX(melee_dist, blow_range);
 	}
 
-	monster_get_target_dist_grid(mon, &target_dist, &target_grid);
+	//monster_get_target_dist_grid(mon, &target_dist, &target_grid);
 
-	t_mon = square_monster(cave, target_grid);
-	if (t_mon) {
+	if (mon->target.who == TARGET_WHO_MONSTER) {
+		t_mon = cave_monster(cave, mon->target.midx);
+		assert(t_mon && t_mon->race);
 		if (!mon_will_attack_mon(mon, t_mon)) {
 			return false;
 		}
 		if (!los(cave, mon->grid, t_mon->grid)) {
 			return false;
 		}
-	}
-	if (mon->target.who == TARGET_WHO_PLAYER) {
-		if (!mon_will_attack_player(mon, player)) {
+		target_grid = t_mon->grid;
+	} else if (mon->target.who == TARGET_WHO_PLAYER) {
+		t_player = player;
+		if (!mon_will_attack_player(mon, t_player)) {
 			return false;
 		}
 		if (!monster_can_see_player(mon)) {
 			return false;
 		}
+		target_grid = t_player->grid;
+	} else {
+		return false;
 	}
+	target_dist = distance(mon->grid, target_grid);
 
 	/* Check for cast this turn, non-innate and then innate */
 	// L: check for ranged melee attacks too
@@ -466,14 +480,13 @@ bool make_ranged_attack(struct monster *mon)
 	} else if (monster_can_cast(mon, true)) {
 		innate = true;
 	} else if (target_dist <= melee_dist) {
-		if (los(cave, mon->grid, target_grid)) {
-			if (mon->target.who == TARGET_WHO_MONSTER && t_mon) {
-				return monster_attack_monster(mon, t_mon);
-			}
-			else if (mon->target.who == TARGET_WHO_PLAYER) {
-				return make_attack_normal(mon, player);
-			}
+		if (t_mon) {
+			return monster_attack_monster(mon, t_mon);
 		}
+		else if (t_player) {
+			return make_attack_normal(mon, t_player);
+		}
+	} else {
 		return false;
 	}
 
@@ -499,6 +512,20 @@ bool make_ranged_attack(struct monster *mon)
 			ignore_spells(f, RST_BOLT);
 		}
 
+		// L: don't try to status the player if they've already got that status
+		if (mon->target.who == TARGET_WHO_PLAYER) {
+			for (i = 0; i < RSF_MAX; i++) {
+				if (!rsf_has(f, i)) continue;
+				const struct monster_spell *ms = monster_spell_by_index(i);
+				if (ms->effect->index == EF_TIMED_INC || ms->effect->index == EF_TIMED_INC_NO_RES) {
+					int curr = player->timed[ms->effect->subtype];
+					if (randint0(100) < curr) {
+						rsf_off(f, i);
+					}
+				}
+			}
+		}
+
 		/* Check for a possible summon */
 		if (!summon_possible(mon->grid)) {
 			ignore_spells(f, RST_SUMMON);
@@ -518,8 +545,9 @@ bool make_ranged_attack(struct monster *mon)
 	monster_desc(m_name, sizeof(m_name), mon, MDESC_STANDARD);
 
 	/* If we see a hidden monster try to cast a spell, become aware of it */
-	if (monster_is_camouflaged(mon))
+	if (monster_is_camouflaged(mon)) {
 		become_aware(cave, mon);
+	}
 
 	/* Check for spell failure (innate attacks never fail) */
 	failrate = monster_spell_failrate(mon);
@@ -606,7 +634,7 @@ bool check_hit(struct player *p, int to_hit)
  */
 int adjust_dam_armor(int damage, int ac)
 {
-	return damage - (damage * ((ac < 240) ? ac : 240) / 400);
+	return damage - (damage * MIN(ac, 200) / 300);
 }
 
 /**
@@ -670,8 +698,9 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 			/* Hack -- Apply "protection from evil" */
 			if (p->timed[TMD_PROTEVIL] > 0) {
 				/* Learn about the evil flag */
-				if (monster_is_visible(mon))
+				if (monster_is_visible(mon)) {
 					rf_on(lore->flags, RF_EVIL);
+				}
 
 				if (monster_is_evil(mon) && p->lev >= rlev &&
 				    randint0(100) + p->lev > 50) {
@@ -706,7 +735,8 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 					NULL,
 					rlev,
 					method,
-					p->state.ac + p->state.to_a,
+					// L: only armour itself affects damage reduction
+					p->state.ac,// + p->state.to_a,
 					ddesc,
 					obvious,
 					blinked,

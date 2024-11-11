@@ -754,15 +754,15 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 static void unarmed_mod_attack(struct attack_roll *aroll, struct object *obj)
 {
 	if (obj) return;
-	aroll->to_hit += get_power_scale(player, PP_UNARMED_STRIKE, 25, PP_SCALE_LINEAR);
-	aroll->to_dam += get_power_scale(player, PP_UNARMED_STRIKE, 20, PP_SCALE_LINEAR);
+	aroll->to_hit += get_power_scale(player, PP_UNARMED_STRIKE, 25);
+	aroll->to_dam += get_power_scale(player, PP_UNARMED_STRIKE, 20);
 }
 
 static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
 {
-	aroll->ddice = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 2, PP_SCALE_LINEAR);
-	aroll->dsides = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 9, PP_SCALE_SQRT);
-	aroll->mtimed[MON_TMD_STUN] = get_power_scale(player, PP_UNARMED_STRIKE, 100, PP_SCALE_SQUARE);
+	aroll->ddice = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 2);
+	aroll->dsides = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 9);
+	aroll->mtimed[MON_TMD_STUN] = get_power_scale(player, PP_UNARMED_STRIKE, 100);
 	aroll->accuracy_stat = STAT_DEX;
 	aroll->damage_stat = STAT_STR;
 	aroll->message = "punch";
@@ -783,9 +783,9 @@ static void specialization_mod_attack(struct attack_roll *aroll, struct object *
 	else if (kf_has(obj->kind->kind_flags, KF_SHOOTS_SHOTS)) spec = PP_SLING_SPECIALIZATION;
 	else return;
 	
-	aroll->to_hit += get_power_scale(player, spec, 20, PP_SCALE_LINEAR);
-	aroll->to_dam += get_power_scale(player, spec, 10, PP_SCALE_LINEAR);
-	aroll->dsides += get_power_scale(player, spec, 10, PP_SCALE_LINEAR);
+	aroll->to_hit += get_power_scale(player, spec, 20);
+	aroll->to_dam += get_power_scale(player, spec, 10);
+	aroll->dsides += get_power_scale(player, spec, 10);
 }
 
 static bool backstab_mod_attack(struct attack_roll *aroll, int power)
@@ -793,12 +793,12 @@ static bool backstab_mod_attack(struct attack_roll *aroll, int power)
 	if (!power) return false;
 	if (aroll->attack_skill != SKILL_TO_HIT_MELEE) return false;
 
-	int nds = aroll->dsides * (get_power_scale(player, PP_BACKSTAB, 50, PP_SCALE_SQRT) + power * 25) / 25;
+	int nds = aroll->dsides * (get_power_scale(player, PP_BACKSTAB, 50) + power * 25) / 25;
 	if (nds <= aroll->dsides) return false;
 
 	aroll->dsides = nds;
-	aroll->to_hit += get_power_scale(player, PP_BACKSTAB, 25, PP_SCALE_LINEAR) + 25;
-	aroll->to_dam += get_power_scale(player, PP_BACKSTAB, 10, PP_SCALE_LINEAR);
+	aroll->to_hit += get_power_scale(player, PP_BACKSTAB, 25) + 25;
+	aroll->to_dam += get_power_scale(player, PP_BACKSTAB, 10);
 	return true;
 }
 
@@ -937,15 +937,34 @@ static struct attack_roll get_thrown_ranged_attack(struct player *p, struct obje
 
 static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow, bool ranged)
 {
-	if (blow->method->skill == SKILL_SEARCH) {
+	/*if (blow->method->skill == SKILL_SEARCH) {
 		// can't gaze while you're blind
 		if (p->timed[TMD_BLIND]) return false;
-	}
+	}*/
 
 	if (!blow->method->player_usable) {
 		return false;
 	}
 
+	return true;
+}
+
+/**
+ * L: can a monster be targeted by an attack under present circumstances
+ * will put a message in  buf  describing why it cannot if it cannot
+ */
+static bool monster_can_be_attacked(struct player *p, struct attack_roll *aroll, struct monster *mon,
+				char *buf, size_t bufsize)
+{
+	if (!monster_is_visible(mon) && aroll->attack_skill == SKILL_SEARCH) {
+		my_strcpy(buf, "You cannot gaze at something you cannot see!", bufsize);
+		return false;
+	}
+	if (distance(p->grid, mon->grid) > aroll->range) {
+		my_strcpy(buf, "You cannot reach that far!", bufsize);
+		return false;
+	}
+	buf[0] = '\0';
 	return true;
 }
 
@@ -1399,6 +1418,7 @@ void py_attack(struct player *p, struct loc grid)
 	bool backstab_msg = false;
 	int dist = distance(p->grid, grid);
 	bool can_attack = false;
+	char buf[128] = { '\0' };
 
 	if (p->state.num_attacks <= 0) {
 		msg("You don't have any way to attack!");
@@ -1431,21 +1451,18 @@ void py_attack(struct player *p, struct loc grid)
 		if (attempt_shield_bash(p, mon, &fear)) return;
 	}
 
-	// L: check to see if we have a sufficiently ranged attack
-	i = 0;
-	while (!can_attack) {
-		if (i >= p->state.num_attacks) {
-			msg("You can't attack that far");
-			return;
-		}
-
+	// L: check to see if we can actually target the monster
+	for (i = 0; !can_attack; ++i) {
 		aroll = p->state.attacks[i];
 
-		if (aroll.range >= dist) {
+		if (monster_can_be_attacked(p, &aroll, mon, buf, sizeof(buf))) {
 			can_attack = true;
 		}
+	}
 
-		++i;
+	if (!can_attack) {
+		msg(buf);
+		return;
 	}
 
 	/* Attack until the next attack would exceed energy available or
@@ -1802,12 +1819,10 @@ struct attack_result make_ranged_throw(struct player *p,
 
 void do_cmd_melee(struct command *cmd)
 {
-	int dir, range = 0, i;
+	int dir, range = 1, i;
 	struct monster *foe = NULL;
 	struct loc target;
 
-	struct attack_roll *aroll = &player->state.ranged_attack;
-	
 	if (cmd_get_target(cmd, "target", &dir) == CMD_OK) {
 		player_confuse_dir(player, &dir, false);
 	} else {
@@ -1849,17 +1864,6 @@ void do_cmd_melee(struct command *cmd)
 
 
 	py_attack(player, target);
-
-	return;
-
-	ranged_helper(player,
-				NULL,
-				dir,
-				range,
-				aroll->blows,
-				aroll,
-				ranged_hit_types,
-				(int)N_ELEMENTS(ranged_hit_types));
 }
 
 /**
