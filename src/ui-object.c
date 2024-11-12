@@ -75,6 +75,8 @@ static size_t max_len;
 static int ex_width;
 static int ex_offset;
 
+struct object *object_being_swapped = NULL;
+
 /**
  * ------------------------------------------------------------------------
  * Display of individual objects in lists or for selection

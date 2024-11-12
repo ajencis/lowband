@@ -1408,7 +1408,7 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 void py_attack(struct player *p, struct loc grid)
 {
 	int avail_energy = MIN(p->energy, z_info->move_energy);
-	int blow_energy;// = 100 * z_info->move_energy / p->state.num_blows;
+	int blow_energy;
 	bool slain = false, fear = false;
 	struct monster *mon = square_monster(cave, grid);
 	struct attack_roll aroll;
@@ -1419,9 +1419,22 @@ void py_attack(struct player *p, struct loc grid)
 	int dist = distance(p->grid, grid);
 	bool can_attack = false;
 	char buf[128] = { '\0' };
+	int which;
 
 	if (p->state.num_attacks <= 0) {
 		msg("You don't have any way to attack!");
+		return;
+	}
+
+	// L: check to see if we can actually target the monster
+	for (i = 0; !can_attack && i < p->state.num_attacks; ++i) {
+		aroll = p->state.attacks[i];
+
+		can_attack = can_attack || monster_can_be_attacked(p, &aroll, mon, buf, sizeof(buf));
+	}
+
+	if (!can_attack) {
+		msg(buf);
 		return;
 	}
 
@@ -1451,25 +1464,11 @@ void py_attack(struct player *p, struct loc grid)
 		if (attempt_shield_bash(p, mon, &fear)) return;
 	}
 
-	// L: check to see if we can actually target the monster
-	for (i = 0; !can_attack; ++i) {
-		aroll = p->state.attacks[i];
-
-		if (monster_can_be_attacked(p, &aroll, mon, buf, sizeof(buf))) {
-			can_attack = true;
-		}
-	}
-
-	if (!can_attack) {
-		msg(buf);
-		return;
-	}
-
 	/* Attack until the next attack would exceed energy available or
 	 * a full turn or until the enemy dies. We limit energy use
 	 * to avoid giving monsters a possible double move. */
+	which = 0;
 	while (!slain) {
-		int which = randint0(p->state.num_attacks);
 		aroll = p->state.attacks[which];
 
 		if (aroll.range < dist) {
@@ -1490,6 +1489,8 @@ void py_attack(struct player *p, struct loc grid)
 
 		slain = py_attack_real(p, grid, &fear, aroll);
 		p->upkeep->energy_use += blow_energy;
+
+		which = (which + 1) % p->state.num_attacks;
 	}
 
 	if (!slain) {

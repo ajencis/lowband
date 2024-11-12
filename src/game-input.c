@@ -249,10 +249,11 @@ bool get_item(struct object **choice, const char *pmt, const char *str,
 			  cmd_code cmd, item_tester tester, int mode)
 {
 	/* Ask the UI for it */
-	if (get_item_hook)
+	if (get_item_hook) {
 		return get_item_hook(choice, pmt, str, cmd, tester, mode);
-	else
+	} else {
 		return false;
+	}
 }
 
 /**

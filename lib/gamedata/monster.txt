@@ -6447,7 +6447,6 @@ depth:27
 rarity:1
 experience:175
 blow:HIT:HURT:1d6
-blow:HIT:HURT:1d6
 blow:BITE:EXP_20:2d6
 blow:BITE:EXP_20:2d6
 flags:DROP_40 | DROP_1
@@ -8650,7 +8649,6 @@ depth:36
 rarity:1
 experience:750
 blow:HIT:HURT:2d6
-blow:HIT:HURT:2d6
 blow:BITE:EXP_40:3d6
 blow:BITE:EXP_40:3d6
 flags:DROP_4
@@ -10793,7 +10791,6 @@ depth:46
 rarity:1
 experience:1800
 blow:HIT:HURT:3d6
-blow:HIT:HURT:3d6
 blow:BITE:EXP_80:4d6
 blow:BITE:EXP_80:4d6
 flags:DROP_4
@@ -12103,7 +12100,6 @@ sleepiness:10
 depth:59
 rarity:3
 experience:4500
-blow:HIT:HURT:4d6
 blow:HIT:HURT:4d6
 blow:BITE:EXP_80:5d6
 blow:BITE:EXP_80:5d6

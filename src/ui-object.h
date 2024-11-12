@@ -23,6 +23,8 @@
 
 #include "cmd-core.h"
 
+extern struct object *object_being_swapped;
+
 /**
  * Modes for item lists in show_inven(), show_equip(), show_quiver() and
  * show_floor()

@@ -422,7 +422,7 @@ int16_t spell_chance(int spell_index)
 	const struct class_spell *spell;
 
 	/* Paranoia -- must be literate */
-	if (!player->class->magic.total_spells && !pf_has(player->class->flags, PF_GETS_ALL_SPELLS)) return chance;
+	if (!player->class->magic.total_spells) return chance;
 
 	/* Get the spell */
 	spell = spell_by_index(player, spell_index);

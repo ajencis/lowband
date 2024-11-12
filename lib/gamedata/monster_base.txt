@@ -45,6 +45,7 @@ attr:HP:2
 attr:SPEED:-2
 stats:1:1:-1:-1:1
 skill-melee:5
+obj-flags:SEE_INVIS
 
 # Ainur were the founding spirits of Arda, and could take any form they wished.
 # Ainur in Angband typically have shapechanges and many possibe other spells,
@@ -85,8 +86,9 @@ glyph:b
 pain:4
 flags:ANIMAL
 desc:Bat
+attr:HP:-1
 attr:SPEED:3
-attr:DAMAGE:-3
+attr:DAMAGE:-2
 
 # Quickish monsters usually with some effect beyond melee
 name:bird
@@ -170,6 +172,7 @@ stats:-2:1:1:1:0
 power:DIVINATION_MAGIC:20
 skill-magic:5
 skill-search:5
+obj-flags:SEE_INVIS
 
 # Creatures (mostly) embodying a single element, mostly with lowish HP
 name:elemental
@@ -576,6 +579,7 @@ stats:1:1:-2:2:-1
 power:POLEARM_SPECIALIZATION:20
 power:BACKSTAB:20
 skill-stealth:10
+player-flags:UNLIGHT
 
 # Always awake, elemental objects which engulf and breathe their element(s)
 name:vortex

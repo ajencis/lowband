@@ -833,12 +833,12 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 			sqinfo_on(sqr->info, SQUARE_GAVE_EXP);
 
 			if (c->squares_everseen > 100) {
-				uint32_t factor = MAX(c->depth, 5) * c->depth;
+				uint32_t factor = c->depth * c->depth;
 				uint32_t total;
-				if (factor > UINT32_MAX / 1000) {
+				if (factor > UINT32_MAX / 500) {
 					total = UINT32_MAX;
 				} else {
-					total = factor * 1000; // in 1/2^16 of a point
+					total = factor * 500; // in 1/2^16 of a point
 				}
 				uint32_t q = total / UINT16_MAX;
 				uint32_t q_frac = total - (q * UINT16_MAX);

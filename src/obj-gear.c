@@ -945,7 +945,7 @@ void inven_carry(struct player *p, struct object *obj, bool absorb,
 /**
  * Wield or wear a single item from the pack or floor
  */
-void inven_wield(struct object *obj, int slot)
+void inven_wield(struct object *obj, int slot, bool verbose)
 {
 	struct object *wielded, *old = player->body.slots[slot].obj;
 
@@ -1000,24 +1000,27 @@ void inven_wield(struct object *obj, int slot)
 	object_learn_on_wield(player, wielded);
 
 	/* Where is the item now */
-	if (tval_is_melee_weapon(wielded))
+	if (tval_is_melee_weapon(wielded)) {
 		fmt = "You are wielding %s (%c).";
-	else if (wielded->tval == TV_BOW)
+	} else if (wielded->tval == TV_BOW) {
 		fmt = "You are shooting with %s (%c).";
-	else if (tval_is_light(wielded))
+	} else if (tval_is_light(wielded)) {
 		fmt = "Your light source is %s (%c).";
-	else
+	} else {
 		fmt = "You are wearing %s (%c).";
+	}
 
 	/* Describe the result */
 	object_desc(o_name, sizeof(o_name), wielded,
 		ODESC_PREFIX | ODESC_FULL, player);
 
 	/* Message */
-	msgt(MSG_WIELD, fmt, o_name, gear_to_label(player, wielded));
+	if (verbose) {
+		msgt(MSG_WIELD, fmt, o_name, gear_to_label(player, wielded));
+	}
 
 	/* Sticky flag geats a special mention */
-	if (of_has(wielded->flags, OF_STICKY)) {
+	if (verbose && of_has(wielded->flags, OF_STICKY)) {
 		/* Warn the player */
 		msgt(MSG_CURSED, "Oops! It feels deathly cold!");
 	}

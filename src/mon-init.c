@@ -1541,6 +1541,52 @@ static enum parser_error parse_mon_base_skill_magic(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_mon_base_obj_flags(struct parser *p) {
+	struct monster_base *mb = parser_priv(p);
+	char *flags;
+	char *s;
+
+	if (!mb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	if (!parser_hasval(p, "flags")) {
+		return PARSE_ERROR_NONE;
+	}
+	flags = string_make(parser_getstr(p, "flags"));
+	s = strtok(flags, " |");
+	while (s) {
+		if (grab_flag(mb->oflags, OF_SIZE, list_obj_flag_names, s)) {
+			break;
+		}
+		s = strtok(NULL, " |");
+	}
+	string_free(flags);
+	return s ? PARSE_ERROR_INVALID_FLAG : PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_play_flags(struct parser *p) {
+	struct monster_base *mb = parser_priv(p);
+	char *flags;
+	char *s;
+
+	if (!mb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	if (!parser_hasval(p, "flags")) {
+		return PARSE_ERROR_NONE;
+	}
+	flags = string_make(parser_getstr(p, "flags"));
+	s = strtok(flags, " |");
+	while (s) {
+		if (grab_flag(mb->pflags, PF_SIZE, player_info_flags, s)) {
+			break;
+		}
+		s = strtok(NULL, " |");
+	}
+	string_free(flags);
+	return s ? PARSE_ERROR_INVALID_FLAG : PARSE_ERROR_NONE;
+}
+
 
 static struct parser *init_parse_mon_base(void) {
 	struct parser *p = parser_new();
@@ -1566,6 +1612,8 @@ static struct parser *init_parse_mon_base(void) {
 	parser_reg(p, "skill-throw int throw", parse_mon_base_skill_throw);
 	parser_reg(p, "skill-dig int dig", parse_mon_base_skill_dig);
 	parser_reg(p, "skill-magic int magic", parse_mon_base_skill_magic);
+	parser_reg(p, "obj-flags ?str flags", parse_mon_base_obj_flags);
+	parser_reg(p, "player-flags ?str flags", parse_mon_base_play_flags);
 	return p;
 }
 

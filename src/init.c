@@ -188,7 +188,7 @@ static const char *mon_race_flags[] =
 	NULL
 };
 
-static const char *player_info_flags[] =
+const char *player_info_flags[] =
 {
 	#define PF(a) #a,
 	#include "list-player-flags.h"

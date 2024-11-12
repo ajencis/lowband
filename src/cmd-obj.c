@@ -41,6 +41,7 @@
 #include "player-util.h"
 #include "target.h"
 #include "trap.h"
+#include "ui-object.h"
 
 /**
  * ------------------------------------------------------------------------
@@ -253,6 +254,15 @@ void do_cmd_takeoff(struct command *cmd)
 	player->upkeep->energy_use = z_info->move_energy / 2;
 }
 
+static bool object_slot_matches_object_being_swapped(const struct object *obj)
+{
+	assert(object_being_swapped);
+
+	if (wield_slot_type(obj) == wield_slot_type(object_being_swapped)) {
+		return true;
+	}
+	return false;
+}
 
 /**
  * Wield or wear an item
@@ -262,6 +272,8 @@ void do_cmd_wield(struct command *cmd)
 	struct object *equip_obj;
 	char o_name[80];
 	const char *act;
+	int numslots;
+	int i;
 
 	unsigned n;
 
@@ -289,20 +301,33 @@ void do_cmd_wield(struct command *cmd)
 
 	/* If the slot is open, wield and be done */
 	if (!equip_obj) {
-		inven_wield(obj, slot);
+		inven_wield(obj, slot, true);
 		return;
+	}
+
+	numslots = 0;
+	for (i = 0; i < player->body.count; i++) {
+		if (player->body.slots[i].type == wield_slot_type(obj)) {
+			++numslots;
+		}
 	}
 
 	/* Usually if the slot is taken we'll just replace the item in the slot,
 	 * but for rings we need to ask the user which slot they actually
 	 * want to replace */
-	if (tval_is_ring(obj)) {
-		if (cmd_get_item(cmd, "replace", &equip_obj,
-						 /* Prompt */ "Replace which ring? ",
-						 /* Error  */ "Error in do_cmd_wield(), please report.",
-						 /* Filter */ tval_is_ring,
-						 /* Choice */ USE_EQUIP) != CMD_OK)
+	if (numslots > 1) {
+		object_being_swapped = obj;
+
+		int cmd_return_code = cmd_get_item(cmd, "replace", &equip_obj,
+				/* Prompt */ "Replace which equipment? ",
+				/* Error  */ "Error in do_cmd_wield(), please report.",
+				/* Filter */ object_slot_matches_object_being_swapped,
+				/* Choice */ USE_EQUIP);
+
+		object_being_swapped = NULL;
+		if (cmd_return_code != CMD_OK) {
 			return;
+		}
 
 		/* Change slot if necessary */
 		slot = equipped_item_slot(player->body, equip_obj);
@@ -345,7 +370,7 @@ void do_cmd_wield(struct command *cmd)
 	else
 		act = "You were wearing";
 
-	inven_wield(obj, slot);
+	inven_wield(obj, slot, true);
 
 	/* Message */
 	msgt(MSG_WIELD, "%s %s (%c).", act, o_name,
@@ -1117,8 +1142,9 @@ void do_cmd_study_spell(struct command *cmd)
 	int spell_index;
 
 	/* Check the player can study at all atm */
-	if (!player_can_study(player, true))
+	if (!player_can_study(player, true)) {
 		return;
+	}
 
 	if (cmd_get_spell(cmd, "spell", player, &spell_index,
 			/* Verb */ "study",

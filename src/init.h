@@ -222,6 +222,7 @@ extern bool play_again;
 
 extern const char *list_element_names[];
 extern const char *list_obj_flag_names[];
+extern const char *player_info_flags[];
 
 extern struct angband_constants *z_info;
 

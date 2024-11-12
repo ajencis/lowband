@@ -139,7 +139,7 @@ static void change_player_body(struct player *p, struct player_body *new)
 		int slot = wield_slot(equipped);
 		if (slot >= 0 && !slot_object(p, slot)) {
 			inven_carry(p, equipped, false, false);
-			inven_wield(equipped, slot);
+			inven_wield(equipped, slot, false);
 		}
 		else {
 			inven_carry(p, equipped, true, false);
@@ -184,17 +184,20 @@ bool check_player_monster(struct player *p, bool init)
 	int currxp = init ? player_exp[4] : (int)p->monster_xp / 3;
 	
 	while (e) {
+		int monlev = e->race->level;
+		if (!curr) monlev = MAX(0, monlev * 2 / 3 - 4);
+
 		++numevols;
 
 		int32_t currxpneed;
-		if (e->race->level < PY_MAX_LEVEL) {
+		if (monlev < PY_MAX_LEVEL) {
 			// monster is in the table
-			currxpneed = player_exp[e->race->level];
+			currxpneed = player_exp[monlev];
 		}
-		else if (player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL < PY_MAX_EXP / e->race->level) {
+		else if (player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL < PY_MAX_EXP / monlev) {
 			/* monster is out of the table but linear scaling of the highest value
 			   in the table is less than the maximum possible */
-			currxpneed = player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL * e->race->level;
+			currxpneed = player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL * monlev;
 		}
 		else {
 			/* monster is out of the table and would need more than the max possible
@@ -560,7 +563,6 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	chance /= obj->number * obj->number * 1000;
 	if (nextcost > currcost) {
 		// avoid asking player too often in case they don't want to learn
-		chance *= 2;
 		chance += 10;
 	}
 	// paranoia
@@ -1740,7 +1742,7 @@ bool player_is_trapsafe(const struct player *p)
  */
 bool player_can_cast(const struct player *p, bool show_msg)
 {
-	if (!p->class->magic.total_spells && !pf_has(p->class->flags, PF_GETS_ALL_SPELLS)) {
+	if (!p->class->magic.total_spells) {
 		if (show_msg) {
 			msg("You cannot pray or produce magics.");
 		}
@@ -1773,8 +1775,9 @@ bool player_can_cast(const struct player *p, bool show_msg)
  */
 bool player_can_study(const struct player *p, bool show_msg)
 {
-	if (!player_can_cast(p, show_msg))
+	if (!player_can_cast(p, show_msg)) {
 		return false;
+	}
 
 	if (!p->upkeep->new_spells) {
 		if (show_msg) {
