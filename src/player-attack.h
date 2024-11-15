@@ -57,8 +57,12 @@ extern void do_cmd_melee(struct command *cmd);
 
 
 /* L: new */
+bool get_unarmed_punch(struct player *p, struct player_state *ps,
+		struct attack_roll *aroll, int attack_div);
+bool get_unarmed_kick(struct player *p, struct player_state *ps,
+		struct attack_roll *aroll, int attack_div);
 bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct object *obj,
-		struct attack_roll *aroll);
+		struct attack_roll *aroll, int attack_div);
 struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_state *ps,
 												struct object *shooter);
 int get_monster_attacks(struct player *p, struct player_state *ps, struct monster_race *mr,

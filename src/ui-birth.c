@@ -26,6 +26,7 @@
 #include "player.h"
 #include "player-birth.h"
 #include "player-spell.h"
+#include "player-util.h"
 #include "ui-birth.h"
 #include "ui-display.h"
 #include "ui-game.h"
@@ -253,6 +254,11 @@ static void race_help(int i, void *db, const region *l)
 	struct player_ability *ability;
 	int n_flags = 0;
 	int flag_space = 5;
+	int race_skills[SKILL_MAX] = { 0 };
+	struct element_info race_elem_info[ELEM_MAX] = { 0 };
+
+	player_race_r_skill(r, false, race_skills);
+	player_race_elem_info(r, false, race_elem_info);
 
 	if (!r) return;
 
@@ -299,7 +305,7 @@ static void race_help(int i, void *db, const region *l)
 	}
 	
 	text_out_e("\n");
-	skill_help(r->r_skills, NULL, r->r_mhp, r->r_exp, r->infra);
+	skill_help(race_skills, NULL, r->r_mhp, r->r_exp, r->infra);
 	text_out_e("\n");
 
 	for (ability = player_abilities; ability; ability = ability->next) {
@@ -311,7 +317,7 @@ static void race_help(int i, void *db, const region *l)
 				   !pf_has(r->pflags, ability->index)) {
 			continue;
 		} else if (streq(ability->type, "element") &&
-				   (r->el_info[ability->index].res_level != ability->value)) {
+				   (race_elem_info[ability->index].res_level != ability->value)) {
 			continue;
 		} else if (streq(ability->type, "power") &&
 		           (!r->r_powers[ability->index])) {

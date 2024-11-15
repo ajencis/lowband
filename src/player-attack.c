@@ -751,21 +751,33 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
  * L: functions to create the attack itself
  */
 
-static void unarmed_mod_attack(struct attack_roll *aroll, struct object *obj)
+static void unarmed_mod_attack(struct attack_roll *aroll)
 {
-	if (obj) return;
 	aroll->to_hit += get_power_scale(player, PP_UNARMED_STRIKE, 25);
 	aroll->to_dam += get_power_scale(player, PP_UNARMED_STRIKE, 20);
 }
 
-static void unarmed_get_attack(struct attack_roll *aroll, struct object *obj)
+static void unarmed_get_punch(struct attack_roll *aroll)
 {
-	aroll->ddice = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 2);
+	aroll->ddice = 1;
 	aroll->dsides = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 9);
 	aroll->mtimed[MON_TMD_STUN] = get_power_scale(player, PP_UNARMED_STRIKE, 100);
 	aroll->accuracy_stat = STAT_DEX;
 	aroll->damage_stat = STAT_STR;
 	aroll->message = "punch";
+	aroll->obj = NULL;
+	aroll->proj_type = PROJ_BLUDGEONING;
+	aroll->range = 1;
+}
+
+static void unarmed_get_kick(struct attack_roll *aroll)
+{
+	aroll->ddice = 1;
+	aroll->dsides = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 14);
+	aroll->mtimed[MON_TMD_SLOW] = get_power_scale(player, PP_UNARMED_STRIKE, 100);
+	aroll->accuracy_stat = STAT_DEX;
+	aroll->damage_stat = STAT_STR;
+	aroll->message = "kick";
 	aroll->obj = NULL;
 	aroll->proj_type = PROJ_BLUDGEONING;
 	aroll->range = 1;
@@ -802,12 +814,68 @@ static bool backstab_mod_attack(struct attack_roll *aroll, int power)
 	return true;
 }
 
+static void get_melee_attack(struct attack_roll *aroll, struct player_state *ps,
+		struct player *p, struct object *obj, int attack_div)
+{
+	int mult, div;
+
+	mult = get_power_scale_state(ps, PP_DUAL_WIELD, 10, p->lev) + 10;
+	mult = MAX(mult, 1);
+	div = attack_div * 5;
+	if (div > 20) {
+		div = (div - 20) * 100 / (get_power_scale_state(ps, PP_DUAL_WIELD, 250, p->lev) + 50) + 20;
+	}
+	div = MAX(div, mult);
+
+	aroll->attack_skill = SKILL_TO_HIT_MELEE;
+
+	aroll->to_hit += ps->to_h;
+	aroll->dsides += player_damage_bonus(ps);
+
+	aroll->to_hit += adj_dex_th(ps->stat_ind[aroll->accuracy_stat]);
+	aroll->dsides += adj_str_td(ps->stat_ind[aroll->damage_stat]);
+
+	specialization_mod_attack(aroll, obj);
+
+	aroll->to_hit = aroll->to_hit * mult / div;
+	aroll->dsides -= div / mult - 1;
+
+	aroll->dsides = MAX(aroll->dsides, 1);
+	aroll->ddice = MAX(aroll->ddice, 1);
+}
+
+bool get_unarmed_punch(struct player *p, struct player_state *ps,
+		struct attack_roll *aroll, int attack_div)
+{
+	memset(aroll, 0, sizeof(*aroll));
+
+	unarmed_get_punch(aroll);
+	unarmed_mod_attack(aroll);
+
+	get_melee_attack(aroll, ps, p, NULL, attack_div);
+
+	return true;
+}
+
+bool get_unarmed_kick(struct player *p, struct player_state *ps,
+		struct attack_roll *aroll, int attack_div)
+{
+	memset(aroll, 0, sizeof(*aroll));
+
+	unarmed_get_kick(aroll);
+	unarmed_mod_attack(aroll);
+
+	get_melee_attack(aroll, ps, p, NULL, attack_div);
+
+	return true;
+}
+
 
 /**
  * L: get a weapon attack
  */
 bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct object *obj,
-		struct attack_roll *aroll)
+		struct attack_roll *aroll, int attack_div)
 {
 	memset(aroll, 0, sizeof(*aroll));
 	if (obj && obj->kind->tval == TV_SHIELD) {
@@ -828,22 +896,10 @@ bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct o
 		aroll->range = obj->tval == TV_POLEARM ? 2 : 1;
 	}
 	else {
-		unarmed_get_attack(aroll, obj);
-        unarmed_mod_attack(aroll, obj);
+		return false;
 	}
 
-	aroll->attack_skill = SKILL_TO_HIT_MELEE;
-
-	aroll->to_hit += ps->to_h;
-	aroll->dsides += player_damage_bonus(&p->state);
-
-	aroll->to_hit += adj_dex_th(ps->stat_ind[aroll->accuracy_stat]);
-	aroll->dsides += adj_str_td(ps->stat_ind[aroll->damage_stat]);
-
-	specialization_mod_attack(aroll, obj);
-
-	aroll->dsides = MAX(aroll->dsides, 1);
-	aroll->ddice = MAX(aroll->ddice, 1);
+	get_melee_attack(aroll, ps, p, obj, attack_div);
 
 	return aroll;
 }
@@ -986,7 +1042,7 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 	if (!monster_attack_is_usable(p, mb, ranged)) return false;
 
 	if (mb->method->unarmed) {
-		unarmed_get_attack(aroll, NULL);
+		unarmed_get_punch(aroll);
 	}
 	else {
 		memset(aroll, 0, sizeof(*aroll));
@@ -1029,7 +1085,7 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 
 	if (aroll->attack_skill == SKILL_TO_HIT_MELEE) {
 		// martial arts don't affect stuff like gaze attacks
-		unarmed_mod_attack(aroll, NULL);
+		unarmed_mod_attack(aroll);
 	}
 
 	return true;

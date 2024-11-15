@@ -30,6 +30,8 @@ struct mon_player_match {
 	int pval;
 };
 
+extern struct mon_player_match elem_matches[];
+
 /**
  * Bit flags for the "player->upkeep->notice" variable
  */

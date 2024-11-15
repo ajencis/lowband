@@ -512,7 +512,7 @@ skill-shoot:10:0
 skill-throw:10:0
 skill-dig:0:0
 skill-magic:0:0
-hitdie:0
+hitdie:3
 max-attacks:6
 min-weight:10
 strength-multiplier:5

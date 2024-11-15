@@ -713,8 +713,6 @@ struct player {
 
 	uint16_t extra_powers[PP_MAX];		/* L: if the player gained powers outside of their class */
 	uint16_t extra_skills[SKILL_MAX];	/* L: skills gained outside class/race */
-
-	int hp_burn;						/* L: temporary reduction of max hp */
 	int sp_burn;						/* L: temporary reduction of max mp */
 
 	uint8_t *player_spell_flags;		/* L: for nonclass spells */

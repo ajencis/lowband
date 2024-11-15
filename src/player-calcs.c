@@ -144,7 +144,7 @@ static int adj_str_wgt(int index) {
 }
 
 int adj_str_hold(int index) {
-	return stat_scale(index, 200, true) + 50;
+	return stat_scale(index, 250, true);
 }
 
 static int adj_str_dig(int index) {
@@ -926,18 +926,20 @@ static void calc_hitpoints(struct player *p)
 	long bonus;
 	int mhp;
 	int resil = get_power_scale(p, PP_RESILIENCE, 50);
+	int resil_hd_min = get_power_scale(p, PP_RESILIENCE, 10);
 	struct monster_race *mon = lookup_player_monster(p);
+	int eff_hd = MAX(p->hitdie, resil_hd_min);
 
 	/* Get "1/100th hitpoint bonus per level" value */
 	bonus = adj_con_mhp(p->state.stat_ind[STAT_CON]);
 
 	/* Calculate hitpoints */
-	mhp = p->hitdie + p->hitdie * (p->lev > 1 ? p->lev : 0) / 5;
+	mhp = eff_hd + eff_hd * (p->lev > 1 ? p->lev : 0) / 5;
 
 	/* L: bonus from being a monster */
 	if (mon) {
 		int mon_hp = (int)my_cbrt((double)mon->avg_hp * mon->avg_hp * mon->avg_hp);
-		mhp = (mhp + mon_hp) / 2;
+		mhp = (mhp + mon_hp) * 2 / 3;
 	}
 
 	mhp += bonus * p->lev / 100;
@@ -947,8 +949,6 @@ static void calc_hitpoints(struct player *p)
 
 	/* Always have at least one hitpoint per level */
 	if (mhp < p->lev + 1) mhp = p->lev + 1;
-
-	mhp = MAX(mhp / 2, mhp - p->hp_burn);
 
 	/* New maximum hitpoints */
 	if (p->mhp != mhp) {
@@ -1339,13 +1339,17 @@ void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX])
 /**
  * L: calculate the effects of being a monster on player state
  */
-static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
-						 struct monster_race *mrace, int *moves)
+static void calc_monster(struct player *p, struct player_state *state,
+						 bool vuln[ELEM_MAX], int *moves)
 {
-	if (!mrace) return;
+	struct monster_race *mrace = lookup_player_monster(p);
 	int i;
 	int powers[PP_MAX] = { 0 };
 	int skills[SKILL_MAX] = { 0 };
+
+	if (!mrace) {
+		return;
+	}
 
 	i = 0;
 	while (elem_matches[i].mval != RF_NONE) {
@@ -1372,6 +1376,7 @@ static void calc_monster(struct player_state *state, bool vuln[ELEM_MAX],
 	for (i = 0; i < SKILL_MAX; i++) {
 		state->skills[i] += skills[i];
 	}
+	
 }
 
 /**
@@ -1413,7 +1418,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	bitflag collect_f[OF_SIZE];
 	bool vuln[ELEM_MAX];
 	struct monster_race *mrace = lookup_player_monster(p);
-	int avail_hands;
+	int avail_hands, attack_div;
+	int race_skills[SKILL_MAX] = { 0 };
+	struct element_info race_elem_info[ELEM_MAX] = { 0 };
 
 	/* Hack to allow calculating hypothetical blows for extra STR, DEX - NRM */
 	int str_ind = state->stat_ind[STAT_STR];
@@ -1428,15 +1435,18 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* Extract race/class info */
 	state->see_infra = p->race->infra;
+	player_race_r_skill(p->race, mrace ? true : false, race_skills);
 	for (i = 0; i < SKILL_MAX; i++) {
-		state->skills[i] = p->race->r_skills[i]	+ player_class_c_skill(p, i);
+		state->skills[i] = race_skills[i] + player_class_c_skill(p, i);
 	}
+
+	player_race_elem_info(p->race, mrace ? true : false, race_elem_info);
 	for (i = 0; i < ELEM_MAX; i++) {
 		vuln[i] = false;
-		if (p->race->el_info[i].res_level == -1) {
+		if (race_elem_info[i].res_level == -1) {
 			vuln[i] = true;
 		} else {
-			state->el_info[i].res_level = p->race->el_info[i].res_level;
+			state->el_info[i].res_level = race_elem_info[i].res_level;
 		}
 	}
 
@@ -1611,7 +1621,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* L: add monster info */
 	if (mrace) {
-		calc_monster(state, vuln, mrace, &extra_moves);
+		calc_monster(p, state, vuln, &extra_moves);
 	}
 
 	/* Now deal with vulnerabilities */
@@ -1843,7 +1853,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	if (state->skills[SKILL_DIGGING] < 1) state->skills[SKILL_DIGGING] = 1;
 	if (state->skills[SKILL_STEALTH] > 150) state->skills[SKILL_STEALTH] = 150;
 	if (state->skills[SKILL_STEALTH] < 0) state->skills[SKILL_STEALTH] = 0;
-	hold = adj_str_hold(state->stat_ind[STAT_STR]);
+	hold = adj_str_hold(state->stat_ind[STAT_STR]) + 100;
 
 	/* L: magic gets a special bonus from its ability score */
 	if (state->skills[SKILL_MAGIC] > 0) {
@@ -1933,10 +1943,20 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	/* L: get melee attacks */
 	avail_hands = 0;
 	attacknum = 0;
+	attack_div = 0;
+	for (i = 0; i < num_weapons; ++i) {
+		if (weapons[i]) {
+			attack_div += 2;
+		}
+		else {
+			attack_div += 1;
+		}
+	}
+
 	for (i = 0; i < num_weapons; ++i) {
 		assert(i < PY_MAX_ATTACKS && attacknum < PY_MAX_ATTACKS);
 		if (weapons[i]) {
-			if (get_melee_weapon_attack(p, state, weapons[i], &state->attacks[attacknum])) {
+			if (get_melee_weapon_attack(p, state, weapons[i], &state->attacks[attacknum], attack_div)) {
 				++attacknum;
 			}
 		}
@@ -1952,10 +1972,18 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 										   false);
 	}
 	while (avail_hands > 0 && attacknum < PY_MAX_ATTACKS) {
-		if (get_melee_weapon_attack(p, state, NULL, &state->attacks[attacknum])) {
+		if (get_unarmed_punch(p, state, &state->attacks[attacknum], attack_div)) {
 			++attacknum;
 		}
 		--avail_hands;
+	}
+	for (i = 0; i < 4 && attacknum < PY_MAX_ATTACKS; i++) {
+		if (get_power_scale_state(state, PP_UNARMED_STRIKE, 3, p->lev) <= i) {
+			break;
+		}
+		if (get_unarmed_kick(p, state, &state->attacks[attacknum], attack_div)) {
+			++attacknum;
+		}
 	}
 
 	state->num_attacks = attacknum;

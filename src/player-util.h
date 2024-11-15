@@ -73,6 +73,8 @@ bool obj_can_learn_extra_from(const struct object *obj);
 int player_class_power(struct player *p, int power);
 int player_class_x_skill(struct player *p, int skill);
 int player_class_c_skill(struct player *p, int skill);
+void player_race_r_skill(const struct player_race *r, bool evolved, int skills[SKILL_MAX]);
+void player_race_elem_info(const struct player_race *r, bool evolved, struct element_info el_info[ELEM_MAX]);
 int dungeon_get_next_level(struct player *p, int dlev, int added);
 void player_set_recall_depth(struct player *p);
 bool player_get_recall_depth(struct player *p);

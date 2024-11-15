@@ -1367,7 +1367,6 @@ void leave_store(game_event_type type, game_event_data *data, void *user)
 	if (store_at(cave, player->grid)->feat == FEAT_HOME) {
 		//msg("You feel refreshed after resting at home.");
         
-		player->hp_burn = 0;
 		player->sp_burn = 0;
 
 		player->csp = player->msp;

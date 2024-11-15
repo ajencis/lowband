@@ -563,7 +563,7 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	chance /= obj->number * obj->number * 1000;
 	if (nextcost > currcost) {
 		// avoid asking player too often in case they don't want to learn
-		chance += 10;
+		chance = MAX(chance, p->depth + 5);
 	}
 	// paranoia
 	chance = MIN(chance, 0x10000000U);
@@ -654,6 +654,53 @@ int player_class_c_skill(struct player *p, int skill)
 		base = MAX(base, p->extra_skills[skill] * 1 / 4);
 	}
 	return base;
+}
+
+void player_race_r_skill(const struct player_race *r, bool evolved, int skills[SKILL_MAX])
+{
+	int i;
+	for (i = 0; i < SKILL_MAX; i++) {
+		skills[i] = r->r_skills[i];
+	}
+	// juvenile monsters get the bonuses of their evolved forms
+	if (!evolved && r->evol) {
+		for (i = 0; i < SKILL_MAX; i++) {
+			int bonus = 25;
+			struct evolution *evol;
+			for (evol = r->evol; evol; evol = evol->next) {
+				bonus = MIN(evol->race->base->skills[i], bonus);
+			}
+			skills[i] += bonus;
+		}
+	}
+}
+
+void player_race_elem_info(const struct player_race *r, bool evolved, struct element_info el_info[ELEM_MAX])
+{
+	int i;
+
+	for (i = 0; i < ELEM_MAX; i++) {
+		el_info[i].res_level = r->el_info[i].res_level;
+	}
+
+	if (!evolved && r->evol) {
+		bool evol_does_resist[ELEM_MAX] = { false };
+		for (i = 0; elem_matches[i].mval != RF_NONE; i++) {
+			struct evolution *e;
+			int elem = elem_matches[i].pval;
+			evol_does_resist[elem] = true;
+			for (e = r->evol; e; e = e->next) {
+				if (!rf_has(e->race->flags, elem_matches[i].mval)) {
+					evol_does_resist[elem] = false;
+				}
+			}
+		}
+		for (i = 0; i < ELEM_MAX; ++i) {
+			if (evol_does_resist[i]) {
+				el_info[i].res_level = MAX(el_info[i].res_level, 1);
+			}
+		}
+	}
 }
 
 /**
