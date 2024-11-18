@@ -318,14 +318,17 @@ struct start_item {
  * Structure for magic realms
  */
 struct magic_realm {
+	int index;
 	struct magic_realm *next;
 	char *code;
 	char *name;
 	int stat;
-	int weight;			/**< L: weight allowance */
+	int weight;						/**< L: weight allowance */
 	char *verb;
 	char *spell_noun;
 	char *book_noun;
+
+	int school_modifiers[MS_MAX];	/* L: which schools it does well */
 };
 
 /**

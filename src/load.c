@@ -1117,6 +1117,7 @@ int rd_player_spells(void)
 {
 	int i;
 	uint16_t tmp16u;
+	int16_t tmp16s;
 	
 	int cnt;
 	
@@ -1124,6 +1125,9 @@ int rd_player_spells(void)
 	rd_u16b(&tmp16u);
 	if (tmp16u > z_info->spell_max) {
 		note(format("Too many player spells (%d).", tmp16u));
+		return (-1);
+	} else if (tmp16u < z_info->spell_max) {
+		note(format("Not enough player spells (%d).", tmp16u));
 		return (-1);
 	}
 
@@ -1138,6 +1142,17 @@ int rd_player_spells(void)
 	/* Read the spell order */
 	for (i = 0, cnt = 0; i < tmp16u; i++, cnt++) {
 		rd_byte(&player->player_spell_order[cnt]);
+	}
+
+	rd_s16b(&tmp16s);
+	if (tmp16s >= 0) {
+		player->realm = realm_by_index(tmp16s);
+		if (!player->realm) {
+			note(format("Unrecognized realm (%i).", tmp16s));
+			return -1;
+		}
+	} else {
+		player->realm = NULL;
 	}
 	
 	/* Success */

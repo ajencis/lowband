@@ -58,6 +58,7 @@ struct angband_constants
 	uint16_t mp_max;	/**< Maximum number of monster pain message sets */
 	uint16_t s_max;		/**< Maximum number of magic spells */
 	uint16_t spell_max;	/**< L: max num of non-class spells */
+	uint16_t realm_max;	/**< L: max num of magic realms */
 	uint16_t pit_max;	/**< Maximum number of monster pit types */
 	uint16_t act_max;	/**< Maximum number of activations for randarts */
 	uint8_t curse_max;	/**< Maximum number of curses */

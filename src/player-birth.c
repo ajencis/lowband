@@ -1322,6 +1322,7 @@ void do_cmd_accept_character(struct command *cmd)
 	of_on(player->obj_k->flags, OF_POWER_LEARN_3);
 	of_on(player->obj_k->flags, OF_POWER_LEARN_4);
 	of_on(player->obj_k->flags, OF_POWER_LEARN_5);
+	of_on(player->obj_k->flags, OF_REALM_LEARN);
 
 	/* Initialise the stores, dungeon */
 	store_reset();

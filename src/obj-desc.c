@@ -17,6 +17,7 @@
  */
 
 #include "angband.h"
+#include "cmd-core.h"
 #include "obj-chest.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
@@ -24,6 +25,7 @@
 #include "obj-knowledge.h"
 #include "obj-tval.h"
 #include "obj-util.h"
+#include "player-spell.h"
 #include "player-util.h"
 #include "ui-knowledge.h"
 
@@ -545,6 +547,11 @@ const char *get_obj_power_name(const struct object *obj)
 	else if (flg) {
 		return skill_index_to_name(obj->pval - PP_MAX);
 	}
+	else if (of_has(obj->flags, OF_REALM_LEARN)) {
+		struct magic_realm *realm = realm_by_index(obj->pval);
+		assert(realm);
+		return realm->name;
+	}
 
 	return NULL;
 }
@@ -559,7 +566,14 @@ static size_t obj_desc_power_learn(const struct object *obj, char *buf, size_t m
 			   of_has(obj->flags, OF_POWER_LEARN_2) ||
 			   of_has(obj->flags, OF_POWER_LEARN_1);
 
-	if (aware && flg) {
+	if (aware && of_has(obj->flags, OF_REALM_LEARN)) {
+		char rname[80];
+		struct magic_realm *r = realm_by_index(obj->pval);
+		strnfmt(rname, sizeof(rname), "%s magic", r->name);
+		my_strcap_full(rname);
+		strnfcat(buf, max, &end, " of %s", rname);
+	}
+	else if (aware && flg) {
 		char sname[80];
 		my_strcpy(sname, get_obj_power_name(obj), sizeof(sname));
 		my_strcap_full(sname);

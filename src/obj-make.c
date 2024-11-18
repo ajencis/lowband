@@ -82,6 +82,27 @@ static const int power_weights[] = {
 };
 
 
+static int get_random_power(void)
+{
+	int i, sum = 0, choice;
+
+	for (i = TOME_NONE + 1; i < TOME_MAX; i++) {
+		sum += power_weights[i];
+	}
+	choice = randint0(sum);
+	for (i = TOME_NONE + 1; i < TOME_MAX; i++) {
+		if (power_weights[i] > choice) break;
+		choice -= power_weights[i];
+	}
+	return i;
+}
+
+static int get_random_realm(void)
+{
+	return randint0(z_info->realm_max);
+}
+
+
 /*
  * Initialize object allocation info
  */
@@ -878,23 +899,17 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 			 of_has(obj->kind->flags, OF_POWER_LEARN_3) ||
 			 of_has(obj->kind->flags, OF_POWER_LEARN_2) ||
 			 of_has(obj->kind->flags, OF_POWER_LEARN_1)) {
-		int sum = 0, choice;
-		for (i = TOME_NONE + 1; i < TOME_MAX; i++) {
-			sum += power_weights[i];
-		}
-		choice = randint0(sum);
-		for (i = TOME_NONE + 1; i < TOME_MAX; i++) {
-			if (power_weights[i] > choice) break;
-			choice -= power_weights[i];
-		}
-		obj->pval = i;
+		obj->pval = get_random_power();
+	}
+
+	else if (of_has(obj->kind->flags, OF_REALM_LEARN)) {
+		obj->pval = get_random_realm();
 	}
 
 	/* Assign pval for food, oil and launchers */
-	else if (tval_is_edible(obj) || tval_is_potion(obj) || tval_is_fuel(obj) ||
-		tval_is_launcher(obj)) {
-		obj->pval
-			= randcalc(k->pval, lev, rand_aspect);
+	else if (tval_is_edible(obj) || tval_is_potion(obj) ||
+			tval_is_fuel(obj) || tval_is_launcher(obj)) {
+		obj->pval = randcalc(k->pval, lev, rand_aspect);
 	}
 
 	/* Default fuel */

@@ -60,4 +60,5 @@ int player_spell_fail(const struct player_spell *ps);
 void get_player_spell_info(int spell_index, char *p, size_t len);
 
 struct magic_realm *get_player_realm(const struct player *p);
+struct magic_realm *realm_by_index(int index);
 

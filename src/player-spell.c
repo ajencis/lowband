@@ -848,11 +848,12 @@ void get_spell_info(int spell_index, char *p, size_t len)
 int school_find_idx(const char *name)
 {
 	int i;
-	int sizemax = N_ELEMENTS(school_names);
 
-	for (i = 0; i < sizemax; i++)
+	for (i = N_ELEMENTS(school_names) - 1; i > MS_NONE; --i)
 	{
-		if (!my_stricmp(name, school_names[i].name)) return school_names[i].tval;
+		if (streq(name, school_names[i].name)) {
+			return school_names[i].tval;
+		}
 	}
 	return -1;
 }
@@ -888,24 +889,29 @@ void get_innate_info(int innate_index, char *p, size_t len)
 
 int gener_spell_power(const struct player *p, const struct player_spell *s)
 {
-	int numschools = 0;
-	int sumschools = 0;
-	int schoolbonus = 0;
+	int numschools = 0, sumschools = 0;
+	int schoolbonus = 0, realmbonus = 0;
 	int skill = p->state.skills[SKILL_MAGIC];
 	int i;
+	struct magic_realm *r = p->realm;
+
 	for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
-		if (s->school[i]) {
+		if (s->school[i] > MS_NONE) {
 			++numschools;
 			sumschools += p->state.powers[s->school[i]];
+			if (r) {
+				realmbonus += r->school_modifiers[s->school[i]];
+			}
 		}
 	}
 
-	if (numschools > 0)
+	if (numschools > 0) {
 		schoolbonus = 3 * sumschools / (2 + numschools);
+	}
 
 	schoolbonus = MIN(schoolbonus, skill * 2);
 
-	return skill + schoolbonus - s->slevel + 1;
+	return skill + schoolbonus + realmbonus - s->slevel + 1;
 }
 
 void gener_spell_learn(struct player *p, const struct player_spell *s)
@@ -976,6 +982,17 @@ void get_player_spell_info(int spell_index, char *p, size_t len)
 	ref_spell = NULL;
 }
 
+struct magic_realm *realm_by_index(int index)
+{
+	// return the first realm in the file if they don't currently have one
+	struct magic_realm *realm = realms;
+	for (realm = realms; realm; realm = realm->next) {
+		if (realm->index == index) {
+			return realm;
+		}
+	}
+	return NULL;
+}
 
 struct magic_realm *get_player_realm(const struct player *p)
 {

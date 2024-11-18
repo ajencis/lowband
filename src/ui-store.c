@@ -144,12 +144,14 @@ static void prt_welcome(const struct owner *proprietor)
 
 	int j;
 
-	if (one_in_(2))
+	if (one_in_(2)) {
 		return;
+	}
 
 	/* Get the first name of the store owner (stop before the first space) */
-	for (j = 0; owner_name[j] && owner_name[j] != ' '; j++)
+	for (j = 0; owner_name[j] && owner_name[j] != ' '; j++) {
 		short_name[j] = owner_name[j];
+	}
 
 	/* Truncate the name */
 	short_name[j] = '\0';
@@ -1335,8 +1337,9 @@ void use_store(game_event_type type, game_event_data *data, void *user)
 	assert(store->owner->name);
 
 	/* Say a friendly hello. */
-	if (store->feat != FEAT_HOME)
+	if (store->feat != FEAT_HOME && store->feat != FEAT_DOJO) {
 		prt_welcome(store->owner);
+	}
 
 	/* Shopping */
     menu_select(&ctx.menu, 0, false);

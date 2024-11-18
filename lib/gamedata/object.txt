@@ -5237,6 +5237,18 @@ desc: elemental and ethereal.
 ##### Tome base objects #####
 
 
+name:& Realm Tome~
+type:tome
+graphics:?:m
+level:0
+weight:15
+cost:500
+alloc:1:0 to 100
+attack:1d1:0:0
+armor:0:0
+power:10
+flags:REALM_LEARN
+
 name:& Basic Tome~
 type:tome
 graphics:?:m

@@ -196,6 +196,17 @@ const char *player_info_flags[] =
 	NULL
 };
 
+static int school_idx_by_name(const char *name)
+{
+	int i;
+	for (i = MS_NONE + 1; i < MS_MAX; ++i) {
+		if (streq(name, list_school_names[i])) {
+			return i;
+		}
+	}
+	return MS_NONE;
+}
+
 errr grab_effect_data(struct parser *p, struct effect *effect)
 {
 	const char *type;
@@ -3016,6 +3027,8 @@ static enum parser_error parse_realm_name(struct parser *p) {
 	struct magic_realm *realm = mem_zalloc(sizeof *realm);
 	const char *name = parser_getstr(p, "name");
 
+	realm->index = z_info->realm_max++;
+
 	realm->next = h;
 	parser_setpriv(p, realm);
 	realm->name = string_make(name);
@@ -3085,7 +3098,29 @@ static enum parser_error parse_realm_weight(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_realm_school_aptitude(struct parser *p) 
+{
+	struct magic_realm *realm = parser_priv(p);
+	const char *school_name = parser_getsym(p, "school");
+	int school_ind;
+
+	if (!realm) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	school_ind = school_idx_by_name(school_name);
+
+	if (school_ind <= MS_NONE) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	realm->school_modifiers[school_ind] = parser_getint(p, "mod");
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_realm(void) {
+	z_info->realm_max = 0;
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
 	parser_reg(p, "name str name", parse_realm_name);
@@ -3094,6 +3129,7 @@ static struct parser *init_parse_realm(void) {
 	parser_reg(p, "spell-noun str spell", parse_realm_spell_noun);
 	parser_reg(p, "book-noun str book", parse_realm_book_noun);
 	parser_reg(p, "weight int weight", parse_realm_weight);
+	parser_reg(p, "school sym school int mod", parse_realm_school_aptitude);
 	return p;
 }
 

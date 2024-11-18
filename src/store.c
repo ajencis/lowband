@@ -173,15 +173,8 @@ static enum parser_error parse_turnover(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
-static enum parser_error parse_normal(struct parser *p) {
-	struct store *s = parser_priv(p);
-	int tval = tval_find_idx(parser_getsym(p, "tval"));
-	int sval = lookup_sval(tval, parser_getsym(p, "sval"));
-
-	struct object_kind *kind = lookup_kind(tval, sval);
-	if (!kind)
-		return PARSE_ERROR_UNRECOGNISED_SVAL;
-
+static void add_kind_to_store_normal(struct store *s, struct object_kind *ok)
+{
 	/* Expand if necessary */
 	if (!s->normal_num) {
 		s->normal_size = 16;
@@ -191,14 +184,47 @@ static enum parser_error parse_normal(struct parser *p) {
 		s->normal_table = mem_realloc(s->normal_table, s->normal_size * sizeof *s->normal_table);
 	}
 
-	s->normal_table[s->normal_num++] = kind;
-	if (!object_kind_stockable_on_reset(kind)) {
+	s->normal_table[s->normal_num++] = ok;
+
+	if (object_kind_stockable_on_reset(ok)) {
+		if (of_has(ok->flags, OF_REALM_LEARN)) {
+			s->normal_max += z_info->realm_max;
+		} else if (ok->tval == TV_TOME) {
+			s->normal_max += TOME_MAX - 1;
+		} else {
+			++s->normal_max;
+		}
 	}
-	else if (kind->tval == TV_TOME) {
-		s->normal_max += TOME_MAX - 1;
+}
+
+static enum parser_error parse_normal(struct parser *p) {
+	struct store *s = parser_priv(p);
+	int tval = tval_find_idx(parser_getsym(p, "tval"));
+
+	if (parser_hasval(p, "sval")) {
+		int sval = lookup_sval(tval, parser_getsym(p, "sval"));
+		struct object_kind *kind = lookup_kind(tval, sval);
+
+		if (!kind) {
+			return PARSE_ERROR_UNRECOGNISED_SVAL;
+		}
+
+		add_kind_to_store_normal(s, kind);
 	}
 	else {
-		++s->normal_max;
+		struct object_base *book_base = &kb_info[tval];
+		int i;
+
+		for (i = 1; i < book_base->num_svals; i++) {
+			struct object_kind *kind = lookup_kind(tval, i);
+			assert(kind);
+
+			if (kind->alloc_min > 5) {
+				continue;
+			}
+
+			add_kind_to_store_normal(s, kind);
+		}
 	}
 
 	return PARSE_ERROR_NONE;
@@ -238,13 +264,15 @@ static enum parser_error parse_always(struct parser *p) {
 			kind = lookup_kind(tval, i);
 
 			if (tval == TV_BOOK) {
-				if (kind->spell && kind->spell->slevel <= 5)
+				if (kind->spell && kind->spell->slevel <= 5) {
 					skip = false;
+				}
 			} else {
 				const struct class_book *book = NULL;
 				book = object_kind_to_book(kind);
-				if (!book->dungeon) 
+				if (!book->dungeon) {
 					skip = false;
+				}
 			}
 
 			if (!skip) {
@@ -327,7 +355,7 @@ struct parser *init_parse_stores(void) {
 	parser_reg(p, "owner uint purse str name", parse_owner);
 	parser_reg(p, "slots uint min uint max", parse_slots);
 	parser_reg(p, "turnover uint turnover", parse_turnover);
-	parser_reg(p, "normal sym tval sym sval", parse_normal);
+	parser_reg(p, "normal sym tval ?sym sval", parse_normal);
 	parser_reg(p, "always sym tval ?sym sval", parse_always);
 	parser_reg(p, "buy str base", parse_buy);
 	parser_reg(p, "buy-flag sym flag str base", parse_buy_flag);
@@ -382,8 +410,9 @@ void store_reset(void) {
 		object_pile_free(NULL, NULL, s->stock);
 		s->stock_k = NULL;
 		s->stock = NULL;
-		if (s->feat == FEAT_HOME)
+		if (s->feat == FEAT_HOME) {
 			continue;
+		}
 		//for (j = 0; j < 10; j++)
 		store_maint(s, true);
 	}
@@ -411,8 +440,9 @@ static bool store_is_staple(struct store *s, struct object_kind *k) {
 
 	for (i = 0; i < s->always_num; i++) {
 		struct object_kind *l = s->always_table[i];
-		if (k == l)
+		if (k == l) {
 			return true;
+		}
 	}
 
 	return false;
@@ -425,8 +455,9 @@ static bool store_can_carry(struct store *store, struct object_kind *kind) {
 	size_t i;
 
 	for (i = 0; i < store->normal_num; i++) {
-		if (store->normal_table[i] == kind)
+		if (store->normal_table[i] == kind) {
 			return true;
+		}
 	}
 
 	return store_is_staple(store, kind);
@@ -472,7 +503,7 @@ static const char *comment_worthless[] =
 	"You hear someone sobbing...",
 	"The shopkeeper howls in agony!",
 	"The shopkeeper wails in anguish!",
-	"The shopkeeper beats his head against the counter."
+	"The shopkeeper beats their head against the counter."
 };
 
 static const char *comment_bad[] =
@@ -823,25 +854,31 @@ void store_stock_list(struct store *store, struct object **list, int n)
 	for (list_num = 0; list_num < n; list_num++) {
 		struct object *current, *first = NULL;
 		for (current = store->stock; current; current = current->next) {
+			assert(current->kind && current->kind->name);
+
 			int i;
 			bool possible = true;
 
 			/* Skip objects already allocated */
-			for (i = 0; i < num; i++)
-				if (list[i] == current)
+			for (i = 0; i < num; i++) {
+				if (list[i] == current) {
 					possible = false;
+				}
+			}
 
 			/* If still possible, choose the first in order */
-			if (!possible)
+			if (!possible) {
 				continue;
-			else if (earlier_object(first, current, home))
+			} else if (earlier_object(first, current, home)) {
 				first = current;
+			}
 		}
 
 		/* Allocate and count the stock */
 		list[list_num] = first;
-		if (first)
+		if (first) {
 			num++;
+		}
 	}
 }
 
@@ -1333,8 +1370,9 @@ static struct object *store_create_item(struct store *store,
 static void store_maint(struct store *s, bool reset)
 {
 	/* Ignore home */
-	if (s->feat == FEAT_HOME)
+	if (s->feat == FEAT_HOME) {
 		return;
+	}
 
 	/* Destroy crappy black market items */
 	if (s->feat == FEAT_STORE_BLACK) {
@@ -1387,8 +1425,9 @@ static void store_maint(struct store *s, bool reset)
 		if (stock > max) stock = max;
 
 		/* Destroy random objects until only "stock" slots are left */
-		while (s->stock_num > stock && --restock_attempts)
+		while (s->stock_num > stock && --restock_attempts) {
 			store_delete_random(s);
+		}
 
 		if (!restock_attempts)
 			quit_fmt("Unable to (de-)stock %s. Please report this bug",
@@ -1813,8 +1852,9 @@ void do_cmd_buy(struct command *cmd)
 				msg("The shopkeeper brings out some new stock.");
 
 			/* New inventory */
-			for (i = 0; i < 10; ++i)
+			for (i = 0; i < 10; ++i) {
 				store_maint(store, false);
+			}
 		}
 	}
 

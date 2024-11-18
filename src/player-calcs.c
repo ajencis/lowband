@@ -377,6 +377,9 @@ bool earlier_object(struct object *orig, struct object *new, bool store)
 	if (orig->tval == TV_TOME) {
 		const char *pnameo = get_obj_power_name(orig);
 		const char *pnamen = get_obj_power_name(new);
+		if (!pnamen || !pnameo) {
+			return false;
+		}
 		int compared = my_stricmp(pnameo, pnamen);
 		if (compared > 0) return true;
 		if (compared < 0) return false;
@@ -1421,6 +1424,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	int avail_hands, attack_div;
 	int race_skills[SKILL_MAX] = { 0 };
 	struct element_info race_elem_info[ELEM_MAX] = { 0 };
+	bool has_feet = false;
 
 	/* Hack to allow calculating hypothetical blows for extra STR, DEX - NRM */
 	int str_ind = state->stat_ind[STAT_STR];
@@ -1503,6 +1507,10 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		if (slot_type_is(p, i, EQUIP_WEAPON) && num_weapons < PY_MAX_ATTACKS) {
 			weapons[num_weapons] = obj;
 			++num_weapons;
+		}
+
+		if (slot_type_is(p, i, EQUIP_BOOTS)) {
+			has_feet = true;
 		}
 
 		while (obj) {
@@ -1977,12 +1985,12 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		}
 		--avail_hands;
 	}
-	for (i = 0; i < 4 && attacknum < PY_MAX_ATTACKS; i++) {
-		if (get_power_scale_state(state, PP_UNARMED_STRIKE, 3, p->lev) <= i) {
-			break;
-		}
-		if (get_unarmed_kick(p, state, &state->attacks[attacknum], attack_div)) {
-			++attacknum;
+	if (has_feet) {
+		int numkicks = get_power_scale_state(state, PP_UNARMED_STRIKE, 3, p->lev) - 1;
+		for (i = 0; i < numkicks && attacknum < PY_MAX_ATTACKS; i++) {
+			if (get_unarmed_kick(p, state, &state->attacks[attacknum], attack_div)) {
+				++attacknum;
+			}
 		}
 	}
 

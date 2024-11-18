@@ -13,6 +13,7 @@ verb:cast
 spell-noun:spell
 book-noun:magic book
 weight:200
+school:HEALING:-10
 
 name:divine
 stat:WIS
@@ -20,6 +21,19 @@ verb:recite
 spell-noun:prayer
 book-noun:prayer book
 weight:400
+school:AIR:-10
+school:FIRE:-10
+school:EARTH:-10
+school:WATER:-10
+school:POISON:-5
+school:TELEPORTATION:-15
+school:ENCHANTMENT:-10
+school:HEALING:10
+school:TRANSMUTATION:-10
+school:ENCHANTMENT:-5
+school:NATURE:-5
+school:DIVINATION:10
+school:NECROMANCY:5
 
 name:nature
 stat:WIS
@@ -27,9 +41,13 @@ verb:chant
 spell-noun:verse
 book-noun:nature book
 weight:300
-
-name:shadow
-stat:INT
-verb:perform
-spell-noun:ritual
-book-noun:shadow book
+school:AIR:5
+school:WATER:5
+school:EARTH:5
+school:FIRE:5
+school:POISON:5
+school:NATURE:10
+school:TRANSMUTATION:5
+school:TELEPORTATION:-15
+school:ENCHANTMENT:-5
+school:NECROMANCY:-25

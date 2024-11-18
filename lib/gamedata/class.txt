@@ -217,7 +217,6 @@ skill-shoot:5:15
 skill-throw:5:18
 skill-dig:0:0
 skill-magic:0:16
-power:NATURE_MAGIC:40
 hitdie:2
 max-attacks:4
 min-weight:35
@@ -254,8 +253,6 @@ skill-throw:10:12
 skill-dig:0:0
 skill-magic:-10:18
 power:HAFTED_SPECIALIZATION:20
-power:DIVINATION_MAGIC:40
-power:HEALING_MAGIC:40
 hitdie:2
 max-attacks:4
 min-weight:35

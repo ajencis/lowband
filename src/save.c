@@ -732,6 +732,13 @@ void wr_player_spells(void)
 	for (i = 0; i < z_info->spell_max; i++) {
 		wr_byte(player->player_spell_order[i]);
 	}
+
+	if (player->realm) {
+		wr_s16b(player->realm->index);
+	}
+	else {
+		wr_s16b(-1);
+	}
 }
 
 static void wr_gear_aux(struct object *gear)

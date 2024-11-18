@@ -319,26 +319,6 @@ int get_power_scale_state(struct player_state *ps, int power, int scaleto, int l
 		powerlev = (powerlev - level) / 2 + level;
 	}
 
-	/* scale linearly by power level then adjust by character level so value
-	   of increasing your power is linear */
-	/*double efflev, div;
-	if (scaling == PP_SCALE_LINEAR) {
-		efflev = (double)powerlev;
-		div = (double)50;
-	}
-	else if (scaling == PP_SCALE_SQUARE) {
-		efflev = (double)powerlev * (double)level;
-		div = (double)50 * 50;
-	}
-	else if (scaling == PP_SCALE_SQRT) {
-		efflev = (double)powerlev / my_sqrt((double)level);
-		div = my_sqrt((double)50);
-	}
-	else {
-		efflev = 0.0;
-		div = 50.0;
-	}*/
-
 	int result = (powerlev * scaleto + 50 * 2 / 3) / 50;
 
 	return MAX(result, 0);
@@ -443,18 +423,19 @@ void calc_extra_points(struct player *p, struct player_state *ps)
 
 static bool player_can_learn_from_tome(struct player *p, int index)
 {
-	assert(index > TOME_NONE && index < TOME_MAX);
+	//assert(index > TOME_NONE && index < TOME_MAX);
 	int cpwr;
 	char name[80];
 	if (index < PP_MAX) {
 		cpwr = p->extra_powers[index];
 		my_strcpy(name, player_powers[index].name, sizeof(name));
 	}
-	else {
+	else if (index < PP_MAX + SKILL_MAX) {
 		cpwr = p->extra_skills[index - PP_MAX];
 		my_strcpy(name, skill_index_to_name(index - PP_MAX), sizeof(name));
 		my_strcap_full(name);
 	}
+	
 	int currcost = player_bonus_to_cost(cpwr, index, p);
 	int nextcost = player_bonus_to_cost(cpwr + 1, index, p);
 
@@ -469,10 +450,21 @@ static bool player_can_learn_from_tome(struct player *p, int index)
 	return true;
 }
 
+static bool learn_realm(struct player *p, struct magic_realm *realm)
+{
+	if (p->realm) return false;
+
+	if (!get_forced_check(format("Learn %s magic? ", realm->name))) return false;
+
+	p->realm = realm;
+
+	msg("You feel that you understand %s magic.", realm->name);
+
+	return true;
+}
+
 static bool learn_extra(struct player *p, int index)
 {
-	assert(index > TOME_NONE && index < TOME_MAX);
-
 	if (!player_can_learn_from_tome(p, index)) return false;
 
 	if (index < PP_MAX) {
@@ -483,7 +475,7 @@ static bool learn_extra(struct player *p, int index)
 		}
 		p->upkeep->update |= player_powers[index].update;
 	}
-	else {
+	else if (index < PP_MAX + SKILL_MAX) {
 		int skill_index = index - PP_MAX;
 		assert(skill_index < SKILL_MAX && skill_index >= 0);
 		p->extra_skills[skill_index]++;
@@ -509,6 +501,11 @@ bool obj_can_learn_extra_from(const struct object *obj)
 	int maxs = tome_max_skill(obj);
 	int power = obj->pval;
 
+	if (of_has(obj->flags, OF_REALM_LEARN)) {
+		if (player->realm) return false;
+		return true;
+	}
+
 	if (maxs <= 0) return false;
 	if (power <= TOME_NONE || power >= TOME_MAX) return false;
 
@@ -532,25 +529,32 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	uint16_t currlearned;
 	bool learned = false;
 	uint32_t chance; // one_in_(chance) to learn
-
-	if (power <= TOME_NONE || power >= TOME_MAX) return false;
-
 	int mx = tome_max_skill(obj);
+	struct magic_realm *realm;
 
+	if (of_has(obj->flags, OF_REALM_LEARN)) {
+		realm = realm_by_index(obj->pval);
+		assert(realm);
+		if (one_in_(p->depth + 5)) {
+			return learn_realm(p, realm);
+		}
+		return false;
+	}
+	
 	if (power < PP_MAX) {
 		assert(power > PP_NONE && power < PP_MAX);
 		chance = p->state.powers[power] + 10;
 		chance *= chance;
 		currlearned = p->extra_powers[power];
 	}
-	else {
+	else if (power < PP_MAX + SKILL_MAX) {
 		int skill_index = power - PP_MAX;
 		assert(skill_index >= 0 && skill_index < SKILL_MAX);
 		chance = p->state.skills[skill_index] + 10;
 		chance *= chance;
 		currlearned = p->extra_skills[skill_index];
 	}
-	
+
 	currcost = player_bonus_to_cost(currlearned, power, p);
 	nextcost = player_bonus_to_cost(currlearned + 1, power, p);
 
@@ -563,7 +567,7 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	chance /= obj->number * obj->number * 1000;
 	if (nextcost > currcost) {
 		// avoid asking player too often in case they don't want to learn
-		chance = MAX(chance, p->depth + 5);
+		chance = MAX(chance, (uint32_t)(p->depth + 5));
 	}
 	// paranoia
 	chance = MIN(chance, 0x10000000U);

@@ -948,3 +948,10 @@ subtype:misc ability
 code:POWER_LEARN_5
 power:25
 desc:Learning
+
+name:learning
+type:flag
+subtype:misc ability
+code:REALM_LEARN
+power:5
+desc:Learning
