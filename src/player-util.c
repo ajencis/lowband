@@ -181,11 +181,10 @@ bool check_player_monster(struct player *p, bool init)
 	struct evolution *e = curr ? curr->evol : p->race->evol;
 	bool do_change = false;
 	uint32_t xpneed;
-	int currxp = init ? player_exp[4] : (int)p->monster_xp / 3;
-	
+	int currxp = init ? player_exp[5] : (int)p->monster_xp;
+
 	while (e) {
 		int monlev = e->race->level;
-		if (!curr) monlev = MAX(0, monlev * 2 / 3 - 4);
 
 		++numevols;
 
@@ -445,6 +444,7 @@ static bool player_can_learn_from_tome(struct player *p, int index)
 	if (p->state.extra_points_max <= p->state.extra_points_used) return false;
 
 	// ask the player if they're willing to spend points
+	p->checked_tome_this_expedition = true;
 	if (!get_forced_check(format("Learn %s? ", name))) return false;
 
 	return true;
@@ -469,23 +469,22 @@ static bool learn_extra(struct player *p, int index)
 
 	if (index < PP_MAX) {
 		p->extra_powers[index]++;
-		if (!(p->extra_powers[index] & 3) || true) {
-			// tell the player when they've learned something
-			msg("You feel a bit more familiar with %s.", player_powers[index].name);
-		}
+			
+		// tell the player when they've learned something
+		msg("You feel a bit more familiar with %s.", player_powers[index].name);
+		
 		p->upkeep->update |= player_powers[index].update;
 	}
 	else if (index < PP_MAX + SKILL_MAX) {
 		int skill_index = index - PP_MAX;
 		assert(skill_index < SKILL_MAX && skill_index >= 0);
 		p->extra_skills[skill_index]++;
-		if (!(p->extra_skills[skill_index] & 3) || true) {
-			// tell the player when they've learned something
-			char buf[80];
-			my_strcpy(buf, skill_index_to_name(skill_index), sizeof(buf));
-			my_strcap_full(buf);
-			msg("You feel a bit more familiar with %s.", buf);
-		}
+
+		// tell the player when they've learned something
+		char buf[80];
+		my_strcpy(buf, skill_index_to_name(skill_index), sizeof(buf));
+		my_strcap_full(buf);
+		msg("You feel a bit more familiar with %s.", buf);
 	}
 
 	p->upkeep->update |= PU_BONUS;
@@ -535,7 +534,8 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	if (of_has(obj->flags, OF_REALM_LEARN)) {
 		realm = realm_by_index(obj->pval);
 		assert(realm);
-		if (one_in_(p->depth + 5)) {
+		if (!p->checked_tome_this_expedition && one_in_(p->depth + 5)) {
+			p->checked_tome_this_expedition = true;
 			return learn_realm(p, realm);
 		}
 		return false;
@@ -564,15 +564,11 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	chance *= (currlearned + 10);
 	chance /= xpgain;
 	// easier to learn if you have more info
-	chance /= obj->number * obj->number * 1000;
-	if (nextcost > currcost) {
-		// avoid asking player too often in case they don't want to learn
-		chance = MAX(chance, (uint32_t)(p->depth + 5));
-	}
+	chance /= obj->number * obj->number * 100;
 	// paranoia
 	chance = MIN(chance, 0x10000000U);
 
-	if (one_in_(chance)) {
+	if (one_in_(chance) && (!p->checked_tome_this_expedition || nextcost <= currcost)) {
 		learned = learn_extra(p, power);
 		if (learned && nextcost >= mx) {
 			char buf[80];
@@ -615,11 +611,8 @@ bool check_learn_powers(struct player *p, int xpgain)
 
 	if (tind > 0) {
 		// if we've found something try to learn a couple times
-		int tries = (tind + 1) / 2;
-		for (i = 0; i < tries && !learned; i++) {
-			int choice = randint0(tind);
-			learned = learn_from_tome(p, tomes[choice], xpgain);
-		}
+		int choice = randint0(tind);
+		learned = learn_from_tome(p, tomes[choice], xpgain);
 	}
 
 	mem_free(tomes);
@@ -800,8 +793,9 @@ void dungeon_change_level(struct player *p, int dlev)
 
 	/* If we're returning to town, update the store contents
 	   according to how long we've been away */
-	if (!dlev && daycount)
+	if (!dlev && daycount) {
 		store_update();
+	}
 
 	/* Leaving, make new level */
 	p->upkeep->generate_level = true;
@@ -831,19 +825,6 @@ int player_apply_damage_reduction(struct player *p, int dam)
 
 	return (dam < 0) ? 0 : dam;
 }
-
-
-/*static void take_max_hp_dam(struct player *p, int dam)
-{
-	if (p->is_dead) return;
-	if (dam <= 5) return;
-	int quantity = (int)sqrt((double)(dam - 5));
-
-	p->hp_burn += quantity;
-	msg("You are wounded.");
-
-	p->upkeep->update |= PU_HP;
-}*/
 
 /**
  * Decreases players hit points and sets death flag if necessary

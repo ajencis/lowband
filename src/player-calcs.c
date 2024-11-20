@@ -941,8 +941,8 @@ static void calc_hitpoints(struct player *p)
 
 	/* L: bonus from being a monster */
 	if (mon) {
-		int mon_hp = (int)my_cbrt((double)mon->avg_hp * mon->avg_hp * mon->avg_hp);
-		mhp = (mhp + mon_hp) * 2 / 3;
+		int mon_hp = my_int_cbrt(mon->avg_hp * mon->avg_hp);
+		mhp = MAX(mhp, mon_hp);
 	}
 
 	mhp += bonus * p->lev / 100;
@@ -986,8 +986,9 @@ static void calc_light(struct player *p, struct player_state *state,
 	/* Ascertain lightness if in the town */
 	if (!p->depth && is_daytime() && update) {
 		/* Update the visuals if necessary*/
-		if (p->state.cur_light != state->cur_light)
+		if (p->state.cur_light != state->cur_light) {
 			p->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
+		}
 
 		return;
 	}
@@ -1015,9 +1016,10 @@ static void calc_light(struct player *p, struct player_state *state,
 
 		/* Examine actual lights */
 		if (tval_is_light(obj) && !of_has(obj->flags, OF_NO_FUEL) &&
-				obj->timeout == 0)
+				obj->timeout == 0) {
 			/* Lights without fuel provide no light */
 			amt = 0;
+		}
 
 		/* Alter p->state.cur_light if reasonable */
 	    state->cur_light += amt;
@@ -1974,16 +1976,21 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	}
 	if (mrace) {
 		avail_hands -= get_monster_attacks(p, state, mrace,
-										   state->attacks,
-										   PY_MAX_ATTACKS,
-										   &attacknum,
-										   false);
+				state->attacks,
+				PY_MAX_ATTACKS,
+				&attacknum,
+				false);
 	}
-	while (avail_hands > 0 && attacknum < PY_MAX_ATTACKS) {
-		if (get_unarmed_punch(p, state, &state->attacks[attacknum], attack_div)) {
-			++attacknum;
+	if (state->powers[PP_UNARMED_STRIKE] > 0 || attacknum == 0) {
+		if (!state->powers[PP_UNARMED_STRIKE]) {
+			avail_hands = MIN(avail_hands, 1);
 		}
-		--avail_hands;
+		while (avail_hands > 0 && attacknum < PY_MAX_ATTACKS) {
+			if (get_unarmed_punch(p, state, &state->attacks[attacknum], attack_div)) {
+				++attacknum;
+			}
+			--avail_hands;
+		}
 	}
 	if (has_feet) {
 		int numkicks = get_power_scale_state(state, PP_UNARMED_STRIKE, 3, p->lev) - 1;

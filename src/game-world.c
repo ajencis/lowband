@@ -547,8 +547,9 @@ void process_world(struct chunk *c)
 	/*** Check the Time ***/
 
 	/* Play an ambient sound at regular intervals. */
-	if (!(turn % ((10L * z_info->day_length) / 4)) && !player->upkeep->generate_level)
+	if (!(turn % ((10L * z_info->day_length) / 4)) && !player->upkeep->generate_level) {
 		play_ambient_sound();
+	}
 
 	/* Handle stores and sunshine */
 	if (!player->depth) {
@@ -1036,16 +1037,22 @@ void on_new_level(void)
 	player->floor_mana = randint0(player->depth) + randint0(player->depth) +
 	                     randint0(25) + randint0(25) + 2;
 
+	if (player->depth == 0) {
+		player->checked_tome_this_expedition = false;
+	}
+
 	/* Disturb */
 	disturb(player);
 
 	/* Track maximum player level */
-	if (player->max_lev < player->lev)
+	if (player->max_lev < player->lev) {
 		player->max_lev = player->lev;
+	}
 
 	/* Track maximum dungeon level */
-	if (player->max_depth < player->depth)
+	if (player->max_depth < player->depth) {
 		player->max_depth = player->recall_depth = player->depth;
+	}
 
 	/* Flush messages */
 	event_signal(EVENT_MESSAGE_FLUSH);

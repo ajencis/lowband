@@ -754,17 +754,23 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 static void unarmed_mod_attack(struct attack_roll *aroll)
 {
 	aroll->to_hit += get_power_scale(player, PP_UNARMED_STRIKE, 25);
-	aroll->to_dam += get_power_scale(player, PP_UNARMED_STRIKE, 20);
+	aroll->to_dam += get_power_scale(player, PP_UNARMED_STRIKE, 25);
 }
 
 static void unarmed_get_punch(struct attack_roll *aroll)
 {
 	aroll->ddice = 1;
 	aroll->dsides = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 9);
+	aroll->to_hit = get_power_scale(player, PP_UNARMED_STRIKE, 25) - 10;
+	aroll->to_hit = MIN(aroll->to_hit, 0);
+
 	aroll->mtimed[MON_TMD_STUN] = get_power_scale(player, PP_UNARMED_STRIKE, 100);
+
 	aroll->accuracy_stat = STAT_DEX;
 	aroll->damage_stat = STAT_STR;
+
 	aroll->message = "punch";
+	my_strcpy(aroll->name, "punch", sizeof(aroll->name));
 	aroll->obj = NULL;
 	aroll->proj_type = PROJ_BLUDGEONING;
 	aroll->range = 1;
@@ -774,10 +780,14 @@ static void unarmed_get_kick(struct attack_roll *aroll)
 {
 	aroll->ddice = 1;
 	aroll->dsides = 1 + get_power_scale(player, PP_UNARMED_STRIKE, 14);
+
 	aroll->mtimed[MON_TMD_SLOW] = get_power_scale(player, PP_UNARMED_STRIKE, 100);
+
 	aroll->accuracy_stat = STAT_DEX;
 	aroll->damage_stat = STAT_STR;
+
 	aroll->message = "kick";
+	my_strcpy(aroll->name, "kick", sizeof(aroll->name));
 	aroll->obj = NULL;
 	aroll->proj_type = PROJ_BLUDGEONING;
 	aroll->range = 1;
@@ -878,11 +888,13 @@ bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct o
 		struct attack_roll *aroll, int attack_div)
 {
 	memset(aroll, 0, sizeof(*aroll));
-	if (obj && obj->kind->tval == TV_SHIELD) {
+	if (!obj || obj->kind->tval == TV_SHIELD) {
 		return false;
 	}
-	else if (obj) {
+	else {
 		int td = object_to_dam(obj);
+		int mode = ODESC_BASE | ODESC_CAPITAL | ODESC_NOEGO | ODESC_SINGULAR | ODESC_TERSE;
+
 		aroll->ddice = obj->dd;
 		// half the weapon to-dam boosts the dice and the other boosts the raw damage
 		aroll->dsides = obj->ds + td / 2;
@@ -894,9 +906,7 @@ bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct o
 		aroll->obj = obj;
 		aroll->proj_type = obj->kind->base->proj_type;
 		aroll->range = obj->tval == TV_POLEARM ? 2 : 1;
-	}
-	else {
-		return false;
+		object_desc(aroll->name, sizeof(aroll->name), obj, mode, p);
 	}
 
 	get_melee_attack(aroll, ps, p, obj, attack_div);
@@ -953,42 +963,38 @@ static bool get_shooter_ranged_attack(struct player *p, struct object *ammo,
 	return true;
 }
 
-static struct attack_roll get_thrown_ranged_attack(struct player *p, struct object *thrown)
+static void get_thrown_ranged_attack(struct player *p, struct object *thrown, struct attack_roll *aroll)
 {
-	struct attack_roll aroll = { 0 };
-
 	assert(thrown);
 
-	aroll.ddice = thrown->dd;
-	aroll.dsides = thrown->ds;
-	aroll.to_hit = object_to_hit(thrown);
-	aroll.to_dam = object_to_dam(thrown);
+	aroll->ddice = thrown->dd;
+	aroll->dsides = thrown->ds;
+	aroll->to_hit = object_to_hit(thrown);
+	aroll->to_dam = object_to_dam(thrown);
 
-	aroll.message = "hit";
-	aroll.accuracy_stat = STAT_STR;
-	aroll.damage_stat = STAT_DEX;
-	aroll.attack_skill = SKILL_TO_HIT_THROW;
+	aroll->message = "hit";
+	aroll->accuracy_stat = STAT_STR;
+	aroll->damage_stat = STAT_DEX;
+	aroll->attack_skill = SKILL_TO_HIT_THROW;
 
-	aroll.obj = thrown;
+	aroll->obj = thrown;
 	
-	aroll.to_hit += adj_dex_th(p->state.stat_ind[aroll.accuracy_stat]);
-	aroll.dsides += adj_str_td(p->state.stat_ind[aroll.damage_stat]);
+	aroll->to_hit += adj_dex_th(p->state.stat_ind[aroll->accuracy_stat]);
+	aroll->dsides += adj_str_td(p->state.stat_ind[aroll->damage_stat]);
 
 	if (of_has(thrown->flags, OF_THROWING)) {
-		aroll.to_hit += p->state.to_h;
-		aroll.to_dam += player_damage_bonus(&p->state);
+		aroll->to_hit += p->state.to_h;
+		aroll->to_dam += player_damage_bonus(&p->state);
 
-		specialization_mod_attack(&aroll, thrown);
+		specialization_mod_attack(aroll, thrown);
 		
-		aroll.ddice = aroll.ddice * (p->state.skills[aroll.attack_skill] + 33) / 33;
+		aroll->ddice = aroll->ddice * (p->state.skills[aroll->attack_skill] + 33) / 33;
 	}
 
-	aroll.dsides = MAX(aroll.dsides, 1);
-	aroll.ddice = MAX(aroll.ddice, 1);
+	aroll->dsides = MAX(aroll->dsides, 1);
+	aroll->ddice = MAX(aroll->ddice, 1);
 	
-	calc_blows(p, thrown->weight, &aroll, &player->state, 0);
-
-	return aroll;
+	calc_blows(p, thrown->weight, aroll, &player->state, 0);
 }
 
 static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow, bool ranged)
@@ -1009,8 +1015,8 @@ static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow
  * L: can a monster be targeted by an attack under present circumstances
  * will put a message in  buf  describing why it cannot if it cannot
  */
-static bool monster_can_be_attacked(struct player *p, struct attack_roll *aroll, struct monster *mon,
-				char *buf, size_t bufsize)
+static bool monster_can_be_attacked(struct player *p, const struct attack_roll *aroll,
+		struct monster *mon, char *buf, size_t bufsize)
 {
 	if (!monster_is_visible(mon) && aroll->attack_skill == SKILL_SEARCH) {
 		my_strcpy(buf, "You cannot gaze at something you cannot see!", bufsize);
@@ -1046,6 +1052,8 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 	}
 	else {
 		memset(aroll, 0, sizeof(*aroll));
+		my_strcpy(aroll->name, mb->method->desc, sizeof(aroll->name));
+		aroll->message = mb->method->fmessage;
 	}
 
 	int mindice = 1;
@@ -1054,7 +1062,7 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 	aroll->ddice = MAX(mb->dice.dice, aroll->ddice);
 	aroll->dsides = MAX(mb->dice.sides, aroll->dsides) + MIN(mb->dice.sides + 2, aroll->dsides + 2) / 3;
 	aroll->blows = 100;
-	aroll->message = (const char *)mb->method->fmessage;
+
 	if (mb->effect->lash_type == -1) {
 		aroll->proj_type = mb->method->lash_type;
 	} else {
@@ -1171,7 +1179,7 @@ static const struct hit_types melee_hit_types[] = {
 /**
  * Attack the monster at the given location with a single blow.
  */
-bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack_roll aroll)
+bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack_roll *aroll)
 {
 	size_t i;
 
@@ -1182,7 +1190,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 
 	/* The weapon used */
 	//struct object *obj = slot_object(p, slot_by_type(p, EQUIP_WEAPON, true));
-	struct object *obj = aroll.obj;
+	struct object *obj = aroll->obj;
 
 	/* Information about the attack */
 	int drain = 0;
@@ -1193,13 +1201,6 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	char verb[20];
 	uint32_t msg_type = MSG_HIT;
 	int j, b, s, weight, dmg;
-
-	/* Default to punching / kicking */
-	if (one_in_(3)) {
-	    my_strcpy(verb, "kick", sizeof(verb));
-	} else {
-    	my_strcpy(verb, "punch", sizeof(verb));
-	}
 
 	/* Extract monster name (or "it") */
 	monster_desc(m_name, sizeof(m_name), mon, MDESC_TARG);
@@ -1222,7 +1223,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	mon_clear_timed(mon, MON_TMD_HOLD, MON_TMD_FLG_NOMESSAGE);
 
 	/* See if the player hit */
-	success = test_hit(chance_of_melee_hit(p, &aroll, mon), mon->race->ac);
+	success = test_hit(chance_of_melee_hit(p, aroll, mon), mon->race->ac);
 
 	/* If a miss, skip this hit */
 	if (!success) {
@@ -1244,8 +1245,8 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 		weight = 0;
 	}
 
-	if (aroll.message) {
-		my_strcpy(verb, aroll.message, sizeof(verb));
+	if (aroll->message) {
+		my_strcpy(verb, aroll->message, sizeof(verb));
 	} else {
 		my_strcpy(verb, "hit", sizeof(verb));
 	}
@@ -1254,12 +1255,14 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	b = 0;
 	s = 0;
 	for (j = 0; j < p->body.count; j++) {
-		if (slot_type_is(p, j, EQUIP_BOW) || slot_type_is(p, j, EQUIP_WEAPON))
+		if (slot_type_is(p, j, EQUIP_BOW) || slot_type_is(p, j, EQUIP_WEAPON)) {
 			continue;
+		}
 		struct object *obj_local = slot_object(p, j);
-		if (obj_local)
+		if (obj_local) {
 			improve_attack_modifier(p, obj_local, mon, &b, &s,
 				verb, false);
+		}
 	}
 
 	/* Get the best attack from all slays or brands - weapon or temporary */
@@ -1269,7 +1272,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	improve_attack_modifier(p, NULL, mon, &b, &s, verb, false);
 
 	/* Get the damage */
-	dmg = get_attack_dam(&aroll, mon, b, s);
+	dmg = get_attack_dam(aroll, mon, b, s);
 	dmg = critical_melee(p, mon, weight, obj ? object_to_hit(obj) : 0,
 			dmg, &msg_type);
 
@@ -1304,13 +1307,15 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	for (i = 0; i < N_ELEMENTS(melee_hit_types); i++) {
 		const char *dmg_text = "";
 		const char *proj_text = "";
-		const struct projection *proj = &projections[aroll.proj_type];
+		const struct projection *proj = &projections[aroll->proj_type];
 
-		if (msg_type != melee_hit_types[i].msg_type)
+		if (msg_type != melee_hit_types[i].msg_type) {
 			continue;
+		}
 
-		if (OPT(p, show_damage))
+		if (OPT(p, show_damage)) {
 			dmg_text = format(" (%d)", dmg);
+		}
 
 		if (proj->player_message) {
 			char proj_name[64];
@@ -1318,11 +1323,12 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 			proj_text = format("; you %s %s", proj->player_message, proj_name);
 		}
 
-		if (melee_hit_types[i].text)
+		if (melee_hit_types[i].text) {
 			msgt(msg_type, "You %s %s%s. %s", verb, m_name, proj_text, dmg_text,
 					melee_hit_types[i].text);
-		else
+		} else {
 			msgt(msg_type, "You %s %s%s.", verb, m_name, proj_text, dmg_text);
+		}
 
 		break;
 	}
@@ -1333,7 +1339,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	drain = MIN(mon->hp, dmg);
 
 	/* Damage, check for hp drain, fear and death */
-	stop = proj_melee_attack_mon(mon, p, dmg, aroll.proj_type, fear, NULL);
+	stop = proj_melee_attack_mon(mon, p, dmg, aroll->proj_type, fear, NULL);
 	
 
 	/* Small chance of bloodlust side-effects */
@@ -1349,12 +1355,14 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 		}
 	}
 
-	if (stop)
+	if (stop) {
 		(*fear) = false;
+	}
 
 	/* Post-damage effects */
-	if (blow_after_effects(grid, dmg, splash, fear, do_quake, &aroll))
+	if (blow_after_effects(grid, dmg, splash, fear, do_quake, aroll)) {
 		stop = true;
+	}
 
 	return stop;
 }
@@ -1543,7 +1551,7 @@ void py_attack(struct player *p, struct loc grid)
 			msg("You backstab %s.", m_name);
 		}
 
-		slain = py_attack_real(p, grid, &fear, aroll);
+		slain = py_attack_real(p, grid, &fear, &aroll);
 		p->upkeep->energy_use += blow_energy;
 
 		which = (which + 1) % p->state.num_attacks;
@@ -1993,7 +2001,7 @@ void do_cmd_throw(struct command *cmd) {
 	int shots = 10;
 	int str = adj_str_blow(player->state.stat_ind[STAT_STR]);
 	//ranged_attack attack = make_ranged_throw;
-	struct attack_roll aroll;
+	struct attack_roll aroll = { 0 };
 
 	int weight;
 	int range;
@@ -2018,10 +2026,11 @@ void do_cmd_throw(struct command *cmd) {
 		!= CMD_OK)
 		return;
 
-	if (cmd_get_target(cmd, "target", &dir) == CMD_OK)
+	if (cmd_get_target(cmd, "target", &dir) == CMD_OK) {
 		player_confuse_dir(player, &dir, false);
-	else
+	} else {
 		return;
+	}
 
 	if (object_is_equipped(player->body, obj)) {
 		assert(obj_can_takeoff(obj) && tval_is_melee_weapon(obj));
@@ -2031,7 +2040,7 @@ void do_cmd_throw(struct command *cmd) {
 	weight = MAX(object_weight_one(obj), 10);
 	range = MIN(((str + 20) * 10) / weight, 10);
 
-	aroll = get_thrown_ranged_attack(player, obj);
+	get_thrown_ranged_attack(player, obj, &aroll);
 
 	ranged_helper(player, obj, dir, range, shots, &aroll, ranged_hit_types,
 				  (int) N_ELEMENTS(ranged_hit_types));

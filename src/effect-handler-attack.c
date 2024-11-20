@@ -1871,7 +1871,7 @@ bool effect_handler_MOVE_ATTACK(effect_handler_context_t *context)
 
 	/* Should return some energy if monster dies early */
 	while (blows-- > 0) {
-		if (py_attack_real(player, target, &fear, aroll)) break;
+		if (py_attack_real(player, target, &fear, &aroll)) break;
 	}
 
 	return true;
@@ -1966,7 +1966,7 @@ bool effect_handler_MELEE_BLOWS(effect_handler_context_t *context)
 	while ((blows-- > 0) && mon) {
 		/* Test for damaging the monster */
 		int hp = mon->hp;
-		if (py_attack_real(player, target, &fear, aroll)) return true;
+		if (py_attack_real(player, target, &fear, &aroll)) return true;
 		/*mon = square_monster(cave, target); */
 		if (mon && (mon->hp == hp)) continue;
 
@@ -1995,7 +1995,7 @@ bool effect_handler_SWEEP(effect_handler_context_t *context)
 		for (i = 0; i < 8; i++) {
 			target = loc_sum(player->grid, clockwise_grid[i]);
 			if (square_monster(cave, target) != NULL)
-				py_attack_real(player, target, &fear, aroll);
+				py_attack_real(player, target, &fear, &aroll);
 		}
 	}
 

@@ -1057,6 +1057,11 @@ int rd_misc(void)
 	rd_s16b(&player->obj_k->to_d);
 	rd_byte(&player->obj_k->dd);
 	rd_byte(&player->obj_k->ds);
+
+	rd_byte(&tmp8u);
+	player->checked_tome_this_expedition = tmp8u ? true : false;
+	rd_u32b(&player->monster_xp);
+
 	return 0;
 }
 

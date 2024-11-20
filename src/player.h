@@ -267,6 +267,7 @@ struct attack_roll {
 	int to_dam;
 	int mtimed[MON_TMD_MAX];
 	const char *message;
+	char name[32];
 	int blows;
 	int proj_type;
 	int attack_skill;	/* which skill it uses to decide accuracy */
@@ -724,6 +725,7 @@ struct player {
 
 	int32_t xp_this_turn;				/* L: how much xp was gained between turns */
 	uint32_t monster_xp;				/* L: XP progression towards evolution */
+	bool checked_tome_this_expedition;	/* L: have we prompted for a tome this level? */
 };
 
 

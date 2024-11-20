@@ -652,8 +652,9 @@ void wr_misc(void)
 	//	return;
 
 	/* Flags */
-	for (i = 0; i < OF_SIZE; i++)
+	for (i = 0; i < OF_SIZE; i++) {
 		wr_byte(player->obj_k->flags[i]);
+	}
 
 	/* Modifiers */
 	for (i = 0; i < OBJ_MOD_MAX; i++) {
@@ -688,6 +689,9 @@ void wr_misc(void)
 	wr_s16b(player->obj_k->to_d);
 	wr_byte(player->obj_k->dd);
 	wr_byte(player->obj_k->ds);
+
+	wr_byte(player->checked_tome_this_expedition ? 1 : 0);
+	wr_u32b(player->monster_xp);
 }
 
 

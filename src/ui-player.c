@@ -735,7 +735,6 @@ static struct panel *get_panel_combat(void) {
 	int bth, dam, blws = 0;
 	struct attack_roll *aroll;
 	int i;
-	size_t j;
 	static char title[10];
 	int colour;
 	int hgt = 0;
@@ -753,39 +752,57 @@ static struct panel *get_panel_combat(void) {
 		bth = player->state.skills[aroll->attack_skill] / BTH_PLUS_ADJ + aroll->to_hit;
 		bth = MAX(0, bth);
 		blws += aroll->blows;
+		struct projection *proj = &projections[aroll->proj_type];
+		colour = proj->color;
 
-		if (aroll->obj) {
-			int mode = ODESC_BASE | ODESC_CAPITAL | ODESC_NOEGO | ODESC_SINGULAR | ODESC_TERSE;
-			object_desc(title, sizeof(title), aroll->obj, mode, player);
-		} else {
-			my_strcpy(title, aroll->message, sizeof(title));
-			for (j = 0; j < N_ELEMENTS(title); j++) {
-				if (title[j] == ' ') {
-					title[j] = '\0';
-					break;
-				}
-			}
-			my_strcap(title);
+		char info[80], proj_desc[80];
+
+		// grab the title
+		my_strcpy(title, aroll->name, sizeof(title));
+		my_strcap_full(title);
+
+		// make a short description for the damage type
+		my_strcpy(proj_desc, proj->name, sizeof(proj));
+		strfilter(proj_desc, sizeof(proj_desc), is_a_vowel);
+
+		// if it starts with a vowel we want to keep that vowel
+		if (is_a_vowel(proj->name[0])) {
+			char temp_str[80];
+			my_strcpy(temp_str, proj_desc, sizeof(temp_str));
+			strnfmt(proj_desc, sizeof(proj_desc), "%c%s", proj->name[0], temp_str);
 		}
-		
-		colour = projections[aroll->proj_type].color;
 
-		if (!aroll->ddice || !aroll->dsides)
-			panel_line(p, colour, title, "%+d; %d", bth, aroll->to_dam);
-		else if (aroll->dsides == 1)
-			panel_line(p, colour, title, "%+d; %d", bth, aroll->to_dam + aroll->ddice);
-		else if (aroll->to_dam)
-			panel_line(p, colour, title, "%+d; %dd%d%+d", bth, aroll->ddice, aroll->dsides, aroll->to_dam);
-		else
-		    panel_line(p, colour, title, "%+d; %dd%d", bth, aroll->ddice, aroll->dsides);
-		++hgt;
+		// enshorten it
+		proj_desc[3] = '\0';
+
+		if (!aroll->ddice || !aroll->dsides) {
+			strnfmt(info, sizeof(info), "%+d; %d (%s)", bth, aroll->to_dam, proj_desc);
+		} else if (aroll->dsides == 1) {
+			strnfmt(info, sizeof(info), "%+d; %d (%s)", bth, aroll->to_dam + aroll->ddice, proj_desc);
+		} else if (aroll->to_dam) {
+			strnfmt(info, sizeof(info), "%+d; %dd%d%+d (%s)", bth, aroll->ddice, aroll->dsides, aroll->to_dam, proj_desc);
+		} else {
+			strnfmt(info, sizeof(info), "%+d; %dd%d (%s)", bth, aroll->ddice, aroll->dsides, proj_desc);
+		}
+
+		if (strlen(info) + strlen(title) + 2 > 21) {
+			// name and info will be displayed on top of each other so cut them up
+			panel_line(p, colour, title, " ");
+			panel_line(p, colour, " ", info);
+			hgt += 2;
+		}
+		else {
+			panel_line(p, colour, title, info);
+			++hgt;
+		}
 	}
 
 	if (i > 0) {
+		panel_space(p);
 		blws /= MAX(1, player->state.num_attacks);
 		panel_line(p, COLOUR_L_BLUE, "Blows", "%d.%d/turn",
 			blws / 100, (blws / 10) % 10);
-		++hgt;
+		hgt += 2;
 	}
 
 	/* Ranged */
@@ -905,8 +922,8 @@ static const struct {
 	/*   x  y wid rows */
 	{ {  1, 1, 40, 7 }, true,  get_panel_topleft },	/* Name, Class, ... */
 	{ { 24, 1, 18, 3 }, false, get_panel_misc },	/* Age, ht, wt, ... */
-	{ {  1, 9, 24, 9 }, false, get_panel_midleft },	/* Cur Exp, Max Exp, ... */
-	{ { 29, 9, 19, 9 }, false, get_panel_combat },
+	{ {  1, 9, 22, 9 }, false, get_panel_midleft },	/* Cur Exp, Max Exp, ... */
+	{ { 27, 9, 21, 9 }, false, get_panel_combat },
 	{ { 52, 9, 20, 8 }, false, get_panel_skills },
 };
 

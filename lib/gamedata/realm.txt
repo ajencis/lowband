@@ -48,6 +48,7 @@ school:FIRE:5
 school:POISON:5
 school:NATURE:10
 school:TRANSMUTATION:5
+school:DIVINATION:5
 school:TELEPORTATION:-15
 school:ENCHANTMENT:-5
 school:NECROMANCY:-25

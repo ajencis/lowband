@@ -151,6 +151,8 @@ void my_strcap(char *buf);
  */
 void my_strcap_full(char *buf);
 
+void strfilter(char *buf, size_t bufsize, bool(tester)(int));
+
 /**
  * Test equality, prefix, suffix
  */

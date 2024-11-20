@@ -1413,7 +1413,7 @@ weight:15
 cost:4
 alloc:20:1 to 100
 attack:1d1:0:0
-armor:1:0
+armor:4:0
 desc:A set of open-topped footgear with soft calfskin lacings and a sturdy
 desc: cured leather base.
 
@@ -1436,7 +1436,7 @@ weight:35
 cost:12
 alloc:20:5 to 100
 attack:1d1:0:0
-armor:4:0
+armor:6:0
 flags:IGNORE_FIRE
 desc:A set of sturdy leather boots strengthened with iron that will last
 desc: many weary miles.
@@ -1449,7 +1449,7 @@ weight:60
 cost:50
 alloc:20:20 to 100
 attack:1d1:0:0
-armor:7:0
+armor:8:0
 flags:IGNORE_FIRE
 desc:A set of double-lined leather boots, with toes and heels reinforced with
 desc: steel.
@@ -1458,7 +1458,7 @@ name:& Pair~ of Mithril Shod Boots
 type:boots
 graphics:]:B
 level:60
-weight:40
+weight:30
 cost:500
 alloc:20:60 to 100
 attack:1d1:0:0
@@ -1490,7 +1490,7 @@ weight:20
 cost:12
 alloc:20:3 to 100
 attack:0d0:0:0
-armor:2:0
+armor:4:0
 desc:A padded skullcap of boiled leather.
 
 name:& Metal Cap~
@@ -1501,7 +1501,7 @@ weight:25
 cost:30
 alloc:20:10 to 100
 attack:1d1:0:0
-armor:3:0
+armor:6:0
 desc:A pot-helm of steel that protects the skull.
 
 name:& Iron Helm~
@@ -1512,7 +1512,7 @@ weight:50
 cost:75
 alloc:20:20 to 100
 attack:1d3:0:0
-armor:7:0
+armor:8:0
 desc:A mighty helmet of heavy iron, completely enclosing the head.
 
 name:& Steel Helm~
@@ -1523,7 +1523,7 @@ weight:60
 cost:200
 alloc:20:40 to 100
 attack:1d3:0:0
-armor:9:0
+armor:10:0
 desc:This great helm covers the head and shoulders with plates of steel and a
 desc: curtain of mail.
 
@@ -1576,7 +1576,7 @@ weight:20
 cost:4
 alloc:20:1 to 100
 attack:0d0:0:0
-armor:2:0
+armor:4:0
 desc:A practical garment of thick wool or velvet, draping from neck to heels.
 
 name:Soft Leather Armour~
@@ -1587,7 +1587,7 @@ weight:80
 cost:20
 alloc:20:3 to 100
 attack:0d0:0:0
-armor:8:0
+armor:6:0
 values:MOVES[-1]
 desc:A cuirass of pliable leather, with a thicker leather jack.
 
@@ -1599,7 +1599,7 @@ weight:100
 cost:100
 alloc:20:5 to 100
 attack:1d1:-1:0
-armor:12:0
+armor:8:0
 values:MOVES[-2]
 desc:A cuirass of pliable leather studded with metal rivets.
 
@@ -1611,7 +1611,7 @@ weight:120
 cost:150
 alloc:20:10 to 100
 attack:1d2:-1:0
-armor:16:0
+armor:10:0
 values:MOVES[-2]
 desc:A boiled leather cuirass and shoulder plates.
 
@@ -1623,7 +1623,7 @@ weight:140
 cost:370
 alloc:20:15 to 100
 attack:1d1:-1:0
-armor:20:0
+armor:12:0
 values:MOVES[-2]
 desc:A tunic and skirt sewn with thick, overlapping scales of hardened
 desc: leather.
@@ -1636,7 +1636,7 @@ weight:250
 cost:550
 alloc:20:25 to 100
 attack:1d4:-2:0
-armor:38:0
+armor:14:0
 values:MOVES[-3]
 desc:A heavy shirt of overlapping steel scales backed by leather, with
 desc: matching skirt and sleeves.
@@ -1649,7 +1649,7 @@ weight:220
 cost:750
 alloc:20:20 to 100
 attack:1d4:-2:0
-armor:32:0
+armor:16:0
 values:MOVES[-3]
 desc:A hauberk, leggings, and sleeves of interlocking steel rings, well padded
 desc: with leather.
@@ -1662,7 +1662,7 @@ weight:270
 cost:900
 alloc:20:35 to 100
 attack:1d4:-2:0
-armor:42:0
+armor:18:0
 values:MOVES[-3]
 desc:A hauberk, leggings, and sleeves of interlocking steel rings,
 desc: strategically reinforced at vital locations with a second layer
@@ -1676,7 +1676,7 @@ weight:280
 cost:950
 alloc:20:40 to 100
 attack:1d4:-2:0
-armor:45:0
+armor:20:0
 values:MOVES[-4]
 desc:A hauberk, leggings, and sleeves of interlocking steel rings,
 desc: reinforced around the shoulders with segmented plates of steel,
@@ -1690,7 +1690,7 @@ weight:290
 cost:1100
 alloc:20:45 to 100
 attack:1d4:-3:0
-armor:48:0
+armor:22:0
 values:MOVES[-4]
 desc:A stiff suit of armour composed of small metal plates sewn to an
 desc: inner layer of heavy canvas, and covered with a second layer of
@@ -1704,7 +1704,7 @@ weight:260
 cost:1200
 alloc:20:30 to 100
 attack:1d6:-3:0
-armor:40:0
+armor:24:0
 values:MOVES[-4]
 desc:A steel corselet and vambraces over a skirt and leggings of chain.
 
@@ -1716,7 +1716,7 @@ weight:340
 cost:1250
 alloc:20:50 to 100
 attack:1d6:-3:0
-armor:58:0
+armor:26:0
 values:MOVES[-4]
 desc:This unusual armour is a surprisingly light suit of laced and
 desc: overlapping metal plates.
@@ -1729,7 +1729,7 @@ weight:360
 cost:1350
 alloc:15:55 to 100
 attack:2d4:-3:0
-armor:62:0
+armor:28:0
 values:MOVES[-5]
 desc:A full suit of carefully fitted plates, with hinged joints backed
 desc: by chain, and light padding underneath.
@@ -1742,7 +1742,7 @@ weight:380
 cost:1500
 alloc:15:60 to 100
 attack:2d4:-3:0
-armor:66:0
+armor:30:0
 values:MOVES[-5]
 desc:A full suit of finely fitted metal armour consisting of steel plates
 desc: reinforced ridging.
@@ -1751,26 +1751,25 @@ name:Mithril Chain Mail~
 type:hard armor
 graphics:[:B
 level:55
-weight:150
-cost:7000
+weight:110
+cost:7500
 alloc:10:55 to 100
-attack:1d4:-1:0
-armor:28:0
+attack:1d4:0:0
+armor:16:0
 flags:IGNORE_ACID
-values:MOVES[-1]
 desc:This wondrous suit of fine-linked chain shimmers as though of pure silver.
 
 name:Mithril Plate Mail~
 type:hard armor
 graphics:[:B
 level:60
-weight:300
-cost:15000
+weight:130
+cost:12000
 alloc:10:65 to 100
 attack:2d4:-3:0
-armor:50:0
+armor:24:0
 flags:IGNORE_ACID
-values:MOVES[-2]
+values:MOVES[-1]
 desc:A shimmering suit of true-silver, forged long ago by dwarven smiths of
 desc: legend.  It gleams with purest white as you gaze upon it.
 
@@ -1782,7 +1781,7 @@ weight:420
 cost:20000
 alloc:10:75 to 100
 attack:2d4:-4:0
-armor:90:0
+armor:40:0
 flags:IGNORE_ACID
 values:MOVES[-7]
 desc:An exquisite suit of nearly impenetrable adamantite.
@@ -1797,7 +1796,7 @@ weight:10
 cost:3
 alloc:20:1 to 100
 attack:0d0:0:0
-armor:1:0
+armor:4:0
 desc:A traveller's sturdy outer garment.
 
 name:& Fur Cloak~
@@ -1808,7 +1807,7 @@ weight:25
 cost:600
 alloc:20:20 to 100
 attack:0d0:0:0
-armor:3:0
+armor:6:0
 desc:A heavy cloak made from fur and lined with leather; a luxury.
 
 name:& Elven Cloak~
@@ -1819,7 +1818,7 @@ weight:5
 cost:2000
 alloc:8:40 to 100
 attack:0d0:0:0
-armor:6:0
+armor:8:0
 values:STEALTH[1] | SPEED[1]
 desc:A mantle made of curious silken material by the Galadrim that wondrously
 desc: takes on the hues and shapes of its surroundings.
@@ -1848,7 +1847,7 @@ weight:10
 cost:5
 alloc:20:1 to 100
 attack:0d0:0:0
-armor:1:0
+armor:4:0
 desc:Leather hand protection, with an open palm for gripping weapons.
 
 name:& Set~ of Gauntlets
@@ -1859,14 +1858,14 @@ weight:25
 cost:45
 alloc:20:10 to 100
 attack:1d1:0:0
-armor:3:0
+armor:6:0
 desc:A set of gloves that completely covers the hand and wrist in steel plating.
 
 name:& Set~ of Mithril Gauntlets
 type:gloves
 graphics:]:B
 level:0
-weight:15
+weight:10
 cost:700
 alloc:20:40 to 100
 attack:1d1:0:0
@@ -1882,7 +1881,7 @@ weight:40
 cost:100
 alloc:10:20 to 100
 attack:1d1:0:3
-armor:5:0
+armor:2:0
 desc:An ancient battle glove designed for hand-to-hand fighting.  Its layered
 desc: leather thongs are enhanced for combat by bloody-looking spikes.
 
@@ -1897,14 +1896,6 @@ attack:1d1:0:0
 armor:0:5+d5
 flags:IGNORE_ACID | IGNORE_ELEC | IGNORE_FIRE | IGNORE_COLD
 desc:Highly protective gloves designed for an alchemist's elemental magics.
-
-#N:179:& Set~ of Mining Gloves
-#G:]:U
-#I:gloves
-#W:0:0:5:500 
-#A:10:50 to 100
-#P:0:1d1:0:0:2
-#V:TUNNEL[1d3]
 
 
 ### Shields ###
@@ -1925,7 +1916,7 @@ weight:30
 cost:20
 alloc:20:1 to 100
 attack:1d1:0:0
-armor:2:0
+armor:6:0
 desc:A light circular frame of wood surrounding fine-grained wickerwork.
 
 name:& Small Metal Shield~
@@ -1936,7 +1927,7 @@ weight:60
 cost:80
 alloc:20:15 to 100
 attack:1d2:0:0
-armor:5:0
+armor:8:0
 desc:A round shield of wood reinforced with metal rims and central disk.
 
 name:& Leather Shield~
@@ -1947,7 +1938,7 @@ weight:90
 cost:200
 alloc:20:10 to 100
 attack:1d3:0:0
-armor:8:0
+armor:10:0
 desc:A large oval shield made of layered wooden strips with a thick leather
 desc: covering.
 
@@ -1971,7 +1962,7 @@ weight:160
 cost:750
 alloc:10:50 to 100
 attack:1d6:0:0
-armor:15:0
+armor:14:0
 desc:A kite-shaped shield with rounded corners that covers the wearer from
 desc: chest to toe, emblazoned with heraldic symbols.
 
@@ -1979,11 +1970,11 @@ name:& Mithril Shield~
 type:shield
 graphics:):B
 level:70
-weight:100
+weight:60
 cost:10000
 alloc:10:70 to 100
 attack:1d4:0:0
-armor:16:10
+armor:12:10
 flags:IGNORE_ACID
 desc:A shield of purest white, made of mithril.
 

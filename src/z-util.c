@@ -528,25 +528,57 @@ size_t my_strcat(char *buf, const char *src, size_t bufsize)
  */
 void my_strcap(char *buf)
 {
-	if (buf && buf[0])
+	if (buf && buf[0]) {
 		buf[0] = toupper((unsigned char) buf[0]);
+	}
 }
 
 
 /**
  * L: Capitalize all letters in string 'buf' that start the
- * string or are preceded by a space
+ * string or are preceded by a space or hyphen
  */
 void my_strcap_full(char *buf)
 {
 	if (!buf) return;
 	int i;
 
-	for (i = 0; buf[i]; i++) {
+	for (i = 0; buf[i] != '\0'; i++) {
 		if (i == 0 || buf[i - 1] == ' ' || buf[i - 1] == '-') {
 			buf[i] = toupper((unsigned char) buf[i]);
 		}
 	}
+}
+
+
+void strfilter(char *buf, size_t bufsize, bool(tester)(int))
+{
+	size_t i;
+	size_t skip; // the difference between where we're copying to and from in the string
+	size_t maxlen = bufsize / sizeof(buf[0]);
+
+	for (i = 0, skip = 0; i + skip < maxlen; i++) {
+		// skip until we hit a nonskippable char or the end of the string
+		while (buf[i + skip] != '\0' && i + skip < maxlen && tester(buf[i + skip])) {
+			++skip;
+		}
+
+		// forcibly null-terminate if we're going out of bounds
+		if (i + skip >= maxlen) {
+			buf[i] = '\0';
+		}
+		// otherwise copy
+		else {
+			buf[i] = buf[i + skip];
+		}
+
+		// if we've hit the end of the string we're done
+		if (buf[i] == '\0') {
+			break;
+		}
+	}
+	// ensure we're null-terminated
+	buf[i] = '\0';
 }
 
 

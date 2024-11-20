@@ -49,12 +49,12 @@ struct player_spell *spells;
  */
 const int32_t player_exp[PY_MAX_LEVEL] =
 {
-	5,
-	10,
+	2,
+	6,
+	12,
 	25,
-	55,
-	85,
-	130,
+	50,
+	100,
 	200,
 	280,
 	380,

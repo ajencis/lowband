@@ -496,6 +496,7 @@ wake:1
 color:White
 
 code:PIERCING
+name:piercing
 type:element
 desc:impales
 blind-desc:something
@@ -503,6 +504,7 @@ obvious:1
 color:Light Blue
 
 code:SLASHING
+name:slashing
 type:element
 desc:cuts
 blind-desc:something
@@ -510,6 +512,7 @@ obvious:1
 color:Light Blue
 
 code:BLUDGEONING
+name:bludgeoning
 type:element
 desc:bashes
 blind-desc:something
