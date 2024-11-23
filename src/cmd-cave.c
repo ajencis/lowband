@@ -1591,7 +1591,7 @@ void do_cmd_explore(struct command *cmd)
 
 	/* Screen for visible monsters */
 	for (y = 0; y < cave->height && !visible_monster; y++) {
-		for (x = 0; x < cave->width; x++) {
+		for (x = 0; x < cave->width && !visible_monster; x++) {
 			struct loc grid = loc(x, y);
 			
 			if (loc_eq(grid, player->grid)) continue;
@@ -1601,7 +1601,6 @@ void do_cmd_explore(struct command *cmd)
 				struct monster *mon = cave_monster(cave, m_idx);
 				if (monster_is_obvious(mon) && mon_will_attack_player(mon, player)) {
 					visible_monster = true;
-					break; /* only breaks the inner loop */
 				}
 			}
 		}

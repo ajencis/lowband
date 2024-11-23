@@ -214,7 +214,7 @@ static void load_roller_data(birther *saved, birther *prev_player)
 	player->wt       = player->wt_birth = saved->wt;
 	player->ht       = player->ht_birth = saved->ht;
 	player->au_birth = saved->au;
-	player->au       = z_info->start_gold;
+	player->au       = player->au_birth;
 
 	/* Load previous stats */
 	for (i = 0; i < STAT_MAX; i++) {
@@ -425,7 +425,11 @@ static void player_embody(struct player *p)
  */
 static void get_money(struct player *p)
 {
-	p->au = p->au_birth = z_info->start_gold;
+	if (p->au_birth == 0) {
+		p->au_birth = z_info->start_gold;
+		if (pf_has(p->class->pflags, PF_EXTRA_GOLD)) p->au_birth *= 5;
+	}
+	p->au = p->au_birth;
 }
 
 void player_init(struct player *p)
@@ -732,6 +736,7 @@ static void recalculate_stats(int *stats_local_local, int points_left_local)
 
 	/* Gold is inversely proportional to cost */
 	player->au_birth = z_info->start_gold * (1 + points_left_local);
+	if (pf_has(player->class->pflags, PF_EXTRA_GOLD)) player->au_birth *= 5;
 
 	/* Update bonuses, hp, etc. */
 	get_bonuses();

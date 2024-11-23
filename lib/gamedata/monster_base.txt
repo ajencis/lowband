@@ -50,7 +50,7 @@ obj-flags:SEE_INVIS
 # Ainur were the founding spirits of Arda, and could take any form they wished.
 # Ainur in Angband typically have shapechanges and many possibe other spells,
 # but typically don't breathe
-name:ainu
+name:angel
 glyph:A
 pain:1
 flags:POWERFUL | SPIRIT | SMART

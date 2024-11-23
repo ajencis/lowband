@@ -467,26 +467,16 @@ static int ac_power(const struct object *obj, int p)
 {
 	int q = 0;
 
-	if (obj->ac) {
+	if (obj->ac || obj->to_a) {
 		int16_t weight = object_weight_one(obj);
 
 		p += BASE_ARMOUR_POWER;
-		q += (obj->ac * BASE_AC_POWER / 2);
+		q += (obj->ac * BASE_AC_POWER + obj->to_a * TO_AC_POWER) / 2;
 		log_obj("Adding %d power for base AC value\n", q);
 
-		/* Add power for AC per unit weight */
-		if (weight > 0) {
-			int i = 750 * (obj->ac + obj->to_a) / weight;
+		// L: factor weight in but not too much
+		q = (int)(q * 15 / my_cbrt((double)weight + 10));
 
-			/* Avoid overpricing Elven Cloaks */
-			if (i > 450) i = 450;
-
-			q *= i;
-			q /= 100;
-
-			/* Weightless (ethereal) armour items get fixed boost */
-		} else
-			q *= 5;
 		p += q;
 		log_obj("Add %d power for AC per unit weight, now %d\n", q, p);
 	}
@@ -497,6 +487,7 @@ static int ac_power(const struct object *obj, int p)
 /**
  * Add power for +to_ac
  */
+/*
 static int to_ac_power(const struct object *obj, int p)
 {
 	int q;
@@ -523,6 +514,7 @@ static int to_ac_power(const struct object *obj, int p)
 	}
 	return p;
 }
+*/
 
 /**
  * Add base power for jewelry
@@ -1030,7 +1022,7 @@ int32_t object_power(const struct object* obj, bool verbose, ang_file *log_file)
 
 	/* Armour class power */
 	p = ac_power(obj, p);
-	p = to_ac_power(obj, p);
+	//p = to_ac_power(obj, p);
 
 	/* Bonus for jewelry */
 	p = jewelry_power(obj, p);

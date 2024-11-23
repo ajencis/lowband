@@ -735,7 +735,7 @@ static struct panel *get_panel_combat(void) {
 	int bth, dam, blws = 0;
 	struct attack_roll *aroll;
 	int i;
-	static char title[10];
+	char title[21];
 	int colour;
 	int hgt = 0;
 
@@ -785,7 +785,7 @@ static struct panel *get_panel_combat(void) {
 			strnfmt(info, sizeof(info), "%+d; %dd%d (%s)", bth, aroll->ddice, aroll->dsides, proj_desc);
 		}
 
-		if (strlen(info) + strlen(title) + 2 > 21) {
+		if (strlen(info) + strlen(title) + 3 > 21) {
 			// name and info will be displayed on top of each other so cut them up
 			panel_line(p, colour, title, " ");
 			panel_line(p, colour, " ", info);

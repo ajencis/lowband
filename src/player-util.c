@@ -307,7 +307,7 @@ bool player_increase_stat(struct player *p)
 	return false;
 }
 
-int get_power_scale_state(struct player_state *ps, int power, int scaleto, int level)
+int get_power_scale_state(const struct player_state *ps, int power, int scaleto, int level)
 {
 	assert(power > 0 && power < PP_MAX);
 

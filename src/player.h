@@ -275,6 +275,7 @@ struct attack_roll {
 	int damage_stat;	/* stat that determines damage */
 	struct object *obj;	/* what weapon is it using */
 	int range;			/* how far it can go (eg for a gaze) */
+	int crit_chance;	/* % chance of a critical hit */
 };
 
 /**
@@ -771,5 +772,6 @@ void player_cleanup_members(struct player *p);
 
 /* player-race.c */
 struct player_race *player_id2race(guid id);
+int max_race_evol_lev(struct player_race *r);
 
 #endif /* !PLAYER_H */

@@ -443,8 +443,9 @@ static void melee_effect_elemental(melee_effect_handler_context_t *context,
 	physical_dam = adjust_dam_armor(context->damage, context->ac + 50);
 
 	/* Some attacks do no physical damage */
-	if (!context->method->phys)
+	if (!context->method->phys) {
 		physical_dam = 0;
+	}
 
 	if (context->p) {
 		elemental_dam = adjust_dam(context->p, type, context->damage,
@@ -459,8 +460,9 @@ static void melee_effect_elemental(melee_effect_handler_context_t *context,
 	context->damage = (physical_dam > elemental_dam) ?
 		physical_dam : elemental_dam;
 
-	if (context->p && elemental_dam > 0)
+	if (context->p && elemental_dam > 0) {
 		inven_damage(context->p, type, MIN(elemental_dam * 5, 300));
+	}
 	if (context->damage > 0) {
 		if (context->p) {
 			/*
@@ -481,8 +483,8 @@ static void melee_effect_elemental(melee_effect_handler_context_t *context,
 				context->t_mon, hurt_msg, die_msg, false);
 		}
 	}
-	else {
-		message_add("context->damage is 0", MSG_GENERIC);
+	else if (context->p) {
+		msg("%s fails to harm you.", context->m_name);
 	}
 
 	/* Learn about the player */
@@ -689,6 +691,10 @@ static void melee_effect_handler_POISON(melee_effect_handler_context_t *context)
 		assert(context->t_mon);
 		mon_inc_timed(context->t_mon, MON_TMD_POISONED, 10 + randint1(context->rlev), 0);
 		context->obvious = true;
+		return;
+	}
+
+	if (context->damage <= 0) {
 		return;
 	}
 

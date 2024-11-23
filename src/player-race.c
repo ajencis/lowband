@@ -16,6 +16,8 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#include "angband.h"
+#include "monster.h"
 #include "player.h"
 
 struct player_race *player_id2race(guid id)
@@ -25,4 +27,30 @@ struct player_race *player_id2race(guid id)
 		if (guid_eq(r->ridx, id))
 			break;
 	return r;
+}
+
+static int max_evol_lev(const struct monster_race *mr)
+{
+	const struct evolution *curr;
+	int maxlev = mr->level;
+
+	for (curr = mr->evol; curr; curr = curr->next) {
+		int currlev = max_evol_lev(curr->race);
+		maxlev = MAX(maxlev, currlev);
+	}
+	
+	return maxlev;
+}
+
+int max_race_evol_lev(struct player_race *r)
+{
+	const struct evolution *curr;
+	int maxlev = 0;
+
+	for (curr = r->evol; curr; curr = curr->next) {
+		int currlev = max_evol_lev(curr->race);
+		maxlev = MAX(maxlev, currlev);
+	}
+
+	return maxlev;
 }

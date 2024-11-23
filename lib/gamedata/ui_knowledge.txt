@@ -42,8 +42,8 @@
 monster-category:Uniques
 mcat-include-flag:UNIQUE
 
-monster-category:Ainur
-mcat-include-base:ainu
+monster-category:Angels
+mcat-include-base:angel
 
 monster-category:Ants
 mcat-include-base:ant

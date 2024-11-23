@@ -946,7 +946,7 @@ int path_nearest_unknown(struct player *p, struct loc start,
 					continue;
 				}
 				if (passable) {
-					if (!square_ispassable(p->cave, grid)
+					if (!square_isknownpassable(p->cave, grid)
 							|| count_neighbors(NULL,
 							p->cave, grid,
 							square_isknown, false)

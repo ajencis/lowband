@@ -8070,32 +8070,6 @@ drop-base:prayer book:5:1:1
 drop-base:prayer book:5:1:1
 desc:A troll who is so bright he knows how to read.
 
-name:Maia
-plural:Maiar
-base:ainu
-color:B
-speed:110
-hit-points:528
-light:2
-hearing:30
-armor-class:81
-sleepiness:255
-depth:34
-rarity:4
-experience:1000
-blow:HIT:HURT:3d5
-blow:HIT:HURT:3d5
-blow:HIT:HURT:3d5
-blow:HIT:HURT:3d5
-flags:DROP_2
-spell-freq:3
-spells:BLIND | CONF | HASTE | HEAL | SCARE
-desc:One of the first children of Eru, currently human-like in form, its body
-desc: shining with glorious light.  Whether this being has taken allegiance to
-desc: Morgoth or faces you in combat for some other reason is not clear; all
-desc: you know is that it stands before you, its eyes ablaze as it prepares its
-desc: next volley of spells.
-
 name:troll blackguard
 base:troll
 color:U
@@ -10221,59 +10195,6 @@ desc: muscular frame.  Despite his bulk, he strikes with stunning speed.
 
 ### Dungeon level 43 ###
 
-name:Maia of Nienna
-plural:Maiar of Nienna
-base:ainu
-color:W
-speed:120
-hit-points:1250
-light:2
-hearing:30
-armor-class:81
-sleepiness:255
-depth:43
-rarity:4
-experience:1900
-blow:HIT:HURT:3d5
-blow:HIT:HURT:3d5
-blow:HIT:HURT:3d5
-blow:HIT:HURT:3d5
-flags:FEMALE | INVISIBLE
-flags:DROP_2
-spell-freq:3
-spells:BLIND | HASTE | HEAL | SCARE
-spells:BO_MANA
-spells:SHAPECHANGE
-shape:air elemental
-shape:nexus vortex
-desc:A servant of Nienna, who grieves for the hurts to the world caused by
-desc: Morgoth.
-
-name:Maia of Mandos
-plural:Maiar of Mandos
-base:ainu
-color:s
-speed:120
-hit-points:1250
-hearing:30
-armor-class:81
-sleepiness:255
-depth:43
-rarity:4
-experience:1900
-blow:HIT:HURT:4d5
-blow:HIT:HURT:4d5
-blow:HIT:HURT:4d5
-blow:HIT:HURT:4d5
-flags:MALE | INVISIBLE
-flags:DROP_2
-spell-freq:3
-spells:BLIND | HASTE | HOLD | CONF
-spells:SHAPECHANGE
-shape:will o' the wisp
-shape:time vortex
-desc:A servant of Mandos, the summoner of the spirits of the slain.
-
 name:mature multi-hued dragon
 short-name:mature multi
 evolution:ancient multi-hued dragon
@@ -11041,6 +10962,28 @@ desc: Gondolin.
 
 ### Dungeon level 50 ###
 
+name:cherub
+evolution:seraph
+base:angel
+color:W
+speed:130
+hit-points:8000
+hearing:50
+smell:50
+armor-class:192
+sleepiness:10
+depth:90
+rarity:1
+experience:40000
+blow:HIT:HURT:9d12
+blow:HIT:HURT:9d12
+flags:SMART
+flags:DROP_4 | DROP_GOOD | ONLY_ITEM
+flags:OPEN_DOOR
+innate-freq:5
+spells:BA_HOLY | HEAL_KIN
+desc:This happy baby seems to glow with an inner light.
+
 name:ancient blue dragon
 short-name:ancient blue
 evolution:great storm wyrm
@@ -11463,35 +11406,6 @@ desc:He is a master of disguise, an expert of stealth, a genius at traps, and
 desc: moves with blinding speed.  Check your pockets!
 
 ### Dungeon level 52 ###
-
-name:Maia of Oromë
-plural:Maiar of Oromë
-base:ainu
-color:w
-speed:120
-hit-points:2000
-light:2
-hearing:30
-armor-class:96
-sleepiness:255
-depth:52
-rarity:4
-experience:2500
-blow:HIT:HURT:4d6
-blow:HIT:HURT:6d5
-blow:HIT:HURT:4d6
-blow:HIT:HURT:6d5
-flags:MALE
-flags:DROP_2
-innate-freq:5
-spell-freq:5
-spells:ARROW
-spells:SHAPECHANGE
-spells:S_HOUND
-shape:ranger chieftain
-shape:giant
-shape:Huan, Wolfhound of the Valar
-desc:A servant of Oromë, hunter of monsters and fell beasts.
 
 name:hasty ent
 base:tree
@@ -12144,6 +12058,28 @@ desc: strength and priestly wisdom are a true match for any adventurer.
 
 ### Dungeon level 60 ###
 
+name:seraph
+evolution:archangel
+base:angel
+color:W
+speed:130
+hit-points:8000
+hearing:50
+smell:50
+armor-class:192
+sleepiness:10
+depth:90
+rarity:1
+experience:40000
+blow:HIT:HURT:9d12
+blow:HIT:HURT:9d12
+flags:SMART
+flags:DROP_4 | DROP_GOOD | ONLY_ITEM
+flags:OPEN_DOOR
+innate-freq:5
+spells:BA_LIGHT | BA_HOLY | HEAL_KIN
+desc:This kindly-seeming young human seems to glow with an inner light.
+
 name:Gilim, the Giant of Eruman
 base:giant
 color:w
@@ -12170,63 +12106,6 @@ spells:BO_ICE | STORM
 spells:S_MONSTERS
 desc:Known as the giant of winter and the northern reaches,
 desc: he is tall even among giants, and his name is cursed in many lands.
-
-name:Maia of Yavanna
-plural:Maiar of Yavanna
-base:ainu
-color:g
-speed:120
-hit-points:3500
-light:2
-hearing:30
-armor-class:90
-sleepiness:255
-depth:60
-rarity:4
-experience:3600
-blow:HIT:HURT:4d6
-blow:HIT:HURT:6d5
-blow:HIT:HURT:4d6
-blow:HIT:HURT:6d5
-flags:FEMALE
-flags:DROP_3
-flags:IM_ACID
-spell-freq:3
-spells:BO_MANA | BO_WATE
-spells:S_AINU | S_ANIMAL
-spells:SHAPECHANGE
-shape:tree
-desc:A servant of Yavanna Kementári, Queen of the Earth, the Giver of Fruits
-desc: and lover of all things that grow.
-
-name:Maia of Aulë
-plural:Maiar of Aulë
-base:ainu
-color:u
-speed:120
-hit-points:3500
-hearing:30
-armor-class:120
-sleepiness:255
-depth:60
-rarity:4
-experience:3600
-blow:HIT:HURT:6d6
-blow:HIT:HURT:6d6
-blow:HIT:HURT:6d6
-blow:HIT:SHATTER:10d10
-flags:MALE | PASS_WALL
-flags:DROP_3
-flags:IM_ELEC
-innate-freq:5
-spell-freq:5
-spells:BOULDER
-spells:SHAPECHANGE
-shape:shardstorm
-shape:great earth elemental
-shape:Quaker, Master of Earth
-desc:A servant of Aulë the Smith, lord of all the substances of Arda and friend
-desc: of the Noldor.
 
 name:great earth elemental
 base:elemental
@@ -12277,7 +12156,7 @@ spells:BR_PLAS | BR_POIS | BR_SHAR | BR_SOUN | BR_TIME | BR_WALL
 desc:An awesome vortex of pure magic, power radiates from its frame.
 
 name:Saruman of Many Colours
-base:ainu
+base:angel
 color:v
 speed:120
 hit-points:5000
@@ -12574,36 +12453,6 @@ desc: perilous.  It strikes with speed and drains life from its
 desc: prey to satisfy its hunger.
 
 ### Dungeon level 65 ###
-
-name:Maia of Ulmo
-plural:Maiar of Ulmo
-base:ainu
-color:b
-speed:120
-hit-points:4700
-hearing:30
-armor-class:90
-sleepiness:255
-depth:65
-rarity:4
-experience:5000
-blow:TOUCH:TERRIFY:6d5
-blow:TOUCH:PARALYZE:6d5
-blow:ENGULF:ACID:6d10
-blow:ENGULF:ACID:6d10
-flags:MALE
-flags:DROP_4
-flags:IM_ACID | IM_ELEC | IM_WATER
-spell-freq:3
-spells:BA_WATE
-spells:BO_MANA | BO_WATE
-spells:S_AINU
-spells:SHAPECHANGE
-shape:great water elemental
-shape:water vortex
-shape:cold vortex
-desc:A servant of Ulmo, Lord of Waters, who speaks to those who dwell in
-desc: Middle-earth with voices that are heard only as the music of water.
 
 name:great water elemental
 base:elemental
@@ -13068,6 +12917,28 @@ desc: spikes.
 
 ### Dungeon level 70 ###
 
+name:archangel
+evolution:planetar
+base:angel
+color:W
+speed:130
+hit-points:8000
+hearing:50
+smell:50
+armor-class:192
+sleepiness:10
+depth:90
+rarity:1
+experience:40000
+blow:HIT:HURT:9d12
+blow:HIT:HURT:9d12
+flags:SMART
+flags:DROP_4 | DROP_GOOD | ONLY_ITEM
+flags:OPEN_DOOR
+innate-freq:5
+spells:BA_LIGHT | BA_HOLY | HEAL | HEAL_KIN
+desc:This kindly-seeming middle-aged human seems to glow with an inner light.
+
 name:great storm wyrm
 short-name:storm wyrm
 base:ancient dragon
@@ -13158,65 +13029,6 @@ desc: you fight it, it sees no reason to do likewise.
 
 ### Dungeon level 71 ###
 
-name:Maia of Manwë
-plural:Maiar of Manwë
-base:ainu
-color:B
-speed:130
-hit-points:5000
-light:2
-hearing:30
-armor-class:120
-sleepiness:255
-depth:71
-rarity:4
-experience:7000
-blow:HIT:ELEC:10d12
-blow:HIT:ELEC:10d12
-blow:ENGULF:CONFUSE:8d10
-blow:ENGULF:CONFUSE:8d10
-flags:MALE
-flags:DROP_4
-flags:IM_ACID | IM_ELEC | IM_WATER
-spell-freq:3
-spells:STORM | BA_ELEC
-spells:S_AINU
-spells:SHAPECHANGE
-shape:elemental
-shape:vortex
-desc:A servant of Manwë Súlimo, the first of all Kings, lord of the realm of
-desc: Arda and ruler of all that dwell therein.
-
-name:Maia of Varda
-plural:Maiar of Varda
-base:ainu
-color:y
-speed:130
-hit-points:5000
-light:3
-hearing:30
-armor-class:110
-sleepiness:255
-depth:71
-rarity:4
-experience:12000
-blow:TOUCH:TERRIFY:6d5
-blow:TOUCH:PARALYZE:6d5
-blow:ENGULF:ACID:6d10
-blow:ENGULF:ACID:6d10
-flags:FEMALE
-flags:DROP_4
-flags:IM_ACID | IM_ELEC
-spell-freq:3
-spells:BA_LIGHT
-spells:BO_MANA
-spells:S_AINU
-spells:SHAPECHANGE
-shape:elemental
-shape:vortex
-desc:A servant of Varda, Lady of the Stars, who the elves call Elbereth and
-desc: love above all the Valar.
-
 name:greater demonic quylthulg
 base:quylthulg
 color:R
@@ -13300,38 +13112,6 @@ desc:A giant humanoid demon wielding a massive, heavy and sharp scythe.
 desc:  Feared by foes and friends alike when it flies into one of its berserk
 desc: rages, the Horned Reaper will cut down anything in its path between it
 desc: and you - even the minions it has just summoned.
-
-name:Ossë, Herald of Ulmo
-base:ainu
-color:w
-speed:130
-hit-points:6000
-hearing:40
-armor-class:204
-sleepiness:10
-depth:72
-rarity:3
-experience:30000
-blow:HIT:DISENCHANT:10d5
-blow:HIT:DISENCHANT:10d5
-blow:HIT:HURT:10d10
-blow:HIT:HURT:10d10
-flags:UNIQUE | MALE | NAME_COMMA
-flags:DROP_4 | DROP_GOOD
-flags:MOVE_BODY
-flags:IM_ACID | IM_ELEC | IM_WATER | IM_DISEN
-innate-freq:4
-spell-freq:2
-spells:BLIND | TELE_TO | WHIP
-spells:BA_WATE | STORM
-spells:BO_MANA | BO_WATE
-spells:BR_DISE
-spells:S_AINU
-desc:Encrusted with barnacles, slimy and dripping, the Maia of the untamed
-desc: sea has dragged himself down into Angband to send you to a watery grave.
-desc: Ossë is the most powerful and heartless of Ulmo's servants and embodies
-desc: the untamed power of the ocean.  Terror grows in your heart with each
-desc: squelching step of his approach.
 
 
 ### Dungeon level 73 ###
@@ -13743,29 +13523,6 @@ message-invis:BLINK:Something slurps.
 desc:A giant seething mass of flesh, overwhelming you with monster after
 desc: monster.
 
-name:Makar, the Warrior
-base:ainu
-color:D
-speed:120
-hit-points:6000
-hearing:30
-armor-class:192
-sleepiness:15
-depth:76
-rarity:5
-experience:37000
-blow:HIT:SHATTER:13d13
-blow:HIT:CONFUSE:13d13
-blow:HIT:SHATTER:13d13
-blow:HIT:CONFUSE:13d13
-flags:UNIQUE | MALE | NAME_COMMA
-flags:DROP_4 | DROP_GOOD
-flags:KILL_WALL | KILL_BODY
-flags:IM_ACID | IM_ELEC
-desc:A battle-hungry spirit from amongst the Ainur, who built a grim hall in
-desc: the early days of Arda to host endless battles.  When not at home, he
-desc: and his sister Meássë hunt and seek out the turmoils caused by Morgoth.
-
 ### Dungeon level 77 ###
 
 name:Feagwath, the Undead Sorcerer
@@ -13965,6 +13722,29 @@ desc: any ordinary man ever could.
 
 
 ### Dungeon level 80 ###
+
+name:planetar
+evolution:solar
+base:angel
+color:W
+speed:130
+hit-points:8000
+hearing:50
+smell:50
+armor-class:192
+sleepiness:10
+depth:80
+rarity:1
+experience:40000
+blow:GAZE:DISENCHANT:9d12
+blow:HIT:HURT:9d12
+blow:HIT:HURT:9d12
+flags:SMART
+flags:DROP_4 | DROP_GOOD | ONLY_ITEM
+flags:OPEN_DOOR
+innate-freq:5
+spells:BA_LIGHT | BA_HOLY | HEAL | HEAL_KIN | S_AINU
+desc:This kindly-seeming old human seems to glow with an inner light.
 
 name:fury
 plural:furies
@@ -14544,43 +14324,6 @@ spells:BR_COLD | BR_DISE | BR_FIRE
 desc:The Tarrasque is a massive reptile of legend, rumoured to be unkillable and
 desc: immune to magic.  Fear its anger, for its devastation is unmatched!
 
-### Dungeon level 87 ###
-
-name:Meássë, the Bloody
-base:ainu
-color:r
-speed:120
-hit-points:7000
-hearing:30
-armor-class:180
-sleepiness:15
-depth:87
-rarity:3
-experience:42000
-blow:HIT:CONFUSE:12d12
-blow:HIT:CONFUSE:12d12
-blow:HIT:CONFUSE:12d12
-blow:HIT:CONFUSE:12d12
-flags:UNIQUE | FEMALE | NAME_COMMA
-flags:DROP_4 | DROP_GOOD
-flags:MOVE_BODY
-flags:IM_ACID | IM_ELEC | NO_STUN
-innate-freq:6
-spell-freq:5
-spells:HEAL | HEAL_KIN
-spells:BOULDER
-spells:BA_SHAR | BR_SOUN
-spells:S_KIN | S_MONSTERS
-friends:50:1d4:Maia of Oromë:servant
-friends:50:1d4:Maia of Aulë:servant
-friends:50:1d3:Lesser titan:servant
-friends:50:1d2:Greater titan:servant
-friends:100:1d1:Makar, the Warrior
-desc:Sister of Makar the Warrior, she would shout encouragement to the
-desc: warriors of their hall and heal their wounds so they could battle on,
-desc: until her arms were reddened to the elbow.  Meássë is delighted by
-desc: all violence, and recruits any beings of like abilities to her service.
-
 
 ### Dungeon level 88 ###
 
@@ -14621,6 +14364,29 @@ desc: the heat of his body.
 
 
 ### Dungeon level 90 ###
+
+name:solar
+base:angel
+color:W
+speed:130
+hit-points:8000
+hearing:50
+smell:50
+armor-class:192
+sleepiness:10
+depth:90
+rarity:1
+experience:40000
+blow:GAZE:DISENCHANT:9d12
+blow:HIT:FIRE:9d12
+blow:HIT:FIRE:9d12
+flags:SMART
+flags:DROP_4 | DROP_GOOD | ONLY_ITEM
+flags:OPEN_DOOR
+flags:IM_FIRE
+innate-freq:5
+spells:BA_LIGHT | BA_HOLY | HEAL | HEAL_KIN | S_AINU | BA_FIRE
+desc:This kindly-seeming ancient human seems to glow with an inner light.
 
 name:Huan, Wolfhound of the Valar
 base:canine
@@ -14784,7 +14550,7 @@ desc: awesome fiery breath he saved his master from Ungoliant's rage.
 ### Dungeon level 99 ###
 
 name:Sauron, the Sorcerer
-base:ainu
+base:angel
 color:p
 speed:130
 hit-points:8000

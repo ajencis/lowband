@@ -1189,7 +1189,7 @@ effect:SUMMON:AINU
 dice:1
 lore:summon an ainu
 lore-color-base:Orange
-message-vis:{name} summons an ainu.
+message-vis:{name} summons an angel.
 message-invis:You hear something appear nearby!
 
 name:S_DEMON

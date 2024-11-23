@@ -92,8 +92,8 @@ desc:hydras
 name:AINU
 msgt:SUM_AINU
 uniques:0
-base:ainu
-desc:ainur
+base:angel
+desc:angels
 
 name:DEMON
 msgt:SUM_DEMON

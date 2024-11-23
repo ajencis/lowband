@@ -513,11 +513,9 @@ hitdie:3
 max-attacks:6
 min-weight:10
 strength-multiplier:5
-player-flags:EXTRA_LEARNING
 equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
-equip:tome:Basic Tome:1:1:none
-equip:tome:Basic Tome:1:1:none
+player-flags:EXTRA_LEARNING | EXTRA_GOLD
 title:Rookie
 title:Soldier
 title:Swordsman

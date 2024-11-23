@@ -1874,7 +1874,7 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 	mr->ac = ac; // 100ish for level 100
 	mr->speed = 105 + (spe * 30 + 49) / 100; // 135ish for level 100
 	mr->spell_power = mag; // 100ish for level 100
-	ttdam = MAX(dam + 4, dam * 3 / 2);
+	ttdam = MAX(dam + 4, dam * 2);
 	if (dam > 0) mr->freq_spell = 40 * mag / dam;
 	else mr->freq_spell = 100;
 	mr->freq_spell = MIN(75, mr->freq_spell);

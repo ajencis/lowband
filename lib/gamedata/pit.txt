@@ -335,11 +335,11 @@ mon-base:ancient dragon
 spell-req:BR_SOUN
 spell-ban:BR_SHAR
 
-name:Ainur
+name:Angels
 room:1
 alloc:1:90
 obj-rarity:0
-mon-base:ainu
+mon-base:angel
 
 
 # New chosen monster types, not necessarily for pits and not used yet

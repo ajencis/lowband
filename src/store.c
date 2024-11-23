@@ -994,14 +994,16 @@ struct object *store_carry(struct store *store, struct object *obj)
 	struct object_kind *kind = obj->kind;
 
 	/* Evaluate the object */
-	if (object_is_carried(player, obj))
+	if (object_is_carried(player, obj)) {
 		value = object_value(obj, 1);
-	else
+	} else {
 		value = object_value_real(obj, 1);
+	}
 
 	/* Cursed/Worthless items "disappear" when sold */
-	if (value <= 0)
+	if (value <= 0) {
 		return NULL;
+	}
 
 	/* Erase the inscription */
 	obj->note = 0;

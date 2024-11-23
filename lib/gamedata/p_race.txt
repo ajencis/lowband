@@ -315,15 +315,12 @@ values:RES_POIS[1]
 body:Humanoid
 
 name:Dhampir
-exp:150
 monster:vampire
 
 name:Eyestalk
-exp:150
 monster:floating eye
 
 name:Draconian
-exp:175
 monster:baby red dragon
 monster:baby blue dragon
 monster:baby white dragon
@@ -339,11 +336,12 @@ monster:aethereal drake
 monster:crystal drake
 
 name:Tiefling
-exp:150
 monster:bodak
 monster:quasit
 monster:imp
 
 name:Reptilian
-exp:135
 monster:2-headed hydra
+
+name:Aasimar
+monster:cherub

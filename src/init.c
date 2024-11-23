@@ -2985,6 +2985,9 @@ static errr finish_parse_p_race(struct parser *p) {
 	for (r = races; r; r = r->next, num--) {
 		assert(num);
 		r->ridx = num - 1;
+		if (r->evol) {
+			r->r_exp = 100 + max_race_evol_lev(r) * 3 / 10 * 5;
+		}
 	}
 	parser_destroy(p);
 	return 0;
