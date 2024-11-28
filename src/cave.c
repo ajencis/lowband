@@ -408,10 +408,12 @@ void cave_free(struct chunk *c) {
 	for (y = 0; y < c->height; y++) {
 		for (x = 0; x < c->width; x++) {
 			mem_free(c->squares[y][x].info);
-			if (c->squares[y][x].trap)
+			if (c->squares[y][x].trap) {
 				square_free_trap(c, loc(x, y));
-			if (c->squares[y][x].obj)
+			}
+			if (c->squares[y][x].obj) {
 				object_pile_free(c, p_c, c->squares[y][x].obj);
+			}
 		}
 		mem_free(c->squares[y]);
 		mem_free(c->noise.grids[y]);
@@ -425,8 +427,9 @@ void cave_free(struct chunk *c) {
 	mem_free(c->objects);
 	mem_free(c->monsters);
 	mem_free(c->monster_groups);
-	if (c->name)
+	if (c->name) {
 		string_free(c->name);
+	}
 	mem_free(c);
 }
 

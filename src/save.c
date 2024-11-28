@@ -111,10 +111,11 @@ static void wr_item(const struct object *obj)
 		wr_string("");
 	}
 
-	if (obj->effect)
+	if (obj->effect) {
 		wr_byte(1);
-	else
+	} else {
 		wr_byte(0);
+	}
 
 	wr_s16b(obj->timeout);
 
@@ -134,8 +135,9 @@ static void wr_item(const struct object *obj)
 	}
 	wr_byte(obj->notice);
 
-	for (i = 0; i < OF_SIZE; i++)
+	for (i = 0; i < OF_SIZE; i++) {
 		wr_byte(obj->flags[i]);
+	}
 
 	for (i = 0; i < OBJ_MOD_MAX; i++) {
 		wr_s16b(obj->modifiers[i]);
@@ -416,6 +418,22 @@ void wr_quests(void)
 }
 
 
+static void wr_followers(void)
+{
+	struct follower *foll;
+	int count = 0;
+	for (foll = player->upkeep->follow; foll; foll = foll->next) {
+		++count;
+	}
+	wr_u16b(count);
+
+	for (foll = player->upkeep->follow; foll; foll = foll->next) {
+		wr_u16b(foll->delay);
+		wr_monster(foll->mon);
+	}
+}
+
+
 void wr_player(void)
 {
 	int i;
@@ -692,6 +710,8 @@ void wr_misc(void)
 
 	wr_byte(player->checked_tome_this_expedition ? 1 : 0);
 	wr_u32b(player->monster_xp);
+
+	wr_followers();
 }
 
 

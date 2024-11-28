@@ -1945,8 +1945,9 @@ bool player_can_cast_prereq(void)
  */
 bool player_can_study_prereq(void)
 {
-	if (player_can_study(player, false)) return true;
+	//if (player_can_study(player, false)) return true;
 	if (player->state.skills[SKILL_MAGIC] > 0) return true;
+	msg("You don't know magic!");
 	return false;
 }
 

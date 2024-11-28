@@ -1351,14 +1351,16 @@ void monster_take_timed_damage(struct monster *mon, int energy)
 		int pois1 = (mon->m_timed[MON_TMD_POISONED] + 3) / 4;
 		int pois2 = (mon->m_timed[MON_TMD_POISONED] + 5) / 4;
 		int pdam = (pois1 * pois2 + energy - 1) / energy;
-		if (pdam > 0)
+		if (pdam > 0) {
 			mon_take_nonplayer_hit(pdam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true);
+		}
 	}
 	if (mon->m_timed[MON_TMD_SUFFOCATING] > 0) {
 		int suff = mon->m_timed[MON_TMD_SUFFOCATING] * 2;
 		int sdam = (suff + 50 + energy - 1) / energy;
-		if (sdam > 0)
+		if (sdam > 0) {
 			mon_take_nonplayer_hit(sdam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true);
+		}
 	}
 }
 

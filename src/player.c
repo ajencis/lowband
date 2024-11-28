@@ -525,6 +525,15 @@ void player_cleanup_members(struct player *p)
 	}
 	mem_free(p->timed);
 	if (p->upkeep) {
+		if (p->upkeep->follow) {
+			struct follower *curr = p->upkeep->follow;
+			while (curr) {
+				struct follower *next = curr->next;
+				mem_free(curr->mon);
+				mem_free(curr);
+				curr = next;
+			}
+		}
 		mem_free(p->upkeep->quiver);
 		mem_free(p->upkeep->inven);
 		mem_free(p->upkeep->steps);

@@ -5109,8 +5109,9 @@ void cleanup_angband(void)
 	chunk_list = NULL;
 
 	for (i = 0; modules[i]; i++) {
-		if (modules[i]->cleanup)
+		if (modules[i]->cleanup) {
 			modules[i]->cleanup();
+		}
 	}
 
 	event_remove_all_handlers();

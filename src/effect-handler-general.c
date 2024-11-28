@@ -2302,33 +2302,38 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 
 		/* Continue summoning until we reach the current dungeon level */
 		while ((val < player->depth * rlev) && (attempts < summon_max)) {
-			int temp;
+			struct monster *summoned;
 
 			/* Get a monster */
-			temp = summon_specific(srcgrid, rlev + level_boost, summon_type,
+			summoned = summon_specific(srcgrid, rlev + level_boost, summon_type,
 								   false, false, faction);
 
-			val += temp * temp;
+			if (summoned) {
+				val += summoned->race->level * summoned->race->level;
+			}
 
 			/* Increase the attempt in case no monsters were available. */
 			attempts++;
 
 			/* Increase count of summoned monsters */
-			if (val > 0)
+			if (val > 0) {
 				count++;
+			}
 		}
 
 		/* If the summon failed and there's a fallback type, use that */
 		if ((count == 0) && (fallback_type >= 0)) {
 			attempts = 0;
 			while ((val < player->depth * rlev) && (attempts < summon_max)) {
-				int temp;
+				struct monster *summoned;
 
 				/* Get a monster */
-				temp = summon_specific(srcgrid, rlev + level_boost,
+				summoned = summon_specific(srcgrid, rlev + level_boost,
 									   fallback_type, false, false, faction);
 
-				val += temp * temp;
+				if (summoned) {
+					val += summoned->race->level * summoned->race->level;
+				}
 
 				/* Increase the attempt in case no monsters were available. */
 				attempts++;
@@ -2341,16 +2346,21 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 
 		/* Summoner failed */
 		if (!count) {
-			if (isplayer)
+			if (isplayer) {
 				msg("Nothing comes.");
-			else
+			}
+			else {
 				msg("But nothing comes.");
+			}
 		}
 	} else {
 		/* If not a monster summon, it's simple */
 		while (summon_max) {
-			count += summon_specific(player->grid, player->depth + level_boost,
-									 summon_type, true, one_in_(4), 0);
+			struct monster *summoned = summon_specific(player->grid, player->depth + level_boost,
+					summon_type, true, one_in_(4), 0);
+			if (summoned) {
+				count += summoned->race->level;
+			}
 			summon_max--;
 		}
 	}
@@ -2359,9 +2369,10 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 	context->ident = true;
 
 	/* Message for the blind */
-	if (count && player->timed[TMD_BLIND])
+	if (count && player->timed[TMD_BLIND]) {
 		msgt(message_type, "You hear %s appear nearby.",
-			 (count > 1 ? "many things" : "something"));
+				(count > 1 ? "many things" : "something"));
+	}
 
 	return true;
 }

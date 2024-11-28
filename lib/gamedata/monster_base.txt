@@ -38,6 +38,7 @@ flags:MOVE_BODY | CLEAR_WEB
 flags:NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
 flags:RES_SLASHING
+flags:SAPIENT
 desc:Ancient Dragon/Wyrm
 body:Dragon
 attr:AC:3
@@ -58,6 +59,7 @@ flags:ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR | TAKE_ITEM | CLEAR_WEB
 flags:IM_COLD | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
+flags:SAPIENT
 desc:Ainu/maia
 body:Humanoid
 attr:MAGIC:2
@@ -163,6 +165,7 @@ name:eye
 glyph:e
 pain:1
 flags:CLEAR_WEB
+flags:SAPIENT
 desc:Floating Eye
 body:Beholder
 attr:MAGIC:2
@@ -217,6 +220,7 @@ glyph:P
 pain:1
 flags:GIANT | EVIL | SPIRIT
 flags:BASH_DOOR | CLEAR_WEB
+flags:SAPIENT
 desc:Giant Humanoid
 attr:DAMAGE:3
 attr:MAGIC:-2
@@ -240,6 +244,7 @@ name:humanoid
 glyph:h
 pain:1
 flags:OPEN_DOOR | BASH_DOOR | SPIRIT | CLEAR_WEB
+flags:SAPIENT
 desc:Hobbit/Elf/Dwarf
 body:Humanoid
 
@@ -311,6 +316,7 @@ glyph:k
 pain:1
 flags:EVIL
 flags:OPEN_DOOR | BASH_DOOR | SPIRIT | CLEAR_WEB
+flags:SAPIENT
 desc:Kobold
 body:Humanoid
 
@@ -323,6 +329,7 @@ flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
 flags:FORCE_SLEEP
 flags:RES_PIERCING | RES_SLASHING
+flags:SAPIENT
 desc:Lich
 body:Humanoid
 attr:MAGIC:2
@@ -351,6 +358,7 @@ flags:ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
+flags:SAPIENT
 desc:Major Demon
 body:Humanoid
 attr:DAMAGE:3
@@ -379,6 +387,7 @@ pain:1
 flags:DEMON | EVIL | SPIRIT
 flags:CLEAR_WEB
 flags:IM_FIRE
+flags:SAPIENT
 desc:Minor Demon
 body:Humanoid
 attr:DAMAGE:3
@@ -410,6 +419,7 @@ glyph:n
 pain:1
 flags:FEMALE | EVIL | HURT_COLD | SPIRIT
 flags:BASH_DOOR | CLEAR_WEB
+flags:SAPIENT
 desc:Naga
 attr:AC:3
 attr:HP:-1
@@ -422,6 +432,7 @@ glyph:O
 pain:1
 flags:GIANT | EVIL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
+flags:SAPIENT
 desc:Ogre
 body:Humanoid
 attr:HP:1
@@ -435,6 +446,7 @@ glyph:o
 pain:1
 flags:MALE | ORC | EVIL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
+flags:SAPIENT
 desc:Orc
 body:Humanoid
 
@@ -442,6 +454,7 @@ name:person
 glyph:p
 pain:1
 flags:BASH_DOOR | SPIRIT | CLEAR_WEB
+flags:SAPIENT
 desc:Person/Human
 body:Humanoid
 
@@ -528,6 +541,7 @@ name:townsfolk
 glyph:t
 pain:4
 flags:SPIRIT | CLEAR_WEB
+flags:SAPIENT
 desc:Townsfolk
 body:Humanoid
 
@@ -552,6 +566,7 @@ pain:1
 flags:TROLL | EVIL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:RES_PIERCING
+flags:SAPIENT
 desc:Troll
 body:Humanoid
 attr:SPEED:-1
@@ -568,6 +583,7 @@ flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:HURT_LIGHT | HURT_FIRE | IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN
 flags:FORCE_SLEEP
 flags:RES_BLUDGEONING | RES_SLASHING
+flags:SAPIENT
 desc:Vampire
 body:Humanoid
 attr:SPEED:2
@@ -635,6 +651,7 @@ pain:1
 flags:ANIMAL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:IM_ACID
+flags:SAPIENT
 desc:Yeek
 body:Humanoid
 attr:SPEED:1
@@ -649,6 +666,7 @@ pain:1
 flags:ANIMAL
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:IM_COLD
+flags:SAPIENT
 desc:Yeti
 body:Humanoid
 attr:HP:3

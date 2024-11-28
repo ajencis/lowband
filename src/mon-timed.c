@@ -61,8 +61,9 @@ static struct mon_timed_effect {
 int mon_timed_name_to_idx(const char *name)
 {
     for (size_t i = 0; i < MON_TMD_MAX; i++) {
-        if (streq(name, effects[i].name))
-            return i;
+        if (streq(name, effects[i].name)) {
+			return i;
+		}
     }
 
     return -1;

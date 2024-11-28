@@ -23,6 +23,7 @@
 #include "generate.h"
 #include "init.h"
 #include "mon-desc.h"
+#include "mon-group.h"
 #include "mon-make.h"
 #include "mon-move.h"
 #include "mon-util.h"
@@ -736,8 +737,9 @@ void process_world(struct chunk *c)
 	}
 
 	/* Regenerate Hit Points if needed */
-	if (player->chp < player->mhp)
+	if (player->chp < player->mhp) {
 		player_regen_hp(player);
+	}
 
 	/* Regenerate or lose mana */
 	player_regen_mana(player);
@@ -772,8 +774,9 @@ void process_world(struct chunk *c)
 	recharge_objects();
 
 	/* Notice things after time */
-	if (!(turn & 127))
+	if (!(turn & 127)) {
 		equip_learn_after_time(player);
+	}
 
 	/* Decrease trap timeouts */
 	for (y = 0; y < c->height; y++) {
@@ -783,8 +786,9 @@ void process_world(struct chunk *c)
 			while (trap) {
 				if (trap->timeout) {
 					trap->timeout--;
-					if (!trap->timeout)
+					if (!trap->timeout) {
 						square_light_spot(c, grid);
+					}
 				}
 				trap = trap->next;
 			}
@@ -844,6 +848,55 @@ void process_world(struct chunk *c)
 				msgt(MSG_TPLEVEL, "You are thrown back in an explosion!");
 				effect_simple(EF_DESTRUCTION, source_none(), "0", 0, 5, 0, 0, 0, NULL);
 			}
+		}
+	}
+
+	// L: following monsters get here eventually
+	struct follower *curr, *prev = NULL;
+	for (curr = player->upkeep->follow; curr; curr = curr->next) {
+		bool placed = false;
+		curr->delay--;
+
+		if (curr->delay <= 0) {
+			struct loc egrid = player->upkeep->entered;
+
+			if (!square(c, egrid)->mon && !loc_eq(egrid, player->grid)) {
+				int new_midx;
+				struct monster *new_mon;
+
+				curr->mon->group_info[PRIMARY_GROUP].index = monster_group_index_new(c);
+				new_midx = place_monster(c, egrid, curr->mon, 0);
+				new_mon = cave_monster(c, new_midx);
+
+				if (monster_is_visible(new_mon)) {
+					const char *act = square_isdownstairs(c, egrid) ? "comes up the stairs" :
+							square_isupstairs(c, egrid) ? "comes down the stairs" :
+							"appears";
+					char mdesc[80];
+				
+					monster_desc(mdesc, sizeof(mdesc), new_mon, MDESC_TARG | MDESC_CAPITAL);
+
+					msg("%s %s.", mdesc, act);
+				}
+
+				player->upkeep->update |= PU_UPDATE_VIEW | PU_MONSTERS;
+
+				if (prev) {
+					prev->next = curr->next;
+				}
+				else {
+					player->upkeep->follow = curr->next;
+				}
+				mem_free(curr->mon);
+				mem_free(curr);
+				placed = true;
+			}
+			else {
+				curr->delay = randint1(5) + randint1(5);
+			}
+		}
+		if (!placed) {
+			prev = curr;
 		}
 	}
 }
@@ -1033,6 +1086,8 @@ void on_new_level(void)
 		health_track(player->upkeep, NULL);
 	}
 
+	player->upkeep->entered = player->grid;
+
 	/* L: new level, new mana */
 	player->floor_mana = randint0(player->depth) + randint0(player->depth) +
 	                     randint0(25) + randint0(25) + 2;
@@ -1075,16 +1130,61 @@ void on_new_level(void)
 	}
 
 	/* Announce (or repeat) the feeling */
-	if (player->depth)
+	if (player->depth) {
 		display_feeling(false);
+	}
 
 	/* Check the surroundings */
 	search(player);
 
 	/* Give player minimum energy to start a new level, but do not reduce
 	 * higher value from savefile for level in progress */
-	if (player->energy < z_info->move_energy)
+	if (player->energy < z_info->move_energy) {
 		player->energy = z_info->move_energy;
+	}
+}
+
+static void increase_follower_delay(struct player *p)
+{
+	struct follower *foll;
+	int increase = distance(p->grid, p->upkeep->entered);
+	for (foll = p->upkeep->follow; foll; foll = foll->next) {
+		foll->delay += increase;
+	}
+}
+
+static void monsters_to_followers(struct chunk *c)
+{
+	int i, cmm = cave_monster_max(c);
+
+	for (i = 1; i < cmm; i++) {
+		struct monster *mon = cave_monster(c, i);
+
+		if (!mon) continue;
+		if (!mon->race) continue;
+		if (rf_has(mon->race->flags, RF_NEVER_MOVE)) continue;
+		if (mon->faction != '@') continue;
+
+		struct follower *follow = mem_zalloc(sizeof(*follow));
+		struct monster *fmon = mem_zalloc(sizeof(*fmon));
+
+		memcpy(fmon, mon, sizeof(*fmon));
+
+		follow->delay = distance(player->grid, mon->grid);
+		fmon->group_info[PRIMARY_GROUP].index = 0;
+		fmon->group_info[PRIMARY_GROUP].role = 0;
+		fmon->grid = loc(0, 0);
+		fmon->mimicked_obj = NULL;
+		fmon->held_obj = NULL;
+		fmon->midx = 0;
+		fmon->energy = 0;
+
+		follow->mon = fmon;
+		follow->next = player->upkeep->follow;
+		player->upkeep->follow = follow;
+
+		delete_monster_idx(c, mon->midx);
+	}
 }
 
 /**
@@ -1101,6 +1201,10 @@ static void on_leave_level(void) {
 	notice_stuff(player);
 	update_stuff(player);
 	redraw_stuff(player);
+
+	// L: monsters follow the player
+	increase_follower_delay(player);
+	monsters_to_followers(cave);
 
 	/* Flush messages */
 	event_signal(EVENT_MESSAGE_FLUSH);
@@ -1175,8 +1279,9 @@ void run_game_loop(void)
 			notice_stuff(player);
 			handle_stuff(player);
 			event_signal(EVENT_REFRESH);
-			if (player->is_dead || !player->upkeep->playing)
+			if (player->is_dead || !player->upkeep->playing) {
 				return;
+			}
 
 			/* Process the world every ten turns */
 			if (!(turn % 10) && !player->upkeep->generate_level) {
@@ -1186,8 +1291,9 @@ void run_game_loop(void)
 				notice_stuff(player);
 				handle_stuff(player);
 				event_signal(EVENT_REFRESH);
-				if (player->is_dead || !player->upkeep->playing)
+				if (player->is_dead || !player->upkeep->playing) {
 					return;
+				}
 			}
 
 			/* Give the player some energy */

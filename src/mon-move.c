@@ -150,17 +150,14 @@ static bool monster_can_smell(struct monster *mon)
 static int compare_monsters(const struct monster *mon1,
 							const struct monster *mon2)
 {
-	uint32_t mexp1 = (mon1->original_race) ?
-		mon1->original_race->mexp : mon1->race->mexp;
-	uint32_t mexp2 = (mon2->original_race) ?
-		mon2->original_race->mexp : mon2->race->mexp;
+	// Get levels
+	uint32_t mlev1 = (mon1->original_race) ?
+		mon1->original_race->level : mon1->race->level;
+	uint32_t mlev2 = (mon2->original_race) ?
+		mon2->original_race->level : mon2->race->level;
 
-	/* Compare */
-	if (mexp1 < mexp2) return (-1);
-	if (mexp1 > mexp2) return (1);
-
-	/* Assume equal */
-	return (0);
+	// Compare
+	return mlev1 - mlev2;
 }
 
 /**
@@ -179,7 +176,7 @@ static bool monster_can_kill(struct monster *mon, struct loc grid)
 	}
 
 	if (rf_has(mon->race->flags, RF_KILL_BODY) &&
-		compare_monsters(mon, mon1) > 0) {
+			compare_monsters(mon, mon1) > 10) {
 		return true;
 	}
 
@@ -197,7 +194,7 @@ static bool monster_can_move(struct monster *mon, struct loc grid)
 	if (!mon1) return true;
 
 	if (rf_has(mon->race->flags, RF_MOVE_BODY) &&
-		compare_monsters(mon, mon1) > 0) {
+			compare_monsters(mon, mon1) > 0) {
 		return true;
 	}
 
@@ -222,6 +219,7 @@ bool mon_will_attack_player(const struct monster *mon, const struct player *p)
 {
 	if (mon->faction == '@') return false;
 	if (mon->m_timed[MON_TMD_CHARMED]) return false;
+	if (mon->faction == 't') return false;
 
 	struct monster_race *pmonr = lookup_player_monster(p);
 	// monsters are by default allied to similar monsters even if the similar monster is the player
@@ -2063,12 +2061,7 @@ static bool process_monster_timed(struct monster *mon)
 	if (mon->m_timed[MON_TMD_SLEEP]) {
 		monster_reduce_sleep(mon);
 		return true;
-	}/* else {
-		// Awake, active monsters may become aware
-		if (one_in_(10) && mflag_has(mon->mflag, MFLAG_ACTIVE)) {
-			mflag_on(mon->mflag, MFLAG_AWARE);
-		}
-	}*/
+	}
 
 	if (mon->m_timed[MON_TMD_FAST])
 		mon_dec_timed(mon, MON_TMD_FAST, 1, 0);
@@ -2107,12 +2100,26 @@ static bool process_monster_timed(struct monster *mon)
 
 	if (mon->m_timed[MON_TMD_SUFFOCATING]) {
 		mon_dec_timed(mon, MON_TMD_SUFFOCATING, 1, 0);
-		if (one_in_(3))
+		if (one_in_(3)) {
 			mon_inc_timed(mon, MON_TMD_SLOW, 5, 0);
-		if (one_in_(3))
+		}
+		if (one_in_(3)) {
 			mon_inc_timed(mon, MON_TMD_STUN, 5, 0);
-		if (one_in_(3))
+		}
+		if (one_in_(3)) {
 			mon_inc_timed(mon, MON_TMD_CONF, 5, 0);
+		}
+	}
+
+	if (mon->m_timed[MON_TMD_SUMMONED]) {
+		mon_dec_timed(mon, MON_TMD_SUMMONED, 1, 0);
+		if (!mon->m_timed[MON_TMD_SUMMONED]) {
+			char mdesc[80];
+			monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG | MDESC_CAPITAL);
+			msg("%s vanishes!", mdesc);
+			delete_monster_idx(cave, mon->midx);
+			return true;
+		}
 	}
 
 	/* Always miss turn if held or commanded, one in STUN_MISS_CHANCE chance
@@ -2183,10 +2190,10 @@ void process_monsters(int minimum_energy)
 	bool targcheck = false;
 
 	/* Regenerate hitpoints and mana every 127 game turns */
-	if ((turn & 0x7f) == 0) {
+	if (!(turn & 0x7f)) {
 		regen = true;
 		// Recheck monsters' targets every 2000ish turns
-		if ((turn & 0x7ff) == 0) {
+		if (!(turn & 0x7ff)) {
 			targcheck = true;
 		}
 	}
@@ -2252,24 +2259,30 @@ void process_monsters(int minimum_energy)
 
 		/* Check if the monster is active */
 		if (monster_check_active(mon)) {
+			bool take_turn;
 			/* Set this monster to be the current actor */
 			cave->mon_current = i;
 
 			/* Process timed effects - skip turn if necessary */
-			if (!process_monster_timed(mon)) {
-				/* The monster takes its turn */
-				monster_turn(mon);
+			take_turn = !process_monster_timed(mon);
+
+			// L: pmt can now kill the monster
+			if (mon && mon->race) {
+				if (take_turn) {
+					/* The monster takes its turn */
+					monster_turn(mon);
+				}
+
+				/*
+				 * For symmetry with the player, monster can take
+				 * terrain damage after its turn.
+				 */
+				monster_take_terrain_damage(mon);
+				monster_take_timed_damage(mon, turn_energy(mspeed));
+
+				/* Monster is no longer current */
+				cave->mon_current = -1;
 			}
-
-			/*
-			 * For symmetry with the player, monster can take
-			 * terrain damage after its turn.
-			 */
-			monster_take_terrain_damage(mon);
-			monster_take_timed_damage(mon, turn_energy(mspeed));
-
-			/* Monster is no longer current */
-			cave->mon_current = -1;
 		}
 	}
 

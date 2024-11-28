@@ -1857,6 +1857,8 @@ void run_step(int dir)
 	//msg("entering rs;");
 	/* Trapsafe player will treat the trap as if it isn't there */
 	bool disarm = player_is_trapsafe(player) ? false : true;
+	int i;
+	bool wait;
 
 	/* Start or continue run */
 	if (dir) {
@@ -1864,8 +1866,9 @@ void run_step(int dir)
 		run_init(dir);
 
 		/* Hack -- Set the run counter if no count given */
-		if (player->upkeep->running == 0)
+		if (player->upkeep->running == 0) {
 			player->upkeep->running = 9999;
+		}
 
 		/* Calculate torch radius */
 		player->upkeep->update |= (PU_TORCH);
@@ -2013,18 +2016,39 @@ void run_step(int dir)
 		}
 	}
 
+	wait = false;
+	for (i = 0; i < cave_monster_max(cave); i++) {
+		struct monster *ally = cave_monster(cave, i);
+		if (!ally || !ally->race) {
+			continue;
+		}
+		if (ally->faction != '@') {
+			continue;
+		}
+		if (rf_has(ally->race->flags, RF_NEVER_MOVE) || rf_has(ally->race->flags, RF_RAND_50)) {
+			continue;
+		}
+		int adist = distance(ally->grid, player->grid);
+		if (adist > 4 && adist < 7) {
+			wait = true;
+		}
+	}
+
 	/* Take time */
 	player->upkeep->energy_use = energy_per_move(player);
 
 	/* Move the player; running straight into a trap == trying to disarm */
-	move_player(run_cur_dir, dir && disarm ? true : false);
+	if (!wait) {
+		move_player(run_cur_dir, dir && disarm ? true : false);
+	}
 
 	/* Decrease counter if it hasn't been cancelled */
 	/* occurs after movement so that using p->u->running as flag works */
 	if (player->upkeep->running) {
 		player->upkeep->running--;
-	} else if (!player->upkeep->steps)
+	} else if (!player->upkeep->steps) {
 		return;
+	}
 
 	/* Prepare the next step */
 	if (player->upkeep->running) {

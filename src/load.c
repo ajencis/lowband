@@ -645,6 +645,25 @@ int rd_quests(void)
 }
 
 
+static void rd_followers(void)
+{
+	uint16_t count, i;
+	struct follower *temp;
+
+	rd_u16b(&count);
+
+	for (i = 0; i < count; i++) {
+		temp = player->upkeep->follow;
+		while (temp->next) {
+			temp = temp->next;
+		}
+		temp->next = mem_zalloc(sizeof (struct follower));
+		rd_u16b(&temp->next->delay);
+		rd_monster(cave, temp->next->mon);
+	}
+}
+
+
 /**
  * Read the player information
  */
@@ -1061,6 +1080,8 @@ int rd_misc(void)
 	rd_byte(&tmp8u);
 	player->checked_tome_this_expedition = tmp8u ? true : false;
 	rd_u32b(&player->monster_xp);
+
+	rd_followers();
 
 	return 0;
 }

@@ -109,6 +109,7 @@ dice:1d$N
 expr:N:SPELL_POWER:+ 4 / 5
 desc:Summons foul necromantic minions.
 school:NECROMANCY
+school:SUMMONING
 
 spell:Control Undead:10:0:0
 effect:PROJECT_LOS:CHARM_UNDEAD
@@ -406,3 +407,27 @@ effect:RESTORE_EXP
 desc:Restores experience points to maximum if it is currently below maximum.
 school:HEALING
 school:DIVINATION
+
+
+spell:Summon Monster:20:20:20
+effect:SUMMON:MONSTER
+desc:Summons a monster to aid you.
+school:SUMMONING
+
+spell:Summon Monsters:40:40:40
+effect:SUMMON:MONSTERS
+desc:Summons monsters to aid you.
+school:SUMMONING
+
+spell:Summon Animals:15:15:15
+effect:SUMMON:ANIMAL
+desc:Summons animals to aid you.
+school:SUMMONING
+school:NATURE
+
+spell:Summon Spiders:25:25:25
+effect:SUMMON:SPIDER
+desc:Summons spiders to aid you.
+school:SUMMONING
+school:NATURE
+school:POISON

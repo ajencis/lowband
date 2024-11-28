@@ -39,8 +39,22 @@
 /**
  * L: faction creation
  */
-static void mon_give_faction(struct monster *mon) {
-	mon->faction = mon->race->d_char;
+static void mon_give_faction(struct monster *mon, struct chunk *c)
+{
+	if (c->depth == 0) {
+		mon->faction = 't';
+	}
+	else {
+		mon->faction = mon->race->d_char;
+	}
+}
+
+static bool mon_can_enter_town(struct monster_race *mr)
+{
+	if (rf_has(mr->flags, RF_SMART)) return true;
+	if (rf_has(mr->flags, RF_SAPIENT)) return true;
+
+	return false;
 }
 
 /**
@@ -236,9 +250,10 @@ struct monster_race *get_mon_num(int generated_level, int current_level)
 	struct tm *date = localtime(&cur_time);
 
 	/* Occasionally produce a nastier monster in the dungeon */
-	if (generated_level > 0 && one_in_(z_info->ood_monster_chance))
+	if (generated_level > 0 && one_in_(z_info->ood_monster_chance)) {
 		generated_level += MIN(generated_level / 4 + 2,
 			z_info->ood_monster_amount);
+	}
 
 	total = 0L;
 
@@ -258,16 +273,23 @@ struct monster_race *get_mon_num(int generated_level, int current_level)
 
 		/* No seasonal monsters outside of Christmas */
 		if (rf_has(race->flags, RF_SEASONAL) &&
-			!(date->tm_mon == 11 && date->tm_mday >= 24 && date->tm_mday <= 26))
+			!(date->tm_mon == 11 && date->tm_mday >= 24 && date->tm_mday <= 26)) {
 			continue;
+		}
 
 		/* Only one copy of a unique must be around at the same time */
-		if (rf_has(race->flags, RF_UNIQUE) && (race->cur_num >= race->max_num))
+		if (rf_has(race->flags, RF_UNIQUE) && (race->cur_num >= race->max_num)) {
 			continue;
+		}
 
 		/* Some monsters never appear out of depth */
-		if (rf_has(race->flags, RF_FORCE_DEPTH) && race->level > current_level)
+		if (rf_has(race->flags, RF_FORCE_DEPTH) && race->level > current_level) {
 			continue;
+		}
+
+		if (!mon_can_enter_town(race) && current_level == 0) {
+			continue;
+		}
 
 		/* Accept */
 		table[i].prob3 = table[i].prob2;
@@ -338,16 +360,19 @@ void delete_monster_idx(struct chunk *c, int m_idx)
 	}
 
 	/* Affect light? */
-	if (mon->race->light != 0)
+	if (mon->race->light != 0) {
 		player->upkeep->update |= PU_UPDATE_VIEW | PU_MONSTERS;
+	}
 
 	/* Hack -- remove target monster */
-	if (target_get_monster() == mon)
+	if (target_get_monster() == mon) {
 		target_set_monster(NULL);
+	}
 
 	/* Hack -- remove tracked monster */
-	if (player->upkeep->health_who == mon)
+	if (player->upkeep->health_who == mon) {
 		health_track(player->upkeep, NULL);
+	}
 
 	/* Hack -- remove any command status */
 	if (mon->m_timed[MON_TMD_COMMAND]) {
@@ -414,8 +439,9 @@ void delete_monster(struct chunk *c, struct loc grid)
 	assert(square_in_bounds(c, grid));
 
 	/* Delete the monster (if any) */
-	if (square(c, grid)->mon > 0)
+	if (square(c, grid)->mon > 0) {
 		delete_monster_idx(c, square(c, grid)->mon);
+	}
 }
 
 
@@ -1022,7 +1048,7 @@ int mon_hp(const struct monster_race *race, aspect hp_aspect)
  */
 int16_t place_monster(struct chunk *c, struct loc grid, struct monster *mon,
 		uint8_t origin)
-{	
+{
 	int16_t m_idx;
 	struct monster *new_mon;
 	struct monster_group_info *info = mon->group_info;
@@ -1128,12 +1154,14 @@ static bool place_new_monster_one(struct chunk *c, struct loc grid,
 	if (square_iswarded(c, grid) || square_isdecoyed(c, grid)) return false;
 
 	/* "unique" monsters must be "unique" */
-	if (rf_has(race->flags, RF_UNIQUE) && (race->cur_num >= race->max_num))
+	if (rf_has(race->flags, RF_UNIQUE) && (race->cur_num >= race->max_num)) {
 		return false;
+	}
 
 	/* Depth monsters may NOT be created out of depth */
-	if (rf_has(race->flags, RF_FORCE_DEPTH) && c->depth < race->level)
+	if (rf_has(race->flags, RF_FORCE_DEPTH) && c->depth < race->level) {
 		return false;
+	}
 
 	/* Add to level feeling, note uniques for cheaters */
 	add_to_monster_rating(c, race->level * race->level);
@@ -1195,37 +1223,42 @@ static bool place_new_monster_one(struct chunk *c, struct loc grid,
 	/* Give a random starting energy */
 	mon->energy = (uint8_t)randint0(50);
 
-	/* L: set target to player */
+	/* L: unset target */
 	mon->target.who = TARGET_WHO_NONE;
 
 	/* L: give it a faction */
-	mon_give_faction(mon);
+	mon_give_faction(mon, c);
 
 	/* Force monster to wait for player */
-	if (rf_has(race->flags, RF_FORCE_SLEEP))
+	if (rf_has(race->flags, RF_FORCE_SLEEP)) {
 		mflag_on(mon->mflag, MFLAG_NICE);
+	}
 
 	/* Affect light? */
-	if (mon->race->light != 0)
+	if (mon->race->light != 0) {
 		player->upkeep->update |= PU_UPDATE_VIEW | PU_MONSTERS;
+	}
 
 	/* Is this obviously a monster? (Mimics etc. aren't) */
-	if (rf_has(race->flags, RF_UNAWARE))
+	if (rf_has(race->flags, RF_UNAWARE)) {
 		mflag_on(mon->mflag, MFLAG_CAMOUFLAGE);
-	else
+	} else {
 		mflag_off(mon->mflag, MFLAG_CAMOUFLAGE);
+	}
 
 	/* Set the color if necessary */
-	if (rf_has(race->flags, RF_ATTR_RAND))
+	if (rf_has(race->flags, RF_ATTR_RAND)) {
 		mon->attr = randint1(BASIC_COLORS - 1);
+	}
 
 	/* Set the group info */
 	mon->group_info[PRIMARY_GROUP].index = group_info.index;
 	mon->group_info[PRIMARY_GROUP].role = group_info.role;
 
 	/* Place the monster in the dungeon */
-	if (!place_monster(c, grid, mon, origin))
+	if (!place_monster(c, grid, mon, origin)) {
 		return (false);
+	}
 
 	/* Success */
 	return (true);

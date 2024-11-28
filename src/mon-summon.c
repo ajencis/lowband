@@ -152,6 +152,20 @@ static enum parser_error parse_summon_specific(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_summon_permanent(struct parser *p)
+{
+	struct summon *s = parser_priv(p);
+	int perm = parser_getint(p, "permanent");
+
+	if (!s) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	s->permanent = perm ? true : false;
+
+	return PARSE_ERROR_NONE;
+}
+
 
 
 static struct parser *init_parse_summon(void) {
@@ -166,6 +180,7 @@ static struct parser *init_parse_summon(void) {
 	parser_reg(p, "specific sym specific", parse_summon_specific);
 	parser_reg(p, "fallback str fallback", parse_summon_fallback);
 	parser_reg(p, "desc str desc", parse_summon_desc);
+	parser_reg(p, "permanent int permanent", parse_summon_permanent);
 	return p;
 }
 
@@ -336,7 +351,7 @@ static bool can_call_monster(struct loc grid, struct monster *mon)
 /**
  * Calls a monster from the level and moves it to the desired spot
  */
-static int call_monster(struct loc grid)
+static struct monster *call_monster(struct loc grid)
 {
 	int i, mon_count, choice;
 	int *mon_indices;
@@ -352,7 +367,7 @@ static int call_monster(struct loc grid)
 	}
 
 	/* There were no good monsters on the level */
-	if (mon_count == 0) return (0);
+	if (mon_count == 0) return (NULL);
 
 	/* Make the array */
 	mon_indices = mem_zalloc(mon_count * sizeof(int));
@@ -384,10 +399,10 @@ static int call_monster(struct loc grid)
 	/* Wake it up, make it aware */
 	monster_wake(mon, false, 100);
 
-	/* Set it's energy to 0 */
+	/* Set its energy to 0 */
 	mon->energy = 0;
 
-	return (mon->race->level);
+	return mon;
 }
 
 
@@ -412,13 +427,14 @@ static int call_monster(struct loc grid)
  *
  * Note that this function may not succeed, though this is very rare.
  */
-int summon_specific(struct loc grid, int lev, int type, bool delay, bool call, wchar_t faction)
+struct monster *summon_specific(struct loc grid, int lev, int type, bool delay, bool call, wchar_t faction)
 {
 	int d;
 	struct loc near = grid;
 	struct monster *mon;
 	struct monster_race *race;
 	struct monster_group_info info = { 0, 0 };
+	struct summon *summ = &summons[type];
 
 	/* Look for a location, allow up to 4 squares away */
 	for (d = 1; d < 5; ++d) {
@@ -428,7 +444,7 @@ int summon_specific(struct loc grid, int lev, int type, bool delay, bool call, w
 	}
 
 	/* Failure */
-	if (d == 5) return 0;
+	if (d == 5) return NULL;
 
 	/* Save the "summon" type */
 	summon_specific_type = type;
@@ -440,7 +456,7 @@ int summon_specific(struct loc grid, int lev, int type, bool delay, bool call, w
 	}
 
 	/* L: get the specific summon if it exists */
-	if (summons[type].specific) {
+	if (summ->specific) {
 		race = lookup_monster(summons[type].specific);
 	}
 	else {
@@ -467,14 +483,18 @@ int summon_specific(struct loc grid, int lev, int type, bool delay, bool call, w
 	/* Attempt to place the monster (awake, don't allow groups) */
 	if (!place_new_monster(cave, near, race, false, false, info,
 						   ORIGIN_DROP_SUMMON)) {
-		return (0);
+		return NULL;
 	}
 
 	/* Success, return the level of the monster */
 	mon = square_monster(cave, near);
 
-	if (faction)
+	if (faction) {
 	    mon->faction = faction;
+	}
+	if (!summ->permanent) {
+		mon->m_timed[MON_TMD_SUMMONED] = lev / 2 + randint1(lev) + randint1(50);
+	}
 
 	/* If delay, try to let the player act before the summoned monsters,
 	 * including holding faster monsters for the required number of turns */
@@ -501,7 +521,7 @@ int summon_specific(struct loc grid, int lev, int type, bool delay, bool call, w
 		}
 	}
 
-	return (mon->race->level);
+	return mon;
 }
 
 /**

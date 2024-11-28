@@ -144,7 +144,7 @@ struct cmd_info cmd_action[] =
 	{ "Target monster or location", { '*' }, CMD_NULL, textui_target, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Target closest monster", { '\'' }, CMD_NULL, textui_target_closest, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Dig a tunnel", { 'T', KTRL('T') }, CMD_TUNNEL, NULL, NULL, 0, NULL, NULL, NULL, 0 },
-	{ "Go up staircase", {'<' }, CMD_GO_UP, NULL, NULL, 0, NULL, NULL, NULL, 0 },
+	{ "Go up staircase", { '<' }, CMD_GO_UP, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Go down staircase", { '>' }, CMD_GO_DOWN, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Open a door or a chest", { 'o' }, CMD_OPEN, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Close a door", { 'c' }, CMD_CLOSE, NULL, NULL, 0, NULL, NULL, NULL, 0 },
@@ -153,6 +153,7 @@ struct cmd_info cmd_action[] =
 	{ "Walk into a trap", { 'W', '-' }, CMD_JUMP, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Use an innate power", { 'U' }, CMD_INNATE, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Make a melee attack", { 'j' }, CMD_MELEE, NULL, NULL, 0, NULL, NULL, NULL, 0 },
+	{ "Talk with a monster", { 'y' }, CMD_DIPLOMACY, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 };
 
 /**

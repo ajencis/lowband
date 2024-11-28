@@ -2703,8 +2703,9 @@ struct chunk *town_gen(struct player *p, int min_height, int min_width,
 
 	/* Make some residents */
 	for (i = 0; i < residents; i++) {
-		pick_and_place_distant_monster(c_new, p->grid, 3, true,
-			c_new->depth);
+		int maxdepth = MAX(0, turn / 1000 - 5000);
+		int depth = one_in_(2) ? c_new->depth : randint0(maxdepth + 1);
+		pick_and_place_distant_monster(c_new, p->grid, 3, true,	depth);
 	}
 
 	return c_new;

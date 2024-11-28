@@ -175,6 +175,12 @@ struct player_power {
 	int update;
 };
 
+struct follower {
+	struct follower *next;
+	struct monster *mon;
+	uint16_t delay;
+};
+
 /**
  * Structure for the "quests"
  */
@@ -599,7 +605,10 @@ struct player_upkeep {
 	int recharge_pow;		/* Power of recharge effect */
 	int step_count;			/* Pathfinding: number of steps left */
 	int16_t *steps;			/* Pathfinding: steps in reverse order */
-	struct loc path_dest;		/* Pathfinding: destination grid */
+	struct loc path_dest;	/* Pathfinding: destination grid */
+
+	struct follower *follow;	/* L: monster trying to get to the player */
+	struct loc entered;			/* L: the grid where they entered the level */
 };
 
 /**

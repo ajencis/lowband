@@ -2130,3 +2130,82 @@ void do_cmd_mon_command(struct command *cmd)
 	/* Take a turn */
 	player->upkeep->energy_use = z_info->move_energy;
 }
+
+
+static int hiring_price(struct monster *mon, struct player *p)
+{
+	assert(mon && mon->race);
+	struct monster_race *pmonr = lookup_player_monster(p);
+	int lev = MAX(mon->race->level, mon->race->level / 2 + 5);
+	int dist = distance(mon->grid, player->grid) + 10; // no yelling from a distance!
+	int uniq = monster_is_unique(mon) ? 3 : 1;
+	int allied = pmonr && mon->race->d_char == pmonr->d_char ? 1 : 3; // already friends :)
+
+	int total = lev * lev * dist * uniq * allied;
+	int mult = 1;
+
+	// round a bit
+	while (total >= 100) {
+		total /= 10;
+		mult *= 10;
+	}
+	total /= 5;
+	mult *= 5;
+
+	return total * mult;
+}
+
+
+void do_cmd_diplomacy(struct command *cmd)
+{
+	int dir;
+	struct monster *mon = NULL;
+	struct loc target;
+
+	if (player->timed[TMD_CONFUSED] > 0) {
+		msg("You are too confused to talk!");
+	}
+
+	if (!cmd_get_target(cmd, "target", &dir) == CMD_OK) {
+		return;
+	}
+
+	if (dir == DIR_TARGET) {
+		if (target_okay()) {
+			target_get(&target);
+			mon = square_monster(cave, target);
+		}
+	}
+
+	if (!mon || !mon->race) {
+		return;
+	}
+
+	monster_wake(mon, false, 100);
+
+	if (mon->faction == '@') {
+		msg("They are already your companion!");
+		return;
+	}
+	if (mon_will_attack_player(mon, player)) {
+		msg("They don't look like they want to talk.");
+		return;
+	}
+
+	int price = hiring_price(mon, player);
+
+	char desc[80];
+	monster_desc(desc, sizeof(desc), mon, MDESC_TARG);
+	bool result = get_check(format("Hire %s for %i gold? ", desc, price));
+
+	if (result && player->au >= price) {
+		player->au -= price;
+		mon->faction = '@';
+		my_strcap(desc);
+		msg("%s agrees to follow you.", desc);
+	}
+	else if (result) {
+		msg("You can't afford their price!");
+	}
+}
+
