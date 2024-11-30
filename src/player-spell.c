@@ -893,7 +893,7 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 	int schoolbonus = 0, realmbonus = 0;
 	int skill = p->state.skills[SKILL_MAGIC];
 	int i;
-	struct magic_realm *r = p->realm;
+	const struct magic_realm *r = p->realm;
 
 	for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
 		if (s->school[i] > MS_NONE) {
@@ -994,7 +994,7 @@ struct magic_realm *realm_by_index(int index)
 	return NULL;
 }
 
-struct magic_realm *get_player_realm(const struct player *p)
+const struct magic_realm *get_player_realm(const struct player *p)
 {
 	if (p->realm) return p->realm;
 	// return the first realm in the file if they don't currently have one

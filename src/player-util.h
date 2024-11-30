@@ -70,6 +70,8 @@ int get_power_scale(struct player *p, int power, int scaleto);
 void calc_extra_points(struct player *p, struct player_state *ps);
 bool check_learn_powers(struct player *p, int xpgain);
 bool obj_can_learn_extra_from(const struct object *obj);
+bool learn_extra(struct player *p, int index);
+bool learn_realm(struct player *p, const struct magic_realm *realm);
 int player_class_power(struct player *p, int power);
 int player_class_x_skill(struct player *p, int skill);
 int player_class_c_skill(struct player *p, int skill);

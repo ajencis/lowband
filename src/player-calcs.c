@@ -658,7 +658,7 @@ static void calc_spells(struct player *p)
 {
 	int i, j, k;
 	int num_allowed, num_known;
-	struct magic_realm *realm = get_player_realm(p);
+	const struct magic_realm *realm = get_player_realm(p);
 
 	const struct player_spell *spell;
 
@@ -680,7 +680,7 @@ static void calc_spells(struct player *p)
 	//if (levels < 0) levels = 0;
 
 	/* Number of 1/100 spells per level (or something - needs clarifying) */
-	num_allowed = adj_mag_study(realm->stat);
+	num_allowed = adj_mag_study(p->state.stat_ind[realm->stat]);
 
 	/* Extract total allowed spells (rounded up) */
 	//num_allowed = (((percent_spells * levels) + 50) / 100);
@@ -1636,8 +1636,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* Now deal with vulnerabilities */
 	for (i = 0; i < ELEM_MAX; i++) {
-		if (vuln[i] && (state->el_info[i].res_level < 3))
+		if (vuln[i] && (state->el_info[i].res_level < 3)) {
 			state->el_info[i].res_level--;
+		}
 	}
 
 	/* Calculate light */
@@ -1832,12 +1833,15 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	/* Analyze weight */
 	j = p->upkeep->total_weight;
 	i = weight_limit(state);
-	if (j > i / 2)
+	if (j > i / 2) {
 		state->speed -= ((j - (i / 2)) / (i / 10));
-	if (state->speed < 0)
+	}
+	if (state->speed < 0) {
 		state->speed = 0;
-	if (state->speed > 199)
+	}
+	if (state->speed > 199) {
 		state->speed = 199;
+	}
 
 	/* Apply modifier bonuses (Un-inflate stat bonuses) */
 	state->to_a += adj_dex_ta(state->stat_ind[STAT_DEX]);
@@ -1866,12 +1870,12 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	hold = adj_str_hold(state->stat_ind[STAT_STR]) + 100;
 
 	/* L: magic gets a special bonus from its ability score */
-	if (state->skills[SKILL_MAGIC] > 0) {
+	if (state->skills[SKILL_MAGIC] > 0 && p->realm) {
 		int stat = get_player_realm(p)->stat;
 		int adj = adj_mag_stat(state->stat_ind[stat]);
 		state->skills[SKILL_MAGIC] += MIN(adj, state->skills[SKILL_MAGIC]);
 	} else {
-		state->skills[SKILL_MAGIC] = 0;
+		state->skills[SKILL_MAGIC] = MAX(state->skills[SKILL_MAGIC], 0);
 	}
 
 	/* Analyze launcher */

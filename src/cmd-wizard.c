@@ -36,6 +36,7 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
+#include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
@@ -2953,3 +2954,34 @@ void do_cmd_wiz_wizard_light(struct command *cmd)
 {
 	wiz_light(cave, player, true);
 }
+
+
+void do_cmd_wiz_learn_tome(struct command *cmd)
+{
+	struct object *tome;
+
+	/* Get the item to tweak. */
+	if (cmd_get_arg_item(cmd, "item", &tome) != CMD_OK) {
+		if (!get_item(&tome, "Learn from which item? ",
+				"You have nothing to learn from.", cmd->code,
+				obj_can_learn_extra_from, (USE_EQUIP | USE_INVEN | USE_QUIVER |
+				USE_FLOOR))) {
+			return;
+		}
+		cmd_set_arg_item(cmd, "item", tome);
+	}
+
+	if (of_has(tome->flags, OF_REALM_LEARN)) {
+		const struct magic_realm *mr = realm_by_index(tome->pval);
+		learn_realm(player, mr);
+	}
+	else {
+		while (obj_can_learn_extra_from(tome)) {
+			if (!learn_extra(player, tome->pval)) {
+				break;
+			}
+			calc_extra_points(player, &player->state);
+		}
+	}
+}
+

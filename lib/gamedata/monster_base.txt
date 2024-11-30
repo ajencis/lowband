@@ -335,7 +335,7 @@ body:Humanoid
 attr:MAGIC:2
 attr:AC:1
 attr:HP:-3
-stats:-2:2:0:1:0
+stats:-2:2:1:1:-1
 power:NECROMANCY_MAGIC:20
 skill-magic:5
 

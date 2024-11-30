@@ -255,13 +255,24 @@ bool mon_will_attack_mon(const struct monster *mon, const struct monster *other)
     return false;
 }
 
+
+static bool mon_can_pickup_objects(struct monster *mon)
+{
+	if (!mon || !mon->race) return false;
+
+	if (!rf_has(mon->race->flags, RF_TAKE_ITEM)) return false;
+	if (mon->faction == '@') return false;
+
+	return true;
+}
+
 static bool object_can_be_targeted_by_mon(struct chunk *c, struct monster *mon, struct object *obj)
 {
 	if (!mon || !mon->race) return false;
 	if (!obj) return false;
 	if (!c) return false;
 
-	if (!rf_has(mon->race->flags, RF_TAKE_ITEM)) return false;
+	if (!mon_can_pickup_objects(mon)) return false;
 	if (loc_is_zero(obj->grid)) return false;
 	if (obj->held_m_idx) return false;
 	if (obj->mimicking_m_idx) return false;
@@ -297,7 +308,7 @@ static void mon_find_target(struct chunk *c, struct monster *mon)
 		score = currscore;
 		found = true;
 	}
-	for (i = 0; i < c->obj_max; i++) {
+	for (i = 0; i < c->obj_max && mon_can_pickup_objects(mon); i++) {
 		// check if the object exists and is a legitimate target
 		struct object *obj = c->objects[i];
 		if (!obj) continue;
@@ -1076,10 +1087,11 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 
 	/* L: Don't assume we're heading towards the player */
 	if (mon->target.who == TARGET_WHO_NONE) {
-		if (one_in_(5))
+		if (one_in_(5)) {
 			mon->target.grid = get_move_random(mon);
-		else
+		} else {
 			mon->target.grid = mon->grid;
+		}
 		grid = loc_diff(mon->target.grid, mon->grid);
 	} else if (mon->target.who == TARGET_WHO_GRID) {
 		// we're heading towards a grid so keep the grid intact

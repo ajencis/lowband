@@ -1267,6 +1267,7 @@ void do_cmd_innate(struct command *cmd)
 		msg(fail);
 		return;
 	}
+
 	ref_race = mr;
 	mana = innate_spell_mana(mr);
 
@@ -1315,6 +1316,10 @@ void do_cmd_cast(struct command *cmd)
 
 	if (player->state.skills[SKILL_MAGIC] <= 0) {
 		msg("You do not know magic.");
+		return;
+	}
+
+	if (!player_can_cast(player, true)) {
 		return;
 	}
 

@@ -426,19 +426,6 @@ static void melee_effect_elemental(melee_effect_handler_context_t *context,
 		context->obvious = true;
 	}
 
-	if (context->p) {
-		switch (type) {
-			case PROJ_ACID: msg("You are covered in acid!");
-				break;
-			case PROJ_ELEC: msg("You are struck by electricity!");
-				break;
-			case PROJ_FIRE: msg("You are enveloped in flames!");
-				break;
-			case PROJ_COLD: msg("You are covered with frost!");
-				break;
-		}
-	}
-
 	/* Give a small bonus to ac for elemental attacks */
 	physical_dam = adjust_dam_armor(context->damage, context->ac + 50);
 
@@ -475,6 +462,17 @@ static void melee_effect_elemental(melee_effect_handler_context_t *context,
 			display_blow_message_vs_player(context->method,
 				context->m_name, context->p, reduced);
 			take_hit(context->p, reduced, context->ddesc);
+
+			switch (type) {
+				case PROJ_ACID: msg("You are covered in acid!");
+					break;
+				case PROJ_ELEC: msg("You are struck by electricity!");
+					break;
+				case PROJ_FIRE: msg("You are enveloped in flames!");
+					break;
+				case PROJ_COLD: msg("You are covered with frost!");
+					break;
+			}
 		} else {
 			assert(context->t_mon);
 			display_blow_message_vs_monster(context->method,

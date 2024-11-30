@@ -221,13 +221,13 @@ bool check_player_monster(struct player *p, bool init)
 		}
 		else if (currxp > 0) {
 			uint32_t chance;
-			if (xpneed < UINT32_MAX / 250) {
+			if (xpneed < 0x10000000 / 250) {
 				chance = xpneed * 250 / currxp;
 			}
 			else {
-				chance = UINT32_MAX / currxp;
+				chance = 0x10000000 / currxp;
 			}
-			chance = MIN(chance, 0x10000000);
+			chance = MAX(chance, 25);
 			char *prompt = format("Evolve into a%s %s? ",
 					is_a_vowel(selected->name[0]) ? "n" : "",
 					selected->name);
@@ -236,9 +236,9 @@ bool check_player_monster(struct player *p, bool init)
 					player->monster_xp = 0;
 					do_change = true;
 				}
-				else {
+				/*else {
 					player->monster_xp /= 3;
-				}
+				}*/
 			}
 		}
 	}
@@ -399,7 +399,7 @@ void calc_extra_points(struct player *p, struct player_state *ps)
 {
 	int i;
 	int sum = 0;
-	int mx = (p->lev + 1) / 2;
+	int mx = p->lev;
 
 	for (i = PP_NONE + 1; i < PP_MAX; i++) {
 		int pwr = p->extra_powers[i];
@@ -450,7 +450,7 @@ static bool player_can_learn_from_tome(struct player *p, int index)
 	return true;
 }
 
-static bool learn_realm(struct player *p, struct magic_realm *realm)
+bool learn_realm(struct player *p, const struct magic_realm *realm)
 {
 	if (p->realm) return false;
 
@@ -463,7 +463,7 @@ static bool learn_realm(struct player *p, struct magic_realm *realm)
 	return true;
 }
 
-static bool learn_extra(struct player *p, int index)
+bool learn_extra(struct player *p, int index)
 {
 	if (!player_can_learn_from_tome(p, index)) return false;
 
@@ -529,7 +529,7 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	bool learned = false;
 	uint32_t chance; // one_in_(chance) to learn
 	int mx = tome_max_skill(obj);
-	struct magic_realm *realm;
+	const struct magic_realm *realm;
 
 	if (of_has(obj->flags, OF_REALM_LEARN)) {
 		realm = realm_by_index(obj->pval);
@@ -1774,9 +1774,9 @@ bool player_is_trapsafe(const struct player *p)
  */
 bool player_can_cast(const struct player *p, bool show_msg)
 {
-	if (!p->class->magic.total_spells) {
+	if (p->state.skills[SKILL_MAGIC] <= 0) {
 		if (show_msg) {
-			msg("You cannot pray or produce magics.");
+			msg("You do not know magic.");
 		}
 		return false;
 	}
@@ -1933,9 +1933,6 @@ bool player_can_refuel(struct player *p, bool show_msg)
  */
 bool player_can_cast_prereq(void)
 {
-	if (player->state.skills[SKILL_MAGIC] > 0) return true;
-	msg("You do not know magic.");
-	return false;
 	return player_can_cast(player, true);
 }
 

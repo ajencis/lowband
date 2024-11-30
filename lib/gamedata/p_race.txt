@@ -314,6 +314,29 @@ weight:65:5
 values:RES_POIS[1]
 body:Humanoid
 
+name:Tallfolk
+stats:-1:0:1:2:-2
+skill-disarm-phys:-5
+skill-disarm-magic:-5
+skill-device:5
+skill-save:5
+skill-stealth:15
+skill-search:10
+skill-melee:-5
+skill-shoot:0
+skill-throw:0
+skill-dig:0
+power:POLEARM_SPECIALIZATION:40
+hitdie:7
+exp:120
+infravision:0
+history:1
+age:25:20
+height:99:10
+weight:155:35
+player-flags:LONG_LIMBS
+body:Humanoid
+
 name:Dhampir
 monster:vampire
 

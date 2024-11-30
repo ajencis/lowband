@@ -163,6 +163,7 @@ typedef enum cmd_code {
 	CMD_WIZ_TWEAK_ITEM,
 	CMD_WIZ_WIPE_RECALL,
 	CMD_WIZ_WIZARD_LIGHT,
+	CMD_WIZ_LEARN_TOME,
 
 	/* Hors categorie Commands */
 	CMD_RETIRE,

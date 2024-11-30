@@ -864,6 +864,10 @@ static void get_melee_attack(struct attack_roll *aroll, struct player_state *ps,
 	aroll->ddice = MAX(aroll->ddice, 1);
 
 	melee_crit_chance(aroll, p, ps);
+
+	if (pf_has(p->state.pflags, PF_LONG_LIMBS)) {
+		aroll->range = MAX(aroll->range, 2);
+	}
 }
 
 bool get_unarmed_punch(struct player *p, struct player_state *ps,
@@ -921,10 +925,10 @@ bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct o
 		object_desc(aroll->name, sizeof(aroll->name), obj, mode, p);
 
 		if (obj->tval == TV_HAFTED) {
-			aroll->mtimed[MON_TMD_STUN] = 25;
+			aroll->mtimed[MON_TMD_STUN] += 25;
 		}
 		else if (obj->tval == TV_POLEARM) {
-			aroll->range = 2;
+			aroll->range += 1;
 		}
 		else if (obj->tval == TV_SWORD) {
 			aroll->crit_chance += 10;

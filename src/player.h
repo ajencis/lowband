@@ -731,7 +731,7 @@ struct player {
 
 	uint8_t *player_spell_flags;		/* L: for nonclass spells */
 	uint8_t *player_spell_order;		/* L: for nonclass spells */
-	struct magic_realm *realm;			/* L: how the player casts */
+	const struct magic_realm *realm;	/* L: how the player casts */
 
 	int32_t xp_this_turn;				/* L: how much xp was gained between turns */
 	uint32_t monster_xp;				/* L: XP progression towards evolution */
