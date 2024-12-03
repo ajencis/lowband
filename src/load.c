@@ -325,10 +325,23 @@ static bool rd_monster(struct chunk *c, struct monster *mon)
 	/* Read all the held objects (order is unimportant) */
 	while (true) {
 		struct object *obj = rd_item();
-		if (!obj)
+		if (!obj) {
 			break;
+		}
 
 		pile_insert(&mon->held_obj, obj);
+		assert(obj->oidx);
+		assert(c->objects[obj->oidx] == NULL);
+		c->objects[obj->oidx] = obj;
+	}
+	// L: likewise with equipped objects
+	while (true) {
+		struct object *obj = rd_item();
+		if (!obj) {
+			break;
+		}
+
+		pile_insert(&mon->equipped_obj, obj);
 		assert(obj->oidx);
 		assert(c->objects[obj->oidx] == NULL);
 		c->objects[obj->oidx] = obj;

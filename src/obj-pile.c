@@ -270,8 +270,9 @@ bool pile_contains(const struct object *top, const struct object *obj)
 	const struct object *pile_obj = top;
 
 	while (pile_obj) {
-		if (obj == pile_obj)
+		if (obj == pile_obj) {
 			return true;
+		}
 		pile_obj = pile_obj->next;
 	}
 
@@ -794,14 +795,16 @@ struct object *object_split(struct object *src, int amt)
 
 	/* Distribute charges of wands, staves, or rods */
 	distribute_charges(src, dest, amt);
-	if (src->known)
+	if (src->known) {
 		distribute_charges(src->known, dest->known, amt);
+	}
 
 	/* Modify quantity */
 	dest->number = amt;
 	src->number -= amt;
-	if (src->note)
+	if (src->note) {
 		dest->note = src->note;
+	}
 	if (src->known) {
 		dest->known->number = dest->number;
 		src->known->number = src->number;
@@ -809,8 +812,9 @@ struct object *object_split(struct object *src, int amt)
 	}
 
 	/* Remove any index */
-	if (dest->known)
+	if (dest->known) {
 		dest->known->oidx = 0;
+	}
 	dest->oidx = 0;
 
 	return dest;

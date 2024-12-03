@@ -1254,10 +1254,11 @@ static bool store_create_random(struct store *store, bool reset)
 		level = rand_range(min_level, max_level);
 
 		/* Black Markets have a random object, of a given level */
-		if (store->feat == FEAT_STORE_BLACK)
+		if (store->feat == FEAT_STORE_BLACK) {
 			kind = get_obj_num(level, false, 0);
-		else
+		} else {
 			kind = store_get_choice(store);
+		}
 
 		/*** Pre-generation filters ***/
 

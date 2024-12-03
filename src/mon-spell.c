@@ -356,7 +356,7 @@ void do_mon_spell(int index, struct monster *mon, bool seen)
 	} else {
 		if (target_midx > 0) {
 			hits = test_hit(chance_of_spell_hit(mon, spell),
-				cave_monster(cave, target_midx)->race->ac);
+				mon_ac(cave_monster(cave, target_midx)));
 		} else {
 			hits = check_hit(player, chance_of_spell_hit(mon, spell));
 		}

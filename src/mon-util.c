@@ -824,8 +824,9 @@ void update_smart_learn(struct monster *mon, struct player *p, int flag,
 	if (!monster_is_smart(mon) && one_in_(2)) return;
 
 	/* Analyze the knowledge; fail very rarely */
-	if (one_in_(100))
+	if (one_in_(100)) {
 		return;
+	}
 
 	/* Learn the flag */
 	if (flag) {
@@ -846,9 +847,10 @@ void update_smart_learn(struct monster *mon, struct player *p, int flag,
 	}
 
 	/* Learn the element */
-	if (element_ok)
+	if (element_ok) {
 		mon->known_pstate.el_info[element].res_level
 			= p->state.el_info[element].res_level;
+	}
 }
 
 /**
@@ -967,8 +969,6 @@ void monster_death(struct monster *mon, struct player *p, bool stats)
 {
 	int dump_item = 0;
 	int dump_gold = 0;
-	struct object *obj = mon->held_obj;
-
 	bool visible = monster_is_visible(mon) || monster_is_unique(mon);
 
 	/* Delete any mimicked objects */
@@ -978,42 +978,54 @@ void monster_death(struct monster *mon, struct player *p, bool stats)
 	}
 
 	/* Drop objects being carried */
-	while (obj) {
-		struct object *next = obj->next;
+	while (true) {
+		struct object *obj;
+		if (mon->held_obj) {
+			obj = mon->held_obj;
+			pile_excise(&mon->held_obj, obj);
+		}
+		else if (mon->equipped_obj) {
+			obj = mon->equipped_obj;
+			pile_excise(&mon->equipped_obj, obj);
+		}
+		else {
+			break;
+		}
 
 		/* Object no longer held */
 		obj->held_m_idx = 0;
-		pile_excise(&mon->held_obj, obj);
 
 		/* Count it and drop it - refactor once origin is a bitflag */
 		if (!stats) {
-			if (tval_is_money(obj) && (obj->origin != ORIGIN_STOLEN))
+			if (tval_is_money(obj) && (obj->origin != ORIGIN_STOLEN)) {
 				dump_gold++;
-			else if (!tval_is_money(obj) && ((obj->origin == ORIGIN_DROP)
+			} else if (!tval_is_money(obj) && ((obj->origin == ORIGIN_DROP)
 					|| (obj->origin == ORIGIN_DROP_PIT)
 					|| (obj->origin == ORIGIN_DROP_VAULT)
 					|| (obj->origin == ORIGIN_DROP_SUMMON)
 					|| (obj->origin == ORIGIN_DROP_SPECIAL)
 					|| (obj->origin == ORIGIN_DROP_BREED)
 					|| (obj->origin == ORIGIN_DROP_POLY)
-					|| (obj->origin == ORIGIN_DROP_WIZARD)))
+					|| (obj->origin == ORIGIN_DROP_WIZARD))) {
 				dump_item++;
+			}
 		}
 
 		/* Change origin if monster is invisible, unless we're in stats mode */
-		if (!visible && !stats)
+		if (!visible && !stats) {
 			obj->origin = ORIGIN_DROP_UNKNOWN;
+		}
 
 		drop_near(cave, &obj, 0, mon->grid, true, false);
-		obj = next;
 	}
 
 	/* Forget objects */
 	mon->held_obj = NULL;
 
 	/* Take note of any dropped treasure */
-	if (visible && (dump_item || dump_gold))
+	if (visible && (dump_item || dump_gold)) {
 		lore_treasure(mon, dump_item, dump_gold);
+	}
 
 	/* Update monster list window */
 	p->upkeep->redraw |= PR_MONLIST;
@@ -1049,10 +1061,11 @@ static void player_kill_monster(struct monster *mon, struct player *p,
 
 	/* Play a special sound if the monster was unique */
 	if (monster_is_unique(mon)) {
-		if (mon->race->base == lookup_monster_base("Morgoth"))
+		if (mon->race->base == lookup_monster_base("Morgoth")) {
 			soundfx = MSG_KILL_KING;
-		else
+		} else {
 			soundfx = MSG_KILL_UNIQUE;
+		}
 	}
 
 	/* Death message */
@@ -1071,15 +1084,16 @@ static void player_kill_monster(struct monster *mon, struct player *p,
 		/* Make sure to flush any monster messages first */
 		notice_stuff(p);
 
-		if (!monster_is_visible(mon))
+		if (!monster_is_visible(mon)) {
 			/* Death by physical attack -- invisible monster */
 			msgt(soundfx, "You have killed %s.", m_name);
-		else if (monster_is_destroyed(mon))
+		} else if (monster_is_destroyed(mon)) {
 			/* Death by Physical attack -- non-living monster */
 			msgt(soundfx, "You have destroyed %s.", m_name);
-		else
+		} else {
 			/* Death by Physical attack -- living monster */
 			msgt(soundfx, "You have slain %s.", m_name);
+		}
 	}
 
 	/* Player level */
@@ -1762,6 +1776,19 @@ bool monster_revert_shape(struct monster *mon)
 	}
 
 	return false;
+}
+
+int mon_ac(struct monster *mon)
+{
+	int base = mon->race->ac, ac = 0, to_a = 0;
+	struct object *obj;
+
+	for (obj = mon->equipped_obj; obj; obj = obj->next) {
+		ac += obj->ac;
+		to_a = object_to_ac(obj);
+	}
+
+	return MAX(base, ac) + MIN(base, ac) / 2 + to_a;
 }
 
 

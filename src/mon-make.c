@@ -20,6 +20,7 @@
 #include "alloc.h"
 #include "game-world.h"
 #include "init.h"
+#include "obj-gear.h"
 #include "mon-group.h"
 #include "mon-lore.h"
 #include "mon-make.h"
@@ -935,6 +936,40 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 		}
 	}
 
+	// L: give them gear
+	if (rf_has(effective_race->flags, RF_GEAR) && effective_race->body && effective_race->body->count) {
+		const struct equip_slot *slot;
+		for (slot = effective_race->body->slots; slot; slot = slot->next) {
+			int tvals[3] = { -1, -1, -1 };
+			switch (slot->type)
+			{
+				case EQUIP_BOW: tvals[0] = TV_BOW; break;
+				case EQUIP_BODY_ARMOR: tvals[0] = TV_SOFT_ARMOR; tvals[1] = TV_HARD_ARMOR; break;
+				case EQUIP_BOOTS: tvals[0] = TV_BOOTS; break;
+				case EQUIP_CLOAK: tvals[0] = TV_CLOAK; break;
+				case EQUIP_GLOVES: tvals[0] = TV_GLOVES; break;
+				case EQUIP_HAT: tvals[0] = TV_HELM; break;
+				case EQUIP_SHIELD: tvals[0] = TV_SHIELD; break;
+				case EQUIP_WEAPON: tvals[0] = TV_POLEARM; tvals[1] = TV_HAFTED; tvals[2] = TV_SWORD; break;
+			}
+			int choice = tvals[randint0(3)];
+			if (choice != -1) {
+				obj = make_object(c, level, one_in_(100), one_in_(100), false, NULL, choice);
+				if (obj) {
+					obj->origin = origin;
+					obj->origin_depth = convert_depth_to_origin(c->depth);
+					obj->origin_race = effective_race;
+					obj->number = 1;
+
+					obj->grid = loc(0, 0);
+					obj->held_m_idx = mon->midx;
+					list_object(c, obj);
+					pile_insert(&mon->equipped_obj, obj);
+				}
+			}
+		}
+	}
+
 	return any;
 }
 
@@ -1245,6 +1280,9 @@ static bool place_new_monster_one(struct chunk *c, struct loc grid,
 	} else {
 		mflag_off(mon->mflag, MFLAG_CAMOUFLAGE);
 	}
+
+	// L: have it try to equip its gear if it wants to
+	mflag_on(mon->mflag, MFLAG_CHECK_EQ);
 
 	/* Set the color if necessary */
 	if (rf_has(race->flags, RF_ATTR_RAND)) {

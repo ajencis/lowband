@@ -38,6 +38,7 @@
 #include "mon-util.h"
 #include "mon-timed.h"
 #include "obj-desc.h"
+#include "obj-gear.h"
 #include "obj-ignore.h"
 #include "obj-knowledge.h"
 #include "obj-pile.h"
@@ -215,10 +216,17 @@ static bool monster_hates_grid(struct monster *mon, struct loc grid)
 }
 
 
+bool mon_will_follow_player(const struct monster *mon, const struct player *p)
+{
+	if (mon->faction == '@') return true;
+	if (mon->m_timed[MON_TMD_CHARMED]) return true;
+
+	return false;
+}
+
 bool mon_will_attack_player(const struct monster *mon, const struct player *p)
 {
-	if (mon->faction == '@') return false;
-	if (mon->m_timed[MON_TMD_CHARMED]) return false;
+	if (mon_will_follow_player(mon, p)) return false;
 	if (mon->faction == 't') return false;
 
 	struct monster_race *pmonr = lookup_player_monster(p);
@@ -404,8 +412,9 @@ bool mon_check_target(struct chunk *c, struct monster *mon)
 		recheck = true;
 	}
 
-	if (recheck)
+	if (recheck) {
 		mon_find_target(c, mon);
+	}
 
 	if (mon->target.who != TARGET_WHO_PLAYER && mon->target.who != TARGET_WHO_GRID &&
 			!monster_can_see_player(mon) && !monster_can_smell(mon) && !monster_can_hear(mon)) {
@@ -422,6 +431,99 @@ bool mon_check_target(struct chunk *c, struct monster *mon)
  * These routines, culminating in get_move(), choose if and where a monster
  * will move on its turn
  * ------------------------------------------------------------------------ */
+
+static bool monster_turn_equip_item(struct monster *mon)
+{
+	if (!mflag_has(mon->mflag, MFLAG_CHECK_EQ)) {
+		return false;
+	}
+	const struct player_body *body = mon->race->body;
+	struct object *equipped, *to_equip = NULL, *to_unequip = NULL;
+	int i, best_best_benefit = 0;
+	struct equip_slot *slot;
+	char mdesc[80], odesc[80];
+	if (!body || body->count == 0) {
+		return false;
+	}
+
+	struct object **obj_slot = mem_zalloc(sizeof(struct object *) * body->count);
+	for (equipped = mon->equipped_obj; equipped; equipped = equipped->next) {
+		int type = wield_slot_type(equipped);
+		if (type == -1) {
+			continue;
+		}
+		for (slot = body->slots, i = 0; slot && i < body->count; slot = slot->next, ++i) {
+			if (slot->type == type) {
+				obj_slot[i] = equipped;
+				break;
+			}
+		}
+	}
+
+	for (slot = body->slots, i = 0; slot && i < body->count; slot = slot->next, ++i) {
+		struct object *curr, *best = obj_slot[i];
+		int best_ac = best ? best->ac + object_to_ac(best) : 0;
+		for (curr = mon->held_obj; curr; curr = curr->next) {
+			if (wield_slot_type(curr) != slot->type) {
+				continue;
+			}
+			int curr_ac = curr->ac + object_to_ac(curr);
+			if (curr_ac > best_ac) {
+				best = curr;
+				best_ac = curr_ac;
+			}
+		}
+		if (best && best != obj_slot[i]) {
+			int best_benefit = best_ac - (obj_slot[i] ? obj_slot[i]->ac + object_to_ac(obj_slot[i]) : 0);
+			if (best_benefit > best_best_benefit) {
+				best_best_benefit = best_benefit;
+				if (obj_slot[i]) {
+					assert(obj_slot[i]);
+					to_unequip = obj_slot[i];
+					to_equip = NULL;
+				}
+				else {
+					assert(best);
+					to_equip = best;
+					to_unequip = NULL;
+				}
+				break;
+			}
+		}
+	}
+
+	mem_free(obj_slot);
+
+	monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG | MDESC_CAPITAL);
+
+	if (to_unequip) {
+		object_desc(odesc, sizeof(odesc), to_unequip, ODESC_TERSE | ODESC_PREFIX, player);
+		pile_excise(&mon->equipped_obj, to_unequip);
+		pile_insert(&mon->held_obj, to_unequip);
+		msg("%s unequips %s.", mdesc, odesc);
+		return true;
+	}
+	if (to_equip) {
+		if (monster_is_visible(mon)) {
+			object_see(player, to_equip);
+		}
+		if (to_equip->number > 1) {
+			struct object *new = object_split(to_equip, 1);
+			pile_insert(&mon->equipped_obj, new);
+			object_desc(odesc, sizeof(odesc), new, ODESC_PREFIX, player);
+		} else {
+			object_desc(odesc, sizeof(odesc), to_equip, ODESC_PREFIX, player);
+			pile_excise(&mon->held_obj, to_equip);
+			pile_insert(&mon->equipped_obj, to_equip);
+		}
+		msg("%s equips %s.", mdesc, odesc);
+		return true;
+	}
+
+	mflag_off(mon->mflag, MFLAG_CHECK_EQ);
+	return false;
+}
+
 /**
  * Calculate minimum and desired combat ranges.  -BR-
  *
@@ -1070,18 +1172,6 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 	bool done = false;
 	bool attacking = false;
 
-	/*
-	if (mon->target.who == TARGET_WHO_PLAYER)
-		target = monster_is_decoyed(mon) ? cave_find_decoy(cave) : player->grid;
-	else if (mon->target.who == TARGET_WHO_MONSTER && cave_monster(cave, mon->target.midx)->race)
-		target = cave->monsters[mon->target.midx].grid;
-	else if (mon->target.who == TARGET_WHO_OBJECT &&
-			object_can_be_targeted_by_mon(cave, mon, cave->objects[mon->target.oidx]))
-		target = cave->objects[mon->target.oidx]->grid;
-	else
-		target = mon->grid;
-	*/
-
 	/* Calculate range */
 	get_move_find_range(mon);
 
@@ -1288,25 +1378,30 @@ static bool monster_turn_multiply(struct monster *mon)
 	if (player->upkeep->arena_level) return false;  
 
 	/* Count the adjacent monsters */
-	for (y = mon->grid.y - 1; y <= mon->grid.y + 1; y++)
-		for (x = mon->grid.x - 1; x <= mon->grid.x + 1; x++)
+	for (y = mon->grid.y - 1; y <= mon->grid.y + 1; y++) {
+		for (x = mon->grid.x - 1; x <= mon->grid.x + 1; x++) {
 			if (square(cave, loc(x, y))->mon > 0) k++;
+		}
+	}
 
 	/* Multiply slower in crowded areas */
 	if ((k < 4) && (k == 0 || one_in_(k * z_info->repro_monster_rate))) {
 		/* Successful breeding attempt, learn about that now */
-		if (monster_is_visible(mon))
+		if (monster_is_visible(mon)) {
 			rf_on(lore->flags, RF_MULTIPLY);
+		}
 
 		/* Leave now if not a breeder */
-		if (!rf_has(mon->race->flags, RF_MULTIPLY))
+		if (!rf_has(mon->race->flags, RF_MULTIPLY)) {
 			return false;
+		}
 
 		/* Try to multiply */
 		if (multiply_monster(mon)) {
 			/* Make a sound */
-			if (monster_is_visible(mon))
+			if (monster_is_visible(mon)) {
 				sound(MSG_MULTIPLY);
+			}
 
 			/* Multiplying takes energy */
 			return true;
@@ -1653,12 +1748,6 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 		bool safe = obj->artifact ? true : false;
 		struct object *next = obj->next;
 
-		/* Skip gold */
-		/*if (tval_is_money(obj)) {
-			obj = next;
-			continue;
-		}*/
-
 		/* Skip mimicked objects */
 		if (obj->mimicking_m_idx) {
 			obj = next;
@@ -1670,8 +1759,9 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 			ODESC_PREFIX | ODESC_FULL, player);
 
 		/* React to objects that hurt the monster */
-		if (react_to_slay(obj, mon))
+		if (react_to_slay(obj, mon)) {
 			safe = true;
+		}
 
 		/* Try to pick up, or crush */
 		if (safe) {
@@ -1706,6 +1796,9 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 				if (square_isseen(cave, new) && !ignore_item_ok(player, obj)) {
 					msg("%s picks up %s.", m_name, o_name);
 				}
+
+				// L: flag the monster as wanting to recheck its equipment
+				mflag_on(mon->mflag, MFLAG_CHECK_EQ);
 
 				/* Delete the object */
 				square_delete_object(cave, new, obj, true, true);
@@ -1817,8 +1910,13 @@ static void monster_turn(struct monster *mon)
 	monster_group_rouse(cave, mon);
 
 	/* Try to multiply - this can use up a turn */
-	if (monster_turn_multiply(mon))
+	if (monster_turn_multiply(mon)) {
 		return;
+	}
+
+	if (monster_turn_equip_item(mon)) {
+		return;
+	}
 
 	/* Attempt a ranged attack */
 	if (make_ranged_attack(mon)) return;

@@ -151,6 +151,11 @@ void my_strcap(char *buf);
  */
 void my_strcap_full(char *buf);
 
+/**
+ * L: uncapitalize all letters in string 'buf'
+ */
+void my_struncap_full(char *buf);
+
 void strfilter(char *buf, size_t bufsize, bool(tester)(int));
 
 /**

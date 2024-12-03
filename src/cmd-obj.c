@@ -245,8 +245,9 @@ void do_cmd_takeoff(struct command *cmd)
 			/* Prompt */ "Take off or unwield which item?",
 			/* Error  */ "You have nothing to take off or unwield.",
 			/* Filter */ obj_can_takeoff,
-			/* Choice */ USE_EQUIP) != CMD_OK)
+			/* Choice */ USE_EQUIP) != CMD_OK) {
 		return;
+	}
 
 	inven_takeoff(obj);
 	combine_pack(player);

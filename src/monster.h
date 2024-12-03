@@ -436,6 +436,7 @@ struct monster {
 
 	struct object *mimicked_obj;		/* Object this monster is mimicking */
 	struct object *held_obj;		/* Object being held (if any) */
+	struct object *equipped_obj;	/* L: objects being worn */
 
 	uint8_t attr;  				/* attr last used for drawing monster */
 

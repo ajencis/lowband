@@ -1282,7 +1282,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	mon_clear_timed(mon, MON_TMD_HOLD, MON_TMD_FLG_NOMESSAGE);
 
 	/* See if the player hit */
-	success = test_hit(chance_of_melee_hit(p, aroll, mon), mon->race->ac);
+	success = test_hit(chance_of_melee_hit(p, aroll, mon), mon_ac(mon));
 
 	/* If a miss, skip this hit */
 	if (!success) {
@@ -1304,6 +1304,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 		weight = 0;
 	}
 
+	// L: paranoia
 	if (aroll->message) {
 		my_strcpy(verb, aroll->message, sizeof(verb));
 	} else {
@@ -1749,9 +1750,9 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 
 			int dmg = get_attack_dam(aroll, mon, 0, 0);
 			dmg = critical_shot(p, mon, wgt, plus, dmg, obj ? true : false, &msg_type);
-
+			
 			int chance = chance_of_melee_hit(p, aroll, mon);
-			bool hit = test_hit(chance, mon->race->ac);
+			bool hit = test_hit(chance, mon_ac(mon));
 			char hit_verb[20];
 			my_strcpy(hit_verb, aroll->message, sizeof(hit_verb));
 

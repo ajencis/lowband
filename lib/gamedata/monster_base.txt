@@ -49,7 +49,7 @@ skill-melee:5
 obj-flags:SEE_INVIS
 
 # Ainur were the founding spirits of Arda, and could take any form they wished.
-# Ainur in Angband typically have shapechanges and many possibe other spells,
+# Ainur in Angband typically have shapechanges and many possible other spells,
 # but typically don't breathe
 name:angel
 glyph:A
@@ -108,6 +108,7 @@ glyph:C
 pain:3
 flags:ANIMAL | CLEAR_WEB
 desc:Canine (Dog)
+body:Dog
 
 # Centipedes are mastly weak, sometimes quick, and their melee attacks are often
 # early examples of different blow effects
@@ -244,7 +245,7 @@ name:humanoid
 glyph:h
 pain:1
 flags:OPEN_DOOR | BASH_DOOR | SPIRIT | CLEAR_WEB
-flags:SAPIENT
+flags:SAPIENT | GEAR
 desc:Hobbit/Elf/Dwarf
 body:Humanoid
 
@@ -447,6 +448,7 @@ pain:1
 flags:MALE | ORC | EVIL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:SAPIENT
+flags:GEAR
 desc:Orc
 body:Humanoid
 
@@ -454,7 +456,7 @@ name:person
 glyph:p
 pain:1
 flags:BASH_DOOR | SPIRIT | CLEAR_WEB
-flags:SAPIENT
+flags:SAPIENT | GEAR
 desc:Person/Human
 body:Humanoid
 
@@ -681,6 +683,7 @@ glyph:Z
 pain:3
 flags:ANIMAL | GROUP_AI | CLEAR_WEB
 desc:Zephyr Hound
+body:Dog
 attr:SPEED:1
 attr:HP:1
 attr:DAMAGE:-1

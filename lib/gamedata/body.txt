@@ -243,3 +243,15 @@ slot:HAT:head
 slot:LIGHT:light
 slot:BOOTS:feet
 slot:BOOTS:feet
+
+body:Dog
+slot:RING:front right foot
+slot:RING:front left foot
+slot:RING:back right foot
+slot:RING:back left foot
+slot:AMULET:neck
+slot:LIGHT:light
+slot:CLOAK:back
+slot:HAT:head
+slot:BOOTS:feet
+slot:BOOTS:feet

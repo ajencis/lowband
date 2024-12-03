@@ -785,7 +785,7 @@ static struct panel *get_panel_combat(void) {
 			strnfmt(info, sizeof(info), "%+d; %dd%d (%s)", bth, aroll->ddice, aroll->dsides, proj_desc);
 		}
 
-		if (strlen(info) + strlen(title) + 4 > 21) {
+		if (strlen(info) + strlen(title) + 1 > 21) {
 			// name and info will be displayed on top of each other so cut them up
 			panel_line(p, colour, title, " ");
 			panel_line(p, colour, " ", info);

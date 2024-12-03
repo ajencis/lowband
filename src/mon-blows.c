@@ -1257,8 +1257,9 @@ melee_effect_handler_f melee_handler_for_blow_effect(const char *name)
 	const struct effect_handler_s *current = effect_handlers;
 
 	while (current->name != NULL && current->function != NULL) {
-		if (my_stricmp(name, current->name) == 0)
+		if (my_stricmp(name, current->name) == 0) {
 			return current->function;
+		}
 
 		current++;
 	}

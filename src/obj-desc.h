@@ -39,10 +39,11 @@ enum {
 	ODESC_CAPITAL = 0x80,	/*!< Capitalise object name */
 	ODESC_TERSE = 0x100,  	/*!< Make terse names */
 	ODESC_NOEGO = 0x200,  	/*!< Don't show ego names */
-	ODESC_ALTNUM = 0x400	/*!< Use the high 16 bits of mode rather
+	ODESC_ALTNUM = 0x400,	/*!< Use the high 16 bits of mode rather
 					than obj->number as the number
 					of objects; not fully compatible
 					with ODESC_EXTRA */
+	ODESC_LOWERCASE = 0x800	/*!< L: uncapitalize the whole string */
 };
 
 

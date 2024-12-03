@@ -220,17 +220,19 @@ static size_t obj_desc_name_prefix(char *buf, size_t max, size_t end,
 		while (*lookahead == ' ') lookahead++;
 
 		if (*lookahead == '#') {
-			if (modstr && is_a_vowel(*modstr))
+			if (modstr && is_a_vowel(*modstr)) {
 				an = true;
+			}
 		} else if (is_a_vowel(*lookahead)) {
 			an = true;
 		}
 
 		if (!terse) {
-			if (an)
+			if (an) {
 				strnfcat(buf, max, &end, "an ");
-			else
-				strnfcat(buf, max, &end, "a ");			
+			} else {
+				strnfcat(buf, max, &end, "a ");	
+			}	
 		}
 	}
 
@@ -340,9 +342,10 @@ static size_t obj_desc_name(char *buf, size_t max, size_t end,
 	const char *modstr = obj_desc_get_modstr(obj->kind);
 
 	/* Quantity prefix */
-	if (prefix)
+	if (prefix) {
 		end = obj_desc_name_prefix(buf, max, end, obj, basename,
 			modstr, terse, number);
+	}
 
 	/* Base name */
 	end = obj_desc_name_format(buf, max, end, basename, modstr, plural);
@@ -354,10 +357,11 @@ static size_t obj_desc_name(char *buf, size_t max, size_t end,
 		strnfcat(buf, max, &end, " %s", obj->ego->name);
 	else if (aware && !obj->artifact &&
 			(obj->kind->flavor || obj->kind->tval == TV_SCROLL || obj->kind->tval == TV_BOOK)) {
-		if (terse)
+		if (terse) {
 			strnfcat(buf, max, &end, " '%s'", obj->kind->name);
-		else
+		} else {
 			strnfcat(buf, max, &end, " of %s", obj->kind->name);
+		}
 	}
 
 	return end;
@@ -690,31 +694,42 @@ size_t object_desc(char *buf, size_t max, const struct object *obj,
 	bool prefix = mode & ODESC_PREFIX ? true : false;
 	bool spoil = mode & ODESC_SPOIL ? true : false;
 	bool terse = mode & ODESC_TERSE ? true : false;
+	bool cap = mode & ODESC_CAPITAL ? true : false;
 
 	size_t end = 0;
 
 	/* Simple description for null item */
-	if (!obj || !obj->known)
+	if (!obj || !obj->known) {
 		return strnfmt(buf, max, "(nothing)");
-
-	/* Unknown itema and cash get straightforward descriptions */
-	if (obj->known && obj->kind != obj->known->kind) {
-		if (prefix)
-			return strnfmt(buf, max, "an unknown item");
-		return strnfmt(buf, max, "unknown item");
 	}
 
-	if (tval_is_money(obj))
+	/* Unknown items and cash get straightforward descriptions */
+	if (obj->known && obj->kind != obj->known->kind) {
+		if (prefix) {
+			end = strnfmt(buf, max, "an unknown item");
+		} else {
+			end = strnfmt(buf, max, "unknown item");
+		}
+		if (cap) {
+			my_strcap(buf);
+		}
+		return end;
+	}
+
+	if (tval_is_money(obj)) {
 		return strnfmt(buf, max, "%d gold pieces worth of %s%s",
 				obj->pval, obj->kind->name,
 				ignore_item_ok(p, obj) ? " {ignore}" : "");
+	}
 
 	/* Egos and kinds whose name we know are seen */
-	if (obj->known->ego && !spoil)
+	if (obj->known->ego && !spoil) {
 		obj->ego->everseen = true;
+	}
 
-	if (object_flavor_is_aware(obj) && !spoil)
+	if (object_flavor_is_aware(obj) && !spoil) {
 		obj->kind->everseen = true;
+	}
 
 	/** Construct the name **/
 
@@ -723,10 +738,11 @@ size_t object_desc(char *buf, size_t max, const struct object *obj,
 
 	/* Combat properties */
 	if (mode & ODESC_COMBAT) {
-		if (tval_is_chest(obj))
+		if (tval_is_chest(obj)) {
 			end = obj_desc_chest(obj, buf, max, end);
-		else if (tval_is_light(obj))
+		} else if (tval_is_light(obj)) {
 			end = obj_desc_light(obj, buf, max, end);
+		}
 
 		end = obj_desc_combat(obj->known, buf, max, end, mode, p);
 	}
@@ -739,10 +755,18 @@ size_t object_desc(char *buf, size_t max, const struct object *obj,
 
 		end = obj_desc_power_learn(obj, buf, max, end, mode);
 
-		if (mode & ODESC_STORE)
+		if (mode & ODESC_STORE) {
 			end = obj_desc_aware(obj, buf, max, end);
-		else
+		} else {
 			end = obj_desc_inscrip(obj, buf, max, end, p);
+		}
+	}
+
+	if (cap) {
+		my_strcap(buf);
+	}
+	else if (mode & ODESC_LOWERCASE) {
+		my_struncap_full(buf);
 	}
 
 	return end;

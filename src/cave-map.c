@@ -232,14 +232,18 @@ void square_note_spot(struct chunk *c, struct loc grid)
 	/* Make the player know precisely what is on this grid */
 	square_know_pile(c, grid, NULL);
 
+	// L: let the player know about items monsters wear
+	square_know_equipped_object(c, grid, NULL);
+
 	/* Notice traps, memorize those we can see */
 	if (square_issecrettrap(c, grid)) {
 		square_reveal_trap(c, grid, false, true);
 	}
 	square_memorize_traps(c, grid);
 
-	if (!square_ismemorybad(c, grid))
+	if (!square_ismemorybad(c, grid)) {
 		return;
+	}
 
 	/* Memorize this grid */
 	square_memorize(c, grid);

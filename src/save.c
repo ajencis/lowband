@@ -225,17 +225,21 @@ static void wr_monster(const struct monster *mon)
 	wr_byte(mon->energy);
 	wr_byte(MON_TMD_MAX);
 
-	for (j = 0; j < MON_TMD_MAX; j++)
+	for (j = 0; j < MON_TMD_MAX; j++) {
 		wr_s16b(mon->m_timed[j]);
+	}
 
-	for (j = 0; j < MFLAG_SIZE; j++)
+	for (j = 0; j < MFLAG_SIZE; j++) {
 		wr_byte(mon->mflag[j]);
+	}
 
-	for (j = 0; j < OF_SIZE; j++)
+	for (j = 0; j < OF_SIZE; j++) {
 		wr_byte(mon->known_pstate.flags[j]);
+	}
 
-	for (j = 0; j < ELEM_MAX; j++)
+	for (j = 0; j < ELEM_MAX; j++) {
 		wr_s16b(mon->known_pstate.el_info[j].res_level);
+	}
 
 	/* Write mimicked object marker, if any */
 	if (mon->mimicked_obj) {
@@ -244,6 +248,14 @@ static void wr_monster(const struct monster *mon)
 		wr_u16b(0);
 
 	/* Write all held objects, followed by a dummy as a marker */
+	while (obj) {
+		wr_item(obj);
+		obj = obj->next;
+	}
+	wr_item(dummy);
+
+	// L: write equipped objects
+	obj = mon->equipped_obj;
 	while (obj) {
 		wr_item(obj);
 		obj = obj->next;

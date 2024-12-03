@@ -650,6 +650,9 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 	bool blinked = false;
 	bool at_range = distance(mon->grid, player->grid) > 1;
 	bool did_attack = false;
+	//random_value weapdice;
+	//int bestweapdice;
+	//struct object *weap;
 
 	/* Not allowed to attack */
 	if (rf_has(mon->race->flags, RF_NEVER_BLOW)) return (false);
@@ -910,7 +913,7 @@ bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 		/* Monster hits monster */
 		assert(effect);
 		if (streq(effect->name, "NONE") ||
-			test_hit(chance_of_monster_hit(mon, effect), t_mon->race->ac)) {
+				test_hit(chance_of_monster_hit(mon, effect), mon_ac(t_mon))) {
 			melee_effect_handler_f effect_handler;
 
 			do_stun = method->stun;
@@ -935,7 +938,7 @@ bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 					t_mon,
 					rlev,
 					method,
-					t_mon->race->ac,
+					mon_ac(t_mon),
 					NULL,
 					obvious,
 					blinked,

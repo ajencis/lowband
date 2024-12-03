@@ -83,8 +83,9 @@ int slot_by_type(struct player *p, int type, bool full)
 				if (p->body.slots[i].obj == NULL) break;
 			}
 			/* Not right for full/empty, but still the right type */
-			if (fallback == -1)
+			if (fallback == -1) {
 				fallback = i;
+			}
 		}
 	}
 
@@ -954,8 +955,9 @@ void inven_wield(struct object *obj, int slot, bool verbose)
 	bool dummy = false;
 
 	/* Increase equipment counter if empty slot */
-	if (old == NULL)
+	if (old == NULL) {
 		player->upkeep->equip_cnt++;
+	}
 
 	/* Take a turn */
 	player->upkeep->energy_use = z_info->move_energy;

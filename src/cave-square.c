@@ -1196,6 +1196,25 @@ void square_know_pile(struct chunk *c, struct loc grid,
 	forget_remembered_objects(c, player->cave, grid, pred);
 }
 
+void square_know_equipped_object(struct chunk *c, struct loc grid, bool (*pred)(const struct object*))
+{
+	struct object *obj;
+	struct monster *mon;
+
+	if (c != cave) return;
+
+	mon = square_monster(c, grid);
+	if (!mon || !mon->race) {
+		return;
+	}
+
+	for (obj = mon->equipped_obj; obj; obj = obj->next) {
+		if (!pred || (*pred)(obj)) {
+			object_see(player, obj);
+		}
+	}
+}
+
 
 /**
  * Return how many cardinal directions around (x, y) contain walls.

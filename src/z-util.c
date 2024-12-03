@@ -550,6 +550,19 @@ void my_strcap_full(char *buf)
 	}
 }
 
+/**
+ * L: Uncapitalize the string
+ */
+void my_struncap_full(char *buf)
+{
+	int i;
+	if (!buf) return;
+
+	for (i = 0; buf[i] != '\0'; ++i) {
+		buf[i] = tolower((unsigned char)buf[i]);
+	}
+}
+
 
 void strfilter(char *buf, size_t bufsize, bool(tester)(int))
 {

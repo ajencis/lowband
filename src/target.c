@@ -25,6 +25,7 @@
 #include "mon-move.h"
 #include "mon-util.h"
 #include "monster.h"
+#include "obj-desc.h"
 #include "obj-ignore.h"
 #include "player-calcs.h"
 #include "player-timed.h"
@@ -73,15 +74,16 @@ void look_mon_desc(char *buf, size_t max, int m_idx)
 		/* Calculate a health "percentage" */
 		int perc = 100L * mon->hp / mon->maxhp;
 
-		if (perc >= 60)
+		if (perc >= 60) {
 			my_strcpy(buf, (living ? "somewhat wounded" : "somewhat damaged"),
 					  max);
-		else if (perc >= 25)
+		} else if (perc >= 25) {
 			my_strcpy(buf, (living ? "wounded" : "damaged"), max);
-		else if (perc >= 10)
+		} else if (perc >= 10) {
 			my_strcpy(buf, (living ? "badly wounded" : "badly damaged"), max);
-		else
+		} else {
 			my_strcpy(buf, (living ? "almost dead" : "almost destroyed"), max);
+		}
 	}
 
 	/* Effect status */
@@ -95,8 +97,22 @@ void look_mon_desc(char *buf, size_t max, int m_idx)
 	if (mon->m_timed[MON_TMD_FAST]) my_strcat(buf, ", hasted", max);
 
 	/* L: friendliness */
-	if (mon->faction == '@') my_strcat(buf, ", allied", max);
-	else if (!mon_will_attack_player(mon, player)) my_strcat(buf, ", friendly", max);
+	if (mon_will_follow_player(mon, player)) my_strcat(buf, "; allied", max);
+	else if (!mon_will_attack_player(mon, player)) my_strcat(buf, "; friendly", max);
+
+	// L: equipment
+	if (mon->equipped_obj) {
+		struct object *eq = mon->equipped_obj;
+		char odesc[80];
+		my_strcat(buf, "; wearing ", max);
+		object_desc(odesc, sizeof(odesc), eq, ODESC_PREFIX | ODESC_LOWERCASE, player);
+		my_strcat(buf, odesc, max);
+		for (eq = eq->next; eq; eq = eq->next) {
+			my_strcat(buf, ", ", max);
+			object_desc(odesc, sizeof(odesc), eq, ODESC_PREFIX | ODESC_LOWERCASE, player);
+			my_strcat(buf, odesc, max);
+		}
+	}
 }
 
 
