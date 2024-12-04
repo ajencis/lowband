@@ -25,6 +25,27 @@ desc:attack
 lore-color-base:Light Green
 lash-type:NONE
 
+name:PIERCE
+power:10
+eval:0
+desc:attack
+lore-color-base:Light Green
+lash-type:PIERCING
+
+name:SLASH
+power:10
+eval:0
+desc:attack
+lore-color-base:Light Green
+lash-type:SLASHING
+
+name:BLUDGEON
+power:10
+eval:0
+desc:attack
+lore-color-base:Light Green
+lash-type:BLUDGEONING
+
 name:POISON
 power:5
 eval:10

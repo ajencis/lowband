@@ -62,6 +62,23 @@ void mark_mon_as_playable(struct monster_race *mr)
 	}
 }
 
+struct object *monster_best_weapon(struct monster *m)
+{
+	struct object *weap, *best = NULL;
+	int bestval;
+
+	for (weap = m->equipped_obj; weap; weap = weap->next) {
+		if (!tval_is_melee_weapon(weap)) continue;
+		int curr = weap->dd * (weap->ds + 1) + weap->to_d * 2 + weap->to_h;
+		if (!best || curr > bestval) {
+			best = weap;
+			bestval = curr;
+		}
+	}
+
+	return best;
+}
+
 
 /**
  * ------------------------------------------------------------------------
@@ -1813,7 +1830,7 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 	int power = mr->level;
 	if (!is_player) power += randint0(mr->level / 5 + 1) - randint0(mr->level / 5 + 1);
 	int blows = 0;
-	bool mspells = false, breaths = false;
+	bool mspells = false, breaths = false, gear = rf_has(mr->flags, RF_GEAR);
 	int ttdam, tdice, quo; // twice total dam
 	struct monster_blow *cblow;
 	int mintotal, maxtotal;
@@ -1931,8 +1948,16 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 		int dsides = (ttdam * fact + quo * ddice - 1) / quo / ddice - 1;
 		dsides = MAX(1, dsides);
 
-		cblow->dice.dice = ddice;
-		cblow->dice.sides = dsides;
+		if (gear) {
+			cblow->dice.dice = 1;
+			cblow->dice.sides = 1;
+			ddice = 2;
+			dsides = mr->level / 5 + 1;
+		}
+		else {
+			cblow->dice.dice = ddice;
+			cblow->dice.sides = dsides;
+		}
 
 		ttdam -= ddice * (dsides + 1);
 		tdice = MAX(tdice - ddice, 1);

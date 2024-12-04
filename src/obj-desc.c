@@ -48,8 +48,9 @@ void object_base_name(char *buf, size_t max, int tval, bool plural)
 	struct object_base *kb = &kb_info[tval];
 	size_t end = 0;
 
-	if (kb->name && kb->name[0]) 
+	if (kb->name && kb->name[0])  {
 		(void) obj_desc_name_format(buf, max, end, kb->name, NULL, plural);
+	}
 }
 
 
@@ -259,8 +260,9 @@ size_t obj_desc_name_format(char *buf, size_t max, size_t end,
 	while (*fmt) {
 		/* Skip */
 		if (*fmt == '&') {
-			while (*fmt == ' ' || *fmt == '&')
+			while (*fmt == ' ' || *fmt == '&') {
 				fmt++;
+			}
 			continue;
 		} else if (*fmt == '~') {
 			/* Pluralizer (regular English plurals) */
@@ -272,10 +274,11 @@ size_t obj_desc_name_format(char *buf, size_t max, size_t end,
 			}
 
 			/* e.g. cutlass-e-s, torch-e-s, box-e-s */
-			if (prev == 's' || prev == 'h' || prev == 'x')
+			if (prev == 's' || prev == 'h' || prev == 'x') {
 				strnfcat(buf, max, &end, "es");
-			else
+			} else {
 				strnfcat(buf, max, &end, "s");
+			}
 		} else if (*fmt == '|') {
 			/* Special plurals 
 			* e.g. kni|fe|ves|

@@ -920,7 +920,7 @@ bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct o
 		aroll->accuracy_stat = STAT_DEX;
 		aroll->damage_stat = STAT_STR;
 		aroll->obj = obj;
-		aroll->proj_type = obj->kind->base->proj_type;
+		aroll->proj_type = obj->kind->proj_type;
 		aroll->range = 1;
 		object_desc(aroll->name, sizeof(aroll->name), obj, mode, p);
 
@@ -984,7 +984,7 @@ static bool get_shooter_ranged_attack(struct player *p, struct object *ammo,
 	aroll->dsides += ammo->ds;
 	aroll->to_dam += object_to_dam(ammo);
 
-	aroll->proj_type = ammo->kind->base->proj_type;
+	aroll->proj_type = ammo->kind->proj_type;
 
 	return true;
 }

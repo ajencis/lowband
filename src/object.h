@@ -261,6 +261,8 @@ struct object_kind {
 
 	uint8_t ignore;  	/**< Ignore settings */
 	bool everseen; 	/**< Kind has been seen (to despoilify ignore menus) */
+
+	int proj_type;		/**< L: type of damage it does */
 };
 
 extern struct object_kind *k_info;

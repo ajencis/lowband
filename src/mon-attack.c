@@ -650,9 +650,8 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 	bool blinked = false;
 	bool at_range = distance(mon->grid, player->grid) > 1;
 	bool did_attack = false;
-	//random_value weapdice;
-	//int bestweapdice;
-	//struct object *weap;
+	struct object *bestweap = monster_best_weapon(mon);
+	double weapval = bestweap ? bestweap->dd * (bestweap->ds + 1) / 2.0 + bestweap->to_d + bestweap->to_h / 2.0 : 0.0;
 
 	/* Not allowed to attack */
 	if (rf_has(mon->race->flags, RF_NEVER_BLOW)) return (false);
@@ -668,8 +667,9 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 		struct loc pgrid = p->grid;
 		bool visible = monster_is_visible(mon) || (mon->race->light > 0);
 		bool obvious = false;
+		melee_effect_handler_f effect_handler = NULL;
 
-		int damage = 0;
+		int damage = 0, hitbonus = 0;
 		bool do_cut = false;
 		bool do_stun = false;
 
@@ -687,13 +687,29 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 		/* Handle "leaving" */
 		if (p->is_dead || p->upkeep->generate_level) break;
 
+		if (bestweap && (streq(effect->name, "NONE") || streq(effect->name, "HURT"))) {
+			int blowdam = randcalc(dice, rlev, AVERAGE);
+			if ((double)blowdam < weapval) {
+				dice.base = bestweap->to_d;
+				dice.dice = bestweap->dd;
+				dice.sides = bestweap->ds;
+				dice.m_bonus = 0;
+				hitbonus = bestweap->to_h;
+				switch (bestweap->kind->proj_type)
+				{
+					case PROJ_PIERCING: effect_handler = melee_handler_for_blow_effect("PIERCING"); break;
+					case PROJ_SLASHING: effect_handler = melee_handler_for_blow_effect("SLASHING"); break;
+					case PROJ_BLUDGEONING: effect_handler = melee_handler_for_blow_effect("BLUDGEONING"); break;
+				}
+			}
+		}
+
 		did_attack = true;
 
 		/* Monster hits player */
 		assert(effect);
 		if (streq(effect->name, "NONE") ||
-			check_hit(p, chance_of_monster_hit(mon, effect))) {
-			melee_effect_handler_f effect_handler;
+				check_hit(p, chance_of_monster_hit(mon, effect) + hitbonus)) {
 
 			/* Always disturbing */
 			disturb(p);
@@ -730,7 +746,9 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 			}
 
 			/* Perform the actual effect. */
-			effect_handler = melee_handler_for_blow_effect(effect->name);
+			if (!effect_handler) {
+				effect_handler = melee_handler_for_blow_effect(effect->name);
+			}
 			if (effect_handler != NULL) {
 				melee_effect_handler_context_t context = {
 					p,
@@ -739,7 +757,7 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 					rlev,
 					method,
 					// L: only armour itself affects damage reduction
-					p->state.ac,// + p->state.to_a,
+					p->state.ac,
 					ddesc,
 					obvious,
 					blinked,

@@ -490,6 +490,71 @@ static void melee_effect_elemental(melee_effect_handler_context_t *context,
 		update_smart_learn(context->mon, context->p, 0, 0, type);
 	}
 }
+static void melee_effect_physical(melee_effect_handler_context_t *context,
+								   int type)
+{
+	int dam;
+	enum mon_messages hurt_msg = MON_MSG_NONE;
+	enum mon_messages die_msg = MON_MSG_DIE;
+
+	dam = adjust_dam_armor(context->damage, context->ac);
+
+	if (context->p) {
+		dam = adjust_dam(context->p, type, context->damage,
+								   RANDOMISE, 0, true);
+	} else {
+		assert(context->t_mon);
+		dam = monster_elemental_damage(context, type, &hurt_msg,
+												 &die_msg);
+	}
+
+	/* Take the larger of physical or elemental damage */
+	context->damage = dam;
+
+	if (context->damage > 0) {
+		if (context->p) {
+			/*
+			 * Player damage reduction does not affect the damage used for side effect calculations so leave
+			 * context->damage as is.
+			 */
+			int reduced = player_apply_damage_reduction(context->p,
+				context->damage);
+			const char* act = NULL;
+
+			switch (type)
+			{
+				case PROJ_PIERCING: act = "stabs"; break;
+				case PROJ_BLUDGEONING: act = "bashes"; break;
+				case PROJ_SLASHING: act = "hacks at"; break;
+			}
+			if (act) {
+				char damtext[80];
+				if (OPT(player, show_damage)) {
+					strnfmt(damtext, sizeof(damtext), " (%i)", reduced);
+				}
+				else {
+					damtext[0] = '\0';
+				}
+				msg("%s %s you.%s", context->m_name, act, damtext);
+			}
+			take_hit(context->p, reduced, context->ddesc);
+		} else {
+			assert(context->t_mon);
+			display_blow_message_vs_monster(context->method,
+				context->m_name, context->t_mon->midx);
+			(void) mon_take_nonplayer_hit(context->damage,
+				context->t_mon, hurt_msg, die_msg, false);
+		}
+	}
+	else if (context->p) {
+		msg("%s fails to harm you.", context->m_name);
+	}
+
+	/* Learn about the player */
+	if (context->p) {
+		update_smart_learn(context->mon, context->p, 0, 0, type);
+	}
+}
 
 /**
  * Do damage as the result of a melee attack that has a status effect.
@@ -1213,6 +1278,30 @@ static void melee_effect_handler_BLACK_BREATH(melee_effect_handler_context_t *co
 }
 
 /**
+ * Melee effect handler: Attack the player with fire.
+ */
+static void melee_effect_handler_PIERCING(melee_effect_handler_context_t *context)
+{
+	melee_effect_physical(context, PROJ_PIERCING);
+}
+
+/**
+ * Melee effect handler: Attack the player with fire.
+ */
+static void melee_effect_handler_SLASHING(melee_effect_handler_context_t *context)
+{
+	melee_effect_physical(context, PROJ_SLASHING);
+}
+
+/**
+ * Melee effect handler: Attack the player with fire.
+ */
+static void melee_effect_handler_BLUDGEONING(melee_effect_handler_context_t *context)
+{
+	melee_effect_physical(context, PROJ_BLUDGEONING);
+}
+
+/**
  * ------------------------------------------------------------------------
  * Monster blow melee handler selection
  * ------------------------------------------------------------------------ */
@@ -1235,6 +1324,9 @@ melee_effect_handler_f melee_handler_for_blow_effect(const char *name)
 		{ "ELEC", melee_effect_handler_ELEC },
 		{ "FIRE", melee_effect_handler_FIRE },
 		{ "COLD", melee_effect_handler_COLD },
+		{ "PIERCING", melee_effect_handler_PIERCING },
+		{ "SLASHING", melee_effect_handler_SLASHING },
+		{ "BLUDGEONING", melee_effect_handler_BLUDGEONING },
 		{ "BLIND", melee_effect_handler_BLIND },
 		{ "CONFUSE", melee_effect_handler_CONFUSE },
 		{ "TERRIFY", melee_effect_handler_TERRIFY },

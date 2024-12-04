@@ -650,7 +650,7 @@ static enum parser_error parse_object_base_flags(struct parser *p) {
 	return t ? PARSE_ERROR_INVALID_FLAG : PARSE_ERROR_NONE;
 }
 
-static enum parser_error parse_object_dam_type(struct parser *p) {
+static enum parser_error parse_object_base_dam_type(struct parser *p) {
 
 	struct kb_parsedata *d = parser_priv(p);
 	struct object_base *kb;
@@ -692,7 +692,7 @@ struct parser *init_parse_object_base(void) {
 	parser_reg(p, "break int breakage", parse_object_base_break);
 	parser_reg(p, "max-stack int size", parse_object_base_max_stack);
 	parser_reg(p, "flags str flags", parse_object_base_flags);
-	parser_reg(p, "dam-type sym proj", parse_object_dam_type);
+	parser_reg(p, "dam-type sym proj", parse_object_base_dam_type);
 	return p;
 }
 
@@ -1804,6 +1804,7 @@ static enum parser_error parse_object_type(struct parser *p) {
 	k->base = &kb_info[k->tval];
 	k->base->num_svals++;
 	k->sval = k->base->num_svals;
+	k->proj_type = k->base->proj_type;
 	return PARSE_ERROR_NONE;
 }
 
@@ -2201,6 +2202,32 @@ static enum parser_error parse_object_curse(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_object_proj_type(struct parser *p) {
+
+	struct object_kind *k = parser_priv(p);
+	char damtype[64];
+	int i;
+
+	if (!k) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	my_strcpy(damtype, parser_getsym(p, "proj"), sizeof(damtype));
+
+	for (i = 0; projection_names[i]; i++) {
+		if (streq(damtype, projection_names[i])) {
+			break;
+		}
+	}
+
+	if (!projection_names[i]) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	k->proj_type = i;
+	
+	return PARSE_ERROR_NONE;
+}
+
 
 struct parser *init_parse_object(void) {
 	struct parser *p = parser_new();
@@ -2231,6 +2258,7 @@ struct parser *init_parse_object(void) {
 	parser_reg(p, "slay str code", parse_object_slay);
 	parser_reg(p, "brand str code", parse_object_brand);
 	parser_reg(p, "curse sym name int power", parse_object_curse);
+	parser_reg(p, "proj-type sym proj", parse_object_proj_type);
 	return p;
 }
 

@@ -33,7 +33,7 @@ struct projection {
 	char *player_desc;
 	char *blind_desc;
 	char *lash_desc;
-	char *player_message; /* L: message when caused by the player */
+	char *player_message;			/* L: message when caused by the player */
 	int numerator;
 	random_value denominator;
 	int divisor;

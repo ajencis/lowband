@@ -95,27 +95,9 @@ turnover:9
 normal:shot:Iron Shot
 normal:arrow:Arrow
 normal:bolt:Bolt
-normal:sword:Dagger
-normal:sword:Main Gauche
-normal:sword:Rapier
-normal:sword:Short Sword
-normal:sword:Cutlass
-normal:sword:Tulwar
-normal:sword:Broad Sword
-normal:sword:Long Sword
-normal:sword:Scimitar
-normal:sword:Katana
-normal:sword:Bastard Sword
-normal:polearm:Spear
-normal:polearm:Awl-Pike
-normal:polearm:Trident
-normal:polearm:Pike
-normal:polearm:Beaked Axe
-normal:polearm:Broad Axe
-normal:polearm:Battle Axe
-normal:polearm:Lance
-normal:polearm:Lucerne Hammer
-normal:hafted:Whip
+normal:sword
+normal:polearm
+normal:hafted
 normal:bow:Sling
 normal:bow:Short Bow
 normal:bow:Long Bow

@@ -26,6 +26,7 @@
 #include "monster.h"
 #include "mon-util.h"
 #include "obj-curse.h"
+#include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-info.h"
 #include "obj-knowledge.h"
@@ -2262,7 +2263,7 @@ static void describe_flavor_text(textblock *tb, const struct object *obj,
 {
 	/* Display the known artifact or object description */
 	if (!OPT(player, birth_randarts) && obj->artifact &&
-		obj->known->artifact && obj->artifact->text) {
+			obj->known->artifact && obj->artifact->text) {
 		textblock_append(tb, "%s\n\n", obj->artifact->text);
 
 	} else if (object_flavor_is_aware(obj) || ego) {
@@ -2271,6 +2272,23 @@ static void describe_flavor_text(textblock *tb, const struct object *obj,
 		if (!ego && obj->kind->text) {
 			textblock_append(tb, "%s", obj->kind->text);
 			did_desc = true;
+
+			// L: tell player damage type and weapon category
+			if (tval_is_weapon(obj)) {
+				char base_name[64];
+				const char *proj_name = projections[obj->kind->proj_type].name;
+				object_base_name(base_name, sizeof(base_name), obj->tval, false);
+				my_struncap_full(base_name);
+				const char *an = is_a_vowel((int)base_name[0]) ? "n" : "";
+
+				if (tval_is_melee_weapon(obj)) {
+					textblock_append(tb, "  It is a%s %s that does %s damage.", an, base_name, proj_name);
+				} else if (tval_is_launcher(obj)) {
+					textblock_append(tb, "  It is a%s %s.", an, base_name);
+				} else if (tval_is_ammo(obj)) {
+					textblock_append(tb, "  It does %s damage.", proj_name);
+				}
+			}
 		}
 
 		/* Display an additional ego-item description */
@@ -2288,16 +2306,17 @@ static void describe_flavor_text(textblock *tb, const struct object *obj,
  */
 static bool describe_ego(textblock *tb, const struct ego_item *ego)
 {
-	if (kf_has(ego->kind_flags, KF_RAND_HI_RES))
+	if (kf_has(ego->kind_flags, KF_RAND_HI_RES)) {
 		textblock_append(tb, "It provides one random higher resistance.  ");
-	else if (kf_has(ego->kind_flags, KF_RAND_SUSTAIN))
+	} else if (kf_has(ego->kind_flags, KF_RAND_SUSTAIN)) {
 		textblock_append(tb, "It provides one random sustain.  ");
-	else if (kf_has(ego->kind_flags, KF_RAND_POWER))
+	} else if (kf_has(ego->kind_flags, KF_RAND_POWER)) {
 		textblock_append(tb, "It provides one random ability.  ");
-	else if (kf_has(ego->kind_flags, KF_RAND_RES_POWER))
+	} else if (kf_has(ego->kind_flags, KF_RAND_RES_POWER)) {
 		textblock_append(tb, "It provides one random ability or base resistance.  ");
-	else
+	} else {
 		return false;
+	}
 
 	return true;
 }

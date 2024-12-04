@@ -669,6 +669,7 @@ alloc:20:0 to 100
 attack:1d4:0:0
 armor:0:0
 flags:THROWING
+proj-type:PIERCING
 desc:A short two-edged blade perfect for thrusting or throwing.
 
 name:& Main~ Gauche~
@@ -691,6 +692,7 @@ cost:70
 alloc:20:5 to 100
 attack:1d6:0:0
 armor:0:0
+proj-type:PIERCING
 desc:A long, thin thrusting blade, mainly used in duels.
 
 name:& Short Sword~
@@ -702,6 +704,7 @@ cost:90
 alloc:20:5 to 100
 attack:1d7:0:0
 armor:0:0
+proj-type:PIERCING
 desc:A short thrusting sword.
 
 name:& Cutlass~
@@ -747,6 +750,7 @@ cost:300
 alloc:20:10 to 100
 attack:2d5:0:0
 armor:0:0
+proj-type:PIERCING
 desc:A long, straight, two-edged blade, with two hand guards projecting out
 desc: from the hilt to form a perfect cross.
 
@@ -833,6 +837,7 @@ cost:30
 alloc:20:3 to 100
 attack:1d3:0:0
 armor:0:0
+proj-type:SLASHING
 desc:A heavy whip, this thick coil is thrown from the shoulder and can
 desc: knock down a large man.
 
@@ -856,6 +861,7 @@ cost:396
 alloc:20:10 to 100
 attack:2d6:0:0
 armor:0:0
+proj-type:PIERCING
 desc:A sturdy wooden pole connected by a chain to a ball of steel, which often
 desc: has projecting spikes.
 
@@ -1058,6 +1064,7 @@ alloc:10:25 to 100
 attack:2d3:0:0
 armor:0:0
 flags:THROWING
+proj-type:SLASHING
 desc:A short-handled hatchet, balanced for throwing.  A classic skirmisher's
 desc: weapon.
 
@@ -1070,6 +1077,7 @@ cost:408
 alloc:20:15 to 100
 attack:2d6:0:0
 armor:0:0
+proj-type:SLASHING
 desc:A narrow axe head opposed by a crow's beak for penetrating armour.
 
 name:& Broad Axe~
@@ -1081,6 +1089,7 @@ cost:304
 alloc:20:15 to 100
 attack:2d6:0:0
 armor:0:0
+proj-type:SLASHING
 desc:A simple, single-bladed war axe capable of chopping though limbs or armour.
 
 name:& Battle Axe~
@@ -1092,6 +1101,7 @@ cost:334
 alloc:20:15 to 100
 attack:2d8:0:0
 armor:0:0
+proj-type:SLASHING
 desc:A double-bladed axe.  Very popular among Dwarves.
 
 name:& Lochaber Axe~
@@ -1103,6 +1113,7 @@ cost:750
 alloc:20:45 to 100
 attack:3d8:0:0
 armor:0:0
+proj-type:SLASHING
 desc:A long shaft with a long narrow blade.
 
 name:& Great Axe~
@@ -1114,6 +1125,7 @@ cost:500
 alloc:20:40 to 100
 attack:4d4:0:0
 armor:0:0
+proj-type:SLASHING
 desc:An enormous two-handed battle axe, carried by Dwarven champions, who
 desc: compete to see who can cleave the most orc heads.
 

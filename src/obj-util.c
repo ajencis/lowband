@@ -1340,4 +1340,3 @@ void alter_weapon_properties(struct object_kind *objs)
 		if (tval_is_launcher_k(curr)) alter_one_missile_weapon(curr);
 	}
 }
-

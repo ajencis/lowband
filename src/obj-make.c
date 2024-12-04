@@ -31,6 +31,7 @@
 #include "obj-slays.h"
 #include "obj-tval.h"
 #include "obj-util.h"
+#include "project.h"
 
 /**
  * Stores cumulative probability distribution for objects at each level.  The
@@ -794,8 +795,10 @@ bool make_fake_artifact(struct object *obj, const struct artifact *artifact)
  */
 static void apply_magic_weapon(struct object *obj, int level, int power)
 {
-	if (power <= 0)
+	int proj_type = obj->kind->proj_type;
+	if (power <= 0) {
 		return;
+	}
 
 	obj->to_h += randint1(5) + m_bonus(5, level) + 5;
 	obj->to_d += randint1(5) + m_bonus(5, level) + 5;
@@ -835,6 +838,15 @@ static void apply_magic_weapon(struct object *obj, int level, int power)
 				}
 			}
 		}
+	}
+
+	if (proj_type == PROJ_PIERCING) {
+		obj->to_h *= 2;
+		obj->to_d /= 2;
+	}
+	else if (proj_type == PROJ_BLUDGEONING) {
+		obj->to_h /= 2;
+		obj->to_d *= 2;
 	}
 }
 

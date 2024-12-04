@@ -111,6 +111,17 @@ static const char *power_names[] =
 	""
 };
 
+/*static const char *proj_names[] =
+{
+	#define ELEM(a) #a,
+	#include "list-elements.h"
+	#undef ELEM
+	#define PROJ(a) #a,
+	#include "list-projections.h"
+	#undef PROJ
+	"MAX"
+};*/
+
 /**
  * Return the index of a flag from its name.
  */
@@ -741,10 +752,11 @@ static errr finish_parse_eff(struct parser *p) {
 	for (eff = parser_priv(p); eff; eff = next, count--) {
 		memcpy(&blow_effects[count], eff, sizeof(*eff));
 		next = eff->next;
-		if (count < z_info->blow_effects_max - 1)
+		if (count < z_info->blow_effects_max - 1) {
 			blow_effects[count].next = &blow_effects[count + 1];
-		else
+		} else {
 			blow_effects[count].next = NULL;
+		}
 
 		mem_free(eff);
 	}
@@ -1830,13 +1842,15 @@ static enum parser_error parse_monster_blow(struct parser *p) {
 		return PARSE_ERROR_UNRECOGNISED_BLOW;
 	if (parser_hasval(p, "effect")) {
 		b->effect = findeff(parser_getsym(p, "effect"));
-		if (!b->effect)
+		if (!b->effect) {
 			return PARSE_ERROR_INVALID_EFFECT;
+		}
 	} else {
 		b->effect = findeff("NONE");
 	}
-	if (parser_hasval(p, "damage"))
+	if (parser_hasval(p, "damage")) {
 		b->dice = parser_getrand(p, "damage");
+	}
 
 	return PARSE_ERROR_NONE;
 }

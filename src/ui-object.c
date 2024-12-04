@@ -157,8 +157,9 @@ static void show_obj(int obj_num, int row, int col, bool cursor,
 	if (!strlen(items[obj_num].label)) return;
 
 	/* Print the label */
-	if (show_label)
+	if (show_label) {
 		c_put_str(label_attr, items[obj_num].label, row + obj_num, col);
+	}
 
 	/* Print the equipment label */
 	c_put_str(label_attr, items[obj_num].equip_label, row + obj_num,
