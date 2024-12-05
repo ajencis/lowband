@@ -1203,6 +1203,8 @@ void square_know_equipped_object(struct chunk *c, struct loc grid, bool (*pred)(
 
 	if (c != cave) return;
 
+	object_lists_check_integrity(c, player->cave);
+
 	mon = square_monster(c, grid);
 	if (!mon || !mon->race) {
 		return;

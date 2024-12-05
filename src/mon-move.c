@@ -500,7 +500,9 @@ static bool monster_turn_equip_item(struct monster *mon)
 		object_desc(odesc, sizeof(odesc), to_unequip, ODESC_TERSE | ODESC_PREFIX, player);
 		pile_excise(&mon->equipped_obj, to_unequip);
 		pile_insert(&mon->held_obj, to_unequip);
-		msg("%s unequips %s.", mdesc, odesc);
+		if (monster_is_visible(mon)) {
+			msg("%s unequips %s.", mdesc, odesc);
+		}
 		return true;
 	}
 	if (to_equip) {
@@ -516,7 +518,9 @@ static bool monster_turn_equip_item(struct monster *mon)
 			pile_excise(&mon->held_obj, to_equip);
 			pile_insert(&mon->equipped_obj, to_equip);
 		}
-		msg("%s equips %s.", mdesc, odesc);
+		if (monster_is_visible(mon)) {
+			msg("%s equips %s.", mdesc, odesc);
+		}
 		return true;
 	}
 

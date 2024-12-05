@@ -943,6 +943,9 @@ bool project_p(struct source origin, int r, struct loc grid, int dam, int typ,
 			msg("You take %d damage.", reduced);
 		}
 		take_hit(player, reduced, killer);
+		if (!player->is_dead && origin.what == SRC_MONSTER) {
+			check_berserk(player, cave_monster(cave, origin.which.monster));
+		}
 	}
 
 	/* Handle side effects, possibly including extra damage */

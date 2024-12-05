@@ -94,6 +94,7 @@ void player_regen_mana(struct player *p);
 void player_adjust_hp_precise(struct player *p, int32_t hp_gain);
 int32_t player_adjust_mana_precise(struct player *p, int32_t sp_gain);
 void convert_mana_to_hp(struct player *p, int32_t sp);
+bool check_berserk(struct player *p, struct monster *mon);
 void player_update_light(struct player *p);
 void player_over_exert(struct player *p, int flag, int chance, int amount);
 struct object *player_best_digger(struct player *p, bool forbid_stack);

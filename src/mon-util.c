@@ -1149,9 +1149,10 @@ static void player_kill_monster(struct monster *mon, struct player *p,
 
 	/* Bloodlust bonus */
 	if (p->timed[TMD_BLOODLUST]) {
-		player_inc_timed(p, TMD_BLOODLUST, 10, false, false, true);
-		player_over_exert(p, PY_EXERT_CONF, 5, 3);
-		player_over_exert(p, PY_EXERT_HALLU, 5, 10);
+		check_berserk(p, mon);
+		//player_inc_timed(p, TMD_BLOODLUST, 10, false, false, true);
+		player_over_exert(p, PY_EXERT_CONF, 5, 2);
+		player_over_exert(p, PY_EXERT_HALLU, 10, 15);
 	}
 
 	/* Recall even invisible uniques or winners */

@@ -506,8 +506,9 @@ void player_safe_name(char *safe, size_t safelen, const char *name, bool strip_s
 	safe[i] = '\0';
 
 	/* Require a "base" name */
-	if (!safe[0])
+	if (!safe[0]) {
 		my_strcpy(safe, "PLAYER", safelen);
+	}
 }
 
 

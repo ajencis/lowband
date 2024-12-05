@@ -419,7 +419,7 @@ msgt:GENERIC
 
 name:TERROR
 desc:terror
-grade:r:10000:Terror:You feel the need to run away and fast!
+grade:r:10000:Terror:You feel the need to run away - and fast!
 on-end:The urge to run dissipates.
 msgt:AFRAID
 flag-synonym:AFRAID:0
@@ -553,6 +553,8 @@ grade:r:34:Bloodlust:Your thirst for blood increases!
 grade:R:45:Bloodlust:Your thirst for blood increases!
 grade:P:50:Bloodlust:Your thirst for blood is insatiable!
 on-end:The mist clears.
+on-end-effect:TIMED_INC:SLOW
+effect-dice:10d10
 
 name:BLACKBREATH
 desc:black breath

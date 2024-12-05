@@ -876,7 +876,7 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 	if (p->chp < 0) {
 		/* From hell's heart I stab at thee */
 		if (p->timed[TMD_BLOODLUST]
-			&& (p->chp + p->timed[TMD_BLOODLUST] + p->lev >= 0)) {
+				&& (p->chp + p->timed[TMD_BLOODLUST] + p->lev >= 0)) {
 			if (randint0(10)) {
 				msg("Your lust for blood keeps you alive!");
 			} else {
@@ -921,8 +921,36 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 		msgt(MSG_HITPOINT_WARN, "*** LOW HITPOINT WARNING! ***");
 		event_signal(EVENT_MESSAGE_FLUSH);
 	}
+}
 
-	//if (one_in_(10)) take_max_hp_dam(p, dam);
+bool check_berserk(struct player *p, struct monster *mon)
+{
+	if (!mon || !mon->race) {
+		return false;
+	}
+	if (!monster_is_visible(mon)) {
+		// can't get mad at something you can't see
+		return false;
+	}
+	if (p->is_dead) {
+		return false;
+	}
+	if (!pf_has(p->state.pflags, PF_BERSERKER)) {
+		return false;
+	}
+	if (p->timed[TMD_SLOW]) {
+		// too tired to berserk
+		return false;
+	}
+	// somewhere between the amount of hp lost and the ratio of hp lost to max hp
+	int increase = (randint1(p->mhp) - p->chp) * 50 / (p->mhp + 50);
+	// higher increase the less you are already
+	if (increase >= 3) {
+		increase -= p->timed[TMD_BLOODLUST] / 3;
+		message_add(format("increase is %i", increase), MSG_GENERIC);
+		return player_inc_timed(p, TMD_BLOODLUST, MAX(increase, 0), true, true, false);
+	}
+	return false;
 }
 
 void take_max_sp_dam(struct player *p, int dam)
@@ -1492,7 +1520,7 @@ bool player_attack_random_monster(struct player *p)
 		const struct monster *mon = square_monster(cave, grid);
 		if (mon && !monster_is_camouflaged(mon)) {
 			p->upkeep->energy_use = z_info->move_energy;
-			msg("You angrily lash out at a nearby foe!");
+			msg("You angrily lash out at a nearby monster!");
 			py_attack(p, grid);
 			return true;
 		}

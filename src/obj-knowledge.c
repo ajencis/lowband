@@ -906,7 +906,7 @@ void object_see(struct player *p, struct object *obj)
 		/* Make a new one */
 		struct object *new_obj;
 
-		assert(! obj->known);
+		assert(!obj->known);
 		new_obj = object_new();
 		obj->known = new_obj;
 		object_set_base_known(p, obj);

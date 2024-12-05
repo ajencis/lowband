@@ -289,8 +289,9 @@ static void decrease_timeouts(void)
 	/* Most timed effects decrement by 1 */
 	for (i = 0; i < TMD_MAX; i++) {
 		int decr = 1;
-		if (!player->timed[i])
+		if (!player->timed[i]) {
 			continue;
+		}
 
 		/* Special cases */
 		switch (i) {
@@ -536,14 +537,17 @@ static void update_scent(void)
 void process_world(struct chunk *c)
 {
 	int i, y, x;
+	bool p_berserker = pf_has(player->state.pflags, PF_BERSERKER);
 
 	/* Compact the monster list if we're approaching the limit */
-	if (cave_monster_count(c) + 32 > z_info->level_monster_max)
+	if (cave_monster_count(c) + 32 > z_info->level_monster_max) {
 		compact_monsters(c, 64);
+	}
 
 	/* Too many holes in the monster list - compress */
-	if (cave_monster_count(c) + 32 < cave_monster_max(c))
+	if (cave_monster_count(c) + 32 < cave_monster_max(c)) {
 		compact_monsters(c, 0);
+	}
 
 	/*** Check the Time ***/
 
@@ -634,9 +638,9 @@ void process_world(struct chunk *c)
 	}
 
 	/* Side effects of diminishing bloodlust */
-	if (player->timed[TMD_BLOODLUST]) {
+	if (player->timed[TMD_BLOODLUST] && !p_berserker) {
 		player_over_exert(player, PY_EXERT_HP | PY_EXERT_CUT | PY_EXERT_SLOW,
-						  MAX(0, 10 - player->timed[TMD_BLOODLUST]),
+						  MAX(0, 25 - player->timed[TMD_BLOODLUST]),
 						  player->chp / 10);
 		if (player->is_dead) {
 			return;

@@ -1096,7 +1096,7 @@ void calc_blows(struct player *p, int wgt, struct attack_roll *aroll,
 	// max 600 * 100 / 100 + 100
 	int blows = MAX(0, baseblows) * state->skills[skill] / div;
 
-	aroll->blows = blows + 100 * extra_blows;
+	aroll->blows = blows + extra_blows;
 }
 
 /**
@@ -1193,7 +1193,7 @@ static void calc_shapechange(struct player_state *state, bool vuln[ELEM_MAX],
 	state->skills[SKILL_DIGGING] += (shape->modifiers[OBJ_MOD_TUNNEL] * 20);
 	state->speed += shape->modifiers[OBJ_MOD_SPEED];
 	state->dam_red += shape->modifiers[OBJ_MOD_DAM_RED];
-	*blows += shape->modifiers[OBJ_MOD_BLOWS];
+	*blows += shape->modifiers[OBJ_MOD_BLOWS] * 100;
 	*shots += shape->modifiers[OBJ_MOD_SHOTS];
 	*might += shape->modifiers[OBJ_MOD_MIGHT];
 	*moves += shape->modifiers[OBJ_MOD_MOVES];
@@ -1569,7 +1569,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 				* p->obj_k->modifiers[OBJ_MOD_SPEED];
 			state->dam_red += obj->modifiers[OBJ_MOD_DAM_RED]
 				* p->obj_k->modifiers[OBJ_MOD_DAM_RED];
-			extra_blows += obj->modifiers[OBJ_MOD_BLOWS]
+			extra_blows += obj->modifiers[OBJ_MOD_BLOWS] * 100
 				* p->obj_k->modifiers[OBJ_MOD_BLOWS];
 			extra_shots += obj->modifiers[OBJ_MOD_SHOTS]
 				* p->obj_k->modifiers[OBJ_MOD_SHOTS];
@@ -1816,8 +1816,12 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 5, 0);
 	}
 	if (p->timed[TMD_BLOODLUST]) {
-		state->to_d += p->timed[TMD_BLOODLUST] / 2;
-		extra_blows += p->timed[TMD_BLOODLUST] / 20;
+		state->to_d += p->timed[TMD_BLOODLUST] / 10 + 1;
+		state->to_h += p->timed[TMD_BLOODLUST] / 2;
+		extra_blows += p->timed[TMD_BLOODLUST] * 5;
+		state->speed += p->timed[TMD_BLOODLUST] / 5 - 3;
+		adjust_skill_scale(&state->skills[SKILL_STEALTH], -p->timed[TMD_BLOODLUST], 5, 10);
+		adjust_skill_scale(&state->skills[SKILL_SAVE], p->timed[TMD_BLOODLUST], 25, 0);
 	}
 	if (p->timed[TMD_STEALTH]) {
 		state->skills[SKILL_STEALTH] += 10;
@@ -1891,12 +1895,13 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		state->num_shots = 10;
 
 		/* Type of ammo */
-		if (kf_has(launcher->kind->kind_flags, KF_SHOOTS_SHOTS))
+		if (kf_has(launcher->kind->kind_flags, KF_SHOOTS_SHOTS)) {
 			state->ammo_tval = TV_SHOT;
-		else if (kf_has(launcher->kind->kind_flags, KF_SHOOTS_ARROWS))
+		} else if (kf_has(launcher->kind->kind_flags, KF_SHOOTS_ARROWS)) {
 			state->ammo_tval = TV_ARROW;
-		else if (kf_has(launcher->kind->kind_flags, KF_SHOOTS_BOLTS))
+		} else if (kf_has(launcher->kind->kind_flags, KF_SHOOTS_BOLTS)) {
 			state->ammo_tval = TV_BOLT;
+		}
 
 		/* Multiplier */
 		state->ammo_mult = launcher->pval;
@@ -2027,7 +2032,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		else {
 			const struct object *obj = state->attacks[i].obj;
 			int wgt = obj ? object_weight_one(obj) : 0;
-			calc_blows(p, wgt, &state->attacks[i], state, extra_blows + attacknum);
+			calc_blows(p, wgt, &state->attacks[i], state, extra_blows + attacknum * 100);
 		}
 	}
 

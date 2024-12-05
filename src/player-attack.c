@@ -1190,6 +1190,7 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 	bool done = false;
 	bool clockwise = one_in_(2);
 	int add = clockwise ? 1 : -1;
+
 	for (i = 0; !cgi && i < 9; i++) {
 		if (loc_eq(loc_sum(clockwise_grid[i], p->grid), grid)) {
 			cgi = i;
@@ -1205,10 +1206,8 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 		struct monster *mon = square_monster(cave, target_loc);
 		char no_attack_msg[80];
 		if (mon && monster_can_be_attacked(p, aroll, mon, no_attack_msg, sizeof(no_attack_msg))) {
-			char mdesc[80];
-			monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG);
-			msg("You cleave!");
-			if (get_check(format("Attack %s?", mdesc))) {
+			if (mon_will_attack_player(mon, p) && mon->target.who == TARGET_WHO_PLAYER) {
+				msg("You cleave!");
 				player->upkeep->energy_use /= 2;
 				return mon;
 			}
@@ -1400,7 +1399,8 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	/* Damage, check for hp drain, fear and death */
 	stop = proj_melee_attack_mon(mon, p, dmg, aroll->proj_type, fear, NULL);
 	
-
+	// L: berserkers go berserk
+	check_berserk(p, mon);
 	/* Small chance of bloodlust side-effects */
 	if (p->timed[TMD_BLOODLUST] && one_in_(50)) {
 		msg("You feel something give way!");

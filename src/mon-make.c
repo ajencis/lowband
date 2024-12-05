@@ -954,7 +954,7 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 			}
 			int choice = tvals[randint0(3)];
 			if (choice != -1) {
-				obj = make_object(c, level, one_in_(100), one_in_(100), false, NULL, choice);
+				obj = make_object(c, level, one_in_(100),false, false, NULL, choice);
 				if (obj) {
 					obj->origin = origin;
 					obj->origin_depth = convert_depth_to_origin(c->depth);

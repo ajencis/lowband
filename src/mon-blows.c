@@ -389,6 +389,7 @@ static bool monster_damage_target(melee_effect_handler_context_t *context,
 			context->p, reduced);
 		take_hit(context->p, reduced, context->ddesc);
 		if (context->p->is_dead) return true;
+		check_berserk(context->p, context->mon);
 	} else {
 		bool dead;
 
@@ -463,15 +464,19 @@ static void melee_effect_elemental(melee_effect_handler_context_t *context,
 				context->m_name, context->p, reduced);
 			take_hit(context->p, reduced, context->ddesc);
 
-			switch (type) {
-				case PROJ_ACID: msg("You are covered in acid!");
-					break;
-				case PROJ_ELEC: msg("You are struck by electricity!");
-					break;
-				case PROJ_FIRE: msg("You are enveloped in flames!");
-					break;
-				case PROJ_COLD: msg("You are covered with frost!");
-					break;
+			if (!context->p->is_dead) {
+				switch (type) {
+					case PROJ_ACID: msg("You are covered in acid!");
+						break;
+					case PROJ_ELEC: msg("You are struck by electricity!");
+						break;
+					case PROJ_FIRE: msg("You are enveloped in flames!");
+						break;
+					case PROJ_COLD: msg("You are covered with frost!");
+						break;
+				}
+
+				check_berserk(context->p, context->mon);
 			}
 		} else {
 			assert(context->t_mon);
@@ -538,6 +543,9 @@ static void melee_effect_physical(melee_effect_handler_context_t *context,
 				msg("%s %s you.%s", context->m_name, act, damtext);
 			}
 			take_hit(context->p, reduced, context->ddesc);
+			if (!context->p->is_dead) {
+				check_berserk(context->p, context->mon);
+			}
 		} else {
 			assert(context->t_mon);
 			display_blow_message_vs_monster(context->method,
