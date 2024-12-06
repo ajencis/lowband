@@ -3537,6 +3537,20 @@ power:5
 effect:TIMED_INC:SINFRA
 dice:100+4d25
 
+name:Fury
+type:potion
+graphics:!:d
+level:3
+weight:4
+cost:800
+alloc:4:25 to 100
+pile:25:2
+power:8
+effect:TIMED_INC:SHERO
+dice:15+1d25
+effect:TIMED_INC:BLOODLUST
+dice:25+1d25
+
 
 ### Useless buggers ###
 

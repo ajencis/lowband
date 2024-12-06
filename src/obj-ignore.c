@@ -693,7 +693,7 @@ void ignore_drop(struct player *p)
 				 * drop, and the drop will not trigger
 				 * bloodlust.
 				 */
-				drop_cmd->background_command = 2;
+				drop_cmd->background_command = 1;
 			}
 		}
 	}

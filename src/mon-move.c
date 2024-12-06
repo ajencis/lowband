@@ -432,6 +432,23 @@ bool mon_check_target(struct chunk *c, struct monster *mon)
  * will move on its turn
  * ------------------------------------------------------------------------ */
 
+static int item_score(struct object *obj)
+{
+	int score = 0;
+	if (!obj) return score;
+
+	score += obj->ac;
+	score += object_to_ac(obj);
+	score += obj->to_h;
+
+	if (wield_slot_type(obj) == EQUIP_WEAPON) {
+		score += obj->dd * (obj->ds + 1);
+		score += obj->to_d * 2;
+	}
+
+	return score;
+}
+
 static bool monster_turn_equip_item(struct monster *mon)
 {
 	if (!mflag_has(mon->mflag, MFLAG_CHECK_EQ)) {
@@ -462,19 +479,20 @@ static bool monster_turn_equip_item(struct monster *mon)
 
 	for (slot = body->slots, i = 0; slot && i < body->count; slot = slot->next, ++i) {
 		struct object *curr, *best = obj_slot[i];
-		int best_ac = best ? best->ac + object_to_ac(best) : 0;
+		int best_score = best ? item_score(best) : 0;
 		for (curr = mon->held_obj; curr; curr = curr->next) {
-			if (wield_slot_type(curr) != slot->type) {
+			int slot_type = wield_slot_type(curr);
+			if (slot_type != slot->type) {
 				continue;
 			}
-			int curr_ac = curr->ac + object_to_ac(curr);
-			if (curr_ac > best_ac) {
+			int curr_score = item_score(best);
+			if (curr_score > best_score) {
 				best = curr;
-				best_ac = curr_ac;
+				best_score = curr_score;
 			}
 		}
 		if (best && best != obj_slot[i]) {
-			int best_benefit = best_ac - (obj_slot[i] ? obj_slot[i]->ac + object_to_ac(obj_slot[i]) : 0);
+			int best_benefit = best_score - (obj_slot[i] ? item_score(obj_slot[i]) : 0);
 			if (best_benefit > best_best_benefit) {
 				best_best_benefit = best_benefit;
 				if (obj_slot[i]) {
@@ -487,7 +505,6 @@ static bool monster_turn_equip_item(struct monster *mon)
 					to_equip = best;
 					to_unequip = NULL;
 				}
-				break;
 			}
 		}
 	}

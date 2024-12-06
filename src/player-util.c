@@ -24,6 +24,7 @@
 #include "game-world.h"
 #include "generate.h"
 #include "init.h"
+#include "mon-desc.h"
 #include "mon-util.h"
 #include "obj-chest.h"
 #include "obj-desc.h"
@@ -876,7 +877,7 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 	if (p->chp < 0) {
 		/* From hell's heart I stab at thee */
 		if (p->timed[TMD_BLOODLUST]
-				&& (p->chp + p->timed[TMD_BLOODLUST] + p->lev >= 0)) {
+				&& (p->chp + (p->timed[TMD_BLOODLUST] * (p->mhp + 25) / 125) >= 0)) {
 			if (randint0(10)) {
 				msg("Your lust for blood keeps you alive!");
 			} else {
@@ -943,11 +944,10 @@ bool check_berserk(struct player *p, struct monster *mon)
 		return false;
 	}
 	// somewhere between the amount of hp lost and the ratio of hp lost to max hp
-	int increase = (randint1(p->mhp) - p->chp) * 50 / (p->mhp + 50);
+	int increase = (randint1(p->mhp) - p->chp) * 100 / (p->mhp + 50);
 	// higher increase the less you are already
 	if (increase >= 3) {
-		increase -= p->timed[TMD_BLOODLUST] / 3;
-		message_add(format("increase is %i", increase), MSG_GENERIC);
+		increase -= p->timed[TMD_BLOODLUST] / 5;
 		return player_inc_timed(p, TMD_BLOODLUST, MAX(increase, 0), true, true, false);
 	}
 	return false;
@@ -1512,19 +1512,109 @@ bool player_attack_random_monster(struct player *p)
 	int i, dir = randint0(8);
 
 	/* Confused players get a free pass */
-	if (p->timed[TMD_CONFUSED]) return false;
+	//if (p->timed[TMD_CONFUSED]) return false;
 
 	/* Look for a monster, attack */
 	for (i = 0; i < 8; i++, dir++) {
 		struct loc grid = loc_sum(p->grid, ddgrid_ddd[dir % 8]);
 		const struct monster *mon = square_monster(cave, grid);
-		if (mon && !monster_is_camouflaged(mon)) {
-			p->upkeep->energy_use = z_info->move_energy;
-			msg("You angrily lash out at a nearby monster!");
-			py_attack(p, grid);
+		if (mon && !monster_is_camouflaged(mon) && target_set_monster(mon)) {
+			char mdesc[80];
+			monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG);
+			// we have to set the target to the monster in case we attack something not adjacent
+			disturb(p);
+			cmdq_push(CMD_MELEE);
+			cmd_set_arg_target(cmdq_peek(), "target", DIR_TARGET);
+			msg("You furiously lash out at %s!", mdesc);
 			return true;
 		}
 	}
+	return false;
+}
+
+bool player_charge_random_monster(struct player *p, struct chunk *c)
+{
+	int i, closestdist = p->timed[TMD_BLOODLUST]; // won't charge enemies farther than this distance
+	struct monster *closest = NULL;
+
+	// might remove this later...
+	//if (p->timed[TMD_CONFUSED]) return false;
+
+	// find the closest foe
+	for (i = 1; i < cave_monster_max(cave); ++i) {
+		struct monster *mon = cave_monster(cave, i);
+
+		if (!mon || !mon->race) continue;
+		if (!monster_is_visible(mon)) continue;
+		int dist = distance(p->grid, mon->grid);
+		if (dist > closestdist) continue;
+		// no check for allies in a berserker rage
+
+		closest = mon;
+		closestdist = dist;
+	}
+
+	// make sure the target exists and we can see it
+	if (!closest) return false;
+	if (!los(c, p->grid, closest->grid)) return false;
+
+	struct loc difference = loc_diff(closest->grid, p->grid);
+	struct loc target_grid = difference;
+	int dir;
+	struct loc target_grids[3] = { 0 };
+
+	target_grid.x = MAX(-1, MIN(1, target_grid.x));
+	target_grid.y = MAX(-1, MIN(1, target_grid.y));
+
+	/* grids to try to go to in order of preference: diagonally towards,
+	   then horizontally and vertically depending on which is more direct */
+	target_grids[0] = target_grid;
+	if (ABS(difference.x) > ABS(difference.y)) {
+		target_grids[1] = loc(target_grid.x, 0);
+		target_grids[2] = loc(0, target_grid.y);
+	}
+	else {
+		target_grids[1] = loc(0, target_grid.y);
+		target_grids[2] = loc(target_grid.x, 0);
+	}
+
+	for (i = 0; i < 3; ++i) {
+		if (loc_is_zero(target_grids[i])) continue;
+
+		for (dir = 1; dir <= 9; ++dir) {
+			if (loc_eq(ddgrid[dir], target_grids[i])) {
+				if (square_ispassable(c, loc_sum(p->grid, ddgrid[dir]))) {
+					char mdesc[80];
+					monster_desc(mdesc, sizeof(mdesc), closest, MDESC_TARG);
+					msg("You furiously charge at %s!", mdesc);
+					disturb(p); // make sure we don't repeat commands
+					cmdq_push(CMD_WALK);
+					cmd_set_arg_direction(cmdq_peek(), "direction", dir);
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+bool player_command_override(struct player *p, struct chunk *c)
+{
+	int currtmd = p->timed[TMD_BLOODLUST];
+	if (p->skip_cmd_coercion) return false;
+	if (currtmd <= (randint0(30) + 5)) return false;
+
+	if (player_attack_random_monster(p)) return true;
+	if (player_charge_random_monster(p, c)) return true;
+
+	// no enemy to fight? we're losing our anger
+	msg("You have run out of enemies to fight!");
+	player_over_exert(p, PY_EXERT_CONF, 100, currtmd * 2);
+	player_over_exert(p, PY_EXERT_FAINT, 75, currtmd * 3 / 2);
+	player_over_exert(p, PY_EXERT_CUT, 50, p->mhp / 5);
+	player_dec_timed(p, TMD_BLOODLUST, currtmd, true, false);
+
 	return false;
 }
 

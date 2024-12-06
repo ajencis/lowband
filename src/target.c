@@ -128,11 +128,11 @@ void look_mon_desc(char *buf, size_t max, int m_idx)
  * the player can hit it with a projection, and the player is not
  * hallucinating.  This allows use of "use closest target" macros.
  */
-bool target_able(struct monster *m)
+bool target_able(const struct monster *m)
 {
 	return m && m->race && monster_is_obvious(m) &&
-		projectable(cave, player->grid, m->grid, PROJECT_NONE) &&
-		!player->timed[TMD_IMAGE];
+			projectable(cave, player->grid, m->grid, PROJECT_NONE) &&
+			!player->timed[TMD_IMAGE];
 }
 
 
@@ -170,7 +170,7 @@ bool target_okay(void)
 /**
  * Set the target to a monster (or nobody); if target is fixed, don't unset
  */
-bool target_set_monster(struct monster *mon)
+bool target_set_monster(const struct monster *mon)
 {
 	/* Acceptable target */
 	if (mon && target_able(mon)) {

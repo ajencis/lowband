@@ -1144,6 +1144,11 @@ int weight_remaining(struct player *p)
  */
 static void adjust_skill_scale(int *v, int num, int den, int minv)
 {
+	if (den < 0) {
+		den *= -1;
+		num *= -1;
+	}
+
 	if (num >= 0) {
 		*v += (MAX(minv, ABS(*v)) * num) / den;
 	} else {
@@ -1816,12 +1821,13 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 5, 0);
 	}
 	if (p->timed[TMD_BLOODLUST]) {
-		state->to_d += p->timed[TMD_BLOODLUST] / 10 + 1;
-		state->to_h += p->timed[TMD_BLOODLUST] / 2;
-		extra_blows += p->timed[TMD_BLOODLUST] * 5;
+		state->to_d += p->timed[TMD_BLOODLUST] / 5 + 1;
+		state->to_h += p->timed[TMD_BLOODLUST] * 2 / 3;
+		extra_blows += p->timed[TMD_BLOODLUST] * 4;
 		state->speed += p->timed[TMD_BLOODLUST] / 5 - 3;
+		state->dam_red += p->timed[TMD_BLOODLUST] * (p->mhp + 100) / 1000;
 		adjust_skill_scale(&state->skills[SKILL_STEALTH], -p->timed[TMD_BLOODLUST], 5, 10);
-		adjust_skill_scale(&state->skills[SKILL_SAVE], p->timed[TMD_BLOODLUST], 25, 0);
+		adjust_skill_scale(&state->skills[SKILL_SAVE], p->timed[TMD_BLOODLUST], 20, 10);
 	}
 	if (p->timed[TMD_STEALTH]) {
 		state->skills[SKILL_STEALTH] += 10;

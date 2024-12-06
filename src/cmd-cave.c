@@ -1230,7 +1230,7 @@ void move_player(int dir, bool disarm)
 		 * autopickup, and the autopickup won't trigger
 		 * bloodlust.
 		 */
-		cmdq_peek()->background_command = 2;
+		cmdq_peek()->background_command = 1;
 	}
 
 	player->upkeep->running_firststep = false;
@@ -1316,8 +1316,9 @@ void do_cmd_walk(struct command *cmd)
 	bool trapsafe = player_is_trapsafe(player) ? true : false;
 
 	/* Get arguments */
-	if (cmd_get_direction(cmd, "direction", &dir, false) != CMD_OK)
+	if (cmd_get_direction(cmd, "direction", &dir, false) != CMD_OK) {
 		return;
+	}
 
 	/* If we're in a web, deal with that */
 	if (square_iswebbed(cave, player->grid)) {
@@ -1333,13 +1334,15 @@ void do_cmd_walk(struct command *cmd)
 
 	/* Apply confusion if necessary */
 	/* Confused movements use energy no matter what */
-	if (player_confuse_dir(player, &dir, false))
+	if (player_confuse_dir(player, &dir, false)) {
 		player->upkeep->energy_use = z_info->move_energy;
+	}
 	
 	/* Verify walkability */
 	grid = loc_sum(player->grid, ddgrid[dir]);
-	if (!do_cmd_walk_test(player, grid))
+	if (!do_cmd_walk_test(player, grid)) {
 		return;
+	}
 
 	player->upkeep->energy_use = energy_per_move(player);
 

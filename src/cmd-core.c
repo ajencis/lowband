@@ -347,15 +347,6 @@ static void process_command(cmd_context ctx, struct command *cmd)
 
 	if (idx == -1) return;
 
-	/* Command repetition */
-	/*if (game_cmds[idx].repeat_allowed) {
-		// Auto-repeat only if there isn't already a repeat length.
-		if (game_cmds[idx].auto_repeat_n > 0 && cmd->nrepeats == 0)
-			cmd_set_repeat(game_cmds[idx].auto_repeat_n);
-	} else {
-		cmd->nrepeats = 0;
-		repeating = false;
-	}*/
 	if (!game_cmds[idx].repeat_allowed) {
 		cmd->nrepeats = 0;
 		repeating = false;
@@ -369,23 +360,29 @@ static void process_command(cmd_context ctx, struct command *cmd)
 
 	/* Actually execute the command function */
 	if (game_cmds[idx].fn) {
-		/* Occasional attack instead for bloodlust-affected characters */
+		// L: this is taken into account elsewhere now
+
 		if (cmd->background_command > 1) {
+			player->skip_cmd_coercion++;
+		}
+		/* Occasional attack instead for bloodlust-affected characters */
+		//if (cmd->background_command > 1) {
 			/*
 			 * Some background commands do not trigger bloodlust.
 			 * If they can take energy, they also don't reset
 			 * whether the player's next command skips the
 			 * bloodlust check.
 			 */
-			if (player->skip_cmd_coercion
-					&& game_cmds[idx].can_use_energy) {
-				player->skip_cmd_coercion = 2;
-			}
-		} else if (game_cmds[idx].can_use_energy
-				&& !player->skip_cmd_coercion) {
-			if (randint0(200) < player->timed[TMD_BLOODLUST]) {
-				if (player_attack_random_monster(player)) return;
-			} else if (player->timed[TMD_BLOODLUST]) {
+			//if (player->skip_cmd_coercion
+					//&& game_cmds[idx].can_use_energy) {
+				//player->skip_cmd_coercion = 2;
+			//}
+		//} else if (game_cmds[idx].can_use_energy
+				//&& !player->skip_cmd_coercion) {
+			//if (randint0(75) < player->timed[TMD_BLOODLUST]) {
+				//if (player_attack_random_monster(player)) return;
+				//if (player_charge_random_monster(player, cave)) return;
+			//} else if (player->timed[TMD_BLOODLUST]) {
 				/*
 				 * In case this command is canceled by the
 				 * user, tentatively mark the player as
@@ -395,15 +392,16 @@ static void process_command(cmd_context ctx, struct command *cmd)
 				 * tentative determination in
 				 * process_player_cleanup().
 				 */
-				player->skip_cmd_coercion = 1;
-			}
-		}
+				//player->skip_cmd_coercion = 1;
+			//}
+		//}
 		game_cmds[idx].fn(cmd);
 	}
 
 	/* If the command hasn't changed nrepeats, count this execution. */
-	if (cmd->nrepeats > 0 && oldrepeats == cmd_get_nrepeats())
+	if (cmd->nrepeats > 0 && oldrepeats == cmd_get_nrepeats()) {
 		cmd_set_repeat(oldrepeats - 1);
+	}
 }
 
 /**
@@ -414,25 +412,11 @@ bool cmdq_pop(cmd_context c)
 	struct command *cmd = NULL;
 
 	/* If we're repeating, just pull the last command again. */
-	/*if (repeating) {
-		cmd = &cmd_queue[prev_cmd_idx(cmd_tail)];
-	} else*/
 	while (!cmd && cmd_head != cmd_tail) {
 		cmd = &cmd_queue[cmd_tail++];
 		if (cmd->nrepeats == -1) cmd = NULL;
 		if (cmd_tail == CMD_QUEUE_SIZE) cmd_tail = 0;
 	}
-	/*if (cmd_head != cmd_tail) {
-		cmd = &cmd_queue[cmd_tail++];
-		while (cmd_head != cmd_tail && cmd->nrepeats < 0) {
-			cmd = &cmd_queue[cmd_tail++];
-			if (cmd_tail == CMD_QUEUE_SIZE)
-				cmd_tail = 0;
-		}
-	} else {
-		// Failure to get a command. 
-		return false;
-	}*/
 	if (!cmd) return false;
 
 	/* Now process it */
@@ -531,6 +515,11 @@ void cmdq_release(void)
 	cmd_release(&last_command);
 	last_command.code = CMD_NULL;
 	last_command_idx = -1;
+}
+
+bool cmdq_is_empty(void)
+{
+	return cmd_tail != cmd_head;
 }
 
 /**

@@ -9,7 +9,8 @@
 # followed by a sequence of alternating slot-type and slot-name lines.
 
 body:Humanoid
-slot:WEAPON:hand
+slot:WEAPON:right hand
+slot:WEAPON:left hand
 slot:BOW:shooting
 slot:RING:right hand
 slot:RING:left hand
@@ -17,7 +18,6 @@ slot:AMULET:neck
 slot:LIGHT:light
 slot:BODY_ARMOR:body
 slot:CLOAK:back
-slot:WEAPON:offhand
 slot:HAT:head
 slot:GLOVES:hands
 slot:BOOTS:feet
@@ -49,25 +49,25 @@ slot:CLOAK:back
 slot:HAT:head
 
 body:Marilith
-slot:WEAPON:hand
-slot:WEAPON:offhand
-slot:WEAPON:hand
-slot:WEAPON:offhand
-slot:WEAPON:hand
-slot:WEAPON:offhand
-slot:RING:right hand
-slot:RING:left hand
-slot:RING:right hand
-slot:RING:left hand
-slot:RING:right hand
-slot:RING:left hand
+slot:WEAPON:top-right hand
+slot:WEAPON:top-left hand
+slot:WEAPON:mid-right hand
+slot:WEAPON:mid-left hand
+slot:WEAPON:low-right hand
+slot:WEAPON:low-left hand
+slot:RING:top-right hand
+slot:RING:top-left hand
+slot:RING:mid-right hand
+slot:RING:mid-left hand
+slot:RING:low-right hand
+slot:RING:low-left hand
 slot:AMULET:neck
 slot:LIGHT:light
 slot:CLOAK:back
 slot:HAT:head
-slot:GLOVES:hands
-slot:GLOVES:hands
-slot:GLOVES:hands
+slot:GLOVES:top hands
+slot:GLOVES:mid hands
+slot:GLOVES:low hands
 
 body:Hydra2
 slot:AMULET:neck

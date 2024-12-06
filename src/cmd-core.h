@@ -300,6 +300,8 @@ const char *cmd_verb(cmd_code cmd);
  */
 struct command *cmdq_peek(void);
 
+bool cmdq_is_empty(void);
+
 /**
  * A function called by the game to get a command from the UI.
  */

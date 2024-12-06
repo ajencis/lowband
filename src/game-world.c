@@ -1040,7 +1040,7 @@ void process_player(void)
 
 		/* Paralyzed or Knocked Out player gets no turn */
 		if (player->timed[TMD_PARALYZED] ||
-			player_timed_grade_eq(player, TMD_STUN, "Knocked Out")) {
+				player_timed_grade_eq(player, TMD_STUN, "Knocked Out")) {
 			cmdq_push(CMD_SLEEP);
 		}
 
@@ -1057,17 +1057,23 @@ void process_player(void)
 		}
 
 		/* Get a command from the queue if there is one */
-		if (!cmdq_pop(CTX_GAME))
+		if (!cmdq_pop(CTX_GAME)) {
 			break;
+		}
 
-		if (!player->upkeep->playing)
+		if (!player->upkeep->playing) {
 			break;
+		}
 
 		process_player_cleanup();
 
 	} while (!player->upkeep->energy_use &&
 			 !player->is_dead &&
 			 !player->upkeep->generate_level);
+
+	/*if (player->upkeep->energy_use && !player->is_dead && !player->upkeep->generate_level) {
+		player_command_override(player, cave);
+	}*/
 
 	/* Notice stuff (if needed) */
 	notice_stuff(player);
@@ -1232,10 +1238,11 @@ void run_game_loop(void)
 	 * another command is needed */
 	while (player->upkeep->playing) {
 		process_player();
-		if (player->upkeep->energy_use)
+		if (player->upkeep->energy_use) {
 			break;
-		else
+		} else {
 			return;
+		}
 	}
 
 	/* The player may still have enough energy to move, so we run another
@@ -1247,16 +1254,18 @@ void run_game_loop(void)
 		/* Process monster with even more energy first */
 		process_monsters(player->energy + 1);
 		if (player->is_dead || !player->upkeep->playing ||
-			player->upkeep->generate_level)
+				player->upkeep->generate_level) {
 			break;
+		}
 
 		/* Process the player until they use some energy */
 		while (player->upkeep->playing) {
 			process_player();
-			if (player->upkeep->energy_use)
+			if (player->upkeep->energy_use) {
 				break;
-			else
+			} else {
 				return;
+			}
 		}
 	}
 
@@ -1270,9 +1279,9 @@ void run_game_loop(void)
 		/* Process the rest of the world, give the player energy and 
 		 * increment the turn counter unless we need to stop playing or
 		 * generate a new level */
-		if (player->is_dead || !player->upkeep->playing)
+		if (player->is_dead || !player->upkeep->playing) {
 			return;
-		else if (!player->upkeep->generate_level) {
+		} else if (!player->upkeep->generate_level) {
 			/* Process the rest of the monsters */
 			process_monsters(0);
 
@@ -1353,16 +1362,18 @@ void run_game_loop(void)
 			/* Process monster with even more energy first */
 			process_monsters(player->energy + 1);
 			if (player->is_dead || !player->upkeep->playing ||
-				player->upkeep->generate_level)
+					player->upkeep->generate_level) {
 				break;
+			}
 
 			/* Process the player until they use some energy */
 			while (player->upkeep->playing) {
 				process_player();
-				if (player->upkeep->energy_use)
+				if (player->upkeep->energy_use) {
 					break;
-				else
+				} else {
 					return;
+				}
 			}
 		}
 	}

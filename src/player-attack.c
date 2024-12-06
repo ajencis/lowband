@@ -1041,14 +1041,20 @@ static bool monster_can_be_attacked(struct player *p, const struct attack_roll *
 		struct monster *mon, char *buf, size_t bufsize)
 {
 	if (!monster_is_visible(mon) && aroll->attack_skill == SKILL_SEARCH) {
-		my_strcpy(buf, "You cannot gaze at something you cannot see!", bufsize);
+		if (buf) {
+			my_strcpy(buf, "You cannot gaze at something you cannot see!", bufsize);
+		}
 		return false;
 	}
 	if (distance(p->grid, mon->grid) > aroll->range) {
-		my_strcpy(buf, "You cannot reach that far!", bufsize);
+		if (buf) {
+			my_strcpy(buf, "You cannot reach that far!", bufsize);
+		}
 		return false;
 	}
-	buf[0] = '\0';
+	if (buf) {
+		buf[0] = '\0';
+	}
 	return true;
 }
 
@@ -1188,8 +1194,16 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 	int i, j;
 	int cgi = 0; // clockwise grid index
 	bool done = false;
-	bool clockwise = one_in_(2);
-	int add = clockwise ? 1 : -1;
+	bool clockwise = false;
+	int add;
+	struct object *weap = aroll->obj;
+
+	if (weap) {
+		int slotnum = object_slot(p->body, weap);
+		if (slotnum < p->body.count && my_stristr(p->body.slots[slotnum].name, "left")) {
+			clockwise = true;
+		}
+	}
 
 	for (i = 0; !cgi && i < 9; i++) {
 		if (loc_eq(loc_sum(clockwise_grid[i], p->grid), grid)) {
@@ -1201,12 +1215,25 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 		return NULL;
 	}
 
+	add = clockwise ? 1 : -1;
 	for (i = (cgi + add) % 9, j = 0; !done && j < 3; i = (i + add) % 9, j++) {
 		struct loc target_loc = loc_sum(clockwise_grid[i], p->grid);
 		struct monster *mon = square_monster(cave, target_loc);
-		char no_attack_msg[80];
-		if (mon && monster_can_be_attacked(p, aroll, mon, no_attack_msg, sizeof(no_attack_msg))) {
+		
+		if (mon && monster_can_be_attacked(p, aroll, mon, NULL, 0U)) {
+			char mdesc[80];
+			bool docleave = false;
+			monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG);
+
 			if (mon_will_attack_player(mon, p) && mon->target.who == TARGET_WHO_PLAYER) {
+				docleave = true;
+			} else if (p->timed[TMD_BLOODLUST]) {
+				docleave = true;
+			} else if (get_check(format("Attack %s? ", mdesc))) {
+				docleave = true;
+			}
+
+			if (docleave) {
 				msg("You cleave!");
 				player->upkeep->energy_use /= 2;
 				return mon;
