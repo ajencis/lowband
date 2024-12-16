@@ -428,15 +428,17 @@ bool cmdq_pop(cmd_context c)
 
 	if (cmd_head == cmd_tail) { // last command
 		struct command *last;
-		if (last_command_idx >= 0)
+		if (last_command_idx >= 0) {
 			last = &cmd_queue[last_command_idx];
-		else if (last_command.code != CMD_NULL)
+		} else if (last_command.code != CMD_NULL) {
 			last = &last_command;
-		else
+		} else {
 			return true;
+		}
 		
-		if (last->nrepeats == 0)
+		if (last->nrepeats == 0) {
 			return true;
+		}
 		
 		if (cmd_head != last_command_idx) {
 			cmd_release(&cmd_queue[cmd_head]);
@@ -519,7 +521,7 @@ void cmdq_release(void)
 
 bool cmdq_is_empty(void)
 {
-	return cmd_tail != cmd_head;
+	return cmd_tail == cmd_head;
 }
 
 /**
@@ -847,8 +849,9 @@ int cmd_get_gener_spell(struct command *cmd, const char *arg, struct player *p,
 		const char *error)
 {
 	if (cmd_get_arg_choice(cmd, arg, spell) == CMD_OK) {
-		if (!gener_spell_filter || gener_spell_filter(p, *spell) == 1)
+		if (!gener_spell_filter || gener_spell_filter(p, *spell) == 1) {
 			return CMD_OK;
+		}
 	}
 
 	*spell = get_gener_spell(p, error, gener_spell_filter);

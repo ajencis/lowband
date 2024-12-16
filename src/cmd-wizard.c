@@ -1199,10 +1199,10 @@ void do_cmd_wiz_edit_player_exp(struct command *cmd)
 	/* Keep in the bounds of [0, PY_MAX_EXP]. */
 	newv = MIN(PY_MAX_EXP, MAX(0, newv));
 
-	if (newv > player->exp) {
-		player_exp_gain(player, newv - player->exp, 0);
+	if ((unsigned)newv > player->exp) {
+		player_exp_gain(player, (unsigned)newv - player->exp, 0);
 	} else {
-		player_exp_lose(player, player->exp - newv, false);
+		player_exp_lose(player, player->exp - (unsigned)newv, false);
 	}
 }
 

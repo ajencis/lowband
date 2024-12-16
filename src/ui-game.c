@@ -923,8 +923,8 @@ void play_game(enum game_mode_type mode)
 		 * is needed */
 		while (!player->is_dead && player->upkeep->playing) {
 			pre_turn_refresh();
-			// L: handle the character overriding the player
-			if (!player_command_override(player, cave)) {
+			// L: possible that queue has been added to
+			if (cmdq_is_empty()) {
 				cmd_get_hook(CTX_GAME);
 			}
 			run_game_loop();

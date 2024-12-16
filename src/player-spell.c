@@ -513,9 +513,10 @@ void spell_learn(int spell_index)
 	player->upkeep->new_spells--;
 
 	/* Message if needed */
-	if (player->upkeep->new_spells)
+	if (player->upkeep->new_spells) {
 		msg("You can learn %d more %s%s.", player->upkeep->new_spells,
 			spell->realm->spell_noun, PLURAL(player->upkeep->new_spells));
+	}
 
 	/* Redraw Study Status */
 	player->upkeep->redraw |= (PR_STUDY | PR_OBJECT);
@@ -633,7 +634,17 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 			convert_mana_to_hp(player, mana << 16);
 		}
 
-		player->player_spell_flags[spell_index] |= PY_SPELL_WORKED;
+		if (!(player->player_spell_flags[spell_index] & PY_SPELL_WORKED)) {
+			int i;
+			bool found_order = false;
+			for (i = 0; i < z_info->spell_max && !found_order; i++) {
+				if (player->player_spell_order[i] == 99) {
+					player->player_spell_order[i] = spell->sidx;
+					found_order = true;
+				}
+			}
+			player->player_spell_flags[spell_index] |= PY_SPELL_WORKED;
+		}
 
 		/* A spell was cast */
 		sound(MSG_SPELL);
@@ -914,23 +925,16 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 	return skill + schoolbonus + realmbonus - s->slevel + 1;
 }
 
-void gener_spell_learn(struct player *p, const struct player_spell *s)
+void gener_spell_learn(struct player *p, const struct player_spell *s, bool verbose)
 {
-	int i;
-	bool found_order;
+	//int i;
+	//bool found_order;
 
 	p->player_spell_flags[s->sidx] |= PY_SPELL_LEARNED;
 
-	for (i = 0; i < z_info->spell_max && !found_order; i++) {
-		if (p->player_spell_order[i] == 99) {
-			p->player_spell_order[i] = s->sidx;
-			found_order = true;
-		}
+	if (verbose) {
+		msg("You have learned the spell of %s.", s->name);
 	}
-
-	assert(found_order);
-
-	msg("You have learned the spell of %s.", s->name);
 
 	p->upkeep->update |= PU_SPELLS;
 

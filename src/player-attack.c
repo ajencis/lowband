@@ -1037,7 +1037,7 @@ static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow
  * L: can a monster be targeted by an attack under present circumstances
  * will put a message in  buf  describing why it cannot if it cannot
  */
-static bool monster_can_be_attacked(struct player *p, const struct attack_roll *aroll,
+bool monster_can_be_attacked(struct player *p, const struct attack_roll *aroll,
 		struct monster *mon, char *buf, size_t bufsize)
 {
 	if (!monster_is_visible(mon) && aroll->attack_skill == SKILL_SEARCH) {
@@ -1056,6 +1056,19 @@ static bool monster_can_be_attacked(struct player *p, const struct attack_roll *
 		buf[0] = '\0';
 	}
 	return true;
+}
+
+bool player_can_attack_monster(struct player *p, struct monster *mon)
+{
+	int i;
+
+	for (i = 0; i < p->state.num_attacks; ++i) {
+		if (monster_can_be_attacked(p, &p->state.attacks[i], mon, NULL, 0)) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 static int mon_blow_dam_stat(struct monster_blow *mb, struct player_state *ps)
@@ -2017,9 +2030,11 @@ void do_cmd_melee(struct command *cmd)
 
 	if (!foe) {
 		msg("There's nobody there.");
+		player->upkeep->energy_use = z_info->move_energy / 2;
 		return;
 	}
 	if (distance(player->grid, target) > range) {
+		player->upkeep->energy_use = z_info->move_energy / 2;
 		msg("You can't attack that far.");
 		return;
 	}

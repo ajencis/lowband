@@ -47,7 +47,7 @@ struct player_spell *spells;
 /**
  * Base experience levels, may be adjusted up for race and/or class
  */
-const int32_t player_exp[PY_MAX_LEVEL] =
+const uint32_t player_exp[PY_MAX_LEVEL] =
 {
 	2,
 	6,
@@ -245,28 +245,26 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 {
 	bool doneone = false;
 
-	if (p->exp < 0)
-		p->exp = 0;
-
-	if (p->max_exp < 0)
-		p->max_exp = 0;
-
-	if (p->exp > PY_MAX_EXP)
+	if (p->exp > PY_MAX_EXP) {
 		p->exp = PY_MAX_EXP;
+	}
 
-	if (p->max_exp > PY_MAX_EXP)
+	if (p->max_exp > PY_MAX_EXP) {
 		p->max_exp = PY_MAX_EXP;
+	}
 
-	if (p->exp > p->max_exp)
+	if (p->exp > p->max_exp) {
 		p->max_exp = p->exp;
+	}
 
 	p->upkeep->redraw |= PR_EXP;
 
 	if (levelup) handle_stuff(p);
 
 	while ((p->lev > 1) &&
-		   (p->exp < player_exp[p->lev-2]))
+		   (p->exp < player_exp[p->lev-2])) {
 		p->lev--;
+	}
 
 	while (((levelup && !doneone) || p->lev < p->max_lev) && player_can_level_up(p)) {
 		char buf[80];
@@ -279,6 +277,8 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 			doneone = true;
 
 			p->max_lev++;
+
+			p->exp_frac = 0;
 
 			int freq = p->max_lev < 20 ? 5 : p->max_lev < 36 ? 4 : 3;
 
@@ -303,7 +303,7 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 	if (levelup) handle_stuff(p);
 }
 
-void player_exp_gain(struct player *p, int32_t amount, uint32_t fract)
+void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract)
 {
 	uint32_t tolev;
 	uint32_t new_fract, extra_fract, new_amt;
@@ -314,7 +314,7 @@ void player_exp_gain(struct player *p, int32_t amount, uint32_t fract)
 	new_amt = amount * 100;
 	new_amt /= p->state.expfact;
 
-	new_fract = 100 * fract;
+	new_fract = fract * 100;
 	new_fract /= p->state.expfact;
 
 	extra_fract = (amount * 100 - new_amt * p->state.expfact) * UINT16_MAX;
@@ -330,7 +330,7 @@ void player_exp_gain(struct player *p, int32_t amount, uint32_t fract)
 
 	if (new_amt > tolev - p->exp) {
 		p->exp = tolev;
-		p->exp_frac = UINT16_MAX;
+		p->exp_frac = new_fract;
 	}
 	else {
 		p->exp += new_amt;
@@ -345,7 +345,7 @@ void player_exp_gain(struct player *p, int32_t amount, uint32_t fract)
 	}
 	
 	if (p->exp < p->max_exp) {
-		p->max_exp = MIN(amount / 10 + p->max_exp, (int)tolev);
+		p->max_exp = MIN(amount / 10 + p->max_exp, tolev);
 	}
 
 	adjust_level(p, true, false);
@@ -353,11 +353,13 @@ void player_exp_gain(struct player *p, int32_t amount, uint32_t fract)
 
 void player_exp_lose(struct player *p, int32_t amount, bool permanent)
 {
-	if (p->exp < amount)
+	if (p->exp < (unsigned)amount) {
 		amount = p->exp;
+	}
 	p->exp -= amount;
-	if (permanent)
+	if (permanent) {
 		p->max_exp -= amount;
+	}
 	adjust_level(p, true, false);
 }
 

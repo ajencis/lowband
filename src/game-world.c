@@ -1071,9 +1071,9 @@ void process_player(void)
 			 !player->is_dead &&
 			 !player->upkeep->generate_level);
 
-	/*if (player->upkeep->energy_use && !player->is_dead && !player->upkeep->generate_level) {
-		player_command_override(player, cave);
-	}*/
+	if (player->upkeep->energy_use && !player->is_dead && !player->upkeep->generate_level) {
+		bloodlust_override(player, cave);
+	}
 
 	/* Notice stuff (if needed) */
 	notice_stuff(player);

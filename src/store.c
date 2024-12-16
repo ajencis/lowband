@@ -702,7 +702,7 @@ int price_item(struct store *store, const struct object *obj,
 			}
 
 			// L: don't buy cheap stuff, especially lategame
-			int minprice = turn * 10 / z_info->day_length + 100;
+			int minprice = turn * 10 / z_info->day_length / 10 + 100;
 			if (tval_is_ammo(obj)) minprice /= 10;
 			if (price <= minprice) return 0;
 		}

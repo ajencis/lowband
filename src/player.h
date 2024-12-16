@@ -337,6 +337,7 @@ struct magic_realm {
 	char *book_noun;
 
 	int school_modifiers[MS_MAX];	/* L: which schools it does well */
+	bool innate;					/* L: does it learn spells? */
 };
 
 /**
@@ -535,7 +536,7 @@ struct player_state {
 
 	bool cumber_armor;	/**< Mana draining armor */
 
-	int expfact;        /**< L: now changes based on int */
+	uint32_t expfact;        /**< L: now changes based on int */
 
 	bitflag flags[OF_SIZE];					/**< Status flags from race and items */
 	bitflag pflags[PF_SIZE];				/**< Player intrinsic flags */
@@ -645,8 +646,8 @@ struct player {
 	int16_t max_lev;	/* Max level */
 	int16_t lev;		/* Cur level */
 
-	int32_t max_exp;	/* Max experience */
-	int32_t exp;		/* Cur experience */
+	uint32_t max_exp;	/* Max experience */
+	uint32_t exp;		/* Cur experience */
 	uint16_t exp_frac;	/* Cur exp frac (times 2^16) */
 
 	int16_t mhp;		/* Max hit pts */
@@ -752,7 +753,7 @@ extern struct player_ability *player_abilities;
 extern struct magic_realm *realms;
 extern struct player_spell *spells;
 
-extern const int32_t player_exp[PY_MAX_LEVEL];
+extern const uint32_t player_exp[PY_MAX_LEVEL];
 extern struct player *player;
 
 /* player-class.c */
@@ -766,7 +767,7 @@ bool player_stat_inc(struct player *p, int stat);
 bool player_stat_dec(struct player *p, int stat, bool permanent);
 bool player_at_max_level(struct player *p);
 bool player_can_level_up(struct player *p);
-void player_exp_gain(struct player *p, int32_t amount, uint32_t fract);
+void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract);
 void player_exp_lose(struct player *p, int32_t amount, bool permanent);
 void player_level_up_one(struct player *p, bool verbose);
 void check_level(struct player *p);

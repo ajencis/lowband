@@ -180,7 +180,7 @@ static int adj_mag_study(int index) {
 }
 
 static int adj_mag_mana(int index) {
-	return (index + 5) * 500 / 20;
+	return (index + 5) * 200 / 20;
 }
 
 int adj_int_xp(int index) {
@@ -658,6 +658,7 @@ static void calc_spells(struct player *p)
 {
 	int i, j, k;
 	int num_allowed, num_known;
+	int lev = p->state.skills[SKILL_MAGIC];
 	const struct magic_realm *realm = get_player_realm(p);
 
 	const struct player_spell *spell;
@@ -670,20 +671,14 @@ static void calc_spells(struct player *p)
 	/* Hack -- handle partial mode */
 	if (p->upkeep->only_partial) return;
 
+	// L: no magic, no spells
+	if (lev <= 0) return;
+
 	/* Save the new_spells value */
 	old_spells = p->upkeep->new_spells;
 
-	/* Determine the number of spells allowed */
-	//levels = p->lev - p->class->magic.spell_first + 1;
-
-	/* Hack -- no negative spells */
-	//if (levels < 0) levels = 0;
-
 	/* Number of 1/100 spells per level (or something - needs clarifying) */
-	num_allowed = adj_mag_study(p->state.stat_ind[realm->stat]);
-
-	/* Extract total allowed spells (rounded up) */
-	//num_allowed = (((percent_spells * levels) + 50) / 100);
+	num_allowed = adj_mag_study(p->state.stat_ind[realm->stat]) * lev / 100 + 3;
 
 	/* Assume none known */
 	num_known = 0;
@@ -698,7 +693,13 @@ static void calc_spells(struct player *p)
 	/* See how many spells we must forget or may learn */
 	p->upkeep->new_spells = num_allowed - num_known;
 
-	
+
+	// L: if we're an innate caster and never got any spells known give them now
+	if (realm->innate && lev >= 3 && num_known == 0) {
+		player_learn_spell_xp(p, true, 0);
+	}
+
+
 	// Forget spells which are too hard 
 	for (i = z_info->spell_max - 1; i >= 0; i--) {
 		// Get the spell
@@ -820,7 +821,7 @@ static void calc_spells(struct player *p)
 	if (old_spells != p->upkeep->new_spells) {
 		/* Message if needed */
 
-		if (p->upkeep->new_spells) {
+		if (p->upkeep->new_spells && !realm->innate) {
 			msg("You can learn %d new %s%s.",
 					p->upkeep->new_spells,
 					realm->spell_noun,
@@ -1938,7 +1939,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			if (weapons[i]->tval == TV_HAFTED) {
 				any_hafted = true;
 			}
-			else {
+			else if (weapons[i]->tval != TV_SHIELD) {
 				all_hafted = false;
 			}
 			weapon_weight = MAX(weapon_weight, currwgt);
@@ -2103,8 +2104,9 @@ static void update_bonuses(struct player *p)
 	}
 
 	// L: update exp if needed
-	if (state.expfact != p->state.expfact)
+	if (state.expfact != p->state.expfact) {
 		p->upkeep->redraw |= PR_EXP;
+	}
 
 	// L: redraw status if learning ability changed
 	if (state.extra_points_max != p->state.extra_points_max ||
@@ -2112,21 +2114,29 @@ static void update_bonuses(struct player *p)
 		p->upkeep->redraw |= PR_STATUS;
 	}
 
+	// L: update spells if magic skill changed
+	if (state.skills[SKILL_MAGIC] != p->state.skills[SKILL_MAGIC]) {
+		p->upkeep->update |= PU_SPELLS;
+	}
+
 
 	/* Hack -- Telepathy Change */
 	if (of_has(state.flags, OF_TELEPATHY) !=
-		of_has(p->state.flags, OF_TELEPATHY))
+		of_has(p->state.flags, OF_TELEPATHY)) {
 		/* Update monster visibility */
 		p->upkeep->update |= (PU_MONSTERS);
+	}
 	/* Hack -- See Invis Change */
 	if (of_has(state.flags, OF_SEE_INVIS) !=
-		of_has(p->state.flags, OF_SEE_INVIS))
+		of_has(p->state.flags, OF_SEE_INVIS)) {
 		/* Update monster visibility */
 		p->upkeep->update |= (PU_MONSTERS);
+		}
 
 	/* Redraw speed (if needed) */
-	if (state.speed != p->state.speed)
+	if (state.speed != p->state.speed) {
 		p->upkeep->redraw |= (PR_SPEED);
+	}
 
 	/* Redraw armor (if needed) */
 	if ((known_state.ac != p->known_state.ac) || 

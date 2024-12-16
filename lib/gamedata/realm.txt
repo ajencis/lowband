@@ -9,6 +9,7 @@
 
 name:arcane
 stat:INT
+innate:0
 verb:cast
 spell-noun:spell
 book-noun:magic book
@@ -17,6 +18,7 @@ school:HEALING:-10
 
 name:divine
 stat:WIS
+innate:1
 verb:recite
 spell-noun:prayer
 book-noun:prayer book
@@ -37,10 +39,11 @@ school:NECROMANCY:5
 
 name:nature
 stat:WIS
+innate:1
 verb:chant
 spell-noun:verse
 book-noun:nature book
-weight:300
+weight:200
 school:AIR:5
 school:WATER:5
 school:EARTH:5

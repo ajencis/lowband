@@ -67,7 +67,7 @@ attr:SPEED:-1
 attr:DAMAGE:-1
 attr:AC:1
 attr:HP:1
-stats:1:1:1:1:1
+stats:0:0:1:0:0
 skill-save:10
 
 # Ants have lowish HP but highish armor class, and powerful melee for their

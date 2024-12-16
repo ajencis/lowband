@@ -182,7 +182,7 @@ bool check_player_monster(struct player *p, bool init)
 	struct evolution *e = curr ? curr->evol : p->race->evol;
 	bool do_change = false;
 	uint32_t xpneed;
-	int currxp = init ? player_exp[5] : (int)p->monster_xp;
+	int currxp = init ? player_exp[5] : p->monster_xp;
 
 	while (e) {
 		int monlev = e->race->level;
@@ -194,7 +194,7 @@ bool check_player_monster(struct player *p, bool init)
 			// monster is in the table
 			currxpneed = player_exp[monlev];
 		}
-		else if (player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL < PY_MAX_EXP / monlev) {
+		else if (player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL < PY_MAX_EXP / (unsigned)monlev) {
 			/* monster is out of the table but linear scaling of the highest value
 			   in the table is less than the maximum possible */
 			currxpneed = player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL * monlev;
@@ -461,6 +461,10 @@ bool learn_realm(struct player *p, const struct magic_realm *realm)
 
 	msg("You feel that you understand %s magic.", realm->name);
 
+	if (p->realm->innate) {
+		player_learn_spell_xp(p, true, 0);
+	}
+
 	return true;
 }
 
@@ -702,6 +706,133 @@ void player_race_elem_info(const struct player_race *r, bool evolved, struct ele
 }
 
 /**
+ * L: upon gaining xp, consider adding spells to those known
+ * clericy casters don't use spellbooks, they get granted spells by their god
+ * we can remove spells to make room for the new spells, but we will only remove spells
+ * that the caster hasn't cast yet
+ */
+bool player_learn_spell_xp(struct player *p, bool initial, int xp)
+{
+	int i, j, currnum = 0, maxnum = 0; // current number of forgettable spells, maximum number of forgettable spells
+	struct player_spell *ps;
+	int learned_num = 0;
+	int forgotten[3] = { -1, -1, -1 }; // track which ones we forgot so we don't relearn them
+	int forgottenind = 0;
+
+	// only some casters learn spells this way
+	if (!p->realm || !p->realm->innate) {
+		return false;
+	}
+
+	// don't get spells until skill 3
+	if (p->state.skills[SKILL_MAGIC] < 3) {
+		return false;
+	}
+
+	if (!initial) {
+		if (xp <= 0) {
+			return false;
+		}
+
+		int freq = p->state.skills[SKILL_MAGIC];
+		freq = MIN(turn * 13 / z_info->day_length / 10, freq);
+		freq = MAX(freq, 3);
+		freq = freq * freq / xp;
+
+		// don't change spells too often
+		message_add(format("chance is %i, skill is %i, turnmod is %i, xp is %i", freq, p->state.skills[SKILL_MAGIC], turn * 13 / z_info->day_length / 10, xp), MSG_GENERIC);
+		if (!one_in_(freq)) {
+			return false;
+		}
+	}
+
+	// count number of spells we already have
+	for (i = 0; i < z_info->spell_max; ++i) {
+		if ((p->player_spell_flags[i] & PY_SPELL_LEARNED) &&
+				!(p->player_spell_flags[i] & PY_SPELL_WORKED)) {
+			++currnum;
+		}
+	}
+
+	// always give 3 spells at birth
+	if (initial) {
+		maxnum = 3;
+		maxnum = MIN(maxnum, p->upkeep->new_spells);
+	} else {
+		int maxnum2 = randint1(3);
+		maxnum = randint1(3);
+		maxnum = MAX(maxnum, maxnum2);
+		maxnum = MIN(maxnum, p->upkeep->new_spells);
+	}
+
+	// while we haven't forgotten enough
+	for (forgottenind = 0; currnum >= maxnum && forgottenind < 3; --currnum, ++forgottenind) {
+		int total_so_far = 0;
+
+		// check every spell
+		for (i = 0; i < z_info->spell_max; ++i) {
+
+			// only forget spells that we know but haven't cast yet
+			if ((p->player_spell_flags[i] & PY_SPELL_LEARNED) &&
+					!(p->player_spell_flags[i] & PY_SPELL_WORKED)) {
+
+				// even chance for all spells
+				if (one_in_(currnum - total_so_far)) {
+					forgotten[forgottenind] = i;
+					p->player_spell_flags[i] &= (~PY_SPELL_LEARNED);
+					--currnum;
+					break;
+				}
+				++total_so_far;
+			}
+		}
+	}
+
+	while (currnum < maxnum) {
+		struct player_spell *choice = NULL;
+		int power_total = 0;
+
+		for (ps = spells; ps; ps = ps->next) {
+			int power = gener_spell_power(p, ps);
+
+			// learn only spells we can cast at a reasonable level
+			if (power > 5 || (initial && power > 0)) {
+				bool skip = false;
+
+				// skip spells we just forgot
+				for (j = 0; j < 3; ++j) {
+					if (forgotten[j] == ps->sidx) {
+						skip = true;
+					}
+				}
+
+				if (!skip) {
+					power_total += power;
+					if (randint0(power_total) < power) {
+						choice = ps;
+					}
+				}
+			}
+		}
+
+		if (!choice) break;
+
+		// actually learn it
+		gener_spell_learn(p, choice, false);
+		++learned_num;
+		++currnum;
+	}
+
+	if (character_generated && learned_num) {
+		msg(learned_num == 1 ? "You feel a new spell in your mind." : "You feel new spells in your mind.");
+		p->upkeep->update |= PU_SPELLS;
+	}
+
+	return learned_num ? true : false;
+}
+
+
+/**
  * Increment to the next or decrement to the preceeding level
    accounting for the stair skip value in constants
    Keep in mind to check all intermediate level for unskippable
@@ -715,8 +846,9 @@ int dungeon_get_next_level(struct player *p, int dlev, int added)
 	target_level = dlev + added * z_info->stair_skip;
 
 	/* Don't allow levels below max */
-	if (target_level > z_info->max_depth - 1)
+	if (target_level > z_info->max_depth - 1) {
 		target_level = z_info->max_depth - 1;
+	}
 
 	/* Don't allow levels above the town */
 	if (target_level < 0) target_level = 0;
@@ -944,10 +1076,13 @@ bool check_berserk(struct player *p, struct monster *mon)
 		return false;
 	}
 	// somewhere between the amount of hp lost and the ratio of hp lost to max hp
-	int increase = (randint1(p->mhp) - p->chp) * 100 / (p->mhp + 50);
-	// higher increase the less you are already
-	if (increase >= 3) {
-		increase -= p->timed[TMD_BLOODLUST] / 5;
+	// 25 max hp = up to 25 increase; 100 max hp = up to 40 increase (with max roll at 0 hp)
+	int increase = (randint1(p->mhp) - p->chp * 2 / 3) * 50 / (p->mhp + 25);
+	
+	if (increase >= 0) {
+		// higher increase the less you are already
+		increase -= p->timed[TMD_BLOODLUST] / 3 - 5;
+
 		return player_inc_timed(p, TMD_BLOODLUST, MAX(increase, 0), true, true, false);
 	}
 	return false;
@@ -1504,41 +1639,10 @@ struct object *player_best_digger(struct player *p, bool forbid_stack)
 	return best;
 }
 
-/**
- * Melee a random adjacent monster
- */
-bool player_attack_random_monster(struct player *p)
+static struct monster *player_nearest_monster(struct player *p, struct chunk *c)
 {
-	int i, dir = randint0(8);
-
-	/* Confused players get a free pass */
-	//if (p->timed[TMD_CONFUSED]) return false;
-
-	/* Look for a monster, attack */
-	for (i = 0; i < 8; i++, dir++) {
-		struct loc grid = loc_sum(p->grid, ddgrid_ddd[dir % 8]);
-		const struct monster *mon = square_monster(cave, grid);
-		if (mon && !monster_is_camouflaged(mon) && target_set_monster(mon)) {
-			char mdesc[80];
-			monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG);
-			// we have to set the target to the monster in case we attack something not adjacent
-			disturb(p);
-			cmdq_push(CMD_MELEE);
-			cmd_set_arg_target(cmdq_peek(), "target", DIR_TARGET);
-			msg("You furiously lash out at %s!", mdesc);
-			return true;
-		}
-	}
-	return false;
-}
-
-bool player_charge_random_monster(struct player *p, struct chunk *c)
-{
-	int i, closestdist = p->timed[TMD_BLOODLUST]; // won't charge enemies farther than this distance
+	int i, closestdist = 0;
 	struct monster *closest = NULL;
-
-	// might remove this later...
-	//if (p->timed[TMD_CONFUSED]) return false;
 
 	// find the closest foe
 	for (i = 1; i < cave_monster_max(cave); ++i) {
@@ -1546,21 +1650,53 @@ bool player_charge_random_monster(struct player *p, struct chunk *c)
 
 		if (!mon || !mon->race) continue;
 		if (!monster_is_visible(mon)) continue;
+		if (!projectable(c, p->grid, mon->grid, PROJECT_INFO)) continue;
+		if (monster_is_camouflaged(mon)) continue;
 		int dist = distance(p->grid, mon->grid);
-		if (dist > closestdist) continue;
+		if (closest && dist > closestdist) continue;
 		// no check for allies in a berserker rage
 
 		closest = mon;
 		closestdist = dist;
 	}
 
-	// make sure the target exists and we can see it
-	if (!closest) return false;
-	if (!los(c, p->grid, closest->grid)) return false;
+	return closest;
+}
 
-	struct loc difference = loc_diff(closest->grid, p->grid);
+/**
+ * Melee a random adjacent monster
+ */
+static bool player_bloodlust_attack_monster(struct player *p, struct monster *mon)
+{
+	if (player_can_attack_monster(p, mon) && target_set_monster(mon)) {
+		char mdesc[80];
+
+		if (p->timed[TMD_IMAGE]) {
+			my_strcpy(mdesc, "something", sizeof(mdesc));
+		} else {
+			monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG);
+		}
+
+		disturb(p);
+
+		cmdq_push(CMD_MELEE);
+		// we have to use DIR_TARGET in case we attack something not adjacent
+		cmd_set_arg_target(cmdq_peek(), "target", DIR_TARGET);
+
+		msg("You furiously lash out at %s!", mdesc);
+		event_signal(EVENT_MESSAGE_FLUSH);
+
+		return true;
+	}
+
+	return false;
+}
+
+static bool player_bloodlust_charge_monster(struct player *p, struct monster *mon, struct chunk *c)
+{
+	int i, dir;
+	struct loc difference = loc_diff(mon->grid, p->grid);
 	struct loc target_grid = difference;
-	int dir;
 	struct loc target_grids[3] = { 0 };
 
 	target_grid.x = MAX(-1, MIN(1, target_grid.x));
@@ -1579,40 +1715,61 @@ bool player_charge_random_monster(struct player *p, struct chunk *c)
 	}
 
 	for (i = 0; i < 3; ++i) {
+		struct loc targ_grid_abs;
 		if (loc_is_zero(target_grids[i])) continue;
 
 		for (dir = 1; dir <= 9; ++dir) {
-			if (loc_eq(ddgrid[dir], target_grids[i])) {
-				if (square_ispassable(c, loc_sum(p->grid, ddgrid[dir]))) {
-					char mdesc[80];
-					monster_desc(mdesc, sizeof(mdesc), closest, MDESC_TARG);
-					msg("You furiously charge at %s!", mdesc);
-					disturb(p); // make sure we don't repeat commands
-					cmdq_push(CMD_WALK);
-					cmd_set_arg_direction(cmdq_peek(), "direction", dir);
-					return true;
-				}
-			}
+			if (loc_eq(ddgrid[dir], target_grids[i])) break;
 		}
+
+		targ_grid_abs = loc_sum(p->grid, ddgrid[dir]);
+		
+		if (!square_ispassable(c, targ_grid_abs)) continue;
+		if (square_monster(c, targ_grid_abs)) continue;
+		if (distance(p->grid, mon->grid) <= distance(targ_grid_abs, mon->grid)) continue;
+		
+		char mdesc[80];
+		if (p->timed[TMD_IMAGE]) {
+			my_strcpy(mdesc, "something", sizeof(mdesc));
+		} else {
+			monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG);
+		}
+
+		msg("You furiously charge at %s!", mdesc);
+		event_signal(EVENT_MESSAGE_FLUSH);
+
+		disturb(p); // make sure we don't repeat commands
+
+		cmdq_push(CMD_WALK);
+		cmd_set_arg_direction(cmdq_peek(), "direction", dir);
+		return true;
 	}
 
 	return false;
 }
 
-bool player_command_override(struct player *p, struct chunk *c)
+bool bloodlust_override(struct player *p, struct chunk *c)
 {
 	int currtmd = p->timed[TMD_BLOODLUST];
+	struct monster *target;
+
 	if (p->skip_cmd_coercion) return false;
-	if (currtmd <= (randint0(30) + 5)) return false;
+	//if (currtmd <= (randint0(30) + 5)) return false;
+	if (!currtmd) return false;
 
-	if (player_attack_random_monster(p)) return true;
-	if (player_charge_random_monster(p, c)) return true;
+	target = player_nearest_monster(p, c);
 
-	// no enemy to fight? we're losing our anger
+	if (target) {
+		if (player_bloodlust_attack_monster(p, target)) return true;
+		if (player_bloodlust_charge_monster(p, target, c)) return true;
+	}
+
 	msg("You have run out of enemies to fight!");
+
 	player_over_exert(p, PY_EXERT_CONF, 100, currtmd * 2);
 	player_over_exert(p, PY_EXERT_FAINT, 75, currtmd * 3 / 2);
-	player_over_exert(p, PY_EXERT_CUT, 50, p->mhp / 5);
+	player_over_exert(p, PY_EXERT_CUT, 50, p->mhp / 10);
+
 	player_dec_timed(p, TMD_BLOODLUST, currtmd, true, false);
 
 	return false;
@@ -2061,6 +2218,10 @@ bool player_can_cast_prereq(void)
 bool player_can_study_prereq(void)
 {
 	//if (player_can_study(player, false)) return true;
+	if (player->realm->innate) {
+		msg("You don't learn spells from books.");
+		return false;
+	}
 	if (player->state.skills[SKILL_MAGIC] > 0) return true;
 	msg("You don't know magic!");
 	return false;
@@ -2533,6 +2694,7 @@ void player_start_turn(struct player *p)
 	if (p->xp_this_turn) {
 		check_learn_powers(p, p->xp_this_turn);
 		check_player_monster(p, false);
+		player_learn_spell_xp(p, false, p->xp_this_turn);
 
 		p->xp_this_turn = 0;
 	}

@@ -2747,6 +2747,15 @@ static enum parser_error parse_p_race_skill_dig(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_p_race_skill_magic(struct parser *p) {
+	struct player_race *r = parser_priv(p);
+	if (!r) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	r->r_skills[SKILL_MAGIC] = parser_getint(p, "magic");
+	return PARSE_ERROR_NONE;
+}
+
 static enum parser_error parse_p_race_hitdie(struct parser *p) {
 	struct player_race *r = parser_priv(p);
 	if (!r)
@@ -2957,6 +2966,7 @@ static struct parser *init_parse_p_race(void) {
 	parser_reg(p, "skill-shoot int shoot", parse_p_race_skill_shoot);
 	parser_reg(p, "skill-throw int throw", parse_p_race_skill_throw);
 	parser_reg(p, "skill-dig int dig", parse_p_race_skill_dig);
+	parser_reg(p, "skill-magic int magic", parse_p_race_skill_magic);
 	parser_reg(p, "hitdie int mhp", parse_p_race_hitdie);
 	parser_reg(p, "exp int exp", parse_p_race_exp);
 	parser_reg(p, "infravision int infra", parse_p_race_infravision);
@@ -3122,6 +3132,20 @@ static enum parser_error parse_realm_school_aptitude(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_realm_innate(struct parser *p) 
+{
+	bool innate = parser_getint(p, "innate") ? true : false;
+	struct magic_realm *realm = parser_priv(p);
+
+	if (!realm) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	realm->innate = innate;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_realm(void) {
 	z_info->realm_max = 0;
 	struct parser *p = parser_new();
@@ -3133,6 +3157,7 @@ static struct parser *init_parse_realm(void) {
 	parser_reg(p, "book-noun str book", parse_realm_book_noun);
 	parser_reg(p, "weight int weight", parse_realm_weight);
 	parser_reg(p, "school sym school int mod", parse_realm_school_aptitude);
+	parser_reg(p, "innate int innate", parse_realm_innate);
 	return p;
 }
 

@@ -68,6 +68,10 @@ struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_sta
 int get_monster_attacks(struct player *p, struct player_state *ps, struct monster_race *mr,
 		struct attack_roll *aroll, int maxnum, int *attacknum, bool ranged);
 
+bool monster_can_be_attacked(struct player *p, const struct attack_roll *aroll,
+		struct monster *mon, char *buf, size_t bufsize);
+bool player_can_attack_monster(struct player *p, struct monster *mon);
+
 extern int breakage_chance(const struct object *obj, bool hit_target);
 int chance_of_melee_hit_base(const struct player *p,
 	struct attack_roll *aroll);

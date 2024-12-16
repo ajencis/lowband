@@ -948,42 +948,58 @@ static int spell_compare_level(const void *a, const void *b)
 	return 0;
 }
 
+static int spell_compare_worked(const void *a, const void *b)
+{
+	assert(a && b);
+	const struct player_spell *ps1 = *((struct player_spell **)a);
+	const struct player_spell *ps2 = *((struct player_spell **)b);
+	assert(ps1 && ps2);
+
+	bool worked1 = player->player_spell_flags[ps1->sidx] & PY_SPELL_WORKED;
+	bool worked2 = player->player_spell_flags[ps2->sidx] & PY_SPELL_WORKED;
+
+	if (worked1 && !worked2) return -1;
+	if (worked2 && !worked1) return 1;
+	return 0;
+}
+
 static int spell_compare_standard(const void *a, const void *b)
 {
-	int result = spell_compare_level(a, b);
-	return result ? result : spell_compare_name(a, b);
+	int result;
+
+	result = spell_compare_worked(a, b);
+	if (result) return result;
+
+	result = spell_compare_level(a, b);
+	if (result) return result;
+
+	result = spell_compare_name(a, b);
+	if (result) return result;
+
+	return 0;
 }
 
 static struct menu *gener_spell_menu_new(struct player *p, 
 		int (*is_valid)(const struct player *p, int spell_index),
 		bool show_description)
 {
-	//plog("entering gsmn");
 	struct menu *m = menu_new(MN_SKIN_SCROLL, &gener_spell_menu_iter);
 	struct gener_spell_menu_data *d = mem_alloc(sizeof *d);
 	size_t width = MAX(0, MIN(Term->wid - 15, 80));
-	bool repeat;
-	int i;
+	struct player_spell *ps;
 
 	int max_splls = 25;
-	struct object *spellbook;
 
 	region loc = { 0 - width, 1, width, -99 };
 
 	/* collect spells from books */
 	d->n_splls = 0;
 	d->spells = mem_zalloc(max_splls * sizeof(struct player_spell *));
-	for (spellbook = p->gear; spellbook && d->n_splls < max_splls; spellbook = spellbook->next) {
-		const struct player_spell *spell = spellbook->kind->spell;
-		repeat = false;
-		if (spell) {
-			for (i = 0; i < d->n_splls; i++) {
-				if (spell->sidx == d->spells[i]->sidx) repeat = true;
-			}
-			if (!repeat && (is_valid(player, spell->sidx) != 2)) {
-				d->spells[d->n_splls] = spell;
-				d->n_splls++;
-			}
+
+	for (ps = spells; ps; ps = ps->next) {
+		if (is_valid(player, ps->sidx) != 2) {
+			d->spells[d->n_splls] = ps;
+			++d->n_splls;
 		}
 	}
 
@@ -1069,7 +1085,6 @@ static void gener_spell_menu_browse(struct menu *m)
 int textui_get_gener_spell(struct player *p, const char *error,
 	int (*spell_filter)(const struct player *p, int spell_index))
 {
-	//plog("entering tggs");
 	struct menu *m;
 
 	handle_stuff(p);

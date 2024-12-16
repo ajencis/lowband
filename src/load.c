@@ -813,8 +813,8 @@ int rd_player(void)
 
 	rd_s32b(&player->au);
 
-	rd_s32b(&player->max_exp);
-	rd_s32b(&player->exp);
+	rd_u32b(&player->max_exp);
+	rd_u32b(&player->exp);
 	rd_u16b(&player->exp_frac);
 
 	rd_s16b(&player->lev);

@@ -140,6 +140,11 @@ code:LONG_LIMBS
 name:Long Limbs
 desc:You can reach farther.
 
+type:player
+code:BERSERKER
+name:Berserker
+desc:You enter a berserk rage when fighting.
+
 
 # Object flags
 

@@ -770,8 +770,9 @@ ui_event menu_select(struct menu *menu, int notify, bool popup)
 	assert(menu->active.width != 0 && menu->active.page_rows != 0);
 
 	notify |= (EVT_SELECT | EVT_ESCAPE | EVT_SWITCH);
-	if (popup)
+	if (popup) {
 		screen_save();
+	}
 
 	/* Stop on first unhandled event */
 	while (!(in.type & notify)) {

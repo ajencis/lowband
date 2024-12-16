@@ -1218,12 +1218,13 @@ void do_cmd_study(struct command *cmd)
 			/* Prompt */ "Study which book? ",
 			/* Error  */ "You cannot learn any new spells from the books you have.",
 			/* Filter */ obj_can_study_gener,
-			/* Choice */ USE_INVEN | USE_FLOOR) != CMD_OK)
+			/* Choice */ USE_INVEN | USE_FLOOR) != CMD_OK) {
 		return;
+	}
 
 	const struct player_spell *spell = spellbook->kind->spell;
 
-	gener_spell_learn(player, spell);
+	gener_spell_learn(player, spell, true);
 }
 
 #if 0
@@ -1303,8 +1304,23 @@ void do_cmd_innate(struct command *cmd)
 }
 
 static int gener_spell_is_castable(const struct player *p, int spell) {
+	struct object *spellbook;
+
 	if (spell < 0 || spell >= z_info->spell_max) return 2;
 	if (!(p->player_spell_flags[spell] & PY_SPELL_LEARNED)) return 2;
+	
+	if (!p->realm->innate) {
+		for (spellbook = p->gear; spellbook; spellbook = spellbook->next) {
+			if (spellbook->kind->spell && spellbook->kind->spell->sidx == spell) {
+				break;
+			}
+		}
+
+		if (!spellbook) {
+			return 0;
+		}
+	}
+
 	return 1;
 }
 
@@ -1343,10 +1359,11 @@ void do_cmd_cast(struct command *cmd)
 	}
 
 	if (gener_spell_needs_aim(ps)) {
-		if (cmd_get_target(cmd, "target", &dir) == CMD_OK)
+		if (cmd_get_target(cmd, "target", &dir) == CMD_OK) {
 			player_confuse_dir(player, &dir, false);
-		else
+		} else {
 			return;
+		}
 	}
 
 	if (gener_spell_cast(spell_index, dir, cmd)) {

@@ -255,3 +255,15 @@ slot:CLOAK:back
 slot:HAT:head
 slot:BOOTS:feet
 slot:BOOTS:feet
+
+body:Misshapen
+slot:WEAPON:left hand
+slot:BOW:shooting
+slot:RING:left hand
+slot:AMULET:neck
+slot:LIGHT:light
+slot:BODY_ARMOR:body
+slot:CLOAK:back
+slot:HAT:head
+slot:BOOTS:feet
+
