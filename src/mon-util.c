@@ -2010,7 +2010,8 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 	mag = MAX(0, mag);
 
 	// calculate its stats based on power
-	mr->avg_hp = MAX(hp / 2 + 5, hp) * MAX((hp + 1) / 2 + 10, hp) / 10; // 1000ish for level 100
+	//mr->avg_hp = MAX(hp / 2 + 5, hp) * MAX((hp + 1) / 2 + 10, hp) / 10; // 1000ish for level 100
+	mr->avg_hp = (int)(MAX(hp + 25.0, hp * 2.5) * (my_sqrt(hp) + 1) / 10.0); // 250ish for level 100
 	mr->ac = ac; // 100ish for level 100
 	mr->speed = 105 + (spe * 30 + 49) / 100; // 135ish for level 100
 	mr->spell_power = mag; // 100ish for level 100

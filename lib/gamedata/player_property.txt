@@ -408,10 +408,10 @@ code:BACKSTAB
 name:Backstabbing
 desc:You know where to hit where it hurts if your target is distracted.
 
-type:power
-code:RESILIENCE
-name:Resilience
-desc:You're particularly tough.
+#type:power
+#code:RESILIENCE
+#name:Resilience
+#desc:You're particularly tough.
 
 
 # L: skills
@@ -469,3 +469,8 @@ type:skill
 code:MAGIC
 name:Magic
 desc:You can cast magic.
+
+type:skill
+code:HEALTH
+name:Health
+desc:You can endure attacks.

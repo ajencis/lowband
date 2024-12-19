@@ -145,6 +145,7 @@ skill-shoot:10:18
 skill-throw:10:18
 skill-dig:0:0
 skill-magic:-10:0
+skill-health:10:18
 hitdie:9
 max-attacks:6
 min-weight:30
@@ -179,6 +180,7 @@ skill-shoot:10:15
 skill-throw:10:15
 skill-dig:0:0
 skill-magic:-25:0
+skill-health:15:19
 hitdie:10
 max-attacks:6
 min-weight:30
@@ -214,6 +216,7 @@ skill-shoot:5:15
 skill-throw:5:15
 skill-dig:0:0
 skill-magic:10:17
+skill-health:5:10
 hitdie:0
 max-attacks:4
 min-weight:40
@@ -250,6 +253,7 @@ skill-shoot:5:15
 skill-throw:5:18
 skill-dig:0:0
 skill-magic:3:15
+skill-health:6:12
 hitdie:2
 max-attacks:4
 min-weight:35
@@ -285,6 +289,7 @@ skill-shoot:10:12
 skill-throw:10:12
 skill-dig:0:0
 skill-magic:-7:17
+skill-health:8:15
 power:HAFTED_SPECIALIZATION:20
 hitdie:2
 max-attacks:4
@@ -321,6 +326,7 @@ skill-shoot:5:15
 skill-throw:5:15
 skill-dig:0:0
 skill-magic:5:16
+skill-health:5:10
 power:NECROMANCY_MAGIC:40
 hitdie:2
 max-attacks:4
@@ -357,6 +363,7 @@ skill-shoot:5:15
 skill-throw:5:15
 skill-dig:0:0
 skill-magic:-10:10
+skill-health:9:17
 hitdie:6
 max-attacks:5
 min-weight:30
@@ -393,6 +400,7 @@ skill-shoot:5:17
 skill-throw:10:17
 skill-dig:0:0
 skill-magic:-10:0
+skill-health:6:12
 power:SWORD_SPECIALIZATION:25
 power:BACKSTAB:100
 hitdie:4
@@ -430,6 +438,7 @@ skill-shoot:10:19
 skill-throw:10:17
 skill-dig:0:0
 skill-magic:-10:12
+skill-health:9:16
 power:NATURE_MAGIC:40
 hitdie:5
 max-attacks:5
@@ -468,6 +477,7 @@ skill-shoot:5:16
 skill-throw:5:16
 skill-dig:0:0
 skill-magic:-10:10
+skill-health:9:17
 power:NECROMANCY_MAGIC:40
 hitdie:8
 max-attacks:5
@@ -507,6 +517,7 @@ skill-shoot:5:16
 skill-throw:5:17
 skill-dig:0:0
 skill-magic:-10:0
+skill-health:5:15
 power:UNARMED_STRIKE:100
 power:AGILITY:100
 hitdie:2
@@ -542,6 +553,7 @@ skill-shoot:10:0
 skill-throw:10:0
 skill-dig:0:0
 skill-magic:0:0
+skill-health:5:5
 hitdie:3
 max-attacks:6
 min-weight:10

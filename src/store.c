@@ -1249,7 +1249,6 @@ static bool store_create_random(struct store *store, bool reset)
 	for (tries = 0; tries < 6; tries++) {
 		struct object_kind *kind;
 		struct object *obj, *known_obj;
-		bool dbg;
 
 		/* Work out the level for objects to be generated at */
 		level = rand_range(min_level, max_level);
@@ -1260,8 +1259,6 @@ static bool store_create_random(struct store *store, bool reset)
 		} else {
 			kind = store_get_choice(store);
 		}
-
-		dbg = kind->tval == TV_POLEARM;
 
 		/*** Pre-generation filters ***/
 

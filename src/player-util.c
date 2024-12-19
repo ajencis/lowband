@@ -677,6 +677,11 @@ void player_race_r_skill(const struct player_race *r, bool evolved, int skills[S
 	}
 }
 
+void player_race_x_skill(const struct player_race *r, bool evolved, int skills[SKILL_MAX])
+{
+	player_race_r_skill(r, evolved, skills);
+}
+
 void player_race_elem_info(const struct player_race *r, bool evolved, struct element_info el_info[ELEM_MAX])
 {
 	int i;

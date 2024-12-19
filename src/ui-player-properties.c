@@ -127,7 +127,12 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 	struct player_ability *choices = data;
 	int monster_powers[PP_MAX] = { 0 };
 	int monster_skills[SKILL_MAX] = { 0 };
+	int race_skills[SKILL_MAX] = { 0 };
+	int race_x_skills[SKILL_MAX] = { 0 };
 	struct monster_race *mrace = lookup_player_monster(player);
+
+	player_race_r_skill(player->race, mrace ? true : false, race_skills);
+	player_race_x_skill(player->race, mrace ? true : false, race_x_skills);
 
 	/* Redirect output to the screen */
 	text_out_hook = text_out_to_screen;
@@ -154,8 +159,8 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 		else {
 			cbase = player_class_c_skill(player, choices[oid].index);
 			cxtra = player_class_x_skill(player, choices[oid].index) * 100 / 5;
-			rbase = player->race->r_skills[choices[oid].index] + monster_skills[choices[oid].index];
-			rxtra = 0;
+			rbase = race_skills[choices[oid].index] + monster_skills[choices[oid].index];
+			rxtra = race_x_skills[choices[oid].index] * 100 / 5;
 			tome = player->extra_skills[choices[oid].index];
 		}
 		int numleft = ((rxtra || rbase) ? 1 : 0) +

@@ -184,11 +184,11 @@ static int adj_mag_mana(int index) {
 }
 
 int adj_int_xp(int index) {
-	return 14 - 2 * index;
+	return -stat_scale(index, 50, false);
 }
 
 int adj_int_lev(int index) {
-	return index - 7;
+	return stat_scale(index, 10, false);
 }
 
 int adj_mag_stat(int index) {
@@ -929,16 +929,14 @@ static void calc_hitpoints(struct player *p)
 {
 	long bonus;
 	int mhp;
-	int resil = get_power_scale(p, PP_RESILIENCE, 50);
-	int resil_hd_min = get_power_scale(p, PP_RESILIENCE, 10);
 	struct monster_race *mon = lookup_player_monster(p);
-	int eff_hd = MAX(p->hitdie, resil_hd_min);
+	//int eff_hd = MAX(p->hitdie, resil_hd_min);
 
 	/* Get "1/100th hitpoint bonus per level" value */
 	bonus = adj_con_mhp(p->state.stat_ind[STAT_CON]);
 
 	/* Calculate hitpoints */
-	mhp = eff_hd + eff_hd * (p->lev > 1 ? p->lev : 0) / 5;
+	mhp = p->state.skills[SKILL_HEALTH];
 
 	/* L: bonus from being a monster */
 	if (mon) {
@@ -947,9 +945,6 @@ static void calc_hitpoints(struct player *p)
 	}
 
 	mhp += bonus * p->lev / 100;
-
-	/* L: bonus from resilience power */
-	mhp += (mhp + p->lev) * resil / 100;
 
 	/* Always have at least one hitpoint per level */
 	if (mhp < p->lev + 1) mhp = p->lev + 1;
@@ -1341,10 +1336,15 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX])
 void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX])
 {
 	int i;
+	int class_hp;
 
 	for (i = 0; i < SKILL_MAX; i++) {
 		skills[i] += mrace->base->skills[i] * mrace->level / 10;
 	}
+
+	// assume the monster gets hp equal to half its level from its class
+	class_hp = mrace->level / 2;
+	skills[SKILL_HEALTH] += MAX(0, mrace->avg_hp - class_hp);
 }
 
 /**
@@ -1430,7 +1430,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	bool vuln[ELEM_MAX];
 	struct monster_race *mrace = lookup_player_monster(p);
 	int avail_hands, attack_div;
-	int race_skills[SKILL_MAX] = { 0 };
+	int race_skills[SKILL_MAX] = { 0 }, race_x_skills[SKILL_MAX] = { 0 };
 	struct element_info race_elem_info[ELEM_MAX] = { 0 };
 	bool has_feet = false;
 
@@ -1448,8 +1448,11 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	/* Extract race/class info */
 	state->see_infra = p->race->infra;
 	player_race_r_skill(p->race, mrace ? true : false, race_skills);
+	player_race_x_skill(p->race, mrace ? true : false, race_x_skills);
 	for (i = 0; i < SKILL_MAX; i++) {
 		state->skills[i] = race_skills[i] + player_class_c_skill(p, i);
+		state->skills[i] += (race_x_skills[i] + player_class_x_skill(p, i)) * p->lev / 10;
+		state->skills[i] += p->extra_skills[i];
 	}
 
 	player_race_elem_info(p->race, mrace ? true : false, race_elem_info);
@@ -1866,14 +1869,6 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	state->skills[SKILL_DEVICE] += adj_int_dev(state->stat_ind[STAT_INT]);
 	state->skills[SKILL_SAVE] += adj_wis_sav(state->stat_ind[STAT_WIS]);
 	state->skills[SKILL_DIGGING] += adj_str_dig(state->stat_ind[STAT_STR]);
-	for (i = 0; i < SKILL_MAX; i++) {
-		state->skills[i] += (player_class_x_skill(p, i) * p->lev / 10);
-	}
-
-	/* L: add extra skills */
-	for (i = 0; i < SKILL_MAX; i++) {
-		state->skills[i] += MIN(p->extra_skills[i], p->lev * 3);
-	}
 
 	if (state->skills[SKILL_DIGGING] < 1) state->skills[SKILL_DIGGING] = 1;
 	if (state->skills[SKILL_STEALTH] > 150) state->skills[SKILL_STEALTH] = 150;
@@ -2119,19 +2114,23 @@ static void update_bonuses(struct player *p)
 		p->upkeep->update |= PU_SPELLS;
 	}
 
+	if (state.skills[SKILL_HEALTH] != p->state.skills[SKILL_HEALTH]) {
+		p->upkeep->update |= PU_HP;
+	}
+
 
 	/* Hack -- Telepathy Change */
 	if (of_has(state.flags, OF_TELEPATHY) !=
-		of_has(p->state.flags, OF_TELEPATHY)) {
+			of_has(p->state.flags, OF_TELEPATHY)) {
 		/* Update monster visibility */
 		p->upkeep->update |= (PU_MONSTERS);
 	}
 	/* Hack -- See Invis Change */
 	if (of_has(state.flags, OF_SEE_INVIS) !=
-		of_has(p->state.flags, OF_SEE_INVIS)) {
+			of_has(p->state.flags, OF_SEE_INVIS)) {
 		/* Update monster visibility */
 		p->upkeep->update |= (PU_MONSTERS);
-		}
+	}
 
 	/* Redraw speed (if needed) */
 	if (state.speed != p->state.speed) {
@@ -2140,8 +2139,9 @@ static void update_bonuses(struct player *p)
 
 	/* Redraw armor (if needed) */
 	if ((known_state.ac != p->known_state.ac) || 
-		(known_state.to_a != p->known_state.to_a))
+			(known_state.to_a != p->known_state.to_a)) {
 		p->upkeep->redraw |= (PR_ARMOR);
+	}
 
 	/* Notice changes in the "light radius" */
 	if (p->state.cur_light != state.cur_light) {
@@ -2159,23 +2159,25 @@ static void update_bonuses(struct player *p)
 		/* Take note when "heavy bow" changes */
 		if (p->state.heavy_shoot != state.heavy_shoot) {
 			/* Message */
-			if (state.heavy_shoot)
+			if (state.heavy_shoot) {
 				msg("You have trouble wielding such a heavy bow.");
-			else if (slot_object(p, slot_by_type(p, EQUIP_BOW, true)))
+			} else if (slot_object(p, slot_by_type(p, EQUIP_BOW, true))) {
 				msg("You have no trouble wielding your bow.");
-			else
+			} else {
 				msg("You feel relieved to put down your heavy bow.");
+			}
 		}
 
 		/* Take note when "heavy weapon" changes */
 		if (p->state.heavy_wield != state.heavy_wield) {
 			/* Message */
-			if (state.heavy_wield)
+			if (state.heavy_wield) {
 				msg("You have trouble wielding such a heavy weapon.");
-			else if (slot_object(p, slot_by_type(p, EQUIP_WEAPON, true)))
+			} else if (slot_object(p, slot_by_type(p, EQUIP_WEAPON, true))) {
 				msg("You have no trouble wielding your weapon.");
-			else
-				msg("You feel relieved to put down your heavy weapon.");	
+			} else {
+				msg("You feel relieved to put down your heavy weapon.");
+			}
 		}
 
 		/* Take note when "illegal weapon" changes */
@@ -2191,10 +2193,11 @@ static void update_bonuses(struct player *p)
 		/* Take note when "armor state" changes */
 		if (p->state.cumber_armor != state.cumber_armor) {
 			/* Message */
-			if (state.cumber_armor)
+			if (state.cumber_armor) {
 				msg("The weight of your armor encumbers your movement.");
-			else
+			} else {
 				msg("You feel able to move more freely.");
+			}
 		}
 	}
 

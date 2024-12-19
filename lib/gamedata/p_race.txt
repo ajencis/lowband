@@ -77,6 +77,7 @@ skill-shoot:0
 skill-throw:0
 skill-dig:0
 skill-magic:0
+skill-health:0
 hitdie:5
 exp:100
 infravision:0
@@ -99,6 +100,7 @@ skill-shoot:5
 skill-throw:5
 skill-dig:0
 skill-magic:0
+skill-health:-1
 hitdie:5
 exp:120
 infravision:2
@@ -122,6 +124,7 @@ skill-shoot:15
 skill-throw:15
 skill-dig:0
 skill-magic:0
+skill-health:-2
 power:BOW_SPECIALIZATION:20
 hitdie:4
 exp:120
@@ -147,6 +150,7 @@ skill-shoot:20
 skill-throw:20
 skill-dig:0
 skill-magic:0
+skill-health:-2
 hitdie:2
 exp:120
 infravision:4
@@ -171,6 +175,7 @@ skill-shoot:12
 skill-throw:12
 skill-dig:0
 skill-magic:0
+skill-health:-2
 hitdie:3
 exp:120
 infravision:4
@@ -195,6 +200,7 @@ skill-shoot:0
 skill-throw:0
 skill-dig:40
 skill-magic:-5
+skill-health:3
 hitdie:6
 exp:120
 infravision:5
@@ -219,6 +225,7 @@ skill-shoot:-5
 skill-throw:-5
 skill-dig:0
 skill-magic:0
+skill-health:2
 hitdie:5
 exp:120
 infravision:3
@@ -242,6 +249,7 @@ skill-shoot:-10
 skill-throw:-10
 skill-dig:0
 skill-magic:0
+skill-health:4
 hitdie:7
 exp:120
 infravision:3
@@ -265,6 +273,7 @@ skill-shoot:10
 skill-throw:10
 skill-dig:0
 skill-magic:0
+skill-health:2
 hitdie:6
 exp:120
 infravision:0
@@ -288,6 +297,7 @@ skill-shoot:25
 skill-throw:25
 skill-dig:0
 skill-magic:0
+skill-health:-1
 power:SWORD_SPECIALIZATION:20
 hitdie:5
 exp:145
@@ -313,6 +323,7 @@ skill-shoot:10
 skill-throw:10
 skill-dig:0
 skill-magic:0
+skill-health:1
 power:BACKSTAB:20
 power:POISON_MAGIC:20
 hitdie:3
@@ -338,6 +349,7 @@ skill-shoot:0
 skill-throw:0
 skill-dig:0
 skill-magic:0
+skill-health:2
 power:POLEARM_SPECIALIZATION:40
 hitdie:7
 exp:120
@@ -394,6 +406,7 @@ skill-shoot:5
 skill-throw:5
 skill-dig:5
 skill-magic:5
+skill-health:5
 hitdie:8
 exp:100
 infravision:0
