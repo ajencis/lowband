@@ -140,6 +140,17 @@ enum
 	MA_MAX
 };
 
+/**
+ * L: monster reaction numbers
+ */
+#define MON_REACT_NONE -1
+#define MON_REACT_HOSTILE 0
+#define MON_REACT_NO_TALK 200
+#define MON_REACT_NEUTRAL 300
+#define MON_REACT_FRIENDLY 400
+#define MON_REACT_ALLY 450
+#define MON_REACT_MAX 500
+
 
 /** Structures **/
 
@@ -451,6 +462,7 @@ struct monster {
 	uint8_t best_range;			/* How close do we want to be? */
 
 	wchar_t faction;            /* L: general group of monsters */
+	int reaction;				/* L: how much it likes the player */
 };
 
 /** Variables **/

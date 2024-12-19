@@ -22,6 +22,7 @@
 #include "game-world.h"
 #include "init.h"
 #include "mon-desc.h"
+#include "mon-group.h"
 #include "mon-list.h"
 #include "mon-lore.h"
 #include "mon-make.h"
@@ -1152,7 +1153,7 @@ static void player_kill_monster(struct monster *mon, struct player *p,
 		check_berserk(p, mon);
 		//player_inc_timed(p, TMD_BLOODLUST, 10, false, false, true);
 		player_over_exert(p, PY_EXERT_CONF, 5, 2);
-		player_over_exert(p, PY_EXERT_HALLU, 10, 15);
+		//player_over_exert(p, PY_EXERT_HALLU, 10, 15);
 	}
 
 	/* Recall even invisible uniques or winners */
@@ -1301,8 +1302,9 @@ bool mon_take_hit(struct monster *mon, struct player *p, int dam, bool *fear,
 		const char *note)
 {
 	/* Redraw (later) if needed */
-	if (p->upkeep->health_who == mon)
+	if (p->upkeep->health_who == mon) {
 		p->upkeep->redraw |= (PR_HEALTH);
+	}
 
 	/* If the hit doesn't kill, wake it up, make it aware of the player */
 	if (dam <= mon->hp) {
@@ -1310,9 +1312,18 @@ bool mon_take_hit(struct monster *mon, struct player *p, int dam, bool *fear,
 		mon_clear_timed(mon, MON_TMD_HOLD, MON_TMD_FLG_NOTIFY);
 	}
 
+	// L: monster usually becomes aware of the player
+	if (monster_can_see_player(mon) || monster_can_smell(mon)) {
+		monster_become_aware(mon);
+	}
+
+	// L: make it angry
+	monster_attacked_get_angry(mon, p, dam);
+
 	/* Become aware of its presence */
-	if (monster_is_camouflaged(mon))
+	if (monster_is_camouflaged(mon)) {
 		become_aware(cave, mon);
+	}
 
 	/* No damage, we're done */
 	if (dam == 0) return false;
@@ -1451,6 +1462,9 @@ struct object *monster_best_takeable_item(struct chunk *c, struct monster *mon, 
 bool monster_carry(struct chunk *c, struct monster *mon, struct object *obj)
 {
 	struct object *held_obj;
+
+	// L: flag the monster as wanting to recheck its equipment
+	mflag_on(mon->mflag, MFLAG_CHECK_EQ);
 
 	/* Scan objects already being held for combination */
 	for (held_obj = mon->held_obj; held_obj; held_obj = held_obj->next) {
@@ -1794,6 +1808,85 @@ bool monster_revert_shape(struct monster *mon)
 	}
 
 	return false;
+}
+
+void reaction_roll(struct monster *mon, struct player *p)
+{
+	int min = MON_REACT_HOSTILE, max = MON_REACT_FRIENDLY;
+	struct monster_race *pmr = lookup_player_monster(p);
+	int roll1, roll2;
+
+	if (mon->reaction != MON_REACT_NONE) {
+		return;
+	}
+
+	if (pmr && pmr->d_char == mon->race->d_char) {
+		min = MON_REACT_NEUTRAL;
+	}
+	if (p->lev > mon->race->level) {
+		min += (p->lev - mon->race->level) * 5;
+	}
+	if (cave->depth <= 0) {
+		min = MAX(min, MON_REACT_NEUTRAL);
+	}
+
+	if (rf_has(mon->race->flags, RF_SAPIENT)) {
+		max = MON_REACT_ALLY;
+	}
+
+	roll1 = randint0(MAX(0, max - min)) + min;
+	roll2 = randint0(MAX(0, max - min)) + min;
+
+	mon->reaction = MAX(0, MIN(roll1, roll2));
+
+	mon_check_target(cave, mon);
+}
+
+void reaction_change(struct monster *mon, int amt)
+{
+	struct monster *leader = monster_group_leader(cave, mon);
+
+	if (!monster_can_see_player(mon) && !monster_can_smell(mon)) {
+		return;
+	}
+	if (mon->reaction == MON_REACT_NONE) {
+		return;
+	}
+
+	mon->reaction += amt;
+	mon->reaction = MAX(0, MIN(MON_REACT_MAX, mon->reaction));
+
+	if (leader && leader != mon && leader->reaction != MON_REACT_NONE) {
+		leader->reaction += amt / 2;
+		leader->reaction = MAX(0, MIN(MON_REACT_MAX, leader->reaction));
+	}
+
+	mon_check_target(cave, mon);
+}
+
+void monster_attacked_get_angry(struct monster *mon, struct player *p, int dam)
+{
+	int pen = 250 + randint0(250);
+
+	if (mon->reaction == MON_REACT_NONE) {
+		return;
+	}
+
+	if (p->timed[TMD_CONFUSED]) {
+		pen = MIN(pen, MON_REACT_MAX - mon->reaction);
+	}
+
+	pen = pen * dam / MAX(mon->hp, 1) + 10;
+
+	reaction_change(mon, -pen);
+}
+
+void monster_become_aware(struct monster *mon)
+{
+	mflag_on(mon->mflag, MFLAG_AWARE);
+	if (mon->reaction == MON_REACT_NONE) {
+		reaction_roll(mon, player);
+	}
 }
 
 int mon_ac(struct monster *mon)

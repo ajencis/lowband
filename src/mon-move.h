@@ -38,5 +38,7 @@ bool multiply_monster(const struct monster *mon);
 void process_monsters(int minimum_energy);
 void reset_monsters(void);
 void restore_monsters(void);
+bool monster_can_hear(struct monster *mon);
+bool monster_can_smell(struct monster *mon);
 
 #endif /* !MONSTER_MOVE_H */

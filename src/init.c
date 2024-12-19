@@ -246,6 +246,8 @@ static enum parser_error write_book_kind(struct class_book *book,
 	struct object_kind *temp, *kind;
 	int i;
 
+	assert(book->tval != TV_POLEARM);
+
 	/* Check we haven't already made this book */
 	for (i = 0; i < z_info->k_max; i++) {
 		if (k_info[i].name && streq(name, k_info[i].name)) {

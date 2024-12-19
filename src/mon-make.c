@@ -1264,6 +1264,9 @@ static bool place_new_monster_one(struct chunk *c, struct loc grid,
 	/* L: give it a faction */
 	mon_give_faction(mon, c);
 
+	/* L: give it a reaction */
+	mon->reaction = MON_REACT_NONE;
+
 	/* Force monster to wait for player */
 	if (rf_has(race->flags, RF_FORCE_SLEEP)) {
 		mflag_on(mon->mflag, MFLAG_NICE);

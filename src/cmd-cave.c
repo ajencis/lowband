@@ -40,6 +40,7 @@
 #include "obj-ignore.h"
 #include "obj-knowledge.h"
 #include "obj-pile.h"
+#include "obj-power.h"
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
@@ -49,6 +50,7 @@
 #include "player-util.h"
 #include "project.h"
 #include "store.h"
+#include "ui-mon-list.h"
 #include "trap.h"
 
 
@@ -2142,10 +2144,13 @@ static int hiring_price(struct monster *mon, struct player *p)
 	int lev = MAX(mon->race->level, mon->race->level / 2 + 5);
 	int dist = distance(mon->grid, player->grid) + 10; // no yelling from a distance!
 	int uniq = monster_is_unique(mon) ? 3 : 1;
-	int allied = pmonr && mon->race->d_char == pmonr->d_char ? 1 : 3; // already friends :)
+	int allied = pmonr && mon->race->d_char == pmonr->d_char ? 2 : 3; // already friends :)
 
 	int total = lev * lev * dist * uniq * allied;
 	int mult = 1;
+
+	total *= MON_REACT_MAX - mon->reaction;
+	total /= MON_REACT_MAX - MON_REACT_ALLY;
 
 	// round a bit
 	while (total >= 100) {
@@ -2155,7 +2160,7 @@ static int hiring_price(struct monster *mon, struct player *p)
 	total /= 5;
 	mult *= 5;
 
-	return total * mult;
+	return MAX(0, total * mult);
 }
 
 
@@ -2164,12 +2169,15 @@ void do_cmd_diplomacy(struct command *cmd)
 	int dir;
 	struct monster *mon = NULL;
 	struct loc target;
+	int new_cmd;
+	char mdesc[80];
 
 	if (player->timed[TMD_CONFUSED] > 0) {
 		msg("You are too confused to talk!");
+		return;
 	}
 
-	if (!cmd_get_target(cmd, "target", &dir) == CMD_OK) {
+	if (cmd_get_target(cmd, "target", &dir) != CMD_OK) {
 		return;
 	}
 
@@ -2178,13 +2186,93 @@ void do_cmd_diplomacy(struct command *cmd)
 			target_get(&target);
 			mon = square_monster(cave, target);
 		}
+	} else if (dir != DIR_UNKNOWN) {
+		int i, range = z_info->max_sight;
+		struct loc direction = loc_sum(player->grid, loc(range * ddx[dir], range * ddy[dir]));
+		int path_n;
+		struct loc path_g[256];
+		path_n = project_path(cave, path_g, range, player->grid, direction, 0);
+		for (i = 0; i < path_n; i++) {
+			target = path_g[i];
+			mon = square_monster(cave, target);
+			if (mon) {
+				break;
+			}
+		}
 	}
 
 	if (!mon || !mon->race) {
 		return;
 	}
 
+	monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG | MDESC_CAPITAL);
+
+	monster_become_aware(mon);
+
+	player->upkeep->energy_use = z_info->move_energy * 5;
 	monster_wake(mon, false, 100);
+	mflag_off(mon->mflag, MFLAG_TALKING);
+
+	if (mon->target.who == TARGET_WHO_MONSTER) {
+		msg("%s is busy!", mdesc);
+		return;
+	}
+	if (mon->reaction <= MON_REACT_NO_TALK) {
+		msg("%s doesn't want to talk.", mdesc);
+		return;
+	}
+
+	new_cmd = textui_do_diplomacy(player, mon, "You have nothing about which to talk.");
+
+	if (new_cmd != CMD_DIP_GIFT && new_cmd != CMD_DIP_HIRE) return;
+
+	mflag_on(mon->mflag, MFLAG_TALKING);
+	cmdq_push(new_cmd);
+	cmd_set_arg_target(cmdq_peek(), "target", dir);
+
+	return;
+}
+
+
+void do_cmd_dip_hire(struct command *cmd) {
+	int dir;
+	struct monster *mon = NULL;
+	struct loc target;
+
+	if (player->timed[TMD_CONFUSED] > 0) {
+		msg("You are too confused to talk!");
+	}
+
+	if (cmd_get_target(cmd, "target", &dir) != CMD_OK) {
+		return;
+	}
+
+	cmdq_push(CMD_DIPLOMACY);
+	cmd_set_arg_target(cmdq_peek(), "target", dir);
+
+	if (dir == DIR_TARGET) {
+		if (target_okay()) {
+			target_get(&target);
+			mon = square_monster(cave, target);
+		}
+	} else if (dir != DIR_UNKNOWN) {
+		int i, range = z_info->max_sight;
+		struct loc direction = loc_sum(player->grid, loc(range * ddx[dir], range * ddy[dir]));
+		int path_n;
+		struct loc path_g[256];
+		path_n = project_path(cave, path_g, range, player->grid, direction, 0);
+		for (i = 0; i < path_n; i++) {
+			target = path_g[i];
+			mon = square_monster(cave, target);
+			if (mon) {
+				break;
+			}
+		}
+	}
+
+	if (!mon || !mon->race) {
+		return;
+	}
 
 	if (mon->faction == '@') {
 		msg("They are already your companion!");
@@ -2194,6 +2282,9 @@ void do_cmd_diplomacy(struct command *cmd)
 		msg("They don't look like they want to talk.");
 		return;
 	}
+
+	monster_wake(mon, false, 100);
+	player->upkeep->energy_use = z_info->move_energy * 5;
 
 	int price = hiring_price(mon, player);
 
@@ -2210,5 +2301,71 @@ void do_cmd_diplomacy(struct command *cmd)
 	else if (result) {
 		msg("You can't afford their price!");
 	}
+}
+
+static bool gift_tester(const struct object *obj)
+{
+	return object_value(obj, 1) > 0;
+}
+
+void do_cmd_dip_gift(struct command *cmd)
+{
+	int dir;
+	struct object *selection, *gift;
+	bool none_left;
+	struct monster *mon;
+	struct loc target;
+	int value, quantity;
+	int reactbonus;
+
+	if (cmd_get_target(cmd, "target", &dir) != CMD_OK) {
+		return;
+	}
+
+	cmdq_push(CMD_DIPLOMACY);
+	cmd_set_arg_target(cmdq_peek(), "target", dir);
+
+	if (dir == DIR_TARGET) {
+		if (target_okay()) {
+			target_get(&target);
+			mon = square_monster(cave, target);
+		}
+	} else if (dir != DIR_UNKNOWN) {
+		int i, range = z_info->max_sight;
+		struct loc direction = loc_sum(player->grid, loc(range * ddx[dir], range * ddy[dir]));
+		int path_n;
+		struct loc path_g[256];
+		path_n = project_path(cave, path_g, range, player->grid, direction, 0);
+		for (i = 0; i < path_n; i++) {
+			target = path_g[i];
+			mon = square_monster(cave, target);
+			if (mon) {
+				break;
+			}
+		}
+	}
+
+	if (!mon || !mon->race) return;
+
+	if (cmd_get_item(cmd, "gift", &selection, "Give which item? ", "You have nothing to give.", gift_tester, USE_INVEN)) {
+		return;
+	}
+
+	if (selection->number == 1) {
+		quantity = 1;
+	} else if (cmd_get_quantity(cmd, "quantity", &quantity, selection->number) != CMD_OK) {
+		return;
+	}
+
+	gift = gear_object_for_use(player, selection, quantity, true, &none_left);
+	value = object_value_real(gift, gift->number);
+
+	monster_carry(cave, mon, gift);
+
+	reactbonus = (randint1(value) + value / 2) / (mon->race->level + 25);
+
+	reaction_change(mon, reactbonus);
+
+	player->upkeep->energy_use = z_info->move_energy * 5;
 }
 

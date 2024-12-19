@@ -49,7 +49,7 @@ int monster_primary_group_size(struct chunk *c, const struct monster *mon);
 struct monster *group_monster_tracking(struct chunk *c,
 									   const struct monster *mon);
 int monster_group_leader_idx(struct monster_group *group);
-struct monster *monster_group_leader(struct chunk *c, struct monster *mon);
+struct monster *monster_group_leader(struct chunk *c, const struct monster *mon);
 void monster_groups_verify(struct chunk *c);
 
 #endif /* !MON_GROUP_H */

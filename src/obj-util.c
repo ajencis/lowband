@@ -494,8 +494,9 @@ struct object_kind *lookup_kind(int tval, int sval)
 	/* Look for it */
 	for (k = 0; k < z_info->k_max; k++) {
 		struct object_kind *kind = &k_info[k];
-		if (kind->tval == tval && kind->sval == sval)
+		if (kind->tval == tval && kind->sval == sval) {
 			return kind;
+		}
 	}
 
 	/* Failure */

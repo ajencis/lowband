@@ -101,7 +101,11 @@ typedef enum cmd_code {
 	CMD_STEAL,
 	CMD_SLEEP,
 	CMD_MELEE,
+
+	/* Diplomacy commands */
 	CMD_DIPLOMACY,
+	CMD_DIP_HIRE,
+	CMD_DIP_GIFT,
 
 	/* Store commands */
 	CMD_SELL,

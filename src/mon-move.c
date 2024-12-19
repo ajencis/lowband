@@ -111,7 +111,9 @@ static bool monster_near_permwall(const struct monster *mon)
  */
 bool monster_can_see_player(struct monster *mon)
 {
-	//if (!square_isview(cave, mon->grid)) return false;
+	if (mon->m_timed[MON_TMD_SLEEP]) {
+		return false;
+	}
 	if (!los(cave, mon->grid, player->grid)) {
 		return false;
 	}
@@ -124,7 +126,7 @@ bool monster_can_see_player(struct monster *mon)
 /**
  * Check if the monster can hear anything
  */
-static bool monster_can_hear(struct monster *mon)
+bool monster_can_hear(struct monster *mon)
 {
 	int base_hearing = mon->race->hearing
 		- player->state.skills[SKILL_STEALTH] / 15;
@@ -137,7 +139,7 @@ static bool monster_can_hear(struct monster *mon)
 /**
  * Check if the monster can smell anything
  */
-static bool monster_can_smell(struct monster *mon)
+bool monster_can_smell(struct monster *mon)
 {
 	if (cave->scent.grids[mon->grid.y][mon->grid.x] == 0) {
 		return false;
@@ -209,7 +211,7 @@ static bool monster_hates_grid(struct monster *mon, struct loc grid)
 {
 	/* Only some creatures can handle damaging terrain */
 	if (square_isdamaging(cave, grid) &&
-		!rf_has(mon->race->flags, square_feat(cave, grid)->resist_flag)) {
+			!rf_has(mon->race->flags, square_feat(cave, grid)->resist_flag)) {
 		return true;
 	}
 	return false;
@@ -218,20 +220,22 @@ static bool monster_hates_grid(struct monster *mon, struct loc grid)
 
 bool mon_will_follow_player(const struct monster *mon, const struct player *p)
 {
-	if (mon->faction == '@') return true;
-	if (mon->m_timed[MON_TMD_CHARMED]) return true;
+	const struct monster *leader = monster_group_leader(cave, mon);
+	leader = leader->reaction != MON_REACT_NONE ? leader : mon;
+
+	if (leader->faction == '@') return true;
+	if (leader->m_timed[MON_TMD_CHARMED]) return true;
 
 	return false;
 }
 
 bool mon_will_attack_player(const struct monster *mon, const struct player *p)
 {
-	if (mon_will_follow_player(mon, p)) return false;
-	if (mon->faction == 't') return false;
+	const struct monster *leader = monster_group_leader(cave, mon);
+	leader = leader->reaction != MON_REACT_NONE ? leader : mon;
 
-	struct monster_race *pmonr = lookup_player_monster(p);
-	// monsters are by default allied to similar monsters even if the similar monster is the player
-	if (pmonr && pmonr->d_char == mon->faction) return false;
+	if (mon_will_follow_player(leader, p)) return false;
+	if (leader->reaction >= MON_REACT_NEUTRAL) return false;
 
 	// assume enemy for now
 	return true;
@@ -240,21 +244,27 @@ bool mon_will_attack_player(const struct monster *mon, const struct player *p)
 bool mon_will_attack_mon(const struct monster *mon, const struct monster *other)
 {
 	int i = 0;
-	bool mpally = mon->faction == '@' || mon->m_timed[MON_TMD_CHARMED];
-	bool opally = other->faction == '@' || other->m_timed[MON_TMD_CHARMED];
+	const struct monster *mlead = monster_group_leader(cave, mon);
+	const struct monster *olead = monster_group_leader(cave, other);
+	
+	mlead = mlead->reaction != MON_REACT_NONE ? mlead : mon;
+	olead = olead->reaction != MON_REACT_NONE ? olead : mon;
+
+	bool mpally = mon_will_follow_player(mlead, player) || mlead->reaction >= MON_REACT_ALLY;
+	bool opally = mon_will_follow_player(olead, player) || olead->reaction >= MON_REACT_ALLY;
 
 	// if one is an enemy of the player and the other is a pet they'll fight
-	if (mpally && mon_will_attack_player(other, player)) return true;
-	if (opally && mon_will_attack_player(mon, player)) return true;
+	if (mpally && mon_will_attack_player(olead, player)) return true;
+	if (opally && mon_will_attack_player(mlead, player)) return true;
 
 	while (opposed_chars[i].char1 >= 0) {
 
-		if (mon->faction == opposed_chars[i].char1 &&
-		    other->faction == opposed_chars[i].char2)
+		if (mlead->faction == opposed_chars[i].char1 &&
+		    	olead->faction == opposed_chars[i].char2)
 			return true;
 
-		if (other->faction == opposed_chars[i].char1 &&
-		    mon->faction == opposed_chars[i].char2)
+		if (olead->faction == opposed_chars[i].char1 &&
+		    	mlead->faction == opposed_chars[i].char2)
 			return true;
 
 		i++;
@@ -344,7 +354,6 @@ static void mon_find_target(struct chunk *c, struct monster *mon)
 		assert(dist > 0);
 		int currscore = 100 / dist + player->lev / 4;
 		if (!found || currscore >= score) {
-			mflag_on(mon->mflag, MFLAG_AWARE);
 			mon->target.who = TARGET_WHO_PLAYER;
 			score = currscore;
 			found = true;
@@ -352,8 +361,7 @@ static void mon_find_target(struct chunk *c, struct monster *mon)
 	}
 	if (!found)	{
 		// if we have no foes but we're a player ally cluster around the player
-		if (mon->faction == '@') {
-			mflag_on(mon->mflag, MFLAG_AWARE);
+		if (mon_will_follow_player(mon, player)) {
 			mon->target.who = TARGET_WHO_PLAYER;
 		} else {
 			mon->target.who = TARGET_WHO_NONE;
@@ -387,9 +395,12 @@ bool mon_check_target(struct chunk *c, struct monster *mon)
 			}
 		}
 
-		if (mon->faction == '@') {
+		if (!mon_will_attack_player(mon, player)) {
 			// if we're on the player's side we should see if there's someone we want to attack
 			recheck = true;
+			if (!mon_will_follow_player(mon, player)) {
+				mon->target.who = TARGET_WHO_NONE;
+			}
 		}
 	}
 	else if (mon->target.who == TARGET_WHO_OBJECT) {
@@ -463,6 +474,7 @@ static bool monster_turn_equip_item(struct monster *mon)
 		return false;
 	}
 
+	// list of all equipped items in their slots
 	struct object **obj_slot = mem_zalloc(sizeof(struct object *) * body->count);
 	for (equipped = mon->equipped_obj; equipped; equipped = equipped->next) {
 		int type = wield_slot_type(equipped);
@@ -477,20 +489,23 @@ static bool monster_turn_equip_item(struct monster *mon)
 		}
 	}
 
+	// check every slot
 	for (slot = body->slots, i = 0; slot && i < body->count; slot = slot->next, ++i) {
 		struct object *curr, *best = obj_slot[i];
-		int best_score = best ? item_score(best) : 0;
+		int curr_score, best_score = best ? item_score(best) : 0;
+		// check every item that could be in that slot
 		for (curr = mon->held_obj; curr; curr = curr->next) {
-			int slot_type = wield_slot_type(curr);
-			if (slot_type != slot->type) {
+			if (wield_slot_type(curr) != slot->type) {
 				continue;
 			}
-			int curr_score = item_score(best);
+			curr_score = item_score(curr);
 			if (curr_score > best_score) {
 				best = curr;
 				best_score = curr_score;
 			}
 		}
+
+		// save the object to equip / unequip that has the best difference in score
 		if (best && best != obj_slot[i]) {
 			int best_benefit = best_score - (obj_slot[i] ? item_score(obj_slot[i]) : 0);
 			if (best_benefit > best_best_benefit) {
@@ -541,6 +556,7 @@ static bool monster_turn_equip_item(struct monster *mon)
 		return true;
 	}
 
+	// looked through everything and no changes to make, so we can stop rechecking
 	mflag_off(mon->mflag, MFLAG_CHECK_EQ);
 	return false;
 }
@@ -1818,9 +1834,6 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 					msg("%s picks up %s.", m_name, o_name);
 				}
 
-				// L: flag the monster as wanting to recheck its equipment
-				mflag_on(mon->mflag, MFLAG_CHECK_EQ);
-
 				/* Delete the object */
 				square_delete_object(cave, new, obj, true, true);
 			} else {
@@ -1842,6 +1855,19 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 		/* Next object */
 		obj = next;
 	}
+}
+
+static bool monster_turn_talk(struct monster *mon)
+{
+	if (!mflag_has(mon->mflag, MFLAG_TALKING)) {
+		return false;
+	}
+	if (mon->target.who == TARGET_WHO_MONSTER ||
+			mon->reaction <= MON_REACT_NO_TALK) {
+		mflag_off(mon->mflag, MFLAG_TALKING);
+		return false;
+	}
+	return true;
 }
 
 
@@ -1882,6 +1908,11 @@ static void monster_turn(struct monster *mon)
 	/* Get the monster name */
 	monster_desc(m_name, sizeof(m_name), mon,
 		MDESC_CAPITAL | MDESC_IND_HID | MDESC_COMMA);
+
+	// L: become aware if we aren't yet
+	if (monster_can_see_player(mon)) {
+		monster_become_aware(mon);
+	}
 
 	/* If we're in a web, deal with that */
 	if (square_iswebbed(cave, mon->grid)) {
@@ -1935,12 +1966,18 @@ static void monster_turn(struct monster *mon)
 		return;
 	}
 
+	if (monster_turn_talk(mon)) {
+		return;
+	}
+
 	if (monster_turn_equip_item(mon)) {
 		return;
 	}
 
 	/* Attempt a ranged attack */
-	if (make_ranged_attack(mon)) return;
+	if (make_ranged_attack(mon)) {
+		return;
+	}
 
 	/* Work out what kind of movement to use - random movement or AI */
 	stagger = monster_turn_should_stagger(mon);

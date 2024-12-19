@@ -1600,6 +1600,11 @@ void py_attack(struct player *p, struct loc grid)
 		return;
 	}
 
+	// L: make the monster aware
+	if (monster_can_see_player(mon) || monster_can_smell(mon)) {
+		monster_become_aware(mon);
+	}
+
 	if (mon->m_timed[MON_TMD_SLEEP] || mon->m_timed[MON_TMD_HOLD]) backstab = 2;
 	else if (mon->m_timed[MON_TMD_SLOW] || mon->m_timed[MON_TMD_FEAR] || mon->m_timed[MON_TMD_STUN]) backstab = 1;
 
@@ -1668,8 +1673,9 @@ void py_attack(struct player *p, struct loc grid)
 	}
 
 	if (!slain) {
-		mflag_on(mon->mflag, MFLAG_AWARE);
-		mon->target.who = TARGET_WHO_PLAYER;
+		if (mon_will_attack_player(mon, player)) {
+			mon->target.who = TARGET_WHO_PLAYER;
+		}
 	}
 
 	/* Hack - delay timed messages */
@@ -2038,7 +2044,6 @@ void do_cmd_melee(struct command *cmd)
 		msg("You can't attack that far.");
 		return;
 	}
-
 
 	py_attack(player, target);
 }

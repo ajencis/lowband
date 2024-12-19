@@ -740,7 +740,6 @@ bool player_learn_spell_xp(struct player *p, bool initial, int xp)
 		freq = freq * freq / xp;
 
 		// don't change spells too often
-		message_add(format("chance is %i, skill is %i, turnmod is %i, xp is %i", freq, p->state.skills[SKILL_MAGIC], turn * 13 / z_info->day_length / 10, xp), MSG_GENERIC);
 		if (!one_in_(freq)) {
 			return false;
 		}
@@ -1699,6 +1698,8 @@ static bool player_bloodlust_charge_monster(struct player *p, struct monster *mo
 	struct loc target_grid = difference;
 	struct loc target_grids[3] = { 0 };
 
+	if (!target_set_monster(mon)) return false;
+
 	target_grid.x = MAX(-1, MIN(1, target_grid.x));
 	target_grid.y = MAX(-1, MIN(1, target_grid.y));
 
@@ -1752,6 +1753,8 @@ bool bloodlust_override(struct player *p, struct chunk *c)
 {
 	int currtmd = p->timed[TMD_BLOODLUST];
 	struct monster *target;
+
+	if (p->timed[TMD_PARALYZED] || p->timed[TMD_COMMAND]) return false;
 
 	if (p->skip_cmd_coercion) return false;
 	//if (currtmd <= (randint0(30) + 5)) return false;

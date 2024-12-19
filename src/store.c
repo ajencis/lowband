@@ -212,10 +212,10 @@ static enum parser_error parse_normal(struct parser *p) {
 		add_kind_to_store_normal(s, kind);
 	}
 	else {
-		struct object_base *book_base = &kb_info[tval];
+		struct object_base *obj_base = &kb_info[tval];
 		int i;
 
-		for (i = 1; i < book_base->num_svals; i++) {
+		for (i = 1; i < obj_base->num_svals; i++) {
 			struct object_kind *kind = lookup_kind(tval, i);
 			assert(kind);
 
@@ -1249,6 +1249,7 @@ static bool store_create_random(struct store *store, bool reset)
 	for (tries = 0; tries < 6; tries++) {
 		struct object_kind *kind;
 		struct object *obj, *known_obj;
+		bool dbg;
 
 		/* Work out the level for objects to be generated at */
 		level = rand_range(min_level, max_level);
@@ -1259,6 +1260,8 @@ static bool store_create_random(struct store *store, bool reset)
 		} else {
 			kind = store_get_choice(store);
 		}
+
+		dbg = kind->tval == TV_POLEARM;
 
 		/*** Pre-generation filters ***/
 

@@ -22,6 +22,7 @@
 #include "game-input.h"
 #include "init.h"
 #include "mon-desc.h"
+#include "mon-group.h"
 #include "mon-move.h"
 #include "mon-util.h"
 #include "monster.h"
@@ -31,6 +32,21 @@
 #include "player-timed.h"
 #include "project.h"
 #include "target.h"
+
+struct timed_desc {
+	int timed;
+	const char *desc;
+} timed_descriptions[] = {
+	{ MON_TMD_SLEEP, "asleep"},
+	{ MON_TMD_HOLD, "held"},
+	{ MON_TMD_DISEN, "disenchanted" },
+	{ MON_TMD_CONF, "confused" },
+	{ MON_TMD_FEAR, "afraid" },
+	{ MON_TMD_STUN, "stunned" },
+	{ MON_TMD_SLOW, "slowed" },
+	{ MON_TMD_FAST, "hasted" },
+	{ -1, NULL }
+};
 
 /**
  * Is the target set?
@@ -58,8 +74,11 @@ static struct target old_target;
 void look_mon_desc(char *buf, size_t max, int m_idx)
 {
 	struct monster *mon = cave_monster(cave, m_idx);
+	struct monster *leader = monster_group_leader(cave, mon);
 
 	bool living = true;
+	bool firsttime;
+	int i;
 
 	if (!mon) return;
 
@@ -86,19 +105,33 @@ void look_mon_desc(char *buf, size_t max, int m_idx)
 		}
 	}
 
-	/* Effect status */
-	if (mon->m_timed[MON_TMD_SLEEP]) my_strcat(buf, ", asleep", max);
-	if (mon->m_timed[MON_TMD_HOLD]) my_strcat(buf, ", held", max);
-	if (mon->m_timed[MON_TMD_DISEN]) my_strcat(buf, ", disenchanted", max);
-	if (mon->m_timed[MON_TMD_CONF]) my_strcat(buf, ", confused", max);
-	if (mon->m_timed[MON_TMD_FEAR]) my_strcat(buf, ", afraid", max);
-	if (mon->m_timed[MON_TMD_STUN]) my_strcat(buf, ", stunned", max);
-	if (mon->m_timed[MON_TMD_SLOW]) my_strcat(buf, ", slowed", max);
-	if (mon->m_timed[MON_TMD_FAST]) my_strcat(buf, ", hasted", max);
+	// L: effect status
+	firsttime = true;
+	for (i = 0; timed_descriptions[i].timed >= 0; ++i) {
+		if (mon->m_timed[timed_descriptions[i].timed]) {
+			if (firsttime) {
+				my_strcat(buf, "; ", max);
+			} else {
+				my_strcat(buf, ", ", max);
+			}
+			my_strcat(buf, timed_descriptions[i].desc, max);
+			firsttime = false;
+		}
+	}
 
-	/* L: friendliness */
-	if (mon_will_follow_player(mon, player)) my_strcat(buf, "; allied", max);
+	// L: friendliness
+	if (mon->reaction == MON_REACT_NONE) my_strcat(buf, "; unaware", max);
+	else if (mon_will_follow_player(mon, player)) my_strcat(buf, "; allied", max);
 	else if (!mon_will_attack_player(mon, player)) my_strcat(buf, "; friendly", max);
+	else my_strcat(buf, "; hostile", max);
+
+	// L: following
+	if (mon != leader) {
+		char ldesc[80];
+		monster_desc(ldesc, sizeof(ldesc), leader, MDESC_OBJE | MDESC_IND_VIS | MDESC_SHOW);
+		my_strcat(buf, "; following ", max);
+		my_strcat(buf, ldesc, max);
+	}
 
 	// L: equipment
 	if (mon->equipped_obj) {

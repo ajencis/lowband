@@ -1073,7 +1073,7 @@ type:hafted
 graphics:/:s
 level:15
 weight:180
-cost:408
+cost:400
 alloc:20:15 to 100
 attack:2d6:0:0
 armor:0:0
@@ -1085,7 +1085,7 @@ type:hafted
 graphics:/:s
 level:15
 weight:160
-cost:304
+cost:300
 alloc:20:15 to 100
 attack:2d6:0:0
 armor:0:0
@@ -1097,7 +1097,7 @@ type:hafted
 graphics:/:s
 level:15
 weight:170
-cost:334
+cost:325
 alloc:20:15 to 100
 attack:2d8:0:0
 armor:0:0

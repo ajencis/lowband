@@ -926,10 +926,11 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 
 	/* Default fuel */
 	else if (tval_is_light(obj)) {
-		if (of_has(obj->flags, OF_BURNS_OUT))
+		if (of_has(obj->flags, OF_BURNS_OUT)) {
 			obj->timeout = z_info->fuel_torch;
-		else if (of_has(obj->flags, OF_TAKES_FUEL))
+		} else if (of_has(obj->flags, OF_TAKES_FUEL)) {
 			obj->timeout = z_info->default_lamp;
+		}
 	}
 
 	/* Default magic */

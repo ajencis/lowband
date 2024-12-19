@@ -2299,6 +2299,7 @@ static errr finish_parse_object(struct parser *p) {
 		assert(k_info[kidx].base);
 		mem_free(k);
 	}
+
 	z_info->k_max += 1;
 	z_info->ordinary_kind_max = z_info->k_max;
 

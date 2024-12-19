@@ -17,11 +17,13 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#include "cmd-core.h"
 #include "mon-desc.h"
 #include "mon-list.h"
 #include "mon-lore.h"
 #include "mon-util.h"
 #include "player-timed.h"
+#include "ui-menu.h"
 #include "ui-mon-list.h"
 #include "ui-output.h"
 #include "ui-prefs.h"
@@ -461,4 +463,277 @@ void monster_list_force_subwindow_update(void)
 {
 	monster_list_t *list = monster_list_shared_instance();
 	list->creation_turn = -1;
+}
+
+
+
+
+
+/**
+ * Diplomacy menu
+ */
+
+
+/**
+ * Diplomacy menu data struct
+ */
+struct diplomacy_menu_data {
+	int *commands;
+	int num_commands;
+
+	bool browse;
+	bool show_description;
+
+	int selected_command;
+};
+
+static void diplomacy_menu_display(struct menu *m, int oid, bool cursor,
+		int row, int col, int wid)
+{
+	//plog("entering dmd");
+	struct diplomacy_menu_data *d = menu_priv(m);
+
+	int command = d->commands[oid];
+	const char *name;
+	int attr = d->selected_command == command ? COLOUR_L_BLUE : COLOUR_WHITE;
+
+	switch (command) {
+		case CMD_DIP_HIRE:
+			name = "Hire";
+			break;
+		case CMD_DIP_GIFT:
+			name = "Gift";
+			break;
+		default:
+			name = "ERROR";
+	}
+
+
+	c_prt(attr, name, row, col);
+	//plog("done dmd");
+}
+
+static bool diplomacy_menu_handler(struct menu *m, const ui_event *e, int oid)
+{
+	//plog("entering gsmh");
+	struct diplomacy_menu_data *d = menu_priv(m);
+
+	if (e->type == EVT_SELECT) {
+		d->selected_command = d->commands[oid];
+		return d->browse ? true : false;
+	}
+	else if (e->type == EVT_KBRD) {
+		if (e->key.code == '?') {
+			d->show_description = !d->show_description;
+		}
+	}
+
+	return false;
+}
+
+static void diplomacy_menu_browser(int oid, void *data, const region *loc)
+{
+	//struct diplomacy_menu_data *d = data;
+	//int command = d->commands[oid];
+
+	/*if (d->show_description) {
+		// Redirect output to the screen 
+		text_out_hook = text_out_to_screen;
+		text_out_wrap = SCREEN_WID - 5;
+		text_out_indent = loc->col - 1;
+		text_out_pad = 1;
+
+		Term_gotoxy(loc->col, loc->row + loc->page_rows);
+		// Spell description 
+		text_out("\n%s", spell->text);
+
+		// To summarize average damage, count the damaging effects 
+		int num_damaging = 0;
+		int num_schools = 0;
+		int i;
+
+		ref_spell = spell;
+
+		for (struct effect *e = spell->effect; e != NULL; e = effect_next(e)) {
+			if (effect_damages(e)) {
+				num_damaging++;
+			}
+		}
+		// Now enumerate the effects' damage and type if not forgotten 
+		if (num_damaging > 0 &&
+				(player->player_spell_flags[spell_index] & PY_SPELL_WORKED) &&
+				!(player->player_spell_flags[spell_index] & PY_SPELL_FORGOTTEN)) {
+			dice_t *shared_dice = NULL;
+			i = 0;
+
+			text_out("  Inflicts an average of");
+			for (struct effect *e = spell->effect; e != NULL; e = effect_next(e)) {
+				if (e->index == EF_SET_VALUE) {
+					shared_dice = e->dice;
+				} else if (e->index == EF_CLEAR_VALUE) {
+					shared_dice = NULL;
+				}
+				if (effect_damages(e)) {
+					if (num_damaging > 2 && i > 0) {
+						text_out(",");
+					}
+					if (num_damaging > 1 && i == num_damaging - 1) {
+						text_out(" and");
+					}
+					text_out_c(COLOUR_L_GREEN, " %d", effect_avg_damage(e, shared_dice));
+					const char *projection = effect_projection(e);
+					if (strlen(projection) > 0) {
+						text_out(" %s", projection);
+					}
+					i++;
+				}
+			}
+			text_out(" damage.");
+		}
+
+		ref_spell = NULL;
+
+		for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
+			if (spell->school[i]) ++num_schools;
+		}
+
+		if (num_schools > 0) {
+			int numremaining = num_schools;
+			text_out("\nIt is a");
+			for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
+				if (spell->school[i]) {
+					--numremaining;
+					const char *name = school_idx_to_name(spell->school[i]);
+					bool add_n = (numremaining + 1 == num_schools) && is_a_vowel(name[0]);
+					text_out("%s %s", add_n ? "n" : "", name);
+					if (num_schools > 2 && numremaining >= 1) {
+						text_out(",");
+					}
+					if (numremaining == 1) {
+						text_out(" and");
+					}
+				}
+			}
+			
+			text_out(" spell.");
+		}
+
+		else {
+			text_out("\nIt is an universal spell.");
+		}
+		
+		text_out("\n\n");
+
+		// XXX 
+		text_out_pad = 0;
+		text_out_indent = 0;
+	}*/
+}
+
+static const menu_iter diplomacy_menu_iter = {
+	NULL,	/* get_tag = NULL, just use lowercase selections */
+	NULL,
+	diplomacy_menu_display,
+	diplomacy_menu_handler,
+	NULL	/* no resize hook */
+};
+
+
+static struct menu *diplomacy_menu_new(struct player *p, struct monster *mon,
+		bool show_description)
+{
+	struct menu *m = menu_new(MN_SKIN_SCROLL, &diplomacy_menu_iter);
+	struct diplomacy_menu_data *d = mem_alloc(sizeof *d);
+	size_t width = MAX(0, MIN(Term->wid - 15, 80));
+
+	region loc = { 0 - width, 1, width, -99 };
+
+	/* comands are static */
+	d->num_commands = 0;
+	d->commands = mem_zalloc(2 * sizeof(*d->commands));
+
+	if (mon->reaction >= MON_REACT_FRIENDLY) {
+		d->commands[d->num_commands] = CMD_DIP_HIRE;
+		++d->num_commands;
+	}
+	if (distance(mon->grid, player->grid) <= 2) {
+		d->commands[d->num_commands] = CMD_DIP_GIFT;
+		++d->num_commands;
+	}
+
+	// no legitimate commands
+	if (d->num_commands <= 0) {
+		mem_free(d->commands);
+		mem_free(d);
+		menu_free(m);
+		return NULL;
+	}
+
+	/* Copy across private data */
+	d->selected_command = -1;
+	d->browse = false;
+	d->show_description = show_description;
+
+	menu_setpriv(m, d->num_commands, d);
+
+	/* Set flags */
+	m->header = "Action";
+	m->flags = MN_CASELESS_TAGS;
+	m->selections = all_letters_nohjkl;
+	m->browse_hook = diplomacy_menu_browser;
+	m->cmd_keys = "?";
+
+	/* Set size */
+	loc.page_rows = d->num_commands + 1;
+	menu_layout(m, &loc);
+
+	//plog("done gsmn");
+	return m;
+}
+
+static void diplomacy_menu_destroy(struct menu *m)
+{
+	struct diplomacy_menu_data *d = menu_priv(m);
+	mem_free(d->commands);
+	mem_free(d);
+	menu_free(m);
+}
+
+static int diplomacy_menu_select(struct menu *m)
+{
+	//plog("entering gsms");
+	struct diplomacy_menu_data *d = menu_priv(m);
+	char buf[80];
+
+	screen_save();
+	region_erase_bordered(&m->active);
+
+	/* Format, capitalise and display */
+	strnfmt(buf, sizeof buf, "Take which action?");
+	my_strcap(buf);
+	prt(buf, 0, 0);
+
+	menu_select(m, 0, true);
+	screen_load();
+
+	//plog("done gsms");
+	return d->selected_command;
+}
+
+int textui_do_diplomacy(struct player *p, struct monster *mon, const char *error)
+{
+	struct menu *m;
+
+	//handle_stuff(p);
+
+	m = diplomacy_menu_new(p, mon, false);
+	if (m) {
+		int command = diplomacy_menu_select(m);
+		diplomacy_menu_destroy(m);
+		return command;
+	} else if (error) {
+		msg("%s", error);
+	}
+
+	return -1;
 }

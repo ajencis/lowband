@@ -1063,7 +1063,7 @@ desc:Within this long two-handed spear dwell the spirits of frost giants and
 desc: fire demons, who war forever, fettered by sorcerous binds.
 
 name:of Théoden
-base-object:polearm:Beaked Axe
+base-object:hafted:Beaked Axe
 level:20
 weight:180
 cost:40000
@@ -1079,7 +1079,7 @@ desc:The narrow axe head of this weapon would pierce the armour of a very
 desc: Dragon, and the designs of your enemies stand naked and revealed.
 
 name:of Húrin
-base-object:polearm:Beaked Axe
+base-object:hafted:Beaked Axe
 level:20
 weight:180
 cost:90000
@@ -1102,7 +1102,7 @@ desc: did he utter his mighty war-cry: "Aurë entuluva!" - "Day shall
 desc: come again!"
 
 name:'Barukkheled'
-base-object:polearm:Broad Axe
+base-object:hafted:Broad Axe
 level:20
 weight:160
 cost:50000
@@ -1119,7 +1119,7 @@ desc:A royal heirloom of the southern coast, strong in combat against the evil
 desc: creatures of earth.
 
 name:of Balli Stonehand
-base-object:polearm:Battle Axe
+base-object:hafted:Battle Axe
 level:30
 weight:170
 cost:90000
@@ -1136,7 +1136,7 @@ desc:The twin blades of this weapon were forged in Belegost, and powerful
 desc: forces to resist and endure lie ready for its next owner.
 
 name:'Lotharang'
-base-object:polearm:Battle Axe
+base-object:hafted:Battle Axe
 level:30
 weight:170
 cost:21000
@@ -1168,7 +1168,7 @@ desc: requires two hands to wield, with spells to ward off the elements
 desc: intricately engraved upon its surface in filleted gold.
 
 name:of Durin
-base-object:polearm:Great Axe
+base-object:hafted:Great Axe
 level:30
 weight:230
 cost:150000
@@ -1189,7 +1189,7 @@ desc: mithril inlay telling sagas of endurance.  The powers of
 desc: Khazad-dûm protect its wielder and slay all evils found underground.
 
 name:of Eönwë
-base-object:polearm:Great Axe
+base-object:hafted:Great Axe
 level:30
 weight:230
 cost:200000

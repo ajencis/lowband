@@ -49,6 +49,7 @@
 #include "ui-knowledge.h"
 #include "ui-map.h"
 #include "ui-menu.h"
+#include "ui-mon-list.h"
 #include "ui-object.h"
 #include "ui-output.h"
 #include "ui-player.h"
