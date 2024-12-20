@@ -120,6 +120,10 @@ bool monster_can_see_player(struct monster *mon)
 	if (player->timed[TMD_COVERTRACKS] && (mon->cdis > z_info->max_sight / 4)) {
 		return false;
 	}
+	if (player->timed[TMD_INVIS] && 
+			(!rf_has(mon->race->flags, RF_SMART) || !mflag_has(mon->mflag, MFLAG_AWARE))) {
+		return false;
+	}
 	return true;
 }
 

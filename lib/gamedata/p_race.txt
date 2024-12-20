@@ -176,6 +176,7 @@ skill-throw:12
 skill-dig:0
 skill-magic:0
 skill-health:-2
+power:ILLUSION_MAGIC:20
 hitdie:3
 exp:120
 infravision:4

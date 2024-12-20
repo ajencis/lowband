@@ -751,8 +751,9 @@ void become_aware(struct chunk *c, struct monster *mon)
 		mflag_off(mon->mflag, MFLAG_CAMOUFLAGE);
 
 		/* Learn about mimicry */
-		if (rf_has(mon->race->flags, RF_UNAWARE))
+		if (rf_has(mon->race->flags, RF_UNAWARE)) {
 			rf_on(lore->flags, RF_UNAWARE);
+		}
 
 		/* Delete any false items */
 		if (mon->mimicked_obj) {

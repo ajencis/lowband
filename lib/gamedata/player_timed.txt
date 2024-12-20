@@ -587,3 +587,8 @@ name:CALL_STORM
 desc:storm
 grade:B:10000:Storm:A storm forms around you.
 on-end:The storm around you dissipates.
+
+name:INVIS
+desc:invisibility
+grade:G:10000:Invis:You become transparent.
+on-end:You become visible again.

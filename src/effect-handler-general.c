@@ -2301,6 +2301,7 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
         bool isplayer = context->origin.what == SRC_PLAYER;
 		struct loc srcgrid = isplayer ? player->grid : mon->grid;
 		wchar_t faction;
+		bool illusory = summon_type == summon_name_to_idx("ILLUSIONS");
         
 		if (!isplayer) {
 			assert(mon);
@@ -2329,6 +2330,11 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 				val += summoned->race->level * summoned->race->level;
 			}
 
+			if (summoned && illusory) {
+				summoned->hp = 1;
+				summoned->maxhp = 1;
+			}
+
 			/* Increase the attempt in case no monsters were available. */
 			attempts++;
 
@@ -2340,6 +2346,7 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 
 		/* If the summon failed and there's a fallback type, use that */
 		if ((count == 0) && (fallback_type >= 0)) {
+			illusory = fallback_type == summon_name_to_idx("ILLUSIONS");
 			attempts = 0;
 			while ((val < player->depth * rlev) && (attempts < summon_max)) {
 				struct monster *summoned;
@@ -2352,12 +2359,18 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 					val += summoned->race->level * summoned->race->level;
 				}
 
+				if (summoned && illusory) {
+					summoned->hp = 1;
+					summoned->maxhp = 1;
+				}
+
 				/* Increase the attempt in case no monsters were available. */
 				attempts++;
 
 				/* Increase count of summoned monsters */
-				if (val > 0)
+				if (val > 0) {
 					count++;
+				}
 			}
 		}
 

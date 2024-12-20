@@ -921,8 +921,7 @@ static int spell_compare_name(const void *a, const void *b)
 	const char *name1 = ps1->name;
 	const char *name2 = ps2->name;
 
-	i = 0;
-	while (name1[i] || name2[i]) {
+	for (i = 0; name1[i] || name2[i]; ++i) {
 		if (!name1[i]) return -1;
 		if (!name2[i]) return 1;
 		if (name1[i] < name2[i]) return -1;
@@ -996,7 +995,7 @@ static struct menu *gener_spell_menu_new(struct player *p,
 	d->n_splls = 0;
 	d->spells = mem_zalloc(max_splls * sizeof(struct player_spell *));
 
-	for (ps = spells; ps; ps = ps->next) {
+	for (ps = spells; ps && d->n_splls < max_splls; ps = ps->next) {
 		if (is_valid(player, ps->sidx) != 2) {
 			d->spells[d->n_splls] = ps;
 			++d->n_splls;
@@ -1040,7 +1039,7 @@ static void gener_spell_menu_destroy(struct menu *m)
 	struct gener_spell_menu_data *d = menu_priv(m);
 	mem_free(d->spells);
 	mem_free(d);
-	mem_free(m);
+	menu_free(m);
 }
 
 static int gener_spell_menu_select(struct menu *m)
@@ -1101,8 +1100,26 @@ int textui_get_gener_spell(struct player *p, const char *error,
 	return -1;
 }
 
-static int dummy_gener_spell_filter(const struct player *p, int spell_index)
-{
+static int gener_spell_is_browsable(const struct player *p, int spell) {
+	struct object *spellbook;
+
+	if (spell < 0 || spell >= z_info->spell_max) return 2;
+	
+	if (!p->realm->innate) {
+		for (spellbook = p->gear; spellbook; spellbook = spellbook->next) {
+			if (spellbook->kind->spell && spellbook->kind->spell->sidx == spell) {
+				break;
+			}
+		}
+
+		if (!spellbook) {
+			return 2;
+		}
+	}
+	else {
+		if (!(p->player_spell_flags[spell] & PY_SPELL_LEARNED)) return 2;
+	}
+
 	return 1;
 }
 
@@ -1110,7 +1127,7 @@ void textui_gener_spell_browse(void)
 {
 	struct menu *m;
 
-	m = gener_spell_menu_new(player, dummy_gener_spell_filter, true);
+	m = gener_spell_menu_new(player, gener_spell_is_browsable, true);
 	if (m) {
 		gener_spell_menu_browse(m);
 		gener_spell_menu_destroy(m);

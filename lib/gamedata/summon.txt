@@ -155,3 +155,8 @@ permanent:1
 base:skeleton
 specific:skeleton human
 desc:a skeleton
+
+name:ILLUSIONS
+msgt:SUM_MONSTER
+uniques:0
+desc:illusory monsters

@@ -379,6 +379,11 @@ name:Enchantment Specialization
 desc:You are particularly good at enchantment magic.
 
 type:power
+code:ILLUSION_MAGIC
+name:Illusion Specialization
+desc:You are particularly good at illusion magic.
+
+type:power
 code:SWORD_SPECIALIZATION
 name:Swordmastery
 desc:You are particularly good with swords.

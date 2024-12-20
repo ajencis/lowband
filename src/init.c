@@ -3597,9 +3597,20 @@ static enum parser_error parse_spell_name(struct parser *p) {
 	struct player_spell *spell = mem_zalloc(sizeof *spell);
 
 	spell->name = string_make(parser_getsym(p, "name"));
+
 	spell->slevel = parser_getint(p, "level");
-	spell->smana = parser_getint(p, "mana");
-	spell->sfail = parser_getint(p, "fail");
+
+	if (parser_hasval(p, "mana")) {
+		spell->smana = parser_getint(p, "mana");
+	} else {
+		spell->smana = spell->slevel / 10 + 1;
+	}
+
+	if (parser_hasval(p, "fail")) {
+		spell->sfail = parser_getint(p, "fail");
+	} else {
+		spell->sfail = spell->slevel / 3 + 10;
+	}
 	
 	spell->next = s;
 
@@ -3798,7 +3809,7 @@ static struct parser *init_parse_spell(void) {
 	struct parser *p = parser_new();
 	z_info->spell_max = 0;
 	parser_setpriv(p, NULL);
-	parser_reg(p, "spell sym name int level int mana int fail", parse_spell_name);
+	parser_reg(p, "spell sym name int level ?int mana ?int fail", parse_spell_name);
 	parser_reg(p, "effect sym eff ?sym type ?int radius ?int other", parse_spell_effect);
 	parser_reg(p, "effect-yx int y int x", parse_spell_effect_yx);
 	parser_reg(p, "monster str mon-name", parse_spell_effect_monster);

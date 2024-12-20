@@ -1371,3 +1371,4 @@ void do_cmd_cast(struct command *cmd)
 		player->upkeep->energy_use = z_info->move_energy;
 	}
 }
+
