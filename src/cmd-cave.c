@@ -79,6 +79,32 @@ static bool check_can_take_stairs(struct player *p, int time)
 	return true;
 }
 
+/**
+ * L: try to clear a web from the current square
+ * \return whether player should thereby skip their turn
+ */
+static bool clear_web(struct player *p)
+{
+	if (player_of_has(p, OF_PASS_WEB)) {
+		return false;
+	}
+	if (square_iswebbed(cave, p->grid)) {
+		if (adj_str_web(p->state.stat_ind[STAT_STR]) < randint1(100)) {
+			msg("You struggle against the web.");
+			player->upkeep->energy_use = z_info->move_energy;
+			return true;
+		}
+		/* Clear the web, finish turn */
+		struct trap_kind *web = lookup_trap("web");
+
+		msg("You clear the web.");
+		assert(web);
+		square_remove_all_traps_of_type(cave, player->grid, web->tidx);
+		return true;
+	}
+	return false;
+}
+
 
 /**
  * Go up one level
@@ -1323,14 +1349,7 @@ void do_cmd_walk(struct command *cmd)
 	}
 
 	/* If we're in a web, deal with that */
-	if (square_iswebbed(cave, player->grid)) {
-		/* Clear the web, finish turn */
-		struct trap_kind *web = lookup_trap("web");
-
-		msg("You clear the web.");
-		assert(web);
-		square_remove_all_traps_of_type(cave, player->grid, web->tidx);
-		player->upkeep->energy_use = z_info->move_energy;
+	if (clear_web(player)) {
 		return;
 	}
 
@@ -1366,14 +1385,7 @@ void do_cmd_jump(struct command *cmd)
 		return;
 
 	/* If we're in a web, deal with that */
-	if (square_iswebbed(cave, player->grid)) {
-		/* Clear the web, finish turn */
-		struct trap_kind *web = lookup_trap("web");
-
-		msg("You clear the web.");
-		assert(web);
-		square_remove_all_traps_of_type(cave, player->grid, web->tidx);
-		player->upkeep->energy_use = z_info->move_energy;
+	if (clear_web(player)) {
 		return;
 	}
 
@@ -1406,14 +1418,7 @@ void do_cmd_run(struct command *cmd)
 		return;
 
 	/* If we're in a web, deal with that */
-	if (square_iswebbed(cave, player->grid)) {
-		/* Clear the web, finish turn */
-		struct trap_kind *web = lookup_trap("web");
-
-		msg("You clear the web.");
-		assert(web);
-		square_remove_all_traps_of_type(cave, player->grid, web->tidx);
-		player->upkeep->energy_use = z_info->move_energy;
+	if (clear_web(player)) {
 		return;
 	}
 
@@ -1457,11 +1462,7 @@ void do_cmd_navigate_down(struct command *cmd)
 
 
 	/* If we're in a web, deal with that */
-	if (square_iswebbed(cave, player->grid)) {
-		/* Clear the web, finish turn */
-		msg("You clear the web.");
-		square_destroy_trap(cave, player->grid);
-		player->upkeep->energy_use = z_info->move_energy;
+	if (clear_web(player)) {
 		return;
 	}
 	
@@ -1520,11 +1521,7 @@ void do_cmd_navigate_up(struct command *cmd)
 
 
 	/* If we're in a web, deal with that */
-	if (square_iswebbed(cave, player->grid)) {
-		/* Clear the web, finish turn */
-		msg("You clear the web.");
-		square_destroy_trap(cave, player->grid);
-		player->upkeep->energy_use = z_info->move_energy;
+	if (clear_web(player)) {
 		return;
 	}
 	
@@ -1585,11 +1582,7 @@ void do_cmd_explore(struct command *cmd)
 
 
 	/* If we're in a web, deal with that */
-	if (square_iswebbed(cave, player->grid)) {
-		/* Clear the web, finish turn */
-		msg("You clear the web.");
-		square_destroy_trap(cave, player->grid);
-		player->upkeep->energy_use = z_info->move_energy;
+	if (clear_web(player)) {
 		return;
 	}
 	

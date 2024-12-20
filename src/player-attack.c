@@ -823,14 +823,17 @@ static void specialization_mod_attack(struct attack_roll *aroll, struct object *
 
 static bool backstab_mod_attack(struct attack_roll *aroll, int power)
 {
+	int scale;
+	
 	if (!power) return false;
 	if (aroll->attack_skill != SKILL_TO_HIT_MELEE) return false;
 
-	int scale = get_power_scale(player, PP_BACKSTAB, 100) + power * 40 - 25;
+	scale = get_power_scale(player, PP_BACKSTAB, 100) + power * 40 - 25;
 	if (scale < 25) return false;
 
 	aroll->to_hit += scale / 4;
 	aroll->crit_chance += scale;
+
 	return true;
 }
 
@@ -1198,6 +1201,25 @@ static int get_attack_dam(struct attack_roll *aroll, struct monster *mon, int b,
 		dmg *= get_monster_brand_multiplier(mon, &brands[b], false);
 	}
 	return dmg;
+}
+
+
+static int backstab_power(struct monster *mon)
+{
+	assert(mon);
+
+	if (mon->m_timed[MON_TMD_SLEEP]) return 2;
+	if (mon->m_timed[MON_TMD_HOLD]) return 2;
+	if (mon->m_timed[MON_TMD_SLOW]) return 1;
+	if (mon->m_timed[MON_TMD_FEAR]) return 1;
+	if (mon->m_timed[MON_TMD_STUN]) return 1;
+	if (square_iswebbed(cave, mon->grid)) {
+		if (!rf_has(mon->race->flags, RF_PASS_WALL) && !rf_has(mon->race->flags, RF_PASS_WEB)) {
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 
@@ -1577,12 +1599,17 @@ void py_attack(struct player *p, struct loc grid)
 	struct attack_roll aroll;
 	int i;
 	int pretimed[MON_TMD_MAX];
-	int backstab = 0;
+	int backstab;
 	bool backstab_msg = false;
 	int dist = distance(p->grid, grid);
 	bool can_attack = false;
 	char buf[128] = { '\0' };
 	int which;
+
+	if (!mon) {
+		msg("There's nobody there to attack!");
+		return;
+	}
 
 	if (p->state.num_attacks <= 0) {
 		msg("You don't have any way to attack!");
@@ -1605,12 +1632,11 @@ void py_attack(struct player *p, struct loc grid)
 		monster_become_aware(mon);
 	}
 
-	if (mon->m_timed[MON_TMD_SLEEP] || mon->m_timed[MON_TMD_HOLD]) backstab = 2;
-	else if (mon->m_timed[MON_TMD_SLOW] || mon->m_timed[MON_TMD_FEAR] || mon->m_timed[MON_TMD_STUN]) backstab = 1;
-
 	for (i = 0; i < MON_TMD_MAX; i++) {
 		pretimed[i] = (int)mon->m_timed[i];
 	}
+
+	backstab = backstab_power(mon);
 
 	/* Disturb the player */
 	disturb(p);

@@ -42,6 +42,7 @@
 #include "player-calcs.h"
 #include "player-history.h"
 #include "player-quest.h"
+#include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
@@ -747,14 +748,20 @@ bool effect_handler_GLYPH(effect_handler_context_t *context)
 bool effect_handler_WEB(effect_handler_context_t *context)
 {
 	int rad = 1;
-	struct monster *mon = NULL;
-	struct loc grid;
+	struct loc grid, origin;
+	int power;
 
 	/* Get the monster creating */
-	if (cave->mon_current > 0) {
-		mon = cave_monster(cave, cave->mon_current);
-	} else {
-		/* Player can't currently create webs */
+	if (context->origin.what == SRC_PLAYER) {
+		power = innate_spell_power(player, RSF_WEAVE);
+		origin = player->grid;
+	}
+	else if (cave->mon_current > 0) {
+		struct monster *mon = cave_monster(cave, cave->mon_current);
+		power = mon->race->spell_power;
+		origin = mon->grid;
+	}
+	else {
 		return false;
 	}
 
@@ -762,17 +769,27 @@ bool effect_handler_WEB(effect_handler_context_t *context)
 	context->ident = true;
 
 	/* Increase the radius for higher spell power */
-	if (mon->race->spell_power > 40) rad++;
-	if (mon->race->spell_power > 80) rad++;
+	if (power > 40) rad++;
+	if (power > 80) rad++;
 
 	/* Check within the radius for clear floor */
-	for (grid.y = mon->grid.y - rad; grid.y <= mon->grid.y + rad; grid.y++) {
-		for (grid.x = mon->grid.x - rad; grid.x <= mon->grid.x + rad; grid.x++){
-			if (distance(grid, mon->grid) > rad ||
-				!square_in_bounds_fully(cave, grid)) continue;
+	for (grid.y = origin.y - rad; grid.y <= origin.y + rad; grid.y++) {
+		for (grid.x = origin.x - rad; grid.x <= origin.x + rad; grid.x++){
+
+			// L: webs take some time to build
+			if (!one_in_(3) && !loc_eq(grid, origin)) continue;
+
+			if (distance(grid, origin) > rad) continue;
+			if (!square_in_bounds_fully(cave, grid)) continue;
 
 			/* Require a floor grid with no existing traps or glyphs */
 			if (!square_iswebbable(cave, grid)) continue;
+
+			// L: don't web a grid that has someone there already unless it's the source
+			if ((square_monster(cave, grid) || square_isplayer(cave, grid)) &&
+					!loc_eq(grid, origin)) {
+				continue;
+			}
 
 			/* Create a web */
 			square_add_web(cave, grid);

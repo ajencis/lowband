@@ -1299,6 +1299,7 @@ void do_cmd_innate(struct command *cmd)
 	effect_do(ms->effect, source_player(), NULL, &ident, true, dir, 0, 0, cmd);
 
 	take_hit(player, mana, "using an innate power");
+	player->upkeep->energy_use = z_info->move_energy;
 
 	ref_race = NULL;
 }

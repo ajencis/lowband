@@ -650,6 +650,7 @@ bool square_isdiggable(struct chunk *c, struct loc grid) {
 
 /**
  * True if the square is a floor with no traps.
+ * L: also require no monster or player there
  */
 bool square_iswebbable(struct chunk *c, struct loc grid) {
 	if (square_trap(c, grid)) return false;

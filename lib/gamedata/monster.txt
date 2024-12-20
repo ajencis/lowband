@@ -1113,6 +1113,7 @@ desc:It is a large slimy mass of worms.
 
 name:cave spider
 base:spider
+evolution:giant spider
 color:p
 speed:120
 hit-points:7
@@ -1126,6 +1127,7 @@ blow:BITE:HURT:1d4
 flags:ANIMAL | WEIRD_MIND
 flags:GROUP_AI
 friends:100:2d8:Same
+spells:WEAVE
 desc:It is a black spider that moves in fits and starts.
 
 name:wild cat
@@ -2849,6 +2851,9 @@ desc: you are trespassing in its territory.
 
 name:giant spider
 base:spider
+evolution:Mirkwood spider
+evolution:phase spider
+evolution:abyss spider
 color:V
 speed:110
 hit-points:55
@@ -9298,6 +9303,7 @@ desc: one...
 
 name:abyss spider
 base:spider
+evolution:ancient spider
 color:G
 speed:120
 hit-points:264
@@ -10767,6 +10773,7 @@ desc: evil surrounds it.  Luckily for you, it can't move.
 
 name:ancient spider
 base:spider
+evolution:spider of Gorgoroth
 color:r
 speed:120
 hit-points:1050

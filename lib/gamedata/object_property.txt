@@ -955,3 +955,27 @@ subtype:misc ability
 code:REALM_LEARN
 power:5
 desc:Learning
+
+name:web walking
+type:flag
+code:PASS_WEB
+power:5
+mult:5
+type-mult:sword:0
+type-mult:polearm:0
+type-mult:hafted:0
+type-mult:digger:0
+type-mult:bow:0
+type-mult:ring:0
+type-mult:amulet:0
+type-mult:light:0
+type-mult:soft armor:0
+type-mult:hard armor:0
+type-mult:dragon armor:0
+type-mult:cloak:0
+type-mult:shield:0
+type-mult:helm:0
+type-mult:crown:0
+type-mult:gloves:0
+type-mult:boots:1
+bindui:blows_ui_compact_0:0

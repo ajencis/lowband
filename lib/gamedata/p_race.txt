@@ -361,6 +361,29 @@ weight:155:35
 player-flags:LONG_LIMBS
 body:Humanoid
 
+name:Misshapen
+stats:0:1:1:-1:1
+skill-disarm-phys:5
+skill-disarm-magic:5
+skill-device:10
+skill-save:10
+skill-stealth:0
+skill-search:5
+skill-melee:0
+skill-shoot:5
+skill-throw:5
+skill-dig:5
+skill-magic:5
+skill-health:5
+hitdie:8
+exp:100
+infravision:0
+history:1
+age:14:6
+height:69:10
+weight:185:40
+body:Misshapen
+
 name:Dhampir
 monster:vampire
 
@@ -393,25 +416,5 @@ monster:2-headed hydra
 name:Aasimar
 monster:cherub
 
-name:Misshapen
-stats:0:1:1:-1:1
-skill-disarm-phys:5
-skill-disarm-magic:5
-skill-device:10
-skill-save:10
-skill-stealth:0
-skill-search:5
-skill-melee:0
-skill-shoot:5
-skill-throw:5
-skill-dig:5
-skill-magic:5
-skill-health:5
-hitdie:8
-exp:100
-infravision:0
-history:1
-age:14:6
-height:69:10
-weight:185:40
-body:Misshapen
+name:Sling
+monster:cave spider

@@ -267,3 +267,19 @@ slot:CLOAK:back
 slot:HAT:head
 slot:BOOTS:feet
 
+body:Spider
+slot:WEAPON:left front claw
+slot:WEAPON:right front claw
+slot:BOW:shooting
+slot:RING:left pedipalp
+slot:RING:right pedipalp
+slot:AMULET:neck
+slot:LIGHT:light
+slot:CLOAK:back
+slot:HAT:head
+slot:GLOVES:pedipalps
+slot:BOOTS:front tarsi
+slot:BOOTS:front middle tarsi
+slot:BOOTS:back middle tarsi
+slot:BOOTS:back tarsi
+

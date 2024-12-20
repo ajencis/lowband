@@ -534,8 +534,10 @@ glyph:S
 pain:7
 flags:BASH_DOOR | PASS_WEB
 desc:Spider/Scorpion/Tick
+body:Spider
 attr:SPEED:-1
 attr:DAMAGE:1
+stats:-1:-1:1:2:-1
 
 # Weak, except the odd one to surprise the unwary newcomer.  Always native to
 # level 0, never give experience

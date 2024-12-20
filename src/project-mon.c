@@ -539,6 +539,8 @@ static void project_monster_handler_COLD(project_monster_handler_context_t *cont
 /* Poison */
 static void project_monster_handler_POIS(project_monster_handler_context_t *context)
 {
+	context->mon_timed[MON_TMD_POISONED] = randint1(context->dam) + 10;
+
 	project_monster_resist_element(context, RF_IM_POIS, 9);
 }
 

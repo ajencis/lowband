@@ -1553,7 +1553,7 @@ static bool see_wall(int dir, struct loc grid)
 	if (!square_in_bounds(cave, grid)) return false;
 
 	/* Webs are enough like walls */
-	if (square_iswebbed(cave, grid)) return true;
+	if (square_iswebbed(cave, grid) && !player_of_has(player, OF_PASS_WEB)) return true;
 
 	/* Non-wall grids are not known walls */
 	if (!square_seemslikewall(cave, grid)) return false;

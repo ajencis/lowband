@@ -1918,7 +1918,6 @@ static void monster_turn(struct monster *mon)
 	if (square_iswebbed(cave, mon->grid)) {
 		/* Learn web behaviour */
 		if (monster_is_visible(mon)) {
-			rf_on(lore->flags, RF_CLEAR_WEB);
 			rf_on(lore->flags, RF_PASS_WEB);
 		}
 
@@ -1945,10 +1944,27 @@ static void monster_turn(struct monster *mon)
 				struct trap_kind *web = lookup_trap("web");
 
 				assert(web);
-				square_remove_all_traps_of_type(cave,
-					mon->grid, web->tidx);
-				return;
+
+				// L: clearing webs is somewhat difficult
+				// L: but you can clear and move in the same turn
+				if (one_in_(10)) {
+					if (monster_is_visible(mon)) {
+						msg("%s clears a web.", m_name);
+						rf_on(lore->flags, RF_CLEAR_WEB);
+					}
+					square_remove_all_traps_of_type(cave,
+							mon->grid, web->tidx);
+				}
+				else {
+					if (one_in_(5)) {
+						msg("%s struggles in a web.", m_name);
+					}
+					return;
+				}
 			} else {
+				if (one_in_(5)) {
+					msg("%s struggles in a web.", m_name);
+				}
 				/* Stuck */
 				return;
 			}
@@ -2014,18 +2030,29 @@ static void monster_turn(struct monster *mon)
 
 		/* Try to break the glyph if there is one.  This can happen multiple
 		 * times per turn because failure does not break the loop */
-		if (square_iswarded(cave, new) && !monster_turn_attack_glyph(mon, new))
+		if (square_iswarded(cave, new) && !monster_turn_attack_glyph(mon, new)) {
 			continue;
+		}
+
+		if (square_iswebbed(cave, new)) {
+			if (!monster_passes_walls(mon) &&
+					!rf_has(mon->race->flags, RF_PASS_WEB) &&
+					!one_in_(5)) {
+				continue;
+			}
+		}
 
 		/* Break a decoy if there is one */
 		if (square_isdecoyed(cave, new)) {
 			/* Learn about if the monster attacks */
-			if (monster_is_visible(mon))
+			if (monster_is_visible(mon)) {
 				rf_on(lore->flags, RF_NEVER_BLOW);
+			}
 
 			/* Some monsters never attack */
-			if (rf_has(mon->race->flags, RF_NEVER_BLOW))
+			if (rf_has(mon->race->flags, RF_NEVER_BLOW)) {
 				continue;
+			}
 
 			/* Wait a minute... */
 			square_destroy_decoy(cave, new);
@@ -2036,12 +2063,14 @@ static void monster_turn(struct monster *mon)
 		/* The player is in the way. */
 		if (square_isplayer(cave, new)) {
 			/* Learn about if the monster attacks */
-			if (monster_is_visible(mon))
+			if (monster_is_visible(mon)) {
 				rf_on(lore->flags, RF_NEVER_BLOW);
+			}
 
 			/* Some monsters never attack */
-			if (rf_has(mon->race->flags, RF_NEVER_BLOW))
+			if (rf_has(mon->race->flags, RF_NEVER_BLOW)) {
 				continue;
+			}
 
 			if (!mon_will_attack_player(mon, player) && stagger != CONFUSED_STAGGER) {
 				if (mon->target.who == TARGET_WHO_PLAYER) return;

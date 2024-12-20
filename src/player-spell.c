@@ -883,6 +883,12 @@ int innate_spell_mana(const struct monster_race *mon)
 	return cost;
 }
 
+int innate_spell_power(struct player *p, int spell)
+{
+	struct monster_race *mr = lookup_player_monster(p);
+	return mr ? mr->spell_power : p->lev;
+}
+
 void get_innate_info(int innate_index, char *p, size_t len)
 {
 	struct effect *effect = monster_spell_by_index(innate_index)->effect;

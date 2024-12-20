@@ -59,6 +59,28 @@ struct mon_player_match elem_matches[] = {
 	{ RF_NONE, -1 }
 };
 
+struct mon_player_match of_matches[] = {
+	{ RF_PASS_WEB, OF_PASS_WEB },
+	{ RF_NONE, -1 }
+};
+
+struct mon_player_match elem_pp_matches[] = {
+	{ ELEM_ACID, PP_EARTH_MAGIC },
+	{ ELEM_COLD, PP_WATER_MAGIC },
+	{ ELEM_DARK, PP_NECROMANCY_MAGIC },
+	{ ELEM_ELEC, PP_AIR_MAGIC },
+	{ ELEM_FIRE, PP_FIRE_MAGIC },
+	{ ELEM_FORCE, PP_EARTH_MAGIC },
+	{ ELEM_ICE, PP_WATER_MAGIC },
+	{ ELEM_NETHER, PP_NECROMANCY_MAGIC },
+	{ ELEM_NEXUS, PP_TELEPORTATION_MAGIC },
+	{ ELEM_PLASMA, PP_FIRE_MAGIC },
+	{ ELEM_POIS, PP_POISON_MAGIC },
+	{ ELEM_SHARD, PP_EARTH_MAGIC },
+	{ ELEM_WATER, PP_WATER_MAGIC },
+	{ -1, -1 }
+};
+
 int power_scalings[] = {
 	PP_SCALE_NONE,
 	#define PP(x, a, b, c, d, e) b,
@@ -193,6 +215,10 @@ int adj_int_lev(int index) {
 
 int adj_mag_stat(int index) {
 	return index - 7;
+}
+
+int adj_str_web(int index) {
+	return stat_scale(index, 50, true) + 5;
 }
 
 
@@ -1217,11 +1243,24 @@ static void calc_shapechange(struct player_state *state, bool vuln[ELEM_MAX],
 	}
 }
 
+static int power_by_element(int elem)
+{
+	int i;
+
+	for (i = 0; elem_pp_matches[i].mval >= 0; ++i) {
+		if (elem_pp_matches[i].mval == elem) {
+			return elem_pp_matches[i].pval;
+		}
+	}
+
+	return PP_NONE;
+}
+
 static bool calc_monster_spell(int counts[PP_MAX], const struct monster_spell *mspell)
 {
 	if (!mspell) return false;
 
-	int skill = -1;
+	int skill = PP_NONE;
 
 	switch (mspell->effect->index)
 	{
@@ -1230,37 +1269,8 @@ static bool calc_monster_spell(int counts[PP_MAX], const struct monster_spell *m
 		case EF_BEAM:
 		case EF_BOLT:
 		case EF_BREATH:
-		{
-			switch (mspell->effect->subtype)
-			{
-				case ELEM_PLASMA:
-				case ELEM_FIRE:
-					skill = PP_FIRE_MAGIC;
-					break;
-				case ELEM_FORCE:
-				case ELEM_ACID:
-				case ELEM_SHARD:
-					skill = PP_EARTH_MAGIC;
-					break;
-				case ELEM_ICE:
-				case ELEM_COLD:
-				case ELEM_WATER:
-					skill = PP_WATER_MAGIC;
-					break;
-				case ELEM_ELEC:
-					skill = PP_AIR_MAGIC;
-					break;
-				case ELEM_NETHER:
-					skill = PP_NECROMANCY_MAGIC;
-					break;
-				case ELEM_POIS:
-					skill = PP_POISON_MAGIC;
-					break;
-				default:
-					return false;
-			}
+			skill = power_by_element(mspell->effect->subtype);
 			break;
-		}
 		case EF_MON_HEAL_HP:
 		case EF_MON_HEAL_KIN:
 			skill = PP_HEALING_MAGIC;
@@ -1271,19 +1281,26 @@ static bool calc_monster_spell(int counts[PP_MAX], const struct monster_spell *m
 		default:
 			return false;
 	}
-
-	assert(skill >= 0);
-
-	counts[skill]++;
+	if (skill > PP_NONE) {
+		counts[skill]++;
+	}
 	return true;
 }
 
 static bool calc_monster_blow(int counts[PP_MAX], const struct monster_blow *mb)
 {
 	bool effect = false;
+	int lash_type = mb->effect->lash_type == -1 ? mb->method->lash_type : mb->effect->lash_type;
+	int lash_skill;
 
 	if (!mb->method->player_usable && mb->method->unarmed) {
 		counts[PP_UNARMED_STRIKE]++;
+		effect = true;
+	}
+
+	lash_skill = power_by_element(lash_type);
+	if (lash_skill > PP_NONE) {
+		counts[lash_skill]++;
 		effect = true;
 	}
 
@@ -1362,13 +1379,17 @@ static void calc_monster(struct player *p, struct player_state *state,
 		return;
 	}
 
-	i = 0;
-	while (elem_matches[i].mval != RF_NONE) {
+	for (i = 0; elem_matches[i].mval != RF_NONE; ++i) {
 		if (rf_has(mrace->flags, elem_matches[i].mval)) {
 			assert(elem_matches[i].pval < ELEM_MAX);
 			state->el_info[elem_matches[i].pval].res_level = 3;
 		}
-		i++;
+	}
+
+	for (i = 0; of_matches[i].mval != RF_NONE; ++i) {
+		if (rf_has(mrace->flags, of_matches[i].mval)) {
+			of_on(state->flags, of_matches[i].pval);
+		}
 	}
 
 	state->speed += mrace->speed / 2 - 55;

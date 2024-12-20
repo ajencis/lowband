@@ -50,6 +50,7 @@ extern bool innate_needs_aim(int innate_index);
 extern bool gener_spell_needs_aim(const struct player_spell *spell);
 
 int innate_spell_mana(const struct monster_race *mon);
+int innate_spell_power(struct player *p, int spell);
 void get_innate_info(int innate_index, char *p, size_t len);
 
 int gener_spell_power(const struct player *p, const struct player_spell *s);

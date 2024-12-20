@@ -291,6 +291,11 @@ bindui:trap_immunity_ui_compact_0:0:1
 name:Trap Immune
 desc:You are immune to traps.
 
+type:object
+code:PASS_WEB
+name:Web-Passing
+desc:You can walk through webs.
+
 ## Element flags
 
 type:element
