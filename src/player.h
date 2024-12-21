@@ -33,6 +33,7 @@ extern const struct player_spell *ref_spell;
  * Indexes of the player stats (hard-coded by savefiles).
  */
 enum {
+	STAT_NONE = -1,
 	#define STAT(a) STAT_##a,
 	#include "list-stats.h"
 	#undef STAT
@@ -160,7 +161,7 @@ enum {
  * Skill indexes
  */
 enum {
-	#define SKILL(x, a, b, c) SKILL_##x,
+	#define SKILL(x, a, b, c, d) SKILL_##x,
 	#include "list-skills.h"
 	#undef SKILL
 	SKILL_MAX

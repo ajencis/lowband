@@ -66,7 +66,7 @@
 
 
 const char *skill_descriptions[] = {
-	#define SKILL(x, a, b, c) c,
+	#define SKILL(x, a, b, c, d) d,
 	#include "list-skills.h"
 	#undef SKILL
 	NULL

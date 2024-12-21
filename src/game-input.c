@@ -357,6 +357,7 @@ void view_ability_menu(struct player_ability *ability_list,
 					   int num_abilities)
 {
 	/* Ask the UI for it */
-	if (view_abilities_hook)
+	if (view_abilities_hook) {
 		view_abilities_hook(ability_list, num_abilities);
+	}
 }

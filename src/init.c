@@ -125,7 +125,7 @@ static const char *list_player_powers_names[] = {
 };
 
 static const char *list_player_skill_names[] = {
-	#define SKILL(x, a, b, c) #x,
+	#define SKILL(x, a, b, c, d) #x,
 	#include "list-skills.h"
 	#undef SKILL
 	NULL

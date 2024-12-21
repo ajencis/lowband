@@ -333,10 +333,11 @@ static void race_help(int i, void *db, const region *l)
 			continue;
 		}
 
-		if (streq(ability->type, "power"))
+		if (streq(ability->type, "power")) {
 		    text_out_e("\n%s [%i%%]", ability->name, r->r_powers[ability->index]);
-		else
+		} else {
 			text_out_e("\n%s", ability->name);
+		}
 
 		n_flags++;
 	}

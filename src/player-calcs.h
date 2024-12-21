@@ -31,6 +31,7 @@ struct mon_player_match {
 };
 
 extern struct mon_player_match elem_matches[];
+extern int skill_stats[];
 
 /**
  * Bit flags for the "player->upkeep->notice" variable
@@ -115,6 +116,8 @@ int adj_int_xp(int index);
 int adj_int_lev(int index);
 int adj_mag_stat(int index);
 int adj_str_web(int index);
+int adj_stat_skill_flat(int index);
+int adj_stat_skill_percent(int index);
 
 bool earlier_object(struct object *orig, struct object *new, bool store);
 int equipped_item_slot(struct player_body body, struct object *obj);

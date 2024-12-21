@@ -777,7 +777,7 @@ static void unarmed_get_punch(struct attack_roll *aroll, const struct player *p,
 
 	aroll->mtimed[MON_TMD_STUN] = get_power_scale_state(ps, PP_UNARMED_STRIKE, 100, p->lev);
 
-	aroll->accuracy_stat = STAT_DEX;
+	aroll->accuracy_stat = -1;
 	aroll->damage_stat = STAT_STR;
 
 	aroll->message = "punch";
@@ -794,7 +794,7 @@ static void unarmed_get_kick(struct attack_roll *aroll, const struct player *p, 
 
 	aroll->mtimed[MON_TMD_SLOW] = get_power_scale_state(ps, PP_UNARMED_STRIKE, 100, p->lev);
 
-	aroll->accuracy_stat = STAT_DEX;
+	aroll->accuracy_stat = -1;
 	aroll->damage_stat = STAT_STR;
 
 	aroll->message = "kick";
@@ -824,7 +824,7 @@ static void specialization_mod_attack(struct attack_roll *aroll, struct object *
 static bool backstab_mod_attack(struct attack_roll *aroll, int power)
 {
 	int scale;
-	
+
 	if (!power) return false;
 	if (aroll->attack_skill != SKILL_TO_HIT_MELEE) return false;
 
@@ -855,7 +855,9 @@ static void get_melee_attack(struct attack_roll *aroll, struct player_state *ps,
 	aroll->to_hit += ps->to_h;
 	aroll->dsides += player_damage_bonus(ps);
 
-	aroll->to_hit += adj_dex_th(ps->stat_ind[aroll->accuracy_stat]);
+	if (aroll->accuracy_stat != -1) {
+		aroll->to_hit += adj_dex_th(ps->stat_ind[aroll->accuracy_stat]);
+	}
 	aroll->dsides += adj_str_td(ps->stat_ind[aroll->damage_stat]);
 
 	specialization_mod_attack(aroll, obj);
@@ -920,7 +922,7 @@ bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct o
 		aroll->to_dam = (td + 1) / 2;
 		aroll->to_hit = object_to_hit(obj);
 		aroll->message = "hit";
-		aroll->accuracy_stat = STAT_DEX;
+		aroll->accuracy_stat = -1;
 		aroll->damage_stat = STAT_STR;
 		aroll->obj = obj;
 		aroll->proj_type = obj->kind->proj_type;
@@ -954,7 +956,7 @@ struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_sta
 	aroll.dsides = object_to_dam(shooter);
 	
 	aroll.message = "hit";
-	aroll.accuracy_stat = STAT_DEX;
+	aroll.accuracy_stat = -1;
 	aroll.damage_stat = STAT_DEX;
 	aroll.attack_skill = SKILL_TO_HIT_BOW;
 
@@ -962,7 +964,9 @@ struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_sta
 	aroll.to_hit += ps->to_h;
 	aroll.dsides += player_damage_bonus(ps);
 	
-	aroll.to_hit += adj_dex_th(ps->stat_ind[aroll.accuracy_stat]);
+	if (aroll.accuracy_stat != -1) {
+		aroll.to_hit += adj_dex_th(ps->stat_ind[aroll.accuracy_stat]);
+	}
 	aroll.dsides += adj_str_td(ps->stat_ind[aroll.damage_stat]);
 	
 	specialization_mod_attack(&aroll, shooter);
@@ -1002,13 +1006,15 @@ static void get_thrown_ranged_attack(struct player *p, struct object *thrown, st
 	aroll->to_dam = object_to_dam(thrown);
 
 	aroll->message = "hit";
-	aroll->accuracy_stat = STAT_STR;
+	aroll->accuracy_stat = -1;
 	aroll->damage_stat = STAT_DEX;
 	aroll->attack_skill = SKILL_TO_HIT_THROW;
 
 	aroll->obj = thrown;
 	
-	aroll->to_hit += adj_dex_th(p->state.stat_ind[aroll->accuracy_stat]);
+	if (aroll->accuracy_stat != -1) {
+		aroll->to_hit += adj_dex_th(p->state.stat_ind[aroll->accuracy_stat]);
+	}
 	aroll->dsides += adj_str_td(p->state.stat_ind[aroll->damage_stat]);
 
 	if (of_has(thrown->flags, OF_THROWING)) {
@@ -1077,7 +1083,7 @@ bool player_can_attack_monster(struct player *p, struct monster *mon)
 static int mon_blow_dam_stat(struct monster_blow *mb, struct player_state *ps)
 {
 	if (mb->method->skill == SKILL_SEARCH) {
-		return ps->stat_ind[STAT_INT] > ps->stat_ind[STAT_WIS] ? STAT_WIS : STAT_INT;
+		return STAT_WIS;
 	}
 	return STAT_STR;
 }
@@ -1120,12 +1126,15 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 			aroll->mtimed[j] += 50 + mr->level;
 		}
 	}
-	aroll->accuracy_stat = STAT_DEX;
+	aroll->accuracy_stat = -1;
 	aroll->damage_stat = mon_blow_dam_stat(mb, ps);
 
 	aroll->to_hit += ps->to_h;
 	aroll->dsides += player_damage_bonus(ps);
-	aroll->to_hit += adj_dex_th(ps->stat_ind[aroll->accuracy_stat]);
+
+	if (aroll->accuracy_stat != -1) {
+		aroll->to_hit += adj_dex_th(ps->stat_ind[aroll->accuracy_stat]);
+	}
 	aroll->dsides += adj_str_td(ps->stat_ind[aroll->damage_stat]);
 
 	aroll->dsides = MAX(minsides, aroll->dsides);

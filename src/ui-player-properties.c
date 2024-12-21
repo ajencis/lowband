@@ -104,9 +104,10 @@ static void add_scaling_desc(char *buf, const char *name, int base, int scale, i
 		my_strcat(buf, " + ", bufsize);
 	}
 	if (scale) {
-		my_strcat(buf, format("%i%%", scale), bufsize);
+		my_strcat(buf, format("%i%% of your level", scale), bufsize);
 	}
-	my_strcat(buf, format(" from your %s", name), bufsize);
+	my_strcat(buf, " from your ", bufsize);
+	my_strcat(buf, name, bufsize);
 	if (numleft > 2) {
 		my_strcat(buf, ", ", bufsize);
 	}
@@ -148,24 +149,37 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 		calc_monster_skills(mrace, monster_skills);
 	}
 	if (choices[oid].group == PLAYER_FLAG_POWER || choices[oid].group == PLAYER_FLAG_SKILL) {
-		int cbase, cxtra, rbase, rxtra, tome;
+		int cbase, cxtra, rbase, rxtra, tome, stat;
+		const char *stat_name = NULL;
 		if (choices[oid].group == PLAYER_FLAG_POWER) {
 			cbase = 0;
 			cxtra = player_class_power(player, choices[oid].index);
 			rbase = monster_powers[choices[oid].index];
 			rxtra = player->race->r_powers[choices[oid].index];
 			tome = player->extra_powers[choices[oid].index] / 2;
+			stat = 0;
 		}
 		else {
+			int whichstat = skill_stats[choices[oid].index];
 			cbase = player_class_c_skill(player, choices[oid].index);
-			cxtra = player_class_x_skill(player, choices[oid].index) * 100 / 5;
+			cxtra = player_class_x_skill(player, choices[oid].index) * 100 / 10;
 			rbase = race_skills[choices[oid].index] + monster_skills[choices[oid].index];
-			rxtra = race_x_skills[choices[oid].index] * 100 / 5;
+			rxtra = race_x_skills[choices[oid].index] * 100 / 10;
 			tome = player->extra_skills[choices[oid].index];
+			if (whichstat != -1) {
+				int ind = player->state.stat_ind[whichstat];
+				int curr = cbase + rbase + (cxtra + rxtra) * player->lev / 100 + tome;
+				stat = curr * adj_stat_skill_percent(ind) / 100;
+				stat += adj_stat_skill_flat(ind);
+				stat_name = stat_idx_to_name(whichstat);
+			} else {
+				stat = 0;
+			}
 		}
 		int numleft = ((rxtra || rbase) ? 1 : 0) +
 				((cxtra || cbase) ? 1 : 0) +
-				(tome ? 1 : 0);
+				(tome ? 1 : 0) +
+				(stat ? 1 : 0);
 		if (numleft > 0) {
 			my_strcat(extra, " You gain ", sizeof(extra));
 			if (cbase || cxtra) {
@@ -178,6 +192,10 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 			}
 			if (tome) {
 				add_scaling_desc(extra, "learning", tome, 0, numleft, sizeof(extra));
+				--numleft;
+			}
+			if (stat && stat_name) {
+				add_scaling_desc(extra, stat_name, stat, 0, numleft, sizeof(extra));
 				--numleft;
 			}
 		}

@@ -71,7 +71,7 @@ static const int tome_factors[] = {
 	#define PP(x, a, b, c, d, e) c,
 	#include "list-player-powers.h"
 	#undef PP
-	#define SKILL(x, a, b, c) a,
+	#define SKILL(x, a, b, c, d) a,
 	#include "list-skills.h"
 	#undef SKILL
 	0

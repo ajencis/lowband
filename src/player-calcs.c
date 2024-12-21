@@ -89,6 +89,13 @@ int power_scalings[] = {
 	PP_SCALE_NONE
 };
 
+int skill_stats[] = {
+	#define SKILL(x, a, b, c, d) c,
+	#include "list-skills.h"
+	#undef SKILL
+	-1
+};
+
 /*struct mon_player_match flag_matches[] = {
 	{ RF_NO_FEAR, OF_PROT_FEAR },
 	{ RF_NO_STUN, OF_PROT_STUN },
@@ -128,7 +135,7 @@ static int stat_scale(int index, int scaleto, bool minzero) {
 }
 
 
-static int adj_int_dev(int index) {
+/*static int adj_int_dev(int index) {
 	return stat_scale(index, 15, false);
 }
 
@@ -142,7 +149,7 @@ static int adj_dex_dis(int index) {
 
 static int adj_int_dis(int index) {
 	return stat_scale(index, 20, false);
-}
+}*/
 
 static int adj_dex_ta(int index) {
 	return stat_scale(index, 15, false);
@@ -169,9 +176,9 @@ int adj_str_hold(int index) {
 	return stat_scale(index, 250, true);
 }
 
-static int adj_str_dig(int index) {
+/*static int adj_str_dig(int index) {
 	return stat_scale(index, 100, false);
-}
+}*/
 
 int adj_str_blow(int index) {
 	return stat_scale(index, 240, true);
@@ -193,9 +200,9 @@ int adj_con_fix(int index) {
 	return stat_scale(index, 10, true);
 }
 
-static int adj_con_mhp(int index) {
+/*static int adj_con_mhp(int index) {
 	return stat_scale(index, 250, false);
-}
+}*/
 
 static int adj_mag_study(int index) {
 	return (index + 5) * 10 / 20;
@@ -219,6 +226,14 @@ int adj_mag_stat(int index) {
 
 int adj_str_web(int index) {
 	return stat_scale(index, 50, true) + 5;
+}
+
+int adj_stat_skill_flat(int index) {
+	return stat_scale(index, 40, false);
+}
+
+int adj_stat_skill_percent(int index) {
+	return stat_scale(index, 40, false);
 }
 
 
@@ -953,27 +968,11 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
  */
 static void calc_hitpoints(struct player *p)
 {
-	long bonus;
 	int mhp;
-	struct monster_race *mon = lookup_player_monster(p);
-	//int eff_hd = MAX(p->hitdie, resil_hd_min);
-
-	/* Get "1/100th hitpoint bonus per level" value */
-	bonus = adj_con_mhp(p->state.stat_ind[STAT_CON]);
 
 	/* Calculate hitpoints */
+	// L: basically allhandled elsewhere now
 	mhp = p->state.skills[SKILL_HEALTH];
-
-	/* L: bonus from being a monster */
-	if (mon) {
-		int mon_hp = my_int_cbrt(mon->avg_hp * mon->avg_hp);
-		mhp = MAX(mhp, mon_hp);
-	}
-
-	mhp += bonus * p->lev / 100;
-
-	/* Always have at least one hitpoint per level */
-	if (mhp < p->lev + 1) mhp = p->lev + 1;
 
 	/* New maximum hitpoints */
 	if (p->mhp != mhp) {
@@ -1104,10 +1103,10 @@ void calc_blows(struct player *p, int wgt, struct attack_roll *aroll,
 	int div = MAX(wgt * 2, 25) + 100;
 
     int sind1 = state->stat_ind[aroll->damage_stat];
-	int sind2 = state->stat_ind[aroll->accuracy_stat];
+	int sind2 = aroll->accuracy_stat >= 0 ? state->stat_ind[aroll->accuracy_stat] : STAT_NONE;
 
 	// max 18
-	int statind = (sind1 + sind2 + MAX(sind1, sind2)) / 3;
+	int statind = sind2 != STAT_NONE ? (sind1 + sind2 + MAX(sind1, sind2)) / 3 : sind1;
 
 	// max 600
 	int baseblows = adj_stat_blow(statind);
@@ -1468,13 +1467,6 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* Extract race/class info */
 	state->see_infra = p->race->infra;
-	player_race_r_skill(p->race, mrace ? true : false, race_skills);
-	player_race_x_skill(p->race, mrace ? true : false, race_x_skills);
-	for (i = 0; i < SKILL_MAX; i++) {
-		state->skills[i] = race_skills[i] + player_class_c_skill(p, i);
-		state->skills[i] += (race_x_skills[i] + player_class_x_skill(p, i)) * p->lev / 10;
-		state->skills[i] += p->extra_skills[i];
-	}
 
 	player_race_elem_info(p->race, mrace ? true : false, race_elem_info);
 	for (i = 0; i < ELEM_MAX; i++) {
@@ -1728,6 +1720,23 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		state->stat_ind[i] = ind;
 	}
 
+	// L: calculate skills
+	player_race_r_skill(p->race, mrace ? true : false, race_skills);
+	player_race_x_skill(p->race, mrace ? true : false, race_x_skills);
+	for (i = 0; i < SKILL_MAX; i++) {
+		int stat = i == SKILL_MAGIC && p->realm ? p->realm->stat : skill_stats[i];
+		int base = race_skills[i] + player_class_c_skill(p, i);
+		int xtra = (race_x_skills[i] + player_class_x_skill(p, i)) * p->lev / 10;
+		int tome = p->extra_skills[i];
+		// += because monster skills have already been calcd
+		state->skills[i] += base + xtra + tome;
+		if (stat != -1) {
+			int sp = state->skills[i] * adj_stat_skill_percent(state->stat_ind[stat]) / 100;
+			int sf = adj_stat_skill_flat(state->stat_ind[stat]);
+			state->skills[i] += sp + sf;
+		}
+	}
+
 	/* Effects of food outside the "Fed" range */
 	if (!player_timed_grade_eq(p, TMD_FOOD, "Fed")) {
 		int excess = p->timed[TMD_FOOD] - PY_FOOD_FULL;
@@ -1885,25 +1894,18 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	state->expfact = p->race->r_exp + p->class->c_exp + adj_int_xp(state->stat_ind[STAT_INT]);
 
 	/* Modify skills */
-	state->skills[SKILL_DISARM_PHYS] += adj_dex_dis(state->stat_ind[STAT_DEX]);
-	state->skills[SKILL_DISARM_MAGIC] += adj_int_dis(state->stat_ind[STAT_INT]);
-	state->skills[SKILL_DEVICE] += adj_int_dev(state->stat_ind[STAT_INT]);
-	state->skills[SKILL_SAVE] += adj_wis_sav(state->stat_ind[STAT_WIS]);
-	state->skills[SKILL_DIGGING] += adj_str_dig(state->stat_ind[STAT_STR]);
+	//state->skills[SKILL_DISARM_PHYS] += adj_dex_dis(state->stat_ind[STAT_DEX]);
+	//state->skills[SKILL_DISARM_MAGIC] += adj_int_dis(state->stat_ind[STAT_INT]);
+	//state->skills[SKILL_DEVICE] += adj_int_dev(state->stat_ind[STAT_INT]);
+	//state->skills[SKILL_SAVE] += adj_wis_sav(state->stat_ind[STAT_WIS]);
+	//state->skills[SKILL_DIGGING] += adj_str_dig(state->stat_ind[STAT_STR]);
 
 	if (state->skills[SKILL_DIGGING] < 1) state->skills[SKILL_DIGGING] = 1;
 	if (state->skills[SKILL_STEALTH] > 150) state->skills[SKILL_STEALTH] = 150;
 	if (state->skills[SKILL_STEALTH] < 0) state->skills[SKILL_STEALTH] = 0;
+	if (state->skills[SKILL_HEALTH] < 3) state->skills[SKILL_HEALTH] = 3;
+	if (state->skills[SKILL_MAGIC] < 0) state->skills[SKILL_MAGIC] = 0;
 	hold = adj_str_hold(state->stat_ind[STAT_STR]) + 100;
-
-	/* L: magic gets a special bonus from its ability score */
-	if (state->skills[SKILL_MAGIC] > 0 && p->realm) {
-		int stat = get_player_realm(p)->stat;
-		int adj = adj_mag_stat(state->stat_ind[stat]);
-		state->skills[SKILL_MAGIC] += MIN(adj, state->skills[SKILL_MAGIC]);
-	} else {
-		state->skills[SKILL_MAGIC] = MAX(state->skills[SKILL_MAGIC], 0);
-	}
 
 	/* Analyze launcher */
 	state->heavy_shoot = false;
