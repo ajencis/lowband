@@ -419,7 +419,7 @@ static bool mon_spell_has_damage(int index)
 
 bool mon_spell_is_innate(int index)
 {
-	return mon_spell_types[index].type & (RST_INNATE);
+	return (mon_spell_types[index].type & RST_INNATE) ? true : false;
 }
 
 /**

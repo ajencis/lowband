@@ -535,6 +535,7 @@ pain:7
 flags:BASH_DOOR | PASS_WEB
 desc:Spider/Scorpion/Tick
 body:Spider
+attr:HP:-1
 attr:SPEED:-1
 attr:DAMAGE:1
 stats:-1:-1:1:2:-1

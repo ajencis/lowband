@@ -78,26 +78,28 @@ enum
  *   INFO: Use believed map rather than truth for player ui
  *   SHORT: Use one quarter of max_range
  *   SELF: May affect the player, even when cast by the player
+ *   OVER: L: Goes over allied monsters (/ player); similar to JUMP but will still follow a path
  */
 enum
 {
-	PROJECT_NONE  = 0x0000,
-	PROJECT_JUMP  = 0x0001,
-	PROJECT_BEAM  = 0x0002,
-	PROJECT_THRU  = 0x0004,
-	PROJECT_STOP  = 0x0008,
-	PROJECT_GRID  = 0x0010,
-	PROJECT_ITEM  = 0x0020,
-	PROJECT_KILL  = 0x0040,
-	PROJECT_HIDE  = 0x0080,
-	PROJECT_AWARE = 0x0100,
-	PROJECT_SAFE  = 0x0200,
-	PROJECT_ARC   = 0x0400,
-	PROJECT_PLAY  = 0x0800,
-	PROJECT_INFO  = 0x1000,
-	PROJECT_SHORT = 0x2000,
-	PROJECT_SELF  = 0x4000,
-	PROJECT_ROCK  = 0x8000,
+	PROJECT_NONE  = 0x00000,
+	PROJECT_JUMP  = 0x00001,
+	PROJECT_BEAM  = 0x00002,
+	PROJECT_THRU  = 0x00004,
+	PROJECT_STOP  = 0x00008,
+	PROJECT_GRID  = 0x00010,
+	PROJECT_ITEM  = 0x00020,
+	PROJECT_KILL  = 0x00040,
+	PROJECT_HIDE  = 0x00080,
+	PROJECT_AWARE = 0x00100,
+	PROJECT_SAFE  = 0x00200,
+	PROJECT_ARC   = 0x00400,
+	PROJECT_PLAY  = 0x00800,
+	PROJECT_INFO  = 0x01000,
+	PROJECT_SHORT = 0x02000,
+	PROJECT_SELF  = 0x04000,
+	PROJECT_ROCK  = 0x08000,
+	PROJECT_OVER  = 0x10000,
 };
 
 /* Display attrs and chars */

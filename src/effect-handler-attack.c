@@ -78,6 +78,8 @@ static void get_target(struct source origin, int dir, struct loc *grid,
 			if (dir == DIR_TARGET && target_okay()) {
 				target_get(grid);
 			} else {
+				// L: can't be PROJECT_OVER if in a direction
+				*flags &= ~PROJECT_OVER;
 				/* Use the adjacent grid in the given direction as target */
 				*grid = loc_sum(player->grid, ddgrid[dir]);
 			}
@@ -128,7 +130,7 @@ static bool ball_spell(effect_handler_context_t *context, uint8_t diameter_of_so
 	int rad = context->radius ? context->radius : 2;
 	struct loc target = loc(-1, -1);
 
-	int flg = PROJECT_THRU | PROJECT_STOP | PROJECT_GRID | PROJECT_ITEM | PROJECT_KILL;
+	int flg = PROJECT_THRU | PROJECT_STOP | PROJECT_GRID | PROJECT_ITEM | PROJECT_KILL | PROJECT_OVER;
 
 	/* Player or monster? */
 	switch (context->origin.what) {
@@ -187,6 +189,7 @@ static bool ball_spell(effect_handler_context_t *context, uint8_t diameter_of_so
 				target_get(&target);
 			} else {
 				target = loc_sum(player->grid, ddgrid[context->dir]);
+				flg &= ~PROJECT_OVER;
 			}
 
 			if (hit_caster) flg |= PROJECT_PLAY;
@@ -214,11 +217,12 @@ static bool ball_spell(effect_handler_context_t *context, uint8_t diameter_of_so
 bool effect_handler_BOLT(effect_handler_context_t *context)
 {
 	int dam = effect_calculate_value(context, true);
-	int flg = PROJECT_STOP | PROJECT_KILL;
+	int flg = PROJECT_STOP | PROJECT_KILL | PROJECT_OVER;
 	(void) project_aimed(context->origin, context->subtype, context->dir, dam,
 						 flg, context->obj);
-	if (!player->timed[TMD_BLIND])
+	if (!player->timed[TMD_BLIND]) {
 		context->ident = true;
+	}
 	return true;
 }
 
@@ -233,8 +237,9 @@ bool effect_handler_BEAM(effect_handler_context_t *context)
 	int flg = PROJECT_BEAM | PROJECT_KILL;
 	(void) project_aimed(context->origin, context->subtype, context->dir, dam,
 						 flg, context->obj);
-	if (!player->timed[TMD_BLIND])
+	if (!player->timed[TMD_BLIND]) {
 		context->ident = true;
+	}
 	return true;
 }
 
@@ -246,10 +251,11 @@ bool effect_handler_BOLT_OR_BEAM(effect_handler_context_t *context)
 {
 	int beam = context->beam + context->other;
 
-	if (randint0(100) < beam)
+	if (randint0(100) < beam) {
 		return effect_handler_BEAM(context);
-	else
+	} else {
 		return effect_handler_BOLT(context);
+	}
 }
 
 /**
@@ -261,8 +267,9 @@ bool effect_handler_LINE(effect_handler_context_t *context)
 {
 	int dam = effect_calculate_value(context, true);
 	int flg = PROJECT_BEAM | PROJECT_GRID | PROJECT_KILL;
-	if (project_aimed(context->origin, context->subtype, context->dir, dam, flg, context->obj))
+	if (project_aimed(context->origin, context->subtype, context->dir, dam, flg, context->obj)) {
 		context->ident = true;
+	}
 	return true;
 }
 
@@ -273,8 +280,9 @@ bool effect_handler_LINE(effect_handler_context_t *context)
 bool effect_handler_ALTER(effect_handler_context_t *context)
 {
 	int flg = PROJECT_BEAM | PROJECT_GRID | PROJECT_ITEM;
-	if (project_aimed(context->origin, context->subtype, context->dir, 0, flg, context->obj))
+	if (project_aimed(context->origin, context->subtype, context->dir, 0, flg, context->obj)) {
 		context->ident = true;
+	}
 	return true;
 }
 
@@ -455,7 +463,7 @@ bool effect_handler_MON_HEAL_KIN(effect_handler_context_t *context)
 bool effect_handler_BOLT_STATUS(effect_handler_context_t *context)
 {
 	int dam = effect_calculate_value(context, true);
-	int flg = PROJECT_STOP | PROJECT_KILL;
+	int flg = PROJECT_STOP | PROJECT_KILL | PROJECT_OVER;
 	if (project_aimed(context->origin, context->subtype, context->dir, dam, flg, context->obj))
 		context->ident = true;
 	return true;
@@ -470,7 +478,7 @@ bool effect_handler_BOLT_STATUS(effect_handler_context_t *context)
 bool effect_handler_BOLT_STATUS_DAM(effect_handler_context_t *context)
 {
 	int dam = effect_calculate_value(context, true);
-	int flg = PROJECT_STOP | PROJECT_KILL;
+	int flg = PROJECT_STOP | PROJECT_KILL | PROJECT_OVER;
 	if (project_aimed(context->origin, context->subtype, context->dir, dam, flg, context->obj))
 		context->ident = true;
 	return true;
@@ -485,7 +493,7 @@ bool effect_handler_BOLT_STATUS_DAM(effect_handler_context_t *context)
 bool effect_handler_BOLT_AWARE(effect_handler_context_t *context)
 {
 	int dam = effect_calculate_value(context, true);
-	int flg = PROJECT_STOP | PROJECT_KILL;
+	int flg = PROJECT_STOP | PROJECT_KILL | PROJECT_OVER;
 	if (context->aware) flg |= PROJECT_AWARE;
 	if (project_aimed(context->origin, context->subtype, context->dir, dam, flg, context->obj))
 		context->ident = true;

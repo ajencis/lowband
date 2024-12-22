@@ -190,6 +190,8 @@ int project_path(struct chunk *c, struct loc *gp, int range, struct loc grid1,
 
 		/* Create the projection path */
 		while (1) {
+			bool go_over = !loc_eq(loc(x, y), grid2) && (flg & PROJECT_OVER);
+
 			/* Save grid */
 			gp[n++] = loc(x, y);
 
@@ -213,7 +215,8 @@ int project_path(struct chunk *c, struct loc *gp, int range, struct loc grid1,
 			}
 
 			/* Sometimes stop at non-initial monsters/players, decoys */
-			if (flg & (PROJECT_STOP)) {
+			// L: go over stuff that isn't what we're aiming at
+			if ((flg & (PROJECT_STOP)) && !go_over) {
 				if ((n > 0) && (square(c, loc(x, y))->mon != 0)) break;
 				if (loc_eq(loc(x, y), decoy)) break;
 			}
@@ -255,6 +258,8 @@ int project_path(struct chunk *c, struct loc *gp, int range, struct loc grid1,
 
 		/* Create the projection path */
 		while (1) {
+			bool go_over = !loc_eq(loc(x, y), grid2) && (flg & PROJECT_OVER);
+
 			/* Save grid */
 			gp[n++] = loc(x, y);
 
@@ -278,7 +283,7 @@ int project_path(struct chunk *c, struct loc *gp, int range, struct loc grid1,
 			}
 
 			/* Sometimes stop at non-initial monsters/players, decoys */
-			if (flg & (PROJECT_STOP)) {
+			if ((flg & (PROJECT_STOP)) && !go_over) {
 				if ((n > 0) && (square(c, loc(x, y))->mon != 0)) break;
 				if (loc_eq(loc(x, y), decoy)) break;
 			}
@@ -314,6 +319,8 @@ int project_path(struct chunk *c, struct loc *gp, int range, struct loc grid1,
 
 		/* Create the projection path */
 		while (1) {
+			bool go_over = !loc_eq(loc(x, y), grid2) && (flg & PROJECT_OVER);
+
 			/* Save grid */
 			gp[n++] = loc(x, y);
 
@@ -337,7 +344,7 @@ int project_path(struct chunk *c, struct loc *gp, int range, struct loc grid1,
 			}
 
 			/* Sometimes stop at non-initial monsters/players, decoys */
-			if (flg & (PROJECT_STOP)) {
+			if ((flg & (PROJECT_STOP)) && !go_over) {
 				if ((n > 0) && (square(c, loc(x, y))->mon != 0)) break;
 				if (loc_eq(loc(x, y), decoy)) break;
 			}

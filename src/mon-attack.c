@@ -507,10 +507,11 @@ bool make_ranged_attack(struct monster *mon)
 
 		/* Check for a clean bolt shot */
 		monster_get_target_dist_grid(mon, NULL, &tgrid);
-		if (test_spells(f, RST_BOLT) &&
+		// L: no longer necessary, can fire over allies with bolts now
+		/*if (test_spells(f, RST_BOLT) &&
 			!projectable(cave, mon->grid, tgrid, PROJECT_STOP)) {
 			ignore_spells(f, RST_BOLT);
-		}
+		}*/
 
 		// L: don't try to status the player if they've already got that status
 		if (mon->target.who == TARGET_WHO_PLAYER) {
@@ -519,7 +520,7 @@ bool make_ranged_attack(struct monster *mon)
 				const struct monster_spell *ms = monster_spell_by_index(i);
 				if (ms->effect->index == EF_TIMED_INC || ms->effect->index == EF_TIMED_INC_NO_RES) {
 					int curr = player->timed[ms->effect->subtype];
-					if (randint0(100) < curr) {
+					if (randint0(25) < curr) {
 						rsf_off(f, i);
 					}
 				}
