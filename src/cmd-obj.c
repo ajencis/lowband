@@ -1134,7 +1134,7 @@ void do_cmd_cast(struct command *cmd)
 }
 #endif
 
-
+#if 0
 /**
  * Gain a specific spell, specified by spell number (for mages).
  */
@@ -1201,6 +1201,7 @@ void do_cmd_study_book(struct command *cmd)
 		player->upkeep->energy_use = z_info->move_energy;
 	}
 }
+#endif
 
 void do_cmd_study(struct command *cmd)
 {
@@ -1310,7 +1311,7 @@ static int gener_spell_is_castable(const struct player *p, int spell) {
 	if (spell < 0 || spell >= z_info->spell_max) return 2;
 	if (!(p->player_spell_flags[spell] & PY_SPELL_LEARNED)) return 2;
 	
-	if (!p->realm->innate) {
+	if (!p->realm || !p->realm->innate) {
 		for (spellbook = p->gear; spellbook; spellbook = spellbook->next) {
 			if (spellbook->kind->spell && spellbook->kind->spell->sidx == spell) {
 				break;

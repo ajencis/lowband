@@ -710,6 +710,14 @@ void player_race_elem_info(const struct player_race *r, bool evolved, struct ele
 	}
 }
 
+int player_skill_stat(struct player *p, int skill)
+{
+	if (skill == SKILL_MAGIC && p->realm) {
+		return p->realm->stat;
+	}
+	return skill_stats[skill];
+}
+
 /**
  * L: upon gaining xp, consider adding spells to those known
  * clericy casters don't use spellbooks, they get granted spells by their god
@@ -991,8 +999,11 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 	/* Disturb */
 	disturb(p);
 
+	assert(dam >= 0);
+
 	/* Hurt the player */
-	p->chp -= dam;
+	if ((int)p->chp - dam < INT16_MIN) p->chp = INT16_MIN;
+	else p->chp -= dam;
 
 	/* Reward COMBAT_REGEN characters with mana for their lost hitpoints
 	 * Unenviable task of separating what should and should not cause rage
@@ -2225,8 +2236,7 @@ bool player_can_cast_prereq(void)
  */
 bool player_can_study_prereq(void)
 {
-	//if (player_can_study(player, false)) return true;
-	if (player->realm->innate) {
+	if (player->realm && player->realm->innate) {
 		msg("You don't learn spells from books.");
 		return false;
 	}

@@ -229,11 +229,11 @@ int adj_str_web(int index) {
 }
 
 int adj_stat_skill_flat(int index) {
-	return stat_scale(index, 40, false);
+	return index > 7 ? (index - 7) * 30 / 7 : 0;
 }
 
 int adj_stat_skill_percent(int index) {
-	return stat_scale(index, 40, false);
+	return (index - 7) * 20 / 7;
 }
 
 
@@ -701,7 +701,6 @@ static void calc_spells(struct player *p)
 	int num_allowed, num_known;
 	int lev = p->state.skills[SKILL_MAGIC];
 	const struct magic_realm *realm = get_player_realm(p);
-
 	const struct player_spell *spell;
 
 	int16_t old_spells;
@@ -736,7 +735,7 @@ static void calc_spells(struct player *p)
 
 
 	// L: if we're an innate caster and never got any spells known give them now
-	if (realm->innate && lev >= 3 && num_known == 0) {
+	if (realm && realm->innate && lev >= 3 && num_known == 0) {
 		player_learn_spell_xp(p, true, 0);
 	}
 
@@ -862,7 +861,7 @@ static void calc_spells(struct player *p)
 	if (old_spells != p->upkeep->new_spells) {
 		/* Message if needed */
 
-		if (p->upkeep->new_spells && !realm->innate) {
+		if (p->upkeep->new_spells && realm && !realm->innate) {
 			msg("You can learn %d new %s%s.",
 					p->upkeep->new_spells,
 					realm->spell_noun,
@@ -1272,7 +1271,7 @@ static bool calc_monster_spell(int counts[PP_MAX], const struct monster_spell *m
 			break;
 		case EF_MON_HEAL_HP:
 		case EF_MON_HEAL_KIN:
-			skill = PP_HEALING_MAGIC;
+			skill = PP_HOLY_MAGIC;
 			break;
 		case EF_LASH:
 			skill = PP_HAFTED_SPECIALIZATION;
@@ -1324,7 +1323,7 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX])
 	}
 
 	if (numcounts > 0) {
-		totalbonus = mrace->spell_power * (2 + numcounts) / (5 + numcounts);
+		totalbonus = mrace->spell_power * (4 + numcounts) / (9 + numcounts);
 		for (i = 0; i < PP_MAX; i++) {
 			powers[i] += spell_counts[i] * totalbonus / numcounts;
 		}
@@ -1355,12 +1354,12 @@ void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX])
 	int class_hp;
 
 	for (i = 0; i < SKILL_MAX; i++) {
-		skills[i] += mrace->base->skills[i] * mrace->level / 10;
+		skills[i] += mrace->base->skills[i] * mrace->level / 20;
 	}
 
 	// assume the monster gets hp equal to half its level from its class
 	class_hp = mrace->level / 2;
-	skills[SKILL_HEALTH] += MAX(0, mrace->avg_hp - class_hp);
+	skills[SKILL_HEALTH] += mrace->avg_hp - class_hp;
 }
 
 /**
@@ -1407,7 +1406,6 @@ static void calc_monster(struct player *p, struct player_state *state,
 	for (i = 0; i < SKILL_MAX; i++) {
 		state->skills[i] += skills[i];
 	}
-	
 }
 
 /**
@@ -1724,16 +1722,15 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	player_race_r_skill(p->race, mrace ? true : false, race_skills);
 	player_race_x_skill(p->race, mrace ? true : false, race_x_skills);
 	for (i = 0; i < SKILL_MAX; i++) {
-		int stat = i == SKILL_MAGIC && p->realm ? p->realm->stat : skill_stats[i];
+		int stat = player_skill_stat(p, i);
 		int base = race_skills[i] + player_class_c_skill(p, i);
 		int xtra = (race_x_skills[i] + player_class_x_skill(p, i)) * p->lev / 10;
 		int tome = p->extra_skills[i];
 		// += because monster skills have already been calcd
 		state->skills[i] += base + xtra + tome;
 		if (stat != -1) {
-			int sp = state->skills[i] * adj_stat_skill_percent(state->stat_ind[stat]) / 100;
-			int sf = adj_stat_skill_flat(state->stat_ind[stat]);
-			state->skills[i] += sp + sf;
+			state->skills[i] += adj_stat_skill_flat(state->stat_ind[stat]);
+			state->skills[i] += MAX(state->skills[i], 0) * adj_stat_skill_percent(state->stat_ind[stat]) / 100;
 		}
 	}
 

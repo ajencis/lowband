@@ -160,7 +160,7 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 			stat = 0;
 		}
 		else {
-			int whichstat = skill_stats[choices[oid].index];
+			int whichstat = player_skill_stat(player, choices[oid].index);
 			cbase = player_class_c_skill(player, choices[oid].index);
 			cxtra = player_class_x_skill(player, choices[oid].index) * 100 / 10;
 			rbase = race_skills[choices[oid].index] + monster_skills[choices[oid].index];
@@ -168,9 +168,11 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 			tome = player->extra_skills[choices[oid].index];
 			if (whichstat != -1) {
 				int ind = player->state.stat_ind[whichstat];
-				int curr = cbase + rbase + (cxtra + rxtra) * player->lev / 100 + tome;
-				stat = curr * adj_stat_skill_percent(ind) / 100;
-				stat += adj_stat_skill_flat(ind);
+				int curr;
+				stat = adj_stat_skill_flat(ind);
+				curr = cbase + rbase + (cxtra + rxtra) * player->lev / 100 + tome + stat;
+				curr = MAX(curr, 0);
+				stat += curr * adj_stat_skill_percent(ind) / 100;
 				stat_name = stat_idx_to_name(whichstat);
 			} else {
 				stat = 0;

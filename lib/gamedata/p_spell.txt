@@ -282,6 +282,11 @@ desc: unless it is a permanent wall.  Each monster caught in the beam that
 desc: is susceptible to rock remover takes 20+1d30 points of damage.
 school:EARTH
 
+spell:Create Wall:37
+effect:CREATE_WALL
+desc:Creates a wall.
+school:EARTH
+
 
 spell:Wave:25
 effect:ARC:WATER:15:45
@@ -304,7 +309,7 @@ expr:D:SPELL_POWER:+ 3 / 4
 expr:S:SPELL_POWER:+ 4 / 5
 desc:Heals you.
 school:WATER
-school:HEALING
+school:HOLY
 
 spell:Ice Storm:47
 effect:PROJECT_LOS:ICE
@@ -380,7 +385,7 @@ effect:CURE:STUN
 effect:CURE:BLACKBREATH
 desc:Cures all cuts, poison, stunning and black breath.
 school:NATURE
-school:HEALING
+school:HOLY
 
 spell:Healing:77
 effect:HEAL_HP
@@ -391,7 +396,7 @@ effect:CURE:STUN
 effect:CURE:AMNESIA
 desc:Heals 2000 points of damage and cures all stunning, cuts, poison
 desc: and amnesia.
-school:HEALING
+school:HOLY
 
 spell:Restoration:58
 effect:RESTORE_STAT:STR
@@ -400,12 +405,28 @@ effect:RESTORE_STAT:WIS
 effect:RESTORE_STAT:DEX
 effect:RESTORE_STAT:CON
 desc:Restores to maximum all stats that are currently below maximum.
-school:HEALING
+school:HOLY
 
 spell:Remembrance:46
 effect:RESTORE_EXP
 desc:Restores experience points to maximum if it is currently below maximum.
-school:HEALING
+school:HOLY
+school:DIVINATION
+
+spell:Holy Orb:35
+effect:SPOT:HOLY_ORB:5:3
+desc:Calls a holy orb to damage evil.
+dice:$Dd$S
+expr:D:SPELL_POWER:* 1
+expr:S:SPELL_POWER:+ 4 / 5
+school:HOLY
+
+spell:Remove Curse:25
+effect:REMOVE_CURSE
+desc:Removes a curse
+dice:$N
+expr:N:SPELL_POWER:* 1
+school:HOLY
 school:DIVINATION
 
 

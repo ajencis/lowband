@@ -359,9 +359,9 @@ name:Necromancy Specialization
 desc:You are particularly good at necromancy.
 
 type:power
-code:HEALING_MAGIC
-name:Healing Specialization
-desc:You are particularly good at healing magic.
+code:HOLY_MAGIC
+name:Holy Magic Specialization
+desc:You are particularly good at holy magic.
 
 type:power
 code:NATURE_MAGIC

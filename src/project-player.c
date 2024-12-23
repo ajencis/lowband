@@ -53,13 +53,13 @@ int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 	/* L: saving throw reduces damage */
 	sav = (uint32_t)MAX(p->state.skills[SKILL_SAVE], 0);
 
-	dam = dam * (100 - sav / 3 - randint0(sav / 3)) / 100;
+	dam = dam * (100 - sav / 4 - randint0(sav / 2)) / 100;
 	dam = MAX(dam, 0);
 
 	/* If an actual player exists, get their actual resist */
 	if (p && p->race) {
 		/* Ice is a special case */
-		int res_type = (type == PROJ_ICE) ? PROJ_COLD: type;
+		int res_type = (type == PROJ_ICE) ? PROJ_COLD : type;
 		resist = res_type < ELEM_MAX ? p->state.el_info[res_type].res_level : 0;
 
 		/* Notice element stuff */

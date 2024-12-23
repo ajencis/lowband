@@ -439,7 +439,6 @@ skill-throw:10:17
 skill-dig:0:0
 skill-magic:-10:12
 skill-health:9:16
-power:NATURE_MAGIC:40
 hitdie:5
 max-attacks:5
 min-weight:35

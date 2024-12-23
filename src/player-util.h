@@ -78,6 +78,7 @@ int player_class_c_skill(struct player *p, int skill);
 void player_race_r_skill(const struct player_race *r, bool evolved, int skills[SKILL_MAX]);
 void player_race_x_skill(const struct player_race *r, bool evolved, int skills[SKILL_MAX]);
 void player_race_elem_info(const struct player_race *r, bool evolved, struct element_info el_info[ELEM_MAX]);
+int player_skill_stat(struct player *p, int skill);
 bool player_learn_spell_xp(struct player *p, bool initial, int xp);
 
 int dungeon_get_next_level(struct player *p, int dlev, int added);

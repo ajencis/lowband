@@ -14,7 +14,7 @@ verb:cast
 spell-noun:spell
 book-noun:magic book
 weight:200
-school:HEALING:-10
+school:HOLY:-15
 
 name:divine
 stat:WIS
@@ -30,7 +30,7 @@ school:WATER:-10
 school:POISON:-5
 school:TELEPORTATION:-15
 school:ENCHANTMENT:-10
-school:HEALING:10
+school:HOLY:10
 school:TRANSMUTATION:-10
 school:ENCHANTMENT:-5
 school:NATURE:-5

@@ -11,7 +11,7 @@
  * menu_name: format string for menu name; use an empty string if there's no
  * plan to use it from a menu
  */
-/* name 							aim		info		args	info flags		description	menu_name */
+/* name 							aim		info		args	info flags		description		menu_name */
 EFFECT(RANDOM,						false,	NULL,		0,		EFINFO_NONE,	"randomly ",	"")
 EFFECT(DAMAGE,						false,	"hurt",		1,		EFINFO_DICE,	"does %s damage to the player",	"")
 EFFECT(HEAL_HP,						false,	"heal",		2,		EFINFO_HEAL,	"heals %s hitpoints%s",	"heal self")
@@ -128,3 +128,4 @@ EFFECT(CLEAR_VALUE,					false,	NULL,		0,		EFINFO_NONE,	"",					"")
 EFFECT(SCRAMBLE_STATS,				false,  NULL,		0,		EFINFO_NONE,	"", 				"")
 EFFECT(UNSCRAMBLE_STATS,			false,	NULL,		0,		EFINFO_NONE,	"",					"")
 EFFECT(RANDOM_MON_DAMAGE,			false,	"dam",		0,		EFINFO_NONE,	"strikes a foe with a bolt",					"produce storm bolts")
+EFFECT(CREATE_WALL,					true,	NULL,		0,		EFINFO_NONE,	"creates a wall",	"create wall")
