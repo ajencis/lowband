@@ -632,8 +632,9 @@ bool ignore_known_item_ok(const struct player *p, const struct object *obj)
 {
 	struct object *base_obj = cave->objects[obj->oidx];
 
-	if (p->unignoring)
+	if (p->unignoring) {
 		return false;
+	}
 
 	/* Get the real object and check its ignore properties */
 	assert(base_obj);

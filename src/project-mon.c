@@ -30,6 +30,7 @@
 #include "mon-timed.h"
 #include "mon-util.h"
 #include "player-calcs.h"
+#include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
 #include "source.h"
@@ -1052,6 +1053,29 @@ static void project_monster_handler_SLASHING(project_monster_handler_context_t *
 static void project_monster_handler_CHARM_UNDEAD(project_monster_handler_context_t *context)
 {
 	project_monster_charm(context, RF_UNDEAD);
+}
+
+static void project_monster_handler_VAMPIRE(project_monster_handler_context_t *context)
+{
+	int drain;
+	bool undrainable = rf_has(context->mon->race->flags, RF_NONLIVING) ||
+			rf_has(context->mon->race->flags, RF_UNDEAD);
+
+	project_monster_resist_element(context, RF_IM_NETHER, 3);
+
+	drain = undrainable ? 0 : context->dam;
+
+	if (drain > 0 && context->origin.what == SRC_PLAYER) {
+		if (player->chp < player->mhp) msg("You feel better");
+		effect_simple(EF_HEAL_HP, context->origin, format("%d", drain), 0, 0, 0,
+				0, 0, NULL);
+		player_inc_timed(player, TMD_FOOD, drain, true, false, false);
+	}
+	else if (drain > 0 && context->origin.what == SRC_MONSTER) {
+		struct monster *mon = cave_monster(cave, context->origin.which.monster);
+		mon->hp += drain;
+		mon->hp = MIN(mon->hp, mon->maxhp);
+	}
 }
 
 static const project_monster_handler_f monster_handlers[] = {

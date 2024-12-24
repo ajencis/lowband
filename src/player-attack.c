@@ -1215,20 +1215,27 @@ static int get_attack_dam(struct attack_roll *aroll, struct monster *mon, int b,
 
 static int backstab_power(struct monster *mon)
 {
+	int power = 0;
 	assert(mon);
 
-	if (mon->m_timed[MON_TMD_SLEEP]) return 2;
-	if (mon->m_timed[MON_TMD_HOLD]) return 2;
-	if (mon->m_timed[MON_TMD_SLOW]) return 1;
-	if (mon->m_timed[MON_TMD_FEAR]) return 1;
-	if (mon->m_timed[MON_TMD_STUN]) return 1;
+	if (mon->m_timed[MON_TMD_SLEEP]) power = MAX(power, 2);
+	if (mon->m_timed[MON_TMD_HOLD]) power = MAX(power, 2);
+	if (mon->m_timed[MON_TMD_SLOW]) power = MAX(power, 1);
+	if (mon->m_timed[MON_TMD_FEAR]) power = MAX(power, 1);
+	if (mon->m_timed[MON_TMD_STUN]) power = MAX(power, 1);
+
 	if (square_iswebbed(cave, mon->grid)) {
 		if (!rf_has(mon->race->flags, RF_PASS_WALL) && !rf_has(mon->race->flags, RF_PASS_WEB)) {
-			return 1;
+			power = MAX(power, 1);
 		}
 	}
 
-	return 0;
+	if (mon->reaction > MON_REACT_FRIENDLY) power = MAX(power, 1);
+	if (mon->reaction > MON_REACT_ALLY) power = MAX(power, 2);
+
+	if (!mflag_has(mon->mflag, MFLAG_AWARE)) power = MAX(power, 1);
+
+	return power;
 }
 
 
@@ -1237,8 +1244,7 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 {
 	int i, j;
 	int cgi = 0; // clockwise grid index
-	bool done = false;
-	bool clockwise = false;
+	bool clockwise = one_in_(2);
 	int add;
 	struct object *weap = aroll->obj;
 
@@ -1246,6 +1252,9 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 		int slotnum = object_slot(p->body, weap);
 		if (slotnum < p->body.count && my_stristr(p->body.slots[slotnum].name, "left")) {
 			clockwise = true;
+		}
+		else if (slotnum < p->body.count && my_stristr(p->body.slots[slotnum].name, "right")) {
+			clockwise = false;
 		}
 	}
 
@@ -1260,7 +1269,7 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 	}
 
 	add = clockwise ? 1 : -1;
-	for (i = (cgi + add) % 9, j = 0; !done && j < 3; i = (i + add) % 9, j++) {
+	for (i = (cgi + add) % 9, j = 0; j < 3; i = (i + add) % 9, j++) {
 		struct loc target_loc = loc_sum(clockwise_grid[i], p->grid);
 		struct monster *mon = square_monster(cave, target_loc);
 		
@@ -1330,6 +1339,8 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	char verb[20];
 	uint32_t msg_type = MSG_HIT;
 	int j, b, s, weight, dmg;
+
+	assert(mon);
 
 	/* Extract monster name (or "it") */
 	monster_desc(m_name, sizeof(m_name), mon, MDESC_TARG);

@@ -314,3 +314,10 @@ eval:10
 desc:inflict Black Breath
 lore-color-base:Light Red
 lash-type:NETHER
+
+name:VAMPIRE
+power:0
+eval:10
+desc:suck blood
+lore-color-base:Red
+lash-type:VAMPIRE

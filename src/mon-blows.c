@@ -1286,7 +1286,7 @@ static void melee_effect_handler_BLACK_BREATH(melee_effect_handler_context_t *co
 }
 
 /**
- * Melee effect handler: Attack the player with fire.
+ * Melee effect handler: Stab the player.
  */
 static void melee_effect_handler_PIERCING(melee_effect_handler_context_t *context)
 {
@@ -1294,7 +1294,7 @@ static void melee_effect_handler_PIERCING(melee_effect_handler_context_t *contex
 }
 
 /**
- * Melee effect handler: Attack the player with fire.
+ * Melee effect handler: Cut the player.
  */
 static void melee_effect_handler_SLASHING(melee_effect_handler_context_t *context)
 {
@@ -1302,11 +1302,25 @@ static void melee_effect_handler_SLASHING(melee_effect_handler_context_t *contex
 }
 
 /**
- * Melee effect handler: Attack the player with fire.
+ * Melee effect handler: Bash the player.
  */
 static void melee_effect_handler_BLUDGEONING(melee_effect_handler_context_t *context)
 {
 	melee_effect_physical(context, PROJ_BLUDGEONING);
+}
+
+/**
+ * Melee effect handler: Attack the player with fire.
+ */
+static void melee_effect_handler_VAMPIRE(melee_effect_handler_context_t *context)
+{
+	melee_effect_elemental(context, ELEM_NETHER, false);
+	if (context->damage > 0) {
+		if (context->mon) {
+			context->mon->hp += context->damage;
+			context->mon->hp = MIN(context->mon->hp, context->mon->maxhp);
+		}
+	}
 }
 
 /**
@@ -1352,6 +1366,7 @@ melee_effect_handler_f melee_handler_for_blow_effect(const char *name)
 		{ "EXP_80", melee_effect_handler_EXP_80 },
 		{ "HALLU", melee_effect_handler_HALLU },
 		{ "BLACK_BREATH", melee_effect_handler_BLACK_BREATH },
+		{ "VAMPIRE", melee_effect_handler_VAMPIRE },
 		{ NULL, NULL },
 	};
 	const struct effect_handler_s *current = effect_handlers;

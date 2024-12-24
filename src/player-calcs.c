@@ -229,11 +229,11 @@ int adj_str_web(int index) {
 }
 
 int adj_stat_skill_flat(int index) {
-	return index > 7 ? (index - 7) * 30 / 7 : 0;
+	return index > 7 ? (index - 7) * 20 / 7 : 0;
 }
 
 int adj_stat_skill_percent(int index) {
-	return (index - 7) * 20 / 7;
+	return (index - 7) * 30 / 7;
 }
 
 
@@ -1740,7 +1740,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		int lack = PY_FOOD_HUNGRY - p->timed[TMD_FOOD];
 		if ((excess > 0) && !p->timed[TMD_ATT_VAMP]) {
 			/* Scale to units 1/10 of the range and subtract from speed */
-			excess = (excess * 10) / (PY_FOOD_MAX - PY_FOOD_FULL);
+			excess = excess * 25 / (PY_FOOD_MAX - PY_FOOD_FULL);
 			state->speed -= excess;
 		} else if (lack > 0) {
 			/* Scale to units 1/20 of the range */

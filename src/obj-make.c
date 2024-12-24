@@ -403,9 +403,6 @@ static struct ego_item *ego_find_random(struct object *obj, int level)
 	}
 
 	if (total) {
-		if (obj->kind->base->tval == TV_TOME || obj->kind->base->tval == TV_BOOK) {
-			plog(format("found some egos for a %s", obj->kind->name));
-		}
 		long value = randint0(total);
 		for (i = 0; i < alloc_ego_size; i++) {
 			/* Found the entry */

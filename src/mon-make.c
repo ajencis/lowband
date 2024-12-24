@@ -975,7 +975,7 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 
 
 /**
- * Creates the onbject a mimic is imitating.
+ * Creates the object a mimic is imitating.
  */
 void mon_create_mimicked_object(struct chunk *c, struct monster *mon, int index)
 {
@@ -999,7 +999,6 @@ void mon_create_mimicked_object(struct chunk *c, struct monster *mon, int index)
 	if (tval_is_money_k(kind)) {
 		obj = make_gold(c->depth, kind->name);
 	} else {
-		plog(format("kidx is %i", kind->kidx));
 		obj = object_new();
 		assert(obj);
 		object_prep(obj, kind, mon->race->level, RANDOMISE);

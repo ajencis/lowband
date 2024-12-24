@@ -5831,8 +5831,8 @@ sleepiness:10
 depth:24
 rarity:2
 experience:150
-blow:BITE:EXP_40:1d4
-blow:BITE:EXP_40:1d4
+blow:BITE:VAMPIRE:1d4
+blow:BITE:VAMPIRE:1d4
 flags:UNDEAD | EVIL | COLD_BLOOD | REGENERATE
 flags:RAND_50
 flags:IM_COLD | NO_FEAR | NO_CONF | NO_SLEEP | NO_STUN
@@ -6451,7 +6451,7 @@ sleepiness:30
 depth:27
 rarity:1
 experience:175
-blow:BITE:EXP_20:2d6
+blow:BITE:VAMPIRE:2d6
 flags:DROP_40 | DROP_1
 spell-freq:9
 spells:WOUND | DARKNESS | MIND_BLAST | TELE_TO
@@ -8625,7 +8625,7 @@ sleepiness:10
 depth:36
 rarity:1
 experience:750
-blow:BITE:EXP_40:3d6
+blow:BITE:VAMPIRE:3d6
 flags:DROP_4
 spell-freq:6
 spells:WOUND | CONF | DARKNESS | MIND_BLAST
@@ -10713,7 +10713,7 @@ sleepiness:10
 depth:46
 rarity:1
 experience:1800
-blow:BITE:EXP_80:4d6
+blow:BITE:VAMPIRE:4d6
 flags:DROP_4
 spell-freq:7
 spells:BLIND | BRAIN_SMASH | WOUND | DARKNESS | DRAIN_MANA
@@ -12015,7 +12015,7 @@ sleepiness:10
 depth:59
 rarity:3
 experience:4500
-blow:BITE:EXP_80:5d6
+blow:BITE:VAMPIRE:5d6
 flags:INVISIBLE
 flags:DROP_4
 flags:PASS_WALL
@@ -12663,8 +12663,7 @@ sleepiness:10
 depth:67
 rarity:4
 experience:23000
-blow:BITE:EXP_80:6d6
-blow:BITE:EXP_80:6d6
+blow:BITE:VAMPIRE:6d6
 blow:HIT:CONFUSE:6d6
 blow:HIT:CONFUSE:6d6
 flags:UNIQUE | FEMALE | NAME_COMMA | SMART
@@ -14659,7 +14658,7 @@ armor-class:164
 sleepiness:0
 depth:99
 rarity:0
-blow:BITE:EXP_80:6d12
+blow:BITE:VAMPIRE:6d12
 blow:CLAW:TERRIFY:8d12
 blow:HIT:DRAIN_CHARGES:8d12
 blow:HIT:DRAIN_CHARGES:8d12

@@ -474,6 +474,8 @@ static bool monster_turn_equip_item(struct monster *mon)
 	int i, best_best_benefit = 0;
 	struct equip_slot *slot;
 	char mdesc[80], odesc[80];
+	bool did_something = false;
+
 	if (!body || body->count == 0) {
 		return false;
 	}
@@ -533,36 +535,39 @@ static bool monster_turn_equip_item(struct monster *mon)
 	monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG | MDESC_CAPITAL);
 
 	if (to_unequip) {
-		object_desc(odesc, sizeof(odesc), to_unequip, ODESC_TERSE | ODESC_PREFIX, player);
 		pile_excise(&mon->equipped_obj, to_unequip);
-		pile_insert(&mon->held_obj, to_unequip);
+		monster_carry(cave, mon, to_unequip);
 		if (monster_is_visible(mon)) {
+			object_desc(odesc, sizeof(odesc), to_unequip, ODESC_TERSE | ODESC_PREFIX, player);
 			msg("%s unequips %s.", mdesc, odesc);
 		}
-		return true;
+		assert(player->cave->objects[to_unequip->oidx] == to_unequip->known);
+		assert(cave->objects[to_unequip->oidx] == to_unequip);
+		did_something = true;
 	}
-	if (to_equip) {
+	else if (to_equip) {
+		if (to_equip->number > 1) {
+			to_equip = object_split(to_equip, 1);
+		} else {
+			pile_excise(&mon->held_obj, to_equip);
+		}
+		monster_equip(cave, mon, to_equip);
 		if (monster_is_visible(mon)) {
 			object_see(player, to_equip);
-		}
-		if (to_equip->number > 1) {
-			struct object *new = object_split(to_equip, 1);
-			pile_insert(&mon->equipped_obj, new);
-			object_desc(odesc, sizeof(odesc), new, ODESC_PREFIX, player);
-		} else {
 			object_desc(odesc, sizeof(odesc), to_equip, ODESC_PREFIX, player);
-			pile_excise(&mon->held_obj, to_equip);
-			pile_insert(&mon->equipped_obj, to_equip);
-		}
-		if (monster_is_visible(mon)) {
 			msg("%s equips %s.", mdesc, odesc);
 		}
-		return true;
+		assert(cave->objects[to_equip->oidx] == to_equip);
+		assert(player->cave->objects[to_equip->oidx] == to_equip->known);
+		did_something = true;
 	}
 
 	// looked through everything and no changes to make, so we can stop rechecking
-	mflag_off(mon->mflag, MFLAG_CHECK_EQ);
-	return false;
+	if (!did_something) {
+		mflag_off(mon->mflag, MFLAG_CHECK_EQ);
+	}
+
+	return did_something;
 }
 
 /**
@@ -610,7 +615,6 @@ static void get_move_find_range(struct monster *mon)
 		} else if (m_lev + 3 < p_lev) {
 			mon->min_range = flee_range;
 		} else if (m_lev - 5 < p_lev) {
-
 			/* Examine player health */
 			p_chp = player->chp;
 			p_mhp = player->mhp;
@@ -1768,17 +1772,14 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 	bool visible = monster_is_visible(mon);
 
 	/* Learn about item pickup behavior */
-	for (obj = square_object(cave, new); obj; obj = obj->next) {
-		if (!tval_is_money(obj) && visible) {
-			rf_on(lore->flags, RF_TAKE_ITEM);
-			rf_on(lore->flags, RF_KILL_ITEM);
-			break;
-		}
+	if (visible && square_object(cave, new)) {
+		rf_on(lore->flags, RF_TAKE_ITEM);
+		rf_on(lore->flags, RF_KILL_ITEM);
 	}
 
 	/* Abort if can't pickup/kill */
 	if (!rf_has(mon->race->flags, RF_TAKE_ITEM) &&
-		!rf_has(mon->race->flags, RF_KILL_ITEM)) {
+			!rf_has(mon->race->flags, RF_KILL_ITEM)) {
 		return;
 	}
 
@@ -1797,7 +1798,7 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 
 		/* Get the object name */
 		object_desc(o_name, sizeof(o_name), obj,
-			ODESC_PREFIX | ODESC_FULL, player);
+				ODESC_PREFIX | ODESC_FULL, player);
 
 		/* React to objects that hurt the monster */
 		if (react_to_slay(obj, mon)) {
@@ -1820,31 +1821,22 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 			 * placeholder if the player remembers seeing the
 			 * object.
 			 */
-			struct object *taken = object_new();
 
-			object_copy(taken, obj);
-			taken->oidx = 0;
-			if (obj->known) {
-				taken->known = object_new();
-				object_copy(taken->known, obj->known);
-				taken->known->oidx = 0;
-				taken->known->grid = loc(0, 0);
-			}
-
-			/* Try to carry the copy */
-			if (monster_carry(cave, mon, taken)) {
+			/* Try to carry */
+			if (monster_carry(cave, mon, obj)) {
 				/* Describe observable situations */
 				if (square_isseen(cave, new) && !ignore_item_ok(player, obj)) {
+					assert(obj->known);
 					msg("%s picks up %s.", m_name, o_name);
 				}
 
 				/* Delete the object */
-				square_delete_object(cave, new, obj, true, true);
-			} else {
-				if (taken->known) {
-					object_delete(player->cave, NULL, &taken->known);
-				}
-				object_delete(cave, player->cave, &taken);
+				square_excise_object(cave, new, obj);
+				square_note_spot(cave, new);
+				square_light_spot(cave, new);
+
+				assert(player->cave->objects[obj->oidx] == obj->known);
+				assert(cave->objects[obj->oidx] == obj);
 			}
 		} else {
 			/* Describe observable situations */

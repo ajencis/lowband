@@ -705,14 +705,6 @@ void get_mon_spell_name(char *buf, int bufsize, int index, const struct monster_
 	my_strcat(buf, desc, bufsize);
 
 	my_strcap_full(buf);
-
-	/*for (i = 0; i < (int)(bufsize / sizeof(buf[0])); i++)
-	{
-		if (buf[i] == '\0')
-			break;
-		if (i == 0 || buf[i - 1] == ' ')
-			buf[i] = toupper(buf[i]);
-	}*/
 }
 
 int mon_spell_lore_damage(int index, const struct monster_race *race,

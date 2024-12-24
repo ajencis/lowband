@@ -1301,8 +1301,10 @@ void player_regen_hp(struct player *p)
 	}
 
 	/* Food bonus - better fed players regenerate up to 1/3 faster */
+	// L: regeneration is now much more food-based
 	fed_pct = p->timed[TMD_FOOD] / z_info->food_value;
-	percent *= 100 + fed_pct / 3;
+	if (fed_pct > 100) fed_pct = fed_pct * 2 - 100;
+	percent *= fed_pct;
 	percent /= 100;
 
 	/* Various things speed up regeneration */

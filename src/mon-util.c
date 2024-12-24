@@ -1497,6 +1497,29 @@ bool monster_carry(struct chunk *c, struct monster *mon, struct object *obj)
 	return true;
 }
 
+bool monster_equip(struct chunk *c, struct monster *mon, struct object *obj)
+{
+	// L: flag the monster as wanting to recheck its equipment
+	mflag_on(mon->mflag, MFLAG_CHECK_EQ);
+
+	/* Forget location */
+	obj->grid = loc(0, 0);
+
+	/* Link the object to the monster */
+	obj->held_m_idx = mon->midx;
+
+	/* Add the object to the monster's inventory */
+	list_object(c, obj);
+	if (obj->known) {
+		obj->known->oidx = obj->oidx;
+		player->cave->objects[obj->oidx] = obj->known;
+	}
+	pile_insert(&mon->equipped_obj, obj);
+
+	/* Result */
+	return true;
+}
+
 /**
  * Get a random object from a monster's inventory
  */

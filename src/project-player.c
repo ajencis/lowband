@@ -395,7 +395,7 @@ static int project_player_handler_NETHER(project_player_handler_context_t *conte
 	int drain = 200 + (player->exp / 100) * z_info->life_drain_percent;
 
 	if (player_resists(player, ELEM_NETHER) ||
-		player_of_has(player, OF_HOLD_LIFE)) {
+			player_of_has(player, OF_HOLD_LIFE)) {
 		msg("You resist the effect!");
 		equip_learn_flag(player, OF_HOLD_LIFE);
 		return 0;
@@ -791,6 +791,18 @@ static int project_player_handler_BLUDGEONING(project_player_handler_context_t *
 
 static int project_player_handler_CHARM_UNDEAD(project_player_handler_context_t *context)
 {
+	return 0;
+}
+
+static int project_player_handler_VAMPIRE(project_player_handler_context_t *context)
+{
+	if (context->origin.what == SRC_MONSTER) {
+		struct monster *mon = cave_monster(cave, context->origin.which.monster);
+
+		mon->hp += context->dam;
+		mon->hp = MIN(mon->hp, mon->maxhp);
+	}
+
 	return 0;
 }
 
