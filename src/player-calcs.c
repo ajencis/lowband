@@ -64,6 +64,11 @@ struct mon_player_match of_matches[] = {
 	{ RF_NONE, -1 }
 };
 
+struct mon_player_match pf_matches[] = {
+	{ RF_UNDEAD, PF_UNDEAD },
+	{ RF_NONE, -1 }
+};
+
 struct mon_player_match elem_pp_matches[] = {
 	{ ELEM_ACID, PP_EARTH_MAGIC },
 	{ ELEM_COLD, PP_WATER_MAGIC },
@@ -125,9 +130,9 @@ static int stat_scale(int index, int scaleto, bool minzero) {
 	int negative = ((asi - lsi) * scaleto + 49) / 50;
 
 	if (index >= asi) return (int)(scaleto * 
-	                               ((index - asi) * (index - asi)) /
-								   ((hsi - asi) * (hsi - asi))) + 
-								   (minzero ? negative : 0);
+	        ((index - asi) * my_sqrt(index - asi)) /
+			((hsi - asi) * my_sqrt(hsi - asi))) + 
+			(minzero ? negative : 0);
 
 	if (index <= asi) return ((index - asi) * scaleto - 24) / 25 + (minzero ? negative : 0);
 
@@ -168,8 +173,7 @@ int adj_dex_th(int index) {
 }*/
 
 static int adj_str_wgt(int index) {
-	int ret = stat_scale(index, 250, true);
-	return MAX(ret, 25);
+	return stat_scale(index, 250, true) + 25;
 }
 
 int adj_str_hold(int index) {
@@ -208,16 +212,16 @@ static int adj_mag_study(int index) {
 	return (index + 5) * 10 / 20;
 }
 
-static int adj_mag_mana(int index) {
+/*static int adj_mag_mana(int index) {
 	return (index + 5) * 200 / 20;
-}
+}*/
 
 int adj_int_xp(int index) {
 	return -stat_scale(index, 50, false);
 }
 
 int adj_int_lev(int index) {
-	return stat_scale(index, 10, false);
+	return stat_scale(index, 6, false);
 }
 
 int adj_mag_stat(int index) {
@@ -228,12 +232,26 @@ int adj_str_web(int index) {
 	return stat_scale(index, 50, true) + 5;
 }
 
-int adj_stat_skill_flat(int index) {
-	return index > 7 ? (index - 7) * 20 / 7 : 0;
+int adj_stat_skill_flat(int index, int skill) {
+	int ret;
+	if (skill == SKILL_MAGIC) {
+		ret = index > 7 ? my_sqrt(index - 7) * 5 : index - 7;
+	}
+	else {
+		ret = stat_scale(index, 20, false);
+	}
+	return MAX(0, ret);
 }
 
-int adj_stat_skill_percent(int index) {
-	return (index - 7) * 30 / 7;
+int adj_stat_skill_percent(int index, int skill) {
+	int ret;
+	if (skill == SKILL_MAGIC) {
+		ret = index > 7 ? my_sqrt(index - 7) * 10 : index - 7;
+	}
+	else {
+		ret = stat_scale(index, 30, false);
+	}
+	return ret;
 }
 
 
@@ -882,16 +900,15 @@ static void calc_spells(struct player *p)
  */
 static void calc_mana(struct player *p, struct player_state *state, bool update)
 {
-	int i, msp, levels, cur_wgt, max_wgt, ass;
+	int i, msp, levels, cur_wgt, max_wgt;
 	struct monster_race *monr = lookup_player_monster(p);
+	const struct magic_realm *realm = player->realm;
 
 	levels = state->skills[SKILL_MAGIC];
-	ass = state->stat_ind[STAT_INT];
 
 	/* Extract "effective" player level */
-	if (levels > 0) {
-		msp = 1;
-		msp += adj_mag_mana(ass) * levels * p->lev / 5000;
+	if (levels > 0 && realm) {
+		msp = levels;
 	} else {
 		p->msp = 0;
 		p->csp = 0;
@@ -915,12 +932,13 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 		if (slot_type_is(p, i, EQUIP_LIGHT)) continue;
 
 		/* Add weight */
-		if (obj_local)
+		if (obj_local) {
 			cur_wgt += object_weight_one(obj_local);
+		}
 	}
 
 	/* Determine the weight allowance */
-	max_wgt = get_player_realm(p)->weight;
+	max_wgt = realm->weight;
 
 	/* Heavy armor penalizes mana */
 	if (((cur_wgt - max_wgt) / 10) > 0) {
@@ -1350,16 +1368,17 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX])
 
 void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX])
 {
-	int i;
-	int class_hp;
+	int i, class_hp, mod;
 
 	for (i = 0; i < SKILL_MAX; i++) {
 		skills[i] += mrace->base->skills[i] * mrace->level / 20;
 	}
 
 	// assume the monster gets hp equal to half its level from its class
-	class_hp = mrace->level / 2;
-	skills[SKILL_HEALTH] += mrace->avg_hp - class_hp;
+	class_hp = (int)(mrace->level * my_sqrt((double)mrace->level) / 10.0);
+	mod = mrace->avg_hp - class_hp;
+	mod = MAX(mod, mod / 2);
+	skills[SKILL_HEALTH] += mod;
 }
 
 /**
@@ -1390,6 +1409,12 @@ static void calc_monster(struct player *p, struct player_state *state,
 		}
 	}
 
+	for (i = 0; pf_matches[i].mval != RF_NONE; ++i) {
+		if (rf_has(mrace->flags, pf_matches[i].mval)) {
+			pf_on(state->pflags, pf_matches[i].pval);
+		}
+	}
+
 	state->speed += mrace->speed / 2 - 55;
 	state->ac = MAX(state->ac, mrace->ac) + MIN(state->ac, mrace->ac) / 2;
 
@@ -1406,6 +1431,8 @@ static void calc_monster(struct player *p, struct player_state *state,
 	for (i = 0; i < SKILL_MAX; i++) {
 		state->skills[i] += skills[i];
 	}
+
+	of_union(state->pflags, mrace->base->pflags);
 }
 
 /**
@@ -1506,9 +1533,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		}
 
 		else if (power_scalings[i] == PP_SCALE_SQRT) {
-			int fact = my_int_sqrt(efflev);
-			int div = (int)(100.0 / my_sqrt((double)50));
-			state->powers[i] = (scale * fact + div - 1) / div;
+			double fact = my_sqrt((double)efflev);
+			double div = 2.0 * my_sqrt((double)50);
+			state->powers[i] = (int)((scale * fact + div - 1) / div);
 		}
 
 		else {
@@ -1728,9 +1755,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		int tome = p->extra_skills[i];
 		// += because monster skills have already been calcd
 		state->skills[i] += base + xtra + tome;
-		if (stat != -1) {
-			state->skills[i] += adj_stat_skill_flat(state->stat_ind[stat]);
-			state->skills[i] += MAX(state->skills[i], 0) * adj_stat_skill_percent(state->stat_ind[stat]) / 100;
+		if (stat != STAT_NONE) {
+			state->skills[i] += MAX(state->skills[i], 0) * adj_stat_skill_percent(state->stat_ind[stat], i) / 100;
+			state->skills[i] += adj_stat_skill_flat(state->stat_ind[stat], i);
 		}
 	}
 
@@ -1889,6 +1916,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* L: change expfact based on int */
 	state->expfact = p->race->r_exp + p->class->c_exp + adj_int_xp(state->stat_ind[STAT_INT]);
+	state->expfact = MAX(50, state->expfact);
 
 	/* Modify skills */
 	//state->skills[SKILL_DISARM_PHYS] += adj_dex_dis(state->stat_ind[STAT_DEX]);

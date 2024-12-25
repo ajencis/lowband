@@ -762,22 +762,26 @@ static int melee_crit_chance(struct attack_roll *aroll, const struct player *p, 
 	return chance;
 }
 
-static void unarmed_mod_attack(struct attack_roll *aroll)
+static void unarmed_mod_attack(struct attack_roll *aroll, const struct player *p, const struct player_state *ps)
 {
-	aroll->to_hit += get_power_scale(player, PP_UNARMED_STRIKE, 25);
-	aroll->to_dam += get_power_scale(player, PP_UNARMED_STRIKE, 25);
+	//aroll->to_hit += get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev);
+	int ddicemod = get_power_scale_state(ps, PP_UNARMED_STRIKE, 1, p->lev);
+	aroll->ddice += ddicemod;
+	aroll->dsides += get_power_scale_state(ps, PP_UNARMED_STRIKE, 50, p->lev) / (ddicemod + 0.5);
+
+	if (aroll->accuracy_stat == STAT_NONE) aroll->accuracy_stat = STAT_DEX;
 }
 
 static void unarmed_get_punch(struct attack_roll *aroll, const struct player *p, const struct player_state *ps)
 {
 	aroll->ddice = 1;
-	aroll->dsides = 1 + get_power_scale_state(ps, PP_UNARMED_STRIKE, 9, p->lev);
-	aroll->to_hit = get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev) - 10;
-	aroll->to_hit = MIN(aroll->to_hit, 0);
+	aroll->dsides = get_power_scale_state(ps, PP_UNARMED_STRIKE, 5, p->lev);
+	aroll->to_hit = get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev) - 25;
+	aroll->to_hit = MIN(aroll->to_hit, -5);
 
 	aroll->mtimed[MON_TMD_STUN] = get_power_scale_state(ps, PP_UNARMED_STRIKE, 100, p->lev);
 
-	aroll->accuracy_stat = -1;
+	aroll->accuracy_stat = STAT_NONE;
 	aroll->damage_stat = STAT_STR;
 
 	aroll->message = "punch";
@@ -790,11 +794,13 @@ static void unarmed_get_punch(struct attack_roll *aroll, const struct player *p,
 static void unarmed_get_kick(struct attack_roll *aroll, const struct player *p, const struct player_state *ps)
 {
 	aroll->ddice = 1;
-	aroll->dsides = 1 + get_power_scale_state(ps, PP_UNARMED_STRIKE, 14, p->lev);
+	aroll->dsides = get_power_scale_state(ps, PP_UNARMED_STRIKE, 15, p->lev);
+	aroll->to_hit = get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev) - 25;
+	aroll->to_hit = MIN(aroll->to_hit, -5);
 
 	aroll->mtimed[MON_TMD_SLOW] = get_power_scale_state(ps, PP_UNARMED_STRIKE, 100, p->lev);
 
-	aroll->accuracy_stat = -1;
+	aroll->accuracy_stat = STAT_NONE;
 	aroll->damage_stat = STAT_STR;
 
 	aroll->message = "kick";
@@ -881,7 +887,7 @@ bool get_unarmed_punch(struct player *p, struct player_state *ps,
 	memset(aroll, 0, sizeof(*aroll));
 
 	unarmed_get_punch(aroll, p, ps);
-	unarmed_mod_attack(aroll);
+	unarmed_mod_attack(aroll, p, ps);
 
 	get_melee_attack(aroll, ps, p, NULL, attack_div);
 
@@ -894,7 +900,7 @@ bool get_unarmed_kick(struct player *p, struct player_state *ps,
 	memset(aroll, 0, sizeof(*aroll));
 
 	unarmed_get_kick(aroll, p, ps);
-	unarmed_mod_attack(aroll);
+	unarmed_mod_attack(aroll, p, ps);
 
 	get_melee_attack(aroll, ps, p, NULL, attack_div);
 
@@ -1145,7 +1151,7 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 
 	if (aroll->attack_skill == SKILL_TO_HIT_MELEE) {
 		// martial arts don't affect stuff like gaze attacks
-		unarmed_mod_attack(aroll);
+		unarmed_mod_attack(aroll, p, ps);
 	}
 
 	melee_crit_chance(aroll, p, ps);

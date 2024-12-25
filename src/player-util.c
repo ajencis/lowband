@@ -423,7 +423,6 @@ void calc_extra_points(struct player *p, struct player_state *ps)
 
 static bool player_can_learn_from_tome(struct player *p, int index)
 {
-	//assert(index > TOME_NONE && index < TOME_MAX);
 	int cpwr;
 	char name[80];
 	if (index < PP_MAX) {
@@ -464,6 +463,8 @@ bool learn_realm(struct player *p, const struct magic_realm *realm)
 	if (p->realm->innate) {
 		player_learn_spell_xp(p, true, 0);
 	}
+
+	p->upkeep->update |= PU_BONUS;
 
 	return true;
 }
@@ -631,7 +632,7 @@ int player_class_power(struct player *p, int power)
 	int base = p->class->c_powers[power];
 	// extra-learning makes class reflect learned powers
 	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
-		base = MAX(base, p->extra_powers[power]);
+		base = MAX(base, p->extra_powers[power] / 2);
 	}
 	return base;
 }
@@ -712,7 +713,7 @@ void player_race_elem_info(const struct player_race *r, bool evolved, struct ele
 
 int player_skill_stat(struct player *p, int skill)
 {
-	if (skill == SKILL_MAGIC && p->realm) {
+	if (skill == SKILL_MAGIC && p->realm) {\
 		return p->realm->stat;
 	}
 	return skill_stats[skill];
@@ -1300,7 +1301,6 @@ void player_regen_hp(struct player *p)
 		percent = PY_REGEN_FAINT;
 	}
 
-	/* Food bonus - better fed players regenerate up to 1/3 faster */
 	// L: regeneration is now much more food-based
 	fed_pct = p->timed[TMD_FOOD] / z_info->food_value;
 	if (fed_pct > 100) fed_pct = fed_pct * 2 - 100;

@@ -291,6 +291,8 @@ skill-dig:0:0
 skill-magic:-7:17
 skill-health:8:15
 power:HAFTED_SPECIALIZATION:20
+power:HOLY_MAGIC:20
+power:NECROMANCY_MAGIC:-40
 hitdie:2
 max-attacks:4
 min-weight:35
@@ -312,6 +314,45 @@ title:Elder
 title:Prophet
 title:Patriarch
 title:High Priest
+
+############### PRIEST ###############
+name:Dark Priest
+skill-disarm-phys:25:12
+skill-disarm-magic:25:12
+skill-device:30:10
+skill-save:11:7
+skill-stealth:15:0
+skill-search:10:14
+skill-melee:10:15
+skill-shoot:10:12
+skill-throw:10:12
+skill-dig:0:0
+skill-magic:-7:17
+skill-health:8:15
+power:HAFTED_SPECIALIZATION:20
+power:HOLY_MAGIC:-40
+power:NECROMANCY_MAGIC:20
+hitdie:2
+max-attacks:4
+min-weight:35
+strength-multiplier:3
+equip:food:Ration of Food:1:3:none
+equip:light:Wooden Torch:1:3:none
+equip:hafted:Mace:1:1:none
+equip:potion:Cure Serious Wounds:2:2:none
+equip:scroll:Word of Recall:1:1:birth_no_recall
+player-flags:BLESS_WEAPON
+realm:divine
+title:Believer
+title:Acolyte
+title:Devotee
+title:Adept
+title:Evangelist
+title:Dark-Priest
+title:Elder
+title:Prophet
+title:Dark Patriarch
+title:Dark High Priest
 
 ############### NECROMANCER ###############
 name:Necromancer
@@ -439,6 +480,7 @@ skill-throw:10:17
 skill-dig:0:0
 skill-magic:-10:12
 skill-health:9:16
+power:NATURE_MAGIC:20
 hitdie:5
 max-attacks:5
 min-weight:35
@@ -552,7 +594,7 @@ skill-shoot:10:0
 skill-throw:10:0
 skill-dig:0:0
 skill-magic:0:0
-skill-health:5:5
+skill-health:5:10
 hitdie:3
 max-attacks:6
 min-weight:10

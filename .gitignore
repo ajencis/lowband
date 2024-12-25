@@ -75,3 +75,4 @@ src/win/angband.res
 build/*
 .vscode/*
 lib/user/*.log
+lib/user/pile_error.txt

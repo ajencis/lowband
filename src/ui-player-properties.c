@@ -169,10 +169,10 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 			if (whichstat != -1) {
 				int ind = player->state.stat_ind[whichstat];
 				int curr;
-				stat = adj_stat_skill_flat(ind);
-				curr = cbase + rbase + (cxtra + rxtra) * player->lev / 100 + tome + stat;
+				stat = adj_stat_skill_flat(ind, choices[oid].index);
+				curr = cbase + rbase + (cxtra + rxtra) * player->lev / 100 + tome;
 				curr = MAX(curr, 0);
-				stat += curr * adj_stat_skill_percent(ind) / 100;
+				stat += curr * adj_stat_skill_percent(ind, choices[oid].index) / 100;
 				stat_name = stat_idx_to_name(whichstat);
 			} else {
 				stat = 0;

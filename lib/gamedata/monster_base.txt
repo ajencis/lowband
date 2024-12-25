@@ -79,7 +79,7 @@ flags:ANIMAL | WEIRD_MIND
 flags:BASH_DOOR
 desc:Ant
 attr:HP:-2
-attr:AC:1
+attr:AC:2
 attr:DAMAGE:1
 
 # Fast, not strong, annoying
@@ -212,6 +212,7 @@ desc:Ghost
 attr:AC:1
 attr:HP:-2
 attr:SPEED:1
+player-flags:NO_FOOD
 
 # Giants are big, strong humanoids which hit hard and throw boulders.  They
 # may be associated with an element and have some spells, but their focus is
@@ -339,6 +340,7 @@ attr:HP:-3
 stats:-2:2:1:1:-1
 power:NECROMANCY_MAGIC:20
 skill-magic:5
+player-flags:NO_FOOD
 
 # Weird monsters tha look like floor.
 name:lurker
@@ -403,6 +405,8 @@ pain:2
 flags:NEVER_MOVE
 flags:IM_POIS | HURT_FIRE | NO_FEAR | NO_CONF | NO_SLEEP
 desc:Mold
+attr:SPEED:-1
+attr:HP:1
 
 # Small (mostly) non-moving (mostly) spore-releasing-for-effect creatures
 name:mushroom
@@ -514,6 +518,7 @@ body:Humanoid
 attr:AC:3
 attr:HP:-4
 attr:MAGIC:1
+player-flags:NO_FOOD
 
 # Snakes are typically slow, but have high armor class
 name:snake
@@ -709,6 +714,7 @@ attr:AC:-1
 attr:SPEED:-2
 attr:DAMAGE:3
 attr:MAGIC:-1
+player-flags:NO_FOOD
 
 ##### Special templates #####
 

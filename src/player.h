@@ -119,7 +119,7 @@ enum {
  */
 #define PY_MAX_EXP		100000000L	/* Maximum exp */
 #define PY_KNOW_LEVEL	30			/* Level to know all runes */
-#define PY_MAX_LEVEL	60			/* Maximum level */
+#define PY_MAX_LEVEL	65			/* Maximum level */
 
 /**
  * Flags for player.spell_flags[]

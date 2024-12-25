@@ -1270,7 +1270,11 @@ static size_t prt_tmd(int row, int col)
 	size_t i, len = 0;
 
 	for (i = 0; i < TMD_MAX; i++) {
+		if (i == TMD_FOOD && pf_has(player->state.pflags, PF_NO_FOOD)) {
+			continue;
+		}
 		if (player->timed[i]) {
+
 			struct timed_grade *grade = timed_effects[i].grade;
 			while (player->timed[i] > grade->max) {
 				grade = grade->next;
