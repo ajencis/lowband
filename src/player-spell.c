@@ -910,6 +910,7 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 	int schoolbonus = 0, realmbonus = 0;
 	int skill = p->state.skills[SKILL_MAGIC];
 	int i;
+	int result, stepdown;
 	const struct magic_realm *r = p->realm;
 
 	for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
@@ -928,7 +929,13 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 
 	schoolbonus = MIN(schoolbonus, skill * 2);
 
-	return skill + schoolbonus + realmbonus - s->slevel + 1;
+	result = skill + schoolbonus + realmbonus - s->slevel + 1;
+
+	for (stepdown = 20; stepdown > result; stepdown += 20) {
+		result = (result - stepdown) * 2 / 3 + stepdown;
+	}
+
+	return result;
 }
 
 void gener_spell_learn(struct player *p, const struct player_spell *s, bool verbose)

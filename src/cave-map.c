@@ -96,8 +96,9 @@ void map_info(struct loc grid, struct grid_data *g)
 
 	/* Use real feature (remove later) */
 	g->f_idx = square(cave, grid)->feat;
-	if (f_info[g->f_idx].mimic)
+	if (f_info[g->f_idx].mimic) {
 		g->f_idx = (uint32_t) (f_info[g->f_idx].mimic - f_info);
+	}
 
 	g->in_view = (square_isseen(cave, grid)) ? true : false;
 	g->is_player = (square(cave, grid)->mon < 0) ? true : false;
@@ -130,8 +131,8 @@ void map_info(struct loc grid, struct grid_data *g)
 
 	/* Use known feature */
 	g->f_idx = square(player->cave, grid)->feat;
-	if (f_info[g->f_idx].mimic)
-		g->f_idx = (uint32_t) (f_info[g->f_idx].mimic - f_info);
+	//if (f_info[g->f_idx].mimic)
+	//	g->f_idx = (uint32_t) (f_info[g->f_idx].mimic - f_info);
 
 	/* There is a known trap in this square */
 	if (square_trap(player->cave, grid) && square_isknown(cave, grid)) {
@@ -178,18 +179,20 @@ void map_info(struct loc grid, struct grid_data *g)
 
 	/* Rare random hallucination on non-outer walls */
 	if (g->hallucinate && g->m_idx == 0 && g->first_kind == 0) {
-		if (one_in_(128) && (int) g->f_idx != FEAT_PERM)
+		if (one_in_(128) && (int) g->f_idx != FEAT_PERM) {
 			g->m_idx = 1;
-		else if (one_in_(128) && (int) g->f_idx != FEAT_PERM)
+		} else if (one_in_(128) && (int) g->f_idx != FEAT_PERM) {
 			/* if hallucinating, we just need first_kind to not be NULL */
 			g->first_kind = k_info;
-		else
+		} else {
 			g->hallucinate = false;
+		}
 	}
 
 	assert((int) g->f_idx < FEAT_MAX);
-	if (!g->hallucinate)
+	if (!g->hallucinate) {
 		assert((int)g->m_idx < cave->mon_max);
+	}
 	/* All other g fields are 'flags', mostly booleans. */
 }
 
@@ -341,8 +344,9 @@ static void cave_unlight(struct point_set *ps)
 		}
 
 		/* Hack -- Forget "boring" grids */
-		if (square_isfloor(cave, grid))
+		if (square_isfloor(cave, grid)) {
 			square_forget(cave, grid);
+		}
 	}
 
 	/* Process the grids */

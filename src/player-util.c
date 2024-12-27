@@ -2672,20 +2672,39 @@ void search(struct player *p)
 
 	/* Various conditions mean no searching */
 	if (p->timed[TMD_BLIND] || no_light(p) ||
-		p->timed[TMD_CONFUSED] || p->timed[TMD_IMAGE])
+			p->timed[TMD_CONFUSED] || p->timed[TMD_IMAGE]) {
 		return;
+	}
 
 	/* Search the nearby grids, which are always in bounds */
 	for (grid.y = (p->grid.y - 1); grid.y <= (p->grid.y + 1); grid.y++) {
 		for (grid.x = (p->grid.x - 1); grid.x <= (p->grid.x + 1); grid.x++) {
 			struct object *obj;
+			struct feature *featr = square_feat(cave, grid);
+
+			// L: reveal anything hidden
+			if (tf_has(featr->flags, TF_HIDDEN) && square_ismemorybad(cave, grid)) {
+				square_true_memorize(cave, grid);
+				msg("You have discovered %s%s",
+						square_apparent_look_prefix(p->cave, grid),
+						square_apparent_name(p->cave, grid));
+			}
 
 			/* Secret doors */
-			if (square_issecretdoor(cave, grid)) {
+			/*if (square_issecretdoor(cave, grid)) {
 				msg("You have found a secret door.");
-				place_closed_door(cave, grid);
+				square_true_memorize(cave, grid);
+				//place_closed_door(cave, grid);
 				disturb(p);
 			}
+
+			message_add(format("feat is %i, known_feat is %i", square(cave, grid)->feat, square(p->cave, grid)->feat), MSG_GENERIC);
+
+			if (square(cave, grid)->feat == FEAT_ILLUSORY_WALL && square_ismemorybad(cave, grid)) {
+				msg("You have discovered an illusory wall.");
+				square_true_memorize(cave, grid);
+				disturb(p);
+			}*/
 
 			/* Traps on chests */
 			for (obj = square_object(cave, grid); obj; obj = obj->next) {

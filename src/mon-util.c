@@ -521,8 +521,9 @@ void update_monsters(bool full)
 		struct monster *mon = cave_monster(cave, i);
 
 		/* Update the monster if alive */
-		if (mon->race)
+		if (mon->race) {
 			update_mon(mon, cave, full);
+		}
 	}
 }
 
@@ -531,6 +532,30 @@ void update_monsters(bool full)
  * ------------------------------------------------------------------------
  * Monster (and player) actual movement
  * ------------------------------------------------------------------------ */
+static void mon_leaving(struct loc grid1, struct loc grid2)
+{
+	//struct monster *mon = cave_monster(cave, square(cave, grid2)->mon);
+	//bool reveal, destroy;
+	//struct loc target;
+
+	/*if (!mon_will_attack_player(mon, player)) {
+		for (target.x = grid2.x - 1; target.x <= grid2.x + 1; ++target.x) {
+			for (target.y = grid2.y - 1; target.y <= grid2.y + 1; ++target.y) {
+				struct square *sq = square(cave, target);
+				if (!square_in_bounds_fully(cave, target)) continue;
+				if (sq->feat == FEAT_ILLUSORY_WALL) {
+					square_true_memorize(cave, target);
+				}
+			}
+		}
+	}*/
+
+	if (square(cave, grid2)->feat == FEAT_ILLUSORY_WALL) {
+		square_force_floor(cave, grid2);
+		player->upkeep->update |= PU_UPDATE_VIEW;
+	}
+}
+
 /**
  * Called when the player has just left grid1 for grid2.
  */
@@ -542,6 +567,10 @@ static void player_leaving(struct loc grid1, struct loc grid2)
 	if (!loc_is_zero(decoy) &&
 		distance(decoy, grid2) > z_info->max_sight) {
 		square_destroy_decoy(cave, decoy);
+	}
+
+	if (square(cave, grid2)->feat == FEAT_ILLUSORY_WALL) {
+		square_force_floor(cave, grid2);
 	}
 
 	/* Delayed traps trigger when the player leaves. */
@@ -623,8 +652,8 @@ void monster_swap(struct loc grid1, struct loc grid2)
 			 * the camouflaged monster before or after the swap.
 			 */
 			if (monster_is_in_view(mon) ||
-				(m2 >= 0 && los(cave, pgrid, grid2)) ||
-				(m2 < 0 && los(cave, grid1, grid2))) {
+					(m2 >= 0 && los(cave, pgrid, grid2)) ||
+					(m2 < 0 && los(cave, grid1, grid2))) {
 				become_aware(cave, mon);
 			} else if (monster_is_mimicking(mon)) {
 				move_mimicked_object(cave, mon, grid1, grid2);
@@ -633,10 +662,12 @@ void monster_swap(struct loc grid1, struct loc grid2)
 		}
 		mon->grid = grid2;
 		update_mon(mon, cave, true);
+		mon_leaving(grid1, mon->grid);
 
 		/* Affect light? */
-		if (mon->race->light != 0)
+		if (mon->race->light != 0) {
 			player->upkeep->update |= PU_UPDATE_VIEW | PU_MONSTERS;
+		}
 
 		/* Redraw monster list */
 		player->upkeep->redraw |= (PR_MONLIST);
@@ -670,8 +701,8 @@ void monster_swap(struct loc grid1, struct loc grid2)
 			 * the camouflaged monster before or after the swap.
 			 */
 			if (monster_is_in_view(mon) ||
-				(m1 >= 0 && los(cave, pgrid, grid1)) ||
-				(m1 < 0 && los(cave, grid2, grid1))) {
+					(m1 >= 0 && los(cave, pgrid, grid1)) ||
+					(m1 < 0 && los(cave, grid2, grid1))) {
 				become_aware(cave, mon);
 			} else if (monster_is_mimicking(mon)) {
 				move_mimicked_object(cave, mon, grid2, grid1);
@@ -680,10 +711,12 @@ void monster_swap(struct loc grid1, struct loc grid2)
 		}
 		mon->grid = grid1;
 		update_mon(mon, cave, true);
+		mon_leaving(grid2, mon->grid);
 
 		/* Affect light? */
-		if (mon->race->light != 0)
+		if (mon->race->light != 0) {
 			player->upkeep->update |= PU_UPDATE_VIEW | PU_MONSTERS;
+		}
 
 		/* Redraw monster list */
 		player->upkeep->redraw |= (PR_MONLIST);

@@ -1210,7 +1210,7 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 
 	/* Offset to current position to move toward */
 	struct loc grid = loc(0, 0);
- 
+
 	/* Monsters will run up to z_info->flee_range grids out of sight */
 	int flee_range = z_info->max_sight + z_info->flee_range;
 
@@ -1372,7 +1372,7 @@ bool multiply_monster(const struct monster *mon)
 {
 	struct loc grid;
 	bool result;
-	struct monster_group_info info = { 0, 0 };
+	struct monster_group_info info = { mon->group_info[PRIMARY_GROUP].index, MON_GROUP_MEMBER };
 
 	/*
 	 * Pick an empty location except for uniques:  they can never
@@ -1384,8 +1384,9 @@ bool multiply_monster(const struct monster *mon)
 	if (!monster_is_shape_unique(mon) && scatter_ext(cave, &grid,
 			1, mon->grid, 1, true, square_isempty) > 0) {
 		/* Create a new monster (awake, no groups) */
-		result = place_new_monster(cave, grid, mon->race, false, false,
-			info, ORIGIN_DROP_BREED);
+		// L: now with groups!
+		result = place_new_monster(cave, grid, mon->race, false, true,
+				info, ORIGIN_DROP_BREED);
 		/*
 		 * Fix so multiplying a revealed camouflaged monster creates
 		 * another revealed camouflaged monster.
@@ -1832,9 +1833,6 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 				}
 
 				/* Delete the object */
-				//plog("excising");
-				//square_excise_object(cave, new, obj);
-				//plog("done");
 				square_note_spot(cave, new);
 				square_light_spot(cave, new);
 
@@ -2114,13 +2112,15 @@ static void monster_turn(struct monster *mon)
 
 	if (did_something) {
 		/* Learn about no lack of movement */
-		if (monster_is_visible(mon))
+		if (monster_is_visible(mon)) {
 			rf_on(lore->flags, RF_NEVER_MOVE);
+		}
 
 		/* Possible disturb */
 		if (monster_is_visible(mon) && monster_is_in_view(mon) && 
-			OPT(player, disturb_near) && mon_will_attack_player(mon, player))
-			disturb(player);	
+				OPT(player, disturb_near) && mon_will_attack_player(mon, player)) {
+			disturb(player);
+		}
 	}
 
 	/* Out of options - monster is paralyzed by fear (unless attacked) */
@@ -2131,8 +2131,9 @@ static void monster_turn(struct monster *mon)
 	}
 
 	/* If we see an unaware monster do something, become aware of it */
-	if (did_something && monster_is_camouflaged(mon))
+	if (did_something && monster_is_camouflaged(mon)) {
 		become_aware(cave, mon);
+	}
 }
 
 
@@ -2147,7 +2148,7 @@ static void monster_turn(struct monster *mon)
 static bool monster_check_active(struct monster *mon)
 {
 	// is the monster resting alongside the player?
-	bool rwp = mon->faction == '@' &&
+	bool rwp = mon_will_follow_player(mon, player) &&
 			distance(mon->grid, player->grid) < 5 &&
 			player_is_resting(player);
 	
@@ -2177,7 +2178,7 @@ static bool monster_check_active(struct monster *mon)
 		mflag_off(mon->mflag, MFLAG_ACTIVE);
 	}
 
-	return mflag_has(mon->mflag, MFLAG_ACTIVE) ? true : false;
+	return mflag_has(mon->mflag, MFLAG_ACTIVE);
 }
 
 /**

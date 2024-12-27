@@ -476,3 +476,8 @@ expr:D:SPELL_POWER:+ 4 / 5
 expr:S:SPELL_POWER:+ 0
 desc:Turns you invisible.
 school:ILLUSION
+
+spell:Create Illusory Wall:27
+effect:CREATE_ILLUSORY_WALL
+desc:Creates an illusory wall, which blocks sight and sound but not scent or movement.
+school:ILLUSION

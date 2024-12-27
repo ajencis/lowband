@@ -1427,7 +1427,6 @@ static void update_maps(game_event_type type, game_event_data *data, void *user)
 			clipy = t->hgt;
 		}
 
-
 		//msg("map info");
 		/* Redraw the grid spot */
 		map_info(data->point, &g);
@@ -1452,8 +1451,9 @@ static void update_maps(game_event_type type, game_event_data *data, void *user)
 		int wid = (t == angband_term[0]) ? SCREEN_WID / 2 :
 			t->wid / (tile_width * 2);
 
-		if (panel_should_modify(t, player->grid.y - hgt, player->grid.x - wid))
+		if (panel_should_modify(t, player->grid.y - hgt, player->grid.x - wid)) {
 			return;
+		}
 	}
 
 	Term_fresh();

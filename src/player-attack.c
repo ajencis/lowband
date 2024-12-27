@@ -767,7 +767,7 @@ static void unarmed_mod_attack(struct attack_roll *aroll, const struct player *p
 	//aroll->to_hit += get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev);
 	int ddicemod = get_power_scale_state(ps, PP_UNARMED_STRIKE, 1, p->lev);
 	aroll->ddice += ddicemod;
-	aroll->dsides += get_power_scale_state(ps, PP_UNARMED_STRIKE, 50, p->lev) / (ddicemod + 0.5);
+	aroll->dsides += get_power_scale_state(ps, PP_UNARMED_STRIKE, 75, p->lev) / (ddicemod * 2 + 1);
 
 	if (aroll->accuracy_stat == STAT_NONE) aroll->accuracy_stat = STAT_DEX;
 }
@@ -1113,7 +1113,7 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 	}
 
 	int mindice = 1;
-	int minsides = MAX(mb->dice.sides, aroll->dsides) > 0 ? 1 : 0;
+	int minsides = 1;// MAX(mb->dice.sides, aroll->dsides) > 0 ? 1 : 0;
 
 	aroll->ddice = MAX(mb->dice.dice, aroll->ddice);
 	aroll->dsides = MAX(mb->dice.sides, aroll->dsides) + MIN(mb->dice.sides + 2, aroll->dsides + 2) / 3;

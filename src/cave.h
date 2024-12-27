@@ -424,6 +424,7 @@ const char *square_apparent_look_prefix(struct chunk *c, struct loc grid);
 const char *square_apparent_look_in_preposition(struct chunk *c, struct loc grid);
 
 void square_memorize(struct chunk *c, struct loc grid);
+void square_true_memorize(struct chunk *c, struct loc grid);
 void square_forget(struct chunk *c, struct loc grid);
 void square_mark(struct chunk *c, struct loc grid);
 void square_unmark(struct chunk *c, struct loc grid);

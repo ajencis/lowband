@@ -27,6 +27,7 @@ FEAT(STORE_BLACK)
 FEAT(HOME)
 FEAT(DOJO) /* L: where you train */
 FEAT(SECRET) /* secret door */
+FEAT(OPEN_SECRET) /* secret door */
 FEAT(RUBBLE) /* impassable rubble */
 FEAT(MAGMA) /* magma vein wall */
 FEAT(QUARTZ) /* quartz vein wall */
@@ -36,3 +37,4 @@ FEAT(GRANITE) /* granite wall */
 FEAT(PERM) /* permanent wall */
 FEAT(LAVA)
 FEAT(PASS_RUBBLE)
+FEAT(ILLUSORY_WALL) // L: looks like a wall, feels like air

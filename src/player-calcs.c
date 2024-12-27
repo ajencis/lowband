@@ -127,7 +127,7 @@ static int stat_scale(int index, int scaleto, bool minzero) {
 	assert(hsi != asi);
 	index = MAX(index, lsi);
 
-	int negative = ((asi - lsi) * scaleto + 49) / 50;
+	int negative = ((asi - lsi) * scaleto + 24) / 25;
 
 	if (index >= asi) return (int)(scaleto * 
 	        ((index - asi) * my_sqrt(index - asi)) /
@@ -177,7 +177,7 @@ static int adj_str_wgt(int index) {
 }
 
 int adj_str_hold(int index) {
-	return stat_scale(index, 250, true);
+	return stat_scale(index, 250, true) + 100;
 }
 
 /*static int adj_str_dig(int index) {
@@ -1148,7 +1148,7 @@ static int weight_limit(struct player_state *state)
 	i = adj_str_wgt(state->stat_ind[STAT_STR]) * 10 + 100;
 
 	/* Return the result */
-	return (i);
+	return MAX(i, 10);
 }
 
 
@@ -1375,7 +1375,7 @@ void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX])
 	}
 
 	// assume the monster gets hp equal to half its level from its class
-	class_hp = (int)(mrace->level * my_sqrt((double)mrace->level) / 10.0);
+	class_hp = (int)(mrace->level * my_cbrt((double)mrace->level) / 10.0);
 	mod = mrace->avg_hp - class_hp;
 	mod = MAX(mod, mod / 2);
 	skills[SKILL_HEALTH] += mod;
@@ -1639,8 +1639,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 			/* Apply combat bonuses */
 			state->ac += obj->ac;
-			if (!known_only || obj->known->to_a)
+			if (!known_only || obj->known->to_a) {
 				state->to_a += obj->to_a;
+			}
 			if (!slot_type_is(p, i, EQUIP_WEAPON)
 					&& !slot_type_is(p, i, EQUIP_BOW)) {
 				if (!known_only || obj->known->to_h) {
@@ -1805,6 +1806,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	unarmoured_speed_bonus(state, armwgt);
 	unarmoured_ac_bonus(state, armwgt);
 
+
 	/* Other timed effects */
 	player_flags_timed(p, state->flags);
 
@@ -1919,18 +1921,12 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	state->expfact = MAX(50, state->expfact);
 
 	/* Modify skills */
-	//state->skills[SKILL_DISARM_PHYS] += adj_dex_dis(state->stat_ind[STAT_DEX]);
-	//state->skills[SKILL_DISARM_MAGIC] += adj_int_dis(state->stat_ind[STAT_INT]);
-	//state->skills[SKILL_DEVICE] += adj_int_dev(state->stat_ind[STAT_INT]);
-	//state->skills[SKILL_SAVE] += adj_wis_sav(state->stat_ind[STAT_WIS]);
-	//state->skills[SKILL_DIGGING] += adj_str_dig(state->stat_ind[STAT_STR]);
-
 	if (state->skills[SKILL_DIGGING] < 1) state->skills[SKILL_DIGGING] = 1;
 	if (state->skills[SKILL_STEALTH] > 150) state->skills[SKILL_STEALTH] = 150;
 	if (state->skills[SKILL_STEALTH] < 0) state->skills[SKILL_STEALTH] = 0;
 	if (state->skills[SKILL_HEALTH] < 3) state->skills[SKILL_HEALTH] = 3;
 	if (state->skills[SKILL_MAGIC] < 0) state->skills[SKILL_MAGIC] = 0;
-	hold = adj_str_hold(state->stat_ind[STAT_STR]) + 100;
+	hold = adj_str_hold(state->stat_ind[STAT_STR]);
 
 	/* Analyze launcher */
 	state->heavy_shoot = false;

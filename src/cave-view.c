@@ -121,10 +121,12 @@ bool los(struct chunk *c, struct loc grid1, struct loc grid2)
 		/* South -- check for walls */
 		if (dy > 0) {
 			for (ty = grid1.y + 1; ty < grid2.y; ty++)
-				if (!square_isprojectable(c, loc(grid1.x, ty))) return (false);
+				//if (!square_isprojectable(c, loc(grid1.x, ty))) return (false);
+				if (!square_allowslos(c, loc(grid1.x, ty))) return (false);
 		} else { /* North -- check for walls */
 			for (ty = grid1.y - 1; ty > grid2.y; ty--)
-				if (!square_isprojectable(c, loc(grid1.x, ty))) return (false);
+				//if (!square_isprojectable(c, loc(grid1.x, ty))) return (false);
+				if (!square_allowslos(c, loc(grid1.x, ty))) return (false);
 		}
 
 		/* Assume los */
@@ -136,10 +138,12 @@ bool los(struct chunk *c, struct loc grid1, struct loc grid2)
 		/* East -- check for walls */
 		if (dx > 0) {
 			for (tx = grid1.x + 1; tx < grid2.x; tx++)
-				if (!square_isprojectable(c, loc(tx, grid1.y))) return (false);
+				//if (!square_isprojectable(c, loc(tx, grid1.y))) return (false);
+				if (!square_allowslos(c, loc(tx, grid1.y))) return (false);
 		} else { /* West -- check for walls */
 			for (tx = grid1.x - 1; tx > grid2.x; tx--)
-				if (!square_isprojectable(c, loc(tx, grid1.y))) return (false);
+				//if (!square_isprojectable(c, loc(tx, grid1.y))) return (false);
+				if (!square_allowslos(c, loc(tx, grid1.y))) return (false);
 		}
 
 		/* Assume los */
@@ -153,10 +157,12 @@ bool los(struct chunk *c, struct loc grid1, struct loc grid2)
 
 	/* Vertical and horizontal "knights" */
 	if ((ax == 1) && (ay == 2) &&
-		square_isprojectable(c, loc(grid1.x, grid1.y + sy))) {
+			//square_isprojectable(c, loc(grid1.x, grid1.y + sy))) {
+			square_allowslos(c, loc(grid1.x, grid1.y + sy))) {
 		return (true);
 	} else if ((ay == 1) && (ax == 2) &&
-			   square_isprojectable(c, loc(grid1.x + sx, grid1.y))) {
+			   //square_isprojectable(c, loc(grid1.x + sx, grid1.y))) {
+			   square_allowslos(c, loc(grid1.x + sx, grid1.y))) {
 		return (true);
 	}
 
@@ -186,7 +192,8 @@ bool los(struct chunk *c, struct loc grid1, struct loc grid2)
 		/* Note (below) the case (qy == f2), where */
 		/* the LOS exactly meets the corner of a tile. */
 		while (grid2.x - tx) {
-			if (!square_isprojectable(c, loc(tx, ty)))
+			//if (!square_isprojectable(c, loc(tx, ty)))
+			if (!square_allowslos(c, loc(tx, ty)))
 				return (false);
 
 			qy += m;
@@ -195,7 +202,8 @@ bool los(struct chunk *c, struct loc grid1, struct loc grid2)
 				tx += sx;
 			} else if (qy > f2) {
 				ty += sy;
-				if (!square_isprojectable(c, loc(tx, ty)))
+				//if (!square_isprojectable(c, loc(tx, ty)))
+				if (!square_allowslos(c, loc(tx, ty)))
 					return (false);
 				qy -= f1;
 				tx += sx;
@@ -222,7 +230,8 @@ bool los(struct chunk *c, struct loc grid1, struct loc grid2)
 		/* Note (below) the case (qx == f2), where */
 		/* the LOS exactly meets the corner of a tile. */
 		while (grid2.y - ty) {
-			if (!square_isprojectable(c, loc(tx, ty)))
+			//if (!square_isprojectable(c, loc(tx, ty)))
+			if (!square_allowslos(c, loc(tx, ty)))
 				return (false);
 
 			qx += m;
@@ -231,7 +240,8 @@ bool los(struct chunk *c, struct loc grid1, struct loc grid2)
 				ty += sy;
 			} else if (qx > f2) {
 				tx += sx;
-				if (!square_isprojectable(c, loc(tx, ty)))
+				//if (!square_isprojectable(c, loc(tx, ty)))
+				if (!square_allowslos(c, loc(tx, ty)))
 					return (false);
 				qx -= f1;
 				ty += sy;

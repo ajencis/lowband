@@ -304,7 +304,8 @@ bool square_isrubble(struct chunk *c, struct loc grid)
 bool square_issecretdoor(struct chunk *c, struct loc grid)
 {
     return (tf_has(f_info[square(c, grid)->feat].flags, TF_DOOR_ANY) &&
-			tf_has(f_info[square(c, grid)->feat].flags, TF_ROCK));
+			f_info[square(c, grid)->feat].mimic);
+			//tf_has(f_info[square(c, grid)->feat].flags, TF_ROCK));
 }
 
 /**
@@ -407,7 +408,7 @@ bool square_isknown(struct chunk *c, struct loc grid) {
  */
 bool square_ismemorybad(struct chunk *c, struct loc grid) {
 	return !square_isknown(c, grid)
-		|| square(player->cave, grid)->feat != square(cave, grid)->feat;
+			|| square(player->cave, grid)->feat != square(c, grid)->feat;
 }
 
 bool square_hasunknownitem(struct chunk *c, struct loc grid)
@@ -644,7 +645,7 @@ bool square_canputitem(struct chunk *c, struct loc grid) {
  */
 bool square_isdiggable(struct chunk *c, struct loc grid) {
 	return (square_ismineral(c, grid) ||
-			square_issecretdoor(c, grid) || 
+			//square_issecretdoor(c, grid) || 
 			square_isrubble(c, grid));
 }
 
@@ -1388,13 +1389,21 @@ void square_open_door(struct chunk *c, struct loc grid)
 	assert(square_iscloseddoor(c, grid) || square_issecretdoor(c, grid));
 	assert(lock);
 	square_remove_all_traps_of_type(c, grid, lock->tidx);
-	square_set_feat(c, grid, FEAT_OPEN);
+	if (square_issecretdoor(c, grid)) {
+		square_set_feat(c, grid, FEAT_OPEN_SECRET);
+	} else {
+		square_set_feat(c, grid, FEAT_OPEN);
+	}
 }
 
 void square_close_door(struct chunk *c, struct loc grid)
 {
 	assert(square_isopendoor(c, grid));
-	square_set_feat(c, grid, FEAT_CLOSED);
+	if (square(c, grid)->feat == FEAT_OPEN_SECRET) {
+		square_set_feat(c, grid, FEAT_SECRET);
+	} else {
+		square_set_feat(c, grid, FEAT_CLOSED);
+	}
 }
 
 void square_smash_door(struct chunk *c, struct loc grid)
@@ -1554,19 +1563,27 @@ int square_digging(struct chunk *c, struct loc grid) {
 	return 0;
 }
 
+static const struct feature *feat_apparent(struct chunk *c, struct loc grid)
+{
+	return &f_info[square(c, grid)->feat];
+}
+
 /*
  * Return the name for the terrain in a grid.  Accounts for the fact that
  * some terrain mimics another terrain.
+ * L: now handled by setting known terrain appropriately
  *
  * \param c Is the chunk to use.  Usually it is the player's version of the
  * chunk.
  * \param grid Is the grid to use.
  */
 const char *square_apparent_name(struct chunk *c, struct loc grid) {
-	int actual = square(c, grid)->feat;
+	return feat_apparent(c, grid)->name;
+
+	/*int actual = square(c, grid)->feat;
 	const struct feature *fp = f_info[actual].mimic ?
 		f_info[actual].mimic : &f_info[actual];
-	return fp->name;
+	return fp->name;*/
 }
 
 /*
@@ -1580,11 +1597,14 @@ const char *square_apparent_name(struct chunk *c, struct loc grid) {
  * The prefix is usually an indefinite article.  It may be an empty string.
  */
 const char *square_apparent_look_prefix(struct chunk *c, struct loc grid) {
-	int actual = square(c, grid)->feat;
+	const char *name = square_apparent_name(c, grid);
+	const struct feature *fp = feat_apparent(c, grid);
+	return fp->look_prefix ? fp->look_prefix : (is_a_vowel(name[0]) ? "an " : "a ");
+	/*int actual = square(c, grid)->feat;
 	const struct feature *fp = f_info[actual].mimic ?
 		f_info[actual].mimic : &f_info[actual];
 	return (fp->look_prefix) ? fp->look_prefix :
-		(is_a_vowel(fp->name[0]) ? "an " : "a ");
+		(is_a_vowel(fp->name[0]) ? "an " : "a ");*/
 }
 
 /*
@@ -1597,14 +1617,26 @@ const char *square_apparent_look_prefix(struct chunk *c, struct loc grid) {
  * \param grid Is the grid to use.
  */
 const char *square_apparent_look_in_preposition(struct chunk *c, struct loc grid) {
-	int actual = square(c, grid)->feat;
+	const struct feature *fp = feat_apparent(c, grid);
+	return fp->look_in_preposition ? fp->look_in_preposition : "on ";
+	/*int actual = square(c, grid)->feat;
 	const struct feature *fp = f_info[actual].mimic ?
 		f_info[actual].mimic : &f_info[actual];
-	return (fp->look_in_preposition) ?  fp->look_in_preposition : "on ";
+	return (fp->look_in_preposition) ?  fp->look_in_preposition : "on ";*/
 }
 
 /* Memorize the terrain */
 void square_memorize(struct chunk *c, struct loc grid) {
+	uint8_t feat = square(c, grid)->feat;
+	if (c != cave) return;
+	// L: if we know the true feat don't override that
+	if (feat == square(player->cave, grid)->feat) return;
+	square_set_known_feat(c, grid, f_info[feat].mimic ? f_info[feat].mimic->fidx : f_info[feat].fidx);
+
+	//square_set_known_feat(c, grid, square(c, grid)->feat);
+}
+
+void square_true_memorize(struct chunk *c, struct loc grid) {
 	if (c != cave) return;
 	square_set_known_feat(c, grid, square(c, grid)->feat);
 }

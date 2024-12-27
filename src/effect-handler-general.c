@@ -3758,9 +3758,10 @@ bool effect_handler_CREATE_WALL(effect_handler_context_t *context)
 	int feat;
 	assert(context->origin.what == SRC_PLAYER);
 
-	target = loc_sum(player->grid, ddgrid[context->dir]);
 	if (context->dir == DIR_TARGET && target_okay()) {
 		target_get(&target);
+	} else {
+		target = loc_sum(player->grid, ddgrid[context->dir]);
 	}
 
 	if (!square_in_bounds_fully(cave, target)) {
@@ -3781,6 +3782,43 @@ bool effect_handler_CREATE_WALL(effect_handler_context_t *context)
 
 	feat = FEAT_GRANITE;
 	square_set_feat(cave, target, feat);
+
+	player->upkeep->update |= PU_UPDATE_VIEW;
+
+	return true;
+}
+
+bool effect_handler_CREATE_ILLUSORY_WALL(effect_handler_context_t *context)
+{
+	struct loc target;
+	int feat;
+	assert(context->origin.what == SRC_PLAYER);
+
+	if (context->dir == DIR_TARGET && target_okay()) {
+		target_get(&target);
+	} else {
+		target = loc_sum(player->grid, ddgrid[context->dir]);
+	}
+
+	if (!square_in_bounds_fully(cave, target)) {
+		return false;
+	}
+	if (square_monster(cave, target)) {
+		msg("There's a monster in the way!");
+		return false;
+	}
+	if (!square_changeable(cave, target)) {
+		msg("But it fails!");
+		return true;
+	}
+
+	if (square_object(cave, target)) {
+		push_object(target);
+	}
+
+	feat = FEAT_ILLUSORY_WALL;
+	square_set_feat(cave, target, feat);
+	square_true_memorize(cave, target);
 
 	player->upkeep->update |= PU_UPDATE_VIEW;
 

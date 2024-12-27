@@ -256,13 +256,22 @@ desc:You can go here to train, if you feel you are ready.
 
 code:SECRET
 name:secret door
-graphics:#:w
+graphics:+:W
 priority:10
 mimic:GRANITE
-flags:WALL | ROCK | DOOR_ANY | GRANITE | TORCH
+flags:DOOR_ANY | HIDDEN | DOOR_CLOSED | NO_FLOW
 digging:5
 confused-msg:bashes into a wall
 desc:A door that appears like a granite wall to untrained eyes.
+
+code:OPEN_SECRET
+name:open secret door
+graphics:':W
+priority:15
+flags:LOS | PROJECT | PASSABLE | DOOR_ANY | INTERESTING | CLOSABLE | EASY
+look-in-preposition:in
+desc:A door that is already open.  Player, monster, spell and missile can pass
+desc: through as long as it stays open.
 
 code:RUBBLE
 name:pile of rubble
@@ -363,3 +372,11 @@ desc:Ends LOS, stops missiles, bolts, and beams, and reduces the radius of ball
 desc: spells.  May dissolve or be tunnelled to normal floor, and can be walked
 desc: through by the player and monsters.
 
+code:ILLUSORY_WALL
+name:illusory wall
+graphics:#:v
+priority:10
+mimic:GRANITE
+flags:PASSABLE | PROJECT | HIDDEN | NO_FLOW
+desc:A seam of hard rock - at least at first glance. Blocks sight and sound but not
+desc: smell or movement.

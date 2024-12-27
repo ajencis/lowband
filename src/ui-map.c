@@ -183,8 +183,9 @@ void grid_data_as_text(struct grid_data *g, int *ap, wchar_t *cp, int *tap,
 	bool skip_objects = false;
 
 	/* Get the colour for ASCII */
-	if (use_graphics == GRAPHICS_NONE)
+	if (use_graphics == GRAPHICS_NONE) {
 		grid_get_attr(g, &a);
+	}
 
 	/* Save the terrain info for the transparency effects */
 	(*tap) = a;

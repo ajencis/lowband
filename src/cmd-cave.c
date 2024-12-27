@@ -221,16 +221,16 @@ static bool do_cmd_open_test(struct player *p, struct loc grid)
 	}
 
 	/* Must be a closed door */
-	if (!square_iscloseddoor(cave, grid)) {
+	if (!square_iscloseddoor(p->cave, grid)) {
 		msgt(MSG_NOTHING_TO_OPEN, "You see nothing there to open.");
-		if (square_iscloseddoor(p->cave, grid)) {
+		/*if (square_iscloseddoor(p->cave, grid)) {
 			square_forget(cave, grid);
 			square_light_spot(cave, grid);
-		}
+		}*/
 		return false;
 	}
 
-	return (true);
+	return true;
 }
 
 
@@ -444,7 +444,7 @@ static bool do_cmd_close_aux(struct loc grid)
 	} else {
 		/* Close door */
 		square_close_door(cave, grid);
-		square_memorize(cave, grid);
+		square_true_memorize(cave, grid);
 		square_light_spot(cave, grid);
 		player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
 		sound(MSG_SHUTDOOR);
@@ -1036,13 +1036,13 @@ static void do_cmd_alter_aux(int dir)
 	if (square(cave, grid)->mon > 0) {
 		/* Attack monster */
 		py_attack(player, grid);
-	} else if (square_isdiggable(cave, grid)) {
+	} else if (square_isdiggable(player->cave, grid)) {
 		/* Tunnel through walls and rubble */
 		more = do_cmd_tunnel_aux(grid);
-	} else if (square_iscloseddoor(cave, grid)) {
+	} else if (square_iscloseddoor(player->cave, grid)) {
 		/* Open closed doors */
 		more = do_cmd_open_aux(grid);
-	} else if (square_isdisarmabletrap(cave, grid)) {
+	} else if (square_isdisarmabletrap(player->cave, grid)) {
 		/* Disarm traps */
 		more = do_cmd_disarm_aux(grid);
 	} else if (o_chest_trapped) {
@@ -1051,7 +1051,7 @@ static void do_cmd_alter_aux(int dir)
     	} else if (o_chest_closed) {
         	/* Open chest */
         	more = do_cmd_open_chest(grid, o_chest_closed);
-	} else if (square_isopendoor(cave, grid)) {
+	} else if (square_isopendoor(player->cave, grid)) {
 		/* Close door */
         	more = do_cmd_close_aux(grid);
 	} else {
