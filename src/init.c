@@ -2646,6 +2646,9 @@ static enum parser_error parse_p_race_name(struct parser *p) {
 		memcpy(r, or, sizeof(*or));
 	}
 
+	// L: no default player flags though
+	pf_wipe(r->pflags);
+
 	r->next = h;
 	r->name = string_make(parser_getstr(p, "name"));
 	/* Default body is humanoid */

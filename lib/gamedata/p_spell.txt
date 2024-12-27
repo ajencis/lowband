@@ -455,7 +455,7 @@ school:NATURE
 spell:Summon Spiders:25:7
 effect:SUMMON:SPIDER
 dice:1d$N
-expr:N:SPELL_POWER:+ 4 / 5
+expr:N:SPELL_POWER:+ 3 / 4
 desc:Summons spiders to aid you.
 school:SUMMONING
 school:NATURE

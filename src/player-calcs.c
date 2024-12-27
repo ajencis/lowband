@@ -1513,7 +1513,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* L: get powers */
 	for (i = 0; i < PP_MAX; i++) {
-		int scale = player_class_power(p, i) + p->race->r_powers[i];
+		int scale = player_class_power(p, i) + player_race_power(p, i);
 		int minlev = 5 - (scale + 5) / 7;
 		int efflev = minlev < 0 ? MAX((p->lev + 1) / 2 - minlev    , p->lev) :
 								  MIN((p->lev + 1) * 2 - minlev * 2, p->lev);

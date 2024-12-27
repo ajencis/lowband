@@ -931,7 +931,7 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 
 	result = skill + schoolbonus + realmbonus - s->slevel + 1;
 
-	for (stepdown = 20; stepdown > result; stepdown += 20) {
+	for (stepdown = 20; result > stepdown; stepdown += 20) {
 		result = (result - stepdown) * 2 / 3 + stepdown;
 	}
 

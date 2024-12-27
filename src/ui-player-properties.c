@@ -155,7 +155,7 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 			cbase = 0;
 			cxtra = player_class_power(player, choices[oid].index);
 			rbase = monster_powers[choices[oid].index];
-			rxtra = player->race->r_powers[choices[oid].index];
+			rxtra = player_race_power(player, choices[oid].index);
 			tome = player->extra_powers[choices[oid].index] / 2;
 			stat = 0;
 		}

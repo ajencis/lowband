@@ -632,6 +632,17 @@ int player_class_power(struct player *p, int power)
 	int base = p->class->c_powers[power];
 	// extra-learning makes class reflect learned powers
 	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
+		base = MAX(base, p->extra_powers[power]);
+	}
+	return base;
+}
+
+int player_race_power(struct player *p, int power)
+{
+	assert(power >= 0 && power < PP_MAX);
+	int base = p->race->r_powers[power];
+	// extra-learning makes race reflect learned powers
+	if (pf_has(p->race->pflags, PF_EXTRA_LEARNING)) {
 		base = MAX(base, p->extra_powers[power] / 2);
 	}
 	return base;
@@ -1289,11 +1300,13 @@ void player_fix_scramble(struct player *p)
 void player_regen_hp(struct player *p)
 {
 	int32_t hp_gain;
-	int percent = 0;/* max 32k -> 50% of mhp; more accurately "pertwobytes" */
+	int percent = 0; // max 32k -> 50% of mhp; more accurately "pertwobytes"
 	int fed_pct, old_chp = p->chp;
 
 	/* Default regeneration */
-	if (p->timed[TMD_FOOD] >= PY_FOOD_WEAK) {
+	if (p->timed[TMD_FOOD] >= PY_FOOD_FULL) {
+		percent = PY_REGEN_FULL;
+	} else if (p->timed[TMD_FOOD] >= PY_FOOD_WEAK) {
 		percent = PY_REGEN_NORMAL;
 	} else if (p->timed[TMD_FOOD] >= PY_FOOD_FAINT) {
 		percent = PY_REGEN_WEAK;
@@ -1302,20 +1315,22 @@ void player_regen_hp(struct player *p)
 	}
 
 	// L: regeneration is now much more food-based
-	fed_pct = p->timed[TMD_FOOD] / z_info->food_value;
-	if (fed_pct > 100) fed_pct = fed_pct * 2 - 100;
-	percent *= fed_pct;
-	percent /= 100;
+	fed_pct = p->timed[TMD_FOOD] / z_info->food_value - 100;
+	if (fed_pct > 0) fed_pct *= 2;
+	percent = MAX(percent + fed_pct, 0);
 
 	/* Various things speed up regeneration */
-	if (player_of_has(p, OF_REGEN) || p->timed[TMD_REGEN])
+	if (player_of_has(p, OF_REGEN) || p->timed[TMD_REGEN]) {
 		percent *= 3;
-	if (player_resting_can_regenerate(p))
+	}
+	if (player_resting_can_regenerate(p)) {
 		percent *= 2;
+	}
 
 	/* Some things slow it down */
-	if (player_of_has(p, OF_IMPAIR_HP))
+	if (player_of_has(p, OF_IMPAIR_HP)) {
 		percent /= 2;
+	}
 
 	/* Various things interfere with physical healing */
 	if (p->timed[TMD_PARALYZED]) percent = 0;
@@ -1324,7 +1339,7 @@ void player_regen_hp(struct player *p)
 	if (p->timed[TMD_CUT]) percent = 0;
 
 	/* Extract the new hitpoints */
-	hp_gain = (int32_t)(p->mhp * percent) + PY_REGEN_HPBASE;
+	hp_gain = p->mhp * percent + PY_REGEN_HPBASE;
 	player_adjust_hp_precise(p, hp_gain);
 
 	/* Notice changes */

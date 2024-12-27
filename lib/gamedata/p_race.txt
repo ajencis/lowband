@@ -85,6 +85,7 @@ history:1
 age:14:6
 height:69:10
 weight:165:35
+player-flags:EXTRA_LEARNING
 body:Humanoid
 
 name:Half-Elf

@@ -24,10 +24,11 @@
 #include "player.h"
 
 /* Player regeneration constants */
+#define PY_REGEN_FULL		395		/* L: regen factor *2^16 when overfull */
 #define PY_REGEN_NORMAL		197		/* Regen factor*2^16 when full */
 #define PY_REGEN_WEAK		98		/* Regen factor*2^16 when weak */
 #define PY_REGEN_FAINT		33		/* Regen factor*2^16 when fainting */
-#define PY_REGEN_HPBASE		1442	/* Min amount hp regen*2^16 */
+#define PY_REGEN_HPBASE		14		/* Min amount hp regen*2^16 */
 #define PY_REGEN_MNBASE		524		/* Min amount mana regen*2^16 */
 
 /* Player over-exertion */
@@ -73,6 +74,7 @@ bool obj_can_learn_extra_from(const struct object *obj);
 bool learn_extra(struct player *p, int index);
 bool learn_realm(struct player *p, const struct magic_realm *realm);
 int player_class_power(struct player *p, int power);
+int player_race_power(struct player *p, int power);
 int player_class_x_skill(struct player *p, int skill);
 int player_class_c_skill(struct player *p, int skill);
 void player_race_r_skill(const struct player_race *r, bool evolved, int skills[SKILL_MAX]);

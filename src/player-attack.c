@@ -767,9 +767,9 @@ static void unarmed_mod_attack(struct attack_roll *aroll, const struct player *p
 	//aroll->to_hit += get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev);
 	int ddicemod = get_power_scale_state(ps, PP_UNARMED_STRIKE, 1, p->lev);
 	aroll->ddice += ddicemod;
-	aroll->dsides += get_power_scale_state(ps, PP_UNARMED_STRIKE, 75, p->lev) / (ddicemod * 2 + 1);
+	aroll->dsides += get_power_scale_state(ps, PP_UNARMED_STRIKE, 30 / (ddicemod * 2 + 1), p->lev);
 
-	if (aroll->accuracy_stat == STAT_NONE) aroll->accuracy_stat = STAT_DEX;
+	if (aroll->accuracy_stat == STAT_NONE && ps->powers[PP_UNARMED_STRIKE] > 15) aroll->accuracy_stat = STAT_DEX;
 }
 
 static void unarmed_get_punch(struct attack_roll *aroll, const struct player *p, const struct player_state *ps)
@@ -795,8 +795,8 @@ static void unarmed_get_kick(struct attack_roll *aroll, const struct player *p, 
 {
 	aroll->ddice = 1;
 	aroll->dsides = get_power_scale_state(ps, PP_UNARMED_STRIKE, 15, p->lev);
-	aroll->to_hit = get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev) - 25;
-	aroll->to_hit = MIN(aroll->to_hit, -5);
+	aroll->to_hit = get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev) - 15;
+	aroll->to_hit = MIN(aroll->to_hit, 0);
 
 	aroll->mtimed[MON_TMD_SLOW] = get_power_scale_state(ps, PP_UNARMED_STRIKE, 100, p->lev);
 
@@ -928,7 +928,7 @@ bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct o
 		aroll->to_dam = (td + 1) / 2;
 		aroll->to_hit = object_to_hit(obj);
 		aroll->message = "hit";
-		aroll->accuracy_stat = -1;
+		aroll->accuracy_stat = STAT_NONE;
 		aroll->damage_stat = STAT_STR;
 		aroll->obj = obj;
 		aroll->proj_type = obj->kind->proj_type;
@@ -962,7 +962,7 @@ struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_sta
 	aroll.dsides = object_to_dam(shooter);
 	
 	aroll.message = "hit";
-	aroll.accuracy_stat = -1;
+	aroll.accuracy_stat = STAT_NONE;
 	aroll.damage_stat = STAT_DEX;
 	aroll.attack_skill = SKILL_TO_HIT_BOW;
 
@@ -970,7 +970,7 @@ struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_sta
 	aroll.to_hit += ps->to_h;
 	aroll.dsides += player_damage_bonus(ps);
 	
-	if (aroll.accuracy_stat != -1) {
+	if (aroll.accuracy_stat != STAT_NONE) {
 		aroll.to_hit += adj_dex_th(ps->stat_ind[aroll.accuracy_stat]);
 	}
 	aroll.dsides += adj_str_td(ps->stat_ind[aroll.damage_stat]);
@@ -1132,7 +1132,7 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 			aroll->mtimed[j] += 50 + mr->level;
 		}
 	}
-	aroll->accuracy_stat = -1;
+	aroll->accuracy_stat = STAT_NONE;
 	aroll->damage_stat = mon_blow_dam_stat(mb, ps);
 
 	aroll->to_hit += ps->to_h;
