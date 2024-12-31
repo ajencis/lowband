@@ -34,6 +34,9 @@
 #include "project.h"
 #include "target.h"
 
+#define NO_FAIL_LEVEL 25 // caster level for which spells get no fail
+#define NO_MANA_LEVEL 60 // caster level for which spells are free
+
 const struct player_spell *ref_spell = NULL;
 
 /**
@@ -931,8 +934,8 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 
 	result = skill + schoolbonus + realmbonus - s->slevel + 1;
 
-	for (stepdown = 20; result > stepdown; stepdown += 20) {
-		result = (result - stepdown) * 2 / 3 + stepdown;
+	for (stepdown = 20; result > stepdown; stepdown += 10) {
+		result = (result - stepdown) / 2 + stepdown;
 	}
 
 	return result;
@@ -965,19 +968,23 @@ struct player_spell *player_spell_lookup(int index) {
 int player_spell_mana(const struct player_spell *ps) {
 	int base = ps->smana;
 	int power = gener_spell_power(player, ps);
+	int result;
+	assert(NO_MANA_LEVEL > NO_FAIL_LEVEL);
 
-	int result = base - (base + 10) * power / 500;
+	result = (NO_MANA_LEVEL - power) * base / (NO_MANA_LEVEL - NO_FAIL_LEVEL);
 
-	return MAX(0, result);
+	return MAX(0, MIN(base, result));
 }
 
 int player_spell_fail(const struct player_spell *ps) {
 	int base = ps->sfail;
 	int power = gener_spell_power(player, ps);
+	int result;
+	assert(NO_FAIL_LEVEL > 0);
 
-	int result = base - (base + 25) * power / 200;
+	result = (NO_FAIL_LEVEL - power) * base / NO_FAIL_LEVEL;
 
-	return MAX(0, result);
+	return MAX(0, MIN(base, result));
 }
 
 void get_player_spell_info(int spell_index, char *p, size_t len)
@@ -1020,5 +1027,133 @@ const struct magic_realm *get_player_realm(const struct player *p)
 		realm = realm->next;
 	}
 	return realm;
+}
+
+bool can_autocast(const struct player_spell *ps)
+{
+	if (!(player->player_spell_flags[ps->sidx] & PY_SPELL_WORKED)) {
+		return false;
+	}
+
+	struct effect *ef;
+
+	for (ef = ps->effect; ef; ef = ef->next)
+	{
+		switch (ps->effect->index)
+		{
+			case EF_TIMED_INC:
+			case EF_NOURISH:
+			case EF_HEAL_HP:
+			case EF_RESTORE_STAT:
+			case EF_RESTORE_EXP:
+			case EF_CURE:
+			case EF_LIGHT_AREA:
+				return true;
+		}
+	}
+	return false;
+}
+
+static bool will_autocast(struct player_spell *ps, const struct player *p)
+{
+	struct effect *ef;
+
+	if (player_spell_mana(ps) > p->csp) {
+		return false;
+	}
+	if (player_spell_fail(ps) >= 100) {
+		return false;
+	}
+	if (!player_can_cast(p, false)) {
+		return false;
+	}
+
+	for (ef = ps->effect; ef; ef = ef->next) {
+
+		if (ef->index == EF_TIMED_INC) {
+			if (p->timed[ef->subtype] < 5) {
+				return true;
+			}
+		}
+
+		else if (ef->index == EF_NOURISH) {
+			random_value rv = { 0, 0, 0, 0 };
+			int amt, min = -1;
+
+			dice_roll(ef->dice, &rv);
+			amt = randcalc(rv, 0, AVERAGE);
+			if (ef->subtype == 3) {
+				min = (PY_FOOD_HUNGRY + amt) / 2;
+				min = MIN(min, amt - 10);
+			}
+			else if (ef->subtype == 0) {
+				min = PY_FOOD_FULL - amt - 1;
+				min = MAX(min, PY_FOOD_HUNGRY);
+			}
+
+			if (min >= p->timed[TMD_FOOD]) {
+				return true;
+			}
+		}
+
+		else if (ef->index == EF_HEAL_HP) {
+			random_value rv = { 0, 0, 0, 0 };
+			int amt;
+			int warning = (p->mhp * p->opts.hitpoint_warn / 10);
+
+			dice_roll(ef->dice, &rv);
+			amt = randcalc(rv, 0, AVERAGE);
+
+			if (p->chp + amt < p->mhp) {
+				return true;
+			}
+			if (p->chp < warning) {
+				return true;
+			}
+		}
+
+		else if (ef->index == EF_CURE) {
+			if (p->timed[ef->subtype]) {
+				return true;
+			}
+		}
+
+		else if (ef->index == EF_RESTORE_STAT) {
+			if (p->stat_max[ef->subtype] > p->stat_cur[ef->subtype]) {
+				return true;
+			}
+		}
+
+		else if (ef->index == EF_RESTORE_EXP) {
+			if (p->exp < p->max_exp) {
+				return true;
+			}
+		}
+
+		else if (ef->index == EF_LIGHT_AREA) {
+			if (!square_isglow(cave, p->grid)) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+bool autocast(const struct player *p)
+{
+	int i;
+	for (i = 0; i < z_info->spell_max; i++) {
+		struct player_spell *ps = player_spell_lookup(i);
+		if (p->player_spell_flags[i] & PY_SPELL_AUTOCAST) {
+			if (will_autocast(ps, p)) {
+				cmdq_push(CMD_CAST);
+				cmd_set_arg_choice(cmdq_peek(), "spell", i);
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 

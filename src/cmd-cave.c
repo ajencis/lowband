@@ -46,6 +46,7 @@
 #include "player-calcs.h"
 #include "player-path.h"
 #include "player-quest.h"
+#include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
@@ -1128,11 +1129,8 @@ void move_player(int dir, bool disarm)
 	bool step = false;
 
 	/* Many things can happen on movement */
-	if (m_idx > 0) {
-		if (!mon_will_attack_player(mon, player)) {
-			step = true;
-		/* Attack monsters */
-		} else if (monster_is_camouflaged(mon)) {
+	if (m_idx > 0 && mon_will_attack_player(mon, player)) {
+		if (monster_is_camouflaged(mon)) {
 			become_aware(cave, mon);
 
 			/* Camouflaged monster wakes up and becomes aware */
@@ -1247,6 +1245,12 @@ void move_player(int dir, bool disarm)
 	}
 
 	if (step) {
+		if (mon) {
+			char mdesc[80];
+			monster_desc(mdesc, sizeof mdesc, mon, MDESC_TARG);
+			msg("You push past %s.", mdesc);
+		}
+		
 		/* Move player */
 		monster_swap(player->grid, grid);
 		player_handle_post_move(player, true, false);
@@ -1684,6 +1688,8 @@ void do_cmd_pathfind(struct command *cmd)
  */
 void do_cmd_hold(struct command *cmd)
 {
+	if (autocast(player)) return;
+
 	/* Take a turn */
 	player->upkeep->energy_use = z_info->move_energy;
 

@@ -445,6 +445,9 @@ void update_mon(struct monster *mon, struct chunk *c, bool full)
 			/* Mark as visible */
 			mflag_on(mon->mflag, MFLAG_VISIBLE);
 
+			// L: mark as having ever been seen
+			mflag_on(mon->mflag, MFLAG_KNOWN);
+
 			/* Draw the monster */
 			square_light_spot(c, mon->grid);
 

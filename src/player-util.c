@@ -819,8 +819,11 @@ bool player_learn_spell_xp(struct player *p, bool initial, int xp)
 		for (ps = spells; ps; ps = ps->next) {
 			int power = gener_spell_power(p, ps);
 
+			if (ps->smana > p->msp) continue;
+
 			// learn only spells we can cast at a reasonable level
 			if (power > 5 || (initial && power > 0)) {
+				power += ps->slevel / 2;
 				bool skip = false;
 
 				// skip spells we just forgot
@@ -2475,6 +2478,8 @@ bool player_resting_can_regenerate(const struct player *p)
  */
 void player_resting_step_turn(struct player *p)
 {
+	if (autocast(p)) return;
+
 	/* Timed rest */
 	if (p->upkeep->resting > 0) {
 		/* Reduce rest count */

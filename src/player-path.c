@@ -28,6 +28,7 @@
 #include "obj-util.h"
 #include "player-calcs.h"
 #include "player-path.h"
+#include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "trap.h"
@@ -1854,7 +1855,6 @@ static bool run_test(const struct player *p)
  */
 void run_step(int dir)
 {
-	//msg("entering rs;");
 	/* Trapsafe player will treat the trap as if it isn't there */
 	bool disarm = player_is_trapsafe(player) ? false : true;
 	int i;
@@ -2034,20 +2034,23 @@ void run_step(int dir)
 		}
 	}
 
-	/* Take time */
-	player->upkeep->energy_use = energy_per_move(player);
+	if (!autocast(player)) {
 
-	/* Move the player; running straight into a trap == trying to disarm */
-	if (!wait) {
-		move_player(run_cur_dir, dir && disarm ? true : false);
-	}
+		/* Take time */
+		player->upkeep->energy_use = energy_per_move(player);
 
-	/* Decrease counter if it hasn't been cancelled */
-	/* occurs after movement so that using p->u->running as flag works */
-	if (player->upkeep->running) {
-		player->upkeep->running--;
-	} else if (!player->upkeep->steps) {
-		return;
+		/* Move the player; running straight into a trap == trying to disarm */
+		if (!wait) {
+			move_player(run_cur_dir, dir && disarm ? true : false);
+		}
+
+		/* Decrease counter if it hasn't been cancelled */
+		/* occurs after movement so that using p->u->running as flag works */
+		if (player->upkeep->running) {
+			player->upkeep->running--;
+		} else if (!player->upkeep->steps) {
+			return;
+		}
 	}
 
 	/* Prepare the next step */
@@ -2067,7 +2070,5 @@ void run_step(int dir)
 		mem_free(player->upkeep->steps);
 		player->upkeep->steps = NULL;
 	}
-
-	//msg("leaving rs;");
 }
 

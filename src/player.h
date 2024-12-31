@@ -127,6 +127,7 @@ enum {
 #define PY_SPELL_LEARNED    0x01 	/* Spell has been learned */
 #define PY_SPELL_WORKED     0x02 	/* Spell has been successfully tried */
 #define PY_SPELL_FORGOTTEN  0x04 	/* Spell has been forgotten */
+#define PY_SPELL_AUTOCAST	0x08	// L: should cast if it runs out
 
 #define BTH_PLUS_ADJ    	3 		/* Adjust BTH per plus-to-hit */
 

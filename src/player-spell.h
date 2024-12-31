@@ -63,3 +63,5 @@ void get_player_spell_info(int spell_index, char *p, size_t len);
 const struct magic_realm *get_player_realm(const struct player *p);
 struct magic_realm *realm_by_index(int index);
 
+bool can_autocast(const struct player_spell *ps);
+bool autocast(const struct player *p);

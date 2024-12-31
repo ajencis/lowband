@@ -141,7 +141,7 @@ desc:Transforms you into a lich.
 school:NECROMANCY
 
 
-spell:Envenom Monsters:10
+spell:Envenom Monsters:20
 effect:PROJECT_LOS:MON_POIS
 dice:$Dd$S
 expr:D:SPELL_POWER:+ 3 / 4
@@ -149,7 +149,7 @@ expr:S:SPELL_POWER:+ 2 / 3
 desc:Poisons all monsters in view, causing them to take damage over time.
 school:POISON
 
-spell:Poison Radiance:25
+spell:Poison Radiance:45
 effect:TIMED_INC:RAD_POIS
 dice:$Dd$S
 expr:D:SPELL_POWER:+ 4 / 5
@@ -157,10 +157,10 @@ expr:S:SPELL_POWER:+ 3 / 4
 desc:Radiates an aura that poisons all monsters in view.
 school:POISON
 
-spell:Toxic:35
+spell:Toxic:65
 effect:MON_TIMED_INC:TOXIC
 dice:$Dd$S
-expr:D:SPELL_POWER:+ 1 / 2
+expr:D:SPELL_POWER:+ 1 * 3 / 4
 expr:S:SPELL_POWER:+ 1 * 2 / 3
 desc:Toxic-poisons a monster, causing it to get more poisoned over time.
 school:POISON
@@ -298,7 +298,9 @@ school:WATER
 school:NATURE
 
 spell:Produce Water:32
-effect:NOURISH:INC_TO:33
+effect:NOURISH:INC_TO
+dice:$N
+expr:N:SPELL_POWER:/ 5 + 25
 desc:Nourishes you, somewhat.
 school:WATER
 

@@ -704,6 +704,7 @@ struct gener_spell_menu_data {
 	int n_splls;
 
 	bool browse;
+	bool autocast;
 	int (*is_valid)(const struct player *p, int spell_index);
 	bool show_description;
 
@@ -743,23 +744,45 @@ static void gener_spell_menu_display(struct menu *m, int oid, bool cursor,
 	int attr = COLOUR_WHITE;
 	size_t u8len;
 
-	if (player->player_spell_flags[spell_index] & PY_SPELL_FORGOTTEN) {
+	if (d->autocast) {
+		if (!can_autocast(spell)) {
+			comment = " cannot autocast";
+			attr = COLOUR_L_RED;
+		}
+		else if (player->player_spell_flags[spell_index] & PY_SPELL_AUTOCAST) {
+			comment = " currently autocasting";
+			attr = COLOUR_L_WHITE;
+		}
+		else {
+			get_player_spell_info(spell_index, desc, sizeof(desc));
+			comment = desc;
+			attr = COLOUR_WHITE;
+		}
+	}
+	else if (player->player_spell_flags[spell_index] & PY_SPELL_FORGOTTEN) {
 		comment = " forgotten";
 		attr = COLOUR_YELLOW;
-	} else if (player->player_spell_flags[spell_index] & PY_SPELL_LEARNED) {
-		if (player->player_spell_flags[spell_index] & PY_SPELL_WORKED) {
+	}
+	else if (player->player_spell_flags[spell_index] & PY_SPELL_LEARNED) {
+		if (player->player_spell_flags[spell_index] & PY_SPELL_AUTOCAST) {
+			attr = COLOUR_L_WHITE;
+		}
+		else if (player->player_spell_flags[spell_index] & PY_SPELL_WORKED) {
 			/* Get extra info */
 			get_player_spell_info(spell_index, desc, sizeof(desc));
 			comment = desc;
 			attr = COLOUR_WHITE;
-		} else {
+		}
+		else {
 			comment = " untried";
 			attr = COLOUR_L_GREEN;
 		}
-	} else if (level > 0) {
+	}
+	else if (level > 0) {
 		comment = " unknown";
 		attr = COLOUR_L_BLUE;
-	} else {
+	}
+	else {
 		comment = " difficult";
 		attr = COLOUR_RED;
 	}
@@ -796,6 +819,15 @@ static bool gener_spell_menu_handler(struct menu *m, const ui_event *e, int oid)
 	else if (e->type == EVT_KBRD) {
 		if (e->key.code == '?') {
 			d->show_description = !d->show_description;
+		}
+		else if (e->key.code == '/' && !d->browse) {
+			d->autocast = !d->autocast;
+			if (d->autocast) {
+				m->title = "Autocast which spell? ('?' to toggle description, '/' to cast)";
+			} else {
+				m->title = "Cast which spell? ('?' to toggle description, '/' to autocast)";
+			}
+			menu_refresh(m, false);
 		}
 	}
 
@@ -1015,6 +1047,7 @@ static struct menu *gener_spell_menu_new(struct player *p,
 	d->is_valid = is_valid;
 	d->selected_spell = -1;
 	d->browse = false;
+	d->autocast = false;
 	d->show_description = show_description;
 
 	menu_setpriv(m, d->n_splls, d);
@@ -1024,10 +1057,11 @@ static struct menu *gener_spell_menu_new(struct player *p,
 	m->flags = MN_CASELESS_TAGS;
 	m->selections = all_letters_nohjkl;
 	m->browse_hook = gener_spell_menu_browser;
-	m->cmd_keys = "?";
+	m->cmd_keys = "?/";
+	m->title = "Cast which spell? (? to toggle description, / to autocast)";
 
 	/* Set size */
-	loc.page_rows = d->n_splls + 1;
+	loc.page_rows = d->n_splls + 3;
 	menu_layout(m, &loc);
 
 	//plog("done gsmn");
@@ -1046,21 +1080,19 @@ static int gener_spell_menu_select(struct menu *m)
 {
 	//plog("entering gsms");
 	struct gener_spell_menu_data *d = menu_priv(m);
-	char buf[80];
+	//char buf[80];
+	ui_event ue;
 
 	screen_save();
 	region_erase_bordered(&m->active);
 
-	/* Format, capitalise and display */
-	strnfmt(buf, sizeof buf, "Cast which spell?");
-	my_strcap(buf);
-	prt(buf, 0, 0);
+	m->title = "Cast which spell? (? to toggle description, / to autocast)";
 
-	menu_select(m, 0, true);
+	ue = menu_select(m, 0, true);
 	screen_load();
 
 	//plog("done gsms");
-	return d->selected_spell;
+	return ue.type == EVT_ESCAPE ? -1 : d->selected_spell;
 }
 
 /**
@@ -1073,7 +1105,7 @@ static void gener_spell_menu_browse(struct menu *m)
 	screen_save();
 
 	region_erase_bordered(&m->active);
-	prt("Browsing spells. ('?' to toggle description)", 0, 0);
+	m->title = "Browsing spells. ('?' to toggle description)";
 
 	d->browse = true;
 	menu_select(m, 0, true);
@@ -1090,7 +1122,26 @@ int textui_get_gener_spell(struct player *p, const char *error,
 
 	m = gener_spell_menu_new(p, spell_filter, false);
 	if (m) {
-		int spell_index = gener_spell_menu_select(m);
+		bool done = false;
+		struct gener_spell_menu_data *d = menu_priv(m);
+		int spell_index = -1;
+		while (!done) {
+			struct player_spell *ps;
+			spell_index = gener_spell_menu_select(m);
+			ps = player_spell_lookup(spell_index);
+			d = m->menu_data;
+			if (d->autocast && spell_index >= 0) {
+				if (p->player_spell_flags[spell_index] & PY_SPELL_AUTOCAST) {
+					p->player_spell_flags[spell_index] &= ~PY_SPELL_AUTOCAST;
+				}
+				else if (can_autocast(ps)) {
+					p->player_spell_flags[spell_index] |= PY_SPELL_AUTOCAST;
+				}
+			}
+			else {
+				done = true;
+			}
+		}
 		gener_spell_menu_destroy(m);
 		return spell_index;
 	} else if (error) {

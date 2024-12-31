@@ -1076,10 +1076,11 @@ static struct object *item_menu(cmd_code cmd, int prompt_size, int mode)
 
 	/* Set up the menu */
 	menu_setpriv(m, num_obj, items);
-	if (player->upkeep->command_wrk == USE_QUIVER)
+	if (player->upkeep->command_wrk == USE_QUIVER) {
 		m->selections = "0123456789";
-	else
+	} else {
 		m->selections = all_letters_nohjkl;
+	}
 	m->switch_keys = "/|-";
 	m->flags = (MN_PVT_TAGS | MN_INSCRIP_TAGS);
 	m->browse_hook = item_menu_browser;

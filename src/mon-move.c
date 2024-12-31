@@ -1961,8 +1961,8 @@ static void monster_turn(struct monster *mon)
 					return;
 				}
 			} else {
-				if (one_in_(5)) {
-					msg("%s struggles in a web.", m_name);
+				if (one_in_(25)) {
+					msg("%s struggles futilely in a web.", m_name);
 				}
 				/* Stuck */
 				return;
@@ -2161,12 +2161,6 @@ static bool monster_check_active(struct monster *mon)
 	} else if (square_isview(cave, mon->grid) && !rwp) {
 		/* Monster can "see" the player (checked backwards) */
 		mflag_on(mon->mflag, MFLAG_ACTIVE);
-	//} else if (ht && monster_can_hear(mon) && !rwp) {
-		/* Monster can hear the player */
-		//mflag_on(mon->mflag, MFLAG_ACTIVE);
-	//} else if (ht && monster_can_smell(mon) && !rwp) {
-		/* Monster can smell the player */
-		//mflag_on(mon->mflag, MFLAG_ACTIVE);
 	} else if (monster_taking_terrain_damage(cave, mon)) {
 		/* Monster is taking damage from the terrain */
 		mflag_on(mon->mflag, MFLAG_ACTIVE);

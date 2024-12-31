@@ -1269,8 +1269,9 @@ struct cmd_info *textui_action_menu_choose(void)
 
 	struct cmd_info *chosen_command = NULL;
 
-	if (!command_menu)
+	if (!command_menu) {
 		command_menu = menu_new(MN_SKIN_SCROLL, &command_menu_iter);
+	}
 
 	while (cmds_all[len].len && cmds_all[len].menu_level == 0) {
 		len++;

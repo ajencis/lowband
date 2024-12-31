@@ -596,23 +596,33 @@ void menu_refresh(struct menu *menu, bool reset_screen)
 		screen_save();
 	}
 
-	if (menu->filter_list && menu->cursor >= 0)
+	if (menu->filter_list && menu->cursor >= 0) {
 		oid = menu->filter_list[oid];
+	}
 
-	if (menu->title)
+	if (menu->title) {
+		int i;
+		for (i = menu->boundary.row; i <= loc->row + loc->page_rows; ++i) {
+			Term_erase(loc->col - 1, i, loc->width);
+		}
+
 		Term_putstr(menu->boundary.col, menu->boundary.row,
 				loc->width, COLOUR_WHITE, menu->title);
+	}
 
-	if (menu->header)
-		Term_putstr(loc->col, loc->row - 1, loc->width,
-				COLOUR_WHITE, menu->header);
+	if (menu->header) {
+		Term_putstr(loc->col, loc->row - 1,
+				loc->width,	COLOUR_WHITE, menu->header);
+	}
 
-	if (menu->prompt)
+	if (menu->prompt) {
 		Term_putstr(menu->boundary.col, loc->row + loc->page_rows,
 				loc->width, COLOUR_WHITE, menu->prompt);
+	}
 
-	if (menu->browse_hook && oid >= 0)
+	if (menu->browse_hook && oid >= 0) {
 		menu->browse_hook(oid, menu->menu_data, loc);
+	}
 
 	menu->skin->display_list(menu, menu->cursor, &menu->top, loc);
 }
@@ -918,7 +928,7 @@ static bool menu_calc_size(struct menu *menu)
 	if (menu->title) {
 		menu->active.row += 2;
 		menu->active.page_rows -= 2;
-		menu->active.col += 4;
+		menu->active.col = MAX(menu->active.col, 4);
 	}
 
 	if (menu->header) {
@@ -941,7 +951,7 @@ static bool menu_calc_size(struct menu *menu)
 
 bool menu_layout(struct menu *m, const region *loc)
 {
-	m->boundary = *loc;
+	m->boundary = region_calculate(*loc);
 	return menu_calc_size(m);
 }
 
