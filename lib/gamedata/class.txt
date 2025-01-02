@@ -349,7 +349,7 @@ title:Evangelist
 title:Priest
 title:Elder
 title:Prophet
-title:Patriarch
+title:Parriarch
 title:High Priest
 
 ############### PRIEST ###############
@@ -380,15 +380,15 @@ equip:potion:Cure Serious Wounds:2:2:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
 player-flags:BLESS_WEAPON
 realm:divine
-title:Believer
-title:Acolyte
-title:Devotee
-title:Adept
-title:Evangelist
+title:Unbeliever
+title:Unacolyte
+title:Undevotee
+title:Unadept
+title:Unevangelist
 title:Dark-Priest
-title:Elder
-title:Prophet
-title:Dark Patriarch
+title:Unelder
+title:Unprophet
+title:Dark Parriarch
 title:Dark High Priest
 
 ############### NECROMANCER ###############
@@ -420,7 +420,7 @@ title:Acolyte
 title:Curser
 title:Dark Student
 title:Initiate
-title:Slavemaster
+title:Murderer
 title:Summoner
 title:Controller
 title:Commander
@@ -466,7 +466,7 @@ title:Paladin Lord
 
 
 ############### ROGUE ###############
-name:Rogue
+name:Thief
 skill-disarm-phys:45:20
 skill-disarm-magic:45:20
 skill-device:32:10
@@ -606,16 +606,16 @@ equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
 equip:soft armour:Robe:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-title:Rookie
-title:Soldier
-title:Swordsman
-title:Swashbuckler
-title:Veteran
-title:Myrmidon
-title:Commando
-title:Champion
-title:Hero
-title:Lord
+title:Novice
+title:Initiate
+title:Disciple
+title:Master
+title:Superior Master
+title:Master of Winter
+title:Master of Autumn
+title:Master of Summer
+title:Master of Spring
+title:Grand Master of Flowers
 
 
 ############### SKILLMASTER ###############
@@ -639,13 +639,13 @@ strength-multiplier:5
 equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
 player-flags:EXTRA_LEARNING | EXTRA_GOLD
-title:Rookie
-title:Soldier
-title:Swordsman
-title:Swashbuckler
-title:Veteran
-title:Myrmidon
-title:Commando
-title:Champion
-title:Hero
-title:Lord
+title:Unskilled
+title:Little-Skilled
+title:Capable
+title:Educated
+title:Practised
+title:Proficient
+title:Consummate
+title:Skilled
+title:Skill-Adept
+title:Skillmaster
