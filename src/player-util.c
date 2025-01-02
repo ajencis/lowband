@@ -444,8 +444,10 @@ static bool player_can_learn_from_tome(struct player *p, int index)
 	if (p->state.extra_points_max <= p->state.extra_points_used) return false;
 
 	// ask the player if they're willing to spend points
-	p->checked_tome_this_expedition = true;
-	if (!get_forced_check(format("Learn %s? ", name))) return false;
+	if (!get_forced_check(format("Learn %s? ", name))) {
+		p->checked_tome_this_expedition = true;
+		return false;
+	}
 
 	return true;
 }
@@ -550,15 +552,18 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	if (power < PP_MAX) {
 		assert(power > PP_NONE && power < PP_MAX);
 		chance = p->state.powers[power] + 10;
-		chance *= chance;
+		//chance *= chance;
 		currlearned = p->extra_powers[power];
 	}
 	else if (power < PP_MAX + SKILL_MAX) {
 		int skill_index = power - PP_MAX;
 		assert(skill_index >= 0 && skill_index < SKILL_MAX);
 		chance = p->state.skills[skill_index] + 10;
-		chance *= chance;
+		//chance *= chance;
 		currlearned = p->extra_skills[skill_index];
+	}
+	else {
+		return false;
 	}
 
 	currcost = player_bonus_to_cost(currlearned, power, p);
@@ -571,6 +576,8 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	chance /= xpgain;
 	// easier to learn if you have more info
 	chance /= obj->number * obj->number * 100;
+	// bonus for skillmasters
+	if (pf_has(p->state.pflags, PF_EXTRA_LEARNING)) chance /= 5;
 	// paranoia
 	chance = MIN(chance, 0x10000000U);
 

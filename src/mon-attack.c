@@ -649,7 +649,7 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 	char m_name[80];
 	char ddesc[80];
 	bool blinked = false;
-	bool at_range = distance(mon->grid, player->grid) > 1;
+	int dist = distance(mon->grid, player->grid);
 	bool did_attack = false;
 	struct object *bestweap = monster_best_weapon(mon);
 	double weapval = bestweap ? bestweap->dd * (bestweap->ds + 1) / 2.0 + bestweap->to_d + bestweap->to_h / 2.0 : 0.0;
@@ -669,28 +669,29 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 		bool visible = monster_is_visible(mon) || (mon->race->light > 0);
 		bool obvious = false;
 		melee_effect_handler_f effect_handler = NULL;
+		struct monster_blow *blow = &mon->race->blow[ap_cnt];
 
 		int damage = 0, hitbonus = 0;
 		bool do_cut = false;
 		bool do_stun = false;
 
 		/* Extract the attack infomation */
-		struct blow_effect *effect = mon->race->blow[ap_cnt].effect;
-		struct blow_method *method = mon->race->blow[ap_cnt].method;
-		random_value dice = mon->race->blow[ap_cnt].dice;
+		struct blow_effect *effect = blow->effect;
+		struct blow_method *method = blow->method;
+		random_value dice = blow->dice;
 
 		/* No more attacks */
 		if (!method) break;
 
 		// L: only some attacks work at range
-		if (at_range && !method->range) continue;
+		if (dist > monster_melee_attack_range(mon->race->level, blow)) continue;
 
 		/* Handle "leaving" */
 		if (p->is_dead || p->upkeep->generate_level) break;
 
 		if (bestweap && (streq(effect->name, "NONE") || streq(effect->name, "HURT"))) {
-			int blowdam = randcalc(dice, rlev, AVERAGE);
-			if ((double)blowdam < weapval) {
+			double blowdam = randcalc(dice, rlev, AVERAGE);
+			if (blowdam < weapval) {
 				dice.base = bestweap->to_d;
 				dice.dice = bestweap->dd;
 				dice.sides = bestweap->ds;

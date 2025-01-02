@@ -907,14 +907,14 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	levels = state->skills[SKILL_MAGIC];
 
 	/* Extract "effective" player level */
-	if (levels > 0 && realm) {
-		msp = levels;
-	} else {
+	if (!realm || levels <= 0 || realm->hp_cast) {
 		p->msp = 0;
 		p->csp = 0;
 		p->csp_frac = 0;
 		return;
 	}
+	
+	msp = levels;
 
 	/* Assume player not encumbered by armor */
 	state->cumber_armor = false;

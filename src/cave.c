@@ -444,9 +444,11 @@ void list_object(struct chunk *c, struct object *obj)
 
 	/* Check for duplicates and objects already deleted or combined */
 	if (!obj) return;
-	for (i = 1; i < c->obj_max; i++)
-		if (c->objects[i] == obj)
+	for (i = 1; i < c->obj_max; i++) {
+		if (c->objects[i] == obj) {
 			return;
+		}
+	}
 
 	/* Put objects in holes in the object list */
 	for (i = 1; i < c->obj_max; i++) {

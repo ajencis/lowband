@@ -3161,6 +3161,20 @@ static enum parser_error parse_realm_innate(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_realm_hp_cast(struct parser *p) 
+{
+	bool hp_cast = parser_getint(p, "hp") ? true : false;
+	struct magic_realm *realm = parser_priv(p);
+
+	if (!realm) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	realm->hp_cast = hp_cast;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_realm(void) {
 	z_info->realm_max = 0;
 	struct parser *p = parser_new();
@@ -3173,6 +3187,7 @@ static struct parser *init_parse_realm(void) {
 	parser_reg(p, "weight int weight", parse_realm_weight);
 	parser_reg(p, "school sym school int mod", parse_realm_school_aptitude);
 	parser_reg(p, "innate int innate", parse_realm_innate);
+	parser_reg(p, "hp-cast int hp", parse_realm_hp_cast);
 	return p;
 }
 

@@ -1817,15 +1817,15 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 				msg("%s tries to pick up %s, but fails.", m_name, o_name);
 			}
 		} else if (rf_has(mon->race->flags, RF_TAKE_ITEM)) {
-			/*
-			 * Make a copy so the original can remain as a
-			 * placeholder if the player remembers seeing the
-			 * object.
-			 */
-
 			/* Try to carry */
+			assert(player->cave->objects[obj->oidx] == obj->known);
+			assert(cave->objects[obj->oidx] == obj);
 			square_excise_object(cave, new, obj);
+			assert(player->cave->objects[obj->oidx] == obj->known);
+			assert(cave->objects[obj->oidx] == obj);
 			if (monster_carry(cave, mon, obj)) {
+				assert(player->cave->objects[obj->oidx] == obj->known);
+				assert(cave->objects[obj->oidx] == obj || !cave->objects[obj->oidx]);
 				/* Describe observable situations */
 				if (square_isseen(cave, new) && !ignore_item_ok(player, obj)) {
 					assert(obj->known);
@@ -1837,7 +1837,7 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 				square_light_spot(cave, new);
 
 				assert(player->cave->objects[obj->oidx] == obj->known);
-				assert(cave->objects[obj->oidx] == obj);
+				assert(cave->objects[obj->oidx] == obj || !cave->objects[obj->oidx]);
 			} else if (!floor_carry(cave, new, obj, NULL)) {
 				drop_near(cave, &obj, 0, new, false, false);
 			}

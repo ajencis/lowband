@@ -340,6 +340,7 @@ struct magic_realm {
 
 	int school_modifiers[MS_MAX];	/* L: which schools it does well */
 	bool innate;					/* L: does it learn spells? */
+	bool hp_cast;					/* L: does it cast from hp instead of mana? */
 };
 
 /**

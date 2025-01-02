@@ -656,11 +656,12 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 	ref_spell = NULL;
 
 	/* Sufficient mana? */
-	if (mana <= player->csp) {
+	if (player->realm && player->realm->hp_cast) {
+		// Use hp
+		take_hit(player, mana, "the strain of casting a spell");
+	} else if (mana <= player->csp) {
 		/* Use some mana */
 		player->csp -= mana;
-
-		if (one_in_(10)) take_max_sp_dam(player, mana);
 	} else {
 		int oops = mana - player->csp;
 

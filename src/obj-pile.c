@@ -326,12 +326,13 @@ void object_delete(struct chunk *c, struct chunk *p_c,
 	}
 
 	/* If we're tracking the object, stop */
-	if (player && player->upkeep && obj == player->upkeep->object)
+	if (player && player->upkeep && obj == player->upkeep->object) {
 		player->upkeep->object = NULL;
+	}
 
 	/* Orphan rather than actually delete if we still have a known object */
 	if (c && p_c && obj->oidx && (obj == c->objects[obj->oidx]) &&
-		p_c->objects[obj->oidx]) {
+			p_c->objects[obj->oidx]) {
 		obj->grid = loc(0, 0);
 		obj->prev = NULL;
 		obj->next = NULL;

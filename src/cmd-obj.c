@@ -1328,15 +1328,10 @@ static int gener_spell_is_castable(const struct player *p, int spell) {
 
 void do_cmd_cast(struct command *cmd)
 {
-	int spell_index;
+	int spell_index, mana;
 	int dir;
 	const struct player_spell *ps;
 	const char *fail = "You don't know any spells.";
-
-	if (player->state.skills[SKILL_MAGIC] <= 0) {
-		msg("You do not know magic.");
-		return;
-	}
 
 	if (!player_can_cast(player, true)) {
 		return;
@@ -1353,11 +1348,21 @@ void do_cmd_cast(struct command *cmd)
 
 	ps = player_spell_lookup(spell_index);
 	assert(ps);
-	
-	if (player_spell_mana(ps) > player->csp) {
-		msg("You do not have enough mana to cast this spell.");
-		event_signal(EVENT_INPUT_FLUSH);
-		if (!get_check("Attempt it anyway? ")) return;
+
+	mana = player_spell_mana(ps);
+
+	if (player->realm && player->realm->hp_cast) {
+		if (mana > player->chp) {
+			msg("You do not have neough hit points to cast this spell.");
+			return;
+		}
+	}
+	else {
+		if (player_spell_mana(ps) > player->csp) {
+			msg("You do not have enough mana to cast this spell.");
+			event_signal(EVENT_INPUT_FLUSH);
+			if (!get_check("Attempt it anyway? ")) return;
+		}
 	}
 
 	if (gener_spell_needs_aim(ps)) {

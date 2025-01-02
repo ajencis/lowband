@@ -276,6 +276,43 @@ title:Stormwielder
 title:High Mystic
 
 
+############### BLOOD-MAGE ###############
+name:Blood-Mage
+skill-disarm-phys:30:10
+skill-disarm-magic:35:12
+skill-device:36:13
+skill-save:15:4
+skill-stealth:10:0
+skill-search:10:12
+skill-melee:5:15
+skill-shoot:5:15
+skill-throw:5:15
+skill-dig:0:0
+skill-magic:10:16
+skill-health:5:12
+hitdie:0
+max-attacks:4
+min-weight:40
+strength-multiplier:2
+equip:food:Ration of Food:1:3:none
+equip:light:Wooden Torch:1:3:none
+equip:sword:Rapier:1:1:none
+equip:scroll:Word of Recall:1:1:birth_no_recall
+equip:spellbook:Magic Missile:1:1:none
+player-flags:CHOOSE_SPELLS
+realm:blood
+title:Novice
+title:Apprentice
+title:Trickster
+title:Illusionist
+title:Spellbinder
+title:Evoker
+title:Conjurer
+title:Warlock
+title:Sorcerer
+title:Arch-Mage
+
+
 ############### PRIEST ###############
 name:Priest
 skill-disarm-phys:25:12
