@@ -806,6 +806,22 @@ static int project_player_handler_VAMPIRE(project_player_handler_context_t *cont
 	return 0;
 }
 
+static int project_player_handler_HOLY_FIRE(project_player_handler_context_t *context)
+{
+	if (player_is_immune(player, ELEM_FIRE)) return 0;
+	inven_damage(player, PROJ_FIRE, MIN(context->dam * 4, 200));
+
+	return 0;
+}
+
+static int project_player_handler_HELLFIRE(project_player_handler_context_t *context)
+{
+	if (player_is_immune(player, ELEM_FIRE)) return 0;
+	inven_damage(player, PROJ_FIRE, MIN(context->dam * 6, 400));
+
+	return 0;
+}
+
 
 static const project_player_handler_f player_handlers[] = {
 	#define ELEM(a) project_player_handler_##a,

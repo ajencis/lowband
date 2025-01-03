@@ -304,8 +304,9 @@ static void project_monster_resist_other(project_monster_handler_context_t *cont
 		context->hurt_msg = msg;
 		context->dam *= factor;
 
-		if (reduce)
+		if (reduce) {
 			context->dam /= randint1(6) + 6;
+		}
 	}
 }
 
@@ -1076,6 +1077,19 @@ static void project_monster_handler_VAMPIRE(project_monster_handler_context_t *c
 		mon->hp += drain;
 		mon->hp = MIN(mon->hp, mon->maxhp);
 	}
+}
+
+/* Holy fire damage */
+static void project_monster_handler_HOLY_FIRE(project_monster_handler_context_t *context)
+{
+	project_monster_resist_other(context, RF_EVIL, 2, false, MON_MSG_CATCH_FIRE);
+	project_monster_hurt_immune(context, RF_HURT_FIRE, RF_IM_FIRE, 2, 3, MON_MSG_CATCH_FIRE, MON_MSG_DISINTEGRATES);
+}
+
+static void project_monster_handler_HELLFIRE(project_monster_handler_context_t *context)
+{
+	project_monster_resist_other(context, RF_EVIL, 6, true, MON_MSG_CATCH_FIRE);
+	project_monster_hurt_immune(context, RF_HURT_FIRE, RF_IM_FIRE, 2, 3, MON_MSG_CATCH_FIRE, MON_MSG_DISINTEGRATES);
 }
 
 static const project_monster_handler_f monster_handlers[] = {

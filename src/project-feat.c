@@ -698,6 +698,53 @@ static void project_feature_handler_CHARM_UNDEAD(project_feature_handler_context
 static void project_feature_handler_VAMPIRE(project_feature_handler_context_t *context)
 {
 }
+static void project_feature_handler_HOLY_FIRE(project_feature_handler_context_t *context)
+{
+	/* Grid is in line of sight and player is not blind */
+	if (square_isview(cave, context->grid) && !player->timed[TMD_BLIND]) {
+		/* Observe */
+		context->obvious = true;
+	}
+
+	/* Removes webs */
+	if (square_iswebbed(cave, context->grid)) {
+		struct trap_kind *web = lookup_trap("web");
+
+		assert(web);
+		square_remove_all_traps_of_type(cave, context->grid, web->tidx);
+	}
+}
+
+static void project_feature_handler_HELLFIRE(project_feature_handler_context_t *context)
+{
+	/* Grid is in line of sight and player is not blind */
+	if (square_isview(cave, context->grid) && !player->timed[TMD_BLIND]) {
+		/* Observe */
+		context->obvious = true;
+	}
+
+	/* Removes webs */
+	if (square_iswebbed(cave, context->grid)) {
+		struct trap_kind *web = lookup_trap("web");
+
+		assert(web);
+		square_remove_all_traps_of_type(cave, context->grid, web->tidx);
+	}
+
+	/* Can create lava if extremely powerful. */
+	if ((context->dam > randint1(600) + 200) &&
+			square_isfloor(cave, context->grid) &&
+			one_in_(2)) {
+		/* Forget the floor, make lava. */
+		square_unmark(cave, context->grid);
+		square_set_feat(cave, context->grid, FEAT_LAVA);
+		if (cave->depth == 0)
+			expose_to_sun(cave, context->grid, is_daytime());
+
+		/* Objects that have survived should move */
+		push_object(context->grid);
+	}
+}
 
 static const project_feature_handler_f feature_handlers[] = {
 	#define ELEM(a) project_feature_handler_##a,

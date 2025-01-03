@@ -143,7 +143,8 @@ flags:FORCE_SLEEP | CLEAR_WEB
 desc:Dragon
 body:Dragon
 attr:AC:2
-attr:HP:1
+attr:DAMAGE:-1
+attr:HP:-1
 attr:SPEED:-1
 stats:1:0:-1:0:1
 skill-melee:5
@@ -226,9 +227,10 @@ flags:BASH_DOOR | CLEAR_WEB
 flags:SAPIENT
 desc:Giant Humanoid
 attr:DAMAGE:3
-attr:MAGIC:-2
+attr:MAGIC:-1
 attr:HP:1
 attr:SPEED:-2
+attr:AC:-1
 
 # Mostly slow with lots of hitpoints and armor
 name:golem
@@ -241,7 +243,8 @@ desc:Golem
 body:Humanoid
 attr:SPEED:-4
 attr:HP:2
-attr:AC:2
+attr:AC:1
+attr:DAMAGE:1
 
 name:humanoid
 glyph:h
@@ -394,7 +397,7 @@ flags:IM_FIRE
 flags:SAPIENT
 desc:Minor Demon
 body:Humanoid
-attr:DAMAGE:3
+attr:DAMAGE:1
 attr:HP:-1
 attr:AC:-3
 stats:2:0:-3:1:1

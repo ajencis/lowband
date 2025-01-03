@@ -321,3 +321,32 @@ eval:10
 desc:suck blood
 lore-color-base:Red
 lash-type:VAMPIRE
+
+name:SMITE_EVIL
+power:0
+eval:10
+desc:smite evil
+lore-color-base:White
+lash-type:HOLY_ORB
+
+name:TURN_EVIL
+power:0
+eval:10
+desc:turn evil
+lore-color-base:White
+lash-type:TURN_EVIL
+
+name:HOLY_FIRE
+power:0
+eval:10
+desc:immolate
+lore-color-base:White
+lash-type:HOLY_FIRE
+
+name:HELLFIRE
+power:0
+eval:10
+desc:incinerate
+lore-color-base:Dark Red
+lash-type:HELLFIRE
+

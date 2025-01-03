@@ -66,6 +66,7 @@ struct mon_player_match of_matches[] = {
 
 struct mon_player_match pf_matches[] = {
 	{ RF_UNDEAD, PF_UNDEAD },
+	{ RF_EVIL, PF_EVIL },
 	{ RF_NONE, -1 }
 };
 
@@ -83,6 +84,8 @@ struct mon_player_match elem_pp_matches[] = {
 	{ ELEM_POIS, PP_POISON_MAGIC },
 	{ ELEM_SHARD, PP_EARTH_MAGIC },
 	{ ELEM_WATER, PP_WATER_MAGIC },
+	{ ELEM_HOLY_FIRE, PP_HOLY_MAGIC },
+	{ ELEM_HELLFIRE, PP_FIRE_MAGIC },
 	{ -1, -1 }
 };
 
@@ -682,29 +685,6 @@ void calc_inventory(struct player *p)
 	mem_free(old_pack);
 	mem_free(old_quiver);
 }
-
-#if 0
-/**
- * Average of the player's spell stats across all the realms they can cast
- * from, rounded up
- *
- * If the player can only cast from a single realm, this is simple the stat
- * for that realm
- */
-static int average_spell_stat(struct player *p, struct player_state *state)
-{
-	int i, count, sum = 0;
-	struct magic_realm *realm = class_magic_realms(p->class, &count), *r_next;
-
-	for (i = count; i > 0; i--) {
-		sum += state->stat_ind[realm->stat];
-		r_next = realm->next;
-		mem_free(realm);
-		realm = r_next;
-	}
-	return (sum + count - 1) / count;
-}
-#endif
 
 /**
  * Calculate number of spells player should have, and forget,
@@ -1375,9 +1355,14 @@ void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX])
 	}
 
 	// assume the monster gets hp equal to half its level from its class
-	class_hp = (int)(mrace->level * my_cbrt((double)mrace->level) / 10.0);
+	class_hp = (int)(mrace->level * my_sqrt((double)mrace->level) / 10.0);
 	mod = mrace->avg_hp - class_hp;
-	mod = MAX(mod, mod / 2);
+	if (mod > 0) {
+		mod = my_int_cbrt(mod * mod);
+	}
+	else {
+		mod = -my_int_sqrt(-mod);
+	}
 	skills[SKILL_HEALTH] += mod;
 }
 
@@ -1682,16 +1667,6 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		calc_monster(p, state, vuln, &extra_moves);
 	}
 
-	/* Now deal with vulnerabilities */
-	for (i = 0; i < ELEM_MAX; i++) {
-		if (vuln[i] && (state->el_info[i].res_level < 3)) {
-			state->el_info[i].res_level--;
-		}
-	}
-
-	/* Calculate light */
-	calc_light(p, state, update);
-
 	/* Unlight - needs change if anything but resist is introduced for dark */
 	if (pf_has(state->pflags, PF_UNLIGHT) && character_dungeon) {
 		state->el_info[ELEM_DARK].res_level = 1;
@@ -1700,8 +1675,21 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	/* Evil */
 	if (pf_has(state->pflags, PF_EVIL) && character_dungeon) {
 		state->el_info[ELEM_NETHER].res_level = 1;
-		state->el_info[ELEM_HOLY_ORB].res_level = -1;
+		vuln[ELEM_HOLY_ORB] = true;
 	}
+
+	/* Now deal with vulnerabilities */
+	for (i = 0; i < ELEM_MAX; i++) {
+		if (vuln[i] && (state->el_info[i].res_level < 3)) {
+			state->el_info[i].res_level--;
+		}
+	}
+
+	state->el_info[ELEM_HOLY_FIRE].res_level = state->el_info[ELEM_HOLY_ORB].res_level * 2 + state->el_info[ELEM_FIRE].res_level;
+	state->el_info[ELEM_HELLFIRE].res_level = state->el_info[ELEM_FIRE].res_level + pf_has(state->pflags, PF_EVIL) ? 0 : -1;
+
+	/* Calculate light */
+	calc_light(p, state, update);
 
 	/* Calculate the various stat values */
 	for (i = 0; i < STAT_MAX; i++) {

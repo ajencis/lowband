@@ -406,6 +406,7 @@ monster:law drake
 monster:balance drake
 monster:aethereal drake
 monster:crystal drake
+monster:life drake
 
 name:Tiefling
 monster:bodak

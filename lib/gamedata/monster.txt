@@ -9854,6 +9854,30 @@ friends:60:2d3:olog:servant
 desc:This troll's great strength and size have won it the place of chieftain of
 desc: its tribe.  It fears nothing.
 
+name:life drake
+base:dragon
+evolution:great wyrm of life
+color:w
+speed:110
+hit-points:264
+light:2
+hearing:20
+armor-class:84
+sleepiness:70
+depth:33
+rarity:3
+experience:1100
+blow:CLAW:HURT:2d4
+blow:CLAW:HURT:2d4
+blow:BITE:HOLY_FIRE:3d6
+flags:DROP_3 | ONLY_ITEM
+flags:NO_CONF | NO_SLEEP
+innate-freq:25
+spell-freq:10
+spells:CONF | SCARE | SLOW
+spells:BR_HOLY_FIRE
+desc:It is a dragon-like form seeming to bring an aura of calm to the dungeon.
+
 ### Dungeon level 41 ###
 
 name:mature red dragon
@@ -12079,7 +12103,7 @@ flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR
 innate-freq:5
 spells:BA_LIGHT | BA_HOLY | HEAL_KIN
-desc:This kindly-seeming young human seems to glow with an inner light.
+desc:This kindly-seeming young human appears to glow with an inner light.
 
 name:Gilim, the Giant of Eruman
 base:giant
@@ -12935,7 +12959,7 @@ flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR
 innate-freq:5
 spells:BA_LIGHT | BA_HOLY | HEAL | HEAL_KIN
-desc:This kindly-seeming middle-aged human seems to glow with an inner light.
+desc:This kindly-seeming middle-aged human appears to glow with an inner light.
 
 name:great storm wyrm
 short-name:storm wyrm
@@ -13734,7 +13758,7 @@ sleepiness:10
 depth:80
 rarity:1
 experience:40000
-blow:GAZE:DISENCHANT:9d12
+blow:GAZE:TURN_EVIL:9d12
 blow:HIT:HURT:9d12
 blow:HIT:HURT:9d12
 flags:SMART
@@ -13742,7 +13766,7 @@ flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR
 innate-freq:5
 spells:BA_LIGHT | BA_HOLY | HEAL | HEAL_KIN | S_AINU
-desc:This kindly-seeming old human seems to glow with an inner light.
+desc:This kindly-seeming old human appears to glow with an inner light.
 
 name:fury
 plural:furies
@@ -13770,6 +13794,7 @@ spells:S_HI_DEMON
 desc:A female embodiment of rage, intent on tearing your mind and body apart.
 
 name:great wyrm of annihilation
+short-name:annihilation wyrm
 plural:great wyrms of annihilation
 base:ancient dragon
 color:v
@@ -14293,6 +14318,33 @@ desc:The spectral form of a once-great dragon, enchanted by magic most
 desc: perilous.  It strikes with speed and drains life from its
 desc: prey to satisfy its hunger.
 
+name:great wyrm of life
+short-name:life wyrm
+plural:great wyrms of life
+base:ancient dragon
+color:w
+speed:120
+hit-points:3080
+hearing:25
+armor-class:144
+sleepiness:80
+depth:85
+rarity:10
+experience:18000
+blow:CLAW:HURT:6d12
+blow:CLAW:HURT:6d12
+blow:BITE:HOLY_FIRE:7d14
+flags:ONLY_ITEM
+flags:BASH_DOOR | TAKE_ITEM
+flags:IM_FIRE | NO_STUN
+innate-freq:10
+spell-freq:12
+spells:CONF | SCARE
+spells:BR_HOLY_FIRE
+spells:HEAL | HEAL_KIN
+desc:The form of a massive dragonlike creature soothes your soul
+desc: as you approach.
+
 ### Dungeon level 86 ###
 
 name:The Tarrasque
@@ -14375,7 +14427,7 @@ sleepiness:10
 depth:90
 rarity:1
 experience:40000
-blow:GAZE:DISENCHANT:9d12
+blow:GAZE:TURN_EVIL:9d12
 blow:HIT:FIRE:9d12
 blow:HIT:FIRE:9d12
 flags:SMART

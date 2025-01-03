@@ -519,6 +519,36 @@ blind-desc:something
 obvious:1
 color:Light Blue
 
+code:HOLY_FIRE
+name:holy fire
+type:element
+desc:holy fire
+player-desc:holy fire
+blind-desc:something
+lash-desc:holy fire
+player-brand:immolate
+divisor:6
+damage-cap:0
+msgt:GENERIC
+obvious:1
+wake:1
+color:White
+
+code:HELLFIRE
+name:hellfire
+type:element
+desc:hellfire
+player-desc:hellfire
+blind-desc:something
+lash-desc:hellfire
+player-brand:incinerate
+divisor:6
+damage-cap:0
+msgt:GENERIC
+obvious:1
+wake:1
+color:Dark Red
+
 code:LIGHT_WEAK
 type:environs
 desc:light

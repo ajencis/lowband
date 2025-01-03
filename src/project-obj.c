@@ -497,6 +497,18 @@ static void project_object_handler_VAMPIRE(project_object_handler_context_t *con
 {
 }
 
+/* Holy Fire -- Flammable objects */
+static void project_object_handler_HOLY_FIRE(project_object_handler_context_t *context)
+{
+	if (one_in_(2)) project_object_elemental(context, ELEM_FIRE, "burns up", "burn up");
+}
+
+/* Hellfire -- Flammable objects */
+static void project_object_handler_HELLFIRE(project_object_handler_context_t *context)
+{
+	project_object_elemental(context, ELEM_FIRE, "burns up", "burn up");
+}
+
 static const project_object_handler_f object_handlers[] = {
 	#define ELEM(a) project_object_handler_##a,
 	#include "list-elements.h"

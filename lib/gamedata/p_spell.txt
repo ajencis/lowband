@@ -415,9 +415,9 @@ desc:Restores experience points to maximum if it is currently below maximum.
 school:HOLY
 school:DIVINATION
 
-spell:Holy Orb:35
+spell:Holy Orb:55
 effect:SPOT:HOLY_ORB:5:3
-desc:Calls a holy orb to damage evil.
+desc:Calls a holy orb to damage evil - including yourself.
 dice:$Dd$S
 expr:D:SPELL_POWER:* 1
 expr:S:SPELL_POWER:+ 4 / 5
@@ -430,6 +430,12 @@ dice:$N
 expr:N:SPELL_POWER:* 1
 school:HOLY
 school:DIVINATION
+
+spell:Ascension:75
+effect:TRANSFORM
+monster:cherub
+desc:Transforms you into an angel.
+school:HOLY
 
 
 spell:Summon Monster:30:8

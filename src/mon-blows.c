@@ -1310,7 +1310,7 @@ static void melee_effect_handler_BLUDGEONING(melee_effect_handler_context_t *con
 }
 
 /**
- * Melee effect handler: Attack the player with fire.
+ * Melee effect handler: Drink blood.
  */
 static void melee_effect_handler_VAMPIRE(melee_effect_handler_context_t *context)
 {
@@ -1321,6 +1321,46 @@ static void melee_effect_handler_VAMPIRE(melee_effect_handler_context_t *context
 			context->mon->hp = MIN(context->mon->hp, context->mon->maxhp);
 		}
 	}
+}
+
+/**
+ * Melee effect handler: Holy power.
+ */
+static void melee_effect_handler_SMITE_EVIL(melee_effect_handler_context_t *context)
+{
+	if (pf_has(player->state.pflags, PF_EVIL)) {
+		context->damage = context->damage * 3 / 2;
+	}
+	else {
+		context->damage = context->damage * 1 / 2;
+	}
+}
+
+/**
+ * Melee effect handler: Unholy fire.
+ */
+static void melee_effect_handler_TURN_EVIL(melee_effect_handler_context_t *context)
+{
+	if (pf_has(player->state.pflags, PF_EVIL)) {
+		melee_effect_timed(context, TMD_AFRAID, randint1(context->damage), OF_PROT_FEAR, true, "You stand your ground!");
+	}
+	context->damage /= 2;
+}
+
+/**
+ * Melee effect handler: Holy fire.
+ */
+static void melee_effect_handler_HOLY_FIRE(melee_effect_handler_context_t *context)
+{
+	melee_effect_elemental(context, PROJ_HOLY_FIRE, true);
+}
+
+/**
+ * Melee effect handler: Unholy fire.
+ */
+static void melee_effect_handler_HELLFIRE(melee_effect_handler_context_t *context)
+{
+	melee_effect_elemental(context, PROJ_HELLFIRE, true);
 }
 
 /**
@@ -1367,6 +1407,10 @@ melee_effect_handler_f melee_handler_for_blow_effect(const char *name)
 		{ "HALLU", melee_effect_handler_HALLU },
 		{ "BLACK_BREATH", melee_effect_handler_BLACK_BREATH },
 		{ "VAMPIRE", melee_effect_handler_VAMPIRE },
+		{ "SMITE_EVIL", melee_effect_handler_SMITE_EVIL },
+		{ "TURN_EVIL", melee_effect_handler_TURN_EVIL },
+		{ "HOLY_FIRE", melee_effect_handler_HOLY_FIRE },
+		{ "HELLFIRE", melee_effect_handler_HELLFIRE },
 		{ NULL, NULL },
 	};
 	const struct effect_handler_s *current = effect_handlers;

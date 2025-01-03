@@ -468,6 +468,26 @@ lore-color-base:Light Red
 message-vis:{name} breathes raw magic.
 message-invis:You hear a scintillating roar.
 
+name:BR_HOLY_FIRE
+hit:100
+effect:BREATH:HOLY_FIRE:0:30
+dice:$D
+expr:D:CASTER_HP: / 3
+lore:holy fire
+lore-color-base:White
+message-vis:{name} breathes holy fire.
+message-invis:You hear a hallowed roar.
+
+name:BR_HELLFIRE
+hit:100
+effect:BREATH:HELLFIRE:0:30
+dice:$D
+expr:D:CASTER_HP: / 3
+lore:hellfire
+lore-color-base:Dark Red
+message-vis:{name} breathes hellfire.
+message-invis:You hear an accursed roar.
+
 name:BOULDER
 hit:60
 effect:BOLT:ARROW
