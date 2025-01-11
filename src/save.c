@@ -896,8 +896,9 @@ static void wr_dungeon_aux(struct chunk *c)
 				wr_byte(prev_char);
 				prev_char = tmp8u;
 				count = 1;
-			} else /* Continue the run */
+			} else { /* Continue the run */
 				count++;
+			}
 		}
 	}
 
@@ -905,6 +906,12 @@ static void wr_dungeon_aux(struct chunk *c)
 	if (count) {
 		wr_byte(count);
 		wr_byte(prev_char);
+	}
+
+	for (y = 0; y < c->height; ++y) {
+		for (x = 0; x < c->width; ++x) {
+			wr_byte((uint8_t)square(c, loc(x, y))->mana);
+		}
 	}
 
 	/* Write feeling */

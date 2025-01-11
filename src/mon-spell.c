@@ -367,7 +367,12 @@ void do_mon_spell(int index, struct monster *mon, bool seen)
 	spell_message(mon, spell, seen, hits);
 
 	if (hits) {
+		int save = player->state.skills[SKILL_SAVE];
 		struct monster_spell_level *level = spell->level;
+
+		if (!mon_spell_is_innate(index)) {
+			save += get_power_scale(player, PP_ANTIMAGIC, 50);
+		}
 
 		/* Get the right level of save message */
 		while (level->next && mon->race->spell_power >= level->next->power) {
@@ -376,7 +381,7 @@ void do_mon_spell(int index, struct monster *mon, bool seen)
 
 		/* Try a saving throw if available */
 		if (level->save_message && (target_midx <= 0) &&
-				randint0(100) < player->state.skills[SKILL_SAVE]) {
+				randint0(100) < randint0(save * 2)) {
 			msg("%s", level->save_message);
 			spell_check_for_fail_rune(spell);
 		} else {

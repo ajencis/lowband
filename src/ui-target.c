@@ -346,9 +346,10 @@ static ui_event target_recall_loop_object(struct object *obj, int y, int x,
 			/* Describe the object */
 			if (p->wizard) {
 				strnfmt(out_val, TARGET_OUT_VAL_SIZE,
-						"%s%s%s%s, %s (%d:%d, noise=%d, scent=%d).", s1, s2, s3,
+						"%s%s%s%s, %s (%d:%d, noise=%d, scent=%d, mana=%i).", s1, s2, s3,
 						o_name, coords, y, x, (int)cave->noise.grids[y][x],
-						(int)cave->scent.grids[y][x]);
+						(int)cave->scent.grids[y][x],
+						square(cave, loc(x, y))->mana);
 			} else {
 				strnfmt(out_val, TARGET_OUT_VAL_SIZE,
 						"%s%s%s%s, %s.", s1, s2, s3, o_name, coords);
@@ -429,7 +430,7 @@ static bool aux_hallucinate(struct chunk *c, struct player *p,
 	/* Display a message */
 	if (p->wizard) {
 		strnfmt(out_val, sizeof(out_val),
-			"%s%s%s, %s (%d:%d, noise=%d, scent=%d).",
+			"%s%s%s, %s (%d:%d, noise=%d, scent=%d, mana=%i).",
 			auxst->phrase1,
 			auxst->phrase2,
 			name_strange,
@@ -437,7 +438,8 @@ static bool aux_hallucinate(struct chunk *c, struct player *p,
 			auxst->grid.y,
 			auxst->grid.x,
 			(int)c->noise.grids[auxst->grid.y][auxst->grid.x],
-			(int)c->scent.grids[auxst->grid.y][auxst->grid.x]);
+			(int)c->scent.grids[auxst->grid.y][auxst->grid.x],
+			square(c, auxst->grid)->mana);
 	} else {
 		strnfmt(out_val, sizeof(out_val), "%s%s%s, %s.",
 			auxst->phrase1,
@@ -505,7 +507,7 @@ static bool aux_monster(struct chunk *c, struct player *p,
 			/* Describe, and prompt for recall */
 			if (p->wizard) {
 				strnfmt(out_val, sizeof(out_val),
-					"%s%s%s (%s), %s (%d:%d, noise=%d, scent=%d).",
+					"%s%s%s (%s), %s (%d:%d, noise=%d, scent=%d, mana=%i).",
 					auxst->phrase1,
 					auxst->phrase2,
 					m_name,
@@ -514,7 +516,8 @@ static bool aux_monster(struct chunk *c, struct player *p,
 					auxst->grid.y,
 					auxst->grid.x,
 					(int)c->noise.grids[auxst->grid.y][auxst->grid.x],
-					(int)c->scent.grids[auxst->grid.y][auxst->grid.x]);
+					(int)c->scent.grids[auxst->grid.y][auxst->grid.x],
+					square(c, auxst->grid)->mana);
 			} else {
 				strnfmt(out_val, sizeof(out_val),
 					"%s%s%s (%s), %s.",
@@ -861,7 +864,7 @@ static bool aux_terrain(struct chunk *c, struct player *p,
 	/* Display a message */
 	if (p->wizard) {
 		strnfmt(out_val, sizeof(out_val),
-			"%s%s%s%s, %s (%d:%d, noise=%d, scent=%d).",
+			"%s%s%s%s, %s (%d:%d, noise=%d, scent=%d, mana=%d).",
 			auxst->phrase1,
 			lphrase2,
 			lphrase3,
@@ -870,7 +873,8 @@ static bool aux_terrain(struct chunk *c, struct player *p,
 			auxst->grid.y,
 			auxst->grid.x,
 			(int)c->noise.grids[auxst->grid.y][auxst->grid.x],
-			(int)c->scent.grids[auxst->grid.y][auxst->grid.x]);
+			(int)c->scent.grids[auxst->grid.y][auxst->grid.x],
+			square(c, auxst->grid)->mana);
 	} else {
 		strnfmt(out_val, sizeof(out_val),
 			"%s%s%s%s, %s.",

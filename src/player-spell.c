@@ -615,6 +615,7 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 	const struct player_spell *spell = player_spell_lookup(spell_index);
 	assert(spell);
 	int mana = player_spell_mana(spell);
+	int availmana = available_mana(cave, player->grid);
 	int chance = player_spell_fail(spell);
 
 	/* L: save the spell for spellpower calc purposes */
@@ -659,17 +660,14 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 	if (player->realm && player->realm->hp_cast) {
 		// Use hp
 		take_hit(player, mana, "the strain of casting a spell");
-	} else if (mana <= player->csp) {
+	} else if (mana <= availmana) {
 		/* Use some mana */
-		player->csp -= mana;
+		cave->squares[player->grid.y][player->grid.x].mana -= mana;
+		square_average_mana(cave, player->grid);
 	} else {
-		int oops = mana - player->csp;
-
-		take_max_sp_dam(player, one_in_(10) ? mana : oops);
-
-		/* No mana left */
-		player->csp = 0;
-		player->csp_frac = 0;
+		int oops = mana - availmana;
+		cave->squares[player->grid.y][player->grid.x].mana -= availmana;
+		square_average_mana(cave, player->grid);
 
 		/* Over-exert the player */
 		player_over_exert(player, PY_EXERT_FAINT, 100, 5 * oops + 1);
@@ -913,6 +911,7 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 	int numschools = 0, sumschools = 0;
 	int schoolbonus = 0, realmbonus = 0;
 	int skill = p->state.skills[SKILL_MAGIC];
+	int antim = p->state.powers[PP_ANTIMAGIC] / 2;
 	int i;
 	int result, stepdown;
 	const struct magic_realm *r = p->realm;
@@ -933,7 +932,7 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 
 	schoolbonus = MIN(schoolbonus, skill * 2);
 
-	result = skill + schoolbonus + realmbonus - s->slevel + 1;
+	result = skill + schoolbonus + realmbonus - s->slevel - antim + 1;
 
 	for (stepdown = 20; result > stepdown; stepdown += 10) {
 		result = (result - stepdown) / 2 + stepdown;
@@ -970,9 +969,9 @@ int player_spell_mana(const struct player_spell *ps) {
 	int base = ps->smana;
 	int power = gener_spell_power(player, ps);
 	int result;
-	assert(NO_MANA_LEVEL > NO_FAIL_LEVEL);
+	assert(NO_MANA_LEVEL > 0);
 
-	result = (NO_MANA_LEVEL - power) * base / (NO_MANA_LEVEL - NO_FAIL_LEVEL);
+	result = ((NO_MANA_LEVEL - power) * base + NO_MANA_LEVEL - 1) / NO_MANA_LEVEL;
 
 	return MAX(0, MIN(base, result));
 }
@@ -983,7 +982,7 @@ int player_spell_fail(const struct player_spell *ps) {
 	int result;
 	assert(NO_FAIL_LEVEL > 0);
 
-	result = (NO_FAIL_LEVEL - power) * base / NO_FAIL_LEVEL;
+	result = ((NO_FAIL_LEVEL - power) * base + NO_FAIL_LEVEL - 1) / NO_FAIL_LEVEL;
 
 	return MAX(0, MIN(base, result));
 }

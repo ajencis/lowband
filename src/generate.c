@@ -96,12 +96,15 @@ static enum parser_error parse_profile_name(struct parser *p) {
 	size_t i;
 
 	c->name = string_make(parser_getstr(p, "name"));
-	for (i = 0; i < N_ELEMENTS(cave_builders); i++)
-		if (streq(c->name, cave_builders[i].name))
+	for (i = 0; i < N_ELEMENTS(cave_builders); i++) {
+		if (streq(c->name, cave_builders[i].name)) {
 			break;
+		}
+	}
 
-	if (i == N_ELEMENTS(cave_builders))
+	if (i == N_ELEMENTS(cave_builders)) {
 		return PARSE_ERROR_NO_BUILDER_FOUND;
+	}
 	c->builder = cave_builders[i].builder;
 	c->next = h;
 	parser_setpriv(p, c);
@@ -1188,8 +1191,9 @@ static struct chunk *cave_generate(struct player *p, int height, int width)
 		}
 
 		/* Regenerate levels that overflow their maxima */
-		if (cave_monster_max(chunk) >= z_info->level_monster_max)
+		if (cave_monster_max(chunk) >= z_info->level_monster_max) {
 			error = "too many monsters";
+		}
 
 		if (error) {
 			if (OPT(p, cheat_room)) {

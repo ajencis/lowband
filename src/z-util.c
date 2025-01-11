@@ -2124,7 +2124,7 @@ static double inverse_binary_search(double num, double (*f)(double),
 	int tries;
 	assert(offby >= 0.0);
 
-	for (tries = 0; tries < 256; tries++) {
+	for (tries = 0; tries < 1024; tries++) {
 		mid = (low + high) / 2;
 
 		result = f(mid);

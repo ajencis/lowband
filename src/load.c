@@ -1434,6 +1434,13 @@ static int rd_dungeon_aux(struct chunk **c)
 		}
 	}
 
+	for (y = 0; y < height; ++y) {
+		for (x = 0; x < width; ++x) {
+			rd_byte(&tmp8u);
+			c1->squares[y][x].mana = (int8_t)tmp8u;
+		}
+	}
+
 
 	/* Read "feeling" */
 	rd_byte(&tmp8u);

@@ -440,6 +440,7 @@ void vault_monsters(struct chunk *c, struct loc grid, int depth, int num);
 void alloc_objects(struct chunk *c, int set, int typ, int num, int depth,
 	uint8_t origin);
 bool alloc_object(struct chunk *c, int set, int typ, int depth, uint8_t origin);
+void alloc_mana(struct chunk *c);
 void uncreate_artifacts(struct chunk *c);
 void dump_level_simple(const char *basefilename, const char *title,
 	struct chunk *c);

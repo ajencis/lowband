@@ -128,8 +128,9 @@ struct level *level_by_depth(int depth)
  */
 bool is_daytime(void)
 {
-	if ((turn % (10L * z_info->day_length)) < ((10L * z_info->day_length) / 2)) 
+	if ((turn % (10L * z_info->day_length)) < ((10L * z_info->day_length) / 2)) {
 		return true;
+	}
 
 	return false;
 }
@@ -143,7 +144,34 @@ int turn_energy(int speed)
 }
 
 /**
- * If player has inscribed the object with "!!", let him know when it's
+ * L: how much mana is normal on a particular square
+ */
+int mana_quantity(struct chunk *c, struct loc grid)
+{
+	// 2.5 pts at peak at level 5, 4.2 points at peak at level 100
+	int base = my_int_sqrt(c->depth * 5); // 2 at 1, 22 at 100
+	int avg = MAX(base + 10, 40 - c->depth * 10); // 1/10 point of mana on average per square
+	int mod = (c->depth / 5) + (c->turn & 0x7) + 5; // space between peaks
+
+	int yseed = (turn >> 3) & 0xf; // semirandom number that changes over time
+	int xseed = (turn >> 7) & 0xf;
+
+	int yuse = (grid.y + yseed + grid.x * 2 / mod) % (2 * mod) + 2 * mod; // levels are not all identical
+	int xuse = (grid.x + xseed - grid.y * 2 / mod) % (2 * mod) + 2 * mod;
+
+	int yfact = ((yuse / mod) % 2 ? yuse % mod : mod - 1 - (yuse % mod)); // zigzag
+	int xfact = ((xuse / mod) % 2 ? xuse % mod : mod - 1 - (xuse % mod));
+
+	assert(avg >= 0);
+	assert(mod >= 0);
+	assert(yseed >= 0 && xseed >= 0);
+	assert(yfact >= 0 && xfact >= 0);
+
+	return (yfact * xfact * avg / (mod - 1) / (mod - 1) + 5) / 10; // peaks like a mountain
+}
+
+/**
+ * If player has inscribed the object with "!!", let them know when it's
  * recharged. -LM-
  * Also inform player when first item of a stack has recharged. -HK-
  * Notify all recharges w/o inscription if notify_recharge option set -WP-
@@ -187,10 +215,11 @@ static void recharged_notice(const struct object *obj, bool all)
 	if (obj->number > 1) {
 		if (all) msg("Your %s have recharged.", o_name);
 		else msg("One of your %s has recharged.", o_name);
-	} else if (obj->artifact)
+	} else if (obj->artifact) {
 		msg("The %s has recharged.", o_name);
-	else
+	} else {
 		msg("Your %s has recharged.", o_name);
+	}
 }
 
 
@@ -227,12 +256,14 @@ static void recharge_objects(void)
 			/* Recharge rods, and update if any rods are recharged */
 			if (tval_can_have_timeout(obj) && recharge_timeout(obj)) {
 				/* Entire stack is recharged */
-				if (obj->timeout == 0)
+				if (obj->timeout == 0) {
 					recharged_notice(obj, true);
+				}
 
 				/* Previously exhausted stack has acquired a charge */
-				else if (discharged_stack)
+				else if (discharged_stack) {
 					recharged_notice(obj, false);
+				}
 
 				/* Combine pack */
 				player->upkeep->notice |= (PN_COMBINE);
@@ -249,8 +280,9 @@ static void recharge_objects(void)
 		if (!obj) continue;
 
 		/* Recharge rods */
-		if (tval_can_have_timeout(obj))
+		if (tval_can_have_timeout(obj)) {
 			recharge_timeout(obj);
+		}
 	}
 }
 
@@ -261,10 +293,11 @@ static void recharge_objects(void)
 void play_ambient_sound(void)
 {
 	if (player->depth == 0) {
-		if (is_daytime())
+		if (is_daytime()) {
 			sound(MSG_AMBIENT_DAY);
-		else 
+		} else {
 			sound(MSG_AMBIENT_NITE);
+		}
 	} else if (player->depth <= 20) {
 		sound(MSG_AMBIENT_DNG1);
 	} else if (player->depth <= 40) {
@@ -590,6 +623,58 @@ void process_world(struct chunk *c)
 	if (one_in_(z_info->alloc_monster_chance) && !player->upkeep->generate_level) {
 		(void)pick_and_place_distant_monster(c, player->grid,
 			z_info->max_sight + 5, true, player->depth);
+	}
+
+	// L: move mana around
+	for (i = 0; i < 25; ++i) {
+		x = randint1(c->width - 2);
+		y = randint1(c->height - 2);
+		square_average_mana(cave, loc(x, y));
+
+		if (i < c->depth / 3 || i == 0) {
+			int avg = mana_quantity(cave, loc(x, y));
+			struct square *sq = &cave->squares[y][x];
+			if (sq->mana < avg) {
+				++sq->mana;
+			} else if (sq->mana > avg) {
+				--sq->mana;
+			}
+		}
+
+		assert(square(cave, loc(x, y))->mana >= 0);
+	}
+
+	if (player->state.powers[PP_ANTIMAGIC] > 0) {
+		int power = get_power_scale(player, PP_ANTIMAGIC, 1500); // chance in 1000 to drain mana
+		int rad = MAX(MIN((power + 99) / 100, power / 75 - 3), 0);
+		int dist, quantity;
+		int totaldrained = 0;
+		struct square *sq;
+		for (x = player->grid.x - rad; x <= player->grid.x + rad; ++x) {
+			for (y = player->grid.y - rad; y <= player->grid.y + rad; ++y) {
+				if (!square_in_bounds_fully(cave, loc(x, y))) continue;
+				if (square_feat(c, loc(x, y))->fidx == FEAT_PERM) continue;
+
+				sq = &cave->squares[y][x];
+				dist = distance(player->grid, loc(x, y));
+
+				if (dist > rad) continue;
+				if (!los(c, player->grid, loc(x, y))) continue;
+
+				quantity = (power - dist * 100 + randint0(1000)) / 1000;
+				quantity = MIN(quantity, sq->mana);
+				quantity = MAX(quantity, 0);
+
+				sq->mana -= quantity;
+				totaldrained += quantity;
+
+				if (quantity > 0) player->upkeep->redraw |= PR_MANA;
+
+				assert(sq->mana >= 0);
+
+				player_adjust_hp_precise(player, (int32_t)((double)INT16_MAX * quantity * my_sqrt(player->mhp) / 10.0));
+			}
+		}
 	}
 
 	/*** Damage (or healing) over Time ***/
@@ -1334,7 +1419,7 @@ void run_game_loop(void)
             // removed temporarily
             //turn += 10 - (turn % 10);
 			/* L: process the world a bunch */
-			/*for (i = 0; (i < player->upkeep->taking_stairs) && !player->is_dead; i++)
+			/*for (i = 0; i < player->upkeep->taking_stairs && !player->is_dead; i++)
 			{
 				turn += 10;
 				//msg("turn %i, food %i", turn, player->timed[TMD_FOOD]);
@@ -1342,7 +1427,6 @@ void run_game_loop(void)
 			}*/
 
 			player->upkeep->taking_stairs = 0;
-			
 			on_new_level();
 
 			player->upkeep->generate_level = false;

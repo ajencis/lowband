@@ -145,7 +145,7 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 	char extra[128];
 	extra[0] = '\0';
 	if (mrace) {
-		calc_monster_powers(mrace, monster_powers);
+		calc_monster_powers(mrace, monster_powers, &player->state);
 		calc_monster_skills(mrace, monster_skills);
 	}
 	if (choices[oid].group == PLAYER_FLAG_POWER || choices[oid].group == PLAYER_FLAG_SKILL) {

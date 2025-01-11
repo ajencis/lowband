@@ -1824,7 +1824,7 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 			assert(player->cave->objects[obj->oidx] == obj->known);
 			assert(cave->objects[obj->oidx] == obj);
 			if (monster_carry(cave, mon, obj)) {
-				assert(player->cave->objects[obj->oidx] == obj->known);
+				assert(!player->cave->objects[obj->oidx] || player->cave->objects[obj->oidx] == obj->known);
 				assert(cave->objects[obj->oidx] == obj || !cave->objects[obj->oidx]);
 				/* Describe observable situations */
 				if (square_isseen(cave, new) && !ignore_item_ok(player, obj)) {
@@ -1836,7 +1836,7 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 				square_note_spot(cave, new);
 				square_light_spot(cave, new);
 
-				assert(player->cave->objects[obj->oidx] == obj->known);
+				assert(!player->cave->objects[obj->oidx] || player->cave->objects[obj->oidx] == obj->known);
 				assert(cave->objects[obj->oidx] == obj || !cave->objects[obj->oidx]);
 			} else if (!floor_carry(cave, new, obj, NULL)) {
 				drop_near(cave, &obj, 0, new, false, false);

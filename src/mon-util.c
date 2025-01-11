@@ -686,7 +686,7 @@ void monster_swap(struct loc grid1, struct loc grid2)
 		player->upkeep->update |= (PU_PANEL | PU_UPDATE_VIEW | PU_DISTANCE);
 
 		/* Redraw monster list */
-		player->upkeep->redraw |= (PR_MONLIST);
+		player->upkeep->redraw |= (PR_MONLIST | PR_MANA);
 
 		/* Don't allow command repeat if moved away from item used. */
 		cmd_disable_repeat_floor_item();
@@ -735,7 +735,7 @@ void monster_swap(struct loc grid1, struct loc grid2)
 		player->upkeep->update |= (PU_PANEL | PU_UPDATE_VIEW | PU_DISTANCE);
 
 		/* Redraw monster list */
-		player->upkeep->redraw |= (PR_MONLIST);
+		player->upkeep->redraw |= (PR_MONLIST | PR_MANA);
 
 		/* Don't allow command repeat if moved away from item used. */
 		cmd_disable_repeat_floor_item();
@@ -1500,6 +1500,10 @@ bool monster_carry(struct chunk *c, struct monster *mon, struct object *obj)
 {
 	struct object *held_obj;
 
+	if (player->cave && player->cave->objects) {
+		assert(player->cave->objects[obj->oidx] == obj->known);
+	}
+
 	// L: flag the monster as wanting to recheck its equipment
 	mflag_on(mon->mflag, MFLAG_CHECK_EQ);
 
@@ -1509,6 +1513,10 @@ bool monster_carry(struct chunk *c, struct monster *mon, struct object *obj)
 		if (object_mergeable(held_obj, obj, OSTACK_MONSTER)) {
 			/* Combine the items */
 			object_absorb(held_obj, obj);
+			
+			if (player->cave && player->cave->objects) {
+				assert(!player->cave->objects[obj->oidx] || player->cave->objects[obj->oidx] == obj->known);
+			}
 
 			/* Result */
 			return true;
@@ -1524,11 +1532,10 @@ bool monster_carry(struct chunk *c, struct monster *mon, struct object *obj)
 	/* Add the object to the monster's inventory */
 	list_object(c, obj);
 
-
 	if (obj->known) {
 		obj->known->oidx = obj->oidx;
 	}
-	
+
 	if (player && player->cave && player->cave->objects) {
 		player->cave->objects[obj->oidx] = obj->known;
 	}
@@ -2081,7 +2088,7 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 	mr->ac = ac; // 100ish for level 100
 	mr->speed = 105 + (spe * 30 + 49) / 100; // 135ish for level 100
 	mr->spell_power = mag; // 100ish for level 100
-	ttdam = MAX(dam + 4, dam * 2);
+	ttdam = MAX(dam / 2 + 4, dam); // 100ish for level 100
 	if (dam > 0) mr->freq_spell = 40 * mag / dam;
 	else mr->freq_spell = 100;
 	mr->freq_spell = MIN(75, mr->freq_spell);
@@ -2093,7 +2100,8 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 		quo += 5 + mr->blow[i].method->power;
 	}
 	// gets a total number of dice for its attacks based on its level and number of attacks
-	tdice = dam * (blows + 4) / 50 + 1;
+	// 5 + blows dice total at level 100
+	tdice = dam / 20 + blows;
 
 	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
 		cblow = &mr->blow[i];

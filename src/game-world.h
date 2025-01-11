@@ -43,6 +43,7 @@ struct level *level_by_name(const char *name);
 struct level *level_by_depth(int depth);
 bool is_daytime(void);
 int turn_energy(int speed);
+int mana_quantity(struct chunk *c, struct loc grid);
 void play_ambient_sound(void);
 void process_world(struct chunk *c);
 void on_new_level(void);

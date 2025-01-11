@@ -83,6 +83,9 @@ void player_race_elem_info(const struct player_race *r, bool evolved, struct ele
 int player_skill_stat(struct player *p, int skill);
 bool player_learn_spell_xp(struct player *p, bool initial, int xp);
 
+int antimagic_fail_increase(struct player *p);
+int antimagic_radius(struct player *p);
+
 int dungeon_get_next_level(struct player *p, int dlev, int added);
 void player_set_recall_depth(struct player *p);
 bool player_get_recall_depth(struct player *p);

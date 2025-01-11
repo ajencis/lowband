@@ -596,6 +596,7 @@ static struct menu *innate_menu_new(const struct monster_race *monr,
 	struct menu *m = menu_new(MN_SKIN_SCROLL, &innate_menu_iter);
 	struct innate_menu_data *d = mem_alloc(sizeof *d);
 	size_t width = MAX(0, MIN(Term->wid - 15, 80));
+	bool is_stupid = rf_has(monr->flags, RF_STUPID) || rf_has(monr->flags, RF_EMPTY_MIND);
 
 	int max_innates = 25;
 
@@ -607,14 +608,14 @@ static struct menu *innate_menu_new(const struct monster_race *monr,
 	d->n_innates = 0;
 	d->innates = mem_zalloc(max_innates * sizeof(int));
 	for (i = 0; i < RSF_MAX; i++) {
-		if (!mon_spell_is_innate(i)) continue;
+		if (!is_stupid && !mon_spell_is_innate(i)) continue;
 		if (!rsf_has(monr->spell_flags, i)) continue;
 		d->innates[d->n_innates] = i;
 		d->n_innates++;
 		if (d->n_innates >= max_innates) break;
 	}
 
-	if (d->n_innates == 0) { //|| !innate_okay_list(player, is_valid, d->spells, d->n_spells)) {
+	if (d->n_innates == 0) {
 		mem_free(m);
 		mem_free(d->innates);
 		mem_free(d);

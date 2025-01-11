@@ -3621,7 +3621,7 @@ static enum parser_error parse_spell_name(struct parser *p) {
 	if (parser_hasval(p, "mana")) {
 		spell->smana = parser_getint(p, "mana");
 	} else {
-		spell->smana = spell->slevel / 10 + 1;
+		spell->smana = my_int_sqrt(spell->slevel) + 2;
 	}
 
 	if (parser_hasval(p, "fail")) {

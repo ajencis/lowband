@@ -1265,6 +1265,11 @@ static bool calc_monster_spell(int counts[PP_MAX], const struct monster_spell *m
 		case EF_BEAM:
 		case EF_BOLT:
 		case EF_BREATH:
+		case EF_BOLT_AWARE:
+		case EF_BOLT_STATUS:
+		case EF_BOLT_STATUS_DAM:
+		case EF_SPOT:
+		case EF_SPHERE:
 			skill = power_by_element(mspell->effect->subtype);
 			break;
 		case EF_MON_HEAL_HP:
@@ -1303,7 +1308,7 @@ static bool calc_monster_blow(int counts[PP_MAX], const struct monster_blow *mb)
 	return effect;
 }
 
-void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX])
+void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], const struct player_state *ps)
 {
 	int i, totalbonus, numcounts = 0, numblows = 0;
 	const struct monster_spell *mspell;
@@ -1321,11 +1326,12 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX])
 	}
 
 	if (numcounts > 0) {
-		totalbonus = mrace->spell_power * (4 + numcounts) / (9 + numcounts);
+		totalbonus = my_cbrt(mrace->spell_power * mrace->spell_power) * (4.0 + numcounts) / (9.0 + numcounts);
 		for (i = 0; i < PP_MAX; i++) {
 			powers[i] += spell_counts[i] * totalbonus / numcounts;
 		}
 	}
+
 
 	for (i = 0; i < z_info->mon_blows_max && mrace->blow[i].method; i++) {
 		mblow = &mrace->blow[i];
@@ -1335,28 +1341,38 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX])
 	}
 
 	if (numblows > 0) {
-		totalbonus = mrace->level * (2 + numblows) / (5 + numblows);
+		totalbonus = my_sqrt(mrace->level * mrace->level) * (4.0 + numblows) / (9.0 + numblows);
 		for (i = 0; i < PP_MAX; i++) {
 			powers[i] += blow_counts[i] * totalbonus / numblows;
 		}
 	}
 
+
 	for (i = 0; i < PP_MAX; i++) {
 		powers[i] += (mrace->base->powers[i] * mrace->level + 50) / 100;
+	}
+
+
+	for (i = 0; i < PP_MAX; ++i) {
+		// monsters are specialized
+		int penalty = my_sqrt(mrace->level * 5);
+		penalty = MIN(ps->powers[i], penalty);
+		penalty = MAX(0, penalty);
+		powers[i] -= penalty;
 	}
 }
 
 void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX])
 {
-	int i, class_hp, mod;
+	int i, norm_hp, mod;
 
 	for (i = 0; i < SKILL_MAX; i++) {
 		skills[i] += mrace->base->skills[i] * mrace->level / 20;
 	}
 
 	// assume the monster gets hp equal to half its level from its class
-	class_hp = (int)(mrace->level * my_sqrt((double)mrace->level) / 10.0);
-	mod = mrace->avg_hp - class_hp;
+	norm_hp = (int)(mrace->level * my_sqrt((double)mrace->level) / 10.0);
+	mod = mrace->avg_hp - norm_hp;
 	if (mod > 0) {
 		mod = my_int_cbrt(mod * mod);
 	}
@@ -1405,7 +1421,7 @@ static void calc_monster(struct player *p, struct player_state *state,
 
 	if (rf_has(mrace->flags, RF_NEVER_MOVE)) *moves -= 25;
 
-	calc_monster_powers(mrace, powers);
+	calc_monster_powers(mrace, powers, state);
 
 	for (i = 0; i < PP_MAX; ++i) {
 		state->powers[i] += powers[i];
@@ -1527,7 +1543,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			state->powers[i] = (efflev * scale + 99) / 100;
 		}
 
-		state->powers[i] += MIN(p->extra_powers[i] / 2, p->lev * 3);
+		state->powers[i] += MIN((p->extra_powers[i] + 1) / 2, p->lev * 3);
 	}
 
 	calc_extra_points(p, state);

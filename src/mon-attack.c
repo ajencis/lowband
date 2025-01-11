@@ -57,6 +57,8 @@
  * to remove attacks or spells before using them. 
  */
 
+
+
 int monster_melee_attack_range(int level, struct monster_blow *mblow)
 {
 	assert(mblow->method);
@@ -64,6 +66,11 @@ int monster_melee_attack_range(int level, struct monster_blow *mblow)
 	int result = level / 10 + (brng + 1) / 2;
 
 	return MAX(1, MIN(brng, result));
+}
+
+static int mon_spell_cost(struct monster *mon)
+{
+	return mon->race->spell_power / 10 + 1;
 }
 
 /**
@@ -112,7 +119,7 @@ static void monster_get_target_dist_grid(struct monster *mon, int *dist,
 static bool monster_can_cast(struct monster *mon, bool innate)
 {
 	int chance = innate ? mon->race->freq_innate : mon->race->freq_spell;
-	int tdist;
+	int tdist, rdist;
 	struct loc tgrid;
 	bool target_is_player;
 
@@ -138,8 +145,17 @@ static bool monster_can_cast(struct monster *mon, bool innate)
 	}
 
 	/* Monsters at their preferred range are more likely to cast */
-	if (tdist == mon->best_range) {
+	rdist = ABS(mon->best_range - tdist);
+	chance = chance * (10 - rdist) / 5;
+	/*if (tdist <= mon->best_range) {
 		chance *= 2;
+	}*/
+
+	// L: avoid trying to cast if we're running out of mana
+	if (!innate) {
+		int exceed = available_mana(cave, mon->grid) - mon_spell_cost(mon);
+		chance = chance * (exceed + 1) / 3;
+		chance = MAX(0, chance);
 	}
 
 	/* Only do spells occasionally */
@@ -149,13 +165,14 @@ static bool monster_can_cast(struct monster *mon, bool innate)
 	if (tdist > z_info->max_range) return false;
 
 	/* Check path */
-	if (!projectable(cave, mon->grid, tgrid, PROJECT_SHORT))
+	if (!projectable(cave, mon->grid, tgrid, PROJECT_SHORT)) {
 		return false;
+	}
 
 	/* If the target isn't the player, only cast if the player can witness */
 	if ((target_is_player) &&
-		!square_isview(cave, mon->grid) &&
-		!square_isview(cave, tgrid)) {
+			!square_isview(cave, mon->grid) &&
+			!square_isview(cave, tgrid)) {
 		struct loc *path = mem_alloc(z_info->max_range * sizeof(*path));
 		int npath, ipath;
 
@@ -336,7 +353,7 @@ int choose_attack_spell(bitflag *f, bool innate, bool non_innate)
 /**
  * Failure rate of a monster's spell, based on spell power and current status
  */
-static int monster_spell_failrate(struct monster *mon)
+static int monster_spell_failrate(struct monster *mon, int spell)
 {
 	int power = MIN(mon->race->spell_power, 1);
 	int failrate = 0;
@@ -347,12 +364,14 @@ static int monster_spell_failrate(struct monster *mon)
 		failrate = 25 - (power + 3) / 4;
 
 		/* Fear adds 20% */
-		if (mon->m_timed[MON_TMD_FEAR])
+		if (mon->m_timed[MON_TMD_FEAR]) {
 			failrate += 20;
+		}
 
 		/* Confusion and diesnchantment add 50% */
-		if (mon->m_timed[MON_TMD_CONF] || mon->m_timed[MON_TMD_DISEN])
+		if (mon->m_timed[MON_TMD_CONF] || mon->m_timed[MON_TMD_DISEN]) {
 			failrate += 50;
+		}
 	}
 
 	return failrate;
@@ -437,6 +456,9 @@ bool make_ranged_attack(struct monster *mon)
 	int i;
 	struct monster *t_mon = NULL;
 	struct player *t_player = NULL;
+	int mana = mon->race->spell_power / 10 + 1;
+	struct square *sq = &cave->squares[mon->grid.y][mon->grid.x];
+	int avail_mana = available_mana(cave, mon->grid);
 
 	if (mon->target.who != TARGET_WHO_MONSTER && mon->target.who != TARGET_WHO_PLAYER) {
 		return false;
@@ -551,10 +573,16 @@ bool make_ranged_attack(struct monster *mon)
 	}
 
 	/* Check for spell failure (innate attacks never fail) */
-	failrate = monster_spell_failrate(mon);
-	if (!mon_spell_is_innate(thrown_spell) && (randint0(100) < failrate)) {
-		msg("%s tries to cast a spell, but fails.", m_name);
-		return true;
+	failrate = monster_spell_failrate(mon, thrown_spell);
+
+	if (!mon_spell_is_innate(thrown_spell)) {
+		int extrafail = 100 - (avail_mana + mana + 1) * 15;
+		if (randint0(100) < failrate + extrafail || mana > avail_mana) {
+			msg("%s tries to cast a spell, but fails.", m_name);
+			return true;
+		}
+		sq->mana -= mana;
+		square_average_mana(cave, mon->grid);
 	}
 
 	/* Cast the spell. */

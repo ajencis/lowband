@@ -1222,6 +1222,7 @@ static bool place_new_monster_one(struct chunk *c, struct loc grid,
 	/* Clean out the monster */
 	memset(mon, 0, sizeof(struct monster));
 
+
 	/* Save the race */
 	mon->race = race;
 
@@ -1489,7 +1490,6 @@ bool place_new_monster(struct chunk *c, struct loc grid,
 	/* We're done unless the group flag is set */
 	if (!group_ok) return (true);
 
-
 	/* Go through friends flags */
 	for (friends = race->friends; friends; friends = friends->next) {
 		if ((unsigned int)randint0(100) >= friends->percent_chance)
@@ -1620,8 +1620,9 @@ bool pick_and_place_distant_monster(struct chunk *c, struct loc to_avoid,
 	}
 
 	/* Attempt to place the monster, allow groups */
-	if (pick_and_place_monster(c, grid, depth, sleep, true, ORIGIN_DROP))
+	if (pick_and_place_monster(c, grid, depth, sleep, true, ORIGIN_DROP)) {
 		return (true);
+	}
 
 	/* Nope */
 	return (false);

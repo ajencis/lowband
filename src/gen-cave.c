@@ -1165,14 +1165,16 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 
 	/* Initialize the room table */
 	dun->room_map = mem_zalloc(dun->row_blocks * sizeof(bool*));
-	for (i = 0; i < dun->row_blocks; i++)
+	for (i = 0; i < dun->row_blocks; i++) {
 		dun->room_map[i] = mem_zalloc(dun->col_blocks * sizeof(bool));
+	}
 
 	/* Initialize the block table */
 	blocks_tried = mem_zalloc(dun->row_blocks * sizeof(bool*));
 
-	for (i = 0; i < dun->row_blocks; i++)
+	for (i = 0; i < dun->row_blocks; i++) {
 		blocks_tried[i] = mem_zalloc(dun->col_blocks * sizeof(bool));
+	}
 
 	/* No rooms yet, pits or otherwise. */
 	dun->pit_num = 0;
@@ -1265,12 +1267,14 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	ensure_connectedness(c, true);
 
 	/* Add some magma streamers */
-	for (i = 0; i < dun->profile->str.mag; i++)
+	for (i = 0; i < dun->profile->str.mag; i++) {
 		build_streamer(c, FEAT_MAGMA, dun->profile->str.mc);
+	}
 
 	/* Add some quartz streamers */
-	for (i = 0; i < dun->profile->str.qua; i++)
+	for (i = 0; i < dun->profile->str.qua; i++) {
 		build_streamer(c, FEAT_QUARTZ, dun->profile->str.qc);
+	}
 
 	/* Place 3 or 4 down stairs and 1 or 2 up stairs near some walls */
 	handle_level_stairs(c, dun->persist, dun->quest,
@@ -1311,6 +1315,8 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 		Rand_normal(z_info->both_item_av * sp / 100, 3), c->depth, ORIGIN_FLOOR);
 	alloc_objects(c, SET_BOTH, TYP_GOLD,
 		Rand_normal(z_info->both_gold_av * sp / 100, 3), c->depth, ORIGIN_FLOOR);
+
+	alloc_mana(c);
 
 	return c;
 }
@@ -1492,6 +1498,8 @@ static struct chunk *labyrinth_chunk(int depth, int h, int w, bool lit, bool sof
 	if (!soft)
 		alloc_objects(c, SET_BOTH, TYP_GREAT, Rand_normal(2, 1),
 			c->depth, ORIGIN_LABYRINTH);
+
+	alloc_mana(c);
 
 	return c;
 }
@@ -2221,6 +2229,8 @@ struct chunk *cavern_gen(struct player *p, int min_height, int min_width,
 	alloc_objects(c, SET_BOTH, TYP_GOOD, randint0(k / 4), c->depth,
 		ORIGIN_CAVERN);
 
+	alloc_mana(c);
+
 	return c;
 }
 
@@ -2448,9 +2458,11 @@ static void build_store(struct chunk *c, int n, struct loc xroads,
 	fill_rectangle(c, build_n, build_w, build_s, build_e, FEAT_PERM, SQUARE_NONE);
 
 	/* Clear previous contents, add a store door */
-	for (feat = 0; feat < FEAT_MAX; feat++)
-		if (feat_is_shop(feat) && (f_info[feat].shopnum == n + 1))
+	for (feat = 0; feat < FEAT_MAX; feat++) {
+		if (feat_is_shop(feat) && (f_info[feat].shopnum == n + 1)) {
 			square_set_feat(c, door, feat);
+		}
+	}
 }
 
 static void build_ruin(struct chunk *c, struct loc xroads, struct loc lot, int lot_wid, int lot_hgt) {
@@ -2708,6 +2720,8 @@ struct chunk *town_gen(struct player *p, int min_height, int min_width,
 		pick_and_place_distant_monster(c_new, p->grid, 3, true,	depth);
 	}
 
+	alloc_mana(c_new);
+
 	return c_new;
 }
 
@@ -2946,6 +2960,8 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 	alloc_objects(c, SET_BOTH, TYP_GOLD,
 		Rand_normal(z_info->both_gold_av, 3), c->depth, ORIGIN_FLOOR);
 
+	alloc_mana(c);
+
 	return c;
 }
 
@@ -3179,6 +3195,8 @@ struct chunk *moria_gen(struct player *p, int min_height, int min_width,
 		Rand_normal(z_info->both_item_av, 3), c->depth, ORIGIN_FLOOR);
 	alloc_objects(c, SET_BOTH, TYP_GOLD,
 		Rand_normal(z_info->both_gold_av, 3), c->depth, ORIGIN_FLOOR);
+
+	alloc_mana(c);
 
 	return c;
 }
@@ -3496,6 +3514,8 @@ struct chunk *hard_centre_gen(struct player *p, int min_height, int min_width,
 	alloc_objects(c, SET_BOTH, TYP_GOOD, randint0(k / 4), c->depth,
 		ORIGIN_CAVERN);
 
+	alloc_mana(c);
+
 	return c;
 }
 
@@ -3694,6 +3714,8 @@ struct chunk *lair_gen(struct player *p, int min_height, int min_width,
 		Rand_normal(z_info->both_item_av, 3), c->depth, ORIGIN_FLOOR);
 	alloc_objects(c, SET_BOTH, TYP_GOLD,
 		Rand_normal(z_info->both_gold_av, 3), c->depth, ORIGIN_FLOOR);
+
+	alloc_mana(c);
 
 	return c;
 }
@@ -3950,6 +3972,8 @@ struct chunk *gauntlet_gen(struct player *p, int min_height, int min_width,
 		Rand_normal(z_info->both_item_av, 3), c->depth, ORIGIN_FLOOR);
 	alloc_objects(c, SET_BOTH, TYP_GOLD,
 		Rand_normal(z_info->both_gold_av, 3), c->depth, ORIGIN_FLOOR);
+
+	alloc_mana(c);
 
 	return c;
 }

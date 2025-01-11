@@ -23,7 +23,7 @@
 #include "player.h"
 
 /**
- * L: struct fr matching monster resists to player resists
+ * L: struct for matching monster resists to player resists
  */
 struct mon_player_match {
 	int mval;
@@ -121,7 +121,7 @@ int adj_stat_skill_percent(int index, int skill);
 
 bool earlier_object(struct object *orig, struct object *new, bool store);
 int equipped_item_slot(struct player_body body, struct object *obj);
-void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX]);
+void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], const struct player_state *ps);
 void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX]);
 void calc_inventory(struct player *p);
 void calc_bonuses(struct player *p, struct player_state *state, bool known_only,

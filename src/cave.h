@@ -163,6 +163,7 @@ struct square {
 	bitflag *info;
 	int light;
 	int16_t mon;
+	int8_t mana;
 	struct object *obj;
 	struct trap *trap;
 };
@@ -455,6 +456,8 @@ int count_feats(struct loc *grid,
 int count_neighbors(struct loc *match, struct chunk *c, struct loc grid,
 	bool (*test)(struct chunk *c, struct loc grid), bool under);
 struct loc cave_find_decoy(struct chunk *c);
+void square_average_mana(struct chunk *c, struct loc grid);
+int available_mana(struct chunk *c, struct loc grid);
 
 void cave_known(struct player *p);
 

@@ -312,16 +312,23 @@ int get_power_scale_state(const struct player_state *ps, int power, int scaleto,
 {
 	assert(power > 0 && power < PP_MAX);
 
-	int powerlev = ps->powers[power];
+	int powerlev = ps->powers[power], result;
+	bool negate = false;
 
 	if (powerlev <= 0) return 0;
 	if (powerlev > level) {
 		powerlev = (powerlev - level) / 2 + level;
 	}
 
-	int result = (powerlev * scaleto + 50 * 2 / 3) / 50;
+	powerlev = MAX(powerlev, 0);
+	if (scaleto < 0) {
+		scaleto = -scaleto;
+		negate = true;
+	}
 
-	return MAX(result, 0);
+	result = (powerlev * scaleto + 50 * 2 / 3) / 50;
+
+	return negate ? -result : result;
 }
 
 int get_power_scale(struct player *p, int power, int scaleto)
@@ -866,6 +873,17 @@ bool player_learn_spell_xp(struct player *p, bool initial, int xp)
 }
 
 
+int antimagic_fail_increase(struct player *p)
+{
+	return get_power_scale(p, PP_ANTIMAGIC, 75);
+}
+
+int antimagic_radius(struct player *p)
+{
+	if (p->state.powers[PP_ANTIMAGIC] <= 0) return 0;
+	return get_power_scale(p, PP_ANTIMAGIC, 3) + 2;
+}
+
 /**
  * Increment to the next or decrement to the preceeding level
    accounting for the stair skip value in constants
@@ -1376,16 +1394,18 @@ void player_regen_mana(struct player *p)
 	percent = PY_REGEN_NORMAL;
 
 	/* L: Limited abount of mana per floor */
-	percent *= p->floor_mana;
-	percent += 25;
+	percent *= square(cave, player->grid)->mana;
+	percent += 24;
 	percent /= 25;
 
 	/* Various things speed up regeneration, but shouldn't punish healthy BGs */
 	if (!(player_has(p, PF_COMBAT_REGEN) && p->chp > p->mhp / 2)) {
-		if (player_of_has(p, OF_REGEN))
+		if (player_of_has(p, OF_REGEN)) {
 			percent *= 2;
-		if (player_resting_can_regenerate(p))
+		}
+		if (player_resting_can_regenerate(p)) {
 			percent *= 2;
+		}
 	}
 
 	/* Some things slow it down */
@@ -1397,8 +1417,9 @@ void player_regen_mana(struct player *p)
 
 	/* Regenerate mana */
 	sp_gain = (int32_t)(p->msp * percent);
-	if (percent > 0)
+	if (percent > 0) {
 		sp_gain += PY_REGEN_MNBASE;
+	}
 	sp_gain = player_adjust_mana_precise(p, sp_gain);
 
 	/* SP degen heals BGs at double efficiency vs casting */
@@ -1411,8 +1432,9 @@ void player_regen_mana(struct player *p)
 		if (player->depth) {
             oldfeel = (p->floor_mana + 14) / 15;
 			p->floor_mana = MAX(0, p->floor_mana + old_csp - p->csp);
-			if ((p->floor_mana + 14) / 15 != oldfeel) 
-			    display_mana_feeling();
+			if ((p->floor_mana + 14) / 15 != oldfeel) {
+			    //display_mana_feeling();
+			}
 		}
 		p->upkeep->redraw |= (PR_MANA);
 		equip_learn_flag(p, OF_REGEN);

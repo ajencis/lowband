@@ -340,10 +340,23 @@ static void prt_hp(int row, int col)
  */
 static void prt_sp(int row, int col)
 {
-	char cur_sp[32], max_sp[32];
-	uint8_t color = player_sp_attr(player);
+	if (!character_dungeon) return;
+	//char cur_sp[32], max_sp[32];
+	char manastr[32];
+	//uint8_t color = player_sp_attr(player);
+	int mana = available_mana(cave, player->grid);
 
-	/* Do not show mana unless we should have some */
+	if ((!player->realm || !player->state.skills[SKILL_MAGIC]) && !player->state.powers[PP_ANTIMAGIC]) {
+		return;
+	}
+	put_str("Mana ", row, col);
+
+	strnfmt(manastr, sizeof(manastr), "%4i", mana);
+	c_put_str(COLOUR_L_GREEN, manastr, row, col + 8);
+	return;
+
+
+	// Do not show mana unless we should have some 
 	if (player->msp <= 0) {
 		/*
 		 * But clear if experience drain may have left no points after
@@ -353,15 +366,15 @@ static void prt_sp(int row, int col)
 		return;
 	}
 
-	put_str("SP ", row, col);
+	/*put_str("SP ", row, col);
 
 	strnfmt(max_sp, sizeof(max_sp), "%4d", player->msp);
 	strnfmt(cur_sp, sizeof(cur_sp), "%4d", player->csp);
 
-	/* Show mana */
+	// Show mana
 	c_put_str(color, cur_sp, row, col + 3);
 	c_put_str(COLOUR_WHITE, "/", row, col + 7);
-	c_put_str(COLOUR_L_GREEN, max_sp, row, col + 8);
+	c_put_str(COLOUR_L_GREEN, max_sp, row, col + 8);*/
 }
 
 /**
@@ -708,10 +721,22 @@ static int prt_hp_short(int row, int col)
 
 static int prt_sp_short(int row, int col)
 {
+	if (!character_dungeon) return 0;
+
+	int mana = available_mana(cave, player->grid);
+	char manastr[32];
+
+	strnfmt(manastr, sizeof(manastr), "%i", mana);
+
+	put_str("Mn:", row, col);
+	c_put_str(COLOUR_L_GREEN, manastr, row, col+3);
+	return 4 + strlen(manastr);
+
+	/*
 	char cur_sp[32], max_sp[32];
 	uint8_t color = player_sp_attr(player);
 
-	/* Do not show mana unless we should have some */
+	// Do not show mana unless we should have some
 	if (!player->class->magic.total_spells
 			|| (player->lev < player->class->magic.spell_first))
 		return 0;
@@ -722,13 +747,14 @@ static int prt_sp_short(int row, int col)
 	strnfmt(max_sp, sizeof(max_sp), "%d", player->msp);
 	strnfmt(cur_sp, sizeof(cur_sp), "%d", player->csp);
 
-	/* Show mana */
+	// Show mana
 	c_put_str(color, cur_sp, row, col);
 	col += strlen(cur_sp);
 	c_put_str(COLOUR_WHITE, "/", row, col);
 	col += 1;
 	c_put_str(COLOUR_L_GREEN, max_sp, row, col);
 	return 5+strlen(cur_sp)+strlen(max_sp);
+	*/
 }
 
 static int prt_health_short(int row, int col)
@@ -1316,6 +1342,14 @@ static size_t prt_learn(int row, int col)
 
 	return 0;
 }
+
+/*static size_t prt_mana(int row, int col)
+{
+	int mana = square(cave, player->grid)->mana;
+	char *str = format("Mana %i", mana);
+	put_str(str, row, col);
+	return strlen(str) + 1;
+}*/
 
 /**
  * Descriptive typedef for status handlers

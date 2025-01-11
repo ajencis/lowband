@@ -725,3 +725,53 @@ struct loc cave_find_decoy(struct chunk *c)
 {
 	return c->decoy;
 }
+
+void square_average_mana(struct chunk *c, struct loc grid)
+{
+	int i, j, x, y, diff;
+	struct square *sq = &c->squares[grid.y][grid.x], *sq2;
+
+	if (!square_in_bounds_fully(c, grid)) return;
+	if (square_feat(c, grid)->fidx == FEAT_PERM) return;
+
+	for (i = randint1(9), j = 0; j < 9; ++j, i = (i % 9) + 1) {
+		x = ddx[i] + grid.x;
+		y = ddy[i] + grid.y;
+		if (!square_in_bounds_fully(c, loc(x, y))) continue;
+		if (square_feat(c, loc(x, y))->fidx == FEAT_PERM) continue;
+
+		sq2 = &c->squares[y][x];
+
+		if (sq->mana < 0) {
+			diff = MIN(-sq->mana, sq2->mana);
+		}
+		else {
+			diff = (sq2->mana - sq->mana) / 2;
+		}
+		sq->mana += diff;
+		sq2->mana -= diff;
+	}
+
+	assert(square(c, grid)->mana >= 0);
+}
+
+/**
+ * total mana in a grid and all adjacent grids
+ */
+int available_mana(struct chunk *c, struct loc grid)
+{
+	assert(c);
+
+	struct loc gr2;
+	int total = 0;
+
+	for (gr2.x = grid.x - 1; gr2.x <= grid.x + 1; ++gr2.x) {
+		for (gr2.y = grid.y - 1; gr2.y <= grid.y + 1; ++gr2.y) {
+			if (!square_in_bounds_fully(c, gr2)) continue;
+
+			total += square(c, gr2)->mana;
+		}
+	}
+
+	return total;
+}

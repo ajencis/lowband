@@ -168,6 +168,43 @@ title:Champion
 title:Hero
 title:Lord
 
+############### UNMAGICIAN ###############
+name:Unmagician
+skill-disarm-phys:20:10
+skill-disarm-magic:25:15
+skill-device:10:4
+skill-save:10:6
+skill-stealth:0:0
+skill-search:10:12
+skill-melee:10:16
+skill-shoot:10:16
+skill-throw:10:16
+skill-dig:0:0
+skill-magic:-25:0
+skill-health:9:18
+power:ANTIMAGIC:100
+hitdie:9
+max-attacks:6
+min-weight:30
+strength-multiplier:5
+equip:food:Ration of Food:1:3:none
+equip:light:Wooden Torch:1:3:none
+equip:potion:Berserk Strength:1:1:none
+equip:sword:Dagger:1:1:none
+equip:soft armour:Soft Leather Armour:1:1:none
+equip:scroll:Word of Recall:1:1:birth_no_recall
+player-flags:BRAVERY_30 | SHIELD_BASH
+title:Null
+title:Void
+title:Absence
+title:Mana-Drinker
+title:Mana-Eater
+title:Mana-Breather
+title:Mana-Null
+title:Mana-Void
+title:Mana-Absence
+title:Unmagician
+
 name:Berserker
 skill-disarm-phys:20:15
 skill-disarm-magic:15:10
@@ -352,7 +389,7 @@ title:Prophet
 title:Parriarch
 title:High Priest
 
-############### PRIEST ###############
+############### DARK-PRIEST ###############
 name:Dark Priest
 skill-disarm-phys:25:12
 skill-disarm-magic:25:12

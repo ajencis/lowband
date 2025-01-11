@@ -418,10 +418,10 @@ code:BACKSTAB
 name:Backstabbing
 desc:You know where to hit where it hurts if your target is distracted.
 
-#type:power
-#code:RESILIENCE
-#name:Resilience
-#desc:You're particularly tough.
+type:power
+code:ANTIMAGIC
+name:Antimagic
+desc:You consume nearby mana.
 
 
 # L: skills

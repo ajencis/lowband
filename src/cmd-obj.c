@@ -1328,7 +1328,7 @@ static int gener_spell_is_castable(const struct player *p, int spell) {
 
 void do_cmd_cast(struct command *cmd)
 {
-	int spell_index, mana;
+	int spell_index, mana, availmana = available_mana(cave, player->grid);
 	int dir;
 	const struct player_spell *ps;
 	const char *fail = "You don't know any spells.";
@@ -1353,13 +1353,13 @@ void do_cmd_cast(struct command *cmd)
 
 	if (player->realm && player->realm->hp_cast) {
 		if (mana > player->chp) {
-			msg("You do not have neough hit points to cast this spell.");
+			msg("You do not have enough hit points to cast this spell.");
 			return;
 		}
 	}
 	else {
-		if (player_spell_mana(ps) > player->csp) {
-			msg("You do not have enough mana to cast this spell.");
+		if (player_spell_mana(ps) > availmana) {
+			msg("There is not enough mana nearby to cast this spell.");
 			event_signal(EVENT_INPUT_FLUSH);
 			if (!get_check("Attempt it anyway? ")) return;
 		}

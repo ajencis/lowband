@@ -24,6 +24,7 @@
 #include "cave.h"
 #include "datafile.h"
 #include "game-event.h"
+#include "game-world.h"
 #include "generate.h"
 #include "init.h"
 #include "mon-make.h"
@@ -729,6 +730,20 @@ void alloc_stairs(struct chunk *c, int feat, int num, int minsep, bool sepany,
 
 	mem_free(state);
 	mem_free(av);
+}
+
+
+void alloc_mana(struct chunk *c)
+{
+	int x, y;
+
+	for (x = 1; x < c->width - 1; ++x) {
+		for (y = 1; y < c->height - 1; ++y) {
+			struct square *sq = &c->squares[y][x];
+			sq->mana = mana_quantity(c, loc(x, y));
+			assert(sq->mana >= 0);
+		}
+	}
 }
 
 
