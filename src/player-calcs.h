@@ -146,4 +146,6 @@ void redraw_stuff(struct player *p);
 void handle_stuff(struct player *p);
 int weight_remaining(struct player *p);
 
+int skill_by_effect(int effect_ind, int effect_subtype);
+
 #endif /* !PLAYER_CALCS_H */

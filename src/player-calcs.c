@@ -698,9 +698,8 @@ static void calc_spells(struct player *p)
 	int i, j, k;
 	int num_allowed, num_known;
 	int lev = p->state.skills[SKILL_MAGIC];
-	const struct magic_realm *realm = get_player_realm(p);
+	const struct magic_realm *realm = p->realm;
 	const struct player_spell *spell;
-
 	int16_t old_spells;
 
 	/* Hack -- wait for creation */
@@ -711,6 +710,9 @@ static void calc_spells(struct player *p)
 
 	// L: no magic, no spells
 	if (lev <= 0) return;
+
+	// L: no realm, no spells
+	if (!realm) return;
 
 	/* Save the new_spells value */
 	old_spells = p->upkeep->new_spells;
@@ -1252,13 +1254,10 @@ static int power_by_element(int elem)
 	return PP_NONE;
 }
 
-static bool calc_monster_spell(int counts[PP_MAX], const struct monster_spell *mspell)
+int skill_by_effect(int effect_ind, int effect_subtype)
 {
-	if (!mspell) return false;
-
-	int skill = PP_NONE;
-
-	switch (mspell->effect->index)
+	
+	switch (effect_ind)
 	{
 		case EF_BALL:
 		case EF_BALL_NO_DAM_RED:
@@ -1270,22 +1269,29 @@ static bool calc_monster_spell(int counts[PP_MAX], const struct monster_spell *m
 		case EF_BOLT_STATUS_DAM:
 		case EF_SPOT:
 		case EF_SPHERE:
-			skill = power_by_element(mspell->effect->subtype);
-			break;
+			return power_by_element(effect_subtype);
 		case EF_MON_HEAL_HP:
 		case EF_MON_HEAL_KIN:
-			skill = PP_HOLY_MAGIC;
-			break;
+			return PP_HOLY_MAGIC;
 		case EF_LASH:
-			skill = PP_HAFTED_SPECIALIZATION;
-			break;
-		default:
-			return false;
+			return PP_HAFTED_SPECIALIZATION;
 	}
+
+	return PP_NONE;
+}
+
+static bool calc_monster_spell(int counts[PP_MAX], const struct monster_spell *mspell)
+{
+	if (!mspell) return false;
+
+	int skill = skill_by_effect(mspell->effect->index, mspell->effect->subtype);
+
 	if (skill > PP_NONE) {
+		assert(skill < PP_MAX);
 		counts[skill]++;
+		return true;
 	}
-	return true;
+	return false;
 }
 
 static bool calc_monster_blow(int counts[PP_MAX], const struct monster_blow *mb)

@@ -111,6 +111,15 @@ desc:Summons foul necromantic minions.
 school:NECROMANCY
 school:SUMMONING
 
+spell:Summon Demon:50:10
+effect:SUMMON:DEMON
+dice:1d$N
+expr:N:SPELL_POWER:+ 4 / 5
+desc:Summons foul necromantic minions.
+school:NECROMANCY
+school:SUMMONING
+school:FIRE
+
 spell:Control Undead:10:0
 effect:PROJECT_LOS:CHARM_UNDEAD
 dice:$Dd$S
@@ -354,6 +363,14 @@ desc:Teleports you 1 level up or 1 level down (chosen at random).
 desc:  This spell may have no effect when the forced descent option is set.
 school:TELEPORTATION
 
+spell:Nexus Ball:20
+effect:BALL:NEXUS:3
+dice:$Dd$S
+expr:D:SPELL_POWER:+ 1 / 2
+expr:S:SPELL_POWER:+ 4 / 5
+desc:Throws a ball of nexus!
+school:TELEPORTATION
+
 
 spell:Object Detection:12
 effect:DETECT_ORE
@@ -468,6 +485,13 @@ desc:Summons spiders to aid you.
 school:SUMMONING
 school:NATURE
 school:POISON
+
+spell:Summon Dragons:55:13
+effect:SUMMON:DRAGON
+dice:1d$N
+expr:N:SPELL_POWER:+ 3 / 4
+desc:Summons a dragon
+school:SUMMONING
 
 
 spell:Shadow Monsters:10

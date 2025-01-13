@@ -526,6 +526,7 @@ static void innate_menu_browser(int oid, void *data, const region *loc)
 		}
 		// Now enumerate the effects' damage and type if not forgotten 
 		if (num_damaging > 0) {
+			int boost = innate_spell_power(player, innate_index);
 			dice_t *shared_dice = NULL;
 			i = 0;
 
@@ -555,7 +556,13 @@ static void innate_menu_browser(int oid, void *data, const region *loc)
 					i++;
 				}
 			}
-			textblock_append(tb, " damage.");
+
+			if (boost > 0) {
+				textblock_append(tb, " damage, with a %i%% boost.", boost);
+			}
+			else {
+				textblock_append(tb, " damage.");
+			}
 		}
 		
 		textblock_append(tb, "\n\n");
@@ -608,7 +615,7 @@ static struct menu *innate_menu_new(const struct monster_race *monr,
 	d->n_innates = 0;
 	d->innates = mem_zalloc(max_innates * sizeof(int));
 	for (i = 0; i < RSF_MAX; i++) {
-		if (!is_stupid && !mon_spell_is_innate(i)) continue;
+		if (!spell_is_castable_innately(monr, i)) continue;
 		if (!rsf_has(monr->spell_flags, i)) continue;
 		d->innates[d->n_innates] = i;
 		d->n_innates++;

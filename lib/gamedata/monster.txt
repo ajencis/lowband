@@ -5125,6 +5125,10 @@ desc: three beasts.
 
 name:quylthulg
 base:quylthulg
+evolution:nexus quylthulg
+evolution:draconic quylthulg
+evolution:demonic quylthulg
+evolution:rotting quylthulg
 color:y
 speed:110
 hit-points:27
@@ -7598,6 +7602,7 @@ desc:A hideous ogre wrapped in black sorcerous robes.
 
 name:nexus quylthulg
 base:quylthulg
+evolution:master quylthulg
 color:P
 speed:110
 hit-points:65
@@ -10477,6 +10482,7 @@ desc: its mandibles as it scuttles toward you.
 
 name:rotting quylthulg
 base:quylthulg
+evolution:greater rotting quylthulg
 color:u
 speed:120
 hit-points:420
@@ -10551,6 +10557,7 @@ desc: drains your vitality for its evil enchantments.
 
 name:demonic quylthulg
 base:quylthulg
+evolution:greater demonic quylthulg
 color:r
 speed:120
 hit-points:420
@@ -10569,6 +10576,7 @@ desc: cry out against it.
 
 name:draconic quylthulg
 base:quylthulg
+evolution:greater draconic quylthulg
 color:g
 speed:120
 hit-points:420

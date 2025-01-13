@@ -421,3 +421,6 @@ monster:cherub
 
 name:Sling
 monster:cave spider
+
+name:Quyling
+monster:quylthulg

@@ -879,8 +879,9 @@ const char *school_idx_to_name(int idx)
 
 int innate_spell_mana(const struct monster_race *mon)
 {
-	int freq = MAX(0, 40 - mon->freq_innate);
-	int cost = mon->avg_hp * freq / 400;
+	int freq = MAX(0, 50 - mon->freq_innate);
+	freq = MAX(freq, 0);
+	int cost = mon->level * freq / 150;
 
 	return cost;
 }
@@ -888,7 +889,13 @@ int innate_spell_mana(const struct monster_race *mon)
 int innate_spell_power(struct player *p, int spell)
 {
 	struct monster_race *mr = lookup_player_monster(p);
-	return mr ? mr->spell_power : p->lev;
+	struct monster_spell *ms = monster_spell_by_index(spell);
+	int base = mr ? mr->spell_power : p->lev;
+	int powerind = skill_by_effect(ms->effect->index, ms->effect->subtype);
+	int powerlevel = powerind > PP_NONE ? 0 : p->state.powers[powerind];
+	int powerbonus = MIN(powerlevel, base);
+
+	return base + powerbonus;
 }
 
 void get_innate_info(int innate_index, char *p, size_t len)
@@ -1154,6 +1161,14 @@ bool autocast(const struct player *p)
 		}
 	}
 
+	return false;
+}
+
+
+bool spell_is_castable_innately(struct monster_race *mr, int spell_index)
+{
+	if (mon_spell_is_innate(spell_index)) return true;
+	if (rf_has(mr->flags, RF_INNATE_MAGIC)) return true;
 	return false;
 }
 

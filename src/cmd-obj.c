@@ -1263,7 +1263,7 @@ void do_cmd_innate(struct command *cmd)
 	bool ident;
 	const struct monster_spell *ms;
 	struct monster_race *mr = lookup_player_monster(player);
-	int mana;
+	int mana, power;
 	const char *fail = "You don't have any innate powers.";
 
 	if (!mr) {
@@ -1288,6 +1288,7 @@ void do_cmd_innate(struct command *cmd)
 	}
 	
 	ms = monster_spell_by_index(innate_index);
+	power = innate_spell_power(player, innate_index);
 
 	if (innate_needs_aim(innate_index)) {
 		if (cmd_get_target(cmd, "target", &dir) == CMD_OK) {
@@ -1297,7 +1298,7 @@ void do_cmd_innate(struct command *cmd)
 		}
 	}
 
-	effect_do(ms->effect, source_player(), NULL, &ident, true, dir, 0, 0, cmd);
+	effect_do(ms->effect, source_player(), NULL, &ident, true, dir, 0, power, cmd);
 
 	take_hit(player, mana, "using an innate power");
 	player->upkeep->energy_use = z_info->move_energy;

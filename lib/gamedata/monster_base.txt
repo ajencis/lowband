@@ -269,7 +269,7 @@ pain:4
 flags:ANIMAL
 flags:ONLY_GOLD
 flags:BASH_DOOR | CLEAR_WEB
-flags:FORCE_SLEEP | HURT_COLD
+flags:FORCE_SLEEP | HURT_COLD | INNATE_MAGIC
 desc:Hydra
 attr:SPEED:1
 attr:DAMAGE:1
@@ -482,11 +482,14 @@ pain:2
 flags:EMPTY_MIND | INVISIBLE
 flags:NEVER_BLOW | NEVER_MOVE
 flags:NO_FEAR | NO_CONF | NO_SLEEP | NO_HOLD
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | INNATE_MAGIC
 desc:Quylthulg
 attr:SPEED:2
 attr:DAMAGE:-4
 attr:MAGIC:2
+stats:-3:2:1:0:1
+power:SUMMONING_MAGIC:40
+power:TELEPORTATION_MAGIC:20
 
 # Mostly early monsters, but later ones are dangerous.  Not fast for depth
 name:reptile

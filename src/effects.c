@@ -427,8 +427,9 @@ bool effect_do(struct effect *effect,
 			return false;
 		}
 
-		if (effect->dice != NULL)
+		if (effect->dice != NULL) {
 			choice_count = dice_roll(effect->dice, &value);
+		}
 
 		/* Deal with special random and select effects */
 		if (effect->index == EF_RANDOM || effect->index == EF_SELECT) {
@@ -503,8 +504,9 @@ bool effect_do(struct effect *effect,
 			}
 
 			/* Roll the damage, if needed */
-			if (effect->dice != NULL)
+			if (effect->dice != NULL) {
 				(void) dice_roll(effect->dice, &value);
+			}
 		}
 
 		/* Handle the effect */
