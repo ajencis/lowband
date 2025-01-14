@@ -20,6 +20,7 @@
 #include "cave.h"
 #include "cmd-core.h"
 #include "cmds.h"
+#include "effects.h"
 #include "game-event.h"
 #include "game-input.h"
 #include "game-world.h"
@@ -2183,7 +2184,8 @@ void do_cmd_diplomacy(struct command *cmd)
 		return;
 	}
 
-	if (dir == DIR_TARGET) {
+	mon = smite_target_get(dir);
+	/*if (dir == DIR_TARGET) {
 		if (target_okay()) {
 			target_get(&target);
 			mon = square_monster(cave, target);
@@ -2201,7 +2203,7 @@ void do_cmd_diplomacy(struct command *cmd)
 				break;
 			}
 		}
-	}
+	}*/
 
 	if (!mon || !mon->race) {
 		return;

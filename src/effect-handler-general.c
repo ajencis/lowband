@@ -579,6 +579,11 @@ bool effect_handler_TIMED_INC(effect_handler_context_t *context)
 	struct monster *t_mon = monster_target_monster(context);
 	struct loc decoy = cave_find_decoy(cave);
 
+	if (context->origin.what == SRC_PLAYER) {
+		t_mon = smite_target_get(context->dir);
+		if (!t_mon) return false;
+	}
+
 	context->ident = true;
 
 	/* Destroy decoy if it's a monster attack */
@@ -2307,15 +2312,17 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 			assert(mon);
 			faction = mon->faction;
 			rlev = mon->race->level;
+			if (summon_type == summon_name_to_idx("KIN")) {
+				kin_base = mon->race->base;
+			}
 		} else {
 			faction = '@';
 			rlev = player->lev;
-		}
-
-		/* Set the kin_base if necessary */
-		if (summon_type == summon_name_to_idx("KIN")) {
-			assert(!isplayer);
-			kin_base = mon->race->base;
+			if (summon_type == summon_name_to_idx("KIN")) {
+				// L: take base from player monster or failing that use people
+				struct monster_race *pmr = lookup_player_monster(player);
+				kin_base = pmr ? pmr->base : lookup_monster_base("person");
+			}
 		}
 
 		/* Continue summoning until we reach the current dungeon level */

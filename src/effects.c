@@ -93,8 +93,9 @@ bool effect_aim(const struct effect *effect)
 {
 	const struct effect *e = effect;
 
-	if (!effect_valid(effect))
+	if (!effect_valid(effect)) {
 		return false;
+	}
 
 	while (e) {
 		if (effects[e->index].aim) return true;
@@ -595,5 +596,29 @@ int recharge_failure_chance(const struct object *obj, int strength) {
 	int raw_chance = strength + ease_of_recharge
 		- 2 * (obj->pval / obj->number);
 	return raw_chance > 1 ? raw_chance : 1;
+}
+
+struct monster *smite_target_get(int dir)
+{
+	if (dir == DIR_TARGET) {
+		if (target_okay()) {
+			return target_get_monster();
+		}
+	} else if (dir != DIR_UNKNOWN) {
+		int i, range = z_info->max_sight;
+		struct loc direction = loc_sum(player->grid, loc(range * ddx[dir], range * ddy[dir]));
+		int path_n;
+		struct loc path_g[256], target;
+		path_n = project_path(cave, path_g, range, player->grid, direction, 0);
+		for (i = 0; i < path_n; i++) {
+			target = path_g[i];
+			struct monster *mon = square_monster(cave, target);
+			if (mon) {
+				return mon;
+			}
+		}
+	}
+
+	return NULL;
 }
 

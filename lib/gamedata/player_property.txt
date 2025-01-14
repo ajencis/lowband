@@ -423,6 +423,16 @@ code:ANTIMAGIC
 name:Antimagic
 desc:You consume nearby mana.
 
+type:power
+code:SPELL_POWER
+name:Spellpower
+desc:Your spells are stronger.
+
+type:power
+code:SPELL_EASE
+name:Spell Ease
+desc:Your spells are easier to learn and use.
+
 
 # L: skills
 type:skill

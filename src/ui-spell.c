@@ -603,7 +603,6 @@ static struct menu *innate_menu_new(const struct monster_race *monr,
 	struct menu *m = menu_new(MN_SKIN_SCROLL, &innate_menu_iter);
 	struct innate_menu_data *d = mem_alloc(sizeof *d);
 	size_t width = MAX(0, MIN(Term->wid - 15, 80));
-	bool is_stupid = rf_has(monr->flags, RF_STUPID) || rf_has(monr->flags, RF_EMPTY_MIND);
 
 	int max_innates = 25;
 

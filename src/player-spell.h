@@ -66,4 +66,4 @@ struct magic_realm *realm_by_index(int index);
 bool can_autocast(const struct player_spell *ps);
 bool autocast(const struct player *p);
 
-bool spell_is_castable_innately(struct monster_race *mr, int spell_index);
+bool spell_is_castable_innately(const struct monster_race *mr, int spell_index);

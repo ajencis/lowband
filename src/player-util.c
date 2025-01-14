@@ -237,9 +237,6 @@ bool check_player_monster(struct player *p, bool init)
 					player->monster_xp = 0;
 					do_change = true;
 				}
-				/*else {
-					player->monster_xp /= 3;
-				}*/
 			}
 		}
 	}
@@ -331,7 +328,7 @@ int get_power_scale_state(const struct player_state *ps, int power, int scaleto,
 	return negate ? -result : result;
 }
 
-int get_power_scale(struct player *p, int power, int scaleto)
+int get_power_scale(const struct player *p, int power, int scaleto)
 {
 	return get_power_scale_state(&p->state, power, scaleto, p->lev);
 }

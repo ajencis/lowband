@@ -21,7 +21,7 @@ EFFECT(NOURISH,						false,	NULL,		3,		EFINFO_FOOD,	"%s for %s turns (%s percent
 EFFECT(CRUNCH,						false,	NULL,		0,		EFINFO_NONE,	"crunches",	"")
 EFFECT(CURE,						false,	NULL,		1,		EFINFO_CURE,	"cures %s",	"cure %s")
 EFFECT(TIMED_SET,					false,	NULL,		2,		EFINFO_TIMED,	"administers %s for %s turns",	"administer %s")
-EFFECT(TIMED_INC,					false,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s turns",	"extend %s")
+EFFECT(TIMED_INC,					true,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s turns",	"extend %s")
 EFFECT(TIMED_INC_NO_RES,			false,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s turns (unresistable)",	"extend %s")
 EFFECT(MON_TIMED_INC,				true,	"dur",		2,		EFINFO_TIMED,	"increases monster %s by %s turns",	"")
 EFFECT(TIMED_DEC,					false,	NULL,		2,		EFINFO_TIMED,	"reduces length of %s by %s turns",	"reduce %s")

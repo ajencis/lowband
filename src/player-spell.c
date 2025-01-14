@@ -889,7 +889,7 @@ int innate_spell_mana(const struct monster_race *mon)
 int innate_spell_power(struct player *p, int spell)
 {
 	struct monster_race *mr = lookup_player_monster(p);
-	struct monster_spell *ms = monster_spell_by_index(spell);
+	const struct monster_spell *ms = monster_spell_by_index(spell);
 	int base = mr ? mr->spell_power : p->lev;
 	int powerind = skill_by_effect(ms->effect->index, ms->effect->subtype);
 	int powerlevel = powerind > PP_NONE ? 0 : p->state.powers[powerind];
@@ -918,7 +918,9 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 	int numschools = 0, sumschools = 0;
 	int schoolbonus = 0, realmbonus = 0;
 	int skill = p->state.skills[SKILL_MAGIC];
-	int antim = p->state.powers[PP_ANTIMAGIC] / 2;
+	int antim = get_power_scale(p, PP_ANTIMAGIC, 25);
+	int power = get_power_scale(p, PP_SPELL_POWER, 50);
+	int ease = get_power_scale(p, PP_SPELL_EASE, 25);
 	int i;
 	int result, stepdown;
 	const struct magic_realm *r = p->realm;
@@ -940,6 +942,13 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 	schoolbonus = MIN(schoolbonus, skill * 2);
 
 	result = skill + schoolbonus + realmbonus - s->slevel - antim + 1;
+
+	if (result > 10 && power > 0) {
+		result = (result - 10) * (100 + power) / 100 + 10;
+	}
+	if (result < 10 && ease > 0) {
+		result = MAX(result, MIN(result / 2, result) + ease - 10);
+	}
 
 	for (stepdown = 20; result > stepdown; stepdown += 10) {
 		result = (result - stepdown) / 2 + stepdown;
@@ -986,10 +995,11 @@ int player_spell_mana(const struct player_spell *ps) {
 int player_spell_fail(const struct player_spell *ps) {
 	int base = ps->sfail;
 	int power = gener_spell_power(player, ps);
+	int ease = get_power_scale(player, PP_SPELL_EASE, 25);
 	int result;
 	assert(NO_FAIL_LEVEL > 0);
 
-	result = ((NO_FAIL_LEVEL - power) * base + NO_FAIL_LEVEL - 1) / NO_FAIL_LEVEL;
+	result = ((NO_FAIL_LEVEL - power - ease) * base + NO_FAIL_LEVEL - 1) / NO_FAIL_LEVEL;
 
 	return MAX(0, MIN(base, result));
 }
@@ -1165,7 +1175,7 @@ bool autocast(const struct player *p)
 }
 
 
-bool spell_is_castable_innately(struct monster_race *mr, int spell_index)
+bool spell_is_castable_innately(const struct monster_race *mr, int spell_index)
 {
 	if (mon_spell_is_innate(spell_index)) return true;
 	if (rf_has(mr->flags, RF_INNATE_MAGIC)) return true;
