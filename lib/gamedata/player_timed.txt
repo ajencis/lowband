@@ -592,3 +592,13 @@ name:INVIS
 desc:invisibility
 grade:G:10000:Invis:You become transparent.
 on-end:You become visible again.
+
+name:PHOENIX
+desc:resurrection
+grade:G:10000:Phoenix:Your body bursts into flames.
+on-end:You are reborn!
+
+name:PHOENIX_CD
+desc:recent resurrection
+grade:G:10000:ResCD:You cool down.
+on-end:You feel filled with flame.

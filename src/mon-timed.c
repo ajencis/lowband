@@ -72,7 +72,7 @@ int mon_timed_name_to_idx(const char *name)
 /**
  * Roll the saving throw for monsters resisting a timed effect.
  */
-static bool saving_throw(const struct monster *mon, int effect_type, int timer, int flag)
+bool saving_throw(const struct monster *mon, int effect_type, int timer, int flag)
 {
 	int resist_chance = MIN(
 								75,
@@ -105,7 +105,7 @@ static bool does_resist(const struct monster *mon, int effect_type, int timer, i
 	}
 
 	/* Check resistances from monster flags */
-	if (rf_has(mon->race->flags, effect->flag_resist)) {
+	if (rf_has(mon->race->flags, effect->flag_resist) && !(flag & MON_TMD_FLG_NORES)) {
 		lore_learn_flag_if_visible(lore, mon, effect->flag_resist);
 		return true;
 	}

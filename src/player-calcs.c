@@ -61,12 +61,15 @@ struct mon_player_match elem_matches[] = {
 
 struct mon_player_match of_matches[] = {
 	{ RF_PASS_WEB, OF_PASS_WEB },
+	{ RF_INVISIBLE, OF_INVISIBILITY },
 	{ RF_NONE, -1 }
 };
 
 struct mon_player_match pf_matches[] = {
 	{ RF_UNDEAD, PF_UNDEAD },
 	{ RF_EVIL, PF_EVIL },
+	{ RF_PASS_WALL, PF_PASS_WALL },
+	{ RF_PHOENIX_RESURRECT, PF_PHOENIX_RESURRECT },
 	{ RF_NONE, -1 }
 };
 
@@ -1423,7 +1426,7 @@ static void calc_monster(struct player *p, struct player_state *state,
 	}
 
 	state->speed += mrace->speed / 2 - 55;
-	state->ac = MAX(state->ac, mrace->ac) + MIN(state->ac, mrace->ac) / 2;
+	state->to_a = MAX(state->to_a, mrace->ac) + MIN(state->to_a, mrace->ac) / 2;
 
 	if (rf_has(mrace->flags, RF_NEVER_MOVE)) *moves -= 25;
 
@@ -2488,22 +2491,25 @@ void redraw_stuff(struct player *p)
 	if (!character_generated) return;
 
 	/* Map is not shown, subwindow updates only */
-	if (!map_is_visible()) 
+	if (!map_is_visible()) {
 		redraw &= PR_SUBWINDOW;
+	}
 
 	/* Hack - rarely update while resting or running, makes it over quicker */
 	if (((player_resting_count(p) % 100) || (p->upkeep->running % 100))
-		&& !(redraw & (PR_MESSAGE | PR_MAP)))
+			&& !(redraw & (PR_MESSAGE | PR_MAP))) {
 		return;
+	}
 
 	/* For each listed flag, send the appropriate signal to the UI */
 	for (i = 0; i < N_ELEMENTS(redraw_events); i++) {
 		const struct flag_event_trigger *hnd = &redraw_events[i];
 
-		if (redraw & hnd->flag)
+		if (redraw & hnd->flag) {
 			event_signal(hnd->event);
+		}
 	}
-
+	
 	/* Then the ones that require parameters to be supplied. */
 	if (redraw & PR_MAP) {
 		/* Mark the whole map to be redrawn */

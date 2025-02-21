@@ -949,6 +949,17 @@ lore-color-resist:Light Green
 message-vis:{name} unleashes a ray of death.
 message-invis:Something intones with deadly menace.
 
+name:BANSHEE_SCREAM
+hit:100
+effect:PROJECT_LOS:BANSHEE:10
+dice:$Dd10
+expr:D:SPELL_POWER:* 2 + 30
+lore:scream
+lore-color-base:Dark Red
+lore-color-resist:Light Red
+message-vis:{name} screams.
+message-invis:Something screams.
+
 name:SCARE
 msgt:CAST_FEAR
 hit:100

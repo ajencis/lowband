@@ -509,6 +509,10 @@ static void project_object_handler_HELLFIRE(project_object_handler_context_t *co
 	project_object_elemental(context, ELEM_FIRE, "burns up", "burn up");
 }
 
+static void project_object_handler_BANSHEE(project_object_handler_context_t *context)
+{
+}
+
 static const project_object_handler_f object_handlers[] = {
 	#define ELEM(a) project_object_handler_##a,
 	#include "list-elements.h"

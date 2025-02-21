@@ -348,9 +348,14 @@ void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract)
 	} else {
 		p->monster_xp = UINT32_MAX;
 	}
+
+	if (p->timed[TMD_PHOENIX_CD]) {
+		int dec = (new_amt + randint0(p->lev)) / p->lev;
+		player_dec_timed(player, TMD_PHOENIX_CD, dec, true, true);
+	}
 	
 	if (p->exp < p->max_exp) {
-		p->max_exp = MIN(amount / 10 + p->max_exp, tolev);
+		p->max_exp = MIN(new_amt / 10 + p->max_exp, tolev);
 	}
 
 	adjust_level(p, true, false);

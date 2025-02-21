@@ -814,12 +814,14 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 			/* Hack -- only one of cut or stun */
 			if (do_cut && do_stun) {
 				/* Cancel cut */
-				if (randint0(100) < 50)
+				if (randint0(100) < 50) {
 					do_cut = false;
+				}
 
 				/* Cancel stun */
-				else
+				else {
 					do_stun = false;
+				}
 			}
 
 			/* Handle cut */
@@ -904,8 +906,9 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 	}
 
 	/* Always notice cause of death */
-	if (p->is_dead && (lore->deaths < SHRT_MAX))
+	if (p->is_dead && (lore->deaths < SHRT_MAX)) {
 		lore->deaths++;
+	}
 
 	/* Learn lore */
 	lore_update(mon->race, lore);

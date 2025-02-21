@@ -335,6 +335,14 @@ static void decrease_timeouts(void)
                 break;
             }
 
+			case TMD_PHOENIX:
+			case TMD_PHOENIX_CD:
+			{
+				// L: also handled seperately
+				decr = 0;
+				break;
+			}
+
 			case TMD_CUT:
 			{
 				/* Check for truly "mortal" wound */
@@ -1128,7 +1136,8 @@ void process_player(void)
 
 		/* Paralyzed or Knocked Out player gets no turn */
 		if (player->timed[TMD_PARALYZED] ||
-				player_timed_grade_eq(player, TMD_STUN, "Knocked Out")) {
+				player_timed_grade_eq(player, TMD_STUN, "Knocked Out") ||
+				player->timed[TMD_PHOENIX]) {
 			cmdq_push(CMD_SLEEP);
 		}
 
@@ -1137,8 +1146,9 @@ void process_player(void)
 			event_signal(EVENT_COMMAND_REPEAT);
 		} else {
 			/* Check monster recall */
-			if (player->upkeep->monster_race)
+			if (player->upkeep->monster_race) {
 				player->upkeep->redraw |= (PR_MONSTER);
+			}
 
 			/* Place cursor on player/target */
 			event_signal(EVENT_REFRESH);

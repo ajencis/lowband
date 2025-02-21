@@ -822,6 +822,26 @@ static int project_player_handler_HELLFIRE(project_player_handler_context_t *con
 	return 0;
 }
 
+static int project_player_handler_BANSHEE(project_player_handler_context_t *context)
+{
+	bool und = pf_has(player->state.flags, PF_UNDEAD);
+	int save = player->state.skills[SKILL_SAVE];
+	int power = context->dam;
+	if (und) power /= 2;
+
+	if (randint0(100) >= save) {
+		player->timed[TMD_STUN] += power * 2;
+		if (randint0(100) >= save) {
+			player->timed[TMD_PARALYZED] += power;
+			if (randint0(100) >= save) {
+				return player->chp + 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
 
 static const project_player_handler_f player_handlers[] = {
 	#define ELEM(a) project_player_handler_##a,

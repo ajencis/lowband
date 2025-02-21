@@ -1092,6 +1092,27 @@ static void project_monster_handler_HELLFIRE(project_monster_handler_context_t *
 	project_monster_hurt_immune(context, RF_HURT_FIRE, RF_IM_FIRE, 2, 3, MON_MSG_CATCH_FIRE, MON_MSG_DISINTEGRATES);
 }
 
+static void project_monster_handler_BANSHEE(project_monster_handler_context_t *context)
+{
+	bool und = rf_has(context->mon->race->flags, RF_UNDEAD);
+	bool kill = false;
+	int power = context->dam;
+	int flg = MON_TMD_FLG_GETS_SAVE | MON_TMD_FLG_NORES;
+
+	if (und) power /= 2;
+
+	if (mon_inc_timed(context->mon, MON_TMD_STUN, power * 2, flg)) {
+		if (mon_inc_timed(context->mon, MON_TMD_HOLD, power, flg)) {
+			if (!saving_throw(context->mon, MON_TMD_SUFFOCATING, power / 2, 0)) {
+				kill = true;
+				add_monster_message(context->mon, MON_MSG_COLLAPSE, true);
+			}
+		}
+	}
+
+	context->dam = kill ? context->mon->hp + 1 : 0;
+}
+
 static const project_monster_handler_f monster_handlers[] = {
 	#define ELEM(a) project_monster_handler_##a,
 	#include "list-elements.h"

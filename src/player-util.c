@@ -1008,6 +1008,20 @@ int player_apply_damage_reduction(struct player *p, int dam)
 	return (dam < 0) ? 0 : dam;
 }
 
+static bool phoenix_resurrect(struct player *p)
+{
+	int avail_mana = available_mana(cave, p->grid);
+
+	if (!pf_has(p->state.pflags, PF_PHOENIX_RESURRECT)) return false;
+	if (p->timed[TMD_PHOENIX_CD]) return false;
+	if (avail_mana < 5) return false;
+
+	p->chp = 0;
+	p->timed[TMD_PHOENIX] = 1;
+
+	return true;
+}
+
 /**
  * Decreases players hit points and sets death flag if necessary
  *
@@ -1033,6 +1047,8 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 	/* Paranoia */
 	if (p->is_dead || dam <= 0) return;
 
+	if (p->timed[TMD_PHOENIX]) return;
+
 	/* Disturb */
 	disturb(p);
 
@@ -1047,7 +1063,7 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 	 * If we eliminate the most exploitable cases it should be fine.
 	 * All traps and lava currently give mana, which could be exploited  */
 	if (player_has(p, PF_COMBAT_REGEN)  && !streq(kb_str, "poison")
-		&& !streq(kb_str, "a fatal wound") && !streq(kb_str, "starvation")) {
+			&& !streq(kb_str, "a fatal wound") && !streq(kb_str, "starvation")) {
 		/* lose X% of hitpoints get X% of spell points */
 		int32_t sp_gain = (((int32_t)MAX(p->msp, 10)) * 65536)
 			/ (int32_t)p->mhp * dam;
@@ -1068,6 +1084,10 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 				msg("So great was his prowess and skill in warfare, the Elves said: ");
 				msg("'The Mormegil cannot be slain, save by mischance.'");
 			}
+		} else if (phoenix_resurrect(p)) {
+			msgt(MSG_DEATH, "You die.");
+			event_signal(EVENT_MESSAGE_FLUSH);
+			return;
 		} else {
 			/*
 			 * Note cause of death.  Do it here so EVENT_CHEAT_DEATH
@@ -1099,8 +1119,9 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 	/* Hitpoint warning */
 	if (p->chp < warning) {
 		/* Hack -- bell on first notice */
-		if (old_chp > warning)
+		if (old_chp > warning) {
 			bell();
+		}
 
 		/* Message */
 		msgt(MSG_HITPOINT_WARN, "*** LOW HITPOINT WARNING! ***");
@@ -2135,6 +2156,13 @@ bool player_can_cast(const struct player *p, bool show_msg)
 		return false;
 	}
 
+	if (p->realm->hp_cast && pf_has(p->state.pflags, PF_UNDEAD)) {
+		if (show_msg) {
+			msg("You have no blood with which to cast!");
+		}
+		return false;
+	}
+
 	return true;
 }
 
@@ -2783,4 +2811,20 @@ void player_start_turn(struct player *p)
 
 		p->xp_this_turn = 0;
 	}
+
+	if (p->timed[TMD_PHOENIX]) {
+		p->timed[TMD_PHOENIX]--;
+		if (!p->timed[TMD_PHOENIX]) {
+			bool id;
+			effect_simple(EF_REBIRTH, source_player(), "0d0", 0, 0, 0, 0, 0, &id);
+		}
+	}
+}
+
+bool player_is_invisible(struct player *p)
+{
+	if (of_has(p->state.flags, OF_INVISIBILITY)) return true;
+	if (p->timed[TMD_INVIS]) return true;
+
+	return false;
 }

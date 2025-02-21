@@ -3463,6 +3463,7 @@ desc:A dwarf of the east, dressed all in black, chanting words of dark sorcery.
 
 name:air spirit
 base:elemental
+evolution:air elemental
 color:B
 speed:130
 hit-points:36
@@ -4482,6 +4483,7 @@ desc:A strange reptilian hybrid with two heads, guarding its hoard.
 
 name:water spirit
 base:elemental
+evolution:water elemental
 color:b
 speed:120
 hit-points:41
@@ -4517,6 +4519,7 @@ desc:It is fast and poisonous.
 
 name:earth spirit
 base:elemental
+evolution:earth elemental
 color:u
 speed:120
 hit-points:59
@@ -4609,6 +4612,7 @@ desc: menacingly.
 
 name:fire spirit
 base:elemental
+evolution:fire elemental
 color:r
 speed:120
 hit-points:50
@@ -5906,13 +5910,12 @@ depth:24
 rarity:2
 experience:60
 blow:WAIL:TERRIFY
-blow:TOUCH:EXP_20
 flags:FEMALE
 flags:DROP_1
 flags:RAND_50 | TAKE_ITEM
 spell-freq:15
-spells:DRAIN_MANA | TPORT
-desc:It is a ghostly woman's form that wails mournfully.
+spells:BANSHEE_SCREAM
+desc:It is a ghostly form that wails mournfully.
 
 name:werebear
 base:quadruped
@@ -6279,6 +6282,7 @@ desc: whose howls strike fear into even the boldest heart.
 
 name:ghoul
 base:zombie
+evolution:ghast
 color:U
 speed:110
 hit-points:83
@@ -7985,6 +7989,7 @@ desc: drake's eyes glare with white hatred from the shadows.
 
 name:fire elemental
 base:elemental
+evolution:will o' the wisp
 color:r
 speed:110
 hit-points:135
@@ -8006,6 +8011,7 @@ desc:It is a towering inferno of flames.
 
 name:water elemental
 base:elemental
+evolution:great water elemental
 color:b
 speed:110
 hit-points:113
@@ -8208,6 +8214,7 @@ desc:It is a skeletal form dressed in robes.  It radiates vastly evil power.
 
 name:earth elemental
 base:elemental
+evolution:great earth elemental
 color:u
 speed:100
 hit-points:165
@@ -8230,6 +8237,7 @@ desc:It is a towering form composed of rock with fists of awesome power.
 
 name:air elemental
 base:elemental
+evolution:invisible stalker
 color:B
 speed:120
 hit-points:90
@@ -9284,6 +9292,7 @@ desc:It is a tangible but ghostly form made of white fog.
 
 name:etten
 base:troll
+body:Etten
 color:b
 speed:110
 hit-points:1320
@@ -11598,7 +11607,7 @@ desc: into the air.
 
 ### Dungeon level 54 ###
 
-name:The Phoenix
+name:phoenix
 base:bird
 color:r
 speed:120
@@ -11612,14 +11621,13 @@ rarity:3
 experience:40000
 blow:BITE:FIRE:12d6
 blow:BITE:FIRE:12d6
-blow:HIT:FIRE:9d12
-blow:HIT:FIRE:9d12
-flags:UNIQUE
+blow:HIT:HOLY_FIRE:9d12
 flags:DROP_2 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR
-flags:IM_ACID | IM_ELEC | IM_FIRE | IM_PLASMA | NO_CONF
+flags:IM_FIRE | IM_PLASMA | NO_CONF
 flags:NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
+flags:PHOENIX_RESURRECT
 innate-freq:6
 spell-freq:5
 spells:BA_FIRE

@@ -261,6 +261,36 @@ height:90:16
 weight:240:60
 obj-flags:SUST_STR | REGEN
 body:Humanoid
+monster:forest troll
+monster:hill troll
+monster:cave troll
+monster:stone troll
+monster:mountain troll
+monster:etten
+
+name:Half-Ghoul
+stats:1:-1:-1:1:0
+skill-disarm-phys:0
+skill-disarm-magic:0
+skill-device:0
+skill-save:0
+skill-stealth:5
+skill-search:-5
+skill-melee:3
+skill-shoot:-3
+skill-throw:-3
+skill-dig:10
+skill-magic:0
+skill-health:0
+hitdie:7
+exp:120
+infravision:3
+history:21
+age:20:10
+height:90:16
+weight:240:60
+body:Humanoid
+monster:ghoul
 
 name:Dunadan
 stats:0:0:0:0:0
@@ -424,3 +454,20 @@ monster:cave spider
 
 name:Quyling
 monster:quylthulg
+
+name:Genasi
+monster:air spirit
+monster:earth spirit
+monster:fire spirit
+monster:water spirit
+
+name:Mourner
+skill-melee:-1
+skill-shoot:-1
+skill-throw:-1
+skill-magic:-1
+skill-health:-3
+monster:banshee
+
+name:Resurrected
+monster:phoenix

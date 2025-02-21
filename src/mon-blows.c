@@ -399,6 +399,7 @@ static bool monster_damage_target(melee_effect_handler_context_t *context,
 			MON_MSG_NONE, MON_MSG_DIE, false);
 		return (dead || no_further_monster_effect);
 	}
+	
 	return false;
 }
 
@@ -495,6 +496,7 @@ static void melee_effect_elemental(melee_effect_handler_context_t *context,
 		update_smart_learn(context->mon, context->p, 0, 0, type);
 	}
 }
+
 static void melee_effect_physical(melee_effect_handler_context_t *context,
 								   int type)
 {
@@ -583,6 +585,7 @@ static void melee_effect_timed(melee_effect_handler_context_t *context,
 {
 	/* Take damage */
 	if (monster_damage_target(context, false)) return;
+	assert(context->p->state.skills);
 
 	/* Handle status */
 	if (context->t_mon) {

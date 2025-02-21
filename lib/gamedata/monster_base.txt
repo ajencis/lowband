@@ -190,6 +190,7 @@ flags:NONLIVING
 desc:Elemental
 attr:MAGIC:1
 attr:HP:-1
+stats:1:-1:1:-1:1
 
 # Fast moving, bash doors, hit hard in melee
 name:feline

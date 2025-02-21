@@ -1290,6 +1290,11 @@ bool mon_take_nonplayer_hit(int dam, struct monster *t_mon,
 	/* Hurt the monster */
 	t_mon->hp -= dam;
 
+	if (t_mon->hp < 0 && rf_has(t_mon->race->flags, RF_PHOENIX_RESURRECT)) {
+		bool id;
+		effect_simple(EF_REBIRTH, source_monster(t_mon->midx), "1d1", 0, 0, 0, 0, 0, &id);
+	}
+
 	/* Dead or damaged monster */
 	if (t_mon->hp < 0) {
 		/* Death message */
@@ -1370,6 +1375,12 @@ bool mon_take_hit(struct monster *mon, struct player *p, int dam, bool *fear,
 
 	/* Hurt it */
 	mon->hp -= dam;
+
+	if (mon->hp < 0 && rf_has(mon->race->flags, RF_PHOENIX_RESURRECT)) {
+		bool id;
+		effect_simple(EF_REBIRTH, source_monster(mon->midx), "1d1", 0, 0, 0, 0, 0, &id);
+	}
+
 	if (mon->hp < 0) {
 		/* Deal with arena monsters */
 		if (p->upkeep->arena_level) {

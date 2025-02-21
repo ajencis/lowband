@@ -120,11 +120,18 @@ bool monster_can_see_player(struct monster *mon)
 	if (player->timed[TMD_COVERTRACKS] && (mon->cdis > z_info->max_sight / 4)) {
 		return false;
 	}
-	if (player->timed[TMD_INVIS] && 
+	if (player_is_invisible(player) && 
 			(!rf_has(mon->race->flags, RF_SMART) || !mflag_has(mon->mflag, MFLAG_AWARE))) {
 		return false;
 	}
 	return true;
+}
+
+static bool monster_cannot_target_player(struct monster *mon)
+{
+	if (player->timed[TMD_PHOENIX]) return true;
+
+	return false;
 }
 
 /**
@@ -240,6 +247,7 @@ bool mon_will_attack_player(const struct monster *mon, const struct player *p)
 
 	if (mon_will_follow_player(leader, p)) return false;
 	if (leader->reaction >= MON_REACT_NEUTRAL) return false;
+	if (p->timed[TMD_PHOENIX]) return false;
 
 	// assume enemy for now
 	return true;
@@ -264,12 +272,14 @@ bool mon_will_attack_mon(const struct monster *mon, const struct monster *other)
 	while (opposed_chars[i].char1 >= 0) {
 
 		if (mlead->faction == opposed_chars[i].char1 &&
-		    	olead->faction == opposed_chars[i].char2)
+		    	olead->faction == opposed_chars[i].char2) {
 			return true;
+		}
 
 		if (olead->faction == opposed_chars[i].char1 &&
-		    	mlead->faction == opposed_chars[i].char2)
+		    	mlead->faction == opposed_chars[i].char2) {
 			return true;
+		}
 
 		i++;
 	}
@@ -390,6 +400,11 @@ bool mon_check_target(struct chunk *c, struct monster *mon)
 		}
 	}
 	else if (mon->target.who == TARGET_WHO_PLAYER) {
+		if (monster_cannot_target_player(mon)) {
+			recheck = true;
+			mon->target.who = TARGET_WHO_NONE;
+		}
+
 		if (!monster_can_see_player(mon)) {
 			// if we can't see the player we should see if we have better targets
 			recheck = true;

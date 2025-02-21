@@ -896,7 +896,7 @@ bool player_set_timed(struct player *p, int idx, int v, bool notify,
 
 	/* Use the value */
 	p->timed[idx] = v;
-
+	
 	if (notify) {
 		/* Disturb */
 		if (can_disturb) {

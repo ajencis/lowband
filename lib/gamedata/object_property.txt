@@ -979,3 +979,10 @@ type-mult:crown:0
 type-mult:gloves:0
 type-mult:boots:1
 bindui:blows_ui_compact_0:0
+
+name:invisibility
+type:flag
+subtype:misc ability
+code:INVISIBILITY
+power:5
+desc:Invisibility

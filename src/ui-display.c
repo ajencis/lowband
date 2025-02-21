@@ -345,10 +345,14 @@ static void prt_sp(int row, int col)
 	char manastr[32];
 	//uint8_t color = player_sp_attr(player);
 	int mana = available_mana(cave, player->grid);
+	bool show = false;
 
-	if ((!player->realm || !player->state.skills[SKILL_MAGIC]) && !player->state.powers[PP_ANTIMAGIC]) {
-		return;
-	}
+	if (player->realm && player->state.skills[SKILL_MAGIC]) show = true;
+	if (player->state.powers[PP_ANTIMAGIC]) show = true;
+	if (pf_has(player->state.pflags, PF_PHOENIX_RESURRECT)) show = true;
+
+	if (!show) return;
+
 	put_str("Mana ", row, col);
 
 	strnfmt(manastr, sizeof(manastr), "%4i", mana);

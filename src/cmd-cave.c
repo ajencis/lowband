@@ -90,6 +90,9 @@ static bool clear_web(struct player *p)
 	if (player_of_has(p, OF_PASS_WEB)) {
 		return false;
 	}
+	if (pf_has(p->state.pflags, PF_PASS_WALL)) {
+		return false;
+	}
 	if (square_iswebbed(cave, p->grid)) {
 		if (adj_str_web(p->state.stat_ind[STAT_STR]) < randint1(100)) {
 			msg("You struggle against the web.");
@@ -1149,7 +1152,8 @@ void move_player(int dir, bool disarm)
 		disturb(player);
 		/* No move made so no energy spent. */
 		player->upkeep->energy_use = 0;
-	} else if (!square_ispassable(cave, grid)) {
+	} else if (!square_ispassable(cave, grid) &&
+			(!pf_has(player->state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
 		disturb(player);
 
 		/* Notice unknown obstacles, mention known obstacles */
@@ -1297,15 +1301,16 @@ static bool do_cmd_walk_test(struct player *p, struct loc grid)
 	}
 
 	/* If we don't know the grid, allow attempts to walk into it */
-	if (!square_isknown(cave, grid))
+	if (!square_isknown(cave, grid)) {
 		return true;
+	}
 
 	/*
 	 * Require open space; if the messaging indicates what is there and
 	 * that does not agree with the player's memory then update the
 	 * player's memory
 	 */
-	if (!square_ispassable(cave, grid)) {
+	if (!square_ispassable(cave, grid) && (!pf_has(p->state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
 		if (square_isrubble(cave, grid)) {
 			/* Rubble */
 			msgt(MSG_HITWALL, "There is a pile of rubble in the way!");
@@ -2171,7 +2176,6 @@ void do_cmd_diplomacy(struct command *cmd)
 {
 	int dir;
 	struct monster *mon = NULL;
-	struct loc target;
 	int new_cmd;
 	char mdesc[80];
 
@@ -2185,25 +2189,6 @@ void do_cmd_diplomacy(struct command *cmd)
 	}
 
 	mon = smite_target_get(dir);
-	/*if (dir == DIR_TARGET) {
-		if (target_okay()) {
-			target_get(&target);
-			mon = square_monster(cave, target);
-		}
-	} else if (dir != DIR_UNKNOWN) {
-		int i, range = z_info->max_sight;
-		struct loc direction = loc_sum(player->grid, loc(range * ddx[dir], range * ddy[dir]));
-		int path_n;
-		struct loc path_g[256];
-		path_n = project_path(cave, path_g, range, player->grid, direction, 0);
-		for (i = 0; i < path_n; i++) {
-			target = path_g[i];
-			mon = square_monster(cave, target);
-			if (mon) {
-				break;
-			}
-		}
-	}*/
 
 	if (!mon || !mon->race) {
 		return;

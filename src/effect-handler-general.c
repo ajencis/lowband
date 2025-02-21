@@ -818,8 +818,9 @@ bool effect_handler_RESTORE_STAT(effect_handler_context_t *context)
 	if (stat < 0 || stat >= STAT_MAX) return false;
 
 	/* Not needed */
-	if (player->stat_cur[stat] == player->stat_max[stat])
+	if (player->stat_cur[stat] == player->stat_max[stat]) {
 		return true;
+	}
 
 	/* Restore */
 	player->stat_cur[stat] = player->stat_max[stat];
@@ -3828,6 +3829,86 @@ bool effect_handler_CREATE_ILLUSORY_WALL(effect_handler_context_t *context)
 	square_true_memorize(cave, target);
 
 	player->upkeep->update |= PU_UPDATE_VIEW;
+
+	return true;
+}
+
+bool effect_handler_REBIRTH(effect_handler_context_t *context)
+{
+	struct loc ogrid;
+	struct monster *mon = NULL;
+	int mana;
+	struct source origin;
+	bool ident;
+
+	if (context->origin.what == SRC_PLAYER) {
+		ogrid = player->grid;
+		origin = source_player();
+	}
+	else if (context->origin.what == SRC_MONSTER) {
+		mon = cave_monster(cave, context->origin.which.monster);
+		ogrid = mon->grid;
+		origin = source_monster(context->origin.which.monster);
+	}
+	else {
+		return false;
+	}
+
+	mana = available_mana(cave, ogrid);
+	if (mon) {
+		mon->hp += damroll(mana, mana * 3);
+		mon->hp = MIN(mon->hp, mon->maxhp);
+		if (player->upkeep->health_who == mon) {
+			player->upkeep->redraw |= (PR_HEALTH);
+		}
+		
+		mon_clear_timed(mon, MON_TMD_CONF, 0);
+		mon_clear_timed(mon, MON_TMD_FEAR, 0);
+		mon_clear_timed(mon, MON_TMD_HOLD, 0);
+		mon_clear_timed(mon, MON_TMD_POISONED, 0);
+		mon_clear_timed(mon, MON_TMD_STUN, 0);
+		mon_clear_timed(mon, MON_TMD_TOXIC, 0);
+	} else {
+		player->chp += damroll(mana, mana * 3);
+		if (player->chp >= player->mhp) {
+			player->chp = player->mhp;
+			player->chp_frac = 0;
+		}
+		player->upkeep->redraw |= PR_HP;
+
+		player_clear_timed(player, TMD_AFRAID, false, true);
+		player_clear_timed(player, TMD_BLIND, false, true);
+		player_clear_timed(player, TMD_CONFUSED, false, true);
+		player_clear_timed(player, TMD_CUT, false, true);
+		player_clear_timed(player, TMD_PARALYZED, false, true);
+		player_clear_timed(player, TMD_POISONED, false, true);
+		player_clear_timed(player, TMD_STUN, false, true);
+
+		for (int i = 0; i < STAT_MAX; ++i) {
+			player->stat_cur[i] = player->stat_max[i];
+		}
+		player->exp = player->max_exp;
+	}
+
+	if (mon) {
+		msg("It is resurrected!");
+	}
+	else {
+		msg("You are resurrected!");
+	}
+
+	effect_simple(EF_SPHERE, origin, format("%id%i", mana, mana * 5), ELEM_HOLY_FIRE, mana / 2 + 2, 0, ogrid.y, ogrid.x, &ident);
+	effect_simple(EF_STAR, origin, format("%id%i", mana, mana * 5), ELEM_LIGHT, mana + 2, 0, ogrid.x, ogrid.y, &ident);
+
+	cave->squares[ogrid.y][ogrid.x].mana -= mana;
+
+	square_average_mana(cave, ogrid);
+	player->upkeep->redraw |= PR_MANA;
+
+	if (!mon) {
+		int base = 500 - 10 * mana;
+		player_inc_timed(player, TMD_PHOENIX_CD, base + randint1(base), true, false, false);
+	}
 
 	return true;
 }

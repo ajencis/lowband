@@ -283,3 +283,19 @@ slot:BOOTS:front middle tarsi
 slot:BOOTS:back middle tarsi
 slot:BOOTS:back tarsi
 
+body:Etten
+slot:WEAPON:right hand
+slot:WEAPON:left hand
+slot:BOW:shooting
+slot:RING:right hand
+slot:RING:left hand
+slot:AMULET:right neck
+slot:AMULET:left neck
+slot:LIGHT:light
+slot:BODY_ARMOR:body
+slot:CLOAK:back
+slot:HAT:right head
+slot:HAT:left head
+slot:GLOVES:hands
+slot:BOOTS:feet
+

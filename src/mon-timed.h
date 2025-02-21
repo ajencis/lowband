@@ -44,9 +44,11 @@
 #define MON_TMD_FLG_NOMESSAGE	0x04 /* Never show a message */
 #define MON_TMD_FLG_NOFAIL		0x08 /* Never fail */
 #define MON_TMD_FLG_GETS_SAVE   0x10 /* L: gets a save even if effect normally wouldn't allow one */
+#define MON_TMD_FLG_NORES       0x20 // L: ignores resistances
 
 /** Functions **/
 int mon_timed_name_to_idx(const char *name);
+bool saving_throw(const struct monster *mon, int effect_type, int timer, int flag);
 bool add_mon_timed_message(struct monster *mon, int effect_type, bool delay, int before, int after);
 bool mon_inc_timed(struct monster *mon, int effect_type, int timer, int flag);
 bool mon_dec_timed(struct monster *mon, int effect_type, int timer, int flag);
