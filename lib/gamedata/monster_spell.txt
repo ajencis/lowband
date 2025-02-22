@@ -949,7 +949,7 @@ lore-color-resist:Light Green
 message-vis:{name} unleashes a ray of death.
 message-invis:Something intones with deadly menace.
 
-name:BANSHEE_SCREAM
+name:BANSHEE_SCREAM:50:1
 hit:100
 effect:PROJECT_LOS:BANSHEE:10
 dice:$Dd10

@@ -42,6 +42,7 @@
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "project.h"
 
 
 /* L: matching monster resists to player_resists */
@@ -89,6 +90,21 @@ struct mon_player_match elem_pp_matches[] = {
 	{ ELEM_WATER, PP_WATER_MAGIC },
 	{ ELEM_HOLY_FIRE, PP_HOLY_MAGIC },
 	{ ELEM_HELLFIRE, PP_FIRE_MAGIC },
+	{ -1, -1 }
+};
+
+struct mon_player_match proj_pp_matches[] = {
+	{ PROJ_ARROW, PP_BOW_SPECIALIZATION },
+	{ PROJ_BANSHEE, PP_NECROMANCY_MAGIC },
+	{ PROJ_DISP_EVIL, PP_HOLY_MAGIC },
+	{ PROJ_DISP_UNDEAD, PP_HOLY_MAGIC },
+	{ PROJ_MON_CONF, PP_ENCHANTMENT_MAGIC },
+	{ PROJ_MON_DRAIN, PP_NECROMANCY_MAGIC },
+	{ PROJ_MON_POIS, PP_POISON_MAGIC },
+	{ PROJ_SLEEP_ALL, PP_ENCHANTMENT_MAGIC },
+	{ PROJ_TURN_EVIL, PP_HOLY_MAGIC },
+	{ PROJ_TURN_UNDEAD, PP_HOLY_MAGIC },
+	{ PROJ_VAMPIRE, PP_NECROMANCY_MAGIC },
 	{ -1, -1 }
 };
 
@@ -1257,6 +1273,19 @@ static int power_by_element(int elem)
 	return PP_NONE;
 }
 
+static int power_by_projection(int proj)
+{
+	int i;
+	
+	for (i = 0; proj_pp_matches[i].mval >= 0; ++i) {
+		if (proj_pp_matches[i].mval == proj) {
+			return proj_pp_matches[i].pval;
+		}
+	}
+
+	return power_by_element(proj);
+}
+
 int skill_by_effect(int effect_ind, int effect_subtype)
 {
 	
@@ -1273,6 +1302,9 @@ int skill_by_effect(int effect_ind, int effect_subtype)
 		case EF_SPOT:
 		case EF_SPHERE:
 			return power_by_element(effect_subtype);
+		case EF_PROJECT_LOS:
+		case EF_PROJECT_LOS_AWARE:
+			return power_by_projection(effect_subtype);
 		case EF_MON_HEAL_HP:
 		case EF_MON_HEAL_KIN:
 			return PP_HOLY_MAGIC;
