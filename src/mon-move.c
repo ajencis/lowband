@@ -2355,7 +2355,8 @@ static void regen_monster(struct monster *mon, int num)
 		if (!frac) frac = 1;
 
 		/* Some monsters regenerate quickly */
-		if (rf_has(mon->race->flags, RF_REGENERATE)) frac *= 2;
+		if (rf_has(mon->race->flags, RF_HI_REGEN)) frac *= 15;
+		else if (rf_has(mon->race->flags, RF_REGENERATE)) frac *= 2;
 
 		/* Multiply by number of regenerations */
 		frac *= num;
@@ -2367,8 +2368,9 @@ static void regen_monster(struct monster *mon, int num)
 		if (mon->hp > mon->maxhp) mon->hp = mon->maxhp;
 
 		/* Redraw (later) if needed */
-		if (player->upkeep->health_who == mon)
+		if (player->upkeep->health_who == mon) {
 			player->upkeep->redraw |= (PR_HEALTH);
+		}
 	}
 }
 

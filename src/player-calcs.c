@@ -63,6 +63,7 @@ struct mon_player_match elem_matches[] = {
 struct mon_player_match of_matches[] = {
 	{ RF_PASS_WEB, OF_PASS_WEB },
 	{ RF_INVISIBLE, OF_INVISIBILITY },
+	{ RF_HI_REGEN, OF_HI_REGEN },
 	{ RF_NONE, -1 }
 };
 
@@ -1394,10 +1395,11 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], const s
 	}
 
 
-	for (i = 0; i < PP_MAX; ++i) {
-		// monsters are specialized
-		int penalty = my_sqrt(mrace->level * 5);
-		penalty = MIN(ps->powers[i], penalty);
+	for (i = 0; i < MS_MAX; ++i) {
+		// monsters are specialized, take penalty to magic skills they don't get
+		if (powers[i] > 0) continue;
+		int penalty = my_sqrt(mrace->level);
+		penalty = MIN(ps->powers[i] / 2, penalty);
 		penalty = MAX(0, penalty);
 		powers[i] -= penalty;
 	}

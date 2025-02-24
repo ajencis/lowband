@@ -1197,11 +1197,13 @@ int get_monster_attacks(struct player *p, struct player_state *ps,
 		struct monster_blow *mb = &mr->blow[i];
 		if (!availslots[mb->method->equip_slot]) continue;
 
-		if (get_monster_attack(p, ps, mr, &aroll[*attacknum], i, false)) ++(*attacknum);
+		if (get_monster_attack(p, ps, mr, &aroll[*attacknum], i, false)) {
+			++(*attacknum);
 
-		// take up the slot
-		availslots[mb->method->equip_slot]--;
-		if (mb->method->equip_slot == EQUIP_WEAPON) ++hands_used;
+			// take up the slot
+			availslots[mb->method->equip_slot]--;
+			if (mb->method->equip_slot == EQUIP_WEAPON) ++hands_used;
+		}
 	}
 
 	return hands_used;

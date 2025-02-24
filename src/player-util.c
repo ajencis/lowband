@@ -1366,7 +1366,10 @@ void player_regen_hp(struct player *p)
 	percent = MAX(percent + fed_pct, 0);
 
 	/* Various things speed up regeneration */
-	if (player_of_has(p, OF_REGEN) || p->timed[TMD_REGEN]) {
+	if (player_of_has(p, OF_HI_REGEN)) {
+		percent *= 25;
+	}
+	else if (player_of_has(p, OF_REGEN) || p->timed[TMD_REGEN]) {
 		percent *= 3;
 	}
 	if (player_resting_can_regenerate(p)) {

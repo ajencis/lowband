@@ -785,7 +785,8 @@ void process_world(struct chunk *c)
 			}
 
 			/* Regeneration takes more food */
-			if (player_of_has(player, OF_REGEN)) i *= 2;
+			if (player_of_has(player, OF_HI_REGEN)) i *= 5;
+			else if (player_of_has(player, OF_REGEN)) i *= 2;
 
 			/* Slow digestion takes less food */
 			if (player_of_has(player, OF_SLOW_DIGEST)) i /= 2;

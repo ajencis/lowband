@@ -268,7 +268,7 @@ name:hydra
 glyph:M
 pain:4
 flags:ANIMAL
-flags:ONLY_GOLD
+flags:ONLY_GOLD | HI_REGEN
 flags:BASH_DOOR | CLEAR_WEB
 flags:FORCE_SLEEP | HURT_COLD | INNATE_MAGIC
 desc:Hydra
@@ -585,7 +585,7 @@ glyph:T
 pain:1
 flags:TROLL | EVIL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
-flags:RES_PIERCING
+flags:RES_PIERCING | HI_REGEN
 flags:SAPIENT
 desc:Troll
 body:Humanoid
