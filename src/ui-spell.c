@@ -445,6 +445,7 @@ static void innate_menu_display(struct menu *m, int oid, bool cursor,
 	char name[80];
 	get_mon_spell_name(name, sizeof(name), innate_index, mrace);
 	int mana = innate_spell_mana(mrace);
+	int power = innate_spell_power(player, innate_index);
 
 	int attr = COLOUR_WHITE;
 	size_t u8len;
@@ -465,7 +466,8 @@ static void innate_menu_display(struct menu *m, int oid, bool cursor,
 		my_strcpy(out, name_copy, sizeof(out));
 		string_free(name_copy);
 	}
-	my_strcat(out, format("%i", mana), sizeof(out));
+	my_strcat(out, format("%4i  ", mana), sizeof(out));
+	my_strcat(out, format("%3i", power), sizeof(out));
 	c_prt(attr, out, row, col);
 }
 
@@ -637,7 +639,7 @@ static struct menu *innate_menu_new(const struct monster_race *monr,
 	menu_setpriv(m, d->n_innates, d);
 
 	/* Set flags */
-	m->header = "Name                             Cost";
+	m->header = "Name                             Cost  Pwr";
 	m->flags = MN_CASELESS_TAGS;
 	m->selections = all_letters_nohjkl;
 	m->browse_hook = innate_menu_browser;
