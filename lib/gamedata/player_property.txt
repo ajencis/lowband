@@ -438,6 +438,11 @@ code:SPELL_EASE
 name:Spell Ease
 desc:Your spells are easier to learn and use.
 
+type:power
+code:WHIRLWIND
+name:Whirlwind
+desc:You can attack multiple nearby monsters.
+
 
 # L: skills
 type:skill

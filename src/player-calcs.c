@@ -216,7 +216,7 @@ int adj_str_blow(int index) {
 }*/
 
 static int adj_stat_blow(int index) {
-	return (index + 1) * 600 / 16;
+	return (index + 1) * 600 / 14;
 }
 
 int adj_dex_safe(int index) {
@@ -1119,22 +1119,27 @@ int calc_unlocking_chance(const struct player *p, int lock_power,
 void calc_blows(struct player *p, int wgt, struct attack_roll *aroll,
                struct player_state *state, int extra_blows)
 {
-	int div = MAX(wgt * 2, 25) + 100;
+	int div = wgt * 2 + 100;
 
     int sind1 = state->stat_ind[aroll->damage_stat];
-	int sind2 = aroll->accuracy_stat >= 0 ? state->stat_ind[aroll->accuracy_stat] : STAT_NONE;
+	int sind2 = aroll->accuracy_stat >= 0 ?
+			state->stat_ind[aroll->accuracy_stat] :
+			STAT_NONE;
+	int sind3 = state->stat_ind[player_skill_stat(p, aroll->attack_skill)];
 
 	// max 18
-	int statind = sind2 != STAT_NONE ? (sind1 + sind2 + MAX(sind1, sind2)) / 3 : sind1;
+	int statind = sind2 != STAT_NONE ? 
+			(sind1 + sind2 + sind3 + MAX(sind1, MAX(sind2, sind3))) / 4 :
+			(sind1 + sind3 + MAX(sind1, sind3)) / 3;
 
 	// max 600
 	int baseblows = adj_stat_blow(statind);
 
 	// max 100
-	int skill = aroll->attack_skill;
+	int skill = state->skills[aroll->attack_skill];
 
-	// max 600 * 100 / 100 + 100
-	int blows = MAX(0, baseblows) * state->skills[skill] / div;
+	// max 600 * 100 / 100
+	int blows = MAX(0, baseblows) * skill / div;
 
 	aroll->blows = blows + extra_blows;
 }

@@ -1246,17 +1246,72 @@ static int backstab_power(struct monster *mon)
 	return power;
 }
 
+static struct loc clockwise_orbit(struct loc center, struct loc grid, int radius)
+{
+	// down, right are positive
+	struct loc newgrid, addgrid;
+
+	grid.y = MAX(MIN(grid.y, center.y + radius), center.y - radius);
+	grid.x = MAX(MIN(grid.x, center.x + radius), center.x - radius);
+
+	if (grid.y == center.y + radius && grid.x != center.x - radius) {
+		return loc(grid.x - 1, grid.y);
+	}
+	else if (grid.y == center.y - radius && grid.x != center.x + radius) {
+		return loc(grid.x + 1, grid.y);
+	}
+	else if (grid.x == center.x + radius) {
+		return loc(grid.x, grid.y + 1);
+	}
+	else if (grid.x == center.x - radius) {
+		return loc(grid.x, grid.y - 1);
+	}
+
+	// if we got here then the point is somewhere inside the radius
+	if (grid.y == center.y && grid.x == center.x) {
+		// starting at the center grid so default to 12 o' clock
+		return clockwise_orbit(center, loc(center.x, center.y - radius), radius);
+	}
+
+	// otherwise go diagonally
+	addgrid = loc(SGN(grid.x - center.x), SGN(grid.y - center.y));
+	newgrid = grid;
+
+	while (true) {
+		newgrid = loc_sum(newgrid, addgrid);
+		if (newgrid.x == center.x + radius || newgrid.x == center.x - radius) break;
+		if (newgrid.y == center.y + radius || newgrid.y == center.y - radius) break;
+	}
+
+	return clockwise_orbit(center, newgrid, radius);
+}
+
+static struct monster *monster_in_direction(struct loc center, struct loc end, int range)
+{
+	int path_n, i;
+	struct loc path_g[256];
+	struct monster *mon;
+
+	path_n = project_path(cave, path_g, range, center, end, 0);
+
+	for (i = 0; i < path_n; ++i) {
+		mon = square_monster(cave, path_g[i]);
+		if (mon) return mon;
+	}
+	return NULL;
+}
 
 
 static struct monster *do_cleave(struct player *p, struct loc grid, const struct attack_roll *aroll)
 {
-	int i, j;
-	int cgi = 0; // clockwise grid index
-	bool clockwise = one_in_(2);
-	int add;
-	struct object *weap = aroll->obj;
+	int i;
+	//bool clockwise = one_in_(2);
+	//struct object *weap = aroll->obj;
+	struct loc end;
+	int rad = aroll->range;
+	int maxspin = rad * 2 + get_power_scale(p, PP_WHIRLWIND, rad * 3) + 1;
 
-	if (weap) {
+	/*if (weap) {
 		int slotnum = object_slot(p->body, weap);
 		if (slotnum < p->body.count && my_stristr(p->body.slots[slotnum].name, "left")) {
 			clockwise = true;
@@ -1264,42 +1319,32 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 		else if (slotnum < p->body.count && my_stristr(p->body.slots[slotnum].name, "right")) {
 			clockwise = false;
 		}
-	}
+	}*/
 
-	for (i = 0; !cgi && i < 9; i++) {
-		if (loc_eq(loc_sum(clockwise_grid[i], p->grid), grid)) {
-			cgi = i;
+	for (i = 0, end = grid; i < maxspin; ++i, end = clockwise_orbit(p->grid, end, rad)) {
+		struct monster *mon = monster_in_direction(p->grid, end, rad);
+		char mdesc[80];
+		bool docleave = false;
+
+		if (!mon) continue;
+		if (loc_eq(mon->grid, grid)) continue;
+		if (!monster_can_be_attacked(p, aroll, mon, NULL, 0U)) continue;
+		if (!monster_is_visible(mon)) continue;
+
+		monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG);
+
+		if (mon_will_attack_player(mon, p) && mon->target.who == TARGET_WHO_PLAYER) {
+			docleave = true;
+		} else if (p->timed[TMD_BLOODLUST]) {
+			docleave = true;
+		} else if (get_check(format("Attack %s? ", mdesc))) {
+			docleave = true;
 		}
-	}
 
-	if (!cgi) {
-		return NULL;
-	}
-
-	add = clockwise ? 1 : -1;
-	for (i = (cgi + add) % 9, j = 0; j < 3; i = (i + add) % 9, j++) {
-		struct loc target_loc = loc_sum(clockwise_grid[i], p->grid);
-		struct monster *mon = square_monster(cave, target_loc);
-		
-		if (mon && monster_can_be_attacked(p, aroll, mon, NULL, 0U)) {
-			char mdesc[80];
-			bool docleave = false;
-			monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG);
-
-			if (mon_will_attack_player(mon, p) && mon->target.who == TARGET_WHO_PLAYER) {
-				docleave = true;
-			} else if (p->timed[TMD_BLOODLUST]) {
-				docleave = true;
-			} else if (get_check(format("Attack %s? ", mdesc))) {
-				docleave = true;
-			}
-
-			if (docleave) {
-				msg("You cleave!");
-				player->upkeep->energy_use /= 2;
-				return mon;
-			}
-			return NULL;
+		if (docleave) {
+			msg("You cleave!");
+			//player->upkeep->energy_use /= 2;
+			return mon;
 		}
 	}
 
@@ -1633,6 +1678,9 @@ void py_attack(struct player *p, struct loc grid)
 	bool can_attack = false;
 	char buf[128] = { '\0' };
 	int which;
+	int totalblows = 0;
+	int cleavediscount = 35 + get_power_scale(p, PP_WHIRLWIND, 25);
+	bool doingcleave = false;
 
 	if (!mon) {
 		msg("There's nobody there to attack!");
@@ -1645,9 +1693,12 @@ void py_attack(struct player *p, struct loc grid)
 	}
 
 	// L: check to see if we can actually target the monster
-	for (i = 0; !can_attack && i < p->state.num_attacks; ++i) {
+	for (i = 0; i < p->state.num_attacks; ++i) {
+		bool thisblowworks;
 		aroll = p->state.attacks[i];
-		can_attack = can_attack || monster_can_be_attacked(p, &aroll, mon, buf, sizeof(buf));
+		thisblowworks = monster_can_be_attacked(p, &aroll, mon, buf, sizeof(buf));
+		can_attack = can_attack || thisblowworks;
+		if (thisblowworks) totalblows += aroll.blows;
 	}
 
 	if (!can_attack) {
@@ -1690,6 +1741,8 @@ void py_attack(struct player *p, struct loc grid)
 	 * to avoid giving monsters a possible double move. */
 	which = 0;
 	while (!slain) {
+		int cleavechance = 0;
+		int cleaveblowenergy;
 		aroll = p->state.attacks[which];
 
 		struct loc tgrid = mon->grid;
@@ -1699,7 +1752,14 @@ void py_attack(struct player *p, struct loc grid)
 		}
 
 		blow_energy = 100 * z_info->move_energy / aroll.blows;
-		if (blow_energy + p->upkeep->energy_use >= avail_energy) {
+		cleaveblowenergy = (blow_energy * (100 - cleavediscount) + 99) / 100;
+
+		if (doingcleave) {
+			if (cleaveblowenergy + p->upkeep->energy_use >= avail_energy) {
+				break;
+			}
+		}
+		else if (blow_energy + p->upkeep->energy_use >= avail_energy) {
 			break;
 		}
 
@@ -1712,18 +1772,25 @@ void py_attack(struct player *p, struct loc grid)
 
 		slain = py_attack_real(p, tgrid, &fear, &aroll);
 
-		if (slain && aroll.obj && aroll.obj->tval == TV_HAFTED) {
+		if (slain) cleavechance += 25;
+		cleavechance += get_power_scale(player, PP_WHIRLWIND, 50);
+		if (aroll.obj && aroll.obj->tval == TV_HAFTED) cleavechance *= 2;
+		
+		if (doingcleave) p->upkeep->energy_use += cleaveblowenergy;
+		else p->upkeep->energy_use += blow_energy;
+
+		doingcleave = false;
+
+		if (randint0(100) < cleavechance && cleaveblowenergy + p->upkeep->energy_use < avail_energy) {
 			struct monster *new_target = do_cleave(p, tgrid, &aroll);
 			if (new_target) {
+				doingcleave = true;
 				mon = new_target;
 				slain = false;
 			}
 		}
-		else {
-			p->upkeep->energy_use += blow_energy;
-		}
 
-		which = (which + 1) % p->state.num_attacks;
+		if (!doingcleave) which = (which + 1) % p->state.num_attacks;
 	}
 
 	if (!slain) {
