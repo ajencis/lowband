@@ -443,6 +443,11 @@ code:WHIRLWIND
 name:Whirlwind
 desc:You can attack multiple nearby monsters.
 
+type:power
+code:CRITICAL_HITS
+name:Critical Hits
+desc:You can more easily critically hit monsters.
+
 
 # L: skills
 type:skill

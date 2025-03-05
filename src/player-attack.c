@@ -424,6 +424,8 @@ static int critical_melee(const struct player *p, const struct monster *monster,
 		const struct attack_roll *aroll, int dam, uint32_t *msg_type)
 {
 	int chance = aroll->crit_chance, new_dam;
+	int powerbonus = chance + get_power_scale(p, PP_CRITICAL_HITS, 20);
+	chance = my_int_sqrt(chance * 5);
 
 	if (is_debuffed(monster)) {
 		chance += z_info->m_crit_debuff_toh;
@@ -437,7 +439,7 @@ static int critical_melee(const struct player *p, const struct monster *monster,
 		int wgt = aroll->obj ? aroll->obj->weight : 0;
 		do {
 			power += randint0(wgt * z_info->m_crit_power_weight_scl * 2 / 100);
-			power += randint0(chance * 5 * 2);
+			power += randint0(powerbonus * 5 * 2);
 		} while (randint0(100) < chance);
 		power += randint0(wgt * z_info->m_crit_power_weight_scl * 2 / 100 + 1);
 		const struct critical_level *this_l = z_info->m_crit_level_head;
@@ -758,7 +760,10 @@ static int melee_crit_chance(struct attack_roll *aroll, const struct player *p, 
 
 	chance += z_info->m_crit_chance_toh_skill_scl * ps->skills[aroll->attack_skill] / 100;
 
+	chance += get_power_scale_state(ps, PP_CRITICAL_HITS, 15, p->lev);
+
 	aroll->crit_chance = chance;
+
 	return chance;
 }
 
@@ -834,11 +839,11 @@ static bool backstab_mod_attack(struct attack_roll *aroll, int power)
 	if (!power) return false;
 	if (aroll->attack_skill != SKILL_TO_HIT_MELEE) return false;
 
-	scale = get_power_scale(player, PP_BACKSTAB, 100) + power * 40 - 25;
+	scale = (get_power_scale(player, PP_BACKSTAB, 60) + 40) * power - 25;
 	if (scale < 25) return false;
 
 	aroll->to_hit += scale / 4;
-	aroll->crit_chance += scale;
+	aroll->crit_chance += scale / 3;
 
 	return true;
 }
@@ -2017,8 +2022,9 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 		}
 
 		/* Stop if non-projectable but passable */
-		if (!(square_isprojectable(cave, path_g[i]))) 
+		if (!(square_isprojectable(cave, path_g[i]))) {
 			break;
+		}
 	}
 
 	/* Get the missile */
