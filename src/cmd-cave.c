@@ -2408,7 +2408,9 @@ void do_cmd_dip_learn(struct command *cmd)
 
 		if (pp_flag_has(mon->powers, i) &&
 				mon->race->level > player->extra_powers[i] &&
-				player->extra_powers[i] < 50) {
+				player->extra_powers[i] < 50 &&
+				player_bonus_to_cost(player->extra_powers[i], i, player) <
+					player_bonus_to_cost(player->extra_powers[i] + 1, i, player)) {
 
 			if (get_check(format("Ask to learn %s? (%i gp) ", pname, cost))) {
 				result = i;

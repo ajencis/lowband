@@ -250,16 +250,16 @@ struct monster_race *get_mon_num(int generated_level, int current_level)
 	time_t cur_time = time(NULL);
 	struct tm *date = localtime(&cur_time);
 
+	// L: let bigger monsters spawn in town (they'll be friendly)
+	if (generated_level == 0 && one_in_(2)) {
+		int maxlevel = player->lev * 3 / 2;
+		generated_level = randint0(maxlevel);
+	}
+
 	/* Occasionally produce a nastier monster in the dungeon */
 	if (generated_level > 0 && one_in_(z_info->ood_monster_chance)) {
 		generated_level += MIN(generated_level / 4 + 2,
 			z_info->ood_monster_amount);
-	}
-
-	// L: let bigger monsters spawn in town (they'll be friendly)
-	if (generated_level == 0) {
-		int maxlevel = turn / 1000;
-		generated_level = randint0(maxlevel);
 	}
 
 	total = 0L;

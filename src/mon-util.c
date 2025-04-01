@@ -108,7 +108,6 @@ bool give_monster_powers(struct monster *mon)
 	if (rf_has(mr->flags, RF_SAPIENT)) {
 		while (one_in_(10)) {
 			int choice = randint0(PP_MAX - PP_NONE - 1) + PP_NONE + 1;
-			message_add(format("giving power %i to %s", choice, mon->race->name), MSG_GENERIC);
 			pp_flag_on(mon->powers, choice);
 		}
 		/*for (i = PP_NONE + 1; i < PP_MAX; ++i) {
@@ -137,11 +136,16 @@ bool player_can_learn_from_monster(struct player *p, struct monster *mon)
 	int i;
 
 	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
-		if (pp_flag_has(mon->powers, i)) {
-			if (mon->race->level > p->extra_powers[i]) {
-				return true;
-			}
+		if (!pp_flag_has(mon->powers, i)) continue;
+
+		if (mon->race->level <= p->extra_powers[i]) continue;
+
+		if (player_bonus_to_cost(p->extra_powers[i], i, p) >=
+				player_bonus_to_cost(p->extra_powers[i] + 1, i, p)) {
+					continue;
 		}
+		
+		return true;
 	}
 
 	return false;

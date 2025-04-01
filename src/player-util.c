@@ -359,7 +359,7 @@ static int bonus_to_cost(int bonus, int tome_ind)
 	return bonus_to_cost_base(bonus, factor);
 }
 
-static int player_bonus_to_cost(int bonus, int tome_ind, struct player *p)
+int player_bonus_to_cost(int bonus, int tome_ind, struct player *p)
 {
 	int base = bonus_to_cost(bonus, tome_ind);
 	int discount = 0; // in percent

@@ -82,6 +82,7 @@ void player_race_x_skill(const struct player_race *r, bool evolved, int skills[S
 void player_race_elem_info(const struct player_race *r, bool evolved, struct element_info el_info[ELEM_MAX]);
 int player_skill_stat(struct player *p, int skill);
 bool player_learn_spell_xp(struct player *p, bool initial, int xp);
+int player_bonus_to_cost(int bonus, int tome_ind, struct player *p);
 
 int antimagic_fail_increase(struct player *p);
 int antimagic_radius(struct player *p);
