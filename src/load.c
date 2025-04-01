@@ -291,18 +291,22 @@ static bool rd_monster(struct chunk *c, struct monster *mon)
 	rd_byte(&mon->energy);
 	rd_byte(&tmp8u);
 
-	for (j = 0; j < tmp8u; j++)
+	for (j = 0; j < tmp8u; j++) {
 		rd_s16b(&mon->m_timed[j]);
+	}
 
 	/* Read and extract the flag */
-	for (j = 0; j < mflag_size; j++)
+	for (j = 0; j < mflag_size; j++) {
 		rd_byte(&mon->mflag[j]);
+	}
 
-	for (j = 0; j < of_size; j++)
+	for (j = 0; j < of_size; j++) {
 		rd_byte(&mon->known_pstate.flags[j]);
+	}
 
-	for (j = 0; j < elem_max; j++)
+	for (j = 0; j < elem_max; j++) {
 		rd_s16b(&mon->known_pstate.el_info[j].res_level);
+	}
 
 	rd_u16b(&tmp16u);
 
@@ -356,6 +360,12 @@ static bool rd_monster(struct chunk *c, struct monster *mon)
 	mon->group_info[SUMMON_GROUP].index = tmp16u;
 	rd_byte(&tmp8u);
 	mon->group_info[SUMMON_GROUP].role = tmp8u;
+
+	for (j = 0; j < PP_FLAG_SIZE; ++j) {
+		rd_byte(&mon->mflag[j]);
+	}
+
+	rd_s16b(&mon->reaction);
 
 	/* Now delete the monster if necessary */
 	if (delete) {

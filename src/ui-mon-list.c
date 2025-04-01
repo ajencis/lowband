@@ -504,6 +504,9 @@ static void diplomacy_menu_display(struct menu *m, int oid, bool cursor,
 		case CMD_DIP_GIFT:
 			name = "Gift";
 			break;
+		case CMD_DIP_LEARN:
+			name = "Learn";
+			break;
 		default:
 			name = "ERROR";
 	}
@@ -658,6 +661,10 @@ static struct menu *diplomacy_menu_new(struct player *p, struct monster *mon,
 	}
 	if (distance(mon->grid, player->grid) <= 2) {
 		d->commands[d->num_commands] = CMD_DIP_GIFT;
+		++d->num_commands;
+	}
+	if (mon->reaction >= MON_REACT_ALLY && player_can_learn_from_monster(p, mon)) {
+		d->commands[d->num_commands] = CMD_DIP_LEARN;
 		++d->num_commands;
 	}
 

@@ -119,9 +119,11 @@ static const struct command_info game_cmds[] =
 	{ CMD_REPEAT, "repeat", NULL, false, false, 0 },
 	{ CMD_INNATE, "use innate power", do_cmd_innate, false, true, 0 },
 	{ CMD_MELEE, "use a melee attack", do_cmd_melee, true, true, 0 },
+
 	{ CMD_DIPLOMACY, "talk with a monster", do_cmd_diplomacy, false, true, 0 },
 	{ CMD_DIP_HIRE, "hire a monster", do_cmd_dip_hire, false, true, 0 },
 	{ CMD_DIP_GIFT, "give a monster an item", do_cmd_dip_gift, false, true, 0 },
+	{ CMD_DIP_LEARN, "learn from a monster", do_cmd_dip_learn, false, true, 0 },
 
 	{ CMD_COMMAND_MONSTER, "make a monster act", do_cmd_mon_command, false, true, 0 },
 

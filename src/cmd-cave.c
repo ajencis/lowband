@@ -2171,6 +2171,28 @@ static int hiring_price(struct monster *mon, struct player *p)
 	return MAX(0, total * mult);
 }
 
+static int teaching_price(struct monster *mon, struct player *p, int power)
+{
+	int currpower = p->extra_powers[power];
+	int maxpower = mon->race->level;
+	int i;
+	int16_t result = 10;
+
+	for (i = 0; i < (currpower + maxpower) / 4; ++i) {
+		if ((i % 3) == 1) {
+			result *= 5;
+			result /= 2;
+		}
+		else {
+			result *= 2;
+		}
+
+		if (result > INT16_MAX / 10) break; 
+	}
+
+	return result;
+}
+
 
 void do_cmd_diplomacy(struct command *cmd)
 {
@@ -2213,7 +2235,7 @@ void do_cmd_diplomacy(struct command *cmd)
 
 	new_cmd = textui_do_diplomacy(player, mon, "You have nothing about which to talk.");
 
-	if (new_cmd != CMD_DIP_GIFT && new_cmd != CMD_DIP_HIRE) return;
+	if (new_cmd != CMD_DIP_GIFT && new_cmd != CMD_DIP_HIRE && new_cmd != CMD_DIP_LEARN) return;
 
 	mflag_on(mon->mflag, MFLAG_TALKING);
 	cmdq_push(new_cmd);
@@ -2356,5 +2378,63 @@ void do_cmd_dip_gift(struct command *cmd)
 	reaction_change(mon, reactbonus);
 
 	player->upkeep->energy_use = z_info->move_energy * 5;
+}
+
+void do_cmd_dip_learn(struct command *cmd)
+{
+	int i;
+	int dir;
+	struct monster *mon;
+	int result = -1;
+	int cost;
+
+	if (cmd_get_target(cmd, "target", &dir) != CMD_OK) {
+		return;
+	}
+
+	cmdq_push(CMD_DIPLOMACY);
+	cmd_set_arg_target(cmdq_peek(), "target", dir);
+
+	mon = smite_target_get(dir);
+
+	if (!mon || !mon->race) return;
+
+	if (!player_can_learn_from_monster(player, mon)) return;
+
+	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
+		const char *pname = power_names[i];
+
+		cost = teaching_price(mon, player, i);
+
+		if (pp_flag_has(mon->powers, i) &&
+				mon->race->level > player->extra_powers[i] &&
+				player->extra_powers[i] < 50) {
+
+			if (get_check(format("Ask to learn %s? (%i gp) ", pname, cost))) {
+				result = i;
+				break;
+			}
+		}
+	}
+
+	if (result == -1) {
+		//msg("You have nothing to learn from them!");
+		return;
+	}
+
+	if (player->au < cost) {
+		msg("You can't afford their price!");
+		return;
+	}
+
+	player->au -= cost;
+
+	player->extra_powers[result]++;
+		
+	// tell the player when they've learned something
+	msg("You feel a bit more familiar with %s.", power_names[i]);
+	
+	player->upkeep->update |= PU_BONUS;
+	player->upkeep->redraw |= PR_STATUS;
 }
 

@@ -256,6 +256,12 @@ struct monster_race *get_mon_num(int generated_level, int current_level)
 			z_info->ood_monster_amount);
 	}
 
+	// L: let bigger monsters spawn in town (they'll be friendly)
+	if (generated_level == 0) {
+		int maxlevel = turn / 1000;
+		generated_level = randint0(maxlevel);
+	}
+
 	total = 0L;
 
 	/* Process probabilities */
@@ -1115,6 +1121,9 @@ int16_t place_monster(struct chunk *c, struct loc grid, struct monster *mon,
 
 	/* Assign monster to its monster group */
 	monster_group_assign(c, new_mon, info, loading);
+
+	// L: consider giving it powers
+	give_monster_powers(new_mon);
 
 	update_mon(new_mon, c, true);
 

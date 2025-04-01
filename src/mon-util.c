@@ -80,6 +80,73 @@ struct object *monster_best_weapon(struct monster *m)
 	return best;
 }
 
+bool give_monster_powers(struct monster *mon)
+{
+	assert(mon);
+	//bool isleader = true;
+	//struct monster *leader = NULL;
+	struct monster_race *mr = mon->race;
+	struct monster_base *mb = mr->base;
+	int i;
+	bool given = false;
+
+	/*if (mon->group_info[PRIMARY_GROUP].role != MON_GROUP_LEADER) {
+		plog("getting leader");
+		leader = monster_group_leader(cave, mon);
+		if (leader != mon) {
+			isleader = false;
+		}
+	}*/
+	
+	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
+		if (mb->powers[i]) {
+			pp_flag_on(mon->powers, i);
+			given = true;
+		}
+	}
+
+	if (rf_has(mr->flags, RF_SAPIENT)) {
+		while (one_in_(10)) {
+			int choice = randint0(PP_MAX - PP_NONE - 1) + PP_NONE + 1;
+			message_add(format("giving power %i to %s", choice, mon->race->name), MSG_GENERIC);
+			pp_flag_on(mon->powers, choice);
+		}
+		/*for (i = PP_NONE + 1; i < PP_MAX; ++i) {
+			if (one_in_(10)) {
+				plog_fmt("turning on flag %i", i);
+				pp_flag_on(mon->powers, i);
+				given = true;
+			}
+		}*/
+		/*else if (leader) {
+			plog("has leader");
+			for (i = 0; i < PP_MAX; ++i) {
+				if (pp_flag_has(leader->powers, i) && one_in_(3)) {
+					pp_flag_on(mon->powers, i);
+					given = true;
+				}
+			}
+		}*/
+	}
+
+	return given;
+}
+
+bool player_can_learn_from_monster(struct player *p, struct monster *mon)
+{
+	int i;
+
+	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
+		if (pp_flag_has(mon->powers, i)) {
+			if (mon->race->level > p->extra_powers[i]) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 
 /**
  * ------------------------------------------------------------------------
@@ -1512,7 +1579,7 @@ bool monster_carry(struct chunk *c, struct monster *mon, struct object *obj)
 	struct object *held_obj;
 
 	if (player->cave && player->cave->objects) {
-		assert(player->cave->objects[obj->oidx] == obj->known);
+		assert(!player->cave->objects[obj->oidx] || player->cave->objects[obj->oidx] == obj->known);
 	}
 
 	// L: flag the monster as wanting to recheck its equipment

@@ -1426,12 +1426,14 @@ bool effect_handler_DETECT_TRAPS(effect_handler_context_t *context)
 	}
 
 	/* Describe */
-	if (detect)
+	if (detect) {
 		msg("You sense the presence of traps!");
+	}
 
 	/* Trap detection always makes you aware, even if no traps are present */
-	else
+	else {
 		msg("You sense no traps.");
+	}
 
 	/* Notice */
 	context->ident = true;

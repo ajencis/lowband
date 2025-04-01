@@ -268,6 +268,12 @@ static void wr_monster(const struct monster *mon)
 	wr_byte(mon->group_info[PRIMARY_GROUP].role);
 	wr_u16b(mon->group_info[SUMMON_GROUP].index);
 	wr_byte(mon->group_info[SUMMON_GROUP].role);
+
+	for (j = 0; j < PP_FLAG_SIZE; ++j) {
+		wr_byte(mon->powers[j]);
+	}
+
+	wr_s16b(mon->reaction);
 }
 
 /**

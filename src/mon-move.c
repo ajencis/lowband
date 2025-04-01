@@ -2126,6 +2126,11 @@ static void monster_turn(struct monster *mon)
 	}
 
 	if (did_something) {
+		// L: see equipped items
+		if (monster_is_visible(mon)) {
+			square_know_equipped_object(cave, mon->grid, NULL);
+		}
+
 		/* Learn about no lack of movement */
 		if (monster_is_visible(mon)) {
 			rf_on(lore->flags, RF_NEVER_MOVE);

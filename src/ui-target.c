@@ -498,7 +498,7 @@ static bool aux_monster(struct chunk *c, struct player *p,
 			lore_show_interactive(mon->race, lore);
 			auxst->press = inkey_m();
 		} else {
-			char buf[80];
+			char buf[160];
 
 			/* Describe the monster */
 			look_mon_desc(buf, sizeof(buf),

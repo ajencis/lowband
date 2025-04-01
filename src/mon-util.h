@@ -66,5 +66,7 @@ void monster_become_aware(struct monster *mon);
 int mon_ac(struct monster *mon);
 void rearrange_monster(struct monster_race *mr, bool is_player);
 void rearrange_monsters(struct monster_race *mraces, uint32_t seed);
+bool give_monster_powers(struct monster *mon);
+bool player_can_learn_from_monster(struct player *p, struct monster *mon);
 
 #endif /* MONSTER_UTILITIES_H */

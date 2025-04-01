@@ -27,6 +27,16 @@
 #include "mon-timed.h"
 #include "mon-blows.h"
 
+/**
+ * L: Monster powers
+ */
+
+#define PP_FLAG_SIZE			FLAG_SIZE(PP_MAX)
+
+#define pp_flag_has(f, flag)	flag_has_dbg(f, PP_FLAG_SIZE, flag, #f, #flag)
+#define pp_flag_on(f, flag)		flag_on_dbg(f, PP_FLAG_SIZE, flag, #f, #flag)
+#define pp_flag_off(f, flag)	flag_off(f, PP_FLAG_SIZE, flag)
+
 /*** Monster flags ***/
 
 /**
@@ -427,42 +437,44 @@ struct monster_race {
  * of objects (if any) being carried by the monster (see above).
  */
 struct monster {
-	struct monster_race *race;		/* Monster's (current) race */
+	struct monster_race *race;			/* Monster's (current) race */
 	struct monster_race *original_race;	/* Changed monster's original race */
 	int midx;
 
-	struct loc grid;			/* Location on map */
+	struct loc grid;					/* Location on map */
 
-	int16_t hp;				/* Current Hit points */
-	int16_t maxhp;				/* Max Hit points */
+	int16_t hp;							/* Current Hit points */
+	int16_t maxhp;						/* Max Hit points */
 
 	int16_t m_timed[MON_TMD_MAX];		/* Timed monster status effects */
 
-	uint8_t mspeed;				/* Monster "speed" */
-	uint8_t energy;				/* Monster "energy" */
+	uint8_t mspeed;						/* Monster "speed" */
+	uint8_t energy;						/* Monster "energy" */
 
-	uint8_t cdis;				/* Current dis from player */
+	uint8_t cdis;						/* Current dis from player */
 
-	bitflag mflag[MFLAG_SIZE];		/* Temporary monster flags */
+	bitflag mflag[MFLAG_SIZE];			/* Temporary monster flags */
 
 	struct object *mimicked_obj;		/* Object this monster is mimicking */
-	struct object *held_obj;		/* Object being held (if any) */
-	struct object *equipped_obj;	/* L: objects being worn */
+	struct object *held_obj;			/* Object being held (if any) */
+	struct object *equipped_obj;		/* L: objects being worn */
 
-	uint8_t attr;  				/* attr last used for drawing monster */
+	uint8_t attr;  						/* attr last used for drawing monster */
 
 	struct player_state known_pstate;	/* Known player state */
 
-	struct target target;			/* Monster target */
+	struct target target;				/* Monster target */
 
-	struct monster_group_info group_info[GROUP_MAX];/* Monster group details */
-	struct heatmap heatmap;			/* Monster location heatmap */
+	struct monster_group_info group_info[GROUP_MAX];	/* Monster group details */
+	struct heatmap heatmap;				/* Monster location heatmap */
 
-	uint8_t min_range;			/* What is the closest we want to be? */
-	uint8_t best_range;			/* How close do we want to be? */
+	uint8_t min_range;					/* What is the closest we want to be? */
+	uint8_t best_range;					/* How close do we want to be? */
 
-	wchar_t faction;            /* L: general group of monsters */
-	int reaction;				/* L: how much it likes the player */
+	wchar_t faction;					/* L: general group of monsters */
+	int16_t reaction;						/* L: how much it likes the player */
+
+	bitflag powers[PP_FLAG_SIZE];		// L: any powers it knows
 };
 
 /** Variables **/

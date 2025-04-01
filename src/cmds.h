@@ -50,6 +50,7 @@ void do_cmd_mon_command(struct command *cmd);
 void do_cmd_diplomacy(struct command *cmd);
 void do_cmd_dip_hire(struct command *cmd);
 void do_cmd_dip_gift(struct command *cmd);
+void do_cmd_dip_learn(struct command *cmd);
 
 /* cmd-misc.c */
 void do_cmd_wizard(void);

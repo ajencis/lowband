@@ -429,6 +429,8 @@ static bool player_can_learn_from_tome(struct player *p, int index)
 {
 	int cpwr;
 	char name[80];
+	assert(index > TOME_NONE && index < TOME_MAX);
+
 	if (index < PP_MAX) {
 		cpwr = p->extra_powers[index];
 		my_strcpy(name, player_powers[index].name, sizeof(name));
@@ -529,6 +531,46 @@ bool obj_can_learn_extra_from(const struct object *obj)
 	return true;
 }
 
+static bool check_learn_skill(struct player *p, int skill, int xpgain)
+{
+	assert(skill < SKILL_MAX);
+	uint32_t chance = p->state.skills[skill];
+
+	chance *= chance;
+	chance *= p->extra_skills[skill];
+
+	if (pf_has(p->state.flags, PF_EXTRA_LEARNING)) chance /= 5;
+	chance /= xpgain;
+	chance = MIN(chance, 0x10000000U);
+
+	if (one_in_(chance)) {
+		return learn_extra(p, skill + PP_MAX);
+	}
+
+	return false;
+}
+
+static bool check_learn_power(struct player *p, int power, int xpgain)
+{
+	assert(power < PP_MAX);
+	uint32_t chance;
+
+	chance = p->state.powers[power] + 10;
+
+	chance *= chance;
+	chance *= p->extra_powers[power];
+
+	if (pf_has(p->state.flags, PF_EXTRA_LEARNING)) chance /= 2;
+	chance /= xpgain;
+	chance = MIN(chance, 0x10000000U);
+
+	if (one_in_(chance)) {
+		return learn_extra(p, power);
+	}
+
+	return false;
+}
+
 static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 {
 	if (!obj) return false;
@@ -554,21 +596,30 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 	}
 	
 	if (power < PP_MAX) {
-		assert(power > PP_NONE && power < PP_MAX);
-		chance = p->state.powers[power] + 10;
-		//chance *= chance;
-		currlearned = p->extra_powers[power];
+		if (!check_learn_power(p, power, xpgain)) return false;
+
+		if (player_bonus_to_cost(p->extra_powers[power], power, p) >= mx) {
+			char buf[80];
+			object_desc(buf, sizeof(buf), obj, ODESC_EXTRA, p);
+			// after learning we're at the max
+			msg("You feel you've learned everything you can from your %s.", buf);
+		}
+		return true;
 	}
 	else if (power < PP_MAX + SKILL_MAX) {
-		int skill_index = power - PP_MAX;
-		assert(skill_index >= 0 && skill_index < SKILL_MAX);
-		chance = p->state.skills[skill_index] + 10;
-		//chance *= chance;
-		currlearned = p->extra_skills[skill_index];
+		int skill_ind = power - PP_MAX;
+		if (!check_learn_skill(p, skill_ind, xpgain)) return false;
+		
+		if (player_bonus_to_cost(p->extra_skills[skill_ind], power, p) >= mx) {
+			char buf[80];
+			object_desc(buf, sizeof(buf), obj, ODESC_EXTRA, p);
+			// after learning we're at the max
+			msg("You feel you've learned everything you can from your %s.", buf);
+		}
+		return true;
 	}
-	else {
-		return false;
-	}
+
+	return false;
 
 	currcost = player_bonus_to_cost(currlearned, power, p);
 	nextcost = player_bonus_to_cost(currlearned + 1, power, p);
@@ -604,6 +655,21 @@ bool check_learn_powers(struct player *p, int xpgain)
 	struct object *obj;
 	bool learned = false;
 	if (xpgain <= 0) return false;
+
+	for (i = 0; i < SKILL_MAX; ++i) {
+		int currcost = player_bonus_to_cost(p->extra_skills[i], i + PP_MAX, p);
+		int nextcost = player_bonus_to_cost(p->extra_skills[i] + 1, i + PP_MAX, p);
+
+		if (currcost >= nextcost && check_learn_skill(p, i, xpgain)) return true;
+	}
+
+	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
+
+		int currcost = player_bonus_to_cost(p->extra_powers[i], i, p);
+		int nextcost = player_bonus_to_cost(p->extra_powers[i] + 1, i, p);
+
+		if (currcost >= nextcost && check_learn_power(p, i, xpgain)) return true;
+	}
 
 	int maxtomes = p->body.count + z_info->pack_size;
 	struct object **tomes = mem_zalloc((maxtomes) * sizeof(*tomes));

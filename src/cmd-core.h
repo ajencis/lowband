@@ -106,6 +106,7 @@ typedef enum cmd_code {
 	CMD_DIPLOMACY,
 	CMD_DIP_HIRE,
 	CMD_DIP_GIFT,
+	CMD_DIP_LEARN,
 
 	/* Store commands */
 	CMD_SELL,
