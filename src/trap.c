@@ -501,6 +501,7 @@ extern void hit_trap(struct loc grid, int delayed)
 	for (trap = square_trap(cave, grid); trap; trap = next_trap) {
 		int flag;
 		bool saved = false;
+		int defadj = player->state.skills[SKILL_HEALTH] - cave->depth * 3 / 2;
 
 		next_trap = trap->next;
 
@@ -509,8 +510,9 @@ extern void hit_trap(struct loc grid, int delayed)
 		if (trap->timeout) continue;
 
 		if (delayed != trf_has(trap->kind->flags, TRF_DELAY) &&
-		    delayed != -1)
+		    	delayed != -1) {
 			continue;
+		}
 
 		if (player_is_trapsafe(player)) {
 			/* Trap immune player learns the rune */
@@ -526,37 +528,44 @@ extern void hit_trap(struct loc grid, int delayed)
 		disturb(player);
 
 		/* Give a message */
-		if (trap->kind->msg)
+		if (trap->kind->msg) {
 			msg("%s", trap->kind->msg);
+		}
 
 		/* Test for save due to flag */
 		for (flag = of_next(trap->kind->save_flags, FLAG_START);
 			 flag != FLAG_END;
-			 flag = of_next(trap->kind->save_flags, flag + 1))
+			 flag = of_next(trap->kind->save_flags, flag + 1)) {
 			if (player_of_has(player, flag)) {
 				saved = true;
 				equip_learn_flag(player, flag);
 			}
+		}
 
 		/* Test for save due to armor */
 		if (trf_has(trap->kind->flags, TRF_SAVE_ARMOR)
-			&& !check_hit(player, 125))
+				&& !check_hit(player, cave->depth + 100 - defadj)) {
 			saved = true;
+		}
 
 		/* Test for save due to saving throw */
 		if (trf_has(trap->kind->flags, TRF_SAVE_THROW) &&
-			(randint0(100) < player->state.skills[SKILL_SAVE]))
+				(randint0(100) < player->state.skills[SKILL_SAVE] + randint0(defadj))) {
 			saved = true;
+		}
 
 		/* Save, or fire off the trap */
 		if (saved) {
-			if (trap->kind->msg_good)
+			if (trap->kind->msg_good) {
 				msg("%s", trap->kind->msg_good);
+			}
 		} else {
-			if (trap->kind->msg_bad)
+			if (trap->kind->msg_bad) {
 				msg("%s", trap->kind->msg_bad);
+			}
 			effect = trap->kind->effect;
-			effect_do(effect, source_trap(trap), NULL, &ident, false, 0, 0, 0, NULL);
+
+			effect_do(effect, source_trap(trap), NULL, &ident, false, 0, 0, -defadj, NULL);
 
 			/* Trap may have gone or the player may be dead */
 			if (!square_trap(cave, grid) || player->is_dead) break;
@@ -575,10 +584,11 @@ extern void hit_trap(struct loc grid, int delayed)
 		}
 
 		/* Some traps drop you a dungeon level */
-		if (trf_has(trap->kind->flags, TRF_DOWN))
+		if (trf_has(trap->kind->flags, TRF_DOWN)) {
 			dungeon_change_level(player,
 				dungeon_get_next_level(player,
 				player->depth, 1));
+		}
 
 		/* Some traps drop you onto them */
 		if (trf_has(trap->kind->flags, TRF_PIT)

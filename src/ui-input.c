@@ -1298,10 +1298,12 @@ static bool textui_get_check_base(const char *prompt, bool force_answer)
 
 		if (ke.type == EVT_MOUSE) {
 			if ((ke.mouse.button != 1) && (ke.mouse.y != 0)) {
+				button = 'y';
 				answer = false;
 				got_answer = true;
 			}
 			else {
+				button = 'n';
 				answer = true;
 				got_answer = true;
 			}

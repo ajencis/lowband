@@ -507,5 +507,5 @@ desc:You can cast magic.
 
 type:skill
 code:HEALTH
-name:Health
+name:Resilience
 desc:You can endure attacks.

@@ -1812,6 +1812,11 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 			continue;
 		}
 
+		// L: make sure object is known if it should be
+		if (square_isview(cave, new)) {
+			object_see(player, obj);
+		}
+
 		/* Get the object name */
 		object_desc(o_name, sizeof(o_name), obj,
 				ODESC_PREFIX | ODESC_FULL, player);

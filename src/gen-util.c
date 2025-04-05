@@ -794,6 +794,15 @@ bool alloc_object(struct chunk *c, int set, int typ, int depth, uint8_t origin)
 		 */
 		bool matched = ((set & SET_CORR) && !square_isroom(c, grid))
 			|| ((set & SET_ROOM) && square_isroom(c, grid));
+
+		// L: traps should be places that players can't go around
+		if (typ == TYP_TRAP) {
+			bool ns = !square_ispassable(c, loc(grid.x, grid.y - 1)) && !square_ispassable(c, loc(grid.x, grid.y + 1));
+			bool ew = !square_ispassable(c, loc(grid.x - 1, grid.y)) && !square_ispassable(c, loc(grid.x + 1, grid.y));
+
+			if (!ns && !ew) matched = false;
+		}
+
 		if (square_isempty(c, grid) && matched) {
 			/* Place something */
 			switch (typ) {
