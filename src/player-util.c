@@ -2645,9 +2645,10 @@ void player_resting_complete_special(struct player *p)
 			/* Stop resting */
 			disturb(p);
 	} else if (p->upkeep->resting == REST_SOME_POINTS) {
-		if ((p->chp == p->mhp) || (p->csp == p->msp))
+		if ((p->chp == p->mhp) || (p->csp == p->msp)) {
 			/* Stop resting */
 			disturb(p);
+		}
 	}
 }
 
@@ -2762,7 +2763,7 @@ void player_handle_post_move(struct player *p, bool eval_trap,
 
 	/* Update view and search */
 	update_view(cave, p);
-	search(p);
+	//search(p);
 }
 
 /*
@@ -2806,23 +2807,39 @@ void disturb(struct player *p)
 	event_signal(EVENT_INPUT_FLUSH);
 }
 
+static bool player_can_search(struct player *p)
+{
+	if (p->searched_this_turn) return false;
+	if (p->timed[TMD_BLIND]) return false;
+	if (p->timed[TMD_CONFUSED]) return false;
+	if (p->timed[TMD_PHOENIX]) return false;
+	if (p->timed[TMD_PARALYZED]) return false;
+	if (player_timed_grade_eq(p, TMD_STUN, "Knocked Out")) return false;
+	if (p->timed[TMD_PHOENIX]) return false;
+	if (no_light(p)) return false;
+
+	return true;
+}
+
 /**
  * Search for traps or secret doors
  */
 void search(struct player *p)
 {
-	struct loc grid;
-	int toroll = MAX(40 + cave->depth / 4, p->state.skills[SKILL_SEARCH] - cave->depth / 4);
-	int roll1 = randint0(toroll);
-	int roll2 = randint0(toroll);
-	int maxdist = (MIN(roll1, roll2) - cave->depth / 4) / 25;
-	maxdist = MAX(0, maxdist);
+	if (!player_can_search(p)) return;
 
-	/* Various conditions mean no searching */
-	if (p->timed[TMD_BLIND] || no_light(p) ||
-			p->timed[TMD_CONFUSED] || p->timed[TMD_IMAGE]) {
-		return;
-	}
+	struct loc grid;
+	int power = p->state.skills[SKILL_SEARCH] - cave->depth / 4;
+	int toroll = MAX(cave->depth / 4, power) + p->search_turn + 25;
+	int roll1 = randint0(toroll) + p->search_turn; // L: make higher rolls more likely as you keep searching
+	int roll2 = randint0(toroll);
+	int maxdist = MIN(roll1, roll2) - cave->depth / 4;
+
+	++p->search_turn;
+	p->searched_this_turn = true;
+
+	if (maxdist < 0) return;
+	maxdist /= 25;
 
 	/* Search the nearby grids, which are always in bounds */
 	// L: add less nearby grids for better searchers, which are not always in bounds
@@ -2841,18 +2858,8 @@ void search(struct player *p)
 						square_apparent_look_prefix(p->cave, grid),
 						square_apparent_name(p->cave, grid));
 			}
-
-			/* Secret doors */
-			/*if (square_issecretdoor(cave, grid)) {
-				msg("You have found a secret door.");
-				square_true_memorize(cave, grid);
-				//place_closed_door(cave, grid);
-				disturb(p);
-			}
-
-			message_add(format("feat is %i, known_feat is %i", square(cave, grid)->feat, square(p->cave, grid)->feat), MSG_GENERIC);
-
-			if (square(cave, grid)->feat == FEAT_ILLUSORY_WALL && square_ismemorybad(cave, grid)) {
+			
+			/*if (square(cave, grid)->feat == FEAT_ILLUSORY_WALL && square_ismemorybad(cave, grid)) {
 				msg("You have discovered an illusory wall.");
 				square_true_memorize(cave, grid);
 				disturb(p);
@@ -2873,6 +2880,9 @@ void search(struct player *p)
 			}
 		}
 	}
+
+	++p->search_turn;
+	p->searched_this_turn = true;
 }
 
 /**
@@ -2896,6 +2906,10 @@ void player_start_turn(struct player *p)
 			bool id;
 			effect_simple(EF_REBIRTH, source_player(), "0d0", 0, 0, 0, 0, 0, &id);
 		}
+	}
+
+	if (player_can_search(p)) {
+		search(p);
 	}
 }
 

@@ -487,6 +487,7 @@ void player_init(struct player *p)
 	turn = 1;
 	p->total_energy = 0;
 	p->resting_turn = 0;
+	p->search_turn = 0;
 
 	/* Default to the first race/class in the edit file */
 	p->race = races;

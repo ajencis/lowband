@@ -669,12 +669,13 @@ struct player {
 
 	int16_t *timed;				/* Timed effects */
 
-	int16_t word_recall;			/* Word of recall counter */
-	int16_t deep_descent;			/* Deep Descent counter */
+	int16_t word_recall;		/* Word of recall counter */
+	int16_t deep_descent;		/* Deep Descent counter */
 
 	int16_t energy;				/* Current energy */
-	uint32_t total_energy;			/* Total energy used (including resting) */
-	uint32_t resting_turn;			/* Number of player turns spent resting */
+	uint32_t total_energy;		/* Total energy used (including resting) */
+	uint32_t resting_turn;		/* Number of player turns spent resting */
+	uint32_t search_turn;		// L: Number of player turns spent consecutively searching on the current square
 
 	int16_t food;				/* Current nutrition */
 
@@ -738,6 +739,7 @@ struct player {
 	const struct magic_realm *realm;	/* L: how the player casts */
 
 	int32_t xp_this_turn;				/* L: how much xp was gained between turns */
+	bool searched_this_turn;			// L: have we searched this turn?
 	uint32_t monster_xp;				/* L: XP progression towards evolution */
 	bool checked_tome_this_expedition;	/* L: have we prompted for a tome this level? */
 };

@@ -1033,19 +1033,25 @@ static void process_player_cleanup(void)
 		/* Player can be damaged by terrain */
 		player_take_terrain_damage(player, player->grid);
 
+		// L: mark the player as not having searched this turn
+		player->searched_this_turn = false;
+
 		/* Do nothing else if player has auto-dropped stuff */
 		if (!player->upkeep->dropping) {
 			/* Hack -- constant hallucination */
-			if (player->timed[TMD_IMAGE])
+			if (player->timed[TMD_IMAGE]) {
 				player->upkeep->redraw |= (PR_MAP);
+			}
 
 			/* Shimmer multi-hued monsters */
 			for (i = 1; i < cave_monster_max(cave); i++) {
 				struct monster *mon = cave_monster(cave, i);
-				if (!mon->race)
+				if (!mon->race) {
 					continue;
-				if (!rf_has(mon->race->flags, RF_ATTR_MULTI))
+				}
+				if (!rf_has(mon->race->flags, RF_ATTR_MULTI)) {
 					continue;
+				}
 				square_light_spot(cave, mon->grid);
 			}
 
@@ -1126,13 +1132,14 @@ void process_player(void)
 		if (player_has(player, PF_SEE_ORE)) {
 			/* Only if they are in good shape */
 			if (!player->timed[TMD_IMAGE] &&
-				!player->timed[TMD_CONFUSED] &&
-				!player->timed[TMD_AMNESIA] &&
-				!player->timed[TMD_STUN] &&
-				!player->timed[TMD_PARALYZED] &&
-				!player->timed[TMD_TERROR] &&
-				!player->timed[TMD_AFRAID])
+					!player->timed[TMD_CONFUSED] &&
+					!player->timed[TMD_AMNESIA] &&
+					!player->timed[TMD_STUN] &&
+					!player->timed[TMD_PARALYZED] &&
+					!player->timed[TMD_TERROR] &&
+					!player->timed[TMD_AFRAID]) {
 				effect_simple(EF_DETECT_ORE, source_none(), "0", 0, 0, 0, 3, 3, NULL);
+			}
 		}
 
 		/* Paralyzed or Knocked Out player gets no turn */
@@ -1244,7 +1251,7 @@ void on_new_level(void)
 	}
 
 	/* Check the surroundings */
-	search(player);
+	//search(player);
 
 	/* Give player minimum energy to start a new level, but do not reduce
 	 * higher value from savefile for level in progress */

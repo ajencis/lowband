@@ -869,6 +869,10 @@ int rd_player(void)
 	rd_byte(&player->skip_cmd_coercion);
 	rd_byte(&player->unignoring);
 	rd_s16b(&player->deep_descent);
+	
+	rd_u32b(&player->search_turn);
+	rd_byte(&tmp8u);
+	player->searched_this_turn = tmp8u;
 
 	/* Read the flags */
 	rd_s16b(&player->energy);
@@ -1060,8 +1064,9 @@ int rd_misc(void)
 
 	/* Property knowledge */
 	/* Flags */
-	for (i = 0; i < OF_SIZE; i++)
+	for (i = 0; i < OF_SIZE; i++) {
 		rd_byte(&player->obj_k->flags[i]);
+	}
 
 	/* Modifiers */
 	for (i = 0; i < OBJ_MOD_MAX; i++) {

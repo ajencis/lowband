@@ -543,6 +543,8 @@ void wr_player(void)
 	wr_byte(player->skip_cmd_coercion);
 	wr_byte(player->unignoring);
 	wr_s16b(player->deep_descent);
+	wr_u32b(player->search_turn);
+	wr_byte(player->searched_this_turn);
 
 	wr_s16b(player->energy);
 	wr_s16b(player->word_recall);
@@ -551,8 +553,9 @@ void wr_player(void)
 	wr_byte(TMD_MAX);
 
 	/* Read all the effects, in a loop */
-	for (i = 0; i < TMD_MAX; i++)
+	for (i = 0; i < TMD_MAX; i++) {
 		wr_s16b(player->timed[i]);
+	}
 
 	/* Total energy used so far */
 	wr_u32b(player->total_energy);

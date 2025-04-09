@@ -1702,7 +1702,8 @@ void do_cmd_hold(struct command *cmd)
 
 	/* Searching (probably not necessary - NRM)*/
 	// L: now necessary
-	search(player);
+	// L: now no longer necessary again
+	//search(player);
 
 	/* Pick things up, not using extra energy */
 	do_autopickup(player);
@@ -1740,31 +1741,35 @@ void do_cmd_rest(struct command *cmd)
 	int n;
 
 	/* XXX-AS need to insert UI here */
-	if (cmd_get_arg_choice(cmd, "choice", &n) != CMD_OK)
+	if (cmd_get_arg_choice(cmd, "choice", &n) != CMD_OK) {
 		return;
+	}
 	/* 
 	 * A little sanity checking on the input - only the specified negative 
 	 * values are valid. 
 	 */
-	if (n < 0 && !player_resting_is_special(n))
+	if (n < 0 && !player_resting_is_special(n)) {
 		return;
+	}
 
 	/* Do some upkeep on the first turn of rest */
 	if (!player_is_resting(player)) {
 		player->upkeep->update |= (PU_BONUS);
 
 		/* If a number of turns was entered, remember it */
-		if (n > 1)
+		if (n > 1) {
 			player_set_resting_repeat_count(player, n);
-		else if (n == 1)
+		} else if (n == 1) {
 			/* If we're repeating the command, use the same count */
 			n = player_get_resting_repeat_count(player);
+		}
 	}
 
 	/* Set the counter, and stop if told to */
 	player_resting_set_count(player, n);
-	if (!player_is_resting(player))
+	if (!player_is_resting(player)) {
 		return;
+	}
 
 	/* Take a turn */
 	player_resting_step_turn(player);

@@ -759,6 +759,9 @@ void monster_swap(struct loc grid1, struct loc grid2)
 		/* Redraw monster list */
 		player->upkeep->redraw |= (PR_MONLIST | PR_MANA);
 
+		// L: reset turns spent not moving
+		player->search_turn = 0;
+
 		/* Don't allow command repeat if moved away from item used. */
 		cmd_disable_repeat_floor_item();
 	}
@@ -807,6 +810,9 @@ void monster_swap(struct loc grid1, struct loc grid2)
 
 		/* Redraw monster list */
 		player->upkeep->redraw |= (PR_MONLIST | PR_MANA);
+
+		// L: reset turns spent not moving
+		player->search_turn = 0;
 
 		/* Don't allow command repeat if moved away from item used. */
 		cmd_disable_repeat_floor_item();
