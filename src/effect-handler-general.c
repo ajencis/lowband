@@ -127,6 +127,7 @@ struct monster *monster_target_monster(effect_handler_context_t *context)
  *     3) does not have webs
  *     3) if a player is moving, it does not have player traps
  *     4) if a monster is moving, it does not have a glyph of warding
+ *     5) L: is not a secret location
  * There's some discussion here,
  * http://angband.oook.cz/forum/showthread.php?t=11066
  */
@@ -151,7 +152,8 @@ static bool has_teleport_destination_prereqs(struct chunk *c, struct loc grid,
 	if (square(c, grid)->mon
 			|| square_isdamaging(c, grid)
 			|| square_iswebbed(c, grid)
-			|| square_isshop(c, grid)) {
+			|| square_isshop(c, grid)
+			|| sqinfo_has(square(c, grid)->info, SQUARE_SECRET)) {
 		return false;
 	}
 	return true;
@@ -1471,12 +1473,15 @@ bool effect_handler_DETECT_DOORS(effect_handler_context_t *context)
 			if (!square_in_bounds_fully(cave, grid)) continue;
 
 			if (square_issecretdoor(cave, grid)) {
+				// L: know what the grid actually is
+				square_true_memorize(cave, grid);
+
 				/* Detect secret doors */
 				/* Put an actual door */
-				place_closed_door(cave, grid);
+				//place_closed_door(cave, grid);
 
 				/* Memorize */
-				square_memorize(cave, grid);
+				//square_memorize(cave, grid);
 				square_light_spot(cave, grid);
 
 				/* Obvious */
@@ -1500,10 +1505,11 @@ bool effect_handler_DETECT_DOORS(effect_handler_context_t *context)
 	}
 
 	/* Describe */
-	if (doors)
+	if (doors) {
 		msg("You sense the presence of doors!");
-	else if (context->aware)
+	} else if (context->aware) {
 		msg("You sense no doors.");
+	}
 
 	context->ident = true;
 

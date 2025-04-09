@@ -22,7 +22,11 @@ enum
 {
 	SET_CORR = 0x01, /*!< Hallway */
 	SET_ROOM = 0x02, /*!< Room */
-	SET_BOTH = 0x03 /*!< Anywhere */
+	SET_BOTH = 0x03, /*!< Anywhere */
+    SET_NO_SECRET = 0x04, /*L: not in secret locations*/
+    SET_NO_SECRET_CORR = 0x05,
+    SET_NO_SECRET_ROOM = 0x06,
+    SET_NO_SECRET_BOTH = 0x07
 };
 
 enum

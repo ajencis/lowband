@@ -78,6 +78,392 @@
 #include "z-type.h"
 
 
+static bool feat_continues_corridor(int feat)
+{
+	if (feat == FEAT_FLOOR) return true;
+	if (feat == FEAT_BROKEN) return true;
+	if (feat == FEAT_CLOSED) return true;
+	if (feat == FEAT_OPEN) return true;
+	//if (feat == FEAT_OPEN_SECRET) return true;
+	//if (feat == FEAT_SECRET) return true;
+	if (feat == FEAT_PASS_RUBBLE) return true;
+	if (feat == FEAT_ILLUSORY_WALL) return true;
+	if (feat == FEAT_RUBBLE) return true;
+	if (feat == FEAT_LESS) return true;
+	if (feat == FEAT_MORE) return true;
+
+	return false;
+}
+
+static struct loc clockwise_card_dir(struct loc dir)
+{
+	if (loc_eq(dir, loc(1, 0))) return loc(0, 1);
+	if (loc_eq(dir, loc(0, 1))) return loc(-1, 0);
+	if (loc_eq(dir, loc(-1, 0))) return loc(0, -1);
+	if (loc_eq(dir, loc(0, -1))) return loc(1, 0);
+	return loc(0, 0);
+}
+
+static struct loc counterclockwise_card_dir(struct loc dir)
+{
+	struct loc ccd = clockwise_card_dir(dir);
+	struct loc opp = clockwise_card_dir(ccd);
+	return clockwise_card_dir(opp);
+}
+
+static bool loc_in_array_of_locs(struct loc searchfor, struct loc *locs, int locs_size)
+{
+	int i;
+
+	for (i = 0; i < locs_size; ++i) {
+		if (loc_eq(searchfor, locs[i])) return true;
+	}
+
+	return false;
+}
+
+/**
+ * L: takes a loc and returns all locs contiuous to it that satisfy  pred  as long as they can be moved
+ * to with the current and next loc satisfying  move_pred .
+ * will ignore  pred  and  move_pred  if each is  NULL
+ * stores the results in  locs  and returns the number of results
+ */
+static int all_contiguous_locs(struct chunk *c, struct loc center, struct loc *locs, int locs_size,
+		square_predicate pred, bool (*move_pred)(struct chunk *c, struct loc gridfrom, struct loc gridto))
+{
+	struct loc uncontinued_locs[1000] = { 0 };
+	int ulei = 0; // uncont'd locs end index
+	int ulsi = 0; // uncont'd locs start index
+	int li = 0; // locs index
+	int di; // dirs index
+	int dirs[] = { 2, 4, 6, 8, 1, 3, 5, 7 };
+	bool foundfloor = false;
+
+	uncontinued_locs[ulei++] = center;
+
+	while (li < locs_size && ulei > ulsi) {
+		struct loc to_cont = uncontinued_locs[ulsi++];
+		assert(!loc_in_array_of_locs(to_cont, locs, li));
+		locs[li++] = to_cont;
+
+		for (di = N_ELEMENTS(dirs) - 1; di >= 0; --di) {
+			struct loc newloc = loc_sum(ddgrid[dirs[di]], to_cont);
+
+			if (loc_in_array_of_locs(newloc, uncontinued_locs, ulei)) {
+				continue;
+			}
+			if (!square_in_bounds_fully(c, newloc)) continue;
+			// if there's a two-wall-thick barrier including diagonally consider them two distinct rooms
+			// ignore this if we're starting inside a solid block of wall
+			/*if (!square_ispassable(c, newloc) && !square_ispassable(c, to_cont) && foundfloor) {
+				message_add(format("found two possibly distinct rooms moving from (%i,%i to (%i,%i)", newloc.x, newloc.y, to_cont.x, to_cont.y), MSG_GENERIC);
+				continue;
+			}*/
+			//if (!square_isroom(c, newloc)) continue;
+			if (foundfloor && move_pred && !move_pred(c, to_cont, newloc)) continue;
+			if (pred && !pred(c, newloc)) continue;
+			if (ulei >= 1000) continue;
+
+			uncontinued_locs[ulei++] = newloc;
+			if (square_ispassable(c, newloc)) foundfloor = true;
+		}
+	}
+
+	return li;
+}
+
+/**
+ * L: moves around the room randomly for a while and ends up somewhere
+ */
+/*static struct loc random_loc_in_room(struct chunk *c, struct loc center)
+{
+	struct loc locs[1000] = { 0 };
+	int n_room_elems = all_locs_in_room(c, center, locs, N_ELEMENTS(locs));
+
+	while (true) {
+		struct loc randelem = locs[randint0(n_room_elems)];
+
+	}
+
+
+	struct loc curr = center;
+	int i, stuck = 0;
+	int dirs[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+	for (i = c->height * c->width / 10; i > 0; --i) {
+		struct loc dir = ddgrid[dirs[randint0(N_ELEMENTS(dirs))]];
+		if (square_ispassable(c, loc_sum(curr, dir)) &&
+				square_isroom(c, loc_sum(curr, dir))) {
+			curr = loc_sum(curr, dir);
+		}
+		else if (!square_ispassable(c, curr)) {
+			++stuck;
+			++i;
+			if (stuck > 100) {
+				return loc(0, 0);
+			}
+		}
+	}
+
+	return curr;
+}*/
+
+/**
+ * L: finds the entrance to a room, if there is exactly one
+ */
+static struct loc room_entrance(struct chunk *c, struct loc center)
+{
+	struct loc edge;
+	struct loc oedge = center;
+	struct loc dir;
+
+	struct loc entrance = loc(0, 0);
+
+	bool havemoved = false;
+
+	int attempts = 1000;
+
+	while (square_in_bounds(c, loc(oedge.x + 1, oedge.y)) && square_isroom(c, loc(oedge.x + 1, oedge.y))) {
+		/*int x, y;
+		bool skip = true;
+		// check the old grid, the new grid, and the four grids above and below them
+		// if all are walls, assume we're looking at two different rooms and stop
+		for (x = oedge.x; x <= oedge.x + 1; ++x) {
+			for (y = oedge.y - 1; y <= oedge.y + 1; ++y) {
+				if (square_in_bounds(c, loc(x, y)) && (square_ispassable(c, loc(x, y)) || square_isdoor(c, loc(x, y)))) {
+					skip = false;
+				}
+			}
+		}
+		if (skip) break;*/
+		++oedge.x;
+	}
+
+	if (!sqinfo_has(square(c, oedge)->info, SQUARE_ROOM)) {
+		plog("re: starting not in a room");
+		return loc(0, 0);
+	}
+
+	edge = oedge;
+	dir = loc(0, 1);
+
+	while ((!loc_eq(edge, oedge) || !havemoved) && attempts > 0) {
+		--attempts;
+		const struct square *cc_next = square_in_bounds(c, loc_sum(edge, counterclockwise_card_dir(dir))) ?
+				square(c, loc_sum(edge, counterclockwise_card_dir(dir))) :
+				NULL;
+		const struct square *next = square_in_bounds(c, loc_sum(edge, dir)) ? square(c, loc_sum(edge, dir)) : NULL;
+		struct loc diagonal_cc_dir = loc_sum(dir, counterclockwise_card_dir(dir));
+		const struct square *diag_cc = square_in_bounds(c, loc_sum(edge, diagonal_cc_dir)) ?
+				square(c, loc_sum(edge, diagonal_cc_dir)) :
+				NULL;
+
+		// consider turning counterclockwise to follow eg an l-shaped room's border
+		if (cc_next && diag_cc &&
+				sqinfo_has(cc_next->info, SQUARE_ROOM) && sqinfo_has(diag_cc->info, SQUARE_ROOM)) {
+			// don't rotate if diagonal is out of room so we don't turn around
+			dir = counterclockwise_card_dir(dir);
+		}
+
+		// consider turning clockwise  if we hit a wall
+		else if (!next || !sqinfo_has(next->info, SQUARE_ROOM)) {
+			dir = clockwise_card_dir(dir);
+		}
+
+		// otherwise keep going
+		else {
+			edge = loc_sum(edge, dir);
+			havemoved = true;
+			assert(square_in_bounds(c, edge));
+			if (!feat_is_wall(square(c, edge)->feat)) {
+				if (!loc_is_zero(entrance)) {
+					return loc(0, 0);
+				}
+				entrance = edge;
+			}
+		}
+	}
+
+	if (attempts == 0) {
+		plog("ran out of attempts in re");
+	}
+
+	return entrance;
+}
+
+/**
+ * L: given the entrance to a room, follow the corridor until it opens into another
+ * corridor or into a room
+ * return the first grid before the corridor opens up
+ * if something goes wrong, return loc(0, 0)
+ */
+static struct loc follow_corridor(struct chunk *c, struct loc room, struct loc entr)
+{
+	int dirs[4] = { 2, 4, 6, 8 };
+	struct loc curr = entr, prev;
+	struct loc dir = loc(0, 0);
+	int i, attempts;
+
+	// check cardinal directions for which direction has a corridor extending
+	for (i = 0; i < 4; ++i) {
+		struct loc possdir = ddgrid[dirs[i]];
+		const struct square *newsq = square(c, loc_sum(possdir, entr));
+		if (!sqinfo_has(newsq->info, SQUARE_ROOM) && feat_continues_corridor(newsq->feat)) {
+			if (!loc_is_zero(dir)) return loc(0, 0);
+			dir = possdir;
+		}
+	}
+
+	if (loc_is_zero(dir)) return loc(0, 0);
+
+	prev = curr;
+	curr = loc_sum(curr, dir);
+
+	for (attempts = 1000; attempts > 0; --attempts) {
+		int count = 0;
+		struct loc next;
+
+		assert(square_in_bounds(c, curr));
+		if (!feat_continues_corridor(square(c, curr)->feat)) {
+			plog("something got messed up in fc");
+			return loc(0, 0);
+		}
+
+		// check all 4 adjacent tiles for continuations to the corridor
+		for (i = 0; i < 4; ++i) {
+			struct loc adj = loc_sum(ddgrid[dirs[i]], curr);
+			assert(square_in_bounds(c, adj));
+			if (loc_eq(prev, adj)) continue;
+			if (square_isroom(c, curr)) return curr;
+			if (feat_continues_corridor(square(c, adj)->feat)) {
+				++count;
+				if (count > 1) {
+					// if we've found multiple continuations to the corridor we've hit the end
+
+					// make sure the door isn't placed at a turn so that the player can't bypass
+					// the secret door entirely
+					bool ns = feat_continues_corridor(square(c, loc(prev.x, prev.y + 1))->feat) ||
+							feat_continues_corridor(square(c, loc(prev.x, prev.y - 1))->feat);
+					bool ew = feat_continues_corridor(square(c, loc(prev.x + 1, prev.y))->feat) ||
+							feat_continues_corridor(square(c, loc(prev.x - 1, prev.y))->feat);
+
+					if (ns && ew) return loc(0, 0);
+						
+					return prev;
+				}
+				next = adj;
+			}
+		}
+		if (count == 1) {
+			// if we have one adjacent location move there and continue
+			prev = curr;
+			curr = next;
+			dir = loc_diff(prev, next);
+		}
+
+		// if we have no adjacent locations the corridor has ended
+		if (count == 0) return loc(0, 0);
+	}
+
+	if (attempts == 0) {
+		plog("ran out of attempts in fc");
+	}
+
+	return loc(0, 0);
+}
+
+static bool not_both_walls(struct chunk *c, struct loc grid1, struct loc grid2)
+{
+	if (square_ispassable(c, grid1) || square_isdoor(c, grid1)) return true;
+	if (square_ispassable(c, grid1) || square_isdoor(c, grid2)) return true;
+	return false;
+}
+
+static bool not_secret_door_nor_wall(struct chunk *c, struct loc grid)
+{
+
+	if (square_issecretdoor(c, grid)) return false;
+	if (square_isdoor(c, grid)) return true;
+	if (!square_ispassable(c, grid)) return false;
+	return true;
+}
+
+/**
+ * L: turn some rooms into secret rooms:
+ * if they have 1 entrance, follow that entrance and make where it
+ * opens into another corridor or a room into a secret door
+ * then, put some treasure in the secret room
+ */
+static void make_rooms_secret(struct chunk *c)
+{
+	int i, j;
+
+	for (i = 0; i < dun->cent_n; ++i) {
+		if (one_in_(2)) continue;
+
+		bool doroom;
+		struct loc end;
+		struct loc center = dun->cent[i];
+		struct loc entrance = room_entrance(c, center);
+		struct loc treas_grid = loc(0, 0);
+		struct loc roomlocs[1000] = { 0 };
+		int roomlocnum;
+
+		if (loc_is_zero(entrance)) continue;
+
+		end = follow_corridor(c, center, entrance);
+
+		if (loc_is_zero(end)) continue;
+		if (square_isstairs(c, end)) continue;
+
+		doroom = false;
+
+		roomlocnum = all_contiguous_locs(c, center, roomlocs, N_ELEMENTS(roomlocs), square_isroom, not_both_walls);
+
+		// 3 in 4 for the first treasure, 3 in 5 for the second, etc
+		for (j = 4; x_in_y(3, j); ++j) {
+			// stack tresures on top of each other sometimes
+			if (one_in_(2) || loc_is_zero(treas_grid)) {
+				int attempts = 1000;
+				do {
+					--attempts;
+					treas_grid = roomlocs[randint0(roomlocnum)];
+				} while (!square_isfloor(c, treas_grid) && attempts > 0);
+
+				if (attempts <= 0) {
+					plog_fmt("can't find a floor space, roomlocnum is %i", roomlocnum);
+					treas_grid = loc(0, 0);
+				}
+			}
+
+			if (loc_is_zero(treas_grid)) {
+				break;
+			} else if (one_in_(3)) {
+				bool good = one_in_(2);
+				bool great = good && one_in_(2);
+				place_object(c, treas_grid, c->depth, good, great, ORIGIN_SECRET, 0);
+				doroom = true;
+			} else {
+				place_gold(c, treas_grid, c->depth, ORIGIN_SECRET);
+				doroom = true;
+			}
+		}
+
+		if (doroom) {
+			square_set_feat(c, end, FEAT_SECRET);
+			struct loc secretlocs[1000] = { 0 };
+			int secretlocnum = all_contiguous_locs(c, center, secretlocs, N_ELEMENTS(secretlocs),
+					not_secret_door_nor_wall, not_both_walls);
+
+			for (j = 0; j < secretlocnum; ++j) {
+				struct loc grid = secretlocs[j];
+				sqinfo_on(square(c, grid)->info, SQUARE_SECRET);
+			}
+		}
+	}
+}
+
+
 /**
  * Check whether a square has one of the tunnelling helper flags
  * \param c is the current chunk
@@ -1266,6 +1652,9 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	/* Connect all the rooms together */
 	do_traditional_tunneling(c);
 	ensure_connectedness(c, true);
+
+	// L: make rooms that have only one connection secret
+	make_rooms_secret(c);
 
 	/* Add some magma streamers */
 	for (i = 0; i < dun->profile->str.mag; i++) {
@@ -2849,6 +3238,10 @@ static struct chunk *modified_chunk(struct player *p, int depth, int height,
 	do_traditional_tunneling(c);
 	ensure_connectedness(c, true);
 
+	// L: make rooms that have only one connection secret
+	make_rooms_secret(c);
+
+
 	/* Turn the outer permanent walls back to granite */
 	draw_rectangle(c, 0, 0, c->height - 1, c->width - 1, 
 		FEAT_GRANITE, SQUARE_NONE, true);
@@ -3092,6 +3485,10 @@ static struct chunk *moria_chunk(struct player *p, int depth, int height,
 	/* Connect all the rooms together */
 	do_traditional_tunneling(c);
 	ensure_connectedness(c, true);
+
+	// L: make rooms that have only one connection secret
+	make_rooms_secret(c);
+
 
 	/* Turn the outer permanent walls back to granite */
 	draw_rectangle(c, 0, 0, c->height - 1, c->width - 1, 
@@ -3471,6 +3868,10 @@ struct chunk *hard_centre_gen(struct player *p, int min_height, int min_width,
 
 	/* Connect to the centre entrances. */
 	ensure_connectedness(c, false);
+
+	// L: make rooms that have only one connection secret
+	make_rooms_secret(c);
+
 
 	/* Free all the chunks */
 	cave_free(left_cavern);

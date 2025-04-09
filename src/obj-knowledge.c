@@ -939,7 +939,7 @@ void object_see(struct player *p, struct object *obj)
 		if (obj->held_m_idx) return;
 
 		/* Attach it to the current floor pile if necessary */
-		if (! square_holds_object(p->cave, grid, known_obj)) {
+		if (!square_holds_object(p->cave, grid, known_obj)) {
 			/* Detach from any old pile */
 			if (!loc_is_zero(old) && square_holds_object(p->cave, old, known_obj)) {
 				square_excise_object(p->cave, old, known_obj);
@@ -964,8 +964,9 @@ void object_touch(struct player *p, struct object *obj)
 	player_know_object(p, obj);
 
 	/* Log artifacts if found */
-	if (obj->artifact)
+	if (obj->artifact) {
 		history_find_artifact(p, obj->artifact);
+	}
 }
 
 

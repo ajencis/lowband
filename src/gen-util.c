@@ -688,8 +688,9 @@ void alloc_stairs(struct chunk *c, int feat, int num, int minsep, bool sepany,
 
 		/* Try to find; then decrease "walls" */
 		while (i < num && cave_find_get_grid(&grid, state)) {
-			if (!square_isempty(c, grid)
-					|| square_num_walls_adjacent(c, grid) != walls) {
+			if (!square_isempty(c, grid) ||
+					sqinfo_has(square(c, grid)->info, SQUARE_SECRET) ||
+					square_num_walls_adjacent(c, grid) != walls) {
 				continue;
 			}
 			if (minsep > 0) {
@@ -795,6 +796,8 @@ bool alloc_object(struct chunk *c, int set, int typ, int depth, uint8_t origin)
 		bool matched = ((set & SET_CORR) && !square_isroom(c, grid))
 			|| ((set & SET_ROOM) && square_isroom(c, grid));
 
+		if ((set & SET_NO_SECRET) && sqinfo_has(square(c, grid)->info, SQUARE_SECRET)) matched = false;
+
 		// L: traps should be places that players can't go around
 		if (typ == TYP_TRAP) {
 			bool ns = !square_ispassable(c, loc(grid.x, grid.y - 1)) && !square_ispassable(c, loc(grid.x, grid.y + 1));
@@ -818,7 +821,7 @@ bool alloc_object(struct chunk *c, int set, int typ, int depth, uint8_t origin)
 			case TYP_OBJECT:
 				place_object(c, grid, depth, false, false, origin, 0);
 				break;
-			case TYP_GOOD: // much fewer good | great objects
+			case TYP_GOOD: // L: much fewer good | great objects
 				place_object(c, grid, depth, one_in_(5), false, origin, 0);
 				break;
 			case TYP_GREAT:

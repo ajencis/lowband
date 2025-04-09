@@ -10,6 +10,7 @@ ORIGIN(PIT,			1,	"Found lying on the floor in a pit %s")
 ORIGIN(VAULT,		1,	"Found lying on the floor in a vault %s")
 ORIGIN(LABYRINTH,	1,	"Found lying on the floor of a labyrinth %s")
 ORIGIN(CAVERN,		1,	"Found lying on the floor of a cavern %s")
+ORIGIN(SECRET,		1,	"Found lying on the floor of a secret room %s")
 ORIGIN(RUBBLE,		1,	"Found under some rubble %s")
 ORIGIN(MIXED,		-1,	"")                 /* stack with mixed origins */
 ORIGIN(DROP,		2,	"Dropped by %s %s") /* normal monster drops */

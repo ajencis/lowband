@@ -1918,7 +1918,7 @@ static void monster_turn(struct monster *mon)
 
 	bool did_something = false;
 
-	int i;
+	int i, x, y;
 	int dir = 0;
 	enum monster_stagger stagger;
 	bool tracking = false;
@@ -1931,6 +1931,24 @@ static void monster_turn(struct monster *mon)
 	// L: become aware if we aren't yet
 	if (monster_can_see_player(mon)) {
 		monster_become_aware(mon);
+	}
+
+	// L: notice secret doors if they're open
+	if (one_in_(2) && rf_has(mon->race->flags,  RF_SAPIENT) && mon_will_attack_player(mon, player)) {
+		for (y = 1; y < cave->height - 1; ++y) {
+			for (x = 1; x < cave->height - 1; ++x) {
+				if (square_in_bounds_fully(cave, loc(x, y)) &&
+						square(cave, loc(x, y))->feat == FEAT_OPEN_SECRET &&
+						los(cave, mon->grid, loc(x, y))) {
+					square_set_feat(cave, loc(x, y), FEAT_OPEN);
+					if (monster_is_in_view(mon)) {
+						char desc[64];
+						monster_desc(desc, sizeof(desc), mon, MDESC_STANDARD);
+						msg("%s notices a secret door!", desc);
+					}
+				}
+			}
+		}
 	}
 
 	/* If we're in a web, deal with that */

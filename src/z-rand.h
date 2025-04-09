@@ -96,6 +96,11 @@ bool verify_rand(uint32_t num, const wchar_t *msg, const wchar_t *file, unsigned
 #define rand_spread(A, D) ((A) + (randint0(1 + (D) + (D))) - (D))
 
 /**
+ * L: return true  x  times in  y
+ */
+#define x_in_y(x, y) (randint0(y) < (x))
+
+/**
  * Return true one time in `x`.
  */
 #define one_in_(x) (!randint0(x))

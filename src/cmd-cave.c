@@ -508,9 +508,10 @@ void do_cmd_close(struct command *cmd)
 	if (square(cave, grid)->mon > 0) {
 		msg("There is a monster in the way!");
 		py_attack(player, grid);
-	} else
+	} else {
 		/* Door - close it */
 		more = do_cmd_close_aux(grid);
+	}
 
 	/* Cancel repeat unless told not to */
 	if (!more) disturb(player);
@@ -673,7 +674,7 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 						&& square_isseen(cave, grid)) {
 					msg("You have found something!");
 				}
-			} 
+			}
 		} else if (gold) {
 			/* Found treasure */
 			place_gold(cave, grid, player->depth, ORIGIN_FLOOR);
@@ -1700,6 +1701,7 @@ void do_cmd_hold(struct command *cmd)
 	player->upkeep->energy_use = z_info->move_energy;
 
 	/* Searching (probably not necessary - NRM)*/
+	// L: now necessary
 	search(player);
 
 	/* Pick things up, not using extra energy */

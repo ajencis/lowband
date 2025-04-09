@@ -259,7 +259,7 @@ name:secret door
 graphics:+:W
 priority:10
 mimic:GRANITE
-flags:DOOR_ANY | HIDDEN | DOOR_CLOSED | NO_FLOW
+flags:DOOR_ANY | HIDDEN | DOOR_CLOSED | NO_FLOW | NO_SCENT
 digging:5
 confused-msg:bashes into a wall
 desc:A door that appears like a granite wall to untrained eyes.

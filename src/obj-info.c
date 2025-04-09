@@ -1793,8 +1793,9 @@ static bool describe_combat(textblock *tb, const struct object *obj)
 
 	textblock_append_c(tb, COLOUR_L_WHITE, "Combat info:\n");
 
-	if (heavy)
+	if (heavy) {
 		textblock_append_c(tb, COLOUR_L_RED, "You are too weak to use this weapon.\n");
+	}
 
 	describe_blows(tb, obj);
 
@@ -2194,21 +2195,29 @@ static bool describe_origin(textblock *tb, const struct object *obj, bool terse)
 	bool comma = false;
 
 	/* Only give this info in chardumps if wieldable */
-	if (terse && !obj_can_wear(obj))
+	if (terse && !obj_can_wear(obj)) {
 		return false;
+	}
+
+	// L: only let the player know origin if they have touched the item
+	if (!obj->known || !(obj->known->notice & OBJ_NOTICE_ASSESSED)) {
+		return false;
+	}
 
 	/* Set the origin - care needed for mimics */
-	if ((obj->origin == ORIGIN_DROP_MIMIC) && (obj->mimicking_m_idx != 0))
+	if ((obj->origin == ORIGIN_DROP_MIMIC) && (obj->mimicking_m_idx != 0)) {
 		origin = ORIGIN_FLOOR;
-	else
+	} else {
 		origin = obj->origin;
+	}
 
 	/* Name the place of origin */
-	if (obj->origin_depth)
+	if (obj->origin_depth) {
 		strnfmt(loot_spot, sizeof(loot_spot), "at %d feet (level %d)",
-		        obj->origin_depth * 50, obj->origin_depth);
-	else
+		obj->origin_depth * 50, obj->origin_depth);
+	} else {
 		my_strcpy(loot_spot, "in town", sizeof(loot_spot));
+	}
 
 	/* Name the monster of origin */
 	if (obj->origin_race) {
@@ -2394,8 +2403,9 @@ static textblock *object_info_out(const struct object *obj, int mode)
 	}
 
 	/* Don't append anything in terse (for chararacter dump) */
-	if (!something && !terse)
+	if (!something && !terse) {
 		textblock_append(tb, "\n\nThis item does not seem to possess any special abilities.");
+	}
 
 	return tb;
 }

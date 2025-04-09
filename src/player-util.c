@@ -2812,6 +2812,11 @@ void disturb(struct player *p)
 void search(struct player *p)
 {
 	struct loc grid;
+	int toroll = MAX(40 + cave->depth / 4, p->state.skills[SKILL_SEARCH] - cave->depth / 4);
+	int roll1 = randint0(toroll);
+	int roll2 = randint0(toroll);
+	int maxdist = (MIN(roll1, roll2) - cave->depth / 4) / 25;
+	maxdist = MAX(0, maxdist);
 
 	/* Various conditions mean no searching */
 	if (p->timed[TMD_BLIND] || no_light(p) ||
@@ -2820,8 +2825,12 @@ void search(struct player *p)
 	}
 
 	/* Search the nearby grids, which are always in bounds */
-	for (grid.y = (p->grid.y - 1); grid.y <= (p->grid.y + 1); grid.y++) {
-		for (grid.x = (p->grid.x - 1); grid.x <= (p->grid.x + 1); grid.x++) {
+	// L: add less nearby grids for better searchers, which are not always in bounds
+	for (grid.y = (p->grid.y - maxdist); grid.y <= (p->grid.y + maxdist); grid.y++) {
+		for (grid.x = (p->grid.x - maxdist); grid.x <= (p->grid.x + maxdist); grid.x++) {
+			if (!square_in_bounds_fully(cave, grid)) continue;
+			if (distance(p->grid, grid) > maxdist) continue;
+			if (!square_isview(cave, grid)) continue;
 			struct object *obj;
 			struct feature *featr = square_feat(cave, grid);
 

@@ -550,7 +550,8 @@ extern void hit_trap(struct loc grid, int delayed)
 
 		/* Test for save due to saving throw */
 		if (trf_has(trap->kind->flags, TRF_SAVE_THROW) &&
-				(randint0(100) < player->state.skills[SKILL_SAVE] + randint0(defadj))) {
+				(randint0(100) < (player->state.skills[SKILL_SAVE] + 
+					defadj > 0 ? randint0(defadj) : -randint0(-defadj)))) {
 			saved = true;
 		}
 
