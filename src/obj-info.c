@@ -876,6 +876,8 @@ static int obj_known_blows(const struct object *obj, int max_num,
 	int str_faster = -1, str_done = -1;
 	int dex_plus_bound;
 	int str_plus_bound;
+	int i;
+	int blownum;
 
 	struct player_state state;
 
@@ -903,10 +905,24 @@ static int obj_known_blows(const struct object *obj, int max_num,
 	possible_blows[num].centiblows = state.num_blows;
 	num++;
 
+	// L: find the blow number with no adjustments
+	for (i = 0; i < state.num_attacks; ++i) {
+		if (state.attacks[i].obj == obj) {
+			blownum = i;
+			old_blows = state.attacks[i].blows;
+			break;
+		}
+	}
+
+	// L: didn't find a blow using that weapon
+	if (old_blows == 0) {
+		return 0;
+	}
+
 	/* Check to see if extra STR or DEX would yield extra blows */
-	old_blows = state.num_blows;
-	dex_plus_bound = STAT_RANGE - state.stat_ind[STAT_DEX];
-	str_plus_bound = STAT_RANGE - state.stat_ind[STAT_STR];
+	// L: limit it to possible stats with current equipment
+	dex_plus_bound = MIN(player->stat_max_max[STAT_DEX] + state.stat_add[STAT_DEX], STAT_RANGE) - state.stat_ind[STAT_DEX];
+	str_plus_bound = MIN(player->stat_max_max[STAT_DEX] + state.stat_add[STAT_STR], STAT_RANGE) - state.stat_ind[STAT_STR];
 
 	/* Re-calculate with increased stats */
 	for (dex_plus = 0; dex_plus < dex_plus_bound; dex_plus++) {
@@ -922,7 +938,8 @@ static int obj_known_blows(const struct object *obj, int max_num,
 			state.stat_ind[STAT_STR] = str_plus; //Hack - NRM
 			state.stat_ind[STAT_DEX] = dex_plus; //Hack - NRM
 			calc_bonuses(player, &state, true, false);
-			new_blows = state.num_blows;
+
+			new_blows = state.attacks[blownum].blows;
 
 			/* Test to make sure that this extra blow is a
 			 * new str/dex combination, not a repeat */
@@ -942,8 +959,8 @@ static int obj_known_blows(const struct object *obj, int max_num,
 			 * the displayed blows number, it might still
 			 * take a little less energy */
 			if ((new_blows > old_blows) &&
-				(str_plus < str_faster || str_faster == -1) &&
-				(str_plus < str_done || str_done == -1)) {
+					(str_plus < str_faster || str_faster == -1) &&
+					(str_plus < str_done || str_done == -1)) {
 				possible_blows[num].str_plus = str_plus;
 				possible_blows[num].dex_plus = dex_plus;
 				possible_blows[num].centiblows = new_blows;
@@ -991,6 +1008,7 @@ static bool describe_blows(textblock *tb, const struct object *obj)
 				(entry.centiblows / 100),
 				(entry.centiblows / 10) % 10);
 		} else {
+			// L: is this useful?
 			textblock_append(tb, 
 				"With +%d STR and +%d DEX you would attack a bit faster\n",
 				entry.str_plus, entry.dex_plus);
