@@ -160,6 +160,27 @@ void message_add(const char *str, uint16_t type)
 }
 
 /**
+ * L: add a formatted message as MSG_GENERIC
+ */
+void msg_add_fmt(const char *fmt, ...)
+{
+	char *res;
+	va_list vp;
+
+	/* Begin the Varargs Stuff */
+	va_start(vp, fmt);
+
+	/* Format the args */
+	res = vformat(fmt, vp);
+
+	/* End the Varargs Stuff */
+	va_end(vp);
+
+	/* Call plog */
+	message_add(res, MSG_GENERIC);
+}
+
+/**
  * Returns the message of age `age`.
  */
 static message_t *message_get(uint16_t age)

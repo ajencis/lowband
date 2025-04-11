@@ -1481,7 +1481,8 @@ static void calc_monster(struct player *p, struct player_state *state,
 		state->skills[i] += skills[i];
 	}
 
-	of_union(state->pflags, mrace->base->pflags);
+	pf_union(state->pflags, mrace->base->pflags);
+	of_union(state->flags, mrace->base->oflags);
 }
 
 /**

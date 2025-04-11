@@ -299,3 +299,15 @@ slot:HAT:left head
 slot:GLOVES:hands
 slot:BOOTS:feet
 
+body:Bat
+slot:WEAPON:right claw
+slot:WEAPON:left claw
+slot:BOW:shooting
+slot:RING:right wing
+slot:RING:left wing
+slot:AMULET:neck
+slot:LIGHT:light
+slot:CLOAK:back
+slot:HAT:head
+slot:BOOTS:claws
+

@@ -229,6 +229,12 @@ extern struct chunk *cave;
 extern struct chunk **chunk_list;
 extern uint16_t chunk_list_max;
 
+/**
+ * square_predicate is a function pointer which tests a given square to
+ * see if the predicate in question is true.
+ */
+typedef bool (*square_predicate)(struct chunk *c, struct loc grid);
+
 /* cave-view.c */
 int distance(struct loc grid1, struct loc grid2);
 bool los(struct chunk *c, struct loc grid1, struct loc grid2);
@@ -246,13 +252,11 @@ void cave_illuminate(struct chunk *c, bool daytime);
 void expose_to_sun(struct chunk *c, struct loc grid, bool daytime);
 void cave_update_flow(struct chunk *c);
 void cave_forget_flow(struct chunk *c);
+int all_contiguous_locs(struct chunk *c, struct loc center, struct loc *locs, int locs_size,
+	square_predicate pred, bool (*move_pred)(struct chunk *c, struct loc gridfrom, struct loc gridto));
 
+	
 /* cave-square.c */
-/**
- * square_predicate is a function pointer which tests a given square to
- * see if the predicate in question is true.
- */
-typedef bool (*square_predicate)(struct chunk *c, struct loc grid);
 
 /* FEATURE PREDICATES */
 bool feat_is_magma(int feat);

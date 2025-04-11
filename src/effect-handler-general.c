@@ -1866,9 +1866,10 @@ static bool detect_monsters(int y_dist, int x_dist, monster_predicate pred)
 			}
 
 			/* Update monster recall window */
-			if (player->upkeep->monster_race == mon->race)
+			if (player->upkeep->monster_race == mon->race) {
 				/* Redraw stuff */
 				player->upkeep->redraw |= (PR_MONSTER);
+			}
 
 			/* Update the monster */
 			update_mon(mon, cave, false);
@@ -1933,10 +1934,11 @@ bool effect_handler_DETECT_INVISIBLE_MONSTERS(effect_handler_context_t *context)
 	bool monsters = detect_monsters(context->y, context->x,
 									monster_is_invisible);
 
-	if (monsters)
+	if (monsters) {
 		msg("You sense the presence of invisible creatures!");
-	else if (context->aware)
+	} else if (context->aware) {
 		msg("You sense no invisible creatures.");
+	}
 
 	context->ident = true;
 	return true;
@@ -2642,7 +2644,7 @@ bool effect_handler_TELEPORT(effect_handler_context_t *context)
 
 		/* Check for a no teleport grid */
 		if (square_isno_teleport(cave, start) &&
-			((dis > 10) || (dis == 0))) {
+				((dis > 10) || (dis == 0))) {
 			msg("Teleportation forbidden!");
 			return true;
 		}
@@ -2763,6 +2765,10 @@ bool effect_handler_TELEPORT(effect_handler_context_t *context)
 	if (is_player) {
 		player_handle_post_move(player, true,
 			context->origin.what == SRC_MONSTER);
+	}
+	else if (t_mon) {
+		// L: teeporing monsters get unspotted
+		mflag_off(t_mon->mflag, MFLAG_SPOTTED);
 	}
 
 	/* Clear any projection marker to prevent double processing */
@@ -2900,6 +2906,10 @@ bool effect_handler_TELEPORT_TO(effect_handler_context_t *context)
 	if (player_moves) {
 		player_handle_post_move(player, true,
 			context->origin.what == SRC_MONSTER);
+	}
+	else if (t_mon) {
+		// L: teeporing monsters get unspotted
+		mflag_off(t_mon->mflag, MFLAG_SPOTTED);
 	}
 
 	/* Cancel target if necessary */
@@ -3916,6 +3926,87 @@ bool effect_handler_REBIRTH(effect_handler_context_t *context)
 	if (!mon) {
 		int base = 500 - 10 * mana;
 		player_inc_timed(player, TMD_PHOENIX_CD, base + randint1(base), true, false, false);
+	}
+
+	return true;
+}
+
+/**
+ * L: is the monster physical ie does it reflect sound waves
+ */
+static bool physical_monster(struct monster *mon)
+{
+	if (!mon) return false;
+	if (!mon->race) return false;
+	if (rf_has(mon->race->flags, RF_PASS_WALL)) return false;
+
+	return true;
+}
+
+/**
+ * L: is the new loc projectable from the palyer or is the previous loc both projectable
+ * from the player and passable?
+ */
+static bool echo_move_pred(struct chunk *c, struct loc movefrom, struct loc moveto)
+{
+	int flg = PROJECT_AWARE;
+
+	// ensure we don't see past walls by going around them (at least walls that are directly n/s/e/w)
+	if (!loc_eq(movefrom, player->grid)) {
+		if (moveto.x == player->grid.x && movefrom.x != player->grid.x) return false;
+		if (moveto.y == player->grid.y && movefrom.y != player->grid.y) return false;
+	}
+
+	// ... or nw, ne, sw, se
+	if (!loc_eq(movefrom, player->grid) &&
+			ABS(moveto.x - player->grid.x) == ABS(moveto.y - player->grid.y) &&
+			ABS(movefrom.x - player->grid.x) != ABS(movefrom.y - player->grid.y)) {
+		return false;
+	}
+
+	if (square_isprojectable(c, movefrom) &&
+			!physical_monster(square_monster(c, movefrom)) &&
+			(loc_eq(player->grid, movefrom) || projectable(c, player->grid, movefrom, flg))) {
+		return true;
+	}
+
+	return false;
+}
+
+bool effect_handler_ECHOLOCATE(effect_handler_context_t *context)
+{
+	if (context->origin.what != SRC_PLAYER) return false;
+
+	struct loc locs[1000];
+	struct loc center = player->grid;
+	int locsnum = all_contiguous_locs(cave, center, locs, N_ELEMENTS(locs), NULL, echo_move_pred);
+	int i;
+
+	for (i = 0; i < locsnum; ++i) {
+		struct loc grid = locs[i];
+		struct monster *mon = square_monster(cave, grid);
+
+		// detect monsters
+		if (mon && physical_monster(mon)) {
+			mflag_on(mon->mflag, MFLAG_MARK);
+			mflag_on(mon->mflag, MFLAG_SHOW);
+
+			// update mon display if needed
+			if (player->upkeep->monster_race == mon->race) {
+				player->upkeep->redraw |= (PR_MONSTER);
+			}
+
+			// update
+			update_mon(mon, cave, false);
+		}
+
+		// detect terrain, sometimes getting it right
+		if (one_in_(3)) {
+			square_true_memorize(cave, grid);
+		}
+		else {
+			square_memorize(cave, grid);
+		}
 	}
 
 	return true;

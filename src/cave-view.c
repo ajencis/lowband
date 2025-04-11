@@ -161,8 +161,8 @@ bool los(struct chunk *c, struct loc grid1, struct loc grid2)
 			square_allowslos(c, loc(grid1.x, grid1.y + sy))) {
 		return (true);
 	} else if ((ay == 1) && (ax == 2) &&
-			   //square_isprojectable(c, loc(grid1.x + sx, grid1.y))) {
-			   square_allowslos(c, loc(grid1.x + sx, grid1.y))) {
+			//square_isprojectable(c, loc(grid1.x + sx, grid1.y))) {
+			square_allowslos(c, loc(grid1.x + sx, grid1.y))) {
 		return (true);
 	}
 
@@ -866,7 +866,8 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 static void update_one(struct chunk *c, struct loc grid, struct player *p)
 {
 	/* Remove view if blind, check visible squares for traps */
-	if (p->timed[TMD_BLIND]) {
+	if (p->timed[TMD_BLIND] ||
+			(of_has(p->state.flags, OF_BAD_VISION) && distance(p->grid, grid) > 5)) {
 		sqinfo_off(square(c, grid)->info, SQUARE_SEEN);
 		sqinfo_off(square(c, grid)->info, SQUARE_CLOSE_PLAYER);
 	} else if (square_isseen(c, grid)) {
@@ -914,10 +915,11 @@ void update_view(struct chunk *c, struct player *p)
 	/* Assume we can view the player grid */
 	sqinfo_on(square(c, p->grid)->info, SQUARE_VIEW);
 	if (p->state.cur_light > 0 || square_islit(c, p->grid) ||
-		player_has(p, PF_UNLIGHT)) {
+			player_has(p, PF_UNLIGHT)) {
 		sqinfo_on(square(c, p->grid)->info, SQUARE_SEEN);
 		sqinfo_on(square(c, p->grid)->info, SQUARE_CLOSE_PLAYER);
 	}
+
 	/*
 	 * If the player is blind and in terrain that was remembered to be
 	 * impassable, forget the remembered terrain.  This will have to be

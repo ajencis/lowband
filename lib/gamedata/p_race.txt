@@ -471,3 +471,6 @@ monster:banshee
 
 name:Resurrected
 monster:phoenix
+
+name:Batling
+monster:fruit bat

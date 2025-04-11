@@ -74,7 +74,7 @@ bool monster_passes_walls(const struct monster *mon)
  */
 bool monster_is_invisible(const struct monster *mon)
 {
-	return rf_has(mon->race->flags, RF_INVISIBLE);
+	return rf_has(mon->race->flags, RF_INVISIBLE) && !mflag_has(mon->mflag, MFLAG_SPOTTED);
 }
 
 /**

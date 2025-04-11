@@ -772,7 +772,7 @@ void process_world(struct chunk *c)
 	}
 	else {
 		/* Digest normally */
-		if (!(turn & 127)) {
+		if (!(turn % 100)) {
 			/* Basic digestion rate based on speed */
 			i = turn_energy(player->state.speed);
 
@@ -837,6 +837,11 @@ void process_world(struct chunk *c)
 		}
 	}
 
+	// L: echolocate if we can
+	if (one_in_(3) && pf_has(player->state.pflags, PF_ECHOLOCATE)) {
+		effect_simple(EF_ECHOLOCATE, source_player(), "0d0", 0, 0, 0, 0, 0, NULL);
+	}
+
 	/* Regenerate Hit Points if needed */
 	if (player->chp < player->mhp) {
 		player_regen_hp(player);
@@ -875,7 +880,7 @@ void process_world(struct chunk *c)
 	recharge_objects();
 
 	/* Notice things after time */
-	if (!(turn & 127)) {
+	if (!(turn % 100)) {
 		equip_learn_after_time(player);
 	}
 

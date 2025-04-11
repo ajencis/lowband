@@ -757,6 +757,7 @@ desc:A large ant with powerful mandibles.
 
 name:fruit bat
 base:bat
+evolution:giant brown bat
 color:o
 speed:120
 hit-points:4
@@ -1978,6 +1979,7 @@ desc:A strange brown growth on the dungeon floor.
 
 name:giant brown bat
 base:bat
+evolution:giant tan bat
 color:u
 speed:130
 hit-points:14
@@ -4183,6 +4185,7 @@ desc:It is a massive animated statue made out of hardened clay.
 
 name:giant tan bat
 base:bat
+evolution:disenchanter bat
 color:U
 speed:130
 hit-points:14
@@ -6236,6 +6239,7 @@ desc:A giant orc-like figure with an awesomely muscled frame.
 
 name:disenchanter bat
 base:bat
+evolution:bat of Gorgoroth
 color:v
 speed:130
 hit-points:27
@@ -6795,6 +6799,7 @@ desc:He is a white troll with shaggy fur and powerfully clawed hands.
 name:bat of Gorgoroth
 plural:bats of Gorgoroth
 base:bat
+evolution:doombat
 color:g
 speed:120
 hit-points:110

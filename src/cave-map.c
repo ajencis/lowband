@@ -317,6 +317,60 @@ static void cave_light(struct point_set *ps)
 }
 
 
+static bool loc_in_array_of_locs(struct loc searchfor, struct loc *locs, int locs_size)
+{
+	int i;
+
+	for (i = 0; i < locs_size; ++i) {
+		if (loc_eq(searchfor, locs[i])) return true;
+	}
+
+	return false;
+}
+
+/**
+ * L: takes a loc and returns all locs contiuous to it that satisfy  pred  as long as they can be moved
+ * to with the current and next loc satisfying  move_pred .
+ * will ignore  pred  and  move_pred  if each is  NULL
+ * stores the results in  locs  and returns the number of results
+ *  move_pred  will be tested for each adjacent square that is reachable
+ */
+int all_contiguous_locs(struct chunk *c, struct loc center, struct loc *locs, int locs_size,
+	square_predicate pred, bool (*move_pred)(struct chunk *c, struct loc gridfrom, struct loc gridto))
+{
+struct loc uncontinued_locs[1000] = { 0 };
+int ulei = 0; // uncont'd locs end index
+int ulsi = 0; // uncont'd locs start index
+int li = 0; // locs index
+int di; // dirs index
+int dirs[] = { 2, 4, 6, 8, 1, 3, 5, 7 };
+
+uncontinued_locs[ulei++] = center;
+
+while (li < locs_size && ulei > ulsi) {
+	struct loc to_cont = uncontinued_locs[ulsi++];
+	assert(!loc_in_array_of_locs(to_cont, locs, li));
+	locs[li++] = to_cont;
+
+	for (di = N_ELEMENTS(dirs) - 1; di >= 0; --di) {
+		struct loc newloc = loc_sum(ddgrid[dirs[di]], to_cont);
+
+		if (loc_in_array_of_locs(newloc, uncontinued_locs, ulei)) {
+			continue;
+		}
+		if (!square_in_bounds_fully(c, newloc)) continue;
+		if (move_pred && !move_pred(c, to_cont, newloc)) continue;
+		if (pred && !pred(c, newloc)) continue;
+		if (ulei >= 1000) continue;
+
+		uncontinued_locs[ulei++] = newloc;
+	}
+}
+
+return li;
+}
+
+
 
 /**
  * This routine will "darken" all grids in the set passed in.

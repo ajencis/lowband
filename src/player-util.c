@@ -25,6 +25,7 @@
 #include "generate.h"
 #include "init.h"
 #include "mon-desc.h"
+#include "mon-lore.h"
 #include "mon-util.h"
 #include "obj-chest.h"
 #include "obj-desc.h"
@@ -2829,41 +2830,70 @@ void search(struct player *p)
 	if (!player_can_search(p)) return;
 
 	struct loc grid;
-	int power = p->state.skills[SKILL_SEARCH] - cave->depth / 4;
-	int toroll = MAX(cave->depth / 4, power) + p->search_turn + 25;
-	int roll1 = randint0(toroll) + p->search_turn; // L: make higher rolls more likely as you keep searching
+	int basepower = p->state.skills[SKILL_SEARCH];// - cave->depth / 4;
+	int toroll = basepower /*MAX(cave->depth / 4, basepower)*/ + p->search_turn + 25;
+	int roll1 = randint0(toroll) + p->search_turn; // L: higher rolls more likely as you keep searching
 	int roll2 = randint0(toroll);
-	int maxdist = MIN(roll1, roll2) - cave->depth / 4;
+	int detectpower = MIN(roll1, roll2); // - cave->depth / 4;
+	int rad;
 
-	++p->search_turn;
+	if (x_in_y(25, p->search_turn))	++p->search_turn;
 	p->searched_this_turn = true;
 
-	if (maxdist < 0) return;
-	maxdist /= 25;
+	if (detectpower < 0) return;
+
+	rad = detectpower / 25;
 
 	/* Search the nearby grids, which are always in bounds */
 	// L: add less nearby grids for better searchers, which are not always in bounds
-	for (grid.y = (p->grid.y - maxdist); grid.y <= (p->grid.y + maxdist); grid.y++) {
-		for (grid.x = (p->grid.x - maxdist); grid.x <= (p->grid.x + maxdist); grid.x++) {
-			if (!square_in_bounds_fully(cave, grid)) continue;
-			if (distance(p->grid, grid) > maxdist) continue;
-			if (!square_isview(cave, grid)) continue;
+	for (grid.y = (p->grid.y - rad); grid.y <= (p->grid.y + rad); grid.y++) {
+		for (grid.x = (p->grid.x - rad); grid.x <= (p->grid.x + rad); grid.x++) {
+			int dist;
 			struct object *obj;
-			struct feature *featr = square_feat(cave, grid);
+			struct monster *mon = square_monster(cave, grid);
+			struct feature *featr;
+			int currpower;
+
+			if (!square_in_bounds_fully(cave, grid)) continue;
+			if (!square_isview(cave, grid)) continue;
+
+			dist = distance(p->grid, grid);
+
+			if (dist > detectpower / 25) continue;
+
+			currpower = detectpower - dist * 10;
+			featr = square_feat(cave, grid);
 
 			// L: reveal anything hidden
-			if (tf_has(featr->flags, TF_HIDDEN) && square_ismemorybad(cave, grid)) {
+			if (tf_has(featr->flags, TF_HIDDEN) && square_ismemorybad(cave, grid) &&
+					randint0(currpower) > cave->depth) {
 				square_true_memorize(cave, grid);
 				msg("You have discovered %s%s",
-						square_apparent_look_prefix(p->cave, grid),
-						square_apparent_name(p->cave, grid));
+					square_apparent_look_prefix(p->cave, grid),
+					square_apparent_name(p->cave, grid));
+
+				if (OPT(p, disturb_secret)) {
+					disturb(p);
+				}
 			}
-			
-			/*if (square(cave, grid)->feat == FEAT_ILLUSORY_WALL && square_ismemorybad(cave, grid)) {
-				msg("You have discovered an illusory wall.");
-				square_true_memorize(cave, grid);
-				disturb(p);
-			}*/
+
+			/* L: find invisible monsters
+			   invisible monsters percieved will get spotted and will be visible until
+			   they teleport or move out of range*/
+			if (mon && monster_is_invisible(mon) &&
+					currpower > randint0(mon->race->level)) {
+				char mdesc[128];
+
+				mflag_on(mon->mflag, MFLAG_SPOTTED);
+				mflag_on(mon->mflag, MFLAG_KNOWN);
+
+				update_mon(mon, cave, false);
+
+				rf_on(get_lore(mon->race)->flags, RF_INVISIBLE);
+
+				monster_desc(mdesc, sizeof(mdesc), mon, MDESC_STANDARD);
+				msg("You have spotted a %s", mdesc);
+			}
 
 			/* Traps on chests */
 			for (obj = square_object(cave, grid); obj; obj = obj->next) {

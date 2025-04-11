@@ -89,9 +89,15 @@ glyph:b
 pain:4
 flags:ANIMAL
 desc:Bat
+body:Bat
 attr:HP:-1
 attr:SPEED:3
 attr:DAMAGE:-2
+stats:-1:0:1:2:-1
+skill-stealth:10
+skill-search:5
+player-flags:ECHOLOCATE
+obj-flags:BAD_VISION
 
 # Quickish monsters usually with some effect beyond melee
 name:bird

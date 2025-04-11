@@ -523,12 +523,14 @@ void update_mon(struct monster *mon, struct chunk *c, bool full)
 			square_light_spot(c, mon->grid);
 
 			/* Update health bar as needed */
-			if (player->upkeep->health_who == mon)
+			if (player->upkeep->health_who == mon) {
 				player->upkeep->redraw |= (PR_HEALTH);
+			}
 
 			/* Hack -- Count "fresh" sightings */
-			if (lore->sights < SHRT_MAX)
+			if (lore->sights < SHRT_MAX) {
 				lore->sights++;
+			}
 
 			/* Window stuff */
 			player->upkeep->redraw |= PR_MONLIST;
@@ -544,8 +546,9 @@ void update_mon(struct monster *mon, struct chunk *c, bool full)
 			square_light_spot(c, mon->grid);
 
 			/* Update health bar as needed */
-			if (player->upkeep->health_who == mon)
+			if (player->upkeep->health_who == mon) {
 				player->upkeep->redraw |= (PR_HEALTH);
+			}
 
 			/* Window stuff */
 			player->upkeep->redraw |= PR_MONLIST;
@@ -572,6 +575,9 @@ void update_mon(struct monster *mon, struct chunk *c, bool full)
 		if (monster_is_in_view(mon)) {
 			/* Mark as not easily visible */
 			mflag_off(mon->mflag, MFLAG_VIEW);
+
+			// L: lose track of the monster
+			mflag_off(mon->mflag, MFLAG_SPOTTED);
 
 			/* Disturb on disappearance */
 			if (OPT(player, disturb_near) && !monster_is_camouflaged(mon))

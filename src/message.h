@@ -46,6 +46,7 @@ void messages_init(void);
 void messages_free(void);
 uint16_t messages_num(void);
 void message_add(const char *str, uint16_t type);
+void msg_add_fmt(const char *fmt, ...);
 const char *message_str(uint16_t age);
 uint16_t message_count(uint16_t age);
 uint16_t message_type(uint16_t age);

@@ -31,6 +31,8 @@ OP(highlight_player,      "Highlight player with cursor between turns",
 INTERFACE, false)
 OP(disturb_near,          "Disturb whenever viewable monster moves",
 INTERFACE, true)
+OP(disturb_secret,        "Disturb whenever secret door spotted",
+INTERFACE, false)
 OP(solid_walls,           "Show walls as solid blocks",
 INTERFACE, false)
 OP(hybrid_walls,          "Show walls with shaded background",
