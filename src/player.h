@@ -436,6 +436,8 @@ struct player_class {
 
 	struct class_magic magic;	/**< Magic spells */
 	struct magic_realm *realm;	/**< L: realm it casts with */
+
+	bool unlockable;			// L: does it need unlocking
 };
 
 /**
@@ -742,6 +744,10 @@ struct player {
 	bool searched_this_turn;			// L: have we searched this turn?
 	uint32_t monster_xp;				/* L: XP progression towards evolution */
 	bool checked_tome_this_expedition;	/* L: have we prompted for a tome this level? */
+
+	bool *unlocked_classes;				// L: which classes the player has unlocked
+	bool *unlocked_races;				// L: unlocked races
+	uint16_t *unlocked_tomes;			// L: unlocked_powers with quantity
 };
 
 

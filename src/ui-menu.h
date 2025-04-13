@@ -255,7 +255,7 @@ struct menu
 	region boundary;
 
 	int filter_count;        /* number of rows in current view */
-	const int *filter_list;  /* optional filter (view) of menu objects */
+	int *filter_list;		  /* optional filter (view) of menu objects */
 
 	int count;               /* number of rows in underlying data set */
 	void *menu_data;         /* the data used to access rows. */

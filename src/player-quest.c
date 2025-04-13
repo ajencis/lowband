@@ -24,6 +24,7 @@
 #include "obj-util.h"
 #include "player-calcs.h"
 #include "player-quest.h"
+#include "player-util.h"
 
 /**
  * Array of quests
@@ -245,6 +246,7 @@ bool quest_check(struct player *p, const struct monster *m)
 		msg("*** CONGRATULATIONS ***");
 		msg("You have won the game!");
 		msg("You may retire (key is shift-q) when you are ready.");
+		tomes_unlock(p);
 	}
 
 	return true;

@@ -696,6 +696,7 @@ int rd_player(void)
 	uint8_t tmp8u, num;
 	uint8_t stat_max = 0;
 	uint32_t tmp32u;
+	uint16_t tmp16u;
 	char buf[80];
 	struct player_race *r;
 	struct player_shape *s;
@@ -903,6 +904,37 @@ int rd_player(void)
 	rd_u32b(&player->total_energy);
 	/* # of turns spent resting */
 	rd_u32b(&player->resting_turn);
+
+	rd_u16b(&tmp16u);
+	if (tmp16u != z_info->c_max) {
+		note(format("Wrong number (%i) of classes!", tmp16u));
+		return -1;
+	}
+	for (i = 0; i < z_info->c_max; ++i) {
+		rd_byte(&tmp8u);
+		player->unlocked_classes[i] = tmp8u;
+	}
+
+	rd_u16b(&tmp16u);
+	if (tmp16u != z_info->pr_max) {
+		note(format("Wrong number (%i) of player races!", tmp16u));
+		return -1;
+	}
+	for (i = 0; i < z_info->pr_max; ++i) {
+		rd_byte(&tmp8u);
+		player->unlocked_races[i] = tmp8u;
+	}
+
+	rd_u16b(&tmp16u);
+	if (tmp16u != TOME_MAX) {
+		note(format("Wrong number (%i) of skills and powers!", tmp16u));
+		return -1;
+	}
+	for (i = 0; i < TOME_MAX; ++i) {
+		rd_u16b(&tmp16u);
+		player->unlocked_tomes[i] = tmp16u;
+	}
+
 
 	/* Future use */
 	strip_bytes(32);

@@ -134,6 +134,7 @@
 
 ############### WARRIOR ###############
 name:Warrior
+unlockable:0
 skill-disarm-phys:25:15
 skill-disarm-magic:20:10
 skill-device:18:7
@@ -170,6 +171,7 @@ title:Lord
 
 ############### UNMAGICIAN ###############
 name:Unmagician
+unlockable:1
 skill-disarm-phys:20:10
 skill-disarm-magic:25:15
 skill-device:10:4
@@ -207,6 +209,7 @@ title:Unmagician
 
 ############### RED_MAGE ###############
 name:Red-Mage
+unlockable:1
 skill-disarm-phys:25:15
 skill-disarm-magic:25:15
 skill-device:18:7
@@ -244,6 +247,7 @@ title:Lord
 
 ############### BERSERKER ###############
 name:Berserker
+unlockable:1
 skill-disarm-phys:20:15
 skill-disarm-magic:15:10
 skill-device:10:0
@@ -280,6 +284,7 @@ title:Lord
 
 ############### MAGE ###############
 name:Mage
+unlockable:0
 skill-disarm-phys:30:10
 skill-disarm-magic:35:12
 skill-device:36:13
@@ -316,6 +321,7 @@ title:Arch-Mage
 
 ############### HIGH-MAGE ###############
 name:High-Mage
+unlockable:1
 skill-disarm-phys:25:10
 skill-disarm-magic:35:12
 skill-device:36:13
@@ -354,6 +360,7 @@ title:Arch-Mage
 
 ############### DRUID ###############
 name:Druid
+unlockable:1
 skill-disarm-phys:30:10
 skill-disarm-magic:30:10
 skill-device:24:10
@@ -390,6 +397,7 @@ title:High Mystic
 
 ############### BLOOD-MAGE ###############
 name:Blood-Mage
+unlockable:1
 skill-disarm-phys:30:10
 skill-disarm-magic:35:12
 skill-device:36:13
@@ -427,6 +435,7 @@ title:Arch-Mage
 
 ############### PRIEST ###############
 name:Priest
+unlockable:0
 skill-disarm-phys:25:12
 skill-disarm-magic:25:12
 skill-device:30:10
@@ -466,6 +475,7 @@ title:High Priest
 
 ############### DARK-PRIEST ###############
 name:Dark Priest
+unlockable:1
 skill-disarm-phys:25:12
 skill-disarm-magic:25:12
 skill-device:30:10
@@ -505,6 +515,7 @@ title:Dark High Priest
 
 ############### NECROMANCER ###############
 name:Necromancer
+unlockable:1
 skill-disarm-phys:30:10
 skill-disarm-magic:35:12
 skill-device:36:13
@@ -542,6 +553,7 @@ title:Night Lord
 
 ############### PALADIN ###############
 name:Paladin
+unlockable:1
 skill-disarm-phys:20:15
 skill-disarm-magic:20:10
 skill-device:24:10
@@ -579,6 +591,7 @@ title:Paladin Lord
 
 ############### ROGUE ###############
 name:Thief
+unlockable:0
 skill-disarm-phys:45:20
 skill-disarm-magic:45:20
 skill-device:32:10
@@ -617,6 +630,7 @@ title:Master Thief
 
 ############### ASSASSIN ###############
 name:Assassin
+unlockable:1
 skill-disarm-phys:30:15
 skill-disarm-magic:30:15
 skill-device:22:10
@@ -655,6 +669,7 @@ title:Master Thief
 
 ############### RANGER ###############
 name:Ranger
+unlockable:1
 skill-disarm-phys:40:15
 skill-disarm-magic:30:10
 skill-device:28:10
@@ -694,6 +709,7 @@ title:Ranger Lord
 
 ############### BLACKGUARD ###############
 name:Blackguard
+unlockable:1
 skill-disarm-phys:20:15
 skill-disarm-magic:20:10
 skill-device:24:10
@@ -734,6 +750,7 @@ title:Tyrant
 
 ############### MONK ###############
 name:Ascetic
+unlockable:1
 skill-disarm-phys:25:15
 skill-disarm-magic:20:10
 skill-device:18:7
@@ -770,6 +787,7 @@ title:Grand Master of Flowers
 
 ############### SKILLMASTER ###############
 name:Skillmaster
+unlockable:1
 skill-disarm-phys:10:0
 skill-disarm-magic:10:0
 skill-device:10:0

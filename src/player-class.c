@@ -22,8 +22,10 @@
 struct player_class *player_id2class(guid id)
 {
 	struct player_class *c;
-	for (c = classes; c; c = c->next)
-		if (guid_eq(c->cidx, id))
+	for (c = classes; c; c = c->next) {
+		if (guid_eq(c->cidx, id)) {
 			break;
+		}
+	}
 	return c;
 }

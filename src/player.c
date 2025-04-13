@@ -576,6 +576,18 @@ void player_cleanup_members(struct player *p)
 		cave_free(p->cave);
 		p->cave = NULL;
 	}
+	if (p->unlocked_classes) {
+		mem_free(p->unlocked_classes);
+		p->unlocked_classes = NULL;
+	}
+	if (p->unlocked_races) {
+		mem_free(p->unlocked_races);
+		p->unlocked_races = NULL;
+	}
+	if (p->unlocked_tomes) {
+		mem_free(p->unlocked_tomes);
+		p->unlocked_tomes = NULL;
+	}
 	mem_free(p->curr_monster_race);
 }
 
@@ -597,6 +609,9 @@ static void init_player(void) {
 	player->obj_k->slays = mem_zalloc(z_info->slay_max * sizeof(bool));
 	player->obj_k->curses = mem_zalloc(z_info->curse_max *
 									   sizeof(struct curse_data));
+	player->unlocked_classes = mem_zalloc(z_info->c_max * sizeof(*player->unlocked_classes));
+	player->unlocked_races = mem_zalloc(z_info->pr_max * sizeof(*player->unlocked_races));
+	player->unlocked_tomes = mem_zalloc(TOME_MAX * sizeof(*player->unlocked_tomes));
 
 	options_init_defaults(&player->opts);
 }

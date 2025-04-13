@@ -61,6 +61,11 @@ enum
  */
 #define REST_REQUIRED_FOR_REGEN 5
 
+bool unlock_all(struct player *p);
+bool races_unlock(struct player *p);
+bool tomes_unlock(struct player *p);
+bool player_can_metaprogress(struct player *p);
+
 struct monster_race *lookup_player_monster(const struct player *p);
 void change_player_monster(struct player *p, struct monster_race *mon, bool init);
 bool check_player_monster(struct player *p, bool init);

@@ -27,6 +27,7 @@
 #include "mon-util.h"
 #include "player-calcs.h"
 #include "player-history.h"
+#include "player-util.h"
 #include "obj-util.h"
 #include "target.h"
 
@@ -75,6 +76,8 @@ void do_cmd_retire(struct command *cmd)
 	/* Treat retired character as dead to satisfy end of game logic. */
 	player->is_dead = true;
 	my_strcpy(player->died_from, "Retiring", sizeof(player->died_from));
+
+	tomes_unlock(player);
 }
 
 /**

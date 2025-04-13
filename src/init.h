@@ -51,6 +51,8 @@ struct angband_constants
 	/* Array bounds etc, set on parsing edit files */
 	uint16_t store_max;	/**< Maximum number of stores */
 	uint16_t trap_max;	/**< Maximum number of trap kinds */
+	uint16_t c_max;		/**< L: max number of classes */
+	uint16_t pr_max;	/**< L: max number of player races */
 	uint16_t k_max;		/**< Maximum number of object base kinds */
 	uint16_t a_max;		/**< Maximum number of artifact kinds */
 	uint16_t e_max;		/**< Maximum number of ego-item kinds */

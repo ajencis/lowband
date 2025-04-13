@@ -78,6 +78,158 @@ static const int tome_factors[] = {
 	0
 };
 
+
+/**
+ * L: unlock all classes that should be unlocked
+ */
+static bool unlock_classes(struct player *p)
+{
+	struct player_class *c;
+	bool didunlock = false;
+
+	assert(p->unlocked_classes);
+
+	for (c = classes; c; c = c->next) {
+		int power;
+
+		assert(c->cidx < z_info->c_max);
+		if (p->unlocked_classes[c->cidx]) {
+			continue;
+		}
+
+		if (!c->unlockable) {
+			//plog_fmt("class %s is by default unlocked", c->name);
+			p->unlocked_classes[c->cidx] = true;
+			didunlock = true;
+		}
+
+		for (power = PP_NONE + 1; !p->unlocked_classes[c->cidx] && power < PP_MAX; ++power) {
+			if (c->c_powers[power] > 0 && p->unlocked_tomes[power] > c->c_powers[power]) {
+				//plog_fmt("class %s is unlocked by virtue of power %s", c->name, power_names[power]);
+				p->unlocked_classes[c->cidx] = true;
+				didunlock = true;
+			}
+		}
+	}
+
+	return didunlock;
+}
+
+static bool unlock_races(struct player *p)
+{
+	struct player_race *r;
+	bool didunlock = false;
+
+	assert(p->unlocked_races);
+
+	for (r = races; r; r = r->next) {
+		if (p->unlocked_races[r->ridx]) {
+			continue;
+		}
+
+		if (!r->evol) {
+			//plog_fmt("%s is by default unlocked", r->name);
+			p->unlocked_races[r->ridx] = true;
+			didunlock = true;
+		}
+	}
+
+	return didunlock;
+}
+
+static bool unlock_tomes(struct player *p)
+{
+	int i;
+	bool didlearn = false;
+
+	for (i = TOME_NONE + 1; i < TOME_MAX; ++i) {
+		int power = i < PP_MAX ? i : -1;
+		int skill = i > PP_MAX ? i - PP_MAX : -1; 
+		struct player_class *pc;
+
+		for (pc = classes; pc; pc = pc->next) {
+			if (!p->unlocked_classes[pc->cidx]) continue;
+
+			if (power > -1 && pc->c_powers[power] > p->unlocked_tomes[i]) {
+				//plog_fmt("power %s is unlocked by virtue of class %s", power_names[power], pc->name);
+				p->unlocked_tomes[i] = pc->c_powers[power];
+				didlearn = true;
+			}
+
+			if (skill > -1 && pc->c_skills[skill] > p->unlocked_tomes[i]) {
+				p->unlocked_tomes[i] = pc->c_skills[skill];
+				didlearn = true;
+			}
+		}
+	}
+
+	return didlearn;
+}
+
+/**
+ * L: make sure at least one class is unlocked
+ */
+static bool guarantee_possible_class(struct player *p)
+{
+	struct player_class *c;
+	for (c = classes; c; c = c->next) {
+		if (p->unlocked_classes[c->cidx]) return false;
+	}
+
+	plog("Error: no classes unlocked!");
+	p->unlocked_classes[0] = true;
+	return true;
+}
+
+static bool guarantee_possible_race(struct player *p)
+{
+	struct player_race *r;
+	for (r = races; r; r = r->next) {
+		if (p->unlocked_races[r->ridx]) return false;
+	}
+
+	plog("Error: no races unlocked!");
+	p->unlocked_races[0] = true;
+	return true;
+}
+
+/**
+ * L: unlock everything that should be unlocked
+ */
+bool unlock_all(struct player *p)
+{
+	if (!p->unlocked_classes) return false;
+
+	bool didunlock = false;
+	do {
+		while (unlock_classes(p) || unlock_races(p) || unlock_tomes(p)) {
+			didunlock = true;
+		}
+	} while (guarantee_possible_class(p) || guarantee_possible_race(p));
+
+	return didunlock;
+}
+
+/**
+ * Can the player unlock stuff currently?
+ */
+bool player_can_metaprogress(struct player *p)
+{
+	if (!OPT(p, birth_no_metaprogression)) {
+		return true;
+	}
+
+	if (!p->unlocked_races[p->race->ridx]) {
+		return false;
+	}
+	if (!p->unlocked_classes[p->class->cidx]) {
+		return false;
+	}
+
+	return true;
+}
+
+
 /**
  * L: functions for players that are monsters
  */
@@ -1280,6 +1432,149 @@ void death_knowledge(struct player *p)
 	/* Hack -- Recalculate bonuses */
 	p->upkeep->update |= (PU_BONUS);
 	handle_stuff(p);
+}
+
+/**
+ * L: unlock tomes on death or victory
+ */
+bool tomes_unlock(struct player *p)
+{
+	bool can_unlock = false;
+	const char *prevent_unlock = NULL;
+	bool add_space = true;
+	bool did_unlock = false;
+	int i;
+
+	if (!player_can_metaprogress(p)) prevent_unlock = "metaprogression is turned off";
+	if (p->noscore) prevent_unlock = "character is a cheater";
+
+	if (p->is_dead && streq(p->died_from, "Retiring")) can_unlock = true;
+	if (p->total_winner) can_unlock = true;
+
+	if (!can_unlock) return false;
+
+	for (i = 0; i < PP_MAX; ++i) {
+		if (p->extra_powers[i] > p->unlocked_tomes[i]) {
+
+			if (add_space) {
+				message_add(" ", MSG_GENERIC);
+				add_space = false;
+			}
+
+			if (prevent_unlock) {
+				msg("You would unlock %s but %s.", power_names[i], prevent_unlock);
+			}
+			else {
+				msg("Unlocked %s!", power_names[i]);
+				p->unlocked_tomes[i] = p->extra_powers[i];
+				did_unlock = true;
+			}
+		}
+	}
+	for (i = 0; i < SKILL_MAX; ++i) {
+		if (add_space) {
+			message_add(" ", MSG_GENERIC);
+			add_space = false;
+		}
+
+		if (prevent_unlock) {
+			msg("You would unlock %s but %s.", skill_index_to_name(i), prevent_unlock);
+		}
+		else {
+			msg("Unlocked %s!", skill_index_to_name(i));
+			p->unlocked_tomes[i + PP_MAX] = p->extra_skills[i];
+			did_unlock = true;
+		}
+	}
+
+	if (did_unlock) message_add(" ", MSG_GENERIC);
+
+	return did_unlock;
+}
+
+static bool race_is_evolution(struct monster_race *or, struct monster_race *mr)
+{
+	struct evolution *evol;
+
+	if (or == mr) return true;
+
+	for (evol = or->evol; evol; evol = evol->next) {
+		if (race_is_evolution(evol->race, mr)) return true;
+	}
+	return false;
+}
+
+static bool unlock_by_race(struct player *p, struct monster_race *mr, bool first)
+{
+	struct player_race *pr;
+	bool unlockedany = false;
+	bool addspace = first;
+
+	const char *prevent_unlock = NULL;
+
+	if (p->noscore) prevent_unlock = "character is a cheater";
+
+	for (pr = races; pr; pr = pr->next) {
+		bool unlock_race = false;
+		struct evolution *evol;
+
+		if (p->unlocked_races[pr->ridx]) continue;
+
+		for (evol = pr->evol; evol && !unlock_race; evol = evol->next) {
+			if (race_is_evolution(evol->race, mr)) {
+				unlock_race = true;
+			}
+		}
+
+		if (unlock_race) {
+			if (addspace && !unlockedany) {
+				message_add(" ", MSG_GENERIC);
+				addspace = false;
+			}
+
+			if (prevent_unlock) {
+				msg("You would unlock %s but %s.", pr->name, prevent_unlock);
+			}
+			else {
+				msg("Unlocked %s!", pr->name);
+				p->unlocked_races[pr->ridx] = true;
+				unlockedany = true;
+			}
+		}
+	}
+
+	return unlockedany;
+}
+
+bool races_unlock(struct player *p)
+{
+	struct monster_race *mr;
+	int i;
+	bool didunlock;
+
+	if (cave->depth > 0) return false;
+	if (!player_can_metaprogress(p)) return false;
+	if (p->noscore) return false;
+
+	for (i = cave_monster_max(cave); i >= 0; --i) {
+		struct monster *mon = cave_monster(cave, i);
+
+		if (!mon || !mon->race) continue;
+		if (mon->reaction < MON_REACT_ALLY && mon->faction != '@') continue;
+
+		didunlock = unlock_by_race(p, mon->race, !didunlock) || didunlock;
+	}
+
+	mr = lookup_player_monster(p);
+	if (mr) {
+		unlock_by_race(p, mr, !didunlock);
+	}
+
+	if (didunlock) {
+		message_add(" ", MSG_GENERIC);
+	}
+
+	return didunlock;
 }
 
 /**

@@ -562,6 +562,22 @@ void wr_player(void)
 	/* # of turns spent resting */
 	wr_u32b(player->resting_turn);
 
+	// L: which classes have been unlocked
+	wr_u16b(z_info->c_max);
+	for (i = 0; i < z_info->c_max; ++i)  {
+		wr_byte(player->unlocked_classes[i]);
+	}
+	
+	wr_u16b(z_info->pr_max);
+	for (i = 0; i < z_info->pr_max; ++i)  {
+		wr_byte(player->unlocked_races[i]);
+	}
+	
+	wr_u16b(TOME_MAX);
+	for (i = 0; i < TOME_MAX; ++i)  {
+		wr_u16b(player->unlocked_tomes[i]);
+	}
+
 	/* Future use */
 	for (i = 0; i < 8; i++) wr_u32b(0L);
 }
@@ -602,9 +618,11 @@ void wr_ignore(void)
 
 	/* Write the current number of aware object auto-inscriptions */
 	n = 0;
-	for (i = 0; i < z_info->k_max; i++)
-		if (k_info[i].note_aware)
+	for (i = 0; i < z_info->k_max; i++) {
+		if (k_info[i].note_aware) {
 			n++;
+		}
+	}
 
 	wr_u16b(n);
 
@@ -622,9 +640,11 @@ void wr_ignore(void)
 
 	/* Write the current number of unaware object auto-inscriptions */
 	n = 0;
-	for (i = 0; i < z_info->k_max; i++)
-		if (k_info[i].note_unaware)
+	for (i = 0; i < z_info->k_max; i++) {
+		if (k_info[i].note_unaware) {
 			n++;
+		}
+	}
 
 	wr_u16b(n);
 

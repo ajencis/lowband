@@ -3007,6 +3007,9 @@ static errr finish_parse_p_race(struct parser *p) {
 	int num = 0;
 	races = parser_priv(p);
 	for (r = races; r; r = r->next) num++;
+
+	z_info->pr_max = num;
+
 	for (r = races; r; r = r->next, num--) {
 		assert(num);
 		r->ridx = num - 1;
@@ -4724,6 +4727,16 @@ static enum parser_error parse_class_realm(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_class_unlockable(struct parser *p) {
+	struct player_class *c = parser_priv(p);
+
+	if (!c) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	c->unlockable = parser_getint(p, "unlockable");
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_class(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -4772,6 +4785,7 @@ static struct parser *init_parse_class(void) {
 	parser_reg(p, "desc str desc", parse_class_desc);
 	parser_reg(p, "school sym school", parse_class_school);
 	parser_reg(p, "realm sym realm", parse_class_realm);
+	parser_reg(p, "unlockable int unlockable", parse_class_unlockable);
 	return p;
 }
 
@@ -4785,6 +4799,9 @@ static errr finish_parse_class(struct parser *p) {
 
 	classes = parser_priv(p);
 	for (c = classes; c; c = c->next) num++;
+
+	z_info->c_max = num;
+
 	for (c = classes; c; c = c->next, num--) {
 		assert(num);
 		c->cidx = num - 1;

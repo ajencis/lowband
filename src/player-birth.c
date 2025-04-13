@@ -313,7 +313,7 @@ static void roll_hp(void)
 		for (i = 1; i < PY_MAX_LEVEL; i++) {
 			j = (player->hitdie + (i & 1)) / 2;
 			//j = randint1(player->hitdie);
-			player->player_hp[i] = player->player_hp[i-1] + j;
+			player->player_hp[i] = player->player_hp[i - 1] + j;
 		}
 
 		/* XXX Could also require acceptable "mid-level" hitpoints */
@@ -437,6 +437,18 @@ void player_init(struct player *p)
 	int i;
 	struct player_options opts_save = p->opts;
 
+	size_t csize = sizeof (*p->unlocked_classes) * z_info->c_max;
+	size_t rsize = sizeof (*p->unlocked_races) * z_info->pr_max;
+	size_t tsize = sizeof (*p->unlocked_tomes) * TOME_MAX;
+
+	bool *unlocked_classes_save = mem_zalloc(csize);
+	bool *unlocked_races_save = mem_zalloc(rsize);
+	uint16_t *unlocked_tomes_save = mem_zalloc(tsize);
+
+	memcpy(unlocked_classes_save, p->unlocked_classes, csize);
+	memcpy(unlocked_races_save, p->unlocked_races, rsize);
+	memcpy(unlocked_tomes_save, p->unlocked_tomes, tsize);
+
 	player_cleanup_members(p);
 
 	/* Wipe the player */
@@ -480,6 +492,11 @@ void player_init(struct player *p)
 	p->obj_k->curses = mem_zalloc(z_info->curse_max *
 								  sizeof(struct curse_data));
 
+	// L: metaprogression should persist
+	p->unlocked_classes = unlocked_classes_save;
+	p->unlocked_races = unlocked_races_save;
+	p->unlocked_tomes = unlocked_tomes_save;
+
 	/* Options should persist */
 	p->opts = opts_save;
 
@@ -514,12 +531,14 @@ void wield_all(struct player *p)
 
 		/* Make sure we can wield it */
 		slot = wield_slot(obj);
-		if (slot < 0 || slot >= p->body.count)
+		if (slot < 0 || slot >= p->body.count) {
 			continue;
+		}
 
 		obj_temp = slot_object(p, slot);
-		if (obj_temp)
+		if (obj_temp) {
 			continue;
+		}
 
 		/* Split if necessary */
 		if (obj->number > 1) {
@@ -1030,6 +1049,8 @@ void player_generate(struct player *p, const struct player_race *r,
 {
 	int i;
 
+	unlock_all(p);
+
 	if (!c) {
 		c = p->class;
 	}
@@ -1086,8 +1107,9 @@ static void do_birth_reset(bool use_quickstart, birther *quickstart_prev_local)
 {
 	/* If there's quickstart data, we use it to set default
 	   character choices. */
-	if (use_quickstart && quickstart_prev_local)
+	if (use_quickstart && quickstart_prev_local) {
 		load_roller_data(quickstart_prev_local, NULL);
+	}
 
 	player_generate(player, NULL, NULL, use_quickstart && quickstart_prev_local);
 
