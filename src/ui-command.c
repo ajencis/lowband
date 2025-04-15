@@ -171,7 +171,7 @@ void textui_cmd_retire(void)
 	} else {
 		struct keypress ch;
 
-		if (!get_check("Do you really want to retire?"))
+		if (!get_check("Do you really want to retire? "))
 			return;
 
 		/* Special Verification for retirement */

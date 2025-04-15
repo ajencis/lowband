@@ -46,6 +46,7 @@ typedef enum _menu_row_validity_t {
 	MN_ROW_INVALID = 0,
 	MN_ROW_VALID = 1,
 	MN_ROW_HIDDEN = 2,
+	MN_ROW_SKIP = 3,
 } menu_row_validity_t;
 
 /* Cursor colours for different states */
@@ -257,6 +258,8 @@ struct menu
 	int filter_count;        /* number of rows in current view */
 	int *filter_list;		  /* optional filter (view) of menu objects */
 
+	bool autorefilter;			// L: should the menu refresh its filters whenever it refreshes?
+
 	int count;               /* number of rows in underlying data set */
 	void *menu_data;         /* the data used to access rows. */
 
@@ -268,6 +271,7 @@ struct menu
 	int top;                /* Position in list for partial display */
 	region active;          /* Subregion actually active for selection */
 	int cursor_x_offset;    /* Adjustment to the default position of the cursor on a line. */
+	int oid_selected;		// L: which oid is selected in case the rows change while the menu is in use
 };
 
 
@@ -308,6 +312,25 @@ void menu_setpriv(struct menu *menu, int count, void *data);
  */
 void *menu_priv(struct menu *menu);
 
+
+/**
+ * L: Create the filter list for the menu
+ * in lieu of making the filter list you can tag elements as MN_ROW_SKIP
+ * and the menu code will make the filter list based on it
+ */
+bool get_menu_filter(struct menu *m);
+
+/**
+ * L: get data from the menu
+ */
+int menu_count(struct menu *m);
+int menu_cursor_to_oid(struct menu *m, int cursor);
+
+/**
+ * L: set data of the menu
+ */
+void menu_move_cursor_to(struct menu *m, int target);
+void menu_move_cursor_by(struct menu *m, int diff);
 
 /*
  * Set a filter on what items a menu can display.

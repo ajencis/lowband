@@ -3154,7 +3154,8 @@ static void do_cmd_knowledge_shapechange(const char *name, int row)
 
 		if (mark_old != mark) {
 			mark_old = mark;
-			m->cursor = mark;
+			menu_move_cursor_to(m, mark);
+			//m->cursor = mark;
 		}
 
 		menu_refresh(m, false);

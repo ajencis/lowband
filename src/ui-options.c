@@ -205,8 +205,9 @@ static bool option_toggle_handle(struct menu *m, const ui_event *event,
 	}
 
 	if (next) {
-		m->cursor++;
-		m->cursor = (m->cursor + m->filter_count) % m->filter_count;
+		menu_move_cursor_by(m, 1);
+		//m->cursor++;
+		//m->cursor = (m->cursor + m->filter_count) % m->filter_count;
 	}
 
 	return true;
@@ -354,8 +355,9 @@ static void option_toggle_menu(const char *name, int page)
 
 	/* Find the number of valid entries */
 	for (i = 0; i < OPT_PAGE_PER; i++) {
-		if (option_page[page][i] == OPT_none)
+		if (option_page[page][i] == OPT_none) {
 			break;
+		}
 	}
 
 	/* Set the data to the player's options */

@@ -209,14 +209,14 @@ struct birthmenu_data
 static void birthmenu_display(struct menu *menu, int oid, bool cursor,
 			      int row, int col, int width)
 {
-	struct birthmenu_data *data = menu->menu_data;
+	struct birthmenu_data *data = menu_priv(menu);
 
 	uint8_t attr = curs_attrs[CURS_KNOWN][0 != cursor];
 	c_put_str(attr, data->items[oid], row, col);
 }
 
 /**
- * L: should we skip displaying the birthmenu option?
+ * L: should we skip displaying this birthmenu option?
  */
 static bool birthmenu_option_skip(int question, int oid)
 {
@@ -257,151 +257,35 @@ static int birthmenu_valid(struct menu *menu, int oid)
 	assert(player);
 	assert(player->opts.opt);
 
-	struct birthmenu_data *data = (struct birthmenu_data *) menu->menu_data;
+	struct birthmenu_data *data = (struct birthmenu_data *) menu_priv(menu);
 
-	return birthmenu_option_skip(data->question, oid) ? MN_ROW_HIDDEN : MN_ROW_VALID;
-
-	switch (data->question) {
-	case BQ_RACE:
-		if (OPT(player, birth_no_metaprogression)) {
-			return MN_ROW_VALID;
-		}
-		if (player->unlocked_races[oid]) {
-			return MN_ROW_VALID;
-		}
-		return MN_ROW_HIDDEN;
-
-	case BQ_CLASS:
-		if (OPT(player, birth_no_metaprogression)) {
-			return MN_ROW_VALID;
-		}
-		if (player->unlocked_classes[oid]) {
-			return MN_ROW_VALID;
-		}
-		return MN_ROW_HIDDEN;
-
-	case BQ_ROLLER:
-		return MN_ROW_VALID;
-
-	default:
-		return MN_ROW_VALID;
-	}
-
-	return MN_ROW_VALID;
+	return birthmenu_option_skip(data->question, oid) ? MN_ROW_SKIP : MN_ROW_VALID;
 }
 
-/**
- * L: frees the filter list as appropriate
- */
-static void birthmenu_release_filter_list(struct menu *menu)
+static void reset_birthmenu_filters(void)
 {
-	if (menu->filter_list) {
-		mem_free(menu->filter_list);
-	}
-	menu_release_filter(menu);
-}
+	get_menu_filter(&race_menu);
+	unsigned int curr_idx = race_menu.oid_selected;
+	struct player_race *new_race = NULL;
+	struct player_class *new_class = NULL;
 
-/**
- * L: get the filter list for the menu
- * will allocate memory, call the previous function first
- */
-static void birthmenu_get_filter_list(struct menu *menu)
-{
-	int i, filter_i;
-	struct birthmenu_data *data = (struct birthmenu_data *)menu->menu_data;
-	int *filter_list;
-
-	if (OPT(player, birth_no_metaprogression)) {
-		menu_release_filter(menu);
+	if (curr_idx != player->race->ridx) {
+		new_race = player_id2race(curr_idx);
 	}
 
-	// L: which data are valid
-	for (i = 0, filter_i = 0; i < menu->count; ++i) {
-		if (!birthmenu_option_skip(data->question, i)) {
-			++filter_i;
-		}
-	}
-	assert(filter_i > 0);
-	filter_list = mem_zalloc(filter_i * sizeof(*menu->filter_list));
-	for (i = 0, filter_i = 0; i < menu->count; ++i) {
-		if (!birthmenu_option_skip(data->question, i)) {
-			filter_list[filter_i] = i;
-			++filter_i;
-		}
+	get_menu_filter(&class_menu);
+
+	curr_idx = class_menu.oid_selected;
+
+	if (curr_idx != player->class->cidx) {
+		new_class = player_id2class(curr_idx);
 	}
 
-	menu_set_filter(menu, filter_list, filter_i);
-}
-
-static int id_selected(struct menu *menu, int cursor)
-{
-	if (menu->filter_list) {
-		return menu->filter_list[cursor];
-	}
-	return cursor;
-}
-
-/**
- * L: make sure  target  is selected in a birthmenu, handle it if
- * it isn't (by setting the cursor to 0)
- * return the id of the new selection
- */
-static int verify_birthmenu_selection(struct menu *menu, int target)
-{
-	int i;
-	int max_cursor = menu->filter_list ? menu->filter_count : menu->count;
-
-	for (i = 0; i < max_cursor; ++i) {
-		int id = id_selected(menu, i);
-		if (id == target) {
-			menu->cursor = i;
-			return id;
-		}
-	}
-
-	menu->cursor = 0;
-	return id_selected(menu, 0);
-}
-
-/**
- * L: reevaluate filter lists
- * frees the previous lists, allocates new ones, then makes sure the menu
- * won't have issues if there's something currently selected
- * - changes the selection to the first selection if the selection is now illegal
- * - changes the selection to the idx of the same selection if that idx is different
- */
-static void birthmenu_get_filter_lists(int curr_q)
-{
-	struct player_class *new_c = NULL;
-	struct player_race *new_r = NULL;
-	unsigned int new_id;
-	unsigned int old_cid, old_rid;
-	bool change_race, change_class;
-
-	old_cid = id_selected(&class_menu, class_menu.cursor);
-
-	birthmenu_release_filter_list(&class_menu);
-	birthmenu_get_filter_list(&class_menu);
-	
-	new_id = verify_birthmenu_selection(&class_menu, old_cid);
-	new_c = player_id2class(new_id);
-	change_class = (curr_q != BQ_CLASS) && (new_id != old_cid);
-
-
-	old_rid = id_selected(&race_menu, race_menu.cursor);
-
-	birthmenu_release_filter_list(&race_menu);
-	birthmenu_get_filter_list(&race_menu);
-
-	new_id = verify_birthmenu_selection(&race_menu, old_rid);
-	new_r = player_id2race(new_id);
-	change_race = (curr_q != BQ_RACE) && (new_id != old_rid);
-
-
-	if (change_class || change_race) {
-		player_generate(player, new_r, new_c, false);
+	if (new_race || new_class) {
+		player_generate(player, new_race, new_class, false);
 	}
 }
+
 
 /**
  * Our custom menu iterator, only really needed to allow us to override
@@ -685,11 +569,11 @@ static bool use_context_menu_birth(struct menu *current_menu,
 		out->type = EVT_SWITCH;
 
 		// L: this can change available choices
-		birthmenu_get_filter_lists(menu_data->question);
+		reset_birthmenu_filters();
 		break;
 
 	case ACT_CTX_BIRTH_RAND:
-		current_menu->cursor = randint0(current_menu->filter_list ? current_menu->filter_count : current_menu->count);
+		menu_move_cursor_to(current_menu, randint0(menu_count(current_menu)));
 		out->type = EVT_SELECT;
 		break;
 
@@ -737,7 +621,7 @@ static void init_birth_menu(struct menu *menu, int n_choices,
 	menu->flags = MN_DBL_TAP;
 
 	/* Copy across the game's suggested initial selection, etc. */
-	menu->cursor = initial_choice;
+	menu_move_cursor_to(menu, initial_choice);
 
 	/* Allocate sufficient space for our own bits of menu information. */
 	menu_data = mem_alloc(sizeof *menu_data);
@@ -762,9 +646,6 @@ static void init_birth_menu(struct menu *menu, int n_choices,
 	 * in menu_question()) is also available using the mouse.
 	 */
 	menu->context_hook = use_context_menu_birth;
-
-	// L: filter unpermitted options
-	birthmenu_get_filter_list(menu);
 
 	/* Lay out the menu appropriately */
 	menu_layout(menu, reg);
@@ -792,7 +673,7 @@ static void setup_menus(void)
 	/* Race menu. */
 	init_birth_menu(&race_menu, n, player->race ? player->race->ridx : 0,
 	                &race_region, true, race_help, BQ_RACE);
-	mdata = race_menu.menu_data;
+	mdata = menu_priv(&race_menu);
 
 	for (i = 0, r = races; r; r = r->next, i++) {
 		mdata->items[r->ridx] = r->name;
@@ -806,7 +687,7 @@ static void setup_menus(void)
 	/* Class menu similar to race. */
 	init_birth_menu(&class_menu, n, player->class ? player->class->cidx : 0,
 	                &class_region, true, class_help, BQ_CLASS);
-	mdata = class_menu.menu_data;
+	mdata = menu_priv(&class_menu);
 
 	for (i = 0, c = classes; c; c = c->next, i++) {
 		mdata->items[c->cidx] = c->name;
@@ -816,7 +697,7 @@ static void setup_menus(void)
 	/* Roller menu straightforward */
 	init_birth_menu(&roller_menu, MAX_BIRTH_ROLLERS, 0, &roller_region, false,
 					NULL, BQ_ROLLER);
-	mdata = roller_menu.menu_data;
+	mdata = menu_priv(&roller_menu);
 	for (i = 0; i < MAX_BIRTH_ROLLERS; i++)
 		mdata->items[i] = roller_choices[i];
 	mdata->hint = "Choose how to generate your intrinsic stats. Point-based is recommended.";
@@ -827,9 +708,8 @@ static void setup_menus(void)
  */
 static void free_birth_menu(struct menu *menu)
 {
-	struct birthmenu_data *data = menu->menu_data;
+	struct birthmenu_data *data = menu_priv(menu);
 
-	birthmenu_release_filter_list(menu);
 	if (data) {
 		mem_free(data->items);
 		mem_free(data);
@@ -1064,7 +944,7 @@ static enum birth_stage menu_question(enum birth_stage current,
 					next = current + 1;
 				}
 			} else {
-				int which = current_menu->filter_list ? current_menu->filter_list[current_menu->cursor] : current_menu->cursor;
+				int which = menu_cursor_to_oid(current_menu, current_menu->cursor);// current_menu->filter_list ? current_menu->filter_list[current_menu->cursor] : current_menu->cursor;
 				cmdq_push(choice_command);
 				cmd_set_arg_choice(cmdq_peek(), "choice", which);
 				next = current + 1;
@@ -1074,7 +954,8 @@ static enum birth_stage menu_question(enum birth_stage current,
 		} else if (cx.type == EVT_KBRD) {
 			/* '*' chooses an option at random from those the game's provided */
 			if (cx.key.code == '*' && menu_data->allow_random) {
-				current_menu->cursor = randint0(current_menu->filter_list ? current_menu->filter_count : current_menu->count);
+				menu_move_cursor_to(current_menu, randint0(menu_count(current_menu)));
+				//current_menu->cursor = randint0(current_menu->filter_list ? current_menu->filter_count : current_menu->count);
 				cmdq_push(choice_command);
 				cmd_set_arg_choice(cmdq_peek(), "choice", current_menu->cursor);
 
@@ -1083,7 +964,7 @@ static enum birth_stage menu_question(enum birth_stage current,
 			} else if (cx.key.code == '=') {
 				do_cmd_options_birth();
 
-				birthmenu_get_filter_lists(menu_data->question);
+				reset_birthmenu_filters();
 				next = current;
 			} else if (cx.key.code == '@') {
 				/*

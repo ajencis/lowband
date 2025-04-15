@@ -487,6 +487,13 @@ int get_power_scale(const struct player *p, int power, int scaleto)
 }
 
 
+const char *lookup_power_name(int power)
+{
+	assert(power > PP_NONE && power < PP_MAX);
+
+	return power_names[power];
+}
+
 
 
 static double btc_scale(int bonus)
@@ -854,6 +861,30 @@ bool check_learn_powers(struct player *p, int xpgain)
 	mem_free(tomes);
 
 	return learned;
+}
+
+static void max_learnable_object(struct object *obj, int *learn_array, int array_max) 
+{
+	int max_learn = tome_max_skill(obj);
+	if (max_learn) {
+		int tome_ind = obj->pval;
+		assert(tome_ind > TOME_NONE && tome_ind < array_max);
+
+		learn_array[tome_ind] = MAX(learn_array[tome_ind], max_learn);
+	}
+}
+
+void tome_max_learnable(struct player *p, int *learn_array, int array_max)
+{
+	assert(array_max >= TOME_MAX);
+
+	memset(learn_array, 0, array_max * sizeof (*learn_array));
+
+	struct object *obj;
+
+	for (obj = p->gear; obj; obj = obj->next) {
+		max_learnable_object(obj, learn_array, array_max);
+	}
 }
 
 int player_class_power(struct player *p, int power)
@@ -1462,16 +1493,16 @@ bool tomes_unlock(struct player *p)
 			}
 
 			if (prevent_unlock) {
-				msg("You would unlock %s but %s.", power_names[i], prevent_unlock);
+				msg("You would unlock %s [%s] but %s.", power_names[i], p->extra_powers[i], prevent_unlock);
 			}
 			else {
-				msg("Unlocked %s!", power_names[i]);
+				msg("Unlocked %s [%s]!", power_names[i], p->extra_powers[i]);
 				p->unlocked_tomes[i] = p->extra_powers[i];
 				did_unlock = true;
 			}
 		}
 	}
-	for (i = 0; i < SKILL_MAX; ++i) {
+	/*for (i = 0; i < SKILL_MAX; ++i) {
 		if (add_space) {
 			message_add(" ", MSG_GENERIC);
 			add_space = false;
@@ -1485,7 +1516,7 @@ bool tomes_unlock(struct player *p)
 			p->unlocked_tomes[i + PP_MAX] = p->extra_skills[i];
 			did_unlock = true;
 		}
-	}
+	}*/
 
 	if (did_unlock) message_add(" ", MSG_GENERIC);
 

@@ -851,7 +851,8 @@ static void select_savefile(bool retry, bool *new_game)
 	m = menu_new(MN_SKIN_SCROLL, menu_find_iter(MN_ITER_STRINGS));
 	menu_setpriv(m, count, entries);
 	menu_layout(m, &m_region);
-	m->cursor = default_entry;
+	menu_move_cursor_to(m, default_entry);
+	//m->cursor = default_entry;
 	m->flags |= MN_DBL_TAP;
 
 	screen_save();
