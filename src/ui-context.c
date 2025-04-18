@@ -1152,7 +1152,7 @@ static void cmd_sub_entry(struct menu *menu, int oid, bool cursor, int row,
 static bool cmd_menu(struct command_list *list, void *selection_p)
 {
 	struct menu menu;
-	menu_iter commands_menu = { NULL, NULL, cmd_sub_entry, NULL, NULL };
+	menu_iter commands_menu = { NULL, NULL, cmd_sub_entry, NULL, NULL, NULL };
 	region area = { 23, 4, 37, 13 };
 
 	ui_event evt;
@@ -1256,6 +1256,7 @@ static menu_iter command_menu_iter =
 	NULL,
 	cmd_list_entry,
 	cmd_list_action,
+	NULL,
 	NULL
 };
 

@@ -68,7 +68,7 @@ enum
 	#define PP(x, a, b, c, d, e) PP_##x,
 	#include "list-player-powers.h"
 	#undef PP
-	PP_MAX
+	PP_MAX,
 };
 
 /**
@@ -80,7 +80,7 @@ enum
 	#define MS(x, a, b) MS_##x,
 	#include "list-magic-schools.h"
 	#undef MS
-	MS_MAX
+	MS_MAX,
 };
 
 enum {
@@ -734,6 +734,7 @@ struct player {
 
 	uint16_t extra_powers[PP_MAX];		/* L: if the player gained powers outside of their class */
 	uint16_t extra_skills[SKILL_MAX];	/* L: skills gained outside class/race */
+	uint16_t extra_target[TOME_MAX];	// L: what the player wants to learn
 	int sp_burn;						/* L: temporary reduction of max mp */
 
 	uint8_t *player_spell_flags;		/* L: for nonclass spells */

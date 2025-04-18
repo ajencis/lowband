@@ -155,6 +155,7 @@ struct cmd_info cmd_action[] =
 	{ "Use an innate power", { 'U' }, CMD_INNATE, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Make a melee attack", { 'j' }, CMD_MELEE, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Talk with a monster", { 'y' }, CMD_DIPLOMACY, NULL, NULL, 0, NULL, NULL, NULL, 0 },
+	{ "Learn powers and skills", { '$' }, CMD_LEARN, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 };
 
 /**

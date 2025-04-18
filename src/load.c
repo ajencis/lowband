@@ -819,6 +819,9 @@ int rd_player(void)
 	for (i = 0; i < SKILL_MAX; i++) {
 		rd_u16b(&player->extra_skills[i]);
 	}
+	for (i = 0; i < TOME_MAX; ++i) {
+		rd_u16b(&player->extra_target[i]);
+	}
 
 	strip_bytes(4);
 

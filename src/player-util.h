@@ -73,6 +73,7 @@ void player_race_name(struct player *p, char *buf, size_t bufsize);
 bool player_increase_stat(struct player *p);
 int get_power_scale_state(const struct player_state *ps, int power, int scaleto, int level);
 int get_power_scale(const struct player *p, int power, int scaleto);
+uint16_t calc_extra_points_array(struct player *p, uint16_t extra_powers[TOME_MAX]);
 void calc_extra_points(struct player *p, struct player_state *ps);
 bool check_learn_powers(struct player *p, int xpgain);
 bool obj_can_learn_extra_from(const struct object *obj);
@@ -88,7 +89,9 @@ void player_race_elem_info(const struct player_race *r, bool evolved, struct ele
 int player_skill_stat(struct player *p, int skill);
 bool player_learn_spell_xp(struct player *p, bool initial, int xp);
 int player_bonus_to_cost(int bonus, int tome_ind, struct player *p);
-void tome_max_learnable(struct player *p, int *learn_array, int array_max);
+void tome_max_learnable(struct player *p, int learn_array[TOME_MAX]);
+int tome_next_increment(struct player *p, int tome, int curr_bonus);
+int tome_prev_increment(struct player *p, int tome_ind, int curr_bonus);
 const char *lookup_power_name(int power);
 
 int antimagic_fail_increase(struct player *p);

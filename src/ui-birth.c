@@ -292,7 +292,7 @@ static void reset_birthmenu_filters(void)
  * the default handling of "commands" in the standard iterators (hence
  * only defining the display and handler parts).
  */
-static const menu_iter birth_iter = { NULL, birthmenu_valid, birthmenu_display, NULL, NULL };
+static const menu_iter birth_iter = { NULL, birthmenu_valid, birthmenu_display, NULL, NULL, NULL };
 
 static void skill_help(const int r_skills[], const int c_skills[], int mhp, int exp, int infra)
 {

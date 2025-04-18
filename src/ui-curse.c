@@ -90,7 +90,7 @@ static void curse_menu_browser(int oid, void *data, const region *loc)
  */
 static int curse_menu(struct object *obj, char *dice_string)
 {
-	menu_iter menu_f = { 0, 0, get_curse_display, get_curse_action, 0 };
+	menu_iter menu_f = { NULL, NULL, get_curse_display, get_curse_action, NULL, NULL };
 	struct menu *m = menu_new(MN_SKIN_SCROLL, &menu_f);
 	char header[80];
 	int row;

@@ -559,32 +559,36 @@ static int tome_max_skill(const struct object *obj)
 	return result;
 }
 
+uint16_t calc_extra_points_array(struct player *p, uint16_t extra_powers[TOME_MAX])
+{
+	int i;
+	uint16_t sum = 0;
+
+	for (i = TOME_NONE + 1; i < TOME_MAX; ++i) {
+		sum += player_bonus_to_cost(extra_powers[i], i, p);
+	}
+
+	return sum;
+}
 
 void calc_extra_points(struct player *p, struct player_state *ps)
 {
+	int sum = calc_extra_points_array(p, p->extra_target);
+	int intbonus = adj_int_tome(ps->stat_ind[STAT_INT]);
+	int mx = 0;
 	int i;
-	int sum = 0;
-	int mx = p->lev;
 
-	for (i = PP_NONE + 1; i < PP_MAX; i++) {
-		int pwr = p->extra_powers[i];
-		if (pwr > 0) {
-			// scales to 10 for normal power
-			sum += player_bonus_to_cost(pwr, i, p);
-		}
+	for (i = 5; i <= p->lev && mx < LEARN_MAX; i += 5) {
+		mx = MIN(mx + 10, LEARN_MAX);
 	}
 
-	for (i = 0; i < SKILL_MAX; i++) {
-		int skl = p->extra_skills[i];
-		if (skl > 0) {
-			sum += player_bonus_to_cost(skl, i + PP_MAX, p);
-		}
-	}
-	
-	ps->extra_points_max = mx;
+	mx += intbonus * mx / LEARN_MAX;
+
+	ps->extra_points_max = MAX(mx, sum);
 	ps->extra_points_used = sum;
 }
 
+#if 0
 static bool player_can_learn_from_tome(struct player *p, int index)
 {
 	int cpwr;
@@ -617,6 +621,7 @@ static bool player_can_learn_from_tome(struct player *p, int index)
 
 	return true;
 }
+#endif
 
 bool learn_realm(struct player *p, const struct magic_realm *realm)
 {
@@ -639,7 +644,7 @@ bool learn_realm(struct player *p, const struct magic_realm *realm)
 
 bool learn_extra(struct player *p, int index)
 {
-	if (!player_can_learn_from_tome(p, index)) return false;
+	//if (!player_can_learn_from_tome(p, index)) return false;
 
 	if (index < PP_MAX) {
 		p->extra_powers[index]++;
@@ -691,6 +696,7 @@ bool obj_can_learn_extra_from(const struct object *obj)
 	return true;
 }
 
+#if 0
 static bool check_learn_skill(struct player *p, int skill, int xpgain)
 {
 	assert(skill < SKILL_MAX);
@@ -730,7 +736,9 @@ static bool check_learn_power(struct player *p, int power, int xpgain)
 
 	return false;
 }
+#endif
 
+#if 0
 static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 {
 	if (!obj) return false;
@@ -808,9 +816,48 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 
 	return learned;
 }
+#endif
 
 bool check_learn_powers(struct player *p, int xpgain)
 {
+	int i;
+	bool learned = false;
+
+	for (i = 0; i < TOME_MAX; ++i) {
+		int curr_total, curr_lrnd;
+		int target = p->extra_target[i];
+		unsigned int chance;
+
+		if (i < PP_MAX) {
+			curr_total = p->state.powers[i];
+			curr_lrnd = p->extra_powers[i];
+		}
+		else {
+			int skill_i = i - PP_MAX;
+			curr_total = p->state.skills[skill_i];
+			curr_lrnd = p->extra_skills[skill_i];
+		}
+
+		if (target <= curr_lrnd) continue;
+
+		chance = 1;
+
+		chance *= curr_total + 10;
+		chance *= curr_lrnd + 10;
+		chance *= cave->depth;
+
+		chance /= xpgain;
+		chance /= my_int_sqrt(target - curr_lrnd);
+
+		if (one_in_(chance)) {
+			learned = true;
+			learn_extra(p, i);
+		}
+	}
+
+	return learned;
+}
+#if 0
 	int i;
 	struct object *obj;
 	bool learned = false;
@@ -861,7 +908,7 @@ bool check_learn_powers(struct player *p, int xpgain)
 	mem_free(tomes);
 
 	return learned;
-}
+#endif
 
 static void max_learnable_object(struct object *obj, int *learn_array, int array_max) 
 {
@@ -874,17 +921,62 @@ static void max_learnable_object(struct object *obj, int *learn_array, int array
 	}
 }
 
-void tome_max_learnable(struct player *p, int *learn_array, int array_max)
+void tome_max_learnable(struct player *p, int learn_array[TOME_MAX])
 {
-	assert(array_max >= TOME_MAX);
-
-	memset(learn_array, 0, array_max * sizeof (*learn_array));
+	memset(learn_array, 0, TOME_MAX * sizeof (*learn_array));
 
 	struct object *obj;
+	int i;
+
+	if (OPT(p, birth_no_metaprogression)) {
+		for (i = 0; i < TOME_MAX; ++i) {
+			learn_array[i] = LEARN_MAX;
+		}
+
+		return;
+	}
 
 	for (obj = p->gear; obj; obj = obj->next) {
-		max_learnable_object(obj, learn_array, array_max);
+		max_learnable_object(obj, learn_array, TOME_MAX);
 	}
+
+	for (i = 0; i < TOME_MAX; ++i) {
+		learn_array[i] = MAX(learn_array[i], p->unlocked_tomes[i]);
+	}
+}
+
+int tome_next_increment(struct player *p, int tome, int curr_bonus)
+{
+	int curr_cost = player_bonus_to_cost(curr_bonus, tome, p);
+	int n_cost, nn_cost;
+	int next_bonus;
+
+	n_cost = player_bonus_to_cost(curr_bonus, tome, p);
+	for (next_bonus = curr_bonus; next_bonus < 50; ++next_bonus) {
+		nn_cost = player_bonus_to_cost(next_bonus + 1, tome, p);
+		// we want the max power at the target cost, so keep going until we're about to go past target
+		// also make sure we have increased the cost just in case one bonus increase increases costs by > 1
+		if ((n_cost > curr_cost) && (nn_cost > n_cost)) return next_bonus;
+
+		n_cost = nn_cost;
+	}
+
+	return next_bonus;
+}
+
+int tome_prev_increment(struct player *p, int tome_ind, int curr_bonus)
+{
+	int curr_cost = player_bonus_to_cost(curr_bonus, tome_ind, p);
+	int p_cost;
+	int prev_bonus;
+
+	for (prev_bonus = curr_bonus; prev_bonus > 0; --prev_bonus) {
+		p_cost = player_bonus_to_cost(prev_bonus, tome_ind, p);
+
+		if (p_cost < curr_cost) return prev_bonus;
+	}
+
+	return prev_bonus;
 }
 
 int player_class_power(struct player *p, int power)

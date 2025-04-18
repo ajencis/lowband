@@ -217,7 +217,8 @@ static const menu_iter spell_menu_iter = {
 	spell_menu_valid,
 	spell_menu_display,
 	spell_menu_handler,
-	NULL	/* no resize hook */
+	NULL,	/* no resize hook */
+	NULL
 };
 
 /**
@@ -272,7 +273,7 @@ static void spell_menu_destroy(struct menu *m)
 	struct spell_menu_data *d = menu_priv(m);
 	mem_free(d->spells);
 	mem_free(d);
-	mem_free(m);
+	menu_free(m);
 }
 
 /**
@@ -595,7 +596,8 @@ static const menu_iter innate_menu_iter = {
 	innate_menu_valid,
 	innate_menu_display,
 	innate_menu_handler,
-	NULL	/* no resize hook */
+	NULL,	/* no resize hook */
+	NULL
 };
 
 static struct menu *innate_menu_new(const struct monster_race *monr,
@@ -948,7 +950,8 @@ static const menu_iter gener_spell_menu_iter = {
 	gener_spell_menu_valid,
 	gener_spell_menu_display,
 	gener_spell_menu_handler,
-	NULL	/* no resize hook */
+	NULL,	/* no resize hook */
+	NULL
 };
 
 static int spell_compare_name(const void *a, const void *b)

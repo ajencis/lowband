@@ -315,6 +315,7 @@ static const menu_iter option_toggle_iter = {
 	NULL,
 	option_toggle_display,
 	option_toggle_handle,
+	NULL,
 	NULL
 };
 
@@ -1411,7 +1412,7 @@ static void ego_menu(const char *unused, int also_unused)
 	struct ego_desc *choice;
 
 	struct menu menu;
-	menu_iter menu_f = { 0, 0, ego_display, ego_action, 0 };
+	menu_iter menu_f = { NULL, NULL, ego_display, ego_action, NULL, NULL };
 	region area = { 1, 5, -1, -1 };
 	int cursor = 0;
 
@@ -1586,7 +1587,7 @@ static void quality_subdisplay(struct menu *menu, int oid, bool cursor, int row,
 static bool quality_action(struct menu *m, const ui_event *event, int oid)
 {
 	struct menu menu;
-	menu_iter menu_f = { NULL, NULL, quality_subdisplay, NULL, NULL };
+	menu_iter menu_f = { NULL, NULL, quality_subdisplay, NULL, NULL, NULL };
 	region area = { 37, 2, 29, IGNORE_MAX };
 	ui_event evt;
 	int count;
@@ -1633,7 +1634,7 @@ static void quality_menu(const char *unused, int also_unused)
 {
 	struct menu menu;
 	menu_iter menu_f = { NULL, quality_validity, quality_display,
-						 quality_action, NULL };
+						 quality_action, NULL, NULL };
 	region area = { 0, 0, 0, 0 };
 
 	/* Save screen */
@@ -1771,6 +1772,7 @@ static const menu_iter ignore_sval_menu =
 	ignore_sval_menu_display,
 	ignore_sval_menu_action,
 	NULL,
+	NULL
 };
 
 
@@ -2002,6 +2004,7 @@ static const menu_iter options_item_iter =
 	valid_options_item,
 	display_options_item,
 	handle_options_item,
+	NULL,
 	NULL
 };
 

@@ -3616,6 +3616,7 @@ struct file_parser shape_parser = {
 static enum parser_error parse_spell_name(struct parser *p) {
 	struct player_spell *s = parser_priv(p);
 	struct player_spell *spell = mem_zalloc(sizeof *spell);
+	int i;
 
 	spell->name = string_make(parser_getsym(p, "name"));
 
@@ -3631,6 +3632,10 @@ static enum parser_error parse_spell_name(struct parser *p) {
 		spell->sfail = parser_getint(p, "fail");
 	} else {
 		spell->sfail = spell->slevel / 3 + 10;
+	}
+
+	for (i = 0; i < MAX_SPELL_SCHOOLS; ++i) {
+		spell->school[i] = MS_NONE;
 	}
 	
 	spell->next = s;
@@ -3807,17 +3812,17 @@ static enum parser_error parse_spell_school(struct parser *p) {
 
 	school_name = parser_getsym(p, "school");
 
-	school_idx = 0;
+	school_idx = MS_NONE;
 	for (i = 0; list_school_names[i]; i++) {
 		if (streq(school_name, list_school_names[i])) {
 			school_idx = i;
 		}
 	}
 
-	if (school_idx == 0) return PARSE_ERROR_GENERIC;
+	if (school_idx == MS_NONE) return PARSE_ERROR_GENERIC;
 
 	for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
-		if (s->school[i] == 0) {
+		if (s->school[i] == MS_NONE) {
 			s->school[i] = school_idx;
 			break;
 		}

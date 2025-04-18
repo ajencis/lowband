@@ -147,7 +147,7 @@ static int stat_scale(int index, int scaleto, bool minzero) {
     int hsi = 14;
 	int asi = 7;
 	int lsi = 0;
-	assert(hsi != asi);
+	assert(hsi >= asi);
 	index = MAX(index, lsi);
 
 	int negative = ((asi - lsi) * scaleto + 24) / 25;
@@ -244,7 +244,12 @@ int adj_int_xp(int index) {
 }
 
 int adj_int_lev(int index) {
-	return stat_scale(index, 6, false);
+	return 0;
+	//return stat_scale(index, 6, false);
+}
+
+int adj_int_tome(int index) {
+	return stat_scale(index, 10, false);
 }
 
 int adj_mag_stat(int index) {
@@ -1124,11 +1129,11 @@ void calc_blows(struct player *p, int wgt, struct attack_roll *aroll,
     int sind1 = state->stat_ind[aroll->damage_stat];
 	int sind2 = aroll->accuracy_stat >= 0 ?
 			state->stat_ind[aroll->accuracy_stat] :
-			STAT_NONE;
+			0;
 	int sind3 = state->stat_ind[player_skill_stat(p, aroll->attack_skill)];
 
 	// max 18
-	int statind = sind2 != STAT_NONE ? 
+	int statind = sind2 != 0 ? 
 			(sind1 + sind2 + sind3 + MAX(sind1, MAX(sind2, sind3))) / 4 :
 			(sind1 + sind3 + MAX(sind1, sind3)) / 3;
 
@@ -1595,8 +1600,6 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		state->powers[i] += MIN((p->extra_powers[i] + 1) / 2, p->lev * 3);
 	}
 
-	calc_extra_points(p, state);
-
 	/* Analyze equipment */
 	for (i = 0; i < p->body.count; i++) {
 		int index = 0;
@@ -1798,6 +1801,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		/* Save the new index */
 		state->stat_ind[i] = ind;
 	}
+
+	// L: calc extra points
+	calc_extra_points(p, state);
 
 	// L: calculate skills
 	player_race_r_skill(p->race, mrace ? true : false, race_skills);

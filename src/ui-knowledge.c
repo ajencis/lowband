@@ -775,7 +775,7 @@ static void display_knowledge(const char *title, int *obj_list, int o_count,
 
 	struct menu group_menu;
 	struct menu object_menu;
-	menu_iter object_iter = { NULL, NULL, display_group_member, NULL, NULL };
+	menu_iter object_iter = { NULL, NULL, display_group_member, NULL, NULL, NULL };
 
 	/* Panel state */
 	/* These are swapped in parallel whenever the actively browsing " */

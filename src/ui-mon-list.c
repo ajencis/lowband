@@ -638,7 +638,8 @@ static const menu_iter diplomacy_menu_iter = {
 	NULL,
 	diplomacy_menu_display,
 	diplomacy_menu_handler,
-	NULL	/* no resize hook */
+	NULL,	/* no resize hook */
+	NULL
 };
 
 

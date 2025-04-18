@@ -102,4 +102,4 @@ BIRTH, false)
 OP(birth_percent_damage,  "To-damage is a percentage of dice (experimental)",
 BIRTH, false)
 OP(birth_no_metaprogression,    "Do not restrict options by metaprogression",
-BIRTH, false)
+BIRTH, true)

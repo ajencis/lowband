@@ -125,6 +125,8 @@ static const struct command_info game_cmds[] =
 	{ CMD_DIP_GIFT, "give a monster an item", do_cmd_dip_gift, false, true, 0 },
 	{ CMD_DIP_LEARN, "learn from a monster", do_cmd_dip_learn, false, true, 0 },
 
+	{ CMD_LEARN, "learn powers and skills", do_cmd_learn, false, false, 0 },
+
 	{ CMD_COMMAND_MONSTER, "make a monster act", do_cmd_mon_command, false, true, 0 },
 
 	{ CMD_SPOIL_ARTIFACT, "generate spoiler file for artifacts", do_cmd_spoil_artifact, false, false, 0 },

@@ -132,11 +132,16 @@ typedef struct
 			int row, int col, int width);
 
 	/* Handle 'positive' events (selections or cmd_keys) */
+	// L: now also handles potential MOVE events
 	/* XXX split out into a select handler and a cmd_key handler */
 	bool (*row_handler)(struct menu *menu, const ui_event *event, int oid);
 
 	/* Called when the screen resizes */
 	void (*resize)(struct menu *m);
+
+	// L: Sorts the contents of the menu
+	// a1 and a2 are  oids 
+	int (*compare)(int a1, int a2);
 } menu_iter;
 
 
@@ -340,7 +345,7 @@ void menu_move_cursor_by(struct menu *m, int diff);
  * object_list[] should be an array of indexes to display, and n should be its
  * length.
  */
-void menu_set_filter(struct menu *menu, const int object_list[], int n);
+void menu_set_filter(struct menu *menu, int object_list[], int n);
 
 
 /**

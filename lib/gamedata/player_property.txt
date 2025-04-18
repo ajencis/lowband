@@ -31,6 +31,7 @@
 #          bind it to multiple user interface elements.
 # name - the name of the property
 # desc - the description of the property
+#        L: for powers, will be prepended with "You" or "The user"
 # value - value for elements; -1 (vulnerability), 1 (resistance) or 3 (immunity)
 
 ## Shapechange player flags
@@ -326,186 +327,211 @@ value:-1
 type:power
 code:AIR_MAGIC
 name:Air Magic Specialization
-desc:You are particularly good at air magic.
+desc: can particularly effectively use at air magic.
 
 type:power
 code:FIRE_MAGIC
 name:Fire Magic Specialization
-desc:You are particularly good at fire magic.
+desc: can particularly effectively use fire magic.
 
 type:power
 code:EARTH_MAGIC
 name:Earth Magic Specialization
-desc:You are particularly good at earth magic.
+desc: can particularly effectively use earth magic.
 
 type:power
 code:WATER_MAGIC
 name:Water Magic Specialization
-desc:You are particularly good at water magic.
+desc: can particularly effectively use water magic.
 
 type:power
 code:POISON_MAGIC
 name:Poison Magic Specialization
-desc:You are particularly good at poison magic.
+desc: can particularly effectively use poison magic.
 
 type:power
 code:DIVINATION_MAGIC
 name:Divination Specialization
-desc:You are particularly good at divination.
+desc: can particularly effectively use divination.
 
 type:power
 code:TELEPORTATION_MAGIC
 name:Teleportation Specialization
-desc:You are particularly good at teleportation magic.
+desc: can particularly effectively use teleportation magic.
 
 type:power
 code:NECROMANCY_MAGIC
 name:Necromancy Specialization
-desc:You are particularly good at necromancy.
+desc: can particularly effectively use necromancy.
 
 type:power
 code:HOLY_MAGIC
 name:Holy Magic Specialization
-desc:You are particularly good at holy magic.
+desc: can particularly effectively use holy magic.
 
 type:power
 code:NATURE_MAGIC
 name:Nature Magic Specialization
-desc:You are particularly good at nature magic.
+desc: can particularly effectively use nature magic.
+
+type:power
+code:SUMMONING_MAGIC
+name:Summoning Magic Specialization
+desc: can particularly effectively use summoning magic.
 
 type:power
 code:TRANSMUTATION_MAGIC
 name:Transmutation Magic Specialization
-desc:You are particularly good at transmutation magic.
+desc: can particularly effectively use transmutation magic.
 
 type:power
 code:ENCHANTMENT_MAGIC
 name:Enchantment Specialization
-desc:You are particularly good at enchantment magic.
+desc: can particularly effectively use enchantment magic.
 
 type:power
 code:ILLUSION_MAGIC
 name:Illusion Specialization
-desc:You are particularly good at illusion magic.
+desc: can particularly effectively use illusion magic.
 
 type:power
 code:SWORD_SPECIALIZATION
 name:Swordmastery
-desc:You are particularly good with swords.
+desc: can particularly effectively use swords.
 
 type:power
 code:HAFTED_SPECIALIZATION
 name:Haftedmastery
-desc:You are particularly good with hafted weapons.
+desc: can particularly effectively use hafted weapons.
 
 type:power
 code:POLEARM_SPECIALIZATION
 name:Polearm-mastery
-desc:You are particularly good with polearms.
+desc: can particularly effectively use polearms.
 
 type:power
 code:BOW_SPECIALIZATION
 name:Bowmastery
-desc:You are particularly good with bows.
+desc: can particularly effectively use bows.
+
+type:power
+code:CROSSBOW_SPECIALIZATION
+name:Crossbowmastery
+desc: can particularly effectively use crossbows.
+
+type:power
+code:SLING_SPECIALIZATION
+name:Slingmastery
+desc: can particularly effectively use slings.
+
+type:power
+code:DUAL_WIELD
+name:Dual-Wielding
+desc: can effectively use multiple weapons at once.
 
 type:power
 code:UNARMED_STRIKE
 name:Unarmed Strike
-desc:Your body is a lethal weapon.
+desc: can attacked unarmed effectively.
 
 type:power
 code:AGILITY
 name:Agility
-desc:You are very agile, especially if you aren't weighed down.
+desc: can effectively dodge attacks, especially if when not weighed down.
+
+type:power
+code:RUNNING
+name:Running
+desc: can move very quickly.
 
 type:power
 code:BACKSTAB
 name:Backstabbing
-desc:You know where to hit where it hurts if your target is distracted.
+desc: can hit where it hurts if the target is distracted.
 
 type:power
 code:ANTIMAGIC
 name:Antimagic
-desc:You consume nearby mana.
+desc: can consume nearby mana.
 
 type:power
 code:SPELL_POWER
 name:Spellpower
-desc:Your spells are stronger.
+desc: can cast stronger spells.
 
 type:power
 code:SPELL_EASE
 name:Spell Ease
-desc:Your spells are easier to learn and use.
+desc: can more easily learn and use spells.
 
 type:power
 code:WHIRLWIND
 name:Whirlwind
-desc:You can attack multiple nearby monsters.
+desc: can attack multiple nearby monsters.
 
 type:power
 code:CRITICAL_HITS
 name:Critical Hits
-desc:You can more easily critically hit monsters.
+desc: can more easily critically hit monsters.
 
 
 # L: skills
 type:skill
 code:DISARM_PHYS
 name:Physical Disarming
-desc:You can disarm mundane traps.
+desc: can disarm mundane traps.
 
 type:skill
 code:DISARM_MAGIC
 name:Magical Disarming
-desc:You can disarm magical traps.
+desc: can disarm magical traps.
 
 type:skill
 code:DEVICE
 name:Magic Devices
-desc:You can use magical devices.
+desc: can use magical devices.
 
 type:skill
 code:SAVE
 name:Saving Throw
-desc:You can avoid extraordinary attack forms.
+desc: can avoid extraordinary attack forms.
 
 type:skill
 code:SEARCH
 name:Perception
-desc:You can spot things.
+desc: can spot things.
 
 type:skill
 code:STEALTH
 name:Stealth
-desc:You can avoid notice.
+desc: can avoid notice.
 
 type:skill
 code:TO_HIT_MELEE
 name:Melee Weapon Skill
-desc:You can use melee weapons.
+desc: can use melee weapons.
 
 type:skill
 code:TO_HIT_BOW
 name:Ranged Weapon Skill
-desc:You can use shooters.
+desc: can use shooters.
 
 type:skill
 code:TO_HIT_THROW
 name:Throwing
-desc:You can throw objects.
+desc: can throw objects.
 
 type:skill
 code:DIGGING
 name:Digging
-desc:You can dig into walls.
+desc: can dig into walls.
 
 type:skill
 code:MAGIC
 name:Magic
-desc:You can cast magic.
+desc: can cast magic.
 
 type:skill
 code:HEALTH
 name:Resilience
-desc:You can endure attacks.
+desc: can endure attacks.

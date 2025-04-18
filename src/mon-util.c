@@ -107,7 +107,9 @@ bool give_monster_powers(struct monster *mon)
 
 	if (rf_has(mr->flags, RF_SAPIENT)) {
 		while (one_in_(10)) {
+			// randint0(30 - (-1) - 1) + (-1) + 1 = randint0()
 			int choice = randint0(PP_MAX - PP_NONE - 1) + PP_NONE + 1;
+			assert(choice > 0);
 			pp_flag_on(mon->powers, choice);
 		}
 		/*for (i = PP_NONE + 1; i < PP_MAX; ++i) {
@@ -135,15 +137,13 @@ bool player_can_learn_from_monster(struct player *p, struct monster *mon)
 {
 	int i;
 
+	int max_target[TOME_MAX];
+	tome_max_learnable(p, max_target);
+
 	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
 		if (!pp_flag_has(mon->powers, i)) continue;
 
-		if (mon->race->level <= p->extra_powers[i]) continue;
-
-		if (player_bonus_to_cost(p->extra_powers[i], i, p) >=
-				player_bonus_to_cost(p->extra_powers[i] + 1, i, p)) {
-					continue;
-		}
+		if (mon->race->level <= max_target[i]) continue;
 		
 		return true;
 	}

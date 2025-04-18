@@ -1219,6 +1219,7 @@ static const menu_iter store_menu =
 	NULL,
 	store_display_entry,
 	store_menu_handle,
+	NULL,
 	NULL
 };
 

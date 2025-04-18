@@ -2395,6 +2395,10 @@ void do_cmd_dip_learn(struct command *cmd)
 	struct monster *mon;
 	int result = -1;
 	int cost;
+	int max_learn[TOME_MAX];
+	int temp_max_learn[TOME_MAX];
+	//bool has_power = false;
+	bool did_learn = false;
 
 	if (cmd_get_target(cmd, "target", &dir) != CMD_OK) {
 		return;
@@ -2409,21 +2413,31 @@ void do_cmd_dip_learn(struct command *cmd)
 
 	if (!player_can_learn_from_monster(player, mon)) return;
 
+	tome_max_learnable(player, max_learn);
+	memcpy(temp_max_learn, max_learn, sizeof(temp_max_learn));
+
 	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
-		const char *pname = power_names[i];
+		//const char *pname = power_names[i];
 
 		cost = teaching_price(mon, player, i);
 
-		if (pp_flag_has(mon->powers, i) &&
-				mon->race->level > player->extra_powers[i] &&
+		if (pp_flag_has(mon->powers, i)) {
+			int new_target = MIN(mon->race->level, player->extra_target[i]);
+			if (max_learn[i] < new_target) {
+				temp_max_learn[i] = new_target;
+				//has_power = true;
+			}
+			
+			/* &&
+				mon->race->level > player->extra_tar[i] &&
 				player->extra_powers[i] < 50 &&
 				player_bonus_to_cost(player->extra_powers[i], i, player) <
-					player_bonus_to_cost(player->extra_powers[i] + 1, i, player)) {
+					player_bonus_to_cost(player->extra_powers[i] + 1, i, player)) {*/
 
-			if (get_check(format("Ask to learn %s? (%i gp) ", pname, cost))) {
+			/*if (get_check(format("Ask to learn %s? (%i gp) ", pname, cost))) {
 				result = i;
 				break;
-			}
+			}*/
 		}
 	}
 
@@ -2437,14 +2451,24 @@ void do_cmd_dip_learn(struct command *cmd)
 		return;
 	}
 
-	player->au -= cost;
+	get_learn(player, temp_max_learn);
 
-	player->extra_powers[result]++;
-		
-	// tell the player when they've learned something
-	msg("You feel a bit more familiar with %s.", power_names[i]);
-	
-	player->upkeep->update |= PU_BONUS;
-	player->upkeep->redraw |= PR_STATUS;
+	for (i = PP_NONE + 1; !did_learn && i < PP_MAX; ++i) {
+		if (player->extra_target[i] > max_learn[i]) {
+			did_learn = true;
+		}
+	}
+
+	if (did_learn) {
+		player->au -= cost;
+	}
+}
+
+void do_cmd_learn(struct command *cmd)
+{
+	int max_learn[TOME_MAX];
+
+	tome_max_learnable(player, max_learn);
+	get_learn(player, max_learn);
 }
 

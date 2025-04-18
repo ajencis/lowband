@@ -17,7 +17,7 @@ combination and does not pass it on.
   g    Get objects on floor            G    Gain new spells/prayers
   h    Fire default ammo at target     H    -
   i    List contents of pack           I    Inspect an item
-  j    -                               J    -
+  j    Make a melee attack             J    -
   k    Ignore an item                  K    Toggle ignore
   l    Look around                     L    Locate player on map
   m    Cast a spell                    M    Display map of entire level
@@ -32,12 +32,12 @@ combination and does not pass it on.
   v    Throw an item                   V    Display version info
   w    Wear/wield equipment            W    Walk into a trap
   x    -                               X    -
-  y    -                               Y    -
+  y    Talk to a monster               Y    -
   z    Zap a rod                       Z    -
   !    -                               ^a   (special - debug command)
   @    -                               ^b   -
   #    -                               ^c   (special - break)
-  $    -                               ^d   -
+  $    Learn skills                    ^d   -
   %    -                               ^e   Toggle inven/equip window
   ^    (special - control key)         ^f   Repeat level feeling
   &    -                               ^g   Do autopickup

@@ -71,7 +71,8 @@ static const menu_iter proj_iter = {
 	NULL, /* validity */
 	proj_display,
 	NULL, /* action */
-	NULL /* resize */
+	NULL, /* resize */
+	NULL
 };
 
 
@@ -208,6 +209,7 @@ static menu_iter wiz_create_item_submenu = {
 	NULL,
 	wiz_create_item_subdisplay,
 	wiz_create_item_subaction,
+	NULL,
 	NULL
 };
 
@@ -318,6 +320,7 @@ static const menu_iter wiz_create_item_menu = {
 	NULL,
 	wiz_create_item_display,
 	wiz_create_item_action,
+	NULL,
 	NULL
 };
 

@@ -1067,7 +1067,7 @@ static void item_menu_browser(int oid, void *data, const region *local_area)
 static struct object *item_menu(cmd_code cmd, int prompt_size, int mode)
 {
 	menu_iter menu_f = { get_item_tag, get_item_validity, get_item_display,
-						 get_item_action, 0 };
+						 get_item_action, NULL, NULL };
 	struct menu *m = menu_new(MN_SKIN_OBJECT, &menu_f);
 	ui_event evt = { 0 };
 	int ex_offset_ctr = 0;

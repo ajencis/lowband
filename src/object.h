@@ -54,6 +54,10 @@ enum {
 	TOME_MAX
 };
 
+/**
+ * The maximum amount any individual can learn
+ */
+#define LEARN_MAX 50
 
 /*** Structures ***/
 
