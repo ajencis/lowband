@@ -30,8 +30,15 @@ struct mon_player_match {
 	int pval;
 };
 
+struct skill_stat_info {
+	int skill;
+	int primary_stat;
+	int secondary_stat;
+};
+
 extern struct mon_player_match elem_matches[];
-extern int skill_stats[];
+
+extern struct skill_stat_info skill_stats[];
 
 /**
  * Bit flags for the "player->upkeep->notice" variable

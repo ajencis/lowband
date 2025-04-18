@@ -55,7 +55,7 @@ static void add_scaling_desc(char *buf, const char *name, int base, int scale, i
 	}
 }
 
-static void ability_desc(struct player *p, struct player_ability *ability, char *buf, size_t bufsize, bool player_has)
+static void ability_desc(struct player *p, const struct player_ability *ability, char *buf, size_t bufsize, bool player_has, int group)
 {
 	int monster_powers[PP_MAX] = { 0 };
 	int monster_skills[SKILL_MAX] = { 0 };
@@ -70,10 +70,12 @@ static void ability_desc(struct player *p, struct player_ability *ability, char 
 
 	buf[0] = '\0';
 
-	if (player_has) {
-		my_strcat(buf, "You", bufsize);
-	} else {
-		my_strcat(buf, "User", bufsize);
+	if (group == PLAYER_FLAG_POWER || group == PLAYER_FLAG_SKILL) {
+		if (player_has) {
+			my_strcat(buf, "You", bufsize);
+		} else {
+			my_strcat(buf, "User", bufsize);
+		}
 	}
 	my_strcat(buf, ability->desc, bufsize);
 	my_strcat(buf, "\n", bufsize);
@@ -82,10 +84,10 @@ static void ability_desc(struct player *p, struct player_ability *ability, char 
 		calc_monster_powers(mrace, monster_powers, &player->state);
 		calc_monster_skills(mrace, monster_skills);
 	}
-	if (ability->group == PLAYER_FLAG_POWER || ability->group == PLAYER_FLAG_SKILL) {
+	if (group == PLAYER_FLAG_POWER || group == PLAYER_FLAG_SKILL) {
 		int cbase, cxtra, rbase, rxtra, tome, stat;
-		const char *stat_name = NULL;
-		if (ability->group == PLAYER_FLAG_POWER) {
+		char stat_name[80];
+		if (group == PLAYER_FLAG_POWER) {
 			cbase = 0;
 			cxtra = player_class_power(player, ability->index);
 			rbase = monster_powers[ability->index];
@@ -94,20 +96,26 @@ static void ability_desc(struct player *p, struct player_ability *ability, char 
 			stat = 0;
 		}
 		else {
-			int whichstat = player_skill_stat(player, ability->index);
+			int stat1, stat2;
+			player_skill_stats(player, &player->state, ability->index, &stat1, &stat2);
 			cbase = player_class_c_skill(player, ability->index);
 			cxtra = player_class_x_skill(player, ability->index) * 100 / 10;
 			rbase = race_skills[ability->index] + monster_skills[ability->index];
 			rxtra = race_x_skills[ability->index] * 100 / 10;
 			tome = player->extra_skills[ability->index];
-			if (whichstat != -1) {
-				int ind = player->state.stat_ind[whichstat];
+			if (stat1 != STAT_NONE) {
+				int ind = player_skill_stat_ind(player, &player->state, ability->index);
 				int curr;
 				stat = adj_stat_skill_flat(ind, ability->index);
 				curr = cbase + rbase + (cxtra + rxtra) * player->lev / 100 + tome;
 				curr = MAX(curr, 0);
 				stat += curr * adj_stat_skill_percent(ind, ability->index) / 100;
-				stat_name = stat_idx_to_name(whichstat);
+				if (stat2 == STAT_NONE) {
+					strnfmt(stat_name, sizeof(stat_name), stat_idx_to_name(stat1));
+				} else {
+					strnfmt(stat_name, sizeof(stat_name), "%s and %s",
+						stat_idx_to_name(stat1), stat_idx_to_name(stat2));
+				}
 			} else {
 				stat = 0;
 			}
@@ -130,7 +138,7 @@ static void ability_desc(struct player *p, struct player_ability *ability, char 
 				add_scaling_desc(buf, "learning", tome, 0, numleft, bufsize);
 				--numleft;
 			}
-			if (stat && stat_name) {
+			if (stat) {
 				add_scaling_desc(buf, stat_name, stat, 0, numleft, bufsize);
 				--numleft;
 			}
@@ -213,7 +221,7 @@ static void view_ability_display(struct menu *menu, int oid, bool cursor,
 static void view_ability_menu_browser(int oid, void *data, const region *loc)
 {
 	struct player_ability *choices = data;
-	char buf[128];
+	char buf[256];
 	/*int monster_powers[PP_MAX] = { 0 };
 	int monster_skills[SKILL_MAX] = { 0 };
 	int race_skills[SKILL_MAX] = { 0 };
@@ -291,12 +299,12 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 		}
 	}*/
 
-	ability_desc(player, &choices[oid], buf, sizeof(buf), true);
-
+	ability_desc(player, &choices[oid], buf, sizeof(buf), true, choices[oid].group);
 
 	clear_from(loc->row + loc->page_rows);
 	Term_gotoxy(loc->col, loc->row + loc->page_rows);
-	text_out_c(COLOUR_L_BLUE, buf);
+
+	text_out_c(COLOUR_L_BLUE, "%s", buf);
 
 	/* XXX */
 	text_out_pad = 0;
@@ -627,7 +635,7 @@ static void ability_learn_browse(int oid, void *db, const region *loc)
 	uint8_t curr_points_attr = points_left > 0 ? COLOUR_L_GREEN : COLOUR_L_RED;
 	int i;
 	int row = loc->row + loc->page_rows;
-	struct player_ability *abil = ability_by_tome_id(oid);
+	const struct player_ability *abil = ability_by_tome_id(oid);
 	const char *pts_str = "Available Points: ";
 
 	text_out_hook = text_out_to_screen;
@@ -655,11 +663,13 @@ static void ability_learn_browse(int oid, void *db, const region *loc)
 	}
 
 	if (abil) {
+		int group = oid < PP_MAX ? PLAYER_FLAG_POWER : PLAYER_FLAG_SKILL;
 		char buf[256];
-		ability_desc(player, abil, buf, sizeof(buf), data->mode != AL_MODE_ALL_POWERS);
+		
+		ability_desc(player, abil, buf, sizeof(buf), data->mode != AL_MODE_ALL_POWERS, group);
 		row += 2;
 		Term_gotoxy(loc->col, row);
-		text_out_c(COLOUR_WHITE, buf);
+		text_out_c(COLOUR_WHITE, "%s", buf);
 	}
 	else {
 		plog_fmt("can't find abil for oid %i", oid);

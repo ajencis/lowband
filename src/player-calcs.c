@@ -117,11 +117,11 @@ int power_scalings[] = {
 	PP_SCALE_NONE
 };
 
-int skill_stats[] = {
-	#define SKILL(x, a, b, c, d) c,
+struct skill_stat_info skill_stats[] = {
+	#define SKILL(x, a, b, c, d, e) { SKILL_##x, c, d },
 	#include "list-skills.h"
 	#undef SKILL
-	-1
+	{ -1, STAT_NONE, STAT_NONE }
 };
 
 /*struct mon_player_match flag_matches[] = {
@@ -1130,7 +1130,7 @@ void calc_blows(struct player *p, int wgt, struct attack_roll *aroll,
 	int sind2 = aroll->accuracy_stat >= 0 ?
 			state->stat_ind[aroll->accuracy_stat] :
 			0;
-	int sind3 = state->stat_ind[player_skill_stat(p, aroll->attack_skill)];
+	int sind3 = player_skill_stat_ind(p, state, aroll->attack_skill);
 
 	// max 18
 	int statind = sind2 != 0 ? 
@@ -1809,15 +1809,15 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	player_race_r_skill(p->race, mrace ? true : false, race_skills);
 	player_race_x_skill(p->race, mrace ? true : false, race_x_skills);
 	for (i = 0; i < SKILL_MAX; i++) {
-		int stat = player_skill_stat(p, i);
+		int stat_ind = player_skill_stat_ind(p, state, i);
 		int base = race_skills[i] + player_class_c_skill(p, i);
 		int xtra = (race_x_skills[i] + player_class_x_skill(p, i)) * p->lev / 10;
 		int tome = p->extra_skills[i];
 		// += because monster skills have already been calcd
 		state->skills[i] += base + xtra + tome;
-		if (stat != STAT_NONE) {
-			state->skills[i] += MAX(state->skills[i], 0) * adj_stat_skill_percent(state->stat_ind[stat], i) / 100;
-			state->skills[i] += adj_stat_skill_flat(state->stat_ind[stat], i);
+		if (stat_ind > -1) {
+			state->skills[i] += MAX(state->skills[i], 0) * adj_stat_skill_percent(stat_ind, i) / 100;
+			state->skills[i] += adj_stat_skill_flat(stat_ind, i);
 		}
 	}
 

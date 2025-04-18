@@ -162,7 +162,7 @@ enum {
  * Skill indexes
  */
 enum {
-	#define SKILL(x, a, b, c, d) SKILL_##x,
+	#define SKILL(x, a, b, c, d, e) SKILL_##x,
 	#include "list-skills.h"
 	#undef SKILL
 	SKILL_MAX

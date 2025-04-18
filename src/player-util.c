@@ -72,7 +72,7 @@ static const int tome_factors[] = {
 	#define PP(x, a, b, c, d, e) c,
 	#include "list-player-powers.h"
 	#undef PP
-	#define SKILL(x, a, b, c, d) a,
+	#define SKILL(x, a, b, c, d, e) a,
 	#include "list-skills.h"
 	#undef SKILL
 	0
@@ -1009,6 +1009,9 @@ int player_class_x_skill(struct player *p, int skill)
 	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
 		xtra = MAX(xtra, p->extra_skills[skill] * 3 / 4 / 5);
 	}
+	if (skill == SKILL_HEALTH) {
+		msg_add_fmt("xtra=%i, x_skill=%i", xtra, p->class->x_skills[skill]);
+	}
 	return xtra;
 }
 
@@ -1075,12 +1078,57 @@ void player_race_elem_info(const struct player_race *r, bool evolved, struct ele
 	}
 }
 
-int player_skill_stat(struct player *p, int skill)
+void player_skill_stats(struct player *p, struct player_state *ps, int skill, int *stat1, int *stat2)
 {
+	int primary_stat, secondary_stat, primary_index, secondary_index;
+
+	*stat1 = STAT_NONE;
+	*stat2 = STAT_NONE;
+
 	if (skill == SKILL_MAGIC && p->realm) {\
-		return p->realm->stat;
+		primary_stat = p->realm->stat;
 	}
-	return skill_stats[skill];
+	else {
+		primary_stat = skill_stats[skill].primary_stat;
+	}
+	secondary_stat = skill_stats[skill].secondary_stat;
+
+	primary_index = primary_stat == STAT_NONE ? -1 : ps->stat_ind[primary_stat];
+	secondary_index = secondary_stat == STAT_NONE ? -1 : ps->stat_ind[secondary_stat];
+
+	if (primary_index < 0 && secondary_index < 0) {
+		return;
+	} else if (secondary_index < 0) {
+		*stat1 = secondary_stat;
+	} else if (primary_index < 0) {
+		*stat1 = primary_stat;
+	}
+	else if (secondary_index < primary_index) {
+		*stat1 = primary_stat;
+	} else {
+		*stat1 = primary_stat;
+		*stat2 = secondary_stat;
+	}
+}
+
+/**
+ * L: the stat used is either the primary stat or the average of the
+ * primary and secondary stats, whichever is higher
+ * returns the primary stat ind if there is no secondary stat and vice versa
+ * returns -1 if there are no appropriate stats at all
+ */
+int player_skill_stat_ind(struct player *p, struct player_state *ps, int skill)
+{
+	int stat1, stat2;
+	player_skill_stats(p, ps, skill, &stat1, &stat2);
+
+	if (stat1 != STAT_NONE && stat2 != STAT_NONE) {
+		return (ps->stat_ind[stat1] + ps->stat_ind[stat2]) / 2;
+	}
+	else if (stat1 != STAT_NONE) {
+		return ps->stat_ind[stat1];
+	}
+	return -1;
 }
 
 /**

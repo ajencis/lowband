@@ -80,7 +80,7 @@ static const char *equip_slot_names[] =
 
 static const char *skill_names[] =
 {
-	#define SKILL(x, a, b, c, d) #x,
+	#define SKILL(x, a, b, c, d, e) #x,
 	#include "list-skills.h"
 	#undef SKILL
 	""
