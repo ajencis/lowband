@@ -387,6 +387,18 @@ enum ability_learn_menu_data_column_locations {
 };
 
 
+static int tome_depth(int tome)
+{
+	assert(tome < TOME_MAX && tome > TOME_NONE);
+	int depth = 0;
+	int next;
+	for (next = tome_parent(tome); next != TOME_NONE; next = tome_parent(next)) {
+		++depth;
+		assert(next != tome);
+	}
+	return depth;
+}
+
 static struct player_ability *ability_by_tome_id(int tome_id)
 {
 	struct player_ability *pa;
@@ -437,7 +449,7 @@ static int ability_learn_valid_mode(struct menu *menu, int oid, int mode)
 		return MN_ROW_VALID;
 	}
 	else {
-		if (mode != AL_MODE_SKILLS) return MN_ROW_SKIP;
+		//if (mode != AL_MODE_SKILLS) return MN_ROW_SKIP;
 		return MN_ROW_VALID;
 	}
 
@@ -459,6 +471,7 @@ static void ability_learn_display(struct menu *m, int oid, bool cursor,
 	uint8_t tl_attr, ll_attr, lt_attr, name_attr, cost_attr, cost_inc_attr;
 	struct ability_learn_menu_data *data = menu_priv(m);
 	bool targ_valid;
+	int name_indent = tome_depth(oid) * 1;
 
 	if (oid <= TOME_NONE || oid >= TOME_MAX) return;
 
@@ -473,6 +486,7 @@ static void ability_learn_display(struct menu *m, int oid, bool cursor,
 	}
 	else {
 		int skill = oid - PP_MAX;
+		assert(skill >= 0 && skill < SKILL_MAX);
 		strcpy(name, skill_index_to_name(skill));
 		my_strcap_full(name);
 		total_level = player->state.skills[skill];
@@ -504,7 +518,7 @@ static void ability_learn_display(struct menu *m, int oid, bool cursor,
 		cost_inc_attr = COLOUR_UMBER;
 	}
 
-	c_prt(name_attr, name, row, col + ALMC_NAME);
+	c_prt(name_attr, name, row, col + ALMC_NAME + name_indent);
 	if (cost > 0) c_prt(cost_attr, format("%3i", cost), row, col + ALMC_COST);
 	if (cost_inc > 0) c_prt(cost_inc_attr, format("%+2i", -cost_inc), row, col + ALMC_COST_DIFF);
 	c_prt(tl_attr, format("%3i", total_level), row, col + ALMC_CURR);
@@ -560,6 +574,8 @@ static void ability_learn_set_mode(struct menu *m, int new_mode)
 	menu_layout(m, &loc);
 	//menu_refresh(m, true);
 	menu_move_cursor_to(m, 0);
+
+	msg_add_fmt("ml=%i, tt=%i", data->max_learnable[TOME_SKILL_HEALTH], data->temp_target[TOME_SKILL_HEALTH]);
 }
 
 static bool ability_learn_handler(struct menu *m, const ui_event *e, int oid)
@@ -589,11 +605,8 @@ static bool ability_learn_handler(struct menu *m, const ui_event *e, int oid)
 	return false;
 }
 
-static int ability_learn_comp(int tome1, int tome2)
+static int ability_learn_comp_base(int tome1, int tome2)
 {
-	assert(tome1 > TOME_NONE && tome2 < TOME_MAX);
-	assert(tome2 > TOME_NONE && tome1 < TOME_MAX);
-
 	if (tome1 < PP_MAX && tome2 >= PP_MAX) return -1;
 	if (tome2 < PP_MAX && tome1 >= PP_MAX) return 1;
 
@@ -604,13 +617,42 @@ static int ability_learn_comp(int tome1, int tome2)
 
 		return strcmp(name1, name2);
 	}
-
 	else {
+		assert(tome1 < TOME_MAX && tome2 < TOME_MAX);
 		const char *name1 = skill_index_to_name(tome1 - PP_MAX);
 		const char *name2 = skill_index_to_name(tome2 - PP_MAX);
 
 		return strcmp(name1, name2);
 	}
+}
+
+static int ability_learn_comp(int tome1, int tome2)
+{
+	assert(tome1 > TOME_NONE && tome2 < TOME_MAX);
+	assert(tome2 > TOME_NONE && tome1 < TOME_MAX);
+
+	int depth1 = tome_depth(tome1), depth2 = tome_depth(tome2), currdepth;
+
+	for (currdepth = 0; currdepth <= MIN(depth1, depth2); ++currdepth) {
+		int depth_parent1 = tome1, depth_parent2 = tome2, i, result;
+		for (i = 0; i < depth1 - currdepth; ++i) {
+			depth_parent1 = tome_parent(depth_parent1);
+			assert(depth_parent1 != TOME_NONE);
+		}
+		for (i = 0; i < depth2 - currdepth; ++i) {
+			depth_parent2 = tome_parent(depth_parent2);
+			assert(depth_parent2 != TOME_NONE);
+		}
+
+		result = ability_learn_comp_base(depth_parent1, depth_parent2);
+
+		if (result) return result;
+	}
+
+	if (depth1 > depth2) return 1;
+	if (depth2 > depth1) return -1;
+
+	return 0;
 }
 
 
@@ -665,7 +707,6 @@ static void ability_learn_browse(int oid, void *db, const region *loc)
 	if (abil) {
 		int group = oid < PP_MAX ? PLAYER_FLAG_POWER : PLAYER_FLAG_SKILL;
 		char buf[256];
-		
 		ability_desc(player, abil, buf, sizeof(buf), data->mode != AL_MODE_ALL_POWERS, group);
 		row += 2;
 		Term_gotoxy(loc->col, row);
@@ -695,7 +736,7 @@ static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode 
 
 	//menu_layout(m, &loc);
 
-	menu_setpriv(m, TOME_MAX - 1, data);
+	menu_setpriv(m, TOME_MAX, data);
 
 	m->header = "   Name                     Cost  Diff  Curr  Lrnd  Trgt";
 	m->selections = all_letters_nohjkl;

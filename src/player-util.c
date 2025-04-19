@@ -62,17 +62,28 @@ static const struct player_power_data {
 	int update;
 } player_powers[] = {
 	{ PP_NONE, "", false, 0, 0, 0 },
-	#define PP(x, a, b, c, d, e) { PP_##x, a, b, c, d, e },
+	#define PP(x, a, b, c, d, e, f) { PP_##x, a, b, c, d, e },
 	#include "list-player-powers.h"
 	#undef PP
 };
 
 static const int tome_factors[] = {
 	0,
-	#define PP(x, a, b, c, d, e) c,
+	#define PP(x, a, b, c, d, e, f) c,
 	#include "list-player-powers.h"
 	#undef PP
 	#define SKILL(x, a, b, c, d, e) a,
+	#include "list-skills.h"
+	#undef SKILL
+	0
+};
+
+static const int tome_parents[] = {
+	0,
+	#define PP(x, a, b, c, d, e, f) f,
+	#include "list-player-powers.h"
+	#undef PP
+	#define SKILL(x, a, b, c, d, e) TOME_NONE,
 	#include "list-skills.h"
 	#undef SKILL
 	0
@@ -98,14 +109,12 @@ static bool unlock_classes(struct player *p)
 		}
 
 		if (!c->unlockable) {
-			//plog_fmt("class %s is by default unlocked", c->name);
 			p->unlocked_classes[c->cidx] = true;
 			didunlock = true;
 		}
 
 		for (power = PP_NONE + 1; !p->unlocked_classes[c->cidx] && power < PP_MAX; ++power) {
 			if (c->c_powers[power] > 0 && p->unlocked_tomes[power] > c->c_powers[power]) {
-				//plog_fmt("class %s is unlocked by virtue of power %s", c->name, power_names[power]);
 				p->unlocked_classes[c->cidx] = true;
 				didunlock = true;
 			}
@@ -128,7 +137,6 @@ static bool unlock_races(struct player *p)
 		}
 
 		if (!r->evol) {
-			//plog_fmt("%s is by default unlocked", r->name);
 			p->unlocked_races[r->ridx] = true;
 			didunlock = true;
 		}
@@ -151,7 +159,6 @@ static bool unlock_tomes(struct player *p)
 			if (!p->unlocked_classes[pc->cidx]) continue;
 
 			if (power > -1 && pc->c_powers[power] > p->unlocked_tomes[i]) {
-				//plog_fmt("power %s is unlocked by virtue of class %s", power_names[power], pc->name);
 				p->unlocked_tomes[i] = pc->c_powers[power];
 				didlearn = true;
 			}
@@ -545,6 +552,13 @@ static int cost_to_bonus_base(int cost, int factor)
 	return i;
 }
 
+static int cost_to_bonus(int cost, int tome_ind)
+{
+	assert(tome_ind > TOME_NONE && tome_ind < TOME_MAX);
+	int factor = tome_factors[tome_ind];
+	return cost_to_bonus_base(cost, factor);
+}
+
 static int tome_max_skill(const struct object *obj)
 {
 	int result = 0;
@@ -910,6 +924,45 @@ bool check_learn_powers(struct player *p, int xpgain)
 	return learned;
 #endif
 
+/**
+ * returns  TOME_NONE if there is none
+ */
+int tome_parent(int tome_ind)
+{
+	assert(tome_ind < TOME_MAX && tome_ind > TOME_NONE);
+	int result = tome_parents[tome_ind];
+	assert(result < TOME_MAX && result >= TOME_NONE);
+	return tome_parents[tome_ind];
+}
+
+/**
+ * If a skill/power is a subpower of another skill/power what is the maximal target for the
+ * former given a particular value for the latter?
+ */
+static int tome_max_learnable_parent(int parent_level, int tome, int parent)
+{
+	int high_power = parent < PP_MAX ? 50 : 100;
+
+	int tome_max_cost = bonus_to_cost(LEARN_MAX, tome);
+
+	int max_cost = tome_max_cost * (parent_level * 3 / 2 - high_power / 3) / high_power;
+
+	int rounded = (max_cost / 2 + (tome_max_cost & 1)) * 2;
+
+	return cost_to_bonus(rounded, tome);
+	
+	/*
+	int tome_max_cost = bonus_to_cost(LEARN_MAX, tome);
+	int parent_max_cost = bonus_to_cost(LEARN_MAX, parent);
+	int parent_curr_cost = bonus_to_cost(parent_level, parent);
+
+	int basecost = parent_curr_cost * 3 / 2 - parent_max_cost * 3 / 2;
+	int maxcost = basecost * tome_max_cost / parent_max_cost;
+
+	return cost_to_bonus(maxcost, tome);
+	*/
+}
+
 static void max_learnable_object(struct object *obj, int *learn_array, int array_max) 
 {
 	int max_learn = tome_max_skill(obj);
@@ -929,19 +982,28 @@ void tome_max_learnable(struct player *p, int learn_array[TOME_MAX])
 	int i;
 
 	if (OPT(p, birth_no_metaprogression)) {
-		for (i = 0; i < TOME_MAX; ++i) {
+		for (i = TOME_NONE + 1; i < TOME_MAX; ++i) {
 			learn_array[i] = LEARN_MAX;
 		}
+	} else {
+		for (obj = p->gear; obj; obj = obj->next) {
+			max_learnable_object(obj, learn_array, TOME_MAX);
+		}
 
-		return;
+		for (i = 0; i < TOME_MAX; ++i) {
+			learn_array[i] = MAX(learn_array[i], p->unlocked_tomes[i]);
+		}
 	}
 
-	for (obj = p->gear; obj; obj = obj->next) {
-		max_learnable_object(obj, learn_array, TOME_MAX);
-	}
-
-	for (i = 0; i < TOME_MAX; ++i) {
-		learn_array[i] = MAX(learn_array[i], p->unlocked_tomes[i]);
+	for (i = TOME_NONE + 1; i < TOME_MAX; ++i) {
+		int tome_parent_id = tome_parent(i);
+		if (tome_parent_id != TOME_NONE) {
+			int curr_learned = tome_parent_id < PP_MAX ? p->state.powers[tome_parent_id] : p->state.skills[tome_parent_id - PP_MAX];
+			int tome_parent_max = tome_max_learnable_parent(curr_learned, i, tome_parent_id);
+			if (learn_array[i] > tome_parent_max) {
+				learn_array[i] = tome_parent_max;
+			}
+		}
 	}
 }
 
@@ -1008,9 +1070,6 @@ int player_class_x_skill(struct player *p, int skill)
 	// extra-learning makes class reflect known skills
 	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
 		xtra = MAX(xtra, p->extra_skills[skill] * 3 / 4 / 5);
-	}
-	if (skill == SKILL_HEALTH) {
-		msg_add_fmt("xtra=%i, x_skill=%i", xtra, p->class->x_skills[skill]);
 	}
 	return xtra;
 }

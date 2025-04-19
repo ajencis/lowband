@@ -45,7 +45,7 @@ enum {
 
 enum {
 	TOME_NONE,
-	#define PP(x, a, b, c, d, e) TOME_PP_##x,
+	#define PP(x, a, b, c, d, e, f) TOME_PP_##x,
 	#include "list-player-powers.h"
 	#undef PP
 	#define SKILL(x, a, b, c, d, e) TOME_SKILL_##x,

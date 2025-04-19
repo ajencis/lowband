@@ -2956,11 +2956,17 @@ void do_cmd_wiz_wizard_light(struct command *cmd)
 }
 
 
-void do_cmd_wiz_learn_tome(struct command *cmd)
+void do_cmd_wiz_learn_tomes(struct command *cmd)
 {
-	struct object *tome;
+	bool didlearn = false;
+	while (check_learn_powers(player, INT_MAX)) {
+		didlearn = true;
+	}
 
-	/* Get the item to tweak. */
+	if (!didlearn) msg("You have nothing to learn!");
+
+	/*struct object *tome;
+	
 	if (cmd_get_arg_item(cmd, "item", &tome) != CMD_OK) {
 		if (!get_item(&tome, "Learn from which item? ",
 				"You have nothing to learn from.", cmd->code,
@@ -2982,6 +2988,6 @@ void do_cmd_wiz_learn_tome(struct command *cmd)
 			}
 			calc_extra_points(player, &player->state);
 		}
-	}
+	}*/
 }
 

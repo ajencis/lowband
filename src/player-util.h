@@ -94,6 +94,7 @@ void tome_max_learnable(struct player *p, int learn_array[TOME_MAX]);
 int tome_next_increment(struct player *p, int tome, int curr_bonus);
 int tome_prev_increment(struct player *p, int tome_ind, int curr_bonus);
 const char *lookup_power_name(int power);
+int tome_parent(int tome_ind);
 
 int antimagic_fail_increase(struct player *p);
 int antimagic_radius(struct player *p);

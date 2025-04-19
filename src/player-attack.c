@@ -421,10 +421,11 @@ static int o_critical_shot(const struct player *p,
  * Factor in weapon weight, total plusses, player level.
  */
 static int critical_melee(const struct player *p, const struct monster *monster,
-		const struct attack_roll *aroll, int dam, uint32_t *msg_type)
+		const struct attack_roll *aroll, int dam, uint32_t *msg_type, int *crit_power)
 {
 	int chance = aroll->crit_chance, new_dam;
 	int powerbonus = chance + get_power_scale(p, PP_CRITICAL_HITS, 20);
+	int power = 0;
 	chance = my_int_sqrt(chance * 5);
 
 	if (is_debuffed(monster)) {
@@ -435,7 +436,6 @@ static int critical_melee(const struct player *p, const struct monster *monster,
 		*msg_type = MSG_HIT;
 		new_dam = dam;
 	} else {
-		int power = 0;
 		int wgt = aroll->obj ? aroll->obj->weight : 0;
 		do {
 			power += randint0(wgt * z_info->m_crit_power_weight_scl * 2 / 100);
@@ -449,6 +449,10 @@ static int critical_melee(const struct player *p, const struct monster *monster,
 		}
 		*msg_type = this_l->msgt;
 		new_dam = this_l->add + this_l->mult * dam;
+	}
+
+	if (crit_power) {
+		*crit_power = power;
 	}
 
 	return new_dam;
@@ -713,19 +717,42 @@ static void blow_side_effects(struct player *p, struct monster *mon)
  * Apply blow after effects
  */
 static bool blow_after_effects(struct loc grid, int dmg, int splash,
-							   bool *fear, bool quake, struct attack_roll *aroll)
+							   bool *fear, bool quake, struct attack_roll *aroll, int crit_power)
 {
     struct monster *mon = square_monster(cave, grid);
 	bool gone = false;
 
     if (mon) {
 		int i;
-		int flgs = MON_TMD_FLG_NOMESSAGE | MON_TMD_FLG_GETS_SAVE;
-		for (i = 0; i < MON_TMD_MAX; i++) {
-			if (!aroll->mtimed[i]) continue;
-			int power = randint0(aroll->mtimed[i] + 1) + aroll->mtimed[i] / 2;
+		int flg = MON_TMD_FLG_NOMESSAGE | MON_TMD_FLG_GETS_SAVE;
+		char mdesc[80];
+
+		monster_desc(mdesc, sizeof mdesc, mon, MDESC_TARG | MDESC_CAPITAL);
+		
+		for (i = 0; i < MON_TMD_MAX && !gone; i++) {
+			if (!aroll->special[i]) continue;
+			int power = randint0(aroll->special[i] + 1) + aroll->special[i] / 2;
 			if (power > 25) {
-				mon_inc_timed(mon, i, power, flgs);
+				mon_inc_timed(mon, i, power, flg);
+			}
+		}
+
+		if (aroll->special[ATK_SPCL_DEATH_TOUCH] && !gone) {
+			int dice, sides;
+			int extra_dam = 0;
+
+			death_touch_extra_dam(aroll, crit_power, &dice, &sides);
+
+			for (i = 0; i < dice; ++i) {
+				extra_dam += randint1(sides);
+			}
+
+			flg = PROJECT_KILL | PROJECT_JUMP | PROJECT_AWARE;
+			msg("%s is surrounded by a dark aura.", mdesc);
+			project(source_player(), 0, grid, extra_dam, PROJ_NETHER, flg, 0, 0, NULL);
+
+			if (!square_monster(cave, grid)) {
+				gone = true;
 			}
 		}
 	}
@@ -736,11 +763,24 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 					  NULL);
 
 		/* Monster may be dead or moved */
-		if (!square_monster(cave, grid))
+		if (!square_monster(cave, grid)) {
 			gone = true;
+		}
 	}
 
 	return gone;
+}
+
+/**
+ * L: don't say that an attack failed to harm the target if it doesn't normally
+ * harm them
+ */
+static bool aroll_is_harmless_base(const struct attack_roll *aroll)
+{
+	int max_dam = aroll->ddice * aroll->dsides + aroll->to_dam;
+
+	if (max_dam <= 0) return true;
+	return false;
 }
 
 
@@ -748,6 +788,16 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 /**
  * L: functions to create the attack itself
  */
+
+bool death_touch_extra_dam(const struct attack_roll *aroll, int crit_power, int *dice, int *sides)
+{
+	if (aroll->special[ATK_SPCL_DEATH_TOUCH] <= 0) return false;
+
+	*dice = 1;
+	*sides = aroll->special[ATK_SPCL_DEATH_TOUCH] * (10 + crit_power) / 25;
+
+	return true;
+}
 
 static int melee_crit_chance(struct attack_roll *aroll, const struct player *p, const struct player_state *ps)
 {
@@ -774,6 +824,10 @@ static void unarmed_mod_attack(struct attack_roll *aroll, const struct player *p
 	aroll->ddice += ddicemod;
 	aroll->dsides += get_power_scale_state(ps, PP_UNARMED_STRIKE, 30 / (ddicemod * 2 + 1), p->lev);
 
+	if (ps->powers[PP_DEATH_TOUCH] > 0) {
+		aroll->special[ATK_SPCL_DEATH_TOUCH] += ps->powers[PP_DEATH_TOUCH] * 5;
+	}
+
 	if (aroll->accuracy_stat == STAT_NONE && ps->powers[PP_UNARMED_STRIKE] > 15) aroll->accuracy_stat = STAT_DEX;
 }
 
@@ -784,7 +838,7 @@ static void unarmed_get_punch(struct attack_roll *aroll, const struct player *p,
 	aroll->to_hit = get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev) - 25;
 	aroll->to_hit = MIN(aroll->to_hit, -5);
 
-	aroll->mtimed[MON_TMD_STUN] = get_power_scale_state(ps, PP_UNARMED_STRIKE, 100, p->lev);
+	aroll->special[ATK_SPCL_TMD_STUN] = get_power_scale_state(ps, PP_UNARMED_STRIKE, 100, p->lev);
 
 	aroll->accuracy_stat = STAT_NONE;
 	aroll->damage_stat = STAT_STR;
@@ -803,7 +857,7 @@ static void unarmed_get_kick(struct attack_roll *aroll, const struct player *p, 
 	aroll->to_hit = get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev) - 15;
 	aroll->to_hit = MIN(aroll->to_hit, 0);
 
-	aroll->mtimed[MON_TMD_SLOW] = get_power_scale_state(ps, PP_UNARMED_STRIKE, 100, p->lev);
+	aroll->special[ATK_SPCL_TMD_SLOW] = get_power_scale_state(ps, PP_UNARMED_STRIKE, 100, p->lev);
 
 	aroll->accuracy_stat = STAT_NONE;
 	aroll->damage_stat = STAT_STR;
@@ -838,6 +892,7 @@ static bool backstab_mod_attack(struct attack_roll *aroll, int power)
 
 	if (!power) return false;
 	if (aroll->attack_skill != SKILL_TO_HIT_MELEE) return false;
+	if (aroll_is_harmless_base(aroll)) return false;
 
 	scale = (get_power_scale(player, PP_BACKSTAB, 60) + 40) * power - 25;
 	if (scale < 25) return false;
@@ -852,6 +907,7 @@ static void get_melee_attack(struct attack_roll *aroll, struct player_state *ps,
 		struct player *p, struct object *obj, int attack_div)
 {
 	int mult, div;
+	int dsides_min = aroll->dsides ? 1 : 0, ddice_min = aroll->ddice ? 1 : 0;
 
 	mult = get_power_scale_state(ps, PP_DUAL_WIELD, 10, p->lev) + 10;
 	mult = MAX(mult, 1);
@@ -876,8 +932,8 @@ static void get_melee_attack(struct attack_roll *aroll, struct player_state *ps,
 	aroll->to_hit = aroll->to_hit * mult / div;
 	aroll->dsides -= div / mult - 1;
 
-	aroll->dsides = MAX(aroll->dsides, 1);
-	aroll->ddice = MAX(aroll->ddice, 1);
+	aroll->dsides = MAX(aroll->dsides, dsides_min);
+	aroll->ddice = MAX(aroll->ddice, ddice_min);
 
 	melee_crit_chance(aroll, p, ps);
 
@@ -889,10 +945,18 @@ static void get_melee_attack(struct attack_roll *aroll, struct player_state *ps,
 bool get_unarmed_punch(struct player *p, struct player_state *ps,
 		struct attack_roll *aroll, int attack_div)
 {
+	if (ps->powers[PP_DEATH_TOUCH] > 0 && ps->powers[PP_UNARMED_STRIKE] < 10) {
+		return get_unarmed_touch(p, ps, aroll, attack_div);
+	}
+
 	memset(aroll, 0, sizeof(*aroll));
 
 	unarmed_get_punch(aroll, p, ps);
 	unarmed_mod_attack(aroll, p, ps);
+
+	if (ps->powers[PP_DEATH_TOUCH] > 0) {
+		aroll->special[ATK_SPCL_DEATH_TOUCH] += ps->powers[PP_DEATH_TOUCH] * 5;
+	}
 
 	get_melee_attack(aroll, ps, p, NULL, attack_div);
 
@@ -909,6 +973,33 @@ bool get_unarmed_kick(struct player *p, struct player_state *ps,
 
 	get_melee_attack(aroll, ps, p, NULL, attack_div);
 
+	return true;
+}
+
+bool get_unarmed_touch(struct player *p, struct player_state *ps,
+		struct attack_roll *aroll, int attack_div)
+{
+	memset(aroll, 0, sizeof(*aroll));
+
+	aroll->ddice = 0;
+	aroll->dsides = 0;
+	aroll->to_hit = 0;
+
+	aroll->accuracy_stat = STAT_DEX;
+	aroll->damage_stat = STAT_NONE;
+
+	aroll->message = "touch";
+	my_strcpy(aroll->name, "touch", sizeof(aroll->name));
+	aroll->obj = NULL;
+	aroll->proj_type = PROJ_BLUDGEONING;
+	aroll->range = 1;
+
+	if (ps->powers[PP_DEATH_TOUCH] > 0) {
+		aroll->special[ATK_SPCL_DEATH_TOUCH] += ps->powers[PP_DEATH_TOUCH] * 5;
+	}
+
+	get_melee_attack(aroll, ps, p, NULL, attack_div);
+	
 	return true;
 }
 
@@ -941,7 +1032,7 @@ bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct o
 		object_desc(aroll->name, sizeof(aroll->name), obj, mode, p);
 
 		if (obj->tval == TV_HAFTED) {
-			aroll->mtimed[MON_TMD_STUN] += 25;
+			aroll->special[ATK_SPCL_TMD_STUN] += 25;
 		}
 		else if (obj->tval == TV_POLEARM) {
 			aroll->range += 1;
@@ -1134,7 +1225,7 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 	aroll->blows = 100;
 	for (j = 0; j < MON_TMD_MAX; j++) {
 		if (mb->effect->mtimed == j) {
-			aroll->mtimed[j] += 50 + mr->level;
+			aroll->special[j] += 50 + mr->level;
 		}
 	}
 	aroll->accuracy_stat = STAT_NONE;
@@ -1396,7 +1487,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 
 	char verb[20];
 	uint32_t msg_type = MSG_HIT;
-	int j, b, s, weight, dmg;
+	int j, b, s, weight, dmg, crit_power;
 
 	assert(mon);
 
@@ -1472,7 +1563,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 
 	/* Get the damage */
 	dmg = get_attack_dam(aroll, mon, b, s);
-	dmg = critical_melee(p, mon, aroll, dmg, &msg_type);
+	dmg = critical_melee(p, mon, aroll, dmg, &msg_type, &crit_power);
 
 	/* Splash damage and earthquakes */
 	splash = (weight * dmg) / 100;
@@ -1498,8 +1589,10 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	/* No negative damage; change verb if no damage done */
 	if (dmg <= 0) {
 		dmg = 0;
-		msg_type = MSG_MISS;
-		my_strcpy(verb, "fail to harm", sizeof(verb));
+		if (!aroll_is_harmless_base(aroll)) {
+			msg_type = MSG_MISS;
+			my_strcpy(verb, "fail to harm", sizeof(verb));
+		}
 	}
 
 	for (i = 0; i < N_ELEMENTS(melee_hit_types); i++) {
@@ -1516,6 +1609,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 		}
 
 		if (proj->player_message) {
+			assert(mon);
 			char proj_name[64];
 			monster_desc(proj_name, sizeof(proj_name), mon, MDESC_PRO_VIS | MDESC_OBJE);
 			proj_text = format("; you %s %s", proj->player_message, proj_name);
@@ -1541,6 +1635,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	
 	// L: berserkers go berserk
 	check_berserk(p, mon);
+
 	/* Small chance of bloodlust side-effects */
 	if (p->timed[TMD_BLOODLUST] && one_in_(50)) {
 		msg("You feel something give way!");
@@ -1559,7 +1654,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	}
 
 	/* Post-damage effects */
-	if (blow_after_effects(grid, dmg, splash, fear, do_quake, aroll)) {
+	if (blow_after_effects(grid, dmg, splash, fear, do_quake, aroll, crit_power)) {
 		stop = true;
 	}
 
@@ -1771,6 +1866,7 @@ void py_attack(struct player *p, struct loc grid)
 		if (backstab && backstab_mod_attack(&aroll, backstab) && !backstab_msg) {
 			backstab_msg = true;
 			char m_name[80];
+			assert(mon);
 			monster_desc(m_name, sizeof(m_name), mon, MDESC_TARG);
 			msg("You backstab %s.", m_name);
 		}

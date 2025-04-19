@@ -111,7 +111,7 @@ struct mon_player_match proj_pp_matches[] = {
 
 int power_scalings[] = {
 	PP_SCALE_NONE,
-	#define PP(x, a, b, c, d, e) b,
+	#define PP(x, a, b, c, d, e, f) b,
 	#include "list-player-powers.h"
 	#undef PP
 	PP_SCALE_NONE
@@ -2068,6 +2068,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	avail_hands = 0;
 	attacknum = 0;
 	attack_div = 0;
+	bool hand_in_use = false;
 	for (i = 0; i < num_weapons; ++i) {
 		if (weapons[i]) {
 			attack_div += 2;
@@ -2082,6 +2083,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		if (weapons[i]) {
 			if (get_melee_weapon_attack(p, state, weapons[i], &state->attacks[attacknum], attack_div)) {
 				++attacknum;
+				hand_in_use = true;
 			}
 		}
 		else {
@@ -2099,6 +2101,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		if (!state->powers[PP_UNARMED_STRIKE]) {
 			avail_hands = MIN(avail_hands, 1);
 		}
+		if (hand_in_use) --avail_hands;
 		while (avail_hands > 0 && attacknum < PY_MAX_ATTACKS) {
 			if (get_unarmed_punch(p, state, &state->attacks[attacknum], attack_div)) {
 				++attacknum;

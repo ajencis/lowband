@@ -105,7 +105,7 @@ static const char *mattr_names[] =
 static const char *power_names[] =
 {
 	"",
-	#define PP(x, a, b, c, d, e) #x,
+	#define PP(x, a, b, c, d, e, f) #x,
 	#include "list-player-powers.h"
 	#undef PP
 	""

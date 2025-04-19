@@ -105,13 +105,21 @@ static void panel_line(struct panel *p, uint8_t attr, const char *label,
 
 	/* Set the basics */
 	pl->attr = attr;
-	my_strcpy(pl->label, label, sizeof(pl->label));
+	if (label) {
+		my_strcpy(pl->label, label, sizeof pl->label);
+	} else {
+		pl->label[0] = '\0';
+	}
 	//pl->label = label;
 
 	/* Set the value */
-	va_start(vp, fmt);
-	vstrnfmt(pl->value, sizeof pl->value, fmt, vp);
-	va_end(vp);
+	if (fmt) {
+		va_start(vp, fmt);
+		vstrnfmt(pl->value, sizeof pl->value, fmt, vp);
+		va_end(vp);
+	} else {
+		pl->value[0] = '\0';
+	}
 }
 
 /**
@@ -730,14 +738,42 @@ static struct panel *get_panel_midleft(void) {
 	return p;
 }
 
+typedef bool (*combat_info_t)(const struct attack_roll *aroll, int *dice, int *sides, int *to_dam, int *proj);
+
+static bool combat_base_info(const struct attack_roll *aroll, int *dice, int *sides, int *to_dam, int *proj)
+{
+	*dice = aroll->ddice;
+	*sides = aroll->dsides;
+	*to_dam = aroll->to_dam;
+	*proj = aroll->proj_type;
+
+	return true;
+}
+
+static bool death_touch_base_info(const struct attack_roll *aroll, int *dice, int *sides, int *to_dam, int *proj)
+{
+	if (!death_touch_extra_dam(aroll, 0, dice, sides)) return false;
+
+	*to_dam = 0;
+	*proj = PROJ_NETHER;
+
+	return true;
+}
+
 static struct panel *get_panel_combat(void) {
 	struct panel *p = panel_allocate(15);
 	int bth, dam, blws = 0;
 	struct attack_roll *aroll;
-	int i;
-	char title[21];
-	int colour;
-	int hgt = 0;
+	uint16_t i, j, k;
+	int hgt = 0, cinfo_len;
+	char name[32], title[32];
+
+	combat_info_t cinfo[] = {
+		combat_base_info,
+		death_touch_base_info
+	};
+
+	cinfo_len = N_ELEMENTS(cinfo);
 
 	/* AC */
 	panel_line(p, COLOUR_L_BLUE, "Armor", "[%d,%+d]",
@@ -747,53 +783,116 @@ static struct panel *get_panel_combat(void) {
 	/* Melee */
 	panel_space(p);
 	++hgt;
-	for (i = 0; i < player->state.num_attacks; i++) {
+	for (i = 0; i < player->state.num_attacks; ++i) {
 		aroll = &player->state.attacks[i];
 		bth = player->state.skills[aroll->attack_skill] / BTH_PLUS_ADJ + aroll->to_hit;
 		bth = MAX(0, bth);
 		blws += aroll->blows;
-		struct projection *proj = &projections[aroll->proj_type];
-		colour = proj->color;
+		uint16_t info_i;
+		int namelen, hitlen, infolen, linelen, spacelen;
+		bool one_line;
+		bool overwrite_prev = false; // if the previous info has no damage overwrite it with the next info
 
-		char info[80], proj_desc[80];
+		char info[5][80], proj_desc[8], hitstr[80];
+		int colours[5];
+
+		strnfmt(hitstr, sizeof hitstr, " %+d;", bth);
 
 		// grab the title
-		my_strcpy(title, aroll->name, sizeof(title));
-		my_strcap_full(title);
+		my_strcpy(name, aroll->name, sizeof name);
+		my_strcap_full(name);
+		strcat(name, ":");
 
-		// make a short description for the damage type
-		my_strcpy(proj_desc, proj->name, sizeof(proj));
-		strfilter(proj_desc, sizeof(proj_desc), is_a_vowel);
+		info_i = 0;
+		for (j = 0; j < cinfo_len; ++j) {
+			int proj_id, dice, to_dam, sides;
+			int max_dam;
 
-		// if it starts with a vowel we want to keep that vowel
-		if (is_a_vowel(proj->name[0])) {
-			char temp_str[80];
-			my_strcpy(temp_str, proj_desc, sizeof(temp_str));
-			strnfmt(proj_desc, sizeof(proj_desc), "%c%s", proj->name[0], temp_str);
+			if (!cinfo[j](aroll, &dice, &sides, &to_dam, &proj_id)) {
+				continue;
+			}
+
+			if (overwrite_prev && info_i > 0) {
+				--info_i;
+			}
+
+			overwrite_prev = false;
+
+			struct projection *proj = &projections[proj_id];
+			colours[info_i] = proj->color;
+
+			int proj_desc_i;
+			int proj_len = strlen(proj->name);
+			for (k = 0, proj_desc_i = 0; k < proj_len && proj_desc_i < 3; ++k) {
+				if (!is_a_vowel(proj->name[k]) || k == 0) {
+					proj_desc[proj_desc_i] = proj->name[k];
+					++proj_desc_i;
+				}
+			}
+
+			// make a short description for the damage type
+			my_strcpy(proj_desc, proj->name, sizeof(proj));
+
+			// filter to just consonants
+			strfilter(proj_desc, sizeof(proj_desc), is_a_vowel);
+
+			// if it starts with a vowel we want to keep that vowel
+			if (is_a_vowel(proj->name[0])) {
+				char temp_str[80];
+				my_strcpy(temp_str, proj_desc, sizeof(temp_str));
+				strnfmt(proj_desc, sizeof(proj_desc), "%c%s", proj->name[0], temp_str);
+			}
+
+			// enshorten it
+			proj_desc[3] = '\0';
+
+			max_dam = MAX(0, dice * sides + to_dam);
+
+			// put the next damage string into the next info slot
+			if (max_dam <= 0) {
+				// we only want to show 0 damage if it's the only damage
+				// we skip it if we've already got lines and mark it to be overwritten if we have subsequent lines
+				if (j == 0) {
+					strnfmt(info[info_i], sizeof(info[info_i]), " 0 (%s)", proj_desc);
+					overwrite_prev = true;
+				}
+			} else if (!dice || !sides) {
+				strnfmt(info[info_i], sizeof(info[info_i]), " %d (%s)", to_dam, proj_desc);
+			} else if (sides == 1) {
+				strnfmt(info[info_i], sizeof(info[info_i]), " %d (%s)", to_dam + dice, proj_desc);
+			} else if (to_dam) {
+				strnfmt(info[info_i], sizeof(info[info_i]), " %dd%d%+d (%s)", dice, sides, to_dam, proj_desc);
+			} else {
+				strnfmt(info[info_i], sizeof(info[info_i]), " %dd%d (%s)", dice, sides, proj_desc);
+			}
+
+			++info_i;
 		}
 
-		// enshorten it
-		proj_desc[3] = '\0';
+		namelen = strlen(name);
+		hitlen = strlen(hitstr);
+		infolen = strlen(info[0]); // +1 for semicolon
+		one_line = namelen + hitlen + infolen <= 21;
+		linelen = namelen + hitlen + (one_line ? infolen : 0);
+		spacelen = one_line ? 21 - linelen : 14 - linelen;
+		
+		strnfmt(title, sizeof title, "%s%*s%s", name, spacelen, "", hitstr);
 
-		if (!aroll->ddice || !aroll->dsides) {
-			strnfmt(info, sizeof(info), "%+d; %d (%s)", bth, aroll->to_dam, proj_desc);
-		} else if (aroll->dsides == 1) {
-			strnfmt(info, sizeof(info), "%+d; %d (%s)", bth, aroll->to_dam + aroll->ddice, proj_desc);
-		} else if (aroll->to_dam) {
-			strnfmt(info, sizeof(info), "%+d; %dd%d%+d (%s)", bth, aroll->ddice, aroll->dsides, aroll->to_dam, proj_desc);
-		} else {
-			strnfmt(info, sizeof(info), "%+d; %dd%d (%s)", bth, aroll->ddice, aroll->dsides, proj_desc);
-		}
-
-		if (strlen(info) + strlen(title) + 1 > 21) {
-			// name and info will be displayed on top of each other so cut them up
-			panel_line(p, colour, title, " ");
-			panel_line(p, colour, " ", info);
-			hgt += 2;
-		}
-		else {
-			panel_line(p, colour, title, info);
-			++hgt;
+		for (j = 0; j < info_i; ++j) {
+			if (j > 0) {
+				panel_line(p, colours[j], " ", info[j]);
+				++hgt;
+			}
+			else if (one_line) {
+				panel_line(p, colours[j], title, info[j]);
+				++hgt;
+			}
+			else {
+				// name and info will be displayed on top of each other so cut them up
+				panel_line(p, colours[j], title, "");
+				panel_line(p, colours[j], " ", info[j]);
+				hgt += 2;
+			}
 		}
 	}
 

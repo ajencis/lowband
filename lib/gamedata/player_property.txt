@@ -474,6 +474,11 @@ code:CRITICAL_HITS
 name:Critical Hits
 desc: can more easily critically hit monsters.
 
+type:power
+code:DEATH_TOUCH
+name:Touch of Death
+desc: can slay at a touch.
+
 
 # L: skills
 type:skill

@@ -73,7 +73,7 @@ static int num_money_types;
 
 static const int power_weights[] = {
 	0,
-	#define PP(x, a, b, c, d, e) d,
+	#define PP(x, a, b, c, d, e, f) d,
 	#include "list-player-powers.h"
 	#undef PP
 	#define SKILL(x, a, b, c, d, e) b,

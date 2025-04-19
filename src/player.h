@@ -65,7 +65,7 @@ enum
 enum
 {
 	PP_NONE,
-	#define PP(x, a, b, c, d, e) PP_##x,
+	#define PP(x, a, b, c, d, e, f) PP_##x,
 	#include "list-player-powers.h"
 	#undef PP
 	PP_MAX,
@@ -156,6 +156,14 @@ enum {
 	DIGGING_DOORS,
 
 	DIGGING_MAX
+};
+
+enum attack_roll_special_effects {
+	#define MON_TMD(a, b, c, d, e, f, g, h) ATK_SPCL_TMD_##a,
+	#include "list-mon-timed.h"
+	#undef MON_TMD
+	ATK_SPCL_DEATH_TOUCH,
+	ATK_SPCL_MAX
 };
 
 /**
@@ -273,7 +281,7 @@ struct attack_roll {
 	int dsides;
 	int to_hit;
 	int to_dam;
-	int mtimed[MON_TMD_MAX];
+	int special[ATK_SPCL_MAX];
 	const char *message;
 	char name[32];
 	int blows;

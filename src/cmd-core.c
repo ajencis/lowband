@@ -181,7 +181,7 @@ static const struct command_info game_cmds[] =
 	{ CMD_WIZ_TWEAK_ITEM, "modify item attributes", do_cmd_wiz_tweak_item, false, false, 0 },
 	{ CMD_WIZ_WIPE_RECALL, "erase monster recall", do_cmd_wiz_wipe_recall, false, false, 0 },
 	{ CMD_WIZ_WIZARD_LIGHT, "wizard light the level", do_cmd_wiz_wizard_light, false, false, 0 },
-	{ CMD_WIZ_LEARN_TOME, "learn from a tome", do_cmd_wiz_learn_tome, false, false, 0 },
+	{ CMD_WIZ_LEARN_TOME, "learn powers and skills", do_cmd_wiz_learn_tomes, false, false, 0 },
 };
 
 /**
