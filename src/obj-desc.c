@@ -548,12 +548,17 @@ const char *get_obj_power_name(const struct object *obj)
 			   of_has(obj->flags, OF_POWER_LEARN_2) ||
 			   of_has(obj->flags, OF_POWER_LEARN_1);
 
-	if (flg && obj->pval < PP_MAX) {
+	struct player_ability *abil = player_ability_by_learn_index(obj->pval);
+	if (flg) {
+		return abil->name;
+	}
+
+	/*if (flg && obj->pval < PP_MAX) {
 		return power_names[obj->pval];
 	}
 	else if (flg) {
 		return skill_index_to_name(obj->pval - PP_MAX);
-	}
+	}*/
 	else if (of_has(obj->flags, OF_REALM_LEARN)) {
 		struct magic_realm *realm = realm_by_index(obj->pval);
 		assert(realm);

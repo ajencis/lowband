@@ -328,156 +328,254 @@ type:power
 code:AIR_MAGIC
 name:Air Magic Specialization
 desc: can particularly effectively use at air magic.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:FIRE_MAGIC
 name:Fire Magic Specialization
 desc: can particularly effectively use fire magic.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:EARTH_MAGIC
 name:Earth Magic Specialization
 desc: can particularly effectively use earth magic.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:WATER_MAGIC
 name:Water Magic Specialization
 desc: can particularly effectively use water magic.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:POISON_MAGIC
 name:Poison Magic Specialization
 desc: can particularly effectively use poison magic.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:DIVINATION_MAGIC
 name:Divination Specialization
 desc: can particularly effectively use divination.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:TELEPORTATION_MAGIC
 name:Teleportation Specialization
 desc: can particularly effectively use teleportation magic.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:NECROMANCY_MAGIC
 name:Necromancy Specialization
 desc: can particularly effectively use necromancy.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:HOLY_MAGIC
 name:Holy Magic Specialization
 desc: can particularly effectively use holy magic.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:NATURE_MAGIC
 name:Nature Magic Specialization
 desc: can particularly effectively use nature magic.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:SUMMONING_MAGIC
 name:Summoning Magic Specialization
 desc: can particularly effectively use summoning magic.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:TRANSMUTATION_MAGIC
 name:Transmutation Magic Specialization
 desc: can particularly effectively use transmutation magic.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:ENCHANTMENT_MAGIC
 name:Enchantment Specialization
 desc: can particularly effectively use enchantment magic.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:ILLUSION_MAGIC
 name:Illusion Specialization
 desc: can particularly effectively use illusion magic.
+cost:10
+rarity:10
+parent:skill:MAGIC
 
 type:power
 code:SWORD_SPECIALIZATION
 name:Swordmastery
 desc: can particularly effectively use swords.
+cost:15
+rarity:15
+parent:skill:TO_HIT_MELEE
 
 type:power
 code:HAFTED_SPECIALIZATION
 name:Haftedmastery
 desc: can particularly effectively use hafted weapons.
+cost:15
+rarity:10
+parent:skill:TO_HIT_MELEE
 
 type:power
 code:POLEARM_SPECIALIZATION
 name:Polearm-mastery
 desc: can particularly effectively use polearms.
+cost:15
+rarity:10
+parent:skill:TO_HIT_MELEE
 
 type:power
 code:BOW_SPECIALIZATION
 name:Bowmastery
 desc: can particularly effectively use bows.
+cost:10
+rarity:10
+parent:skill:TO_HIT_BOW
 
 type:power
 code:CROSSBOW_SPECIALIZATION
 name:Crossbowmastery
 desc: can particularly effectively use crossbows.
+cost:10
+rarity:7
+parent:skill:TO_HIT_BOW
 
 type:power
 code:SLING_SPECIALIZATION
 name:Slingmastery
 desc: can particularly effectively use slings.
+cost:10
+rarity:7
+parent:skill:TO_HIT_BOW
 
 type:power
 code:DUAL_WIELD
 name:Dual-Wielding
 desc: can effectively use multiple weapons at once.
+cost:10
+rarity:10
+parent:skill:TO_HIT_MELEE
 
 type:power
 code:UNARMED_STRIKE
 name:Unarmed Strike
 desc: can attacked unarmed effectively.
+cost:15
+rarity:5
+scale:1
+parent:skill:TO_HIT_MELEE
 
 type:power
 code:AGILITY
 name:Agility
 desc: can effectively dodge attacks, especially if when not weighed down.
+cost:15
+rarity:5
+scale:-1
+parent:skill:STEALTH
 
 type:power
 code:RUNNING
 name:Running
 desc: can move very quickly.
+cost:10
+rarity:5
+scale:-1
+parent:power:AGILITY
 
 type:power
 code:BACKSTAB
 name:Backstabbing
 desc: can hit where it hurts if the target is distracted.
+cost:10
+rarity:5
+scale:-1
+parent:power:SWORD_SPECIALIZATION
 
 type:power
 code:ANTIMAGIC
 name:Antimagic
 desc: can consume nearby mana.
+cost:20
+rarity:3
+scale:-1
+parent:skill:HEALTH
 
 type:power
 code:SPELL_POWER
 name:Spellpower
 desc: can cast stronger spells.
+cost:10
+rarity:5
+parent:skill:MAGIC
 
 type:power
 code:SPELL_EASE
 name:Spell Ease
 desc: can more easily learn and use spells.
+cost:10
+rarity:5
+parent:skill:MAGIC
 
 type:power
 code:WHIRLWIND
 name:Whirlwind
 desc: can attack multiple nearby monsters.
+cost:10
+rarity:5
+parent:power:AIR_MAGIC
 
 type:power
 code:CRITICAL_HITS
 name:Critical Hits
 desc: can more easily critically hit monsters.
+cost:10
+rarity:5
+parent:power:SWORD_SPECIALIZATION
 
 type:power
 code:DEATH_TOUCH
 name:Touch of Death
 desc: can slay at a touch.
+cost:10
+rarity:3
+parent:power:NECROMANCY_MAGIC
 
 
 # L: skills
@@ -485,58 +583,82 @@ type:skill
 code:DISARM_PHYS
 name:Physical Disarming
 desc: can disarm mundane traps.
+cost:10
+rarity:20
 
 type:skill
 code:DISARM_MAGIC
 name:Magical Disarming
 desc: can disarm magical traps.
+cost:10
+rarity:20
 
 type:skill
 code:DEVICE
 name:Magic Devices
 desc: can use magical devices.
+cost:15
+rarity:20
 
 type:skill
 code:SAVE
 name:Saving Throw
 desc: can avoid extraordinary attack forms.
+cost:20
+rarity:20
 
 type:skill
 code:SEARCH
 name:Perception
 desc: can spot things.
+cost:20
+rarity:20
 
 type:skill
 code:STEALTH
 name:Stealth
 desc: can avoid notice.
+cost:20
+rarity:20
 
 type:skill
 code:TO_HIT_MELEE
 name:Melee Weapon Skill
 desc: can use melee weapons.
+cost:25
+rarity:20
 
 type:skill
 code:TO_HIT_BOW
 name:Ranged Weapon Skill
 desc: can use shooters.
+cost:20
+rarity:20
 
 type:skill
 code:TO_HIT_THROW
 name:Throwing
 desc: can throw objects.
+cost:15
+rarity:20
 
 type:skill
 code:DIGGING
 name:Digging
 desc: can dig into walls.
+cost:10
+rarity:20
 
 type:skill
 code:MAGIC
 name:Magic
 desc: can cast magic.
+cost:25
+rarity:20
 
 type:skill
 code:HEALTH
 name:Resilience
 desc: can endure attacks.
+cost:25
+rarity:20

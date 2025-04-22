@@ -264,7 +264,7 @@ struct monster_base {
 
 	int attributes[MA_MAX];		/* L: strengths and weaknesses */
 	int stats[STAT_MAX];		/* L: stat bonuses for players */
-	int powers[PP_MAX];			/* L: power bonuses for players */
+	int *abilities;			/* L: power bonuses for players */
 	int skills[SKILL_MAX];		/* L: skill bonuses for players */
 	bitflag oflags[OF_SIZE];	/* L: object flags for players */
 	bitflag pflags[PF_SIZE];	/* L: player flags for players */
@@ -472,9 +472,9 @@ struct monster {
 	uint8_t best_range;					/* How close do we want to be? */
 
 	wchar_t faction;					/* L: general group of monsters */
-	int16_t reaction;						/* L: how much it likes the player */
+	int16_t reaction;					/* L: how much it likes the player */
 
-	bitflag powers[PP_FLAG_SIZE];		// L: any powers it knows
+	bool *abilities;					// L: any powers it knows
 };
 
 /** Variables **/

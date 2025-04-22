@@ -19,6 +19,7 @@
 
 #include "angband.h"
 #include "game-input.h"
+#include "init.h"
 #include "player-calcs.h"
 #include "player-properties.h"
 #include "player-util.h"
@@ -354,9 +355,6 @@ void textui_view_ability_menu(struct player_ability *ability_list,
 
 
 
-
-
-
 /**
  * L: Menu for learning powers / skills
  */
@@ -364,15 +362,14 @@ struct ability_learn_menu_mode_data {
 	int index;
 	const char *name;
 } ability_learn_menu_modes[] = {
-	{ AL_MODE_SKILLS, "Skills" },
-	{ AL_MODE_POWERS, "Powers" },
-	{ AL_MODE_ALL_POWERS, "All Powers" },
+	{ AL_MODE_KNOWN, "Known Abilities" },
+	{ AL_MODE_ALL, "All Abilities" },
 };
 
 struct ability_learn_menu_data {
 	int mode;
-	int max_learnable[TOME_MAX];
-	uint16_t temp_target[TOME_MAX];
+	int *max_learnable;
+	uint16_t *temp_target;
 };
 
 enum ability_learn_menu_data_column_locations {
@@ -387,14 +384,13 @@ enum ability_learn_menu_data_column_locations {
 };
 
 
-static int tome_depth(int tome)
+static int tome_depth(struct player_ability *abil)
 {
-	assert(tome < TOME_MAX && tome > TOME_NONE);
 	int depth = 0;
-	int next;
-	for (next = tome_parent(tome); next != TOME_NONE; next = tome_parent(next)) {
+	struct player_ability *next;
+	for (next = tome_parent(abil); next; next = tome_parent(next)) {
 		++depth;
-		assert(next != tome);
+		assert(next != abil);
 	}
 	return depth;
 }
@@ -403,11 +399,8 @@ static struct player_ability *ability_by_tome_id(int tome_id)
 {
 	struct player_ability *pa;
 
-	const char *type = tome_id < PP_MAX ? "power" : "skill";
-	int abil_id = tome_id < PP_MAX ? tome_id : tome_id - PP_MAX;
-
 	for (pa = player_abilities; pa; pa = pa->next) {
-		if (abil_id == pa->index && streq(pa->type, type)) {
+		if (pa->learn_index == tome_id) {
 			return pa;
 		}
 	}
@@ -432,16 +425,17 @@ static bool extra_target_valid(struct player *p, int *max_learnable, int oid, in
 static int ability_learn_valid_mode(struct menu *menu, int oid, int mode)
 {
 	struct ability_learn_menu_data *data = menu_priv(menu);
+	struct player_ability *abil = ability_by_tome_id(oid);
+	assert(abil);
 
-	if (oid <= TOME_NONE || oid >= TOME_MAX) return MN_ROW_SKIP;
+	if (oid < 0 || oid >= z_info->learn_max) return MN_ROW_SKIP;
 
-	if (oid < PP_MAX) {
-		if (mode != AL_MODE_POWERS && mode != AL_MODE_ALL_POWERS) return MN_ROW_SKIP;
+	if (abil->type == PY_ABIL_POWER) {
 		if (player->extra_powers[oid] <= 0 &&
 				player->state.powers[oid] <= 0) {
 			// if it's the full menu show all powers
 			// if it's the partial menu only show learned powers
-			if (mode == AL_MODE_ALL_POWERS) {
+			if (mode == AL_MODE_ALL) {
 				return data->max_learnable[oid] > 0 ? MN_ROW_VALID : MN_ROW_INVALID;
 			}
 			return MN_ROW_SKIP;
@@ -467,44 +461,48 @@ static void ability_learn_display(struct menu *m, int oid, bool cursor,
 	int row, int col, int wid)
 {
 	char name[32];
-	int total_level, learn_level, learn_target, cost, cost_inc;
+	int total_level, learn_level, learn_target, cost, cost_inc, next_level;
 	uint8_t tl_attr, ll_attr, lt_attr, name_attr, cost_attr, cost_inc_attr;
 	struct ability_learn_menu_data *data = menu_priv(m);
-	bool targ_valid;
-	int name_indent = tome_depth(oid) * 1;
+	struct player_ability *abil = ability_by_tome_id(oid);
+	bool targ_valid, next_targ_valid;
+	int name_indent = tome_depth(abil) * 1;
+	bool power = abil->type == PY_ABIL_POWER;
 
-	if (oid <= TOME_NONE || oid >= TOME_MAX) return;
+	if (oid < 0 || oid >= z_info->learn_max) return;
 
-	if (oid < PP_MAX) {
-		assert(oid > PP_NONE);
-		strcpy(name, lookup_power_name(oid));
+	if (power) {
+		/*strcpy(name, lookup_power_name(oid));
 		if (oid < MS_MAX) {
 			strcat(name, " Magic");
-		}
-		total_level = player->state.powers[oid];
-		learn_level = player->extra_powers[oid];
+		}*/
+		total_level = player->state.powers[abil->index];
+		learn_level = player->extra_powers[abil->index];
 	}
 	else {
-		int skill = oid - PP_MAX;
+		/*int skill = oid - PP_MAX;
 		assert(skill >= 0 && skill < SKILL_MAX);
 		strcpy(name, skill_index_to_name(skill));
-		my_strcap_full(name);
-		total_level = player->state.skills[skill];
-		learn_level = player->extra_skills[skill];
+		my_strcap_full(name);*/
+		total_level = player->state.skills[abil->index];
+		learn_level = player->extra_skills[abil->index];
 	}
+	strcpy(name, abil->name);
+
 	learn_target = data->temp_target[oid];
 
+	next_level = tome_next_increment(player, abil, learn_target);
 	targ_valid = extra_target_valid(player, data->max_learnable, oid, learn_target);
+	next_targ_valid = learn_target >= LEARN_MAX ? false : extra_target_valid(player, data->max_learnable, oid, next_level);
 
-	cost = player_bonus_to_cost(learn_target, oid, player);
-	cost_inc = cost - player_bonus_to_cost(player->extra_target[oid], oid, player);
-
-	//points_valid = calc_extra_points_array(player, data->temp_target) <= (uint16_t)player->state.extra_points_max;
+	cost = player_bonus_to_cost(learn_target, abil, player);
+	cost_inc = cost - player_bonus_to_cost(player->extra_target[oid], abil, player);
 	
 	if (cursor) {
 		tl_attr = COLOUR_WHITE;
 		ll_attr = learn_level >= learn_target ? COLOUR_L_BLUE : COLOUR_L_GREEN;
-		lt_attr = targ_valid ? COLOUR_L_GREEN : COLOUR_L_RED;
+		lt_attr = next_targ_valid ? COLOUR_L_GREEN : COLOUR_L_BLUE;
+		if (!targ_valid) lt_attr = COLOUR_L_RED;
 		name_attr = COLOUR_WHITE;
 		cost_attr = COLOUR_L_BLUE;
 		cost_inc_attr = COLOUR_L_UMBER;
@@ -512,7 +510,8 @@ static void ability_learn_display(struct menu *m, int oid, bool cursor,
 	else {
 		tl_attr = COLOUR_L_BLUE;
 		ll_attr = learn_level >= learn_target ? COLOUR_BLUE : COLOUR_GREEN;
-		lt_attr = targ_valid ? COLOUR_GREEN : COLOUR_RED;
+		lt_attr = next_targ_valid ? COLOUR_GREEN : COLOUR_BLUE;
+		if (!targ_valid) lt_attr = COLOUR_RED;
 		name_attr = COLOUR_L_BLUE;
 		cost_attr = COLOUR_BLUE;
 		cost_inc_attr = COLOUR_UMBER;
@@ -520,7 +519,7 @@ static void ability_learn_display(struct menu *m, int oid, bool cursor,
 
 	c_prt(name_attr, name, row, col + ALMC_NAME + name_indent);
 	if (cost > 0) c_prt(cost_attr, format("%3i", cost), row, col + ALMC_COST);
-	if (cost_inc > 0) c_prt(cost_inc_attr, format("%+2i", -cost_inc), row, col + ALMC_COST_DIFF);
+	if (cost_inc > 0) c_prt(cost_inc_attr, format("%+3i", -cost_inc), row, col + ALMC_COST_DIFF);
 	c_prt(tl_attr, format("%3i", total_level), row, col + ALMC_CURR);
 	c_prt(ll_attr, format("%3i", learn_level), row, col + ALMC_LRND);
 	c_prt(lt_attr, format("%3i", learn_target), row, col + ALMC_TRGT);
@@ -574,25 +573,24 @@ static void ability_learn_set_mode(struct menu *m, int new_mode)
 	menu_layout(m, &loc);
 	//menu_refresh(m, true);
 	menu_move_cursor_to(m, 0);
-
-	msg_add_fmt("ml=%i, tt=%i", data->max_learnable[TOME_SKILL_HEALTH], data->temp_target[TOME_SKILL_HEALTH]);
 }
 
 static bool ability_learn_handler(struct menu *m, const ui_event *e, int oid)
 {
 	struct ability_learn_menu_data *data = menu_priv(m);
+	struct player_ability *abil = ability_by_tome_id(oid);
 
 	if (e->type == EVT_SELECT) {
 		return true;
 	}
 	else if ((e->type == EVT_KBRD && e->key.code == '+') ||
 			(e->type == EVT_MOVE && target_dir(e->key) == 6)) {
-		data->temp_target[oid] = tome_next_increment(player, oid, data->temp_target[oid]);
+		data->temp_target[oid] = tome_next_increment(player, abil, data->temp_target[oid]);
 		return true;
 	}
 	else if ((e->type == EVT_KBRD && e->key.code == '-') ||
 			(e->type == EVT_MOVE && target_dir(e->key) == 4)) {
-		data->temp_target[oid] = tome_prev_increment(player, oid, data->temp_target[oid]);
+		data->temp_target[oid] = tome_prev_increment(player, abil, data->temp_target[oid]);
 		return true;
 	}
 	else if (e->type == EVT_KBRD) {
@@ -605,43 +603,34 @@ static bool ability_learn_handler(struct menu *m, const ui_event *e, int oid)
 	return false;
 }
 
-static int ability_learn_comp_base(int tome1, int tome2)
+static int ability_learn_comp_base(struct player_ability *abil1, struct player_ability *abil2)
 {
-	if (tome1 < PP_MAX && tome2 >= PP_MAX) return -1;
-	if (tome2 < PP_MAX && tome1 >= PP_MAX) return 1;
+	bool ispower1 = abil1->type == PY_ABIL_POWER;
+	bool ispower2 = abil2->type == PY_ABIL_POWER;
 
-	if (tome1 < PP_MAX) {
-		assert(tome1 > PP_NONE && tome2 > PP_NONE);
-		const char *name1 = lookup_power_name(tome1);
-		const char *name2 = lookup_power_name(tome2);
+	if (ispower1 && !ispower2) return 1;
+	if (!ispower1 && ispower2) return -1;
 
-		return strcmp(name1, name2);
-	}
-	else {
-		assert(tome1 < TOME_MAX && tome2 < TOME_MAX);
-		const char *name1 = skill_index_to_name(tome1 - PP_MAX);
-		const char *name2 = skill_index_to_name(tome2 - PP_MAX);
-
-		return strcmp(name1, name2);
-	}
+	return strcmp(abil1->name, abil2->name);
 }
 
-static int ability_learn_comp(int tome1, int tome2)
+static int ability_learn_comp(int oid1, int oid2)
 {
-	assert(tome1 > TOME_NONE && tome2 < TOME_MAX);
-	assert(tome2 > TOME_NONE && tome1 < TOME_MAX);
+	struct player_ability *abil1 = ability_by_tome_id(oid1);
+	struct player_ability *abil2 = ability_by_tome_id(oid2);
 
-	int depth1 = tome_depth(tome1), depth2 = tome_depth(tome2), currdepth;
+	int depth1 = tome_depth(abil1), depth2 = tome_depth(abil2), currdepth;
 
 	for (currdepth = 0; currdepth <= MIN(depth1, depth2); ++currdepth) {
-		int depth_parent1 = tome1, depth_parent2 = tome2, i, result;
+		struct player_ability *depth_parent1 = abil1, *depth_parent2 = abil2;
+		int i, result;
 		for (i = 0; i < depth1 - currdepth; ++i) {
 			depth_parent1 = tome_parent(depth_parent1);
-			assert(depth_parent1 != TOME_NONE);
+			assert(depth_parent1);
 		}
 		for (i = 0; i < depth2 - currdepth; ++i) {
 			depth_parent2 = tome_parent(depth_parent2);
-			assert(depth_parent2 != TOME_NONE);
+			assert(depth_parent2);
 		}
 
 		result = ability_learn_comp_base(depth_parent1, depth_parent2);
@@ -707,13 +696,13 @@ static void ability_learn_browse(int oid, void *db, const region *loc)
 	if (abil) {
 		int group = oid < PP_MAX ? PLAYER_FLAG_POWER : PLAYER_FLAG_SKILL;
 		char buf[256];
-		ability_desc(player, abil, buf, sizeof(buf), data->mode != AL_MODE_ALL_POWERS, group);
+		ability_desc(player, abil, buf, sizeof(buf), data->mode == AL_MODE_KNOWN, group);
 		row += 2;
 		Term_gotoxy(loc->col, row);
 		text_out_c(COLOUR_WHITE, "%s", buf);
 	}
 	else {
-		plog_fmt("can't find abil for oid %i", oid);
+		plog_fmt("Error: can't find abil for oid %i", oid);
 	}
 	
 	text_out_wrap = 0;
@@ -721,22 +710,27 @@ static void ability_learn_browse(int oid, void *db, const region *loc)
 	text_out_pad = 0;
 }
 
-static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode mode, int max_learn[TOME_MAX])
+static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode mode, int *max_learn)
 {
 	struct menu *m = menu_new(MN_SKIN_SCROLL, &ability_learn_menu_iter);
 	struct ability_learn_menu_data *data = mem_zalloc(sizeof *data);
+	assert(max_learn);
+	assert(p->extra_target);
 	//size_t width = MAX(0, MIN(Term->wid - 5, ALMC_MAX + 1));
 	
 	// col, row, wid, page_rows
 	//region loc = { /*0 - width*/ 15, 5, width, 15 };
 
 	data->mode = mode;
-	memcpy(data->temp_target, p->extra_target, sizeof(data->temp_target));
-	memcpy(data->max_learnable, max_learn, sizeof(data->max_learnable));
+	data->max_learnable = mem_zalloc(sizeof *data->max_learnable * z_info->learn_max);
+	data->temp_target = mem_zalloc(sizeof *data->temp_target * z_info->learn_max);
+
+	memcpy(data->max_learnable, max_learn, sizeof *data->max_learnable * z_info->learn_max);
+	memcpy(data->temp_target, p->extra_target, sizeof *data->temp_target * z_info->learn_max);
 
 	//menu_layout(m, &loc);
 
-	menu_setpriv(m, TOME_MAX, data);
+	menu_setpriv(m, z_info->learn_max, data);
 
 	m->header = "   Name                     Cost  Diff  Curr  Lrnd  Trgt";
 	m->selections = all_letters_nohjkl;
@@ -744,7 +738,6 @@ static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode 
 	m->browse_hook = ability_learn_browse;
 
 	ability_learn_set_mode(m, mode);
-
 	return m;
 }
 
@@ -752,14 +745,41 @@ static void ability_learn_menu_destroy(struct menu *m)
 {
 	struct ability_learn_menu_data *data = menu_priv(m);
 
+	mem_free(data->max_learnable);
+	mem_free(data->temp_target);
 	mem_free(data);
 	mem_free((char *)m->title);
+
 	menu_free(m);
 }
 
-void textui_powers_learn(struct player *p, int max_learn[TOME_MAX])
+/**
+ * i'm not telling you what this function does
+ * mind your own business
+ */
+static bool validate_result(struct player *p, struct menu *m, bool correct)
 {
-	struct menu *m = ability_learn_menu_new(p, AL_MODE_SKILLS, max_learn);
+	int i;
+	struct ability_learn_menu_data *data = menu_priv(m);
+
+	for (i = 0; i < m->count; ++i) {
+		if (!extra_target_valid(p, data->max_learnable, i, data->temp_target[i])) {
+			if (correct) data->temp_target[i] = p->extra_target[i];
+			else return false;
+		}
+	}
+
+	if (calc_extra_points_array(p, data->temp_target) > p->state.extra_points_max) {
+		if (correct) memcpy(data->temp_target, p->extra_target, sizeof *data->temp_target * z_info->learn_max);
+		else return false;
+	}
+
+	return true;
+}
+
+void textui_powers_learn(struct player *p, int *max_learn)
+{
+	struct menu *m = ability_learn_menu_new(p, AL_MODE_KNOWN, max_learn);
 	struct ability_learn_menu_data *data = menu_priv(m);
 	bool done = false;
 	bool changed = false;
@@ -772,31 +792,36 @@ void textui_powers_learn(struct player *p, int max_learn[TOME_MAX])
 	while (!done) {
 		menu_select(m, 0, false);
 
-		done = true;
-		for (i = TOME_NONE + 1; i < m->count; ++i) {
+		done = validate_result(p, m, false);
+		
+		if (!done) {
+			if (get_check("Discard changes? ")) {
+				validate_result(p, m, true);
+			}
+		}
+		/*for (i = 0; i < m->count; ++i) {
 			if (!extra_target_valid(p, data->max_learnable, i, data->temp_target[i])) {
 				done = false;
 				data->temp_target[i] = p->extra_target[i];
 			}
-		}
+		}*/
 
-		for (i = 0; !changed && i < TOME_MAX; ++i) {
-			changed = p->extra_target[i] != data->temp_target[i];
-		}
 
-		if (changed && (calc_extra_points_array(p, data->temp_target) > (uint16_t)p->state.extra_points_max)) {
+		/*if (changed && (calc_extra_points_array(p, data->temp_target) > (uint16_t)p->state.extra_points_max)) {
 			if (get_forced_check("Discard changes? ")) {
-				memcpy(data->temp_target, p->extra_target, sizeof(data->temp_target));
+				memcpy(data->temp_target, p->extra_target, sizeof *data->temp_target * z_info->learn_max);
 				changed = false;
 			}
-			else {
-				done = false;
-			}
-		}
+			done = false;
+		}*/
+	}
+
+	for (i = 0; !changed && i < z_info->learn_max; ++i) {
+		changed = p->extra_target[i] != data->temp_target[i];
 	}
 
 	if (changed && get_forced_check("Use these targets? ")) {
-		memcpy(p->extra_target, data->temp_target, sizeof(p->extra_target));
+		memcpy(p->extra_target, data->temp_target, sizeof *p->extra_target * z_info->learn_max);
 		p->upkeep->update |= PU_BONUS;
 	}
 

@@ -39,6 +39,7 @@
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
+#include "player-properties.h"
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
@@ -1365,6 +1366,7 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], const s
 	int i, totalbonus, numcounts = 0, numblows = 0;
 	const struct monster_spell *mspell;
 	const struct monster_blow *mblow;
+	struct player_ability *abil;
 	int spell_counts[PP_MAX] = { 0 };
 	int blow_counts[PP_MAX] = { 0 };
 
@@ -1400,8 +1402,10 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], const s
 	}
 
 
-	for (i = 0; i < PP_MAX; i++) {
-		powers[i] += (mrace->base->powers[i] * mrace->level + 50) / 100;
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (abil->learn_index < 0) continue;
+		if (abil->type != PY_ABIL_POWER) continue;
+		powers[abil->index] += (mrace->base->abilities[i] * mrace->level + 50) / 100;
 	}
 
 
@@ -1567,11 +1571,38 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	player_flags(p, collect_f);
 
 	/* L: get powers */
-	for (i = 0; i < PP_MAX; i++) {
+	for (i = PP_NONE + 1; i < PP_MAX; i++) {
+		struct player_ability *abil = lookup_player_ability(i, PY_ABIL_POWER);
+		assert(abil);
+
 		int scale = player_class_power(p, i) + player_race_power(p, i);
 		int minlev = 5 - (scale + 5) / 7;
 		int efflev = minlev < 0 ? MAX((p->lev + 1) / 2 - minlev    , p->lev) :
 								  MIN((p->lev + 1) * 2 - minlev * 2, p->lev);
+
+		double fact = 1.0, div = 1.0;
+		int scaling = abil->scale;
+
+		while (scaling >= 2) {
+			fact *= (float)p->lev;
+			div *= 50.0;
+			scaling -= 2;
+		}
+		while (scaling >= 1) {
+			fact *= my_sqrt((double)p->lev);
+			div *= my_sqrt(50.0);
+			--scaling;
+		}
+		while (scaling <= -2) {
+			fact *= 50.0;
+			div *= (float)p->lev;
+			scaling += 2;
+		}
+		while (scaling <= -1) {
+			fact *= my_sqrt(50.0);
+			div *= my_sqrt((double)p->lev);
+			++scaling;
+		}
 
 		if ((scale <= 0) || (efflev <= 0)) {
 			state->powers[i] = 0;
@@ -1581,7 +1612,11 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			state->powers[i] = (p->lev * scale + 99) / 100;
 		}
 
-		else if (power_scalings[i] == PP_SCALE_SQUARE) {
+		else {
+			state->powers[i] = (int)((efflev * scale * fact + div * 100 - 1) / (div * 100));
+		}
+
+		/*else if (power_scalings[i] == PP_SCALE_SQUARE) {
 			int fact = efflev * efflev;
 			int div = 100 * 50;
 			state->powers[i] = (scale * fact + div - 1) / div;
@@ -1595,7 +1630,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 		else {
 			state->powers[i] = (efflev * scale + 99) / 100;
-		}
+		}*/
 
 		state->powers[i] += MIN((p->extra_powers[i] + 1) / 2, p->lev * 3);
 	}

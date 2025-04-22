@@ -18,13 +18,12 @@
  */
 
 typedef enum {
-	AL_MODE_SKILLS,
-	AL_MODE_POWERS,
-	AL_MODE_ALL_POWERS,
+	AL_MODE_KNOWN,
+	AL_MODE_ALL,
 	AL_MODE_MAX
 } ability_learn_mode;
 
 void textui_view_ability_menu(struct player_ability *ability_list,
 							  int num_abilities);
 				
-void textui_powers_learn(struct player *p, int max_learn[TOME_MAX]);
+void textui_powers_learn(struct player *p, int *max_learn);

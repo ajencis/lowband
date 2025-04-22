@@ -71,31 +71,24 @@ static struct money *money_type;
 static int num_money_types;
 
 
-static const int power_weights[] = {
-	0,
-	#define PP(x, a, b, c, d, e, f) d,
-	#include "list-player-powers.h"
-	#undef PP
-	#define SKILL(x, a, b, c, d, e) b,
-	#include "list-skills.h"
-	#undef SKILL
-	0
-};
-
-
-static int get_random_power(void)
+static struct player_ability *get_random_power(void)
 {
-	int i, sum = 0, choice;
+	int sum = 0, choice;
+	struct player_ability *abil = NULL;
 
-	for (i = TOME_NONE + 1; i < TOME_MAX; i++) {
-		sum += power_weights[i];
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (abil->learn_index < 0) continue;
+		sum += abil->rarity;
 	}
 	choice = randint0(sum);
-	for (i = TOME_NONE + 1; i < TOME_MAX; i++) {
-		if (power_weights[i] > choice) break;
-		choice -= power_weights[i];
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (abil->learn_index < 0) continue;
+		if (abil->rarity > choice) break;
+		choice -= abil->rarity;
 	}
-	return i;
+
+	assert(abil);
+	return abil;
 }
 
 static int get_random_realm(void)
@@ -908,7 +901,7 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 			 of_has(obj->kind->flags, OF_POWER_LEARN_3) ||
 			 of_has(obj->kind->flags, OF_POWER_LEARN_2) ||
 			 of_has(obj->kind->flags, OF_POWER_LEARN_1)) {
-		obj->pval = get_random_power();
+		obj->pval = get_random_power()->learn_index;
 	}
 
 	else if (of_has(obj->kind->flags, OF_REALM_LEARN)) {

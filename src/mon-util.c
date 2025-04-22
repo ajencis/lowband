@@ -45,6 +45,7 @@
 #include "obj-util.h"
 #include "player-calcs.h"
 #include "player-history.h"
+#include "player-properties.h"
 #include "player-quest.h"
 #include "player-timed.h"
 #include "player-util.h"
@@ -87,8 +88,10 @@ bool give_monster_powers(struct monster *mon)
 	//struct monster *leader = NULL;
 	struct monster_race *mr = mon->race;
 	struct monster_base *mb = mr->base;
-	int i;
 	bool given = false;
+	struct player_ability *abil;
+	
+	mon->abilities = mem_zalloc(sizeof *mon->abilities * z_info->learn_max);
 
 	/*if (mon->group_info[PRIMARY_GROUP].role != MON_GROUP_LEADER) {
 		plog("getting leader");
@@ -98,13 +101,18 @@ bool give_monster_powers(struct monster *mon)
 		}
 	}*/
 	
-	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
-		if (mb->powers[i]) {
-			pp_flag_on(mon->powers, i);
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (abil->learn_index < 0) continue;
+		if (abil->type != PY_ABIL_POWER) continue;
+		int learn_i = abil->learn_index;
+
+		if (mb->abilities[learn_i]) {
+			mon->abilities[learn_i] = true;
 			given = true;
 		}
 	}
 
+	#if 0
 	if (rf_has(mr->flags, RF_SAPIENT)) {
 		while (one_in_(10)) {
 			// randint0(30 - (-1) - 1) + (-1) + 1 = randint0()
@@ -130,24 +138,29 @@ bool give_monster_powers(struct monster *mon)
 		}*/
 	}
 
+
+	#endif
+
 	return given;
 }
 
 bool player_can_learn_from_monster(struct player *p, struct monster *mon)
 {
-	int i;
+	struct player_ability *abil;
 
-	int max_target[TOME_MAX];
+	int *max_target = mem_zalloc(sizeof *max_target * z_info->learn_max);
 	tome_max_learnable(p, max_target);
 
-	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
-		if (!pp_flag_has(mon->powers, i)) continue;
-
-		if (mon->race->level <= max_target[i]) continue;
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (abil->type != PY_ABIL_POWER) continue;
+		if (mon->abilities[abil->learn_index]) continue;
+		if (mon->race->level <= max_target[abil->learn_index]) continue;
 		
+		mem_free(max_target);
 		return true;
 	}
 
+	mem_free(max_target);
 	return false;
 }
 

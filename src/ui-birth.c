@@ -25,6 +25,7 @@
 #include "obj-tval.h"
 #include "player.h"
 #include "player-birth.h"
+#include "player-properties.h"
 #include "player-spell.h"
 #include "player-util.h"
 #include "ui-birth.h"
@@ -385,23 +386,23 @@ static void race_help(int i, void *db, const region *l)
 
 	for (ability = player_abilities; ability; ability = ability->next) {
 		if (n_flags >= flag_space) break;
-		if (streq(ability->type, "object") &&
+		if ((ability->type == PY_ABIL_OBJECT) &&
 			!of_has(r->flags, ability->index)) {
 			continue;
-		} else if (streq(ability->type, "player") &&
+		} else if ((ability->type == PY_ABIL_PLAYER) &&
 				   !pf_has(r->pflags, ability->index)) {
 			continue;
-		} else if (streq(ability->type, "element") &&
+		} else if ((ability->type == PY_ABIL_ELEMENT) &&
 				   (race_elem_info[ability->index].res_level != ability->value)) {
 			continue;
-		} else if (streq(ability->type, "power") &&
+		} else if ((ability->type == PY_ABIL_POWER) &&
 		           (!r->r_powers[ability->index])) {
             continue;
-		} else if (streq(ability->type, "skill")) {
+		} else if ((ability->type == PY_ABIL_SKILL)) {
 			continue;
 		}
 
-		if (streq(ability->type, "power")) {
+		if (ability->type == PY_ABIL_POWER) {
 		    text_out_e("\n%s [%i%%]", ability->name, r->r_powers[ability->index]);
 		} else {
 			text_out_e("\n%s", ability->name);
@@ -468,25 +469,26 @@ static void class_help(int i, void *db, const region *l)
 
 	for (ability = player_abilities; ability; ability = ability->next) {
 		if (n_flags >= flag_space) break;
-		if (streq(ability->type, "object") &&
-			!of_has(c->flags, ability->index)) {
+		if (ability->type == PY_ABIL_OBJECT &&
+				!of_has(c->flags, ability->index)) {
 			continue;
-		} else if (streq(ability->type, "player") &&
-				   !pf_has(c->pflags, ability->index)) {
+		} else if ((ability->type == PY_ABIL_PLAYER) &&
+				!pf_has(c->pflags, ability->index)) {
 			continue;
-		} else if (streq(ability->type, "element")) {
+		} else if (ability->type == PY_ABIL_ELEMENT) {
 			continue;
-		} else if (streq(ability->type, "power") &&
-		           !c->c_powers[ability->index]) {
+		} else if ((ability->type == PY_ABIL_POWER) &&
+		        !c->c_powers[ability->index]) {
             continue;
-		} else if (streq(ability->type, "skill")) {
+		} else if (ability->type == PY_ABIL_SKILL) {
 			continue;
 		}
 
-		if (streq(ability->type, "power"))
-		    text_out_e("\n%s [%i%%]", ability->name, c->c_powers[ability->index]);
-        else
+		if (ability->type == PY_ABIL_POWER) {
+			text_out_e("\n%s [%i%%]", ability->name, c->c_powers[ability->index]);
+		} else {
             text_out_e("\n%s", ability->name);
+		}
 
         n_flags++;
 	}

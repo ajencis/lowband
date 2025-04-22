@@ -427,6 +427,10 @@ void delete_monster_idx(struct chunk *c, int m_idx)
 		square_delete_object(c, mon->grid, mon->mimicked_obj, true, false);
 	}
 
+	if (mon->abilities) {
+		mem_free(mon->abilities);
+	}
+
 	/* Wipe the Monster */
 	memset(mon, 0, sizeof(struct monster));
 

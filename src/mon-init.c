@@ -32,6 +32,7 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
+#include "player-properties.h"
 #include "player-spell.h"
 #include "project.h"
 #include "ui-visuals.h"
@@ -1308,6 +1309,7 @@ static enum parser_error parse_mon_base_name(struct parser *p) {
 	struct monster_base *rb = mem_zalloc(sizeof *rb);
 	rb->next = h;
 	rb->name = string_make(parser_getstr(p, "name"));
+	rb->abilities = mem_zalloc(sizeof *rb->abilities * z_info->learn_max);
 
 	parser_setpriv(p, rb);
 	return PARSE_ERROR_NONE;
@@ -1436,6 +1438,7 @@ static enum parser_error parse_mon_base_power(struct parser *p)
 	struct monster_base *rb = parser_priv(p);
 	char pname[80];
 	int pind;
+	struct player_ability *abil;
 
 	if (!rb) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -1445,11 +1448,13 @@ static enum parser_error parse_mon_base_power(struct parser *p)
 
 	pind = power_index_by_name(pname);
 
+	abil = lookup_player_ability(pind, PY_ABIL_POWER);
+
 	if (pind < 0 || pind >= PP_MAX) {
 		return PARSE_ERROR_GENERIC;
 	}
 
-	rb->powers[pind] = parser_getint(p, "amount");
+	rb->abilities[abil->learn_index] = parser_getint(p, "amount");
 
 	return PARSE_ERROR_NONE;
 }
@@ -1646,6 +1651,7 @@ static void cleanup_mon_base(void)
 	rb = rb_info;
 	while (rb) {
 		next = rb->next;
+		mem_free(rb->abilities);
 		string_free(rb->text);
 		string_free(rb->name);
 		mem_free(rb);

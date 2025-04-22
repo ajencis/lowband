@@ -25,14 +25,29 @@
  * ------------------------------------------------------------------------
  * Ability utilities
  * ------------------------------------------------------------------------ */
+
+struct player_ability *lookup_player_ability(int idx, int type)
+{
+	struct player_ability *abil;
+
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (abil->index == idx && type == abil->type) {
+			return abil;
+		}
+	}
+
+	return NULL;
+}
+
+
 bool class_has_ability(const struct player_class *class,
 					   struct player_ability *ability)
 {
-	if (streq(ability->type, "player") &&
-		pf_has(class->pflags, ability->index)) {
+	if ((ability->type == PY_ABIL_PLAYER) &&
+			pf_has(class->pflags, ability->index)) {
 		return true;
-	} else if (streq(ability->type, "object") &&
-			   of_has(class->flags, ability->index)) {
+	} else if ((ability->type == PY_ABIL_OBJECT) &&
+			of_has(class->flags, ability->index)) {
 		return true;
 	}
 
@@ -42,14 +57,14 @@ bool class_has_ability(const struct player_class *class,
 bool race_has_ability(const struct player_race *race,
 					  struct player_ability *ability)
 {
-	if (streq(ability->type, "player") &&
+	if ((ability->type == PY_ABIL_PLAYER) &&
 		pf_has(race->pflags, ability->index)) {
 		return true;
-	} else if (streq(ability->type, "object") &&
-			   of_has(race->flags, ability->index)) {
+	} else if ((ability->type == PY_ABIL_OBJECT) &&
+			of_has(race->flags, ability->index)) {
 		return true;
-	} else if (streq(ability->type, "element") &&
-			   (race->el_info[ability->index].res_level == ability->value)) {
+	} else if ((ability->type == PY_ABIL_ELEMENT) &&
+			(race->el_info[ability->index].res_level == ability->value)) {
 		return true;
 	}
 
@@ -86,7 +101,7 @@ static void view_abilities(void)
 
 	// L: powers get listed
 	for (ability = player_abilities; ability && num_abilities < MAX_ABILITIES; ability = ability->next) {
-		if (streq(ability->type, "power") && player->state.powers[ability->index] > 0) {
+		if ((ability->type == PY_ABIL_POWER) && player->state.powers[ability->index] > 0) {
 			memcpy(&ability_list[num_abilities], ability,
 				   sizeof(struct player_ability));
 			ability_list[num_abilities++].group = PLAYER_FLAG_POWER;
@@ -95,7 +110,7 @@ static void view_abilities(void)
 
 	// L: skills get listed too!
 	for (ability = player_abilities; ability && num_abilities < MAX_ABILITIES; ability = ability->next) {
-		if (streq(ability->type, "skill") && player->state.skills[ability->index] > 0) {
+		if ((ability->type == PY_ABIL_SKILL) && player->state.skills[ability->index] > 0) {
 			memcpy(&ability_list[num_abilities], ability, sizeof(ability_list[0]));
 			ability_list[num_abilities++].group = PLAYER_FLAG_SKILL;
 		}

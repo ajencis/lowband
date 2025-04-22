@@ -389,8 +389,6 @@ static void get_ahw(struct player *p)
 }
 
 
-
-
 /**
  * Creates the player's body
  */
@@ -439,7 +437,7 @@ void player_init(struct player *p)
 
 	size_t csize = sizeof (*p->unlocked_classes) * z_info->c_max;
 	size_t rsize = sizeof (*p->unlocked_races) * z_info->pr_max;
-	size_t tsize = sizeof (*p->unlocked_tomes) * TOME_MAX;
+	size_t tsize = sizeof (*p->unlocked_tomes) * z_info->learn_max;
 
 	bool *unlocked_classes_save = mem_zalloc(csize);
 	bool *unlocked_races_save = mem_zalloc(rsize);
@@ -474,8 +472,9 @@ void player_init(struct player *p)
 		struct monster_lore *lore = get_lore(race);
 		race->cur_num = 0;
 		race->max_num = 100;
-		if (rf_has(race->flags, RF_UNIQUE))
+		if (rf_has(race->flags, RF_UNIQUE)) {
 			race->max_num = 1;
+		}
 		lore->pkills = 0;
 		lore->thefts = 0;
 	}
@@ -491,6 +490,8 @@ void player_init(struct player *p)
 	p->obj_k->slays = mem_zalloc(z_info->slay_max * sizeof(bool));
 	p->obj_k->curses = mem_zalloc(z_info->curse_max *
 								  sizeof(struct curse_data));
+
+	p->extra_target = mem_zalloc(z_info->learn_max * sizeof *player->extra_target);
 
 	// L: metaprogression should persist
 	p->unlocked_classes = unlocked_classes_save;

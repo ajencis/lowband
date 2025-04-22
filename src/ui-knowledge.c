@@ -41,6 +41,7 @@
 #include "object.h"
 #include "player-calcs.h"
 #include "player-history.h"
+#include "player-properties.h"
 #include "player-util.h"
 #include "project.h"
 #include "store.h"
@@ -2969,7 +2970,7 @@ static void shape_lore_append_misc_flags(textblock *tb,
 	}
 
 	for (ability = player_abilities; ability; ability = ability->next) {
-		if (streq(ability->type, "player") &&
+		if ((ability->type == PY_ABIL_PLAYER) &&
 			pf_has(s->pflags, ability->index)) {
 			textblock_append(tb, "%s%s", (n > 0) ? "  " : "",
 				ability->desc);

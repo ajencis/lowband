@@ -46,6 +46,7 @@
 #include "player-attack.h"
 #include "player-calcs.h"
 #include "player-path.h"
+#include "player-properties.h"
 #include "player-quest.h"
 #include "player-spell.h"
 #include "player-timed.h"
@@ -2178,7 +2179,12 @@ static int hiring_price(struct monster *mon, struct player *p)
 	return MAX(0, total * mult);
 }
 
-static int teaching_price(struct monster *mon, struct player *p, int power)
+static int teaching_price(struct monster *mon, struct player *p)
+{
+	return 10 << (mon->race->level / 5);
+}
+
+/*static int teaching_price(struct monster *mon, struct player *p, int power)
 {
 	int currpower = p->extra_powers[power];
 	int maxpower = mon->race->level;
@@ -2198,7 +2204,7 @@ static int teaching_price(struct monster *mon, struct player *p, int power)
 	}
 
 	return result;
-}
+}*/
 
 
 void do_cmd_diplomacy(struct command *cmd)
@@ -2393,12 +2399,10 @@ void do_cmd_dip_learn(struct command *cmd)
 	int i;
 	int dir;
 	struct monster *mon;
-	int result = -1;
 	int cost;
-	int max_learn[TOME_MAX];
-	int temp_max_learn[TOME_MAX];
+	int *max_learn, *base_max_learn, *extra_max_learn;
 	//bool has_power = false;
-	bool did_learn = false;
+	bool did_learn = false, can_learn;
 
 	if (cmd_get_target(cmd, "target", &dir) != CMD_OK) {
 		return;
@@ -2408,25 +2412,26 @@ void do_cmd_dip_learn(struct command *cmd)
 	cmd_set_arg_target(cmdq_peek(), "target", dir);
 
 	mon = smite_target_get(dir);
+	cost = teaching_price(mon, player);
 
 	if (!mon || !mon->race) return;
 
 	if (!player_can_learn_from_monster(player, mon)) return;
 
-	tome_max_learnable(player, max_learn);
-	memcpy(temp_max_learn, max_learn, sizeof(temp_max_learn));
+	max_learn = mem_zalloc(sizeof *max_learn * z_info->learn_max);
+	base_max_learn = mem_zalloc(sizeof *base_max_learn * z_info->learn_max);
+	extra_max_learn	= mem_zalloc(sizeof *extra_max_learn * z_info->learn_max);
 
 	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
-		//const char *pname = power_names[i];
 
-		cost = teaching_price(mon, player, i);
-
-		if (pp_flag_has(mon->powers, i)) {
-			int new_target = MIN(mon->race->level, player->extra_target[i]);
+		if (mon->abilities[i]) {
+			extra_max_learn[i] = mon->race->level;
+			/*int new_target = MIN(mon->race->level, player->extra_target[i]);
 			if (max_learn[i] < new_target) {
 				temp_max_learn[i] = new_target;
+				can_learn = true;
 				//has_power = true;
-			}
+			}*/
 			
 			/* &&
 				mon->race->level > player->extra_tar[i] &&
@@ -2441,34 +2446,39 @@ void do_cmd_dip_learn(struct command *cmd)
 		}
 	}
 
-	if (result == -1) {
-		//msg("You have nothing to learn from them!");
-		return;
-	}
+	can_learn = tome_max_learnable_extra(player, max_learn, extra_max_learn);
+	tome_max_learnable(player, base_max_learn);
 
-	if (player->au < cost) {
+	if (!can_learn) {
+		msg("You have nothing to learn from them!");
+	} else if (player->au < cost) {
 		msg("You can't afford their price!");
-		return;
-	}
+	} else {
+		get_learn(player, max_learn);
 
-	get_learn(player, temp_max_learn);
+		for (i = PP_NONE + 1; !did_learn && i < PP_MAX; ++i) {
+			if (player->extra_target[i] > base_max_learn[i]) {
+				did_learn = true;
+			}
+		}
 
-	for (i = PP_NONE + 1; !did_learn && i < PP_MAX; ++i) {
-		if (player->extra_target[i] > max_learn[i]) {
-			did_learn = true;
+		if (did_learn) {
+			player->au -= cost;
 		}
 	}
 
-	if (did_learn) {
-		player->au -= cost;
-	}
+	mem_free(max_learn);
+	mem_free(base_max_learn);
+	mem_free(extra_max_learn);
 }
 
 void do_cmd_learn(struct command *cmd)
 {
-	int max_learn[TOME_MAX];
+	int *max_learn = mem_zalloc(sizeof *max_learn * z_info->learn_max);
 
 	tome_max_learnable(player, max_learn);
 	get_learn(player, max_learn);
+
+	mem_free(max_learn);
 }
 

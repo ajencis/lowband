@@ -207,6 +207,7 @@ static void wr_item(const struct object *obj)
 static void wr_monster(const struct monster *mon)
 {
 	size_t j;
+	int i;
 	struct object *obj = mon->held_obj; 
 	struct object *dummy = object_new();
 
@@ -269,8 +270,8 @@ static void wr_monster(const struct monster *mon)
 	wr_u16b(mon->group_info[SUMMON_GROUP].index);
 	wr_byte(mon->group_info[SUMMON_GROUP].role);
 
-	for (j = 0; j < PP_FLAG_SIZE; ++j) {
-		wr_byte(mon->powers[j]);
+	for (i = 0; i < z_info->learn_max; ++i) {
+		wr_byte(mon->abilities[j]);
 	}
 
 	wr_s16b(mon->reaction);
@@ -502,6 +503,7 @@ void wr_player(void)
 		wr_string(player->body.slots[i].name);
 	}
 
+	wr_u16b(z_info->learn_max);
 	// L: extra powers
 	for (i = 0; i < PP_MAX; i++) {
 		wr_u16b(player->extra_powers[i]);
@@ -509,7 +511,7 @@ void wr_player(void)
 	for (i = 0; i < SKILL_MAX; i++) {
 		wr_u16b(player->extra_skills[i]);
 	}
-	for (i = 0; i < TOME_MAX; ++i) {
+	for (i = 0; i < z_info->learn_max; ++i) {
 		wr_u16b(player->extra_target[i]);
 	}
 
@@ -576,8 +578,8 @@ void wr_player(void)
 		wr_byte(player->unlocked_races[i]);
 	}
 	
-	wr_u16b(TOME_MAX);
-	for (i = 0; i < TOME_MAX; ++i)  {
+	//wr_u16b(TOME_MAX);
+	for (i = 0; i < z_info->learn_max; ++i)  {
 		wr_u16b(player->unlocked_tomes[i]);
 	}
 

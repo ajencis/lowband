@@ -23,6 +23,7 @@
 #include "obj-knowledge.h"
 #include "obj-util.h"
 #include "player.h"
+#include "player-properties.h"
 #include "player-timed.h"
 #include "ui-entry.h"
 #include "ui-entry-combiner.h"
@@ -534,19 +535,17 @@ bool is_ui_entry_for_known_rune(const struct ui_entry *entry,
 	for (i = 0; i < entry->n_p_ability && result; ++i) {
 		int ind = entry->p_abilities[i].ability->index;
 
-		if (streq(entry->p_abilities[i].ability->type, "player")) {
+		if (entry->p_abilities[i].ability->type == PY_ABIL_PLAYER) {
 			/*
 			 * Not so easy to associate with a rune so don't let
 			 * it change the result.
 			 */
 			continue;
-		} else if (streq(entry->p_abilities[i].ability->type,
-			"object")) {
+		} else if (entry->p_abilities[i].ability->type == PY_ABIL_OBJECT) {
 			if (! of_has(p->obj_k->flags, ind)) {
 				result = false;
 			}
-		} else if (streq(entry->p_abilities[i].ability->type,
-			"element")) {
+		} else if (entry->p_abilities[i].ability->type == PY_ABIL_ELEMENT) {
 			if (p->obj_k->el_info[ind].res_level == 0) {
 				result = false;
 			}
@@ -834,7 +833,7 @@ void compute_ui_entry_values_for_player(const struct ui_entry *entry,
 			entry->p_abilities[i].isaux) {
 			continue;
 		}
-		if (streq(entry->p_abilities[i].ability->type, "player")) {
+		if (entry->p_abilities[i].ability->type ==PY_ABIL_PLAYER) {
 			if (! player_has(p, ind)) {
 				continue;
 			}
@@ -913,8 +912,7 @@ void compute_ui_entry_values_for_player(const struct ui_entry *entry,
 					break;
 				}
 			}
-		} else if (streq(entry->p_abilities[i].ability->type,
-			"object")) {
+		} else if (entry->p_abilities[i].ability->type == PY_ABIL_OBJECT) {
 			int v = of_has((*cache)->untimed, ind) ? 1 : 0;
 			int a;
 
@@ -947,8 +945,7 @@ void compute_ui_entry_values_for_player(const struct ui_entry *entry,
 				}
 				(*combiner.accum_func)(v, a, &cst);
 			}
-		} else if (streq(entry->p_abilities[i].ability->type,
-			"element")) {
+		} else if (entry->p_abilities[i].ability->type == PY_ABIL_ELEMENT) {
 			int v = p->race->el_info[ind].res_level;
 			int a;
 

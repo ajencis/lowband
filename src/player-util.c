@@ -38,6 +38,7 @@
 #include "player-attack.h"
 #include "player-calcs.h"
 #include "player-history.h"
+#include "player-properties.h"
 #include "player-quest.h"
 #include "player-spell.h"
 #include "player-timed.h"
@@ -51,43 +52,6 @@
 #include "ui-knowledge.h"
 
 
-
-
-static const struct player_power_data {
-	int index;
-	const char *name;
-	int scale;
-	int power;
-	int weight;
-	int update;
-} player_powers[] = {
-	{ PP_NONE, "", false, 0, 0, 0 },
-	#define PP(x, a, b, c, d, e, f) { PP_##x, a, b, c, d, e },
-	#include "list-player-powers.h"
-	#undef PP
-};
-
-static const int tome_factors[] = {
-	0,
-	#define PP(x, a, b, c, d, e, f) c,
-	#include "list-player-powers.h"
-	#undef PP
-	#define SKILL(x, a, b, c, d, e) a,
-	#include "list-skills.h"
-	#undef SKILL
-	0
-};
-
-static const int tome_parents[] = {
-	0,
-	#define PP(x, a, b, c, d, e, f) f,
-	#include "list-player-powers.h"
-	#undef PP
-	#define SKILL(x, a, b, c, d, e) TOME_NONE,
-	#include "list-skills.h"
-	#undef SKILL
-	0
-};
 
 
 /**
@@ -147,24 +111,25 @@ static bool unlock_races(struct player *p)
 
 static bool unlock_tomes(struct player *p)
 {
-	int i;
 	bool didlearn = false;
 
-	for (i = TOME_NONE + 1; i < TOME_MAX; ++i) {
-		int power = i < PP_MAX ? i : -1;
-		int skill = i > PP_MAX ? i - PP_MAX : -1; 
+	struct player_ability *abil;
+
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (abil->learn_index < 0) continue;
+		bool ispower = abil->type == PY_ABIL_POWER;
 		struct player_class *pc;
 
 		for (pc = classes; pc; pc = pc->next) {
 			if (!p->unlocked_classes[pc->cidx]) continue;
 
-			if (power > -1 && pc->c_powers[power] > p->unlocked_tomes[i]) {
-				p->unlocked_tomes[i] = pc->c_powers[power];
+			if (ispower && pc->c_powers[abil->index] > p->unlocked_tomes[abil->learn_index]) {
+				p->unlocked_tomes[abil->learn_index] = pc->c_powers[abil->index];
 				didlearn = true;
 			}
 
-			if (skill > -1 && pc->c_skills[skill] > p->unlocked_tomes[i]) {
-				p->unlocked_tomes[i] = pc->c_skills[skill];
+			if (!ispower && pc->c_skills[abil->index] > p->unlocked_tomes[abil->learn_index]) {
+				p->unlocked_tomes[abil->learn_index] = pc->c_skills[abil->index];
 				didlearn = true;
 			}
 		}
@@ -505,6 +470,7 @@ const char *lookup_power_name(int power)
 
 static double btc_scale(int bonus)
 {
+
 	if (bonus <= 0) return 0;
 	assert(bonus * bonus < INT_MAX / bonus);
 	int result = my_int_sqrt(bonus * bonus * bonus);
@@ -514,26 +480,28 @@ static double btc_scale(int bonus)
 static int bonus_to_cost_base(int bonus, int factor)
 {
 	int scaleto = 10;
-	double scalefrom = btc_scale(50);
-	int result = (int)((btc_scale(bonus) * scaleto * factor + 100 * scalefrom - 1)  / 100 / scalefrom);
+	static double scalefrom = -1;
+	if (scalefrom == -1) scalefrom = btc_scale(50);
+	int result = (int)((btc_scale(bonus) * scaleto * factor + 10 * scalefrom - 1)  / 10 / scalefrom);
+	
 	return result;
 }
 
-static int bonus_to_cost(int bonus, int tome_ind)
+static int bonus_to_cost(int bonus, struct player_ability *abil)
 {
-	assert(tome_ind > TOME_NONE && tome_ind < TOME_MAX);
-	int factor = tome_factors[tome_ind];
-	return bonus_to_cost_base(bonus, factor);
+	if (abil->learn_index < 0) return 0;
+	return bonus_to_cost_base(bonus, abil->cost);
 }
 
-int player_bonus_to_cost(int bonus, int tome_ind, struct player *p)
+int player_bonus_to_cost(int bonus, struct player_ability *abil, struct player *p)
 {
-	int base = bonus_to_cost(bonus, tome_ind);
+	assert(abil);
+	int base = bonus_to_cost(bonus, abil);
 	int discount = 0; // in percent
 
 	if ((of_has(p->class->pflags, PF_EXTRA_LEARNING) || 
 				of_has(p->race->pflags, PF_EXTRA_LEARNING)) &&
-			tome_ind >= PP_MAX) {
+			abil->type != PY_ABIL_POWER) {
 		discount += 35;
 	}
 
@@ -552,10 +520,10 @@ static int cost_to_bonus_base(int cost, int factor)
 	return i;
 }
 
-static int cost_to_bonus(int cost, int tome_ind)
+static int cost_to_bonus(int cost, struct player_ability *abil)
 {
-	assert(tome_ind > TOME_NONE && tome_ind < TOME_MAX);
-	int factor = tome_factors[tome_ind];
+	if (abil->learn_index < 0) return 0;
+	int factor = abil->cost;
 	return cost_to_bonus_base(cost, factor);
 }
 
@@ -573,13 +541,17 @@ static int tome_max_skill(const struct object *obj)
 	return result;
 }
 
-uint16_t calc_extra_points_array(struct player *p, uint16_t extra_powers[TOME_MAX])
+uint16_t calc_extra_points_array(struct player *p, uint16_t *extra_abil)
 {
-	int i;
 	uint16_t sum = 0;
+	struct player_ability *abil;
 
-	for (i = TOME_NONE + 1; i < TOME_MAX; ++i) {
-		sum += player_bonus_to_cost(extra_powers[i], i, p);
+	assert(player_abilities);
+	assert(extra_abil);
+
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (abil->learn_index < 0) continue;
+		sum += player_bonus_to_cost(extra_abil[abil->learn_index], abil, p);
 	}
 
 	return sum;
@@ -587,6 +559,11 @@ uint16_t calc_extra_points_array(struct player *p, uint16_t extra_powers[TOME_MA
 
 void calc_extra_points(struct player *p, struct player_state *ps)
 {
+	if (!character_generated) {
+		ps->extra_points_max = 0;
+		ps->extra_points_used = 0;
+	}
+	assert(p->extra_target);
 	int sum = calc_extra_points_array(p, p->extra_target);
 	int intbonus = adj_int_tome(ps->stat_ind[STAT_INT]);
 	int mx = 0;
@@ -656,26 +633,24 @@ bool learn_realm(struct player *p, const struct magic_realm *realm)
 	return true;
 }
 
-bool learn_extra(struct player *p, int index)
+bool learn_extra(struct player *p, struct player_ability *abil)
 {
 	//if (!player_can_learn_from_tome(p, index)) return false;
 
-	if (index < PP_MAX) {
-		p->extra_powers[index]++;
+	if (abil->type == PY_ABIL_POWER) {
+		p->extra_powers[abil->index]++;
 			
 		// tell the player when they've learned something
-		msg("You feel a bit more familiar with %s.", player_powers[index].name);
+		msg("You feel a bit more familiar with %s.", abil->name);
 		
-		p->upkeep->update |= player_powers[index].update;
+		//p->upkeep->update |= player_powers[abil->index].update;
 	}
-	else if (index < PP_MAX + SKILL_MAX) {
-		int skill_index = index - PP_MAX;
-		assert(skill_index < SKILL_MAX && skill_index >= 0);
-		p->extra_skills[skill_index]++;
+	else if (abil->type == PY_ABIL_SKILL) {
+		p->extra_skills[abil->index]++;
 
 		// tell the player when they've learned something
 		char buf[80];
-		my_strcpy(buf, skill_index_to_name(skill_index), sizeof(buf));
+		my_strcpy(buf, abil->name,/*skill_index_to_name(abil->index),*/ sizeof(buf));
 		my_strcap_full(buf);
 		msg("You feel a bit more familiar with %s.", buf);
 	}
@@ -688,24 +663,38 @@ bool learn_extra(struct player *p, int index)
 	return true;
 }
 
+struct player_ability *player_ability_by_learn_index(int learn_index)
+{
+	assert(learn_index < z_info->learn_max);
+	struct player_ability *abil;
+
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (abil->learn_index == learn_index) return abil;
+	}
+
+	return NULL;
+}
+
 bool obj_can_learn_extra_from(const struct object *obj)
 {
 	int maxs = tome_max_skill(obj);
 	int power = obj->pval;
+
+	struct player_ability *abil = player_ability_by_learn_index(power);
 
 	if (of_has(obj->flags, OF_REALM_LEARN)) {
 		if (player->realm) return false;
 		return true;
 	}
 
-	if (maxs <= 0) return false;
-	if (power <= TOME_NONE || power >= TOME_MAX) return false;
+	//if (maxs <= 0) return false;
+	//if (power <= TOME_NONE || power >= TOME_MAX) return false;
 
-	if (power < PP_MAX) {
-		if (player->extra_powers[power] >= maxs) return false;
+	if (abil->type == PY_ABIL_POWER) {
+		if (player->extra_powers[abil->index] >= maxs) return false;
 	}
 	else {
-		if (player->extra_skills[power - PP_MAX] >= maxs) return false;
+		if (player->extra_skills[abil->index] >= maxs) return false;
 	}
 	return true;
 }
@@ -834,22 +823,23 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 
 bool check_learn_powers(struct player *p, int xpgain)
 {
-	int i;
 	bool learned = false;
+	struct player_ability *abil;
 
-	for (i = 0; i < TOME_MAX; ++i) {
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (abil->learn_index < 0) continue;
+		int i = abil->learn_index;
 		int curr_total, curr_lrnd;
 		int target = p->extra_target[i];
 		unsigned int chance;
 
-		if (i < PP_MAX) {
-			curr_total = p->state.powers[i];
-			curr_lrnd = p->extra_powers[i];
+		if (abil->type == PY_ABIL_POWER) {
+			curr_total = p->state.powers[abil->index];
+			curr_lrnd = p->extra_powers[abil->index];
 		}
 		else {
-			int skill_i = i - PP_MAX;
-			curr_total = p->state.skills[skill_i];
-			curr_lrnd = p->extra_skills[skill_i];
+			curr_total = p->state.skills[abil->index];
+			curr_lrnd = p->extra_skills[abil->index];
 		}
 
 		if (target <= curr_lrnd) continue;
@@ -865,7 +855,7 @@ bool check_learn_powers(struct player *p, int xpgain)
 
 		if (one_in_(chance)) {
 			learned = true;
-			learn_extra(p, i);
+			learn_extra(p, abil);
 		}
 	}
 
@@ -925,42 +915,32 @@ bool check_learn_powers(struct player *p, int xpgain)
 #endif
 
 /**
- * returns  TOME_NONE if there is none
+ * returns  NONE  if there is none
  */
-int tome_parent(int tome_ind)
+struct player_ability *tome_parent(struct player_ability *abil)
 {
-	assert(tome_ind < TOME_MAX && tome_ind > TOME_NONE);
+	return abil->parent;
+	/*assert(tome_ind < TOME_MAX && tome_ind > TOME_NONE);
 	int result = tome_parents[tome_ind];
 	assert(result < TOME_MAX && result >= TOME_NONE);
-	return tome_parents[tome_ind];
+	return tome_parents[tome_ind];*/
 }
 
 /**
  * If a skill/power is a subpower of another skill/power what is the maximal target for the
  * former given a particular value for the latter?
  */
-static int tome_max_learnable_parent(int parent_level, int tome, int parent)
+static int tome_max_learnable_parent(int parent_level, struct player_ability *abil, struct player_ability *parent)
 {
-	int high_power = parent < PP_MAX ? 50 : 100;
+	int high_power = parent->type == PY_ABIL_POWER ? 50 : 100;
 
-	int tome_max_cost = bonus_to_cost(LEARN_MAX, tome);
+	int tome_max_cost = bonus_to_cost(LEARN_MAX, abil);
 
 	int max_cost = tome_max_cost * (parent_level * 3 / 2 - high_power / 3) / high_power;
 
 	int rounded = (max_cost / 2 + (tome_max_cost & 1)) * 2;
 
-	return cost_to_bonus(rounded, tome);
-	
-	/*
-	int tome_max_cost = bonus_to_cost(LEARN_MAX, tome);
-	int parent_max_cost = bonus_to_cost(LEARN_MAX, parent);
-	int parent_curr_cost = bonus_to_cost(parent_level, parent);
-
-	int basecost = parent_curr_cost * 3 / 2 - parent_max_cost * 3 / 2;
-	int maxcost = basecost * tome_max_cost / parent_max_cost;
-
-	return cost_to_bonus(maxcost, tome);
-	*/
+	return cost_to_bonus(rounded, abil);
 }
 
 static void max_learnable_object(struct object *obj, int *learn_array, int array_max) 
@@ -974,48 +954,66 @@ static void max_learnable_object(struct object *obj, int *learn_array, int array
 	}
 }
 
-void tome_max_learnable(struct player *p, int learn_array[TOME_MAX])
+bool tome_max_learnable_extra(struct player *p, int *learn_array, int *extra_array)
 {
-	memset(learn_array, 0, TOME_MAX * sizeof (*learn_array));
+	memset(learn_array, 0, z_info->learn_max * sizeof (*learn_array));
 
 	struct object *obj;
+	struct player_ability *abil;
+	bool extra = false;
 	int i;
 
 	if (OPT(p, birth_no_metaprogression)) {
-		for (i = TOME_NONE + 1; i < TOME_MAX; ++i) {
+		for (i = 0; i < z_info->learn_max; ++i) {
 			learn_array[i] = LEARN_MAX;
 		}
 	} else {
 		for (obj = p->gear; obj; obj = obj->next) {
-			max_learnable_object(obj, learn_array, TOME_MAX);
+			max_learnable_object(obj, learn_array, z_info->learn_max);
 		}
 
-		for (i = 0; i < TOME_MAX; ++i) {
+		for (i = 0; i < z_info->learn_max; ++i) {
 			learn_array[i] = MAX(learn_array[i], p->unlocked_tomes[i]);
 		}
 	}
 
-	for (i = TOME_NONE + 1; i < TOME_MAX; ++i) {
-		int tome_parent_id = tome_parent(i);
-		if (tome_parent_id != TOME_NONE) {
-			int curr_learned = tome_parent_id < PP_MAX ? p->state.powers[tome_parent_id] : p->state.skills[tome_parent_id - PP_MAX];
-			int tome_parent_max = tome_max_learnable_parent(curr_learned, i, tome_parent_id);
-			if (learn_array[i] > tome_parent_max) {
-				learn_array[i] = tome_parent_max;
+	if (extra_array) {
+		for (i = 0; i < z_info->learn_max; ++i) {
+			if (extra_array[i] > learn_array[i]) {
+				learn_array[i] = extra_array[i];
+				extra = true;
 			}
 		}
 	}
+
+	for (abil = player_abilities; abil; abil = abil->next) {
+		struct player_ability *parent = tome_parent(abil);
+		if (parent) {
+			int curr_learned = abil->type == PY_ABIL_POWER ? p->state.powers[abil->index] : p->state.skills[abil->index];
+			int tome_parent_max = tome_max_learnable_parent(curr_learned, abil, parent);
+			if (learn_array[abil->learn_index] > tome_parent_max) {
+				learn_array[abil->learn_index] = tome_parent_max;
+			}
+		}
+	}
+
+	return extra;
 }
 
-int tome_next_increment(struct player *p, int tome, int curr_bonus)
+void tome_max_learnable(struct player *p, int *learn_array)
 {
-	int curr_cost = player_bonus_to_cost(curr_bonus, tome, p);
+	tome_max_learnable_extra(p, learn_array, NULL);
+}
+
+int tome_next_increment(struct player *p, struct player_ability *abil, int curr_bonus)
+{
+	int curr_cost = player_bonus_to_cost(curr_bonus, abil, p);
 	int n_cost, nn_cost;
 	int next_bonus;
 
-	n_cost = player_bonus_to_cost(curr_bonus, tome, p);
+	n_cost = player_bonus_to_cost(curr_bonus, abil, p);
 	for (next_bonus = curr_bonus; next_bonus < 50; ++next_bonus) {
-		nn_cost = player_bonus_to_cost(next_bonus + 1, tome, p);
+		nn_cost = player_bonus_to_cost(next_bonus + 1, abil, p);
 		// we want the max power at the target cost, so keep going until we're about to go past target
 		// also make sure we have increased the cost just in case one bonus increase increases costs by > 1
 		if ((n_cost > curr_cost) && (nn_cost > n_cost)) return next_bonus;
@@ -1026,14 +1024,14 @@ int tome_next_increment(struct player *p, int tome, int curr_bonus)
 	return next_bonus;
 }
 
-int tome_prev_increment(struct player *p, int tome_ind, int curr_bonus)
+int tome_prev_increment(struct player *p, struct player_ability *abil, int curr_bonus)
 {
-	int curr_cost = player_bonus_to_cost(curr_bonus, tome_ind, p);
+	int curr_cost = player_bonus_to_cost(curr_bonus, abil, p);
 	int p_cost;
 	int prev_bonus;
 
 	for (prev_bonus = curr_bonus; prev_bonus > 0; --prev_bonus) {
-		p_cost = player_bonus_to_cost(prev_bonus, tome_ind, p);
+		p_cost = player_bonus_to_cost(prev_bonus, abil, p);
 
 		if (p_cost < curr_cost) return prev_bonus;
 	}

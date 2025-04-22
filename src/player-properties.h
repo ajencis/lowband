@@ -29,6 +29,16 @@ enum {
     PLAYER_FLAG_SKILL
 };
 
+enum player_ability_types {
+    PY_ABIL_ELEMENT,
+    PY_ABIL_POWER,
+    PY_ABIL_SKILL,
+    PY_ABIL_PLAYER,
+    PY_ABIL_OBJECT,
+    PY_ABIL_MAX
+};
+
+struct player_ability *lookup_player_ability(int idx, int type);
 bool class_has_ability(const struct player_class *class,
 					   struct player_ability *ability);
 bool race_has_ability(const struct player_race *race,

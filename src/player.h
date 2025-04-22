@@ -176,15 +176,6 @@ enum {
 	SKILL_MAX
 };
 
-struct player_power {
-	int index;
-	const char *name;
-	bool expon;
-	int power;
-	int weight;
-	int update;
-};
-
 struct follower {
 	struct follower *next;
 	struct monster *mon;
@@ -454,11 +445,18 @@ struct player_class {
 struct player_ability {
 	struct player_ability *next;
 	uint16_t index;			/* PF_*, OF_* or element index */
-	char *type;			/* Ability type */
+	int type;			/* Ability type */
 	char *name;			/* Ability name */
 	char *desc;			/* Ability description */
 	int group;			/* Ability group (set locally when viewing) */
 	int value;			/* Resistance value for elements */
+
+	// L: learning data
+	int cost;						// L: how much it costs to max out
+	int rarity;						// L: how likely it is to be found
+	int scale;						// L: does it scale other than linearly with level
+	int learn_index;				// L: what is its index of all learnable abilities
+	struct player_ability *parent;	// L: what abilities are needed to learn first
 };
 
 /**
@@ -742,7 +740,7 @@ struct player {
 
 	uint16_t extra_powers[PP_MAX];		/* L: if the player gained powers outside of their class */
 	uint16_t extra_skills[SKILL_MAX];	/* L: skills gained outside class/race */
-	uint16_t extra_target[TOME_MAX];	// L: what the player wants to learn
+	uint16_t *extra_target;	// L: what the player wants to learn
 	int sp_burn;						/* L: temporary reduction of max mp */
 
 	uint8_t *player_spell_flags;		/* L: for nonclass spells */

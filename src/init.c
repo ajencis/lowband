@@ -60,6 +60,7 @@
 #include "option.h"
 #include "player.h"
 #include "player-history.h"
+#include "player-properties.h"
 #include "player-quest.h"
 #include "player-spell.h"
 #include "player-timed.h"
@@ -1260,11 +1261,30 @@ struct embryo_player_ability {
 	struct player_ability ability;
 	struct player_bound_ui *boundui;
 	struct embryo_player_ability *next;
+	int parent_type;
+	int parent;
 };
 static struct embryo_player_ability  *embryo_player_abilities = NULL;
 
+static int abil_type_by_name(const char *name)
+{
+	if (streq(name, "power")) {
+		return PY_ABIL_POWER;
+	} else if (streq(name, "skill")) {
+		return PY_ABIL_SKILL;
+	} else if (streq(name, "player")) {
+		return PY_ABIL_PLAYER;
+	} else if (streq(name, "object")) {
+		return PY_ABIL_OBJECT;
+	} else if (streq(name, "element")) {
+		return PY_ABIL_ELEMENT;
+	}
+
+	return -1;
+}
+
 static enum parser_error parse_player_prop_type(struct parser *p) {
-	const char *type = parser_getstr(p, "type");
+	char *type = string_make(parser_getstr(p, "type"));
 	struct embryo_player_ability *h = parser_priv(p);
 	struct embryo_player_ability *embryo = mem_zalloc(sizeof *embryo);
 
@@ -1274,7 +1294,14 @@ static enum parser_error parse_player_prop_type(struct parser *p) {
 		embryo_player_abilities = embryo;
 	}
 	parser_setpriv(p, embryo);
-	embryo->ability.type = string_make(type);
+
+	embryo->ability.type = abil_type_by_name(type);
+
+	string_free(type);
+
+	if (embryo->ability.type < 0) {
+		return PARSE_ERROR_GENERIC;
+	}
 	return PARSE_ERROR_NONE;
 }
 
@@ -1283,18 +1310,20 @@ static enum parser_error parse_player_prop_code(struct parser *p) {
 	struct embryo_player_ability *embryo = parser_priv(p);
 	int index = -1;
 
-	if (!embryo)
+	if (!embryo) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	if (!embryo->ability.type)
+	}
+	if (embryo->ability.type < 0) {
 		return PARSE_ERROR_MISSING_PLAY_PROP_TYPE;
+	}
 
-	if (streq(embryo->ability.type, "player")) {
+	if (embryo->ability.type == PY_ABIL_PLAYER) {
 		index = code_index_in_array(player_info_flags, code);
-	} else if (streq(embryo->ability.type, "object")) {
+	} else if (embryo->ability.type == PY_ABIL_OBJECT) {
 		index = code_index_in_array(list_obj_flag_names, code);
-	} else if (streq(embryo->ability.type, "power")) {
+	} else if (embryo->ability.type == PY_ABIL_POWER) {
 		index = code_index_in_array(list_player_powers_names, code);
-	} else if (streq(embryo->ability.type, "skill")) {
+	} else if (embryo->ability.type == PY_ABIL_SKILL) {
 		index = code_index_in_array(list_player_skill_names, code);
 	}
 	if (index >= 0) {
@@ -1378,6 +1407,79 @@ static enum parser_error parse_player_prop_bindui(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_player_prop_cost(struct parser *p)
+{
+	struct embryo_player_ability *embryo = parser_priv(p);
+	int cost = parser_getint(p, "cost");
+	
+	if (!embryo) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	embryo->ability.cost = cost;
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_player_prop_rarity(struct parser *p)
+{
+	struct embryo_player_ability *embryo = parser_priv(p);
+	int rarity = parser_getint(p, "rarity");
+	
+	if (!embryo) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	embryo->ability.rarity = rarity;
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_player_prop_scale(struct parser *p)
+{
+	struct embryo_player_ability *embryo = parser_priv(p);
+	int scale = parser_getint(p, "scale");
+	
+	if (!embryo) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	embryo->ability.scale = scale;
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_player_prop_parent(struct parser *p)
+{
+	struct embryo_player_ability *embryo = parser_priv(p);
+	int parent_type = abil_type_by_name(parser_getsym(p, "parent-type"));
+	const char *parent_code = parser_getsym(p, "parent-code");
+	int parent;
+	
+	if (!embryo) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	if (parent_type < 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	if (!parent_code) {
+		return PARSE_ERROR_GENERIC;
+	} else if (parent_type == PY_ABIL_POWER) {
+		parent = code_index_in_array(list_player_powers_names, parent_code);
+	} else if (parent_type == PY_ABIL_SKILL) {
+		parent = code_index_in_array(list_player_skill_names, parent_code);
+	} else {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	embryo->parent = parent;
+	embryo->parent_type = parent_type;
+
+	return PARSE_ERROR_NONE;
+}
+
+
 static struct parser *init_parse_player_prop(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -1387,6 +1489,10 @@ static struct parser *init_parse_player_prop(void) {
 	parser_reg(p, "name str desc", parse_player_prop_name);
 	parser_reg(p, "value int value", parse_player_prop_value);
 	parser_reg(p, "bindui sym ui int aux sym uival", parse_player_prop_bindui);
+	parser_reg(p, "cost int cost", parse_player_prop_cost);
+	parser_reg(p, "rarity int rarity", parse_player_prop_rarity);
+	parser_reg(p, "scale int scale", parse_player_prop_scale);
+	parser_reg(p, "parent sym parent-type sym parent-code", parse_player_prop_parent);
 	return p;
 }
 
@@ -1394,25 +1500,50 @@ static errr run_parse_player_prop(struct parser *p) {
 	return parse_file_quit_not_found(p, "player_property");
 }
 
+static struct player_ability *player_prop_by_name(const char *name)
+{
+	struct player_ability *prop;
+
+	for (prop = player_abilities; prop; prop = prop->next) {
+		if (streq(name, prop->name)) {
+			return prop;
+		}
+	}
+
+	return NULL;
+}
+
+static struct player_ability *player_prop_lookup(int type, int id)
+{
+	struct player_ability *prop;
+
+	for (prop = player_abilities; prop; prop = prop->next) {
+		if (prop->index == id && prop->type == type) {
+			return prop;
+		}
+	}
+
+	return NULL;
+}
+
 static errr finish_parse_player_prop(struct parser *p) {
-	struct embryo_player_ability *embryo = embryo_player_abilities;
-	struct embryo_player_ability *target;
+	struct embryo_player_ability *embryo = embryo_player_abilities, *next;
 	struct player_bound_ui *boundui_cursor;
 	struct player_ability *new, *previous = NULL;
 
-	embryo_player_abilities = NULL;
+	//embryo_player_abilities = NULL;
 	/* Copy abilities over, making multiple copies for element types */
 	player_abilities = mem_zalloc(sizeof(*player_abilities));
 	new = player_abilities;
 	while (embryo) {
-		if (streq(embryo->ability.type, "element")) {
+		if (embryo->ability.type == PY_ABIL_ELEMENT) {
 			uint16_t i, n;
 			assert(N_ELEMENTS(list_element_names) < 65536);
 			n = (uint16_t) N_ELEMENTS(list_element_names);
 			for (i = 0; i < n - 1; i++) {
 				char *name = string_make(projections[i].name);
 				new->index = i;
-				new->type = string_make(embryo->ability.type);
+				new->type = embryo->ability.type;
 				new->desc = string_make(format("%s %s.", embryo->ability.desc, name));
 				my_strcap(name);
 				new->name = string_make(format("%s %s", name, embryo->ability.name));
@@ -1431,7 +1562,7 @@ static errr finish_parse_player_prop(struct parser *p) {
 					previous->next = new;
 				}
 			}
-			string_free(embryo->ability.type);
+			//string_free(embryo->ability.type);
 			string_free(embryo->ability.desc);
 			string_free(embryo->ability.name);
 			while (embryo->boundui) {
@@ -1445,6 +1576,11 @@ static errr finish_parse_player_prop(struct parser *p) {
 			new->index = embryo->ability.index;
 			new->desc = embryo->ability.desc;
 			new->name = embryo->ability.name;
+
+			new->cost = embryo->ability.cost;
+			new->rarity = embryo->ability.rarity;
+			new->scale = embryo->ability.scale;
+
 			while (embryo->boundui) {
 				boundui_cursor = embryo->boundui;
 				embryo->boundui = embryo->boundui->next;
@@ -1458,10 +1594,44 @@ static errr finish_parse_player_prop(struct parser *p) {
 				previous->next = new;
 			}
 		}
-		target = embryo;
+
+		//target = embryo;
 		embryo = embryo->next;
-		mem_free(target);
+		//mem_free(target);
 	}
+	
+	// L: find parents
+	for (embryo = embryo_player_abilities, next = embryo->next; embryo; embryo = next, next = embryo ? embryo->next : NULL) {
+		int parent_type = embryo->parent_type;
+		int parent = embryo->parent;
+		const char *name = embryo->ability.name;
+
+		if (!parent_type) continue;
+
+		struct player_ability *prop_base = player_prop_by_name(name);
+		struct player_ability *prop_parent = player_prop_lookup(parent_type, parent);
+
+		assert(prop_base && prop_parent);
+
+		prop_base->parent = prop_parent;
+
+		mem_free(embryo);
+	}
+
+	embryo_player_abilities = NULL;
+
+	assert(z_info);
+	z_info->learn_max = 0;
+	for (new = player_abilities; new; new = new->next) {
+		if (new->cost) {
+			new->learn_index = z_info->learn_max;
+			++z_info->learn_max;
+		}
+		else {
+			new->learn_index = -1;
+		}
+	}
+
 	parser_destroy(p);
 	return 0;
 }
@@ -1472,7 +1642,6 @@ static void cleanup_player_prop(void)
 	while (ability) {
 		struct player_ability *totrash = ability;
 		ability = ability->next;
-		string_free(totrash->type);
 		string_free(totrash->desc);
 		string_free(totrash->name);
 		mem_free(totrash);

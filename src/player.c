@@ -588,6 +588,10 @@ void player_cleanup_members(struct player *p)
 		mem_free(p->unlocked_tomes);
 		p->unlocked_tomes = NULL;
 	}
+	if (p->extra_target) {
+		mem_free(p->extra_target);
+		p->extra_target = NULL;
+	}
 	mem_free(p->curr_monster_race);
 }
 
@@ -611,7 +615,9 @@ static void init_player(void) {
 									   sizeof(struct curse_data));
 	player->unlocked_classes = mem_zalloc(z_info->c_max * sizeof(*player->unlocked_classes));
 	player->unlocked_races = mem_zalloc(z_info->pr_max * sizeof(*player->unlocked_races));
-	player->unlocked_tomes = mem_zalloc(TOME_MAX * sizeof(*player->unlocked_tomes));
+	player->unlocked_tomes = mem_zalloc(z_info->learn_max * sizeof(*player->unlocked_tomes));
+
+	player->extra_target = mem_zalloc(z_info->learn_max * sizeof *player->extra_target);
 
 	options_init_defaults(&player->opts);
 }
