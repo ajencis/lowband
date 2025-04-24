@@ -111,6 +111,8 @@ static bool monster_near_permwall(const struct monster *mon)
  */
 bool monster_can_see_player(struct monster *mon)
 {
+	int p_sq_light = square_light(cave, player->grid);
+
 	if (mon->m_timed[MON_TMD_SLEEP]) {
 		return false;
 	}
@@ -122,6 +124,9 @@ bool monster_can_see_player(struct monster *mon)
 	}
 	if (player_is_invisible(player) && 
 			(!rf_has(mon->race->flags, RF_SMART) || !mflag_has(mon->mflag, MFLAG_AWARE))) {
+		return false;
+	}
+	if (-p_sq_light > mon->race->level / 10) {
 		return false;
 	}
 	return true;

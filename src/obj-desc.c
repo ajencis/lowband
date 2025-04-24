@@ -548,7 +548,7 @@ const char *get_obj_power_name(const struct object *obj)
 			   of_has(obj->flags, OF_POWER_LEARN_2) ||
 			   of_has(obj->flags, OF_POWER_LEARN_1);
 
-	struct player_ability *abil = player_ability_by_learn_index(obj->pval);
+	const struct player_ability *abil = player_ability_by_learn_index(obj->pval);
 	if (flg) {
 		return abil->name;
 	}

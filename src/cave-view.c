@@ -24,6 +24,7 @@
 #include "monster.h"
 #include "player-calcs.h"
 #include "player-timed.h"
+#include "player-util.h"
 #include "trap.h"
 
 /**
@@ -612,6 +613,25 @@ static bool glow_can_light_wall(struct chunk *c, struct player *p,
 }
 
 /**
+ * L: how dark the square in question can get
+ * if the player is nearby and has PP_UNLIGHT it will be les than 0
+ * otherwise it will be 0
+ */
+static int square_min_light(struct chunk *c, struct loc grid, struct player *p)
+{
+	int result = 0;
+
+	if (p->state.powers[PP_UNLIGHT] > 0) {
+		int pdist = distance(player->grid, grid);
+		int darkness_max = get_power_scale(p, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2 - 1) + 1;
+
+		result = MIN(pdist - darkness_max, result);
+	}
+
+	return result;
+}
+
+/**
  * Help calc_lighting():  add in the effect of a light source.
  * \param c Is the chunk to use.
  * \param p Is the player to use.
@@ -621,40 +641,90 @@ static bool glow_can_light_wall(struct chunk *c, struct player *p,
  * This is a brute force approach.  Some computation probably could be saved by
  * propagating the light out from the source and terminating paths when they
  * reach a wall.
+ * 
+ * L: changed
+ * light partly overwrites darkness
+ * cave starts dark, then light is added to it
+ * the minimum light level for a square is the light level of each light in
+ * the dungeon less the distance from that light (if the light is in los) plus half
+ * the original light level of the square
+ * 
+ * eg a square is light -10 because of a UNLIGHT player, and there is a monster with
+ * a intensity 2 lantern 4 squares away
+ * the normal minimum intensity for the original square is -2, (intensity 2 lanturn - 4 squares distance)
+ * the original light level of the square is -10, so the resulting light level is -7
+ * (half of -10 + -2)
+ * a square 3 squares away from the lantern with min-light -9 would have (-9 / 2 + -1) = -5 light level
+ * it is assumed that the light level cannot drop by more than 2 between adjacent squares
+ * the spread of light will be limited to radius unless radius is less than 0
  */
 static void add_light(struct chunk *c, struct player *p, struct loc sgrid,
 		int radius, int inten)
 {
-	int y;
+	int currrad = 0;
+	bool done = false;
 
-	for (y = -radius; y <= radius; y++) {
-		int x;
+	if (inten <= 0) return;
 
+	for (currrad = 0; !done && (radius < 0 || currrad <= radius); ++currrad) {
+		struct loc grid;
+		done = true;
+
+		for (grid.x = sgrid.x - currrad; grid.x <= sgrid.x + currrad; ++grid.x) {
+			for (grid.y = sgrid.y - currrad; grid.y <= sgrid.y + currrad; ++grid.y) {
+				int dist = distance(sgrid, grid);
+				if (!square_in_bounds(c, grid)) continue;
+				if (dist != currrad) continue;
+				if (!los(c, sgrid, grid)) continue;
+
+				if (!square_allowslos(c, grid) &&
+						!source_can_light_wall(c, p, sgrid, grid)) {
+					continue;
+				}
+
+				int add = inten - dist;
+				int curr = square_light(c, grid);
+				int new = MAX(curr, curr / 2) + add;
+
+				// if we're adding light still or if we're lighting darkness keep going
+				if (new > curr) {
+					c->squares[grid.y][grid.x].light = new;
+					done = false;
+				}
+
+				// squares of 1 greater distance could have 2 less light but we will be adding 1 less light
+				done = done && (new - 1 < curr - 2) && (add <= 0);
+			}
+		}
+	}
+
+	/*for (y = -radius; y <= radius; y++) {
 		for (x = -radius; x <= radius; x++) {
 			struct loc grid = loc_sum(sgrid, loc(x, y));
 			int dist = distance(sgrid, grid);
 			if (!square_in_bounds(c, grid)) continue;
 			if (dist > radius) continue;
-			/* Don't propagate the light through walls. */
+			// Don't propagate the light through walls.
 			if (!los(c, sgrid, grid)) continue;
-			/*
-			 * Only light a wall if the face lit is possibly visible
-			 * to the player.
-			 */
+			
+			// Only light a wall if the face lit is possibly visible
+			// to the player.
 			if (!square_allowslos(c, grid) && !source_can_light_wall(c,
 					p, sgrid, grid)) continue;
-			/* Adjust the light level */
+
+			// Adjust the light level
 			if (inten > 0) {
-				/* Light getting less further away */
+				// Light getting less further away
 				c->squares[grid.y][grid.x].light +=
 					inten - dist;
 			} else {
-				/* Light getting greater further away */
+				// Light getting greater further away
 				c->squares[grid.y][grid.x].light +=
 					inten + dist;
 			}
 		}
-	}
+	}*/
+	
 }
 
 /**
@@ -662,46 +732,56 @@ static void add_light(struct chunk *c, struct player *p, struct loc sgrid,
  */
 static void calc_lighting(struct chunk *c, struct player *p)
 {
-	int dir, k, x, y;
-	int light = p->state.cur_light, radius = ABS(light) - 1;
+	int k, x, y;
+	int light = p->state.cur_light, radius;// = ABS(light) - 1;
 	int old_light = square_light(c, p->grid);
+	struct loc grid;
+
+	for (grid.y = 0; grid.y < c->height; ++grid.y) {
+		for (grid.x = 0; grid.x < c->width; ++grid.x) {
+			c->squares[grid.y][grid.x].light = square_min_light(cave, grid, p);
+		}
+	}
 
 	/* Starting values based on permanent light */
 	for (y = 0; y < c->height; y++) {
 		for (x = 0; x < c->width; x++) {
-			struct loc grid = loc(x, y);
+			grid = loc(x, y);
 
 			if (square_isglow(c, grid) &&
 					(square_allowslos(c, grid) ||
 					glow_can_light_wall(c, p, grid))) {
-				c->squares[y][x].light = 1;
-			} else {
+				add_light(c, p, grid, 0, 1);
+				//c->squares[y][x].light += 1;
+			} /*else {
 				c->squares[y][x].light = 0;
-			}
+			}*/
 
 			/* Squares with bright terrain have intensity 2 */
 			if (square_isbright(c, grid)) {
+				add_light(c, p, grid, 1, 2);
+				/*
 				c->squares[y][x].light += 2;
 				for (dir = 0; dir < 8; dir++) {
 					struct loc adj_grid = loc_sum(grid, ddgrid_ddd[dir]);
 					if (!square_in_bounds(c, adj_grid)) continue;
-					/*
-					 * Only brighten a wall if the player
-					 * is in position to view the face
-					 * that's lit up.
-					 */
+					
+					// Only brighten a wall if the player
+					// is in position to view the face
+					// that's lit up.
+					
 					if (!square_allowslos(c, adj_grid) &&
 							!source_can_light_wall(
 							c, p, grid, adj_grid))
 							continue;
 					c->squares[adj_grid.y][adj_grid.x].light += 1;
-				}
+				}*/
 			}
 		}
 	}
 
 	/* Light around the player */
-	add_light(c, p, p->grid, radius, light);
+	add_light(c, p, p->grid, -1, light);
 
 	/* Scan monster list and add monster light or darkness */
 	for (k = 1; k < cave_monster_max(c); k++) {
@@ -726,13 +806,19 @@ static void calc_lighting(struct chunk *c, struct player *p)
 			continue;
 		}
 
-		add_light(c, p, mon->grid, radius, light);
+		add_light(c, p, mon->grid, -1, light);
 	}
 
 	/* Update light level indicator */
 	if (square_light(c, p->grid) != old_light) {
 		p->upkeep->redraw |= PR_LIGHT;
 	}
+}
+
+static bool lit_for_player(struct chunk *c, struct loc grid, struct player *p)
+{
+	int vis = player_grid_visibility(grid, p, cave);
+	return vis == PY_SEE_VISIBLE;
 }
 
 /**
@@ -755,17 +841,21 @@ static void become_viewable(struct chunk *c, struct loc grid, struct player *p,
 	}
 
 	/* Mark lit grids, and walls near to them, as seen */
-	if (square_islit(c, grid)) {
+	if (lit_for_player(c, grid, p)) {
 		if (!square_allowslos(c, grid)) {
 			/* For walls, check for a lit grid closer to the player */
 			int xc = (x < p->grid.x) ? (x + 1) : (x > p->grid.x) ? (x - 1) : x;
 			int yc = (y < p->grid.y) ? (y + 1) : (y > p->grid.y) ? (y - 1) : y;
-			if (square_islit(c, loc(xc, yc))) {
+			if (lit_for_player(c, loc(xc, yc), p)) {
 				sqinfo_on(square(c, grid)->info, SQUARE_SEEN);
 			}
 		} else {
 			sqinfo_on(square(c, grid)->info, SQUARE_SEEN);
 		}
+	}
+	
+	if (p->state.powers[PP_UNLIGHT] > 0 && square_light(c, grid) < 0) {
+		sqinfo_on(square(c, grid)->info, SQUARE_SEEN);
 	}
 }
 
@@ -781,13 +871,18 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 	int d = distance(grid, p->grid);
 	bool close = d < p->state.cur_light;
 
+	int unlight = unlight_radius(p);
+	int light = square_light(c, grid);
+
+	if (unlight >= d && light < 0) close = true;
+
 	/* Too far away */
 	if (d > z_info->max_sight) return;
 
 	/* UNLIGHT players have a special radius of view */
-	if (player_has(p, PF_UNLIGHT) && (p->state.cur_light <= 1)) {
+	/*if (player_has(p, PF_UNLIGHT) && (p->state.cur_light <= 1)) {
 		close = d < (2 + p->lev / 6 - p->state.cur_light);
-	}
+	}*/
 
 	/* Special case for wall lighting. If we are a wall and the square in
 	 * the direction of the player is in LOS, we are in LOS. This avoids
@@ -906,6 +1001,8 @@ void update_view(struct chunk *c, struct player *p)
 {
 	int x, y;
 
+	bool p_sq_lit = lit_for_player(c, p->grid, p);
+
 	/* Record the current view */
 	mark_wasseen(c);
 
@@ -915,7 +1012,7 @@ void update_view(struct chunk *c, struct player *p)
 	/* Assume we can view the player grid */
 	sqinfo_on(square(c, p->grid)->info, SQUARE_VIEW);
 	if (p->state.cur_light > 0 || square_islit(c, p->grid) ||
-			player_has(p, PF_UNLIGHT)) {
+			p_sq_lit) {
 		sqinfo_on(square(c, p->grid)->info, SQUARE_SEEN);
 		sqinfo_on(square(c, p->grid)->info, SQUARE_CLOSE_PLAYER);
 	}

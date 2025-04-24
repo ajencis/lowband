@@ -77,7 +77,7 @@ uint16_t calc_extra_points_array(struct player *p, uint16_t *extra_abil);
 void calc_extra_points(struct player *p, struct player_state *ps);
 bool check_learn_powers(struct player *p, int xpgain);
 bool obj_can_learn_extra_from(const struct object *obj);
-bool learn_extra(struct player *p, struct player_ability *abil);
+bool learn_extra(struct player *p, const struct player_ability *abil);
 bool learn_realm(struct player *p, const struct magic_realm *realm);
 int player_class_power(struct player *p, int power);
 int player_race_power(struct player *p, int power);
@@ -89,17 +89,22 @@ void player_race_elem_info(const struct player_race *r, bool evolved, struct ele
 int player_skill_stat_ind(struct player *p, struct player_state *ps, int skill);
 void player_skill_stats(struct player *p, struct player_state *ps, int skill, int *stat1, int *stat2);
 bool player_learn_spell_xp(struct player *p, bool initial, int xp);
-int player_bonus_to_cost(int bonus, struct player_ability *abil, struct player *p);
+int player_bonus_to_cost(int bonus, const struct player_ability *abil, struct player *p);
 bool tome_max_learnable_extra(struct player *p, int *learn_array, int *extra_array);
 void tome_max_learnable(struct player *p, int *learn_array);
-int tome_next_increment(struct player *p, struct player_ability *abil, int curr_bonus);
-int tome_prev_increment(struct player *p, struct player_ability *abil, int curr_bonus);
+int tome_next_increment(struct player *p, const struct player_ability *abil, int curr_bonus);
+int tome_prev_increment(struct player *p, const struct player_ability *abil, int curr_bonus);
 const char *lookup_power_name(int power);
-struct player_ability *tome_parent(struct player_ability *abil);
-struct player_ability *player_ability_by_learn_index(int learn_index);
+const struct player_ability *tome_parent(const struct player_ability *abil);
+const struct player_ability *player_ability_by_learn_index(int learn_index);
 
 int antimagic_fail_increase(struct player *p);
 int antimagic_radius(struct player *p);
+
+int unlight_power_state(struct player_state *ps, struct player *p);
+int unlight_power(struct player *p);
+int player_grid_visibility(struct loc grid, struct player *p, struct chunk *c);
+int unlight_radius(struct player *p);
 
 int dungeon_get_next_level(struct player *p, int dlev, int added);
 void player_set_recall_depth(struct player *p);

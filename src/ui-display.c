@@ -1347,6 +1347,22 @@ static size_t prt_learn(int row, int col)
 	return 0;
 }
 
+static size_t prt_unlight(int row, int col)
+{
+	if (player->state.powers[PP_UNLIGHT] > 0) {
+		int power = unlight_power(player);
+		char buf[80];
+
+		strnfmt(buf, sizeof buf, "Unlight %i", power);
+
+		c_put_str(COLOUR_SLATE, buf, row, col);
+
+		return strlen(buf) + 1;
+	}
+
+	return 0;
+}
+
 /*static size_t prt_mana(int row, int col)
 {
 	int mana = square(cave, player->grid)->mana;
@@ -1363,7 +1379,7 @@ typedef size_t status_f(int row, int col);
 static status_f *status_handlers[] =
 { prt_level_feeling, prt_light, prt_moves, prt_unignore, prt_recall,
   prt_descent, prt_state, prt_study, prt_tmd, prt_dtrap, prt_terrain,
-  prt_learn };
+  prt_learn, prt_unlight };
 
 
 static void update_statusline_aux(int row, int col)
@@ -1374,8 +1390,9 @@ static void update_statusline_aux(int row, int col)
 	prt("", row, col);
 
 	/* Display those which need redrawing */
-	for (i = 0; i < N_ELEMENTS(status_handlers); i++)
+	for (i = 0; i < N_ELEMENTS(status_handlers); i++) {
 		col += status_handlers[i](row, col);
+	}
 }
 
 /**
@@ -2677,9 +2694,11 @@ static void see_floor_items(game_event_type type, game_event_data *data,
 	}
 
 	/* Can we pick any up? */
-	for (i = 0; i < floor_num; i++)
-	    if (inven_carry_okay(floor_list[i]))
+	for (i = 0; i < floor_num; i++) {
+	    if (inven_carry_okay(floor_list[i])) {
 			can_pickup = true;
+		}
+	}
 
 	/* One object */
 	if (floor_num == 1) {
@@ -2687,10 +2706,11 @@ static void see_floor_items(game_event_type type, game_event_data *data,
 		struct object *obj = floor_list[0];
 		char o_name[80];
 
-		if (!can_pickup)
+		if (!can_pickup) {
 			p = "have no room for";
-		else if (blind)
+		} else if (blind) {
 			p = "feel";
+		}
 
 		/* Describe the object.  Less detail if blind. */
 		if (blind) {

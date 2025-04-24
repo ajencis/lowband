@@ -28,6 +28,7 @@
 #include "obj-util.h"
 #include "player-calcs.h"
 #include "player-timed.h"
+#include "player-util.h"
 #include "trap.h"
 
 /**
@@ -109,7 +110,7 @@ void map_info(struct loc grid, struct grid_data *g)
 		bool lit = square_islit(cave, grid);
 
 		if (sqinfo_has(square(cave, grid)->info, SQUARE_CLOSE_PLAYER)) {
-			if (player_has(player, PF_UNLIGHT) &&
+			if (player->state.powers[PP_UNLIGHT] > 0 &&
 					player->state.cur_light <= 1) {
 				g->lighting = (lit) ?
 					LIGHTING_LOS : LIGHTING_DARK;
@@ -393,7 +394,7 @@ static void cave_unlight(struct point_set *ps)
 		}
 
 		/* ...but dark-loving characters remember them */
-		if (player_has(player, PF_UNLIGHT)) {
+		if (unlight_power(player) > 0) {
 			square_memorize(cave, grid);
 		}
 

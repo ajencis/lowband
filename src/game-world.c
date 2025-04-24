@@ -623,7 +623,7 @@ void process_world(struct chunk *c)
 	}
 
 	/* Check for light change */
-	if (player_has(player, PF_UNLIGHT)) {
+	if (player->state.powers[PP_UNLIGHT] > 0) {
 		player->upkeep->update |= PU_BONUS;
 	}
 

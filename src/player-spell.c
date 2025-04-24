@@ -422,6 +422,10 @@ int16_t spell_chance(int spell_index)
 {
 	int chance = 100, minfail;
 
+	int curr_unlight = player->state.powers[PP_UNLIGHT] ?
+			unlight_power(player) - get_power_scale(player, PP_UNLIGHT, 5) :
+			0;
+
 	const struct class_spell *spell;
 
 	/* Paranoia -- must be literate */
@@ -441,8 +445,9 @@ int16_t spell_chance(int spell_index)
 	chance -= fail_adjust(player, spell);
 
 	/* Not enough mana to cast */
-	if (spell->smana > player->csp)
+	if (spell->smana > player->csp) {
 		chance += 5 * (spell->smana - player->csp);
+	}
 
 	/* Get the minimum failure rate for the casting stat level */
 	minfail = min_fail(player, spell);
@@ -453,9 +458,7 @@ int16_t spell_chance(int spell_index)
 	}
 
 	/* Necromancers are punished by being on lit squares */
-	if (player_has(player, PF_UNLIGHT) && square_islit(cave, player->grid)) {
-		chance += 25;
-	}
+	chance -= curr_unlight;
 
 	/* Fear makes spells harder (before minfail) */
 	/* Note that spells that remove fear have a much lower fail rate than

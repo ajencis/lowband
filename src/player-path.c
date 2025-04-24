@@ -178,7 +178,7 @@ static int compute_unlocked_penalty(struct player *p)
 static int compute_locked_penalty(struct player *p)
 {
 	int chance = calc_unlocking_chance(p, 7, p->state.cur_light < 1
-		&& !player_has(p, PF_UNLIGHT));
+		&& unlight_power(p) < 1);
 	int penalty;
 
 	if (chance <= 0) {

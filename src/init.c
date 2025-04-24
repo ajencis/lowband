@@ -1261,8 +1261,8 @@ struct embryo_player_ability {
 	struct player_ability ability;
 	struct player_bound_ui *boundui;
 	struct embryo_player_ability *next;
-	int parent_type;
-	int parent;
+	int parent_type[MAX_ABIL_PARENTS];
+	int parent[MAX_ABIL_PARENTS];
 };
 static struct embryo_player_ability  *embryo_player_abilities = NULL;
 
@@ -1287,6 +1287,7 @@ static enum parser_error parse_player_prop_type(struct parser *p) {
 	char *type = string_make(parser_getstr(p, "type"));
 	struct embryo_player_ability *h = parser_priv(p);
 	struct embryo_player_ability *embryo = mem_zalloc(sizeof *embryo);
+	int i;
 
 	if (h) {
 		h->next = embryo;
@@ -1298,6 +1299,11 @@ static enum parser_error parse_player_prop_type(struct parser *p) {
 	embryo->ability.type = abil_type_by_name(type);
 
 	string_free(type);
+
+	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
+		embryo->parent_type[i] = -1;
+		embryo->parent[i] = -1;
+	}
 
 	if (embryo->ability.type < 0) {
 		return PARSE_ERROR_GENERIC;
@@ -1455,6 +1461,7 @@ static enum parser_error parse_player_prop_parent(struct parser *p)
 	int parent_type = abil_type_by_name(parser_getsym(p, "parent-type"));
 	const char *parent_code = parser_getsym(p, "parent-code");
 	int parent;
+	int i;
 	
 	if (!embryo) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -1473,8 +1480,13 @@ static enum parser_error parse_player_prop_parent(struct parser *p)
 		return PARSE_ERROR_GENERIC;
 	}
 
-	embryo->parent = parent;
-	embryo->parent_type = parent_type;
+	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
+		if (embryo->parent[i] < 0) {
+			embryo->parent[i] = parent;
+			embryo->parent_type[i] = parent_type;
+			break;
+		}
+	}
 
 	return PARSE_ERROR_NONE;
 }
@@ -1500,19 +1512,6 @@ static errr run_parse_player_prop(struct parser *p) {
 	return parse_file_quit_not_found(p, "player_property");
 }
 
-static struct player_ability *player_prop_by_name(const char *name)
-{
-	struct player_ability *prop;
-
-	for (prop = player_abilities; prop; prop = prop->next) {
-		if (streq(name, prop->name)) {
-			return prop;
-		}
-	}
-
-	return NULL;
-}
-
 static struct player_ability *player_prop_lookup(int type, int id)
 {
 	struct player_ability *prop;
@@ -1524,6 +1523,35 @@ static struct player_ability *player_prop_lookup(int type, int id)
 	}
 
 	return NULL;
+}
+
+static bool power_parents_loop(const struct player_ability *curr, const struct player_ability *orig)
+{
+	if (!curr) return false;
+
+	int i;
+
+	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
+		const struct player_ability *parent = curr->parent[i];
+		if (parent == orig) return true;
+		if (power_parents_loop(parent, orig)) return true;
+	}
+
+	return false;
+}
+
+static bool looping_power_parents(void)
+{
+	const struct player_ability *abil;
+
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (power_parents_loop(abil, abil)) {
+			plog_fmt("Power %s's parents loop!", abil->name);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 static errr finish_parse_player_prop(struct parser *p) {
@@ -1599,24 +1627,33 @@ static errr finish_parse_player_prop(struct parser *p) {
 		embryo = embryo->next;
 		//mem_free(target);
 	}
-	
+
 	// L: find parents
 	for (embryo = embryo_player_abilities, next = embryo->next; embryo; embryo = next, next = embryo ? embryo->next : NULL) {
-		int parent_type = embryo->parent_type;
-		int parent = embryo->parent;
-		const char *name = embryo->ability.name;
+		int i;
+		struct player_ability *prop_base, *prop_parent;
 
-		if (!parent_type) continue;
+		prop_base = player_prop_lookup(embryo->ability.type, embryo->ability.index);
 
-		struct player_ability *prop_base = player_prop_by_name(name);
-		struct player_ability *prop_parent = player_prop_lookup(parent_type, parent);
+		for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
+			int parent_type = embryo->parent_type[i];
+			int parent = embryo->parent[i];
+			prop_base = player_prop_lookup(embryo->ability.type, embryo->ability.index);
 
-		assert(prop_base && prop_parent);
+			if (parent_type < 0) continue;
 
-		prop_base->parent = prop_parent;
+			//prop_base = player_prop_by_name(name);
+			prop_parent = player_prop_lookup(parent_type, parent);
+
+			assert(prop_base && prop_parent);
+
+			prop_base->parent[i] = prop_parent;
+		}
 
 		mem_free(embryo);
 	}
+
+	if (looping_power_parents()) return -1;
 
 	embryo_player_abilities = NULL;
 
@@ -1624,8 +1661,7 @@ static errr finish_parse_player_prop(struct parser *p) {
 	z_info->learn_max = 0;
 	for (new = player_abilities; new; new = new->next) {
 		if (new->cost) {
-			new->learn_index = z_info->learn_max;
-			++z_info->learn_max;
+			new->learn_index = z_info->learn_max++;
 		}
 		else {
 			new->learn_index = -1;

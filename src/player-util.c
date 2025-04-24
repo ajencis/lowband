@@ -113,7 +113,7 @@ static bool unlock_tomes(struct player *p)
 {
 	bool didlearn = false;
 
-	struct player_ability *abil;
+	const struct player_ability *abil;
 
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->learn_index < 0) continue;
@@ -487,13 +487,13 @@ static int bonus_to_cost_base(int bonus, int factor)
 	return result;
 }
 
-static int bonus_to_cost(int bonus, struct player_ability *abil)
+static int bonus_to_cost(int bonus, const struct player_ability *abil)
 {
 	if (abil->learn_index < 0) return 0;
 	return bonus_to_cost_base(bonus, abil->cost);
 }
 
-int player_bonus_to_cost(int bonus, struct player_ability *abil, struct player *p)
+int player_bonus_to_cost(int bonus, const struct player_ability *abil, struct player *p)
 {
 	assert(abil);
 	int base = bonus_to_cost(bonus, abil);
@@ -520,7 +520,7 @@ static int cost_to_bonus_base(int cost, int factor)
 	return i;
 }
 
-static int cost_to_bonus(int cost, struct player_ability *abil)
+static int cost_to_bonus(int cost, const struct player_ability *abil)
 {
 	if (abil->learn_index < 0) return 0;
 	int factor = abil->cost;
@@ -544,7 +544,7 @@ static int tome_max_skill(const struct object *obj)
 uint16_t calc_extra_points_array(struct player *p, uint16_t *extra_abil)
 {
 	uint16_t sum = 0;
-	struct player_ability *abil;
+	const struct player_ability *abil;
 
 	assert(player_abilities);
 	assert(extra_abil);
@@ -633,7 +633,7 @@ bool learn_realm(struct player *p, const struct magic_realm *realm)
 	return true;
 }
 
-bool learn_extra(struct player *p, struct player_ability *abil)
+bool learn_extra(struct player *p, const struct player_ability *abil)
 {
 	//if (!player_can_learn_from_tome(p, index)) return false;
 
@@ -663,10 +663,10 @@ bool learn_extra(struct player *p, struct player_ability *abil)
 	return true;
 }
 
-struct player_ability *player_ability_by_learn_index(int learn_index)
+const struct player_ability *player_ability_by_learn_index(int learn_index)
 {
 	assert(learn_index < z_info->learn_max);
-	struct player_ability *abil;
+	const struct player_ability *abil;
 
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->learn_index == learn_index) return abil;
@@ -679,13 +679,16 @@ bool obj_can_learn_extra_from(const struct object *obj)
 {
 	int maxs = tome_max_skill(obj);
 	int power = obj->pval;
-
-	struct player_ability *abil = player_ability_by_learn_index(power);
+	const struct player_ability *abil;
 
 	if (of_has(obj->flags, OF_REALM_LEARN)) {
 		if (player->realm) return false;
 		return true;
 	}
+
+	if (maxs <= 0) return false;
+
+	abil = player_ability_by_learn_index(power);
 
 	//if (maxs <= 0) return false;
 	//if (power <= TOME_NONE || power >= TOME_MAX) return false;
@@ -824,7 +827,7 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 bool check_learn_powers(struct player *p, int xpgain)
 {
 	bool learned = false;
-	struct player_ability *abil;
+	const struct player_ability *abil;
 
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->learn_index < 0) continue;
@@ -917,20 +920,21 @@ bool check_learn_powers(struct player *p, int xpgain)
 /**
  * returns  NONE  if there is none
  */
-struct player_ability *tome_parent(struct player_ability *abil)
+const struct player_ability *tome_parent(const struct player_ability *abil)
 {
-	return abil->parent;
+	return abil->parent[0];
 	/*assert(tome_ind < TOME_MAX && tome_ind > TOME_NONE);
 	int result = tome_parents[tome_ind];
 	assert(result < TOME_MAX && result >= TOME_NONE);
 	return tome_parents[tome_ind];*/
 }
 
+#if 0
 /**
  * If a skill/power is a subpower of another skill/power what is the maximal target for the
  * former given a particular value for the latter?
  */
-static int tome_max_learnable_parent(int parent_level, struct player_ability *abil, struct player_ability *parent)
+static int tome_max_cost_parent(int parent_level, struct player_ability *abil, struct player_ability *parent)
 {
 	int high_power = parent->type == PY_ABIL_POWER ? 50 : 100;
 
@@ -938,9 +942,40 @@ static int tome_max_learnable_parent(int parent_level, struct player_ability *ab
 
 	int max_cost = tome_max_cost * (parent_level * 3 / 2 - high_power / 3) / high_power;
 
-	int rounded = (max_cost / 2 + (tome_max_cost & 1)) * 2;
+	return max_cost;
+}
+#endif
 
-	return cost_to_bonus(rounded, abil);
+static int tome_max_learnable_parents_array(const struct player_ability *abil, int *powers_array, int *skills_array)
+{
+	int div = 0, sum = 0;
+	int i;
+	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
+		const struct player_ability *prnt = abil->parent[i];
+		if (prnt) {
+			if (prnt->type == PY_ABIL_POWER) {
+				sum += powers_array[prnt->index];
+				div += 50;
+			} else if (prnt->type == PY_ABIL_SKILL) {
+				sum += skills_array[prnt->index] / 2;
+				div += 100;
+			}
+		}
+	}
+
+	if (div > 0) {
+		int abil_max_cost = bonus_to_cost(LEARN_MAX, abil);
+		int max_cost = abil_max_cost * sum * 3 / 2 / div;
+
+		return cost_to_bonus(max_cost, abil);
+	}
+
+	return LEARN_MAX;
+}
+
+static int tome_max_learnable_parents(const struct player_ability *abil, struct player *p)
+{
+	return tome_max_learnable_parents_array(abil, p->state.powers, p->state.skills);
 }
 
 static void max_learnable_object(struct object *obj, int *learn_array, int array_max) 
@@ -959,7 +994,7 @@ bool tome_max_learnable_extra(struct player *p, int *learn_array, int *extra_arr
 	memset(learn_array, 0, z_info->learn_max * sizeof (*learn_array));
 
 	struct object *obj;
-	struct player_ability *abil;
+	const struct player_ability *abil;
 	bool extra = false;
 	int i;
 
@@ -987,14 +1022,16 @@ bool tome_max_learnable_extra(struct player *p, int *learn_array, int *extra_arr
 	}
 
 	for (abil = player_abilities; abil; abil = abil->next) {
-		struct player_ability *parent = tome_parent(abil);
+		int tome_parent_max = tome_max_learnable_parents(abil, p);
+		learn_array[abil->learn_index] = MIN(learn_array[abil->learn_index], tome_parent_max);
+		/*struct player_ability *parent = tome_parent(abil);
 		if (parent) {
 			int curr_learned = abil->type == PY_ABIL_POWER ? p->state.powers[abil->index] : p->state.skills[abil->index];
 			int tome_parent_max = tome_max_learnable_parent(curr_learned, abil, parent);
 			if (learn_array[abil->learn_index] > tome_parent_max) {
 				learn_array[abil->learn_index] = tome_parent_max;
 			}
-		}
+		}*/
 	}
 
 	return extra;
@@ -1005,7 +1042,7 @@ void tome_max_learnable(struct player *p, int *learn_array)
 	tome_max_learnable_extra(p, learn_array, NULL);
 }
 
-int tome_next_increment(struct player *p, struct player_ability *abil, int curr_bonus)
+int tome_next_increment(struct player *p, const struct player_ability *abil, int curr_bonus)
 {
 	int curr_cost = player_bonus_to_cost(curr_bonus, abil, p);
 	int n_cost, nn_cost;
@@ -1024,7 +1061,7 @@ int tome_next_increment(struct player *p, struct player_ability *abil, int curr_
 	return next_bonus;
 }
 
-int tome_prev_increment(struct player *p, struct player_ability *abil, int curr_bonus)
+int tome_prev_increment(struct player *p, const struct player_ability *abil, int curr_bonus)
 {
 	int curr_cost = player_bonus_to_cost(curr_bonus, abil, p);
 	int p_cost;
@@ -1327,6 +1364,56 @@ int antimagic_radius(struct player *p)
 	if (p->state.powers[PP_ANTIMAGIC] <= 0) return 0;
 	return get_power_scale(p, PP_ANTIMAGIC, 3) + 2;
 }
+
+
+/**
+ * L: unlight players like to be in the dark
+ * scales up to UNLIGHT_MAX_POWER
+ */
+int unlight_power_state(struct player_state *ps, struct player *p)
+{
+	if (!cave || !character_dungeon) return 0;
+	if (ps->powers[PP_UNLIGHT] <= 0) return 0;
+	int bonus = -square_light(cave, p->grid);
+	int malus = get_power_scale_state(ps, PP_UNLIGHT, UNLIGHT_MAX_POWER, p->lev);
+	return bonus - malus;
+}
+
+int unlight_power(struct player *p)
+{
+	return unlight_power_state(&p->state, p);
+}
+
+/**
+ * L: radius of darkness from an unlight player, also the depth of darkness
+ * at their square
+ */
+int unlight_radius(struct player *p)
+{
+	return get_power_scale(p, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2);
+}
+
+
+int player_grid_visibility(struct loc grid, struct player *p, struct chunk *c)
+{
+	int darkest = 1;
+	int brightest = 10;
+	int light = square_light(c, grid);
+	int unl_rad = unlight_radius(p);
+	int dist = distance(p->grid, grid);
+	bool p_is_unlight = p->state.powers[PP_UNLIGHT] ? true : false;
+
+	darkest -= get_power_scale(p, PP_UNLIGHT, UNLIGHT_MAX_POWER * 4);
+	brightest -= get_power_scale(p, PP_UNLIGHT, 10);
+
+	if (p_is_unlight && dist <= unl_rad && light <= 0) return PY_SEE_VISIBLE;
+	if (light == 0) return PY_SEE_TOO_DARK;
+	if (light > brightest) return PY_SEE_TOO_BRIGHT;
+	if (light < darkest) return PY_SEE_TOO_DARK;
+
+	return PY_SEE_VISIBLE;
+}
+
 
 /**
  * Increment to the next or decrement to the preceeding level

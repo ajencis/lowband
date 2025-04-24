@@ -145,6 +145,10 @@ enum {
 
 #define MAX_SPELL_SCHOOLS 3
 
+#define UNLIGHT_MAX_POWER 10
+
+#define MAX_ABIL_PARENTS 3
+
 /**
  * Terrain that the player has a chance of digging through
  */
@@ -156,6 +160,15 @@ enum {
 	DIGGING_DOORS,
 
 	DIGGING_MAX
+};
+
+/**
+ * L: whether the light in the grid in question is too bright or dark
+ */
+enum {
+	PY_SEE_VISIBLE = 0,
+	PY_SEE_TOO_DARK,
+	PY_SEE_TOO_BRIGHT
 };
 
 enum attack_roll_special_effects {
@@ -445,7 +458,7 @@ struct player_class {
 struct player_ability {
 	struct player_ability *next;
 	uint16_t index;			/* PF_*, OF_* or element index */
-	int type;			/* Ability type */
+	int type;			/* Ability type (PY_ABIL_*) */
 	char *name;			/* Ability name */
 	char *desc;			/* Ability description */
 	int group;			/* Ability group (set locally when viewing) */
@@ -456,7 +469,7 @@ struct player_ability {
 	int rarity;						// L: how likely it is to be found
 	int scale;						// L: does it scale other than linearly with level
 	int learn_index;				// L: what is its index of all learnable abilities
-	struct player_ability *parent;	// L: what abilities are needed to learn first
+	struct player_ability *parent[MAX_ABIL_PARENTS];	// L: what abilities are needed to learn first
 };
 
 /**

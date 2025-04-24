@@ -1127,7 +1127,7 @@ int16_t place_monster(struct chunk *c, struct loc grid, struct monster *mon,
 	monster_group_assign(c, new_mon, info, loading);
 
 	// L: consider giving it powers
-	give_monster_powers(new_mon);
+	if (origin) give_monster_powers(new_mon);
 
 	update_mon(new_mon, c, true);
 

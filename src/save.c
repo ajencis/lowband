@@ -218,6 +218,7 @@ static void wr_monster(const struct monster *mon)
 	} else {
 		wr_string("none");
 	}
+
 	wr_byte(mon->grid.y);
 	wr_byte(mon->grid.x);
 	wr_s16b(mon->hp);
@@ -245,8 +246,9 @@ static void wr_monster(const struct monster *mon)
 	/* Write mimicked object marker, if any */
 	if (mon->mimicked_obj) {
 		wr_u16b(mon->midx);
-	} else
+	} else {
 		wr_u16b(0);
+	}
 
 	/* Write all held objects, followed by a dummy as a marker */
 	while (obj) {
@@ -270,8 +272,9 @@ static void wr_monster(const struct monster *mon)
 	wr_u16b(mon->group_info[SUMMON_GROUP].index);
 	wr_byte(mon->group_info[SUMMON_GROUP].role);
 
+	wr_s16b(z_info->learn_max);
 	for (i = 0; i < z_info->learn_max; ++i) {
-		wr_byte(mon->abilities[j]);
+		wr_byte(mon->abilities[i]);
 	}
 
 	wr_s16b(mon->reaction);
@@ -1022,8 +1025,9 @@ static void wr_monsters_aux(struct chunk *c)
 {
 	int i;
 
-	if (player->is_dead)
+	if (player->is_dead) {
 		return;
+	}
 
 	/* Total monsters */
 	wr_u16b(cave_monster_max(c));

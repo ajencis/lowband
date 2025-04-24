@@ -206,8 +206,9 @@ static void sf_put(uint8_t v)
 
 static uint8_t sf_get(void)
 {
-	if ((buffer == NULL) || (buffer_size <= 0) || (buffer_pos >= buffer_size))
+	if ((buffer == NULL) || (buffer_size <= 0) || (buffer_pos >= buffer_size)) {
 		quit("Broken savefile - probably from a development version");
+	}
 
 	buffer_check += buffer[buffer_pos];
 
@@ -421,13 +422,15 @@ bool savefile_save(const char *path)
 			err = true;
 
 		if (!err) {
-			if (!file_move(new_savefile, path))
+			if (!file_move(new_savefile, path)) {
 				err = true;
+			}
 
-			if (err)
+			if (err) {
 				file_move(old_savefile, path);
-			else
+			} else {
 				file_delete(old_savefile);
+			}
 		} 
 
 		safe_setuid_drop();

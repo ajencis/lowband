@@ -166,7 +166,7 @@ static void view_ability_display(struct menu *menu, int oid, bool cursor,
 {
 	char buf[80];
 	uint8_t color;
-	struct player_ability *choices = menu->menu_data;
+	const struct player_ability *choices = menu->menu_data;
 
 	switch (choices[oid].group) {
 	case PLAYER_FLAG_SPECIAL:
@@ -221,7 +221,7 @@ static void view_ability_display(struct menu *menu, int oid, bool cursor,
  */
 static void view_ability_menu_browser(int oid, void *data, const region *loc)
 {
-	struct player_ability *choices = data;
+	const struct player_ability *choices = data;
 	char buf[256];
 	/*int monster_powers[PP_MAX] = { 0 };
 	int monster_skills[SKILL_MAX] = { 0 };
@@ -374,7 +374,7 @@ struct ability_learn_menu_data {
 
 enum ability_learn_menu_data_column_locations {
 	ALMC_NAME = 0,
-	ALMC_COST = ALMC_NAME + 25,
+	ALMC_COST = ALMC_NAME + 35,
 	ALMC_COST_DIFF = ALMC_COST + 6,
 	ALMC_CURR = ALMC_COST_DIFF + 6,
 	ALMC_LRND = ALMC_CURR + 6,
@@ -384,20 +384,42 @@ enum ability_learn_menu_data_column_locations {
 };
 
 
-static int tome_depth(struct player_ability *abil)
+static const struct player_ability *abil_parent(const struct player_ability *abil, struct player *p)
+{
+	const struct player_ability *bestparent = NULL, *currparent;
+	int bestknown = -1, currknown, i;
+
+	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
+		currparent = abil->parent[i];
+		if (currparent) {
+			if (currparent->type == PY_ABIL_POWER) currknown = p->state.powers[currparent->index];
+			else if (currparent->type == PY_ABIL_SKILL) currknown = p->state.skills[currparent->index];
+			else continue;
+
+			if (currknown > bestknown || !bestparent) {
+				bestparent = currparent;
+				bestknown = currknown;
+			}
+		}
+	}
+
+	return bestparent;
+}
+
+static int tome_depth(const struct player_ability *abil)
 {
 	int depth = 0;
-	struct player_ability *next;
-	for (next = tome_parent(abil); next; next = tome_parent(next)) {
+	const struct player_ability *next;
+	for (next = abil_parent(abil, player); next; next = abil_parent(next, player)) {
 		++depth;
 		assert(next != abil);
 	}
 	return depth;
 }
 
-static struct player_ability *ability_by_tome_id(int tome_id)
+static const struct player_ability *ability_by_tome_id(int tome_id)
 {
-	struct player_ability *pa;
+	const struct player_ability *pa;
 
 	for (pa = player_abilities; pa; pa = pa->next) {
 		if (pa->learn_index == tome_id) {
@@ -425,14 +447,14 @@ static bool extra_target_valid(struct player *p, int *max_learnable, int oid, in
 static int ability_learn_valid_mode(struct menu *menu, int oid, int mode)
 {
 	struct ability_learn_menu_data *data = menu_priv(menu);
-	struct player_ability *abil = ability_by_tome_id(oid);
+	const struct player_ability *abil = ability_by_tome_id(oid);
 	assert(abil);
 
 	if (oid < 0 || oid >= z_info->learn_max) return MN_ROW_SKIP;
 
 	if (abil->type == PY_ABIL_POWER) {
-		if (player->extra_powers[oid] <= 0 &&
-				player->state.powers[oid] <= 0) {
+		if (player->extra_powers[abil->index] <= 0 &&
+				player->state.powers[abil->index] <= 0) {
 			// if it's the full menu show all powers
 			// if it's the partial menu only show learned powers
 			if (mode == AL_MODE_ALL) {
@@ -464,7 +486,7 @@ static void ability_learn_display(struct menu *m, int oid, bool cursor,
 	int total_level, learn_level, learn_target, cost, cost_inc, next_level;
 	uint8_t tl_attr, ll_attr, lt_attr, name_attr, cost_attr, cost_inc_attr;
 	struct ability_learn_menu_data *data = menu_priv(m);
-	struct player_ability *abil = ability_by_tome_id(oid);
+	const struct player_ability *abil = ability_by_tome_id(oid);
 	bool targ_valid, next_targ_valid;
 	int name_indent = tome_depth(abil) * 1;
 	bool power = abil->type == PY_ABIL_POWER;
@@ -578,7 +600,7 @@ static void ability_learn_set_mode(struct menu *m, int new_mode)
 static bool ability_learn_handler(struct menu *m, const ui_event *e, int oid)
 {
 	struct ability_learn_menu_data *data = menu_priv(m);
-	struct player_ability *abil = ability_by_tome_id(oid);
+	const struct player_ability *abil = ability_by_tome_id(oid);
 
 	if (e->type == EVT_SELECT) {
 		return true;
@@ -603,7 +625,7 @@ static bool ability_learn_handler(struct menu *m, const ui_event *e, int oid)
 	return false;
 }
 
-static int ability_learn_comp_base(struct player_ability *abil1, struct player_ability *abil2)
+static int ability_learn_comp_base(const struct player_ability *abil1, const struct player_ability *abil2)
 {
 	bool ispower1 = abil1->type == PY_ABIL_POWER;
 	bool ispower2 = abil2->type == PY_ABIL_POWER;
@@ -616,20 +638,20 @@ static int ability_learn_comp_base(struct player_ability *abil1, struct player_a
 
 static int ability_learn_comp(int oid1, int oid2)
 {
-	struct player_ability *abil1 = ability_by_tome_id(oid1);
-	struct player_ability *abil2 = ability_by_tome_id(oid2);
+	const struct player_ability *abil1 = ability_by_tome_id(oid1);
+	const struct player_ability *abil2 = ability_by_tome_id(oid2);
 
 	int depth1 = tome_depth(abil1), depth2 = tome_depth(abil2), currdepth;
 
 	for (currdepth = 0; currdepth <= MIN(depth1, depth2); ++currdepth) {
-		struct player_ability *depth_parent1 = abil1, *depth_parent2 = abil2;
+		const struct player_ability *depth_parent1 = abil1, *depth_parent2 = abil2;
 		int i, result;
 		for (i = 0; i < depth1 - currdepth; ++i) {
-			depth_parent1 = tome_parent(depth_parent1);
+			depth_parent1 = abil_parent(depth_parent1, player);
 			assert(depth_parent1);
 		}
 		for (i = 0; i < depth2 - currdepth; ++i) {
-			depth_parent2 = tome_parent(depth_parent2);
+			depth_parent2 = abil_parent(depth_parent2, player);
 			assert(depth_parent2);
 		}
 
@@ -653,6 +675,44 @@ static const menu_iter ability_learn_menu_iter = {
 	NULL,
 	ability_learn_comp
 };
+
+static int ability_learn_browse_desc(const struct player_ability *abil, struct player *p, bool known, int col, int row)
+{
+	assert(abil);
+
+	int group, i;
+	bool hasparent = false;
+	char buf[512];
+
+	if (abil->type == PY_ABIL_POWER) group = PLAYER_FLAG_POWER;
+	else if (abil->type == PY_ABIL_SKILL) group = PLAYER_FLAG_SKILL;
+	else return row;
+
+	ability_desc(p, abil, buf, sizeof buf, known, group);
+
+	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
+		const struct player_ability *prnt = abil->parent[i];
+		if (prnt) {
+			if (!hasparent) {
+				strcat(buf, "\nIts parent abilities are ");
+			}
+			else {
+				strcat(buf, ", ");
+			}
+
+			strcat(buf, prnt->name);
+			hasparent = true;
+		}
+	}
+
+	if (hasparent) strcat(buf, ".");
+
+	Term_gotoxy(col, row);
+
+	text_out_c(COLOUR_WHITE, "%s", buf);
+
+	return row;
+}
 
 static void ability_learn_browse(int oid, void *db, const region *loc)
 {
@@ -694,12 +754,15 @@ static void ability_learn_browse(int oid, void *db, const region *loc)
 	}
 
 	if (abil) {
-		int group = oid < PP_MAX ? PLAYER_FLAG_POWER : PLAYER_FLAG_SKILL;
+		bool known = data->mode == AL_MODE_KNOWN;
+		row += 2;
+		ability_learn_browse_desc(abil, player, known, loc->col, row);
+		/*int group = oid < PP_MAX ? PLAYER_FLAG_POWER : PLAYER_FLAG_SKILL;
 		char buf[256];
 		ability_desc(player, abil, buf, sizeof(buf), data->mode == AL_MODE_KNOWN, group);
 		row += 2;
 		Term_gotoxy(loc->col, row);
-		text_out_c(COLOUR_WHITE, "%s", buf);
+		text_out_c(COLOUR_WHITE, "%s", buf);*/
 	}
 	else {
 		plog_fmt("Error: can't find abil for oid %i", oid);
@@ -732,7 +795,7 @@ static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode 
 
 	menu_setpriv(m, z_info->learn_max, data);
 
-	m->header = "   Name                     Cost  Diff  Curr  Lrnd  Trgt";
+	m->header = "   Name                               Cost  Diff  Curr  Lrnd  Trgt";
 	m->selections = all_letters_nohjkl;
 	m->cmd_keys = "/+-";
 	m->browse_hook = ability_learn_browse;

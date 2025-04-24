@@ -103,12 +103,6 @@ name:Charms
 desc:You are extra persuasive to monsters.
 
 type:player
-code:UNLIGHT
-bindui:resist_ui_compact_0<DARK>:0:1
-name:Unlight
-desc:You gain stealth in, can see in, and resist the dark.
-
-type:player
 code:STEAL
 name:Pickpocketing
 desc:You can steal from monsters.
@@ -435,6 +429,32 @@ desc: can particularly effectively use illusion magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+
+type:power
+code:DARKNESS_MAGIC
+name:Darkness Magic Specialization
+desc: can particularly effectively use dark magic.
+cost:10
+rarity:7
+parent:power:NECROMANCY_MAGIC
+parent:power:DIVINATION_MAGIC
+
+type:power
+code:LIGHT_MAGIC
+name:Light Magic Specialization
+desc: can particularly effectively use light magic.
+cost:10
+rarity:7
+parent:power:HOLY_MAGIC
+parent:power:DIVINATION_MAGIC
+
+type:power
+code:UNLIGHT
+name:Unlight
+desc: can create a shroud of darkness that hides and protects.
+cost:10
+rarity:5
+parent:power:DARKNESS_MAGIC
 
 type:power
 code:SWORD_SPECIALIZATION

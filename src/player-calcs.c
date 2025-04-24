@@ -1025,9 +1025,10 @@ static void calc_light(struct player *p, struct player_state *state,
 					   bool update)
 {
 	int i;
+	int unlight = get_power_scale_state(state, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2, p->lev);
 
 	/* Assume no light */
-	state->cur_light = 0;
+	state->cur_light = -unlight;
 
 	/* Ascertain lightness if in the town */
 	if (!p->depth && is_daytime() && update) {
@@ -1055,11 +1056,6 @@ static void calc_light(struct player *p, struct player_state *state,
 		}
 		amt += obj->modifiers[OBJ_MOD_LIGHT];
 
-		/* Adjustment to allow UNLIGHT players to use +1 LIGHT gear */
-		if ((obj->modifiers[OBJ_MOD_LIGHT] > 0) && pf_has(state->pflags, PF_UNLIGHT)) {
-			amt--;
-		}
-
 		/* Examine actual lights */
 		if (tval_is_light(obj) && !of_has(obj->flags, OF_NO_FUEL) &&
 				obj->timeout == 0) {
@@ -1070,6 +1066,39 @@ static void calc_light(struct player *p, struct player_state *state,
 		/* Alter p->state.cur_light if reasonable */
 	    state->cur_light += amt;
 	}
+
+	/*
+	// L: reduce darkness radius to just short of the nearest lit grid
+	if (state->powers[PP_UNLIGHT] > 0 && state->cur_light < 0) {
+		int base = -state->cur_light, actual;
+		int rad = base + 3;
+		struct loc grid;
+
+		actual = base;
+
+		for (grid.x = p->grid.x - rad; grid.x <= p->grid.x + rad; ++grid.x) {
+			for (grid.y = p->grid.y - rad; grid.y <= p->grid.y + rad; ++grid.y) {
+				if (!square_in_bounds(cave, grid)) continue;
+
+				// slightly underestimate distance to get upper bound on light needed to impact radius
+				int approx_dist = MAX(ABS(grid.x - p->grid.x), ABS(grid.y - p->grid.y));
+				int approx_expected_lite = approx_dist - actual;
+				int actual_lite = square_light(cave, grid);
+
+				if (approx_expected_lite <= actual_lite) continue;
+				if (!los(cave, p->grid, grid)) continue;
+
+				int dist = distance(p->grid, grid);
+				int expected_lite = dist - actual;
+
+				// if it's too bright reduce our 
+				actual = MIN(actual, actual_lite - dist);
+			}
+		}
+
+		state->cur_light = -actual;
+	}
+	*/
 }
 
 /**
@@ -1495,6 +1524,23 @@ static void calc_monster(struct player *p, struct player_state *state,
 }
 
 /**
+ * L: bonuses from the PP_UNLIGHT power
+ */
+static void calc_unlight(struct player_state *ps, struct player *p)
+{
+	if (ps->powers[PP_UNLIGHT] < 0) return;
+
+	int power = unlight_power_state(ps, p);
+
+	ps->el_info[ELEM_DARK].res_level++;
+
+	adjust_skill_scale(&ps->skills[SKILL_STEALTH], power, 25, 25);
+	adjust_skill_scale(&ps->skills[SKILL_SAVE], power, 20, 10);
+
+	ps->ac += power * ABS(power);
+}
+
+/**
  * Calculate the players current "state", taking into account
  * not only race/class intrinsics, but also objects being worn
  * and temporary spell effects.
@@ -1758,6 +1804,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		}
 	}
 
+	/* Calculate light */
+	calc_light(p, state, update);
+
 	/* Apply the collected flags */
 	of_union(state->flags, collect_f);
 
@@ -1768,11 +1817,6 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	/* L: add monster info */
 	if (mrace) {
 		calc_monster(p, state, vuln, &extra_moves);
-	}
-
-	/* Unlight - needs change if anything but resist is introduced for dark */
-	if (pf_has(state->pflags, PF_UNLIGHT) && character_dungeon) {
-		state->el_info[ELEM_DARK].res_level = 1;
 	}
 
 	/* Evil */
@@ -1791,8 +1835,6 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	state->el_info[ELEM_HOLY_FIRE].res_level = state->el_info[ELEM_HOLY_ORB].res_level * 2 + state->el_info[ELEM_FIRE].res_level;
 	state->el_info[ELEM_HELLFIRE].res_level = state->el_info[ELEM_FIRE].res_level + pf_has(state->pflags, PF_EVIL) ? 0 : -1;
 
-	/* Calculate light */
-	calc_light(p, state, update);
 
 	/* Calculate the various stat values */
 	for (i = 0; i < STAT_MAX; i++) {
@@ -1855,6 +1897,8 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			state->skills[i] += adj_stat_skill_flat(stat_ind, i);
 		}
 	}
+
+	calc_unlight(state, p);
 
 	/* Effects of food outside the "Fed" range */
 	if (!player_timed_grade_eq(p, TMD_FOOD, "Fed")) {
