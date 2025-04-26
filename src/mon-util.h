@@ -24,6 +24,7 @@
 
 void mark_mon_as_playable(struct monster_race *mr);
 struct object *monster_best_weapon(struct monster *m);
+int monster_light(struct monster *mon);
 const char *describe_race_flag(int flag);
 void create_mon_flag_mask(bitflag *f, ...);
 struct monster_race *lookup_monster(const char *name);

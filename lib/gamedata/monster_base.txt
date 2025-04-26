@@ -58,7 +58,7 @@ flags:POWERFUL | SPIRIT | SMART
 flags:ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR | TAKE_ITEM | CLEAR_WEB
 flags:IM_COLD | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | LIGHT_AURA
 flags:SAPIENT
 desc:Ainu/maia
 body:Humanoid
@@ -69,6 +69,7 @@ attr:AC:1
 attr:HP:1
 stats:0:0:1:0:0
 power:HOLY_MAGIC:20
+power:GLOW:40
 skill-save:10
 
 # Ants have lowish HP but highish armor class, and powerful melee for their
@@ -559,6 +560,7 @@ attr:SPEED:-2
 attr:DAMAGE:1
 stats:-1:-1:1:2:-1
 power:BACKSTAB:20
+power:POISON_MAGIC:20
 skill-stealth:5
 
 # Weak, except the odd one to surprise the unwary newcomer.  Always native to
@@ -610,6 +612,7 @@ flags:HURT_LIGHT | HURT_FIRE | IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN
 flags:FORCE_SLEEP
 flags:RES_BLUDGEONING | RES_SLASHING
 flags:SAPIENT
+flags:DARK_AURA
 desc:Vampire
 body:Humanoid
 attr:SPEED:2
@@ -620,8 +623,9 @@ attr:DAMAGE:-1
 stats:1:1:-2:2:-1
 power:POLEARM_SPECIALIZATION:20
 power:BACKSTAB:20
+power:DARKNESS_MAGIC:20
+power:UNLIGHT:40
 skill-stealth:10
-player-flags:UNLIGHT
 
 # Always awake, elemental objects which engulf and breathe their element(s)
 name:vortex

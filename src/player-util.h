@@ -103,6 +103,8 @@ int antimagic_radius(struct player *p);
 
 int unlight_power_state(struct player_state *ps, struct player *p);
 int unlight_power(struct player *p);
+int glow_power_state(struct player_state *ps, struct player *p);
+int glow_power(struct player *p);
 int player_grid_visibility(struct loc grid, struct player *p, struct chunk *c);
 int unlight_radius(struct player *p);
 

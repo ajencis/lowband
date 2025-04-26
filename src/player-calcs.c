@@ -1025,10 +1025,12 @@ static void calc_light(struct player *p, struct player_state *state,
 					   bool update)
 {
 	int i;
+	int glow = get_power_scale_state(state, PP_GLOW, UNLIGHT_MAX_POWER * 2, p->lev);
 	int unlight = get_power_scale_state(state, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2, p->lev);
+	//int unlight = get_power_scale_state(state, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2, p->lev);
 
 	/* Assume no light */
-	state->cur_light = -unlight;
+	state->cur_light = glow - unlight;
 
 	/* Ascertain lightness if in the town */
 	if (!p->depth && is_daytime() && update) {
@@ -1066,39 +1068,6 @@ static void calc_light(struct player *p, struct player_state *state,
 		/* Alter p->state.cur_light if reasonable */
 	    state->cur_light += amt;
 	}
-
-	/*
-	// L: reduce darkness radius to just short of the nearest lit grid
-	if (state->powers[PP_UNLIGHT] > 0 && state->cur_light < 0) {
-		int base = -state->cur_light, actual;
-		int rad = base + 3;
-		struct loc grid;
-
-		actual = base;
-
-		for (grid.x = p->grid.x - rad; grid.x <= p->grid.x + rad; ++grid.x) {
-			for (grid.y = p->grid.y - rad; grid.y <= p->grid.y + rad; ++grid.y) {
-				if (!square_in_bounds(cave, grid)) continue;
-
-				// slightly underestimate distance to get upper bound on light needed to impact radius
-				int approx_dist = MAX(ABS(grid.x - p->grid.x), ABS(grid.y - p->grid.y));
-				int approx_expected_lite = approx_dist - actual;
-				int actual_lite = square_light(cave, grid);
-
-				if (approx_expected_lite <= actual_lite) continue;
-				if (!los(cave, p->grid, grid)) continue;
-
-				int dist = distance(p->grid, grid);
-				int expected_lite = dist - actual;
-
-				// if it's too bright reduce our 
-				actual = MIN(actual, actual_lite - dist);
-			}
-		}
-
-		state->cur_light = -actual;
-	}
-	*/
 }
 
 /**
@@ -1434,7 +1403,8 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], const s
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->learn_index < 0) continue;
 		if (abil->type != PY_ABIL_POWER) continue;
-		powers[abil->index] += (mrace->base->abilities[i] * mrace->level + 50) / 100;
+		int add = (mrace->base->abilities[abil->learn_index] * mrace->level + 50) / 100;
+		powers[abil->index] += add;
 	}
 
 
@@ -1524,7 +1494,7 @@ static void calc_monster(struct player *p, struct player_state *state,
 }
 
 /**
- * L: bonuses from the PP_UNLIGHT power
+ * L: bonuses from the UNLIGHT power
  */
 static void calc_unlight(struct player_state *ps, struct player *p)
 {
@@ -1532,12 +1502,29 @@ static void calc_unlight(struct player_state *ps, struct player *p)
 
 	int power = unlight_power_state(ps, p);
 
-	ps->el_info[ELEM_DARK].res_level++;
+	if (power > 5) ps->el_info[ELEM_DARK].res_level++;
 
 	adjust_skill_scale(&ps->skills[SKILL_STEALTH], power, 25, 25);
-	adjust_skill_scale(&ps->skills[SKILL_SAVE], power, 20, 10);
+	adjust_skill_scale(&ps->skills[SKILL_SAVE], power, 25, 25);
 
 	ps->ac += power * ABS(power);
+}
+
+/** 
+ * L: bonuses from the GLOW power
+ */
+static void calc_glow(struct player_state *ps, struct player *p)
+{
+	if (ps->powers[PP_GLOW] < 0) return;
+
+	int power = glow_power_state(ps, p);
+
+	if (power > 5) {
+		ps->el_info[ELEM_LIGHT].res_level++;
+	}
+
+	adjust_skill_scale(&ps->skills[SKILL_SAVE], power, 30, 10);
+	ps->to_a += SGN(power) * my_int_sqrt(ABS(power) * power * power);
 }
 
 /**
@@ -1617,7 +1604,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	player_flags(p, collect_f);
 
 	/* L: get powers */
-	for (i = PP_NONE + 1; i < PP_MAX; i++) {
+	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
 		struct player_ability *abil = lookup_player_ability(i, PY_ABIL_POWER);
 		assert(abil);
 
@@ -1641,7 +1628,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		}
 		while (scaling <= -2) {
 			fact *= 50.0;
-			div *= (float)p->lev;
+			div *= (double)p->lev;
 			scaling += 2;
 		}
 		while (scaling <= -1) {
@@ -1804,9 +1791,6 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		}
 	}
 
-	/* Calculate light */
-	calc_light(p, state, update);
-
 	/* Apply the collected flags */
 	of_union(state->flags, collect_f);
 
@@ -1818,6 +1802,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	if (mrace) {
 		calc_monster(p, state, vuln, &extra_moves);
 	}
+
+	/* Calculate light */
+	calc_light(p, state, update);
 
 	/* Evil */
 	if (pf_has(state->pflags, PF_EVIL) && character_dungeon) {
@@ -1899,6 +1886,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	}
 
 	calc_unlight(state, p);
+	calc_glow(state, p);
 
 	/* Effects of food outside the "Fed" range */
 	if (!player_timed_grade_eq(p, TMD_FOOD, "Fed")) {

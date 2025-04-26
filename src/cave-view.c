@@ -22,6 +22,7 @@
 #include "init.h"
 #include "game-world.h"
 #include "monster.h"
+#include "mon-util.h"
 #include "player-calcs.h"
 #include "player-timed.h"
 #include "player-util.h"
@@ -617,9 +618,9 @@ static bool glow_can_light_wall(struct chunk *c, struct player *p,
  * if the player is nearby and has PP_UNLIGHT it will be les than 0
  * otherwise it will be 0
  */
-static int square_min_light(struct chunk *c, struct loc grid, struct player *p)
+/*static int square_min_light(struct chunk *c, struct loc grid, struct player *p)
 {
-	int result = 0;
+	int result = 0, i;
 
 	if (p->state.powers[PP_UNLIGHT] > 0) {
 		int pdist = distance(player->grid, grid);
@@ -628,8 +629,17 @@ static int square_min_light(struct chunk *c, struct loc grid, struct player *p)
 		result = MIN(pdist - darkness_max, result);
 	}
 
+	for (i = 0; i < cave_monster_max(c); ++i) {
+		struct monster *mon = cave_monster(c, i);
+		if (!mon || !mon->race) continue;
+		int darkness = monster_darkness(mon);
+		int dist = distance(mon->grid, grid);
+
+		result = MIN(result, dist - darkness);
+	}
+
 	return result;
-}
+}*/
 
 /**
  * Help calc_lighting():  add in the effect of a light source.
@@ -663,37 +673,48 @@ static void add_light(struct chunk *c, struct player *p, struct loc sgrid,
 {
 	int currrad = 0;
 	bool done = false;
+	bool reducing = inten < 0;
 
-	if (inten <= 0) return;
+	if (inten == 0) return;
 
 	for (currrad = 0; !done && (radius < 0 || currrad <= radius); ++currrad) {
 		struct loc grid;
-		done = true;
+		int add = (ABS(inten) - currrad) * SGN(inten);
+
+		done = add * SGN(inten) <= 0;
 
 		for (grid.x = sgrid.x - currrad; grid.x <= sgrid.x + currrad; ++grid.x) {
 			for (grid.y = sgrid.y - currrad; grid.y <= sgrid.y + currrad; ++grid.y) {
-				int dist = distance(sgrid, grid);
-				if (!square_in_bounds(c, grid)) continue;
-				if (dist != currrad) continue;
-				if (!los(c, sgrid, grid)) continue;
+				int dist, curr, new;
 
-				if (!square_allowslos(c, grid) &&
-						!source_can_light_wall(c, p, sgrid, grid)) {
+				if (!square_in_bounds(c, grid)) continue;
+				dist = distance(sgrid, grid);
+				if (dist != currrad) continue;
+				//if (!los(c, sgrid, grid)) continue;
+
+				if (!los(c, sgrid, grid) &&
+						!(square_allowslos(c, grid) ||
+							source_can_light_wall(c, p, sgrid, grid))) {
 					continue;
 				}
 
-				int add = inten - dist;
-				int curr = square_light(c, grid);
-				int new = MAX(curr, curr / 2) + add;
+				curr = square_light(c, grid);
+				// if both are negative take most of the sum
+				if (add < 0 && curr < 0) new = (curr + add) * 3 / 4;
+				// otherwise let light override darkness
+				else new = MAX(curr, curr / 2) + add;
 
 				// if we're adding light still or if we're lighting darkness keep going
-				if (new > curr) {
+				if (reducing ? new < curr : new > curr) {
 					c->squares[grid.y][grid.x].light = new;
 					done = false;
 				}
 
-				// squares of 1 greater distance could have 2 less light but we will be adding 1 less light
-				done = done && (new - 1 < curr - 2) && (add <= 0);
+				if (!reducing) {
+					// if there's potential for an adjacent grid to be enlightened we're not done
+					// a square of 1 greater distance will generally have no more than 2 less light
+					if (new - 1 < curr - 2) done = false;
+				}
 			}
 		}
 	}
@@ -724,31 +745,26 @@ static void add_light(struct chunk *c, struct player *p, struct loc sgrid,
 			}
 		}
 	}*/
-	
 }
 
 /**
  * Calculate light level for every grid in view - stolen from Sil
+ * L: changed: we now calculate all darkness first and all light second
+ * dark will flag the function as only adding darkness
+ * if !dark the function will only add light
  */
-static void calc_lighting(struct chunk *c, struct player *p)
+static void calc_lighting_aux(struct chunk *c, struct player *p, bool dark)
 {
 	int k, x, y;
-	int light = p->state.cur_light, radius;// = ABS(light) - 1;
-	int old_light = square_light(c, p->grid);
+	int light = p->state.cur_light;
 	struct loc grid;
-
-	for (grid.y = 0; grid.y < c->height; ++grid.y) {
-		for (grid.x = 0; grid.x < c->width; ++grid.x) {
-			c->squares[grid.y][grid.x].light = square_min_light(cave, grid, p);
-		}
-	}
 
 	/* Starting values based on permanent light */
 	for (y = 0; y < c->height; y++) {
 		for (x = 0; x < c->width; x++) {
 			grid = loc(x, y);
 
-			if (square_isglow(c, grid) &&
+			if (!dark && square_isglow(c, grid) &&
 					(square_allowslos(c, grid) ||
 					glow_can_light_wall(c, p, grid))) {
 				add_light(c, p, grid, 0, 1);
@@ -758,7 +774,7 @@ static void calc_lighting(struct chunk *c, struct player *p)
 			}*/
 
 			/* Squares with bright terrain have intensity 2 */
-			if (square_isbright(c, grid)) {
+			if (!dark && square_isbright(c, grid)) {
 				add_light(c, p, grid, 1, 2);
 				/*
 				c->squares[y][x].light += 2;
@@ -781,7 +797,9 @@ static void calc_lighting(struct chunk *c, struct player *p)
 	}
 
 	/* Light around the player */
-	add_light(c, p, p->grid, -1, light);
+	if ((light > 0 && !dark) || (light < 0 && dark)) {
+		add_light(c, p, p->grid, -1, light);
+	}
 
 	/* Scan monster list and add monster light or darkness */
 	for (k = 1; k < cave_monster_max(c); k++) {
@@ -795,19 +813,34 @@ static void calc_lighting(struct chunk *c, struct player *p)
 		if (monster_is_camouflaged(mon)) continue;
 
 		/* Get light info for this monster */
-		light = mon->race->light;
-		radius = ABS(light) - 1;
+		light = monster_light(mon);
+		//radius = ABS(light) - 1;
 
 		/* Skip monsters not affecting light */
-		if (!light) continue;
+		if (!light || (light > 0 ? dark : !dark)) continue;
 
 		/* Skip if the player can't see it. */
-		if (distance(p->grid, mon->grid) - radius > z_info->max_sight) {
+		/*if (distance(p->grid, mon->grid) - radius > z_info->max_sight) {
 			continue;
-		}
+		}*/
 
 		add_light(c, p, mon->grid, -1, light);
 	}
+}
+
+static void calc_lighting(struct chunk *c, struct player *p)
+{
+	int old_light = square_light(c, p->grid);
+	int x, y;
+
+	for (x = 0; x < c->width; ++x) {
+		for (y = 0; y < c->height; ++y) {
+			c->squares[y][x].light = 0;
+		}
+	}
+
+	calc_lighting_aux(c, p, true);
+	calc_lighting_aux(c, p, false);
 
 	/* Update light level indicator */
 	if (square_light(c, p->grid) != old_light) {

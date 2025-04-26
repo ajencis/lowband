@@ -164,6 +164,20 @@ bool player_can_learn_from_monster(struct player *p, struct monster *mon)
 	return false;
 }
 
+int monster_light(struct monster *mon)
+{
+	int base = mon->race->light;
+
+	if (rf_has(mon->race->flags, RF_LIGHT_AURA)) {
+		base += mon->race->level / 10;
+	}
+	if (rf_has(mon->race->flags, RF_DARK_AURA)) {
+		base -= mon->race->level / 10;
+	}
+
+	return base;
+}
+
 
 /**
  * ------------------------------------------------------------------------
@@ -214,9 +228,11 @@ void create_mon_flag_mask(bitflag *f, ...)
 
 	/* Process each type in the va_args */
     for (i = va_arg(args, int); i != RFT_MAX; i = va_arg(args, int)) {
-		for (rf = monster_flag_table; rf->index < RF_MAX; rf++)
-			if (rf->type == i)
+		for (rf = monster_flag_table; rf->index < RF_MAX; rf++) {
+			if (rf->type == i) {
 				rf_on(f, rf->index);
+			}
+		}
 	}
 
 	va_end(args);

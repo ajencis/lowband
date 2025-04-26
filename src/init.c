@@ -4999,6 +4999,45 @@ static struct parser *init_parse_class(void) {
 	return p;
 }
 
+static void ensure_proper_power_parents(struct player_class *c, int power)
+{
+	int curr = c->c_powers[power];
+	int parent_powers = 0;
+	int i;
+	int num_power_parents = 0;
+	struct player_ability *abil = lookup_player_ability(power, PY_ABIL_POWER);
+
+	assert(abil);
+	if (curr <= 0) return;
+
+	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
+		struct player_ability *parent = abil->parent[i];
+		if (!parent) continue;
+		if (parent->type != PY_ABIL_POWER) continue;
+
+		++num_power_parents;
+
+		parent_powers += c->c_powers[parent->index];
+	}
+
+	if (num_power_parents > 0) {
+		int to_add = ((curr - parent_powers) / 2 + num_power_parents - 1) / num_power_parents;
+		if (to_add > 0) {
+			for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
+				struct player_ability *parent = abil->parent[i];
+
+				if (parent && parent->type == PY_ABIL_POWER) {
+					// round it up to the nearest 5
+					c->c_powers[parent->index] += to_add;
+					int to_round = 5 - c->c_powers[parent->index] % 5;
+					if (to_round < 5) c->c_powers[parent->index] += to_round;
+					ensure_proper_power_parents(c, parent->index);
+				}
+			}
+		}
+	}
+}
+
 static errr run_parse_class(struct parser *p) {
 	return parse_file_quit_not_found(p, "class");
 }
@@ -5015,6 +5054,14 @@ static errr finish_parse_class(struct parser *p) {
 	for (c = classes; c; c = c->next, num--) {
 		assert(num);
 		c->cidx = num - 1;
+	}
+
+	// L: ensure classes have parents to support child properties
+	for (c = classes; c; c = c->next) {
+		int i;
+		for (i = PP_NONE + 1; i < PP_MAX; ++i) {
+			ensure_proper_power_parents(c, i);
+		}
 	}
 
 	parser_destroy(p);

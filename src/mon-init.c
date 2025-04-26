@@ -1450,7 +1450,7 @@ static enum parser_error parse_mon_base_power(struct parser *p)
 
 	abil = lookup_player_ability(pind, PY_ABIL_POWER);
 
-	if (pind < 0 || pind >= PP_MAX) {
+	if (pind <= PP_NONE || pind >= PP_MAX) {
 		return PARSE_ERROR_GENERIC;
 	}
 

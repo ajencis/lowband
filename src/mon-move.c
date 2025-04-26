@@ -126,7 +126,7 @@ bool monster_can_see_player(struct monster *mon)
 			(!rf_has(mon->race->flags, RF_SMART) || !mflag_has(mon->mflag, MFLAG_AWARE))) {
 		return false;
 	}
-	if (-p_sq_light > mon->race->level / 10) {
+	if (-p_sq_light > mon->race->level / 20 && !rf_has(mon->race->flags, RF_DARK_AURA)) {
 		return false;
 	}
 	return true;

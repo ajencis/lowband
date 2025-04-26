@@ -1349,6 +1349,17 @@ static size_t prt_learn(int row, int col)
 
 static size_t prt_unlight(int row, int col)
 {
+	if (player->state.powers[PP_GLOW] > 0) {
+		int power = glow_power(player);
+		char buf[80];
+
+		strnfmt(buf, sizeof buf, "Glow %i", power);
+
+		c_put_str(COLOUR_L_YELLOW, buf, row, col);
+
+		return strlen(buf) + 1;
+	}
+	
 	if (player->state.powers[PP_UNLIGHT] > 0) {
 		int power = unlight_power(player);
 		char buf[80];

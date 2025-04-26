@@ -60,8 +60,7 @@ dice:1
 desc:Lights up all squares within 2 grids of the player, and hurts
 desc: all light-sensitive monsters in the area of effect.
 desc:  If you are in a room, the entire room will be lit up as well.
-school:FIRE
-school:DIVINATION
+school:LIGHT
 
 spell:Create Darkness:1
 effect:DARKEN_AREA
@@ -69,8 +68,7 @@ effect:SPHERE:DARK_WEAK:2:10
 dice:1
 desc:Darkens all squares in a level-dependent area.  If you are in a room,
 desc: the entire room will be darkened as well.
-school:WATER
-school:DIVINATION
+school:DARKNESS
 
 spell:Find Traps, Doors & Stairs:1
 effect:DETECT_TRAPS
@@ -204,7 +202,7 @@ spell:Clairvoyance:55
 effect:LIGHT_LEVEL
 desc:Lights up, maps out, and senses all objects on the complete current
 desc: dungeon level.
-school:FIRE
+school:LIGHT
 school:DIVINATION
 
 spell:Call Light:42
@@ -215,8 +213,7 @@ effect:PROJECT_LOS:LIGHT_WEAK
 dice:100
 desc:Casts a beam of strong light in every direction, and then bathes the entire area
 desc: in light doing 100 damage to every light-sensitive creature.
-school:FIRE
-school:DIVINATION
+school:LIGHT
 
 
 spell:Charm Monster:10
@@ -343,7 +340,7 @@ spell:Dark Vision:50
 effect:DARKEN_LEVEL
 desc:Darkens, maps out, and senses all objects on the complete current
 desc: dungeon level.
-school:WATER
+school:DARKNESS
 school:DIVINATION
 
 

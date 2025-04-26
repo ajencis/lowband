@@ -457,6 +457,14 @@ rarity:5
 parent:power:DARKNESS_MAGIC
 
 type:power
+code:GLOW
+name:Glow
+desc: can emit light that protects.
+cost:10
+rarity:5
+parent:power:LIGHT_MAGIC
+
+type:power
 code:SWORD_SPECIALIZATION
 name:Swordmastery
 desc: can particularly effectively use swords.
@@ -555,7 +563,7 @@ desc: can consume nearby mana.
 cost:20
 rarity:3
 scale:-1
-parent:skill:HEALTH
+parent:skill:SAVE
 
 type:power
 code:SPELL_POWER

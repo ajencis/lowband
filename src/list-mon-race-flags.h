@@ -97,4 +97,6 @@ RF(NO_HOLD,			RFT_PROT,		-2,		"held")
 RF(NO_SLOW,			RFT_PROT,		-2,		"slowed")
 RF(INNATE_MAGIC,	RFT_OBV,		0,		"")
 RF(PHOENIX_RESURRECT,RFT_OBV,		-5,		"")
+RF(DARK_AURA,		RFT_OBV,		-2,		"")
+RF(LIGHT_AURA,		RFT_OBV,		0,		"")
 /* end flags */

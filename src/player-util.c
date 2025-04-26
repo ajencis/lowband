@@ -964,8 +964,9 @@ static int tome_max_learnable_parents_array(const struct player_ability *abil, i
 	}
 
 	if (div > 0) {
+		// need parents to be at ~50/3 before you can learn
 		int abil_max_cost = bonus_to_cost(LEARN_MAX, abil);
-		int max_cost = abil_max_cost * sum * 3 / 2 / div;
+		int max_cost = abil_max_cost * sum * 2 / div - abil_max_cost / 3;
 
 		return cost_to_bonus(max_cost, abil);
 	}
@@ -1382,6 +1383,21 @@ int unlight_power_state(struct player_state *ps, struct player *p)
 int unlight_power(struct player *p)
 {
 	return unlight_power_state(&p->state, p);
+}
+
+
+int glow_power_state(struct player_state *ps, struct player *p)
+{
+	if (!cave || !character_dungeon) return 0;
+	if (ps->powers[PP_GLOW] <= 0) return 0;
+	int bonus = square_light(cave, p->grid);
+	int malus = get_power_scale_state(ps, PP_GLOW, UNLIGHT_MAX_POWER, p->lev);
+	return bonus - malus;
+}
+
+int glow_power(struct player *p)
+{
+	return glow_power_state(&p->state, p);
 }
 
 /**
