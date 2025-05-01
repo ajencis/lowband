@@ -20,6 +20,8 @@
 #include "angband.h"
 #include "game-input.h"
 #include "init.h"
+#include "mon-desc.h"
+#include "mon-util.h"
 #include "player-calcs.h"
 #include "player-properties.h"
 #include "player-util.h"
@@ -62,14 +64,18 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 	int monster_skills[SKILL_MAX] = { 0 };
 	int race_skills[SKILL_MAX] = { 0 };
 	int race_x_skills[SKILL_MAX] = { 0 };
-	struct monster_race *mrace = lookup_player_monster(player);
+	struct monster_race *mrace = lookup_player_monster(p);
+
+	// L: hack for hypothetical players
+	bool hypothetical = p != player;
+	const char *verb = hypothetical ? "would gain" : "gain";
 
 	assert(bufsize > 0);
 
-	player_race_r_skill(player->race, mrace ? true : false, race_skills);
-	player_race_x_skill(player->race, mrace ? true : false, race_x_skills);
+	player_race_r_skill(p->race, mrace ? true : false, race_skills);
+	player_race_x_skill(p->race, mrace ? true : false, race_x_skills);
 
-	buf[0] = '\0';
+	memset(buf, '\0', bufsize * sizeof *buf);
 
 	if (group == PLAYER_FLAG_POWER || group == PLAYER_FLAG_SKILL) {
 		if (player_has) {
@@ -82,7 +88,7 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 	my_strcat(buf, "\n", bufsize);
 
 	if (mrace) {
-		calc_monster_powers(mrace, monster_powers, &player->state);
+		calc_monster_powers(mrace, monster_powers, player->state.powers);
 		calc_monster_skills(mrace, monster_skills);
 	}
 	if (group == PLAYER_FLAG_POWER || group == PLAYER_FLAG_SKILL) {
@@ -90,25 +96,25 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 		char stat_name[80];
 		if (group == PLAYER_FLAG_POWER) {
 			cbase = 0;
-			cxtra = player_class_power(player, ability->index);
+			cxtra = player_class_power(p, ability->index);
 			rbase = monster_powers[ability->index];
-			rxtra = player_race_power(player, ability->index);
+			rxtra = player_race_power(p, ability->index);
 			tome = player->extra_powers[ability->index] / 2;
 			stat = 0;
 		}
 		else {
 			int stat1, stat2;
-			player_skill_stats(player, &player->state, ability->index, &stat1, &stat2);
-			cbase = player_class_c_skill(player, ability->index);
-			cxtra = player_class_x_skill(player, ability->index) * 100 / 10;
+			player_skill_stats(p, &p->state, ability->index, &stat1, &stat2);
+			cbase = player_class_c_skill(p, ability->index);
+			cxtra = player_class_x_skill(p, ability->index) * 100 / 10;
 			rbase = race_skills[ability->index] + monster_skills[ability->index];
 			rxtra = race_x_skills[ability->index] * 100 / 10;
-			tome = player->extra_skills[ability->index];
+			tome = p->extra_skills[ability->index];
 			if (stat1 != STAT_NONE) {
-				int ind = player_skill_stat_ind(player, &player->state, ability->index);
+				int ind = player_skill_stat_ind(p, &p->state, ability->index);
 				int curr;
 				stat = adj_stat_skill_flat(ind, ability->index);
-				curr = cbase + rbase + (cxtra + rxtra) * player->lev / 100 + tome;
+				curr = cbase + rbase + (cxtra + rxtra) * p->lev / 100 + tome;
 				curr = MAX(curr, 0);
 				stat += curr * adj_stat_skill_percent(ind, ability->index) / 100;
 				if (stat2 == STAT_NONE) {
@@ -126,7 +132,7 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 				(tome ? 1 : 0) +
 				(stat ? 1 : 0);
 		if (numleft > 0) {
-			my_strcat(buf, " You gain ", bufsize);
+			my_strcat(buf, format("You %s ", verb), bufsize);
 			if (cbase || cxtra) {
  				add_scaling_desc(buf, "class", cbase, cxtra, numleft, bufsize);
 				--numleft;
@@ -143,8 +149,53 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 				add_scaling_desc(buf, stat_name, stat, 0, numleft, bufsize);
 				--numleft;
 			}
+			my_strcat(buf, "\n", bufsize);
 		}
 	}
+}
+
+static bool ability_parent_desc(const struct player_ability *abil, char *buf, size_t bufsize)
+{
+	int i;
+	int parent_num = 0;
+	int numleft;
+
+	memset(buf, '\0', bufsize * sizeof *buf);
+
+	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
+		if (abil->parent[i]) {
+			++parent_num;
+		}
+	}
+
+	if (parent_num == 0) {
+		return false;
+	}
+
+	numleft = parent_num;
+
+	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
+		if (abil->parent[i]) {
+			const char *label, *name;
+
+			if (parent_num == 1) label = "Its parent is ";
+			else if (numleft == parent_num) label = "Its parents are ";
+			else if (numleft > 1) label = ", ";
+			else if (parent_num == 2) label = "and ";
+			else label = ", and ";
+
+			name = abil->parent[i]->name;
+
+			my_strcat(buf, label, bufsize);
+			my_strcat(buf, name, bufsize);
+
+			--numleft;
+		}
+	}
+
+	strncat(buf, ".\n", bufsize);
+
+	return true;
 }
 
 
@@ -222,7 +273,7 @@ static void view_ability_display(struct menu *menu, int oid, bool cursor,
 static void view_ability_menu_browser(int oid, void *data, const region *loc)
 {
 	const struct player_ability *choices = data;
-	char buf[256];
+	char buf[256] = "";
 	/*int monster_powers[PP_MAX] = { 0 };
 	int monster_skills[SKILL_MAX] = { 0 };
 	int race_skills[SKILL_MAX] = { 0 };
@@ -367,9 +418,15 @@ struct ability_learn_menu_mode_data {
 };
 
 struct ability_learn_menu_data {
+	struct player *p;
 	int mode;
 	int *max_learnable;
+	int *extra_max_learnable;
 	uint16_t *temp_target;
+	//uint16_t *max_result;
+	bool birth;
+	int points;
+	const struct monster_race *end_monster;
 };
 
 enum ability_learn_menu_data_column_locations {
@@ -380,8 +437,30 @@ enum ability_learn_menu_data_column_locations {
 	ALMC_LRND = ALMC_CURR + 6,
 	ALMC_TRGT = ALMC_LRND + 6,
 	ALMC_COST_RESULT = ALMC_COST_DIFF + 5,
-	ALMC_MAX = ALMC_TRGT + 5
+	ALMC_MAX = ALMC_TRGT + 5,
 };
+
+
+static const struct player_ability *ability_by_tome_id(int tome_id)
+{
+	const struct player_ability *pa;
+
+	for (pa = player_abilities; pa; pa = pa->next) {
+		if (pa->learn_index == tome_id) {
+			return pa;
+		}
+	}
+
+	return NULL;
+}
+
+
+static void get_max_learnable(struct menu *m, struct player *p)
+{
+	struct ability_learn_menu_data *data = menu_priv(m);
+
+	tome_max_learnable_extra(data->p, data->max_learnable, data->extra_max_learnable);
+}
 
 
 static const struct player_ability *abil_parent(const struct player_ability *abil, struct player *p)
@@ -406,6 +485,9 @@ static const struct player_ability *abil_parent(const struct player_ability *abi
 	return bestparent;
 }
 
+/**
+ * how many sequential parents a tome has
+ */
 static int tome_depth(const struct player_ability *abil)
 {
 	int depth = 0;
@@ -417,19 +499,12 @@ static int tome_depth(const struct player_ability *abil)
 	return depth;
 }
 
-static const struct player_ability *ability_by_tome_id(int tome_id)
-{
-	const struct player_ability *pa;
-
-	for (pa = player_abilities; pa; pa = pa->next) {
-		if (pa->learn_index == tome_id) {
-			return pa;
-		}
-	}
-
-	return NULL;
-}
-
+/**
+ * if it's beyond what is learnable it's not valid
+ * if it's less than what is learned so far it's not valid
+ * however it's valid if it's beyond what is learnable but isn't more than
+ * what has been leanred so far
+ */
 static bool extra_target_valid(struct player *p, int *max_learnable, int oid, int target)
 {
 	if (target > max_learnable[oid] && target > p->extra_target[oid]) {
@@ -453,12 +528,12 @@ static int ability_learn_valid_mode(struct menu *menu, int oid, int mode)
 	if (oid < 0 || oid >= z_info->learn_max) return MN_ROW_SKIP;
 
 	if (abil->type == PY_ABIL_POWER) {
-		if (player->extra_powers[abil->index] <= 0 &&
-				player->state.powers[abil->index] <= 0) {
+		if (data->p->extra_powers[abil->index] <= 0 &&
+				data->p->state.powers[abil->index] <= 0) {
 			// if it's the full menu show all powers
 			// if it's the partial menu only show learned powers
 			if (mode == AL_MODE_ALL) {
-				return data->max_learnable[oid] > 0 ? MN_ROW_VALID : MN_ROW_INVALID;
+				return data->max_learnable[oid] > 0 || data->birth ? MN_ROW_VALID : MN_ROW_INVALID;
 			}
 			return MN_ROW_SKIP;
 		}
@@ -494,31 +569,23 @@ static void ability_learn_display(struct menu *m, int oid, bool cursor,
 	if (oid < 0 || oid >= z_info->learn_max) return;
 
 	if (power) {
-		/*strcpy(name, lookup_power_name(oid));
-		if (oid < MS_MAX) {
-			strcat(name, " Magic");
-		}*/
-		total_level = player->state.powers[abil->index];
-		learn_level = player->extra_powers[abil->index];
+		total_level = data->p->state.powers[abil->index];
+		learn_level = data->p->extra_powers[abil->index];
 	}
 	else {
-		/*int skill = oid - PP_MAX;
-		assert(skill >= 0 && skill < SKILL_MAX);
-		strcpy(name, skill_index_to_name(skill));
-		my_strcap_full(name);*/
-		total_level = player->state.skills[abil->index];
-		learn_level = player->extra_skills[abil->index];
+		total_level = data->p->state.skills[abil->index];
+		learn_level = data->p->extra_skills[abil->index];
 	}
 	strcpy(name, abil->name);
 
 	learn_target = data->temp_target[oid];
 
-	next_level = tome_next_increment(player, abil, learn_target);
-	targ_valid = extra_target_valid(player, data->max_learnable, oid, learn_target);
-	next_targ_valid = learn_target >= LEARN_MAX ? false : extra_target_valid(player, data->max_learnable, oid, next_level);
+	next_level = tome_next_increment(data->p, abil, learn_target);
+	targ_valid = extra_target_valid(data->p, data->max_learnable, oid, learn_target);
+	next_targ_valid = learn_target >= LEARN_MAX ? false : extra_target_valid(data->p, data->max_learnable, oid, next_level);
 
-	cost = player_bonus_to_cost(learn_target, abil, player);
-	cost_inc = cost - player_bonus_to_cost(player->extra_target[oid], abil, player);
+	cost = player_bonus_to_cost(learn_target, abil, data->p);
+	cost_inc = cost - player_bonus_to_cost(data->p->extra_target[oid], abil, data->p);
 	
 	if (cursor) {
 		tl_attr = COLOUR_WHITE;
@@ -547,6 +614,9 @@ static void ability_learn_display(struct menu *m, int oid, bool cursor,
 	c_prt(lt_attr, format("%3i", learn_target), row, col + ALMC_TRGT);
 }
 
+/**
+ * if the mode doesn't have any valid selections skip it when changing modes
+ */
 static bool mode_is_valid(struct menu *m, int mode)
 {
 	int i;
@@ -569,6 +639,9 @@ static int get_next_mode(struct menu *m, int mode)
 	return result;
 }
 
+/**
+ * change the mode of the menu, involves recalculating the menu size
+ */
 static void ability_learn_set_mode(struct menu *m, int new_mode)
 {
 	struct ability_learn_menu_data *data = menu_priv(m);
@@ -576,7 +649,13 @@ static void ability_learn_set_mode(struct menu *m, int new_mode)
 	size_t title_size = 80;
 	char *new_title = mem_zalloc(title_size * sizeof(char));
 	size_t width = MAX(0, MIN(Term->wid - 15, ALMC_MAX + 3));
-	region loc = { 15, 2, width, 25 };
+	region loc = { 15, 2, width, 30 };
+
+	if (data->birth) {
+		loc.col = 0;
+		loc.row = 9;
+		clear_from(loc.row);
+	}
 
 	data->mode = new_mode;
 
@@ -591,10 +670,41 @@ static void ability_learn_set_mode(struct menu *m, int new_mode)
 	m->title = new_title;
 	get_menu_filter(m);
 	loc.page_rows = menu_count(m) + 3;
-	loc.page_rows = MIN(loc.page_rows, 25);
+	loc.page_rows = MIN(loc.page_rows, Term->hgt - loc.row - 8);
 	menu_layout(m, &loc);
 	//menu_refresh(m, true);
 	menu_move_cursor_to(m, 0);
+}
+
+static void refresh_hypothetical_player(struct menu *m)
+{
+	struct ability_learn_menu_data *data = menu_priv(m);
+	struct player *hypo = data->p;
+	struct player_ability *abil;
+
+	if (data->p == player) return;
+
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (abil->learn_index < 0) continue;
+		else if (abil->type == PY_ABIL_SKILL) {
+			hypo->extra_skills[abil->index] = data->temp_target[abil->learn_index];
+		}
+		else if (abil->type == PY_ABIL_POWER) {
+			hypo->extra_powers[abil->index] = data->temp_target[abil->learn_index];
+		}
+	}
+
+	calc_bonuses(hypo, &hypo->state, false, false);
+
+	data->points = hypo->state.extra_points_max;
+}
+
+static void on_change_target(struct menu *m)
+{
+	struct ability_learn_menu_data *data = menu_priv(m);
+
+	refresh_hypothetical_player(m);
+	get_max_learnable(m, data->p);
 }
 
 static bool ability_learn_handler(struct menu *m, const ui_event *e, int oid)
@@ -602,23 +712,28 @@ static bool ability_learn_handler(struct menu *m, const ui_event *e, int oid)
 	struct ability_learn_menu_data *data = menu_priv(m);
 	const struct player_ability *abil = ability_by_tome_id(oid);
 
-	if (e->type == EVT_SELECT) {
+	/*if (e->type == EVT_SELECT) {
 		return true;
 	}
-	else if ((e->type == EVT_KBRD && e->key.code == '+') ||
+	else */if ((e->type == EVT_KBRD && e->key.code == '+') ||
 			(e->type == EVT_MOVE && target_dir(e->key) == 6)) {
-		data->temp_target[oid] = tome_next_increment(player, abil, data->temp_target[oid]);
+		data->temp_target[oid] = tome_next_increment(data->p, abil, data->temp_target[oid]);
+		on_change_target(m);
 		return true;
 	}
 	else if ((e->type == EVT_KBRD && e->key.code == '-') ||
 			(e->type == EVT_MOVE && target_dir(e->key) == 4)) {
-		data->temp_target[oid] = tome_prev_increment(player, abil, data->temp_target[oid]);
+		data->temp_target[oid] = tome_prev_increment(data->p, abil, data->temp_target[oid]);
+		on_change_target(m);
 		return true;
 	}
-	else if (e->type == EVT_KBRD) {
-		if (e->key.code == '/') {
-			ability_learn_set_mode(m, get_next_mode(m, data->mode));
-			return true;
+	else if (e->type == EVT_KBRD && e->key.code == '/') {
+		ability_learn_set_mode(m, get_next_mode(m, data->mode));
+		return true;
+	}
+	else if (data->birth) {
+		if (e->type == EVT_KBRD && e->key.code == KTRL('X')) {
+			quit(NULL);
 		}
 	}
 
@@ -636,6 +751,9 @@ static int ability_learn_comp_base(const struct player_ability *abil1, const str
 	return strcmp(abil1->name, abil2->name);
 }
 
+/**
+ * sorta abilities by their ultimate parent first, then penultimate, etc
+ */
 static int ability_learn_comp(int oid1, int oid2)
 {
 	const struct player_ability *abil1 = ability_by_tome_id(oid1);
@@ -680,46 +798,37 @@ static int ability_learn_browse_desc(const struct player_ability *abil, struct p
 {
 	assert(abil);
 
-	int group, i;
-	bool hasparent = false;
-	char buf[512];
+	int group, c_x, c_y;
+	char desc_buf[512];
+	char parent_buf[512];
 
 	if (abil->type == PY_ABIL_POWER) group = PLAYER_FLAG_POWER;
 	else if (abil->type == PY_ABIL_SKILL) group = PLAYER_FLAG_SKILL;
 	else return row;
 
-	ability_desc(p, abil, buf, sizeof buf, known, group);
-
-	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
-		const struct player_ability *prnt = abil->parent[i];
-		if (prnt) {
-			if (!hasparent) {
-				strcat(buf, "\nIts parent abilities are ");
-			}
-			else {
-				strcat(buf, ", ");
-			}
-
-			strcat(buf, prnt->name);
-			hasparent = true;
-		}
-	}
-
-	if (hasparent) strcat(buf, ".");
+	ability_desc(p, abil, desc_buf, sizeof desc_buf, known, group);
+	ability_parent_desc(abil, parent_buf, sizeof parent_buf);
 
 	Term_gotoxy(col, row);
 
-	text_out_c(COLOUR_WHITE, "%s", buf);
+	text_out_c(COLOUR_WHITE, "%s%s", desc_buf, parent_buf);
 
-	return row;
+	if (Term_locate(&c_x, &c_y)) {
+		return row + 1;
+	}
+
+	return c_y + 1;
 }
 
+/**
+ * show the points at the bottom, give a description of the current ability
+ */
 static void ability_learn_browse(int oid, void *db, const region *loc)
 {
 	struct ability_learn_menu_data *data = db;
 
-	int points_left = player->state.extra_points_max - player->state.extra_points_used;
-	int more_points_used = calc_extra_points_array(player, data->temp_target) - player->state.extra_points_used;
+	int points_left = data->points - data->p->state.extra_points_used;
+	int more_points_used = calc_extra_points_array(data->p, data->temp_target) - data->p->state.extra_points_used;
 	//int row = loc->row + loc->page_rows, col = loc->col - loc->width;
 	//row = 20, col = 15;
 	uint8_t more_pts_attr = more_points_used > points_left ? COLOUR_L_RED : COLOUR_L_GREEN;
@@ -728,6 +837,7 @@ static void ability_learn_browse(int oid, void *db, const region *loc)
 	int row = loc->row + loc->page_rows;
 	const struct player_ability *abil = ability_by_tome_id(oid);
 	const char *pts_str = "Available Points: ";
+	bool known;
 
 	text_out_hook = text_out_to_screen;
 	text_out_wrap = loc->col + loc->width;
@@ -753,31 +863,23 @@ static void ability_learn_browse(int oid, void *db, const region *loc)
 		text_out_c(more_pts_attr, "%i", points_left - more_points_used);
 	}
 
-	if (abil) {
-		bool known = data->mode == AL_MODE_KNOWN;
-		row += 2;
-		ability_learn_browse_desc(abil, player, known, loc->col, row);
-		/*int group = oid < PP_MAX ? PLAYER_FLAG_POWER : PLAYER_FLAG_SKILL;
-		char buf[256];
-		ability_desc(player, abil, buf, sizeof(buf), data->mode == AL_MODE_KNOWN, group);
-		row += 2;
-		Term_gotoxy(loc->col, row);
-		text_out_c(COLOUR_WHITE, "%s", buf);*/
-	}
-	else {
-		plog_fmt("Error: can't find abil for oid %i", oid);
-	}
+	assert(abil);
+
+	known = data->mode == AL_MODE_KNOWN;
+	row += 2;
+	Term_gotoxy(loc->col + ALMC_NAME, row);
+	ability_learn_browse_desc(abil, data->p, known, loc->col + ALMC_NAME, row);
 	
 	text_out_wrap = 0;
 	text_out_indent = 0;
 	text_out_pad = 0;
 }
 
-static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode mode, int *max_learn)
+static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode mode, int *max_learn, bool birth)
 {
 	struct menu *m = menu_new(MN_SKIN_SCROLL, &ability_learn_menu_iter);
 	struct ability_learn_menu_data *data = mem_zalloc(sizeof *data);
-	assert(max_learn);
+	//assert(max_learn);
 	assert(p->extra_target);
 	//size_t width = MAX(0, MIN(Term->wid - 5, ALMC_MAX + 1));
 	
@@ -787,20 +889,41 @@ static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode 
 	data->mode = mode;
 	data->max_learnable = mem_zalloc(sizeof *data->max_learnable * z_info->learn_max);
 	data->temp_target = mem_zalloc(sizeof *data->temp_target * z_info->learn_max);
+	data->extra_max_learnable = mem_zalloc(sizeof *data->extra_max_learnable * z_info->learn_max);
+	data->birth = birth;
+	data->p = p;
 
-	memcpy(data->max_learnable, max_learn, sizeof *data->max_learnable * z_info->learn_max);
+	if (p->num_evol_choices > 0) {
+		data->end_monster = p->evol_choices[p->num_evol_choices - 1];
+	} else {
+		data->end_monster = NULL;
+	}
+
+	if (max_learn) {
+		memcpy(data->extra_max_learnable, max_learn, sizeof *data->max_learnable * z_info->learn_max);
+	}
 	memcpy(data->temp_target, p->extra_target, sizeof *data->temp_target * z_info->learn_max);
 
-	//menu_layout(m, &loc);
+	//if (OPT(p, birth_level_one_learn)) calc_max_level_powers(data, p);
 
 	menu_setpriv(m, z_info->learn_max, data);
 
-	m->header = "   Name                               Cost  Diff  Curr  Lrnd  Trgt";
+	get_max_learnable(m, p);
+
+	if (birth) {
+		m->header = "   Name                               Cost  Diff  Max   Lrnd  Trgt";
+	}
+	else {
+		m->header = "   Name                               Cost  Diff  Curr  Lrnd  Trgt";
+	}
 	m->selections = all_letters_nohjkl;
 	m->cmd_keys = "/+-";
 	m->browse_hook = ability_learn_browse;
 
 	ability_learn_set_mode(m, mode);
+	refresh_hypothetical_player(m);
+	data->points = data->p->state.extra_points_max;
+
 	return m;
 }
 
@@ -808,8 +931,10 @@ static void ability_learn_menu_destroy(struct menu *m)
 {
 	struct ability_learn_menu_data *data = menu_priv(m);
 
+	//free_max_level_powers(data);
 	mem_free(data->max_learnable);
 	mem_free(data->temp_target);
+	mem_free(data->extra_max_learnable);
 	mem_free(data);
 	mem_free((char *)m->title);
 
@@ -820,19 +945,19 @@ static void ability_learn_menu_destroy(struct menu *m)
  * i'm not telling you what this function does
  * mind your own business
  */
-static bool validate_result(struct player *p, struct menu *m, bool correct)
+static bool validate_result(struct player *p, struct menu *m, bool correct, int points)
 {
 	int i;
 	struct ability_learn_menu_data *data = menu_priv(m);
 
 	for (i = 0; i < m->count; ++i) {
-		if (!extra_target_valid(p, data->max_learnable, i, data->temp_target[i])) {
+		if (!extra_target_valid(data->p, data->max_learnable, i, data->temp_target[i])) {
 			if (correct) data->temp_target[i] = p->extra_target[i];
 			else return false;
 		}
 	}
 
-	if (calc_extra_points_array(p, data->temp_target) > p->state.extra_points_max) {
+	if (calc_extra_points_array(data->p, data->temp_target) > points) {
 		if (correct) memcpy(data->temp_target, p->extra_target, sizeof *data->temp_target * z_info->learn_max);
 		else return false;
 	}
@@ -840,55 +965,286 @@ static bool validate_result(struct player *p, struct menu *m, bool correct)
 	return true;
 }
 
-void textui_powers_learn(struct player *p, int *max_learn)
+/**
+ * if we're in birth check if we're not using all our points
+ */
+static bool validate_birth(struct player *p, struct menu *m, int points)
 {
-	struct menu *m = ability_learn_menu_new(p, AL_MODE_KNOWN, max_learn);
 	struct ability_learn_menu_data *data = menu_priv(m);
+
+	if (!get_check("Use these targets? ")) {
+		return false;
+	}
+
+	if (calc_extra_points_array(data->p, data->temp_target) < points) {
+		if (!get_forced_check("Unused points will be lost permanently. Proceed? ")) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+/**
+ * make a version of the player that (approximates what) they would be at the end of the game
+ */
+static struct player *hypothetical_player(const struct player *p)
+{
+	struct player *hypo = mem_zalloc(sizeof *hypo);
+	struct monster_race *hypo_race = mem_zalloc(sizeof *hypo_race);
+	int i;
+
+	memcpy(hypo, p, sizeof *hypo);
+
+	for (i = 0; i < STAT_MAX; ++i) {
+		hypo->stat_cur[i] = hypo->stat_max_max[i];
+	}
+
+	if (hypo->num_evol_choices > 0) {
+		memcpy(hypo_race, hypo->evol_choices[hypo->num_evol_choices - 1], sizeof *hypo_race);
+		rearrange_monster(hypo_race, true);
+		hypo->curr_monster_race = hypo_race;
+	}
+
+	hypo->max_lev = PY_MAX_LEVEL;
+	hypo->lev = PY_MAX_LEVEL;
+
+	return hypo;
+}
+
+static void free_hypothetical_player(struct player *hypo)
+{
+	if (hypo) {
+		mem_free(hypo->curr_monster_race);
+		mem_free(hypo);
+	}
+}
+
+bool textui_powers_learn(struct player *p, int *max_learn, bool birth)
+{
+	struct menu *m;
+	struct ability_learn_menu_data *data;
+	struct player *hypo = NULL;
+	struct player *use;
 	bool done = false;
 	bool changed = false;
+	bool go_back;
 	int i;
+
+	/*if (!OPT(p, birth_level_one_learn)) {
+		points = p->state.extra_points_max;
+	} else if (birth) {
+		int intel = p->stat_max_max[STAT_INT];
+		int intbonus = adj_int_tome(intel);
+		points = LEARN_MAX;
+		points += intbonus;
+	} else {
+		points = 0;
+	}*/
+
+	if (OPT(p, birth_level_one_learn)) {
+		if (birth) {
+			hypo = hypothetical_player(p);
+		}
+	}
+
+	use = hypo ? hypo : p;
+
+	m = ability_learn_menu_new(use, AL_MODE_KNOWN, max_learn, birth);
+	data = menu_priv(m);
 
 	assert(m);
 
 	screen_save();
 
 	while (!done) {
-		menu_select(m, 0, false);
+		ui_event evt;
 
-		done = validate_result(p, m, false);
+		evt = menu_select(m, 0, false);
+		go_back = evt.type == EVT_ESCAPE;
+
+		if (go_back) {
+			changed = false;
+			for (i = 0; !changed && i < z_info->learn_max; ++i) {
+				changed = p->extra_target[i] != data->temp_target[i];
+			}
+			done = !changed || get_check("Discard changes? ");
+		}
+		else {
+			done = validate_result(use, m, false, data->points);
 		
-		if (!done) {
-			if (get_check("Discard changes? ")) {
-				validate_result(p, m, true);
+			if (!done) {
+				if (get_check("Discard changes? ")) {
+					validate_result(use, m, true, data->points);
+				}
+			}
+
+			if (birth && !validate_birth(use, m, data->points)) {
+				done = false;
 			}
 		}
-		/*for (i = 0; i < m->count; ++i) {
-			if (!extra_target_valid(p, data->max_learnable, i, data->temp_target[i])) {
-				done = false;
-				data->temp_target[i] = p->extra_target[i];
-			}
-		}*/
-
-
-		/*if (changed && (calc_extra_points_array(p, data->temp_target) > (uint16_t)p->state.extra_points_max)) {
-			if (get_forced_check("Discard changes? ")) {
-				memcpy(data->temp_target, p->extra_target, sizeof *data->temp_target * z_info->learn_max);
-				changed = false;
-			}
-			done = false;
-		}*/
 	}
 
-	for (i = 0; !changed && i < z_info->learn_max; ++i) {
-		changed = p->extra_target[i] != data->temp_target[i];
-	}
+	if (!go_back) {
+		for (i = 0; !changed && i < z_info->learn_max; ++i) {
+			changed = p->extra_target[i] != data->temp_target[i];
+		}
 
-	if (changed && get_forced_check("Use these targets? ")) {
-		memcpy(p->extra_target, data->temp_target, sizeof *p->extra_target * z_info->learn_max);
-		p->upkeep->update |= PU_BONUS;
+		if (!birth && changed && get_forced_check("Use these targets? ")) {
+			memcpy(p->extra_target, data->temp_target, sizeof *p->extra_target * z_info->learn_max);
+			p->upkeep->update |= PU_BONUS;
+		}
 	}
 
 	screen_load();
 
+	if (hypo) free_hypothetical_player(hypo);
+
 	ability_learn_menu_destroy(m);
+
+	return !go_back;
 }
+
+
+
+
+struct evolution_choice_menu_data {
+	const struct evolution *choices;
+	const struct monster_race *which;
+	bool birth;
+};
+
+static void evolution_choice_browse(int oid, void *db, const region *loc)
+{
+	return;
+}
+
+static int evolution_choice_valid(struct menu *menu, int oid)
+{
+	return MN_ROW_VALID;
+}
+
+static void evolution_choice_display(struct menu *menu, int oid, bool cursor,
+		int row, int col, int width)
+{
+	struct evolution_choice_menu_data *data = menu_priv(menu);
+	char desc[80];
+	int i;
+	const struct evolution *curr = data->choices;
+	uint8_t colour = cursor ? COLOUR_WHITE : COLOUR_L_BLUE;
+	if (data->which && data->which->ridx == curr->race->ridx) {
+		colour = cursor ? COLOUR_L_GREEN : COLOUR_GREEN;
+	}
+
+	assert(curr);
+
+	assert(oid >= 0 && oid < menu->count);
+
+	for (i = 0; i < oid; ++i) {
+		assert(curr->next);
+		curr = curr->next;
+	}
+
+	strnfmt(desc, sizeof desc, curr->race->name);
+
+	my_strcap_full(desc);
+
+	Term_gotoxy(col, row);
+	text_out_c(colour, "%s", desc);
+}
+
+static bool evolution_choice_handler(struct menu *m, const ui_event *e, int oid)
+{
+	struct evolution_choice_menu_data *data = menu_priv(m);
+	int i;
+
+	if (e->type == EVT_SELECT) {
+		const struct evolution *select = data->choices;
+		for (i = 0; i < oid; ++i) {
+			select = select->next;
+		}
+		data->which = select->race;
+	}
+	else if (data->birth) {
+		if (e->key.code == KTRL('X')) {
+			quit(NULL);
+		}
+	}
+	return false;
+}
+
+static const menu_iter evolution_choice_menu_iter = { 
+	NULL,
+	evolution_choice_valid,
+	evolution_choice_display,
+	evolution_choice_handler,
+	NULL,
+	NULL
+};
+
+static struct menu *evolution_choice_menu_new(const struct evolution *curr, bool birth)
+{
+	struct menu *m;
+	struct evolution_choice_menu_data *data;
+	int num_choices = 0;
+	const struct evolution *evol;
+	region loc = { 25, 1, 50, 30 };
+
+	for (evol = curr; evol; evol = evol->next) {
+		++num_choices;
+	}
+
+	if (num_choices <= 1) return NULL;
+
+	m = menu_new(MN_SKIN_SCROLL, &evolution_choice_menu_iter);
+	data = mem_zalloc(sizeof *data);
+
+	data->choices = curr;
+	data->which = NULL;
+	data->birth = birth;
+
+	loc.page_rows = MAX(num_choices + 3, 25);
+
+	m->title = "Evolve into which monster?";
+	m->header = "  Name";
+	m->browse_hook = evolution_choice_browse;
+	m->selections = all_letters_nohjkl;
+
+	menu_setpriv(m, num_choices, data);
+	menu_layout(m, &loc);
+
+	return m;
+}
+
+static void evolution_choice_menu_free(struct menu *m)
+{
+	struct evolution_choice_menu_data *data = menu_priv(m);
+
+	mem_free(data);
+	menu_free(m);
+}
+
+const struct monster_race *evolution_choice_menu_select(const struct evolution *evol, bool birth)
+{
+	struct menu *m;
+	struct evolution_choice_menu_data *data;
+	const struct monster_race *result;
+
+	if (!evol) return NULL;
+	if (!evol->next) return evol->race;
+
+	m = evolution_choice_menu_new(evol, birth);
+
+	assert(m);
+
+	menu_select(m, 0, true);
+
+	data = menu_priv(m);
+	result = data->which;
+
+	evolution_choice_menu_free(m);
+
+	return result;
+}
+
+

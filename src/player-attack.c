@@ -825,7 +825,7 @@ static void unarmed_mod_attack(struct attack_roll *aroll, const struct player *p
 	aroll->dsides += get_power_scale_state(ps, PP_UNARMED_STRIKE, 30 / (ddicemod * 2 + 1), p->lev);
 
 	if (ps->powers[PP_DEATH_TOUCH] > 0) {
-		aroll->special[ATK_SPCL_DEATH_TOUCH] += ps->powers[PP_DEATH_TOUCH] * 5;
+		aroll->special[ATK_SPCL_DEATH_TOUCH] += ps->powers[PP_DEATH_TOUCH] * 5 / 2;
 	}
 
 	if (aroll->accuracy_stat == STAT_NONE && ps->powers[PP_UNARMED_STRIKE] > 15) aroll->accuracy_stat = STAT_DEX;

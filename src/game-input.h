@@ -21,6 +21,7 @@
 
 #include "cmd-core.h"
 #include "player.h"
+#include "ui-event.h"
 
 /**
  * Bit flags for get_item() function
@@ -58,7 +59,7 @@ extern int (*get_innate_hook)(struct player *p,
 	bool (*innate_filter)(const struct player *p, int innate_index));
 extern int (*get_gener_spell_hook)(struct player *p, const char *error,
 	int (*spell_filter)(const struct player *p, int spell_index));
-extern void (*get_learn_hook)(struct player *p, int *max_learn);
+extern bool (*get_learn_hook)(struct player *p, int *max_learn, bool birth);
 extern bool (*get_item_hook)(struct object **choice, const char *pmt,
 							 const char *str, cmd_code cmd, item_tester tester,
 							 int mode);
@@ -91,7 +92,7 @@ int get_innate(struct player *p, struct monster_race *monr, const char *error,
 		bool (*innate_filter)(const struct player *p, int innate));
 int get_gener_spell(struct player *p, const char *error,
 		int (*spell_filter)(const struct player *p, int spell));
-void get_learn(struct player *p, int *max_learn);
+bool get_learn(struct player *p, int *max_learn, bool birth);
 bool get_item(struct object **choice, const char *pmt, const char *str,
 			  cmd_code cmd, item_tester tester, int mode);
 bool get_curse(int *choice, struct object *obj, char *dice_string);

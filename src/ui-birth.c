@@ -36,6 +36,7 @@
 #include "ui-menu.h"
 #include "ui-options.h"
 #include "ui-player.h"
+#include "ui-player-properties.h"
 #include "ui-prefs.h"
 #include "ui-target.h"
 
@@ -71,6 +72,8 @@ enum birth_stage
 	BIRTH_ROLLER_CHOICE,
 	BIRTH_POINTBASED,
 	BIRTH_ROLLER,
+	BIRTH_MONSTER,
+	BIRTH_LEARN,
 	BIRTH_NAME_CHOICE,
 	BIRTH_HISTORY_CHOICE,
 	BIRTH_FINAL_CONFIRM,
@@ -1119,7 +1122,8 @@ static enum birth_stage roller_command(bool first_call)
 
 	case ACT_CTX_BIRTH_ROLL_ACCEPT:
 		/* Accept the roll.  Go to the next stage. */
-		next = BIRTH_NAME_CHOICE;
+		//next = BIRTH_NAME_CHOICE;
+		next = BIRTH_MONSTER;
 		break;
 
 	case ACT_CTX_BIRTH_ROLL_QUIT:
@@ -1399,7 +1403,8 @@ static enum birth_stage point_based_command(void)
 
 	case ACT_CTX_BIRTH_PTS_ACCEPT:
 		/* Done with this stage.  Proceed to the next. */
-		next = BIRTH_NAME_CHOICE;
+		//next = BIRTH_NAME_CHOICE;
+		next = BIRTH_MONSTER;
 		break;
 
 	case ACT_CTX_BIRTH_PTS_QUIT:
@@ -1412,6 +1417,77 @@ static enum birth_stage point_based_command(void)
 	}
 
 	return next;
+}
+
+static struct evolution *next_evol(struct player *p)
+{
+	if (p->evol_choices) return p->evol_choices[p->num_evol_choices - 1]->evol;
+	else if (p->curr_monster_race) return p->curr_monster_race->evol;
+	else return p->race->evol;
+}
+
+/**
+ * returns whether it should continue going back
+ */
+static bool previous_evolution_choice(struct player *p)
+{
+	const struct evolution *nxt;
+	bool done = false;
+
+	while (!done && player->evol_choices) {
+		remove_last_evolution(p);
+		nxt = next_evol(p);
+
+		assert(nxt);
+
+		if (nxt->next) done = true;
+	}
+
+	return !done;
+}
+
+/**
+ * L: get monster and learn choices if we need to
+ */
+static enum birth_stage get_evol_command(void)
+{
+	if (OPT(player, birth_level_one_learn)) {
+		const struct evolution *choice_evol;
+		const struct monster_race *select;
+
+		choice_evol = next_evol(player);
+
+		while (choice_evol) {
+			if (!choice_evol->next) {
+				select = choice_evol->race;
+			} else {
+				select = evolution_choice_menu_select(choice_evol, true);
+			}
+
+			if (select) {
+				add_evolution(player, select);
+				choice_evol = select->evol;
+			}
+
+			else {
+				if (previous_evolution_choice(player)) return BIRTH_BACK;
+
+				choice_evol = next_evol(player);
+			}
+		}
+	}
+
+	return BIRTH_LEARN;
+}
+
+static enum birth_stage get_learn_command(void)
+{
+	bool next = true;
+	if (OPT(player, birth_level_one_learn)) {
+		next = get_learn(player, NULL, true); 
+	}
+
+	return next ? BIRTH_NAME_CHOICE : BIRTH_BACK;
 }
 	
 /**
@@ -1839,8 +1915,33 @@ int textui_do_birth(void)
 			{
 				roller = BIRTH_ROLLER;
 				next = roller_command(prev < BIRTH_ROLLER);
-				if (next == BIRTH_BACK)
+				if (next == BIRTH_BACK) {
 					next = BIRTH_ROLLER_CHOICE;
+				}
+
+				break;
+			}
+
+			case BIRTH_MONSTER:
+			{
+				next = get_evol_command();
+
+				if (next == BIRTH_BACK) next = roller;
+
+				break;
+			}
+
+			case BIRTH_LEARN:
+			{
+				next = get_learn_command();
+
+				if (next == BIRTH_BACK) {
+					if (previous_evolution_choice(player)) {
+						next = roller;
+					} else {
+						next = BIRTH_MONSTER;
+					}
+				}
 
 				break;
 			}

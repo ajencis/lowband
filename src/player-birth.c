@@ -20,6 +20,7 @@
 #include "cmd-core.h"
 #include "cmds.h"
 #include "game-event.h"
+#include "game-input.h"
 #include "game-world.h"
 #include "init.h"
 #include "mon-lore.h"
@@ -47,6 +48,7 @@
 #include "player-util.h"
 #include "savefile.h"
 #include "store.h"
+#include "ui-player-properties.h"
 
 /**
  * Overview
@@ -1086,6 +1088,9 @@ void player_generate(struct player *p, const struct player_race *r,
 	/* L: copy realm over */
 	p->realm = c->realm;
 
+	// L: clear learning
+	memset(p->extra_target, 0, sizeof *p->extra_target * z_info->learn_max);
+
 	/* Roll for age/height/weight */
 	get_ahw(p);
 
@@ -1111,6 +1116,8 @@ static void do_birth_reset(bool use_quickstart, birther *quickstart_prev_local)
 	if (use_quickstart && quickstart_prev_local) {
 		load_roller_data(quickstart_prev_local, NULL);
 	}
+
+	while (player->evol_choices) remove_first_evolution(player);
 
 	player_generate(player, NULL, NULL, use_quickstart && quickstart_prev_local);
 

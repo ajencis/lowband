@@ -893,13 +893,11 @@ bool menu_handle_keypress(struct menu *menu, const ui_event *in,
 		}
 	} else if (in->key.code == KC_ENTER) {
 		out->type = EVT_SELECT;
-	} else {
+	} else if (target_dir(in->key)) {
 		/* Try directional movement */
 		int dir = target_dir(in->key);
 		ui_event temp_ui = *in;
-		if (dir) {
-			temp_ui.type = EVT_MOVE;
-		}
+		temp_ui.type = EVT_MOVE;
 
 		if (dir && !no_valid_row(menu, count) && !menu_handle_action(menu, &temp_ui)) {
 			*out = menu->skin->process_dir(menu, dir);
@@ -923,6 +921,8 @@ bool menu_handle_keypress(struct menu *menu, const ui_event *in,
 				assert(menu->cursor < count);
 			}
 		}
+	} else {
+		menu_handle_action(menu, in);
 	}
 
 	return eat;

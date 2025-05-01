@@ -1359,7 +1359,7 @@ static bool calc_monster_blow(int counts[PP_MAX], const struct monster_blow *mb)
 	return effect;
 }
 
-void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], const struct player_state *ps)
+void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int curr_powers[PP_MAX])
 {
 	int i, totalbonus, numcounts = 0, numblows = 0;
 	const struct monster_spell *mspell;
@@ -1412,7 +1412,7 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], const s
 		// monsters are specialized, take penalty to magic skills they don't get
 		if (powers[i] > 0) continue;
 		int penalty = my_sqrt(mrace->level);
-		penalty = MIN(ps->powers[i] / 2, penalty);
+		penalty = MIN(curr_powers[i] / 2, penalty);
 		penalty = MAX(0, penalty);
 		powers[i] -= penalty;
 	}
@@ -1477,7 +1477,7 @@ static void calc_monster(struct player *p, struct player_state *state,
 
 	if (rf_has(mrace->flags, RF_NEVER_MOVE)) *moves -= 25;
 
-	calc_monster_powers(mrace, powers, state);
+	calc_monster_powers(mrace, powers, state->powers);
 
 	for (i = 0; i < PP_MAX; ++i) {
 		state->powers[i] += powers[i];
@@ -1641,7 +1641,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			state->powers[i] = 0;
 		}
 
-		else if (p->lev > 50) {
+		else if (p->lev >= PY_MAX_LEVEL) {
 			state->powers[i] = (p->lev * scale + 99) / 100;
 		}
 
@@ -1850,7 +1850,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		assert((0 <= ind) && (ind < STAT_RANGE));
 
 		/* Hack for hypothetical blows - NRM */
-		if (!update) {
+		if (!update && character_generated) {
 			if (i == STAT_STR) {
 				ind += str_ind;
 				ind = MIN(ind, 37);

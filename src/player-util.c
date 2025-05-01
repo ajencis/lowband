@@ -50,6 +50,7 @@
 #include "trap.h"
 #include "ui-input.h"
 #include "ui-knowledge.h"
+#include "ui-player-properties.h"
 
 
 
@@ -278,7 +279,68 @@ static void change_player_body(struct player *p, struct player_body *new)
 	assert(!equipped_pile);
 }
 
-void change_player_monster(struct player *p, struct monster_race *mon, bool init)
+bool add_evolution(struct player *p, const struct monster_race *mr)
+{
+	++p->num_evol_choices;
+
+	if (p->num_evol_choices > 1) {
+		p->evol_choices = mem_realloc(p->evol_choices, sizeof *p->evol_choices * p->num_evol_choices);
+	}
+	else {
+		p->evol_choices = mem_zalloc(sizeof *p->evol_choices * p->num_evol_choices);
+	}
+	
+	assert(p->evol_choices);
+	p->evol_choices[p->num_evol_choices - 1] = mr;
+
+	return true;
+}
+
+static void remove_evolution(struct player *p, int which)
+{
+	assert(which < p->num_evol_choices && which >= 0);
+	assert(p->evol_choices);
+
+	const struct monster_race **old_evol_choices = p->evol_choices;
+	int old_i, new_i;
+
+	--p->num_evol_choices;
+
+	if (p->num_evol_choices <= 0) {
+		p->evol_choices = NULL;
+	}
+	else {
+		p->evol_choices = mem_zalloc(sizeof *p->evol_choices * p->num_evol_choices);
+
+		for (old_i = 0, new_i = 0; new_i < p->num_evol_choices; ++old_i) {
+			if (old_i == which) {
+				// skip this one
+			} else {
+				assert(new_i < p->num_evol_choices);
+				p->evol_choices[new_i] = old_evol_choices[old_i];
+				++new_i;
+			}
+		}
+	}
+
+	mem_free(old_evol_choices);
+}
+
+void remove_first_evolution(struct player *p)
+{
+	if (p->num_evol_choices > 0) {
+		remove_evolution(p, 0);
+	}
+}
+
+void remove_last_evolution(struct player *p)
+{
+	if (p->num_evol_choices > 0) {
+		remove_evolution(p, p->num_evol_choices - 1);
+	}
+}
+
+void change_player_monster(struct player *p, const struct monster_race *mon, bool init)
 {
 	assert(mon);
 	disturb(p);
@@ -301,44 +363,42 @@ void change_player_monster(struct player *p, struct monster_race *mon, bool init
 
 bool check_player_monster(struct player *p, bool init)
 {
-	struct monster_race *curr = lookup_player_monster(p);
-	struct monster_race *selected = NULL;
-	int numevols = 0, numpossible = 0;
-	struct evolution *e = curr ? curr->evol : p->race->evol;
+	const struct monster_race *selected = NULL;
+	int numevols = 0;
+	//struct evolution *e = curr ? curr->evol : p->race->evol;
 	bool do_change = false;
 	uint32_t xpneed;
 	int currxp = init ? player_exp[5] : p->monster_xp;
 
-	while (e) {
-		int monlev = e->race->level;
+	if (p->num_evol_choices <= 0) {
+		if ((signed)p->monster_xp > p->lev * 10 && !init) {
+			select_evolution(p);
+		}
+		return false;
+	}
+	assert(p->evol_choices);
+
+	selected = p->evol_choices[0];
+
+	if (selected) {
+		int monlev = selected->level;
 
 		++numevols;
 
-		int32_t currxpneed;
 		if (monlev < PY_MAX_LEVEL) {
 			// monster is in the table
-			currxpneed = player_exp[monlev];
+			xpneed = player_exp[monlev];
 		}
 		else if (player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL < PY_MAX_EXP / (unsigned)monlev) {
 			/* monster is out of the table but linear scaling of the highest value
 			   in the table is less than the maximum possible */
-			currxpneed = player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL * monlev;
+			xpneed = player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL * monlev;
 		}
 		else {
 			/* monster is out of the table and would need more than the max possible
 			   xp to choose */
-			currxpneed = PY_MAX_EXP;
+			xpneed = PY_MAX_EXP;
 		}
-
-		if (currxpneed <= currxp) {
-			++numpossible;
-			if (numpossible < 2 || one_in_(numpossible)) {
-				selected = e->race;
-				xpneed = currxpneed;
-			}
-		}
-
-		e = e->next;
 	}
 
 	if (selected && (!init || numevols <= 1)) {
@@ -354,14 +414,10 @@ bool check_player_monster(struct player *p, bool init)
 				chance = 0x10000000 / currxp;
 			}
 			chance = MAX(chance, 25);
-			char *prompt = format("Evolve into a%s %s? ",
-					is_a_vowel(selected->name[0]) ? "n" : "",
-					selected->name);
 			if (one_in_(chance)) {
-				if (get_forced_check(prompt)) {
-					player->monster_xp = 0;
-					do_change = true;
-				}
+				p->monster_xp = 0;
+				do_change = true;
+				remove_first_evolution(p);
 			}
 		}
 	}
@@ -429,6 +485,68 @@ bool player_increase_stat(struct player *p)
 	}
 	return false;
 }
+
+/**
+ * L: gets the next evolution selection for the player
+ * returns true if an evolution was added to the player's evolution queue
+ */
+bool select_evolution(struct player *p)
+{
+	struct evolution *choice_evol;
+	const struct monster_race *select;
+
+	if (p->evol_choices) choice_evol = p->evol_choices[p->num_evol_choices - 1]->evol;
+	else choice_evol = p->curr_monster_race ? p->curr_monster_race->evol : p->race->evol;
+
+	if (!choice_evol) return false;
+
+	if (!choice_evol->next) {
+		add_evolution(p, choice_evol->race);
+		return true;
+	}
+
+	select = evolution_choice_menu_select(choice_evol, false);
+
+	if (!select) return false;
+
+	add_evolution(p, select);
+
+	return true;
+
+	//if (!last) return false;
+
+	/*choice_evol = curr_evol;
+	plog_fmt("nec=%i", p->num_evol_choices);
+	for (i = 0; i < p->num_evol_choices; ++i) {
+		plog_fmt("ce.r=%s/%i, p.ec[i]=%s/%i", choice_evol->race->name, choice_evol->race->ridx, p->evol_choices[i]->name, p->evol_choices[i]->ridx);
+		while (choice_evol->race->ridx != p->evol_choices[i]->ridx) {
+			choice_evol = choice_evol->next;
+			assert(choice_evol);
+		}
+		choice_evol = choice_evol->race->evol;
+		assert(choice_evol);
+	}*/
+
+	/*plog_fmt("ce->r=%s", choice_evol->race->name);
+
+	if (!choice_evol->race->evol) return false;
+
+	plog_fmt("ce->r->e->r=%s", choice_evol->race->evol->name);
+
+	if (!choice_evol->race->evol->next) {
+		add_evolution(p, choice_evol->race->evol->race);
+		return true;
+	}
+
+	select = evolution_choice_menu_select(choice_evol->race->evol);
+
+	add_evolution(p, select);
+
+	return true;*/
+}
+
+
+
 
 int get_power_scale_state(const struct player_state *ps, int power, int scaleto, int level)
 {
@@ -563,6 +681,12 @@ void calc_extra_points(struct player *p, struct player_state *ps)
 		ps->extra_points_max = 0;
 		ps->extra_points_used = 0;
 	}
+	ps->extra_points_used = calc_extra_points_array(p, p->extra_target);
+	/*if (OPT(p, birth_level_one_learn)) {
+		if (!character_generated) ps->extra_points_max = LEARN_MAX;
+		else ps->extra_points_max = 0;
+		return;
+	}*/
 	assert(p->extra_target);
 	int sum = calc_extra_points_array(p, p->extra_target);
 	int intbonus = adj_int_tome(ps->stat_ind[STAT_INT]);
@@ -824,6 +948,47 @@ static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
 }
 #endif
 
+static int tome_max_learnable_parents_array(const struct player_ability *abil, int *powers_array, int *skills_array)
+{
+	int div = 0, sum = 0;
+	int i;
+	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
+		const struct player_ability *prnt = abil->parent[i];
+		if (prnt) {
+			if (prnt->type == PY_ABIL_POWER) {
+				sum += powers_array[prnt->index];
+				div += 50;
+			} else if (prnt->type == PY_ABIL_SKILL) {
+				sum += skills_array[prnt->index] / 2;
+				div += 50;
+			}
+		}
+	}
+
+	if (div > 0) {
+		// need parents to be at ~50/3 before you can learn
+		int abil_max_cost = bonus_to_cost(LEARN_MAX, abil);
+		int max_cost = abil_max_cost * sum * 2 / div - abil_max_cost / 3;
+
+		return cost_to_bonus(max_cost, abil);
+	}
+
+	return LEARN_MAX;
+}
+
+static int tome_max_learnable_parents(const struct player_ability *abil, struct player *p)
+{
+	return tome_max_learnable_parents_array(abil, p->state.powers, p->state.skills);
+}
+
+static int player_extra_target(struct player *p, const struct player_ability *abil)
+{
+	int base = p->extra_target[abil->learn_index];
+	int max = tome_max_learnable_parents(abil, p);
+
+	return MIN(base, max);
+}
+
 bool check_learn_powers(struct player *p, int xpgain)
 {
 	bool learned = false;
@@ -831,10 +996,13 @@ bool check_learn_powers(struct player *p, int xpgain)
 
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->learn_index < 0) continue;
-		int i = abil->learn_index;
 		int curr_total, curr_lrnd;
-		int target = p->extra_target[i];
+		int target = player_extra_target(p, abil);
 		unsigned int chance;
+
+		if (OPT(p, birth_level_one_learn)) {
+			target = (target * p->lev + PY_MAX_LEVEL - 1) / PY_MAX_LEVEL;
+		}
 
 		if (abil->type == PY_ABIL_POWER) {
 			curr_total = p->state.powers[abil->index];
@@ -946,39 +1114,6 @@ static int tome_max_cost_parent(int parent_level, struct player_ability *abil, s
 }
 #endif
 
-static int tome_max_learnable_parents_array(const struct player_ability *abil, int *powers_array, int *skills_array)
-{
-	int div = 0, sum = 0;
-	int i;
-	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
-		const struct player_ability *prnt = abil->parent[i];
-		if (prnt) {
-			if (prnt->type == PY_ABIL_POWER) {
-				sum += powers_array[prnt->index];
-				div += 50;
-			} else if (prnt->type == PY_ABIL_SKILL) {
-				sum += skills_array[prnt->index] / 2;
-				div += 100;
-			}
-		}
-	}
-
-	if (div > 0) {
-		// need parents to be at ~50/3 before you can learn
-		int abil_max_cost = bonus_to_cost(LEARN_MAX, abil);
-		int max_cost = abil_max_cost * sum * 2 / div - abil_max_cost / 3;
-
-		return cost_to_bonus(max_cost, abil);
-	}
-
-	return LEARN_MAX;
-}
-
-static int tome_max_learnable_parents(const struct player_ability *abil, struct player *p)
-{
-	return tome_max_learnable_parents_array(abil, p->state.powers, p->state.skills);
-}
-
 static void max_learnable_object(struct object *obj, int *learn_array, int array_max) 
 {
 	int max_learn = tome_max_skill(obj);
@@ -990,7 +1125,8 @@ static void max_learnable_object(struct object *obj, int *learn_array, int array
 	}
 }
 
-bool tome_max_learnable_extra(struct player *p, int *learn_array, int *extra_array)
+bool tome_max_learnable_extra_array(bool metaprog, int *learn_array, int *extra_array,
+	int *curr_powers, int *curr_skills, struct player *p)
 {
 	memset(learn_array, 0, z_info->learn_max * sizeof (*learn_array));
 
@@ -999,7 +1135,7 @@ bool tome_max_learnable_extra(struct player *p, int *learn_array, int *extra_arr
 	bool extra = false;
 	int i;
 
-	if (OPT(p, birth_no_metaprogression)) {
+	if (!metaprog || !p) {
 		for (i = 0; i < z_info->learn_max; ++i) {
 			learn_array[i] = LEARN_MAX;
 		}
@@ -1023,7 +1159,8 @@ bool tome_max_learnable_extra(struct player *p, int *learn_array, int *extra_arr
 	}
 
 	for (abil = player_abilities; abil; abil = abil->next) {
-		int tome_parent_max = tome_max_learnable_parents(abil, p);
+		if (abil->learn_index < 0) continue;
+		int tome_parent_max = tome_max_learnable_parents_array(abil, curr_powers, curr_skills);
 		learn_array[abil->learn_index] = MIN(learn_array[abil->learn_index], tome_parent_max);
 		/*struct player_ability *parent = tome_parent(abil);
 		if (parent) {
@@ -1036,6 +1173,12 @@ bool tome_max_learnable_extra(struct player *p, int *learn_array, int *extra_arr
 	}
 
 	return extra;
+}
+
+bool tome_max_learnable_extra(struct player *p, int *learn_array, int *extra_array)
+{
+	return tome_max_learnable_extra_array(!OPT(p, birth_no_metaprogression), learn_array, extra_array,
+			p->state.powers, p->state.skills, p);
 }
 
 void tome_max_learnable(struct player *p, int *learn_array)
@@ -1077,48 +1220,69 @@ int tome_prev_increment(struct player *p, const struct player_ability *abil, int
 	return prev_bonus;
 }
 
-int player_class_power(struct player *p, int power)
+int player_class_power_array(const struct player_class *c, int extra_power, int power)
 {
 	assert(power >= 0 && power < PP_MAX);
-	int base = p->class->c_powers[power];
+	int base = c->c_powers[power];
 	// extra-learning makes class reflect learned powers
-	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
-		base = MAX(base, p->extra_powers[power]);
+	if (pf_has(c->pflags, PF_EXTRA_LEARNING)) {
+		base = MAX(base, extra_power);
+	}
+	return base;
+}
+
+int player_class_power(struct player *p, int power)
+{
+	return player_class_power_array(p->class, p->extra_powers[power], power);
+}
+
+int player_race_power_array(const struct player_race *r, int extra_power, int power)
+{
+	assert(power >= 0 && power < PP_MAX);
+	int base = r->r_powers[power];
+	// extra-learning makes race reflect learned powers
+	if (pf_has(r->pflags, PF_EXTRA_LEARNING)) {
+		base = MAX(base, extra_power / 2);
 	}
 	return base;
 }
 
 int player_race_power(struct player *p, int power)
 {
-	assert(power >= 0 && power < PP_MAX);
-	int base = p->race->r_powers[power];
-	// extra-learning makes race reflect learned powers
-	if (pf_has(p->race->pflags, PF_EXTRA_LEARNING)) {
-		base = MAX(base, p->extra_powers[power] / 2);
-	}
-	return base;
+	return player_race_power_array(p->race, p->extra_powers[power], power);
 }
 
-int player_class_x_skill(struct player *p, int skill)
+int class_x_skill(const struct player_class *c, int extra, int skill)
 {
 	assert(skill >= 0 && skill < SKILL_MAX);
-	int xtra = p->class->x_skills[skill];
+	int xtra = c->x_skills[skill];
 	// extra-learning makes class reflect known skills
-	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
-		xtra = MAX(xtra, p->extra_skills[skill] * 3 / 4 / 5);
+	if (pf_has(c->pflags, PF_EXTRA_LEARNING)) {
+		xtra = MAX(xtra, extra * 3 / 4 / 5);
 	}
 	return xtra;
 }
 
-int player_class_c_skill(struct player *p, int skill)
+int player_class_x_skill(struct player *p, int skill)
+{
+	return class_x_skill(p->class, p->extra_skills[skill], skill);
+}
+
+
+int class_c_skill(const struct player_class *c, int extra, int skill)
 {
 	assert(skill >= 0 && skill < SKILL_MAX);
-	int base = p->class->c_skills[skill];
+	int base = c->c_skills[skill];
 	// extra-learning makes class reflect known skills
-	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
-		base = MAX(base, p->extra_skills[skill] * 1 / 4);
+	if (pf_has(c->pflags, PF_EXTRA_LEARNING)) {
+		base = MAX(base, extra * 1 / 4);
 	}
 	return base;
+}
+
+int player_class_c_skill(struct player *p, int skill)
+{
+	return class_c_skill(p->class, p->extra_skills[skill], skill);
 }
 
 void player_race_r_skill(const struct player_race *r, bool evolved, int skills[SKILL_MAX])
@@ -1173,23 +1337,23 @@ void player_race_elem_info(const struct player_race *r, bool evolved, struct ele
 	}
 }
 
-void player_skill_stats(struct player *p, struct player_state *ps, int skill, int *stat1, int *stat2)
+void skill_stat(const struct magic_realm *realm, int indices[STAT_MAX], int skill, int *stat1, int *stat2)
 {
 	int primary_stat, secondary_stat, primary_index, secondary_index;
 
 	*stat1 = STAT_NONE;
 	*stat2 = STAT_NONE;
 
-	if (skill == SKILL_MAGIC && p->realm) {\
-		primary_stat = p->realm->stat;
+	if (skill == SKILL_MAGIC && realm) {\
+		primary_stat = realm->stat;
 	}
 	else {
 		primary_stat = skill_stats[skill].primary_stat;
 	}
 	secondary_stat = skill_stats[skill].secondary_stat;
 
-	primary_index = primary_stat == STAT_NONE ? -1 : ps->stat_ind[primary_stat];
-	secondary_index = secondary_stat == STAT_NONE ? -1 : ps->stat_ind[secondary_stat];
+	primary_index = primary_stat == STAT_NONE ? -1 : indices[primary_stat];
+	secondary_index = secondary_stat == STAT_NONE ? -1 : indices[secondary_stat];
 
 	if (primary_index < 0 && secondary_index < 0) {
 		return;
@@ -1206,24 +1370,35 @@ void player_skill_stats(struct player *p, struct player_state *ps, int skill, in
 	}
 }
 
+void player_skill_stats(struct player *p, struct player_state *ps, int skill, int *stat1, int *stat2)
+{
+	skill_stat(p->realm, p->state.stat_ind, skill, stat1, stat2);
+}
+
 /**
  * L: the stat used is either the primary stat or the average of the
  * primary and secondary stats, whichever is higher
  * returns the primary stat ind if there is no secondary stat and vice versa
  * returns -1 if there are no appropriate stats at all
  */
-int player_skill_stat_ind(struct player *p, struct player_state *ps, int skill)
+int skill_stat_ind(const struct magic_realm *realm, int indices[STAT_MAX], int skill)
 {
 	int stat1, stat2;
-	player_skill_stats(p, ps, skill, &stat1, &stat2);
+	skill_stat(realm, indices, skill, &stat1, &stat2);
+	//player_skill_stats(p, ps, skill, &stat1, &stat2);
 
 	if (stat1 != STAT_NONE && stat2 != STAT_NONE) {
-		return (ps->stat_ind[stat1] + ps->stat_ind[stat2]) / 2;
+		return (indices[stat1] + indices[stat2]) / 2;
 	}
 	else if (stat1 != STAT_NONE) {
-		return ps->stat_ind[stat1];
+		return indices[stat1];
 	}
 	return -1;
+}
+
+int player_skill_stat_ind(struct player *p, struct player_state *ps, int skill)
+{
+	return skill_stat_ind(p->realm, ps->stat_ind, skill);
 }
 
 /**

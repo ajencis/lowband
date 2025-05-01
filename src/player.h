@@ -750,10 +750,12 @@ struct player {
 	struct player_upkeep *upkeep;		/* Temporary player-related values */
 
 	struct monster_race *curr_monster_race;	/* L: if the player is a monster */
+	const struct monster_race **evol_choices;	// L: which monster the player is choosing to evolve into
+	int num_evol_choices;				// L: how many evolution choices the player has made
 
 	uint16_t extra_powers[PP_MAX];		/* L: if the player gained powers outside of their class */
 	uint16_t extra_skills[SKILL_MAX];	/* L: skills gained outside class/race */
-	uint16_t *extra_target;	// L: what the player wants to learn
+	uint16_t *extra_target;				// L: what the player wants to learn
 	int sp_burn;						/* L: temporary reduction of max mp */
 
 	uint8_t *player_spell_flags;		/* L: for nonclass spells */

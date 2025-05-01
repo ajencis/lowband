@@ -705,6 +705,7 @@ int rd_player(void)
 	uint8_t stat_max = 0;
 	uint32_t tmp32u;
 	uint16_t tmp16u;
+	int16_t tmp16s;
 	char buf[80];
 	struct player_race *r;
 	struct player_shape *s;
@@ -743,6 +744,14 @@ int rd_player(void)
 	}
 	else {
 		player->curr_monster_race = NULL;
+	}
+
+	rd_s16b(&tmp16s);
+	player->num_evol_choices = tmp16s;
+	if (tmp16s > 0) player->evol_choices = mem_zalloc(sizeof *player->evol_choices * player->num_evol_choices);
+	for (i = 0; i < player->num_evol_choices; ++i) {
+		rd_u32b(&tmp32u);
+		player->evol_choices[i] = &r_info[tmp32u];
 	}
 
 	/* Player shape */

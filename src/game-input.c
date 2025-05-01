@@ -42,7 +42,7 @@ int (*get_innate_hook)(struct player *p,
 	bool (*innate_filter)(const struct player *p, int innate_index));
 int (*get_gener_spell_hook)(struct player *p, const char *error,
 	int (*spell_filter)(const struct player *p, int spell_index));
-void (*get_learn_hook)(struct player *p, int *max_learn);
+bool (*get_learn_hook)(struct player *p, int *max_learn, bool birth);
 bool (*get_item_hook)(struct object **choice, const char *pmt, const char *str,
 					  cmd_code cmd, item_tester tester, int mode);
 bool (*get_curse_hook)(int *choice, struct object *obj, char *dice_string);
@@ -231,11 +231,13 @@ int get_gener_spell(struct player *p, const char *error,
 	return -1;
 }
 
-void get_learn(struct player *p, int *max_learn)
+bool get_learn(struct player *p, int *max_learn, bool birth)
 {
 	if (get_learn_hook) {
-		get_learn_hook(p, max_learn);
+		return get_learn_hook(p, max_learn, birth);
 	}
+
+	return false;
 }
 
 /**

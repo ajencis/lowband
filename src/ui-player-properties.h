@@ -26,4 +26,6 @@ typedef enum {
 void textui_view_ability_menu(struct player_ability *ability_list,
 							  int num_abilities);
 				
-void textui_powers_learn(struct player *p, int *max_learn);
+bool textui_powers_learn(struct player *p, int *max_learn, bool birth);
+
+const struct monster_race *evolution_choice_menu_select(const struct evolution *evol, bool birth);

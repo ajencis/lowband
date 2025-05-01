@@ -103,3 +103,5 @@ OP(birth_percent_damage,  "To-damage is a percentage of dice (experimental)",
 BIRTH, false)
 OP(birth_no_metaprogression,    "Do not restrict options by metaprogression",
 BIRTH, true)
+OP(birth_level_one_learn, "Make all choices at level 1",
+BIRTH, false)

@@ -2454,7 +2454,7 @@ void do_cmd_dip_learn(struct command *cmd)
 	} else if (player->au < cost) {
 		msg("You can't afford their price!");
 	} else {
-		get_learn(player, max_learn);
+		get_learn(player, max_learn, false);
 
 		for (i = PP_NONE + 1; !did_learn && i < PP_MAX; ++i) {
 			if (player->extra_target[i] > base_max_learn[i]) {
@@ -2475,9 +2475,15 @@ void do_cmd_dip_learn(struct command *cmd)
 void do_cmd_learn(struct command *cmd)
 {
 	int *max_learn = mem_zalloc(sizeof *max_learn * z_info->learn_max);
+	int tmp;
+	bool birth = false;
+
+	if (cmd_get_arg_number(cmd, "birth", &tmp) == CMD_OK) {
+		birth = tmp;
+	}
 
 	tome_max_learnable(player, max_learn);
-	get_learn(player, max_learn);
+	get_learn(player, max_learn, birth);
 
 	mem_free(max_learn);
 }
