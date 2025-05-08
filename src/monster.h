@@ -221,10 +221,12 @@ struct monster_spell {
 	struct monster_spell *next;
 
 	uint16_t index;				/* Numerical index (RSF_FOO) */
-	int msgt;				/* Flag for message colouring */
-	int hit;				/* To-hit level for the attack */
-	struct effect *effect;	/* Effect(s) of the spell */
+	int msgt;					/* Flag for message colouring */
+	int hit;					/* To-hit level for the attack */
+	struct effect *effect;		/* Effect(s) of the spell */
 	struct monster_spell_level *level;	/* Spell power dependent details */
+
+	int powers[PP_MAX];			// L: which powers it uses	
 };
 
 
@@ -264,7 +266,7 @@ struct monster_base {
 
 	int attributes[MA_MAX];		/* L: strengths and weaknesses */
 	int stats[STAT_MAX];		/* L: stat bonuses for players */
-	int *abilities;			/* L: power bonuses for players */
+	int powers[PP_MAX];				/* L: power bonuses for players */
 	int skills[SKILL_MAX];		/* L: skill bonuses for players */
 	bitflag oflags[OF_SIZE];	/* L: object flags for players */
 	bitflag pflags[PF_SIZE];	/* L: player flags for players */
@@ -425,6 +427,8 @@ struct monster_race {
 	struct player_body *body;	/* L: its body if it's a player */
 
 	struct evolution *evol;		/* L: monster into which it evolves */
+
+	int powers[PP_MAX];
 };
 
 
@@ -474,7 +478,7 @@ struct monster {
 	wchar_t faction;					/* L: general group of monsters */
 	int16_t reaction;					/* L: how much it likes the player */
 
-	bool *abilities;					// L: any powers it knows
+	bool abilities[PP_MAX];					// L: any powers it knows
 };
 
 /** Variables **/

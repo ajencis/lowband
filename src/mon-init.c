@@ -1234,6 +1234,24 @@ static enum parser_error parse_mon_spell_save_message(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_mon_spell_power(struct parser *p) {
+	struct monster_spell *s = parser_priv(p);
+	int which_power = power_index_by_name(parser_getsym(p, "name"));
+	int strength = parser_getint(p, "amount");
+
+	if (!s) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	if (which_power <= PP_NONE || which_power >= PP_MAX) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	s->powers[which_power] = strength;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_mon_spell(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -1253,6 +1271,7 @@ static struct parser *init_parse_mon_spell(void) {
 	parser_reg(p, "message-invis str text", parse_mon_spell_blind_message);
 	parser_reg(p, "message-miss str text", parse_mon_spell_miss_message);
 	parser_reg(p, "message-save str text", parse_mon_spell_save_message);
+	parser_reg(p, "power sym name int amount", parse_mon_spell_power);
 	return p;
 }
 
@@ -1309,7 +1328,6 @@ static enum parser_error parse_mon_base_name(struct parser *p) {
 	struct monster_base *rb = mem_zalloc(sizeof *rb);
 	rb->next = h;
 	rb->name = string_make(parser_getstr(p, "name"));
-	rb->abilities = mem_zalloc(sizeof *rb->abilities * z_info->learn_max);
 
 	parser_setpriv(p, rb);
 	return PARSE_ERROR_NONE;
@@ -1439,6 +1457,7 @@ static enum parser_error parse_mon_base_power(struct parser *p)
 	char pname[80];
 	int pind;
 	struct player_ability *abil;
+	int amount = 100;
 
 	if (!rb) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -1454,7 +1473,11 @@ static enum parser_error parse_mon_base_power(struct parser *p)
 		return PARSE_ERROR_GENERIC;
 	}
 
-	rb->abilities[abil->learn_index] = parser_getint(p, "amount");
+	if (parser_hasval(p, "amount")) {
+		amount = parser_getint(p, "amount");
+	}
+
+	rb->powers[abil->index] = amount;
 
 	return PARSE_ERROR_NONE;
 }
@@ -1617,7 +1640,7 @@ static struct parser *init_parse_mon_base(void) {
 	parser_reg(p, "body str body", parse_mon_base_body);
 	parser_reg(p, "attr sym which int power", parse_mon_base_attribute);
 	parser_reg(p, "stats int str int int int wis int dex int con", parse_mon_base_stat);
-	parser_reg(p, "power sym power int amount", parse_mon_base_power);
+	parser_reg(p, "power sym power ?int amount", parse_mon_base_power);
 	parser_reg(p, "skill-disarm-phys int disarm", parse_mon_base_skill_disarm_phys);
 	parser_reg(p, "skill-disarm-magic int disarm", parse_mon_base_skill_disarm_magic);
 	parser_reg(p, "skill-device int device", parse_mon_base_skill_device);
@@ -1651,7 +1674,6 @@ static void cleanup_mon_base(void)
 	rb = rb_info;
 	while (rb) {
 		next = rb->next;
-		mem_free(rb->abilities);
 		string_free(rb->text);
 		string_free(rb->name);
 		mem_free(rb);
@@ -1694,6 +1716,9 @@ static enum parser_error parse_monster_base(struct parser *p) {
 
 	// L: template gives default body as well
 	r->body = r->base->body;
+
+	// L: and default powers
+	memcpy(r->powers, r->base->powers, sizeof *r->powers * PP_MAX);
 
 	/* Give the monster its default flags */
 	rf_union(r->flags, r->base->flags);
@@ -2325,6 +2350,29 @@ static enum parser_error parse_monster_body(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_monster_powers(struct parser *p)
+{
+	struct monster_race *r = parser_priv(p);
+	int power = power_index_by_name(parser_getsym(p, "name"));
+	int amt = 100;
+
+	if (!r) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	if (power <= PP_NONE || power >= PP_MAX) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	if (parser_hasval(p, "amount")) {
+		amt = parser_getint(p, "amount");
+	}
+
+	r->powers[power] = amt;
+
+	return PARSE_ERROR_NONE;
+}
+
 struct parser *init_parse_monster(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -2365,6 +2413,7 @@ struct parser *init_parse_monster(void) {
 	parser_reg(p, "short-name str short_name", parse_monster_short_name);
 	parser_reg(p, "evolution str evol", parse_monster_evolution);
 	parser_reg(p, "body str body", parse_monster_body);
+	parser_reg(p, "power sym name ?int amt", parse_monster_powers);
 	return p;
 }
 

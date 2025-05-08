@@ -1426,63 +1426,106 @@ static struct evolution *next_evol(struct player *p)
 	else return p->race->evol;
 }
 
-/**
- * returns whether it should continue going back
- */
-static bool previous_evolution_choice(struct player *p)
+static void check_player_birth_monster(struct player *p)
 {
-	const struct evolution *nxt;
-	bool done = false;
-
-	while (!done && player->evol_choices) {
-		remove_last_evolution(p);
-		nxt = next_evol(p);
-
-		assert(nxt);
-
-		if (nxt->next) done = true;
-	}
-
-	return !done;
+	demonster_player(p);
+	check_player_monster(p, true);
+	get_bonuses();
+	display_player_xtra_info();
 }
 
 /**
  * L: get monster and learn choices if we need to
  */
-static enum birth_stage get_evol_command(void)
+static enum birth_stage get_evol_command(bool going_back)
 {
-	if (OPT(player, birth_level_one_learn)) {
-		const struct evolution *choice_evol;
-		const struct monster_race *select;
+	bool onlyone = !OPT(player, birth_level_one_learn);
 
-		choice_evol = next_evol(player);
+	const struct evolution *choice_evol;
+	const struct monster_race *select = NULL;
 
-		while (choice_evol) {
-			if (!choice_evol->next) {
-				select = choice_evol->race;
-			} else {
-				select = evolution_choice_menu_select(choice_evol, true);
-			}
+	bool back = going_back;
 
-			if (select) {
-				add_evolution(player, select);
-				choice_evol = select->evol;
-			}
+	if (going_back) {
+		remove_last_evolution(player);
+	}
 
-			else {
-				if (previous_evolution_choice(player)) return BIRTH_BACK;
+	choice_evol = next_evol(player);
 
+	while (choice_evol) {
+		if (!choice_evol->next) {
+			if (back) select = NULL;
+			else select = choice_evol->race;
+		}
+		else {
+			select = evolution_choice_menu_select(choice_evol, true);
+		}
+
+		if (select) {
+			// this iteration of the loop went forwards
+			add_evolution(player, select);
+			choice_evol = onlyone ? NULL : select->evol;
+			back = false;
+		}
+		else {
+			// this iteration of the loop went backwards
+			if (player->num_evol_choices > 0) {
+				remove_last_evolution(player);
 				choice_evol = next_evol(player);
+			} else {
+				choice_evol = NULL;
 			}
+			back = true;
 		}
 	}
 
-	return BIRTH_LEARN;
+	check_player_birth_monster(player);
+	return back ? BIRTH_BACK : BIRTH_LEARN;
+
+	/*
+	if (going_back) {
+		plog("goign back");
+
+		choice_evol = next_evol(player);
+
+		// figure out the next choice that would be made
+		while (choice_evol) {
+			if (choice_evol->next) return BIRTH_MONSTER;
+			choice_evol = choice_evol->race->evol;
+		}
+
+		return BIRTH_BACK;
+	}
+	
+	if (go_forward) {
+		check_player_monster(player, true);
+		get_bonuses();
+		plog("remonstering player");
+		return BIRTH_LEARN;
+	}
+
+	if (!choice_evol->next) {
+		select = choice_evol->race;
+	}
+	else {
+		select = evolution_choice_menu_select(choice_evol, true);
+	}
+
+	if (select) {
+		add_evolution(player, select);
+	}
+	else if (previous_evolution_choice(player)) {
+		demonster_player(player);
+		return BIRTH_BACK;
+	}
+
+	return BIRTH_MONSTER;
+	*/
 }
 
-static enum birth_stage get_learn_command(void)
+static enum birth_stage get_learn_command(bool going_back)
 {
-	bool next = true;
+	bool next = !going_back;
 	if (OPT(player, birth_level_one_learn)) {
 		next = get_learn(player, NULL, true); 
 	}
@@ -1924,7 +1967,7 @@ int textui_do_birth(void)
 
 			case BIRTH_MONSTER:
 			{
-				next = get_evol_command();
+				next = get_evol_command(prev > BIRTH_MONSTER);
 
 				if (next == BIRTH_BACK) next = roller;
 
@@ -1933,15 +1976,9 @@ int textui_do_birth(void)
 
 			case BIRTH_LEARN:
 			{
-				next = get_learn_command();
+				next = get_learn_command(prev > BIRTH_LEARN);
 
-				if (next == BIRTH_BACK) {
-					if (previous_evolution_choice(player)) {
-						next = roller;
-					} else {
-						next = BIRTH_MONSTER;
-					}
-				}
+				if (next == BIRTH_BACK) next = BIRTH_MONSTER;
 
 				break;
 			}
@@ -1953,7 +1990,7 @@ int textui_do_birth(void)
 
 				next = get_name_command();
 				if (next == BIRTH_BACK)
-					next = roller;
+					next = BIRTH_LEARN;
 
 				break;
 			}

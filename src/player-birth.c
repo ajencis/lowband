@@ -277,8 +277,9 @@ static void get_stats(int stat_use[STAT_MAX])
 
 		/* Save that value */
 		player->stat_max_max[i] = j + player->race->r_adj[i];
-		if (player->stat_max_max[i] > 18)
+		if (player->stat_max_max[i] > 18) {
 			player->stat_max_max[i] = (player->stat_max_max[i] - 18) / 10 + 18;
+		}
 
 		player->stat_max[i] = birth_stat(player, i);
 
@@ -330,16 +331,8 @@ static void roll_hp(void)
 }
 
 
-static void get_bonuses(void)
+void get_bonuses(void)
 {
-	/* L: rearrange monsters so being a monster works as intended */
-	init_monsters();
-
-	/* L: check monster */
-	mem_free(player->curr_monster_race);
-	player->curr_monster_race = NULL;
-	check_player_monster(player, true);
-
 	/* Calculate the bonuses and hitpoints */
 	player->upkeep->update |= (PU_BONUS | PU_HP);
 
@@ -351,6 +344,14 @@ static void get_bonuses(void)
 
 	/* Fully rested */
 	player->csp = player->msp;
+}
+
+
+void demonster_player(struct player *p)
+{
+	mem_free(p->curr_monster_race);
+	p->curr_monster_race = NULL;
+	get_bonuses();
 }
 
 
@@ -515,6 +516,8 @@ void player_init(struct player *p)
 
 	/* Player starts unshapechanged */
 	p->shape = lookup_player_shape("normal");
+
+	init_monsters();
 }
 
 /**
@@ -1088,9 +1091,6 @@ void player_generate(struct player *p, const struct player_race *r,
 	/* L: copy realm over */
 	p->realm = c->realm;
 
-	// L: clear learning
-	memset(p->extra_target, 0, sizeof *p->extra_target * z_info->learn_max);
-
 	/* Roll for age/height/weight */
 	get_ahw(p);
 
@@ -1371,6 +1371,13 @@ void do_cmd_accept_character(struct command *cmd)
 
 	/* Player learns innate runes */
 	player_learn_innate(player);
+
+	// L: remove evolution as necessary
+	if (player->evol_choices && player->curr_monster_race) {
+		if (player->evol_choices[0]->ridx == player->curr_monster_race->ridx) {
+			remove_first_evolution(player);
+		}
+	}
 
 	/* Restore the standard artifacts (randarts may have been loaded) */
 	cleanup_parser(&randart_parser);

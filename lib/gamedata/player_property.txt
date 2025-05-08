@@ -343,12 +343,28 @@ rarity:10
 parent:skill:MAGIC
 
 type:power
+code:ACID_MAGIC
+name:Acid Magic Specialization
+desc: can particularly effectively use acid magic.
+cost:5
+rarity:10
+parent:power:EARTH_MAGIC
+
+type:power
 code:WATER_MAGIC
 name:Water Magic Specialization
 desc: can particularly effectively use water magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+
+type:power
+code:COLD_MAGIC
+name:Cold Magic Specialization
+desc: can particularly effectively use cold magic.
+cost:5
+rarity:10
+parent:power:WATER_MAGIC
 
 type:power
 code:POISON_MAGIC
@@ -447,6 +463,15 @@ cost:10
 rarity:7
 parent:power:HOLY_MAGIC
 parent:power:DIVINATION_MAGIC
+
+type:power
+code:DEMONOLOGY_MAGIC
+name:Demonology
+desc: can particularly effectively use demonic magic.
+cost:15
+rarity:5
+parent:power:SUMMONING_MAGIC
+parent:skill:MAGIC
 
 type:power
 code:UNLIGHT
@@ -604,6 +629,11 @@ desc: can slay at a touch.
 cost:10
 rarity:3
 parent:power:NECROMANCY_MAGIC
+
+type:power
+code:BREATH
+name:breathing
+desc: can breathe
 
 
 # L: skills

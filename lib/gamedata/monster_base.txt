@@ -47,6 +47,7 @@ attr:SPEED:-2
 stats:1:1:-1:-1:1
 skill-melee:5
 obj-flags:SEE_INVIS
+power:BREATH
 
 # Ainur were the founding spirits of Arda, and could take any form they wished.
 # Ainur in Angband typically have shapechanges and many possible other spells,
@@ -58,7 +59,7 @@ flags:POWERFUL | SPIRIT | SMART
 flags:ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR | TAKE_ITEM | CLEAR_WEB
 flags:IM_COLD | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
-flags:FORCE_SLEEP | LIGHT_AURA
+flags:FORCE_SLEEP | LIGHT_AURA | SPELLCASTER
 flags:SAPIENT
 desc:Ainu/maia
 body:Humanoid
@@ -68,8 +69,9 @@ attr:DAMAGE:-1
 attr:AC:1
 attr:HP:1
 stats:0:0:1:0:0
-power:HOLY_MAGIC:20
-power:GLOW:40
+power:HOLY_MAGIC
+power:LIGHT_MAGIC
+power:GLOW
 skill-save:10
 
 # Ants have lowish HP but highish armor class, and powerful melee for their
@@ -99,6 +101,8 @@ skill-stealth:10
 skill-search:5
 player-flags:ECHOLOCATE
 obj-flags:BAD_VISION
+power:DARKNESS_MAGIC:50
+power:BREATH:25
 
 # Quickish monsters usually with some effect beyond melee
 name:bird
@@ -155,6 +159,7 @@ attr:HP:-1
 attr:SPEED:-1
 stats:1:0:-1:0:1
 skill-melee:5
+power:BREATH:80
 
 # Early, weak breathers which move quickly and erratically
 name:dragon fly
@@ -246,7 +251,7 @@ glyph:g
 pain:1
 flags:EMPTY_MIND | CLEAR_WEB | IM_POIS
 flags:IM_ELEC | NO_FEAR | NO_CONF | NO_SLEEP
-flags:NONLIVING
+flags:NONLIVING | INNATE_MAGIC
 desc:Golem
 body:Humanoid
 attr:SPEED:-4
@@ -343,7 +348,7 @@ flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
 flags:FORCE_SLEEP
 flags:RES_PIERCING | RES_SLASHING
-flags:SAPIENT
+flags:SAPIENT | SPELLCASTER
 desc:Lich
 body:Humanoid
 attr:MAGIC:2
@@ -372,7 +377,7 @@ flags:DEMON | EVIL | SPIRIT
 flags:ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:NO_CONF | NO_SLEEP | NO_HOLD
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | SPELLCASTER
 flags:SAPIENT
 desc:Major Demon
 body:Humanoid
@@ -382,6 +387,9 @@ attr:HP:-1
 attr:AC:-3
 stats:2:1:-3:0:1
 skill-melee:5
+power:BREATH:50
+power:DEMONOLOGY_MAGIC
+power:SUMMONING_MAGIC:50
 
 # Monsters which pretend to be objects.  They don't move but do cast spells,
 # and attack if the player steps next to them.
@@ -409,6 +417,7 @@ attr:DAMAGE:1
 attr:HP:-1
 attr:AC:-3
 stats:2:0:-3:1:1
+power:DEMONOLOGY_MAGIC
 
 # Non-moving growths which release spores when stepped next to
 name:mold
@@ -490,7 +499,7 @@ pain:2
 flags:EMPTY_MIND | INVISIBLE
 flags:NEVER_BLOW | NEVER_MOVE
 flags:NO_FEAR | NO_CONF | NO_SLEEP | NO_HOLD
-flags:FORCE_SLEEP | INNATE_MAGIC
+flags:FORCE_SLEEP | INNATE_MAGIC | SPELLCASTER
 desc:Quylthulg
 attr:SPEED:2
 attr:DAMAGE:-4
@@ -609,7 +618,7 @@ pain:1
 flags:UNDEAD | EVIL | COLD_BLOOD | REGENERATE | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:HURT_LIGHT | HURT_FIRE | IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | SPELLCASTER
 flags:RES_BLUDGEONING | RES_SLASHING
 flags:SAPIENT
 flags:DARK_AURA

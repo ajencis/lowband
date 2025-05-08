@@ -272,8 +272,7 @@ static void wr_monster(const struct monster *mon)
 	wr_u16b(mon->group_info[SUMMON_GROUP].index);
 	wr_byte(mon->group_info[SUMMON_GROUP].role);
 
-	wr_s16b(z_info->learn_max);
-	for (i = 0; i < z_info->learn_max; ++i) {
+	for (i = 0; i < PP_MAX; ++i) {
 		wr_byte(mon->abilities[i]);
 	}
 

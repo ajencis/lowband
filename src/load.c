@@ -260,7 +260,6 @@ static bool rd_monster(struct chunk *c, struct monster *mon)
 {
 	uint8_t tmp8u;
 	uint16_t tmp16u;
-	int16_t tmp16s;
 	char race_name[80];
 	size_t j;
 	int i;
@@ -364,11 +363,7 @@ static bool rd_monster(struct chunk *c, struct monster *mon)
 	rd_byte(&tmp8u);
 	mon->group_info[SUMMON_GROUP].role = tmp8u;
 
-	rd_s16b(&tmp16s);
-	assert(tmp16s == z_info->learn_max);
-	mon->abilities = mem_zalloc(sizeof *mon->abilities * z_info->learn_max);
-	assert(mon->abilities);
-	for (i = 0; i < z_info->learn_max; ++i) {
+	for (i = 0; i < PP_MAX; ++i) {
 		rd_byte(&tmp8u);
 		mon->abilities[i] = tmp8u;
 	}

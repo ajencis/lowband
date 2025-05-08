@@ -1325,6 +1325,7 @@ int skill_by_effect(int effect_ind, int effect_subtype)
 	return PP_NONE;
 }
 
+#if 0
 static bool calc_monster_spell(int counts[PP_MAX], const struct monster_spell *mspell)
 {
 	if (!mspell) return false;
@@ -1338,6 +1339,7 @@ static bool calc_monster_spell(int counts[PP_MAX], const struct monster_spell *m
 	}
 	return false;
 }
+#endif
 
 static bool calc_monster_blow(int counts[PP_MAX], const struct monster_blow *mb)
 {
@@ -1362,20 +1364,19 @@ static bool calc_monster_blow(int counts[PP_MAX], const struct monster_blow *mb)
 void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int curr_powers[PP_MAX])
 {
 	int i, totalbonus, numcounts = 0, numblows = 0;
-	const struct monster_spell *mspell;
 	const struct monster_blow *mblow;
 	struct player_ability *abil;
 	int spell_counts[PP_MAX] = { 0 };
 	int blow_counts[PP_MAX] = { 0 };
 
-	for (i = 0; i < RSF_MAX; i++)
+	/*for (i = 0; i < RSF_MAX; i++)
 	{
 		if (!rsf_has(mrace->spell_flags, i)) continue;
 		mspell = monster_spell_by_index(i);
 		if (calc_monster_spell(spell_counts, mspell)) {
 			++numcounts;
 		}
-	}
+	}*/
 
 	if (numcounts > 0) {
 		totalbonus = my_cbrt(mrace->spell_power * mrace->spell_power) * (4.0 + numcounts) / (9.0 + numcounts);
@@ -1403,7 +1404,7 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int cur
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->learn_index < 0) continue;
 		if (abil->type != PY_ABIL_POWER) continue;
-		int add = (mrace->base->abilities[abil->learn_index] * mrace->level + 50) / 100;
+		int add = (mrace->powers[abil->index] * mrace->level + 50) / 100;
 		powers[abil->index] += add;
 	}
 

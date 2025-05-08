@@ -90,8 +90,6 @@ bool give_monster_powers(struct monster *mon)
 	struct monster_base *mb = mr->base;
 	bool given = false;
 	struct player_ability *abil;
-	
-	mon->abilities = mem_zalloc(sizeof *mon->abilities * z_info->learn_max);
 
 	/*if (mon->group_info[PRIMARY_GROUP].role != MON_GROUP_LEADER) {
 		plog("getting leader");
@@ -104,10 +102,10 @@ bool give_monster_powers(struct monster *mon)
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->learn_index < 0) continue;
 		if (abil->type != PY_ABIL_POWER) continue;
-		int learn_i = abil->learn_index;
+		int i = abil->index;
 
-		if (mb->abilities[learn_i]) {
-			mon->abilities[learn_i] = true;
+		if (mb->powers[i]) {
+			mon->abilities[i] = true;
 			given = true;
 		}
 	}
@@ -153,7 +151,7 @@ bool player_can_learn_from_monster(struct player *p, struct monster *mon)
 
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->type != PY_ABIL_POWER) continue;
-		if (mon->abilities[abil->learn_index]) continue;
+		if (mon->abilities[abil->index]) continue;
 		if (mon->race->level <= max_target[abil->learn_index]) continue;
 		
 		mem_free(max_target);
@@ -2098,6 +2096,21 @@ int mon_ac(struct monster *mon)
 	return MAX(base, ac) + MIN(base, ac) / 2 + to_a;
 }
 
+int mon_power(struct monster_race *mon, int power)
+{
+	//assert(abil->type == PY_ABIL_POWER);
+
+	int scale = mon->powers[power];
+
+	if (scale < 0) return scale;
+
+	int normal = scale * mon->level / 100;
+	int special = scale * mon->level / 50 + scale * scale / 50 - 100 * 100 / 50;
+
+	// a low-level monster with slow scaling doesn't get the power at all;
+	return MAX(0, MIN(normal, special));
+}
+
 
 static bool race_has_drops(struct monster_race *mr)
 {
@@ -2115,6 +2128,68 @@ static bool race_has_drops(struct monster_race *mr)
 	return false;
 }
 
+/**
+ * L: decide which spells to give a monster
+ * should be done after spellpower is calculated
+ */
+static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
+{
+	int i, j;
+	int level_mod = my_int_sqrt(mr->level);
+	int magic, magic_mod;
+
+	magic = mr->base->skills[SKILL_MAGIC] + mr->spell_power;
+
+	magic_mod = my_int_sqrt(magic);
+
+	for (i = RSF_NONE + 1; i < RSF_MAX; ++i) {
+		bool on = false;
+		bool haspower = false;
+		int chance = level_mod;
+		const struct monster_spell *ms = monster_spell_by_index(i);
+		if (!mon_spell_is_innate(i)) {
+			if (magic <= 0) continue;
+			else chance = magic_mod;
+		}
+		if (!mon_spell_is_innate(i) && magic <= 0) continue;
+		if (!ms) continue;
+
+		for (j = 0; j < PP_MAX; ++j) {
+			int min = ms->powers[j];
+			int race_power = mon_power(mr, j);// mr->powers[j] * mr->level / 100;
+			int mod;
+			if (min <= 0) continue;
+
+			haspower = true;
+
+			mod = race_power - min;
+			if (race_power <= 0) mod *= 2; // mages without any specialty at all in the subject are unlikely to know
+			if (mod > 0) mod += magic_mod; // good mages in their specialty are likely to know a spell
+
+			chance += mod;
+		}
+
+		if (!haspower) continue;
+
+		else if (is_player) {
+			if (chance >= 50) {
+				on = true;
+			}
+		}
+
+		else if (randint0(100) < chance) {
+			on = true;
+		}
+
+		if (on) {
+			rsf_on(mr->spell_flags, i);
+		}
+		else {
+			rsf_off(mr->spell_flags, i);
+		}
+	}
+}
+
 void rearrange_monster(struct monster_race *mr, bool is_player)
 {
 	int power = mr->level;
@@ -2128,6 +2203,7 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 	int dam, hp, ac, spe, mag;
 	int powermod = 0;
 	struct monster_base *rb = mr->base;
+	bool spellcaster = rf_has(mr->flags, RF_SPELLCASTER);
 
 	// change monster's power based on its flags
 	for (i = 0; i < RF_MAX; i++) {
@@ -2163,7 +2239,7 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 	}
 	if (!blows) dam /= 2;
 
-	if (!rsf_is_empty(mr->spell_flags)) mspells = true;
+	if (spellcaster) mspells = true;
 	if (!mspells) mag /= 2;
 
 	// if it breathes give it better hp at expense of magic
@@ -2210,7 +2286,7 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 	mr->avg_hp = (int)(MAX(hp + 25.0, hp * 2.5) * (my_sqrt(hp) + 1) / 10.0); // 250ish for level 100
 	mr->ac = ac; // 100ish for level 100
 	mr->speed = 105 + (spe * 30 + 49) / 100; // 135ish for level 100
-	mr->spell_power = mag; // 100ish for level 100
+	mr->spell_power = spellcaster ? mag : 0; // 100ish for level 100
 	ttdam = MAX(dam / 2 + 4, dam); // 100ish for level 100
 	if (dam > 0) mr->freq_spell = 40 * mag / dam;
 	else mr->freq_spell = 100;
@@ -2256,6 +2332,8 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 
 		quo = MAX(1, quo - fact);
 	}
+
+	rearrange_monster_spells(mr, is_player);
 }
 
 void rearrange_monsters(struct monster_race *mraces, uint32_t seed)

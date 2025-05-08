@@ -313,9 +313,7 @@ static void remove_evolution(struct player *p, int which)
 		p->evol_choices = mem_zalloc(sizeof *p->evol_choices * p->num_evol_choices);
 
 		for (old_i = 0, new_i = 0; new_i < p->num_evol_choices; ++old_i) {
-			if (old_i == which) {
-				// skip this one
-			} else {
+			if (old_i != which) {
 				assert(new_i < p->num_evol_choices);
 				p->evol_choices[new_i] = old_evol_choices[old_i];
 				++new_i;
@@ -368,15 +366,15 @@ bool check_player_monster(struct player *p, bool init)
 	//struct evolution *e = curr ? curr->evol : p->race->evol;
 	bool do_change = false;
 	uint32_t xpneed;
-	int currxp = init ? player_exp[5] : p->monster_xp;
+	uint32_t currxp = init ? player_exp[5] : p->monster_xp;
 
-	if (p->num_evol_choices <= 0) {
-		if ((signed)p->monster_xp > p->lev * 10 && !init) {
-			select_evolution(p);
-		}
-		return false;
+	if (p->num_evol_choices <= 0 && !init) {
+		select_evolution(p);
 	}
-	assert(p->evol_choices);
+
+	if (!p->evol_choices) return false;
+	if (init && p->curr_monster_race) return false;
+	//assert(p->evol_choices);
 
 	selected = p->evol_choices[0];
 
@@ -401,8 +399,13 @@ bool check_player_monster(struct player *p, bool init)
 		}
 	}
 
-	if (selected && (!init || numevols <= 1)) {
+	if (currxp >= xpneed) do_change = true;
+
+	/*if (selected && (!init || numevols <= 1)) {
 		if (init) {
+			do_change = true;
+		}
+		else if (currxp >= xpneed) {
 			do_change = true;
 		}
 		else if (currxp > 0) {
@@ -420,11 +423,12 @@ bool check_player_monster(struct player *p, bool init)
 				remove_first_evolution(p);
 			}
 		}
-	}
+	}*/
 
 	if (do_change) {
 		change_player_monster(p, selected, init);
 		if (!init) {
+			remove_first_evolution(p);
 			player_increase_stat(p);
 		}
 	}

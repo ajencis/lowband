@@ -185,6 +185,7 @@ lore-color-base:Yellow
 message-vis:{name} slings a seeker shot at {target}.
 message-invis:You hear something heavy whirl through the air.
 message-miss:{name} slings a seeker shot, but misses.
+power:SLING_SPECIALIZATION:5
 
 name:ARROW
 hit:50
@@ -214,6 +215,7 @@ lore-color-base:Yellow
 message-vis:{name} fires a seeker arrow.
 message-invis:You hear a loud thwang.
 message-miss:{name} fires a seeker arrow, but misses.
+power:BOW_SPECIALIZATION:5
 
 name:BOLT
 hit:50
@@ -237,6 +239,7 @@ lore-color-base:Yellow
 message-vis:{name} fires a seeker bolt.
 message-invis:You hear a loud thwung.
 message-miss:{name} fires a seeker bolt, but misses.
+power:CROSSBOW_SPECIALIZATION:5
 
 name:BR_ACID
 msgt:BR_ACID
@@ -250,6 +253,7 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} breathes acid.
 message-invis:You hear an acrid roar.
+power:ACID_MAGIC:10
 
 name:BR_ELEC
 msgt:BR_ELEC
@@ -263,6 +267,8 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} breathes lightning.
 message-invis:You hear a crackling roar.
+power:AIR_MAGIC:10
+power:BREATH:10
 
 name:BR_FIRE
 msgt:BR_FIRE
@@ -276,6 +282,8 @@ lore:fire
 lore-color-base:Orange
 lore-color-resist:Yellow
 lore-color-immune:Light Green
+power:FIRE_MAGIC:10
+power:BREATH:10
 
 name:BR_COLD
 msgt:BR_FROST
@@ -289,6 +297,8 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} breathes frost.
 message-invis:You hear a whooshing roar.
+power:COLD_MAGIC:10
+power:BREATH:10
 
 name:BR_POIS
 msgt:BR_GAS
@@ -302,6 +312,8 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} breathes poison.
 message-invis:You hear a sickening roar.
+power:POISON_MAGIC:10
+power:BREATH:10
 
 name:BR_NETH
 msgt:BR_NETHER
@@ -314,6 +326,8 @@ lore-color-base:Orange
 lore-color-resist:Light Green
 message-vis:{name} breathes nether.
 message-invis:You hear an eerie roar.
+power:NECROMANCY_MAGIC:15
+power:BREATH:15
 
 name:BR_LIGHT
 msgt:BR_LIGHT
@@ -326,6 +340,8 @@ lore-color-base:Orange
 lore-color-resist:Light Green
 message-vis:{name} breathes light.
 message-invis:You hear a humming roar.
+power:LIGHT_MAGIC:25
+power:BREATH:25
 
 name:BR_DARK
 msgt:BR_DARK
@@ -338,6 +354,8 @@ lore-color-base:Orange
 lore-color-resist:Light Green
 message-vis:{name} breathes darkness.
 message-invis:You hear a hushing roar.
+power:DARKNESS_MAGIC:25
+power:BREATH:25
 
 name:BR_SOUN
 msgt:BR_SOUND
@@ -388,6 +406,8 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} breathes nexus.
 message-invis:You hear a tearing roar.
+power:TELEPORTATION_MAGIC:25
+power:BREATH:25
 
 name:BR_TIME
 msgt:BR_TIME
@@ -433,6 +453,8 @@ lore-color-base:Orange
 lore-color-resist:Light Green
 message-vis:{name} breathes shards.
 message-invis:You hear a shattering roar.
+power:EARTH_MAGIC:25
+power:BREATH:25
 
 name:BR_PLAS
 msgt:BR_PLASMA
@@ -445,6 +467,8 @@ lore-color-base:Orange
 lore-color-resist:Yellow
 message-vis:{name} breathes plasma.
 message-invis:You hear a hissing roar.
+power:FIRE_MAGIC:40
+power:BREATH:25
 
 name:BR_WALL
 msgt:BR_FORCE
@@ -467,6 +491,7 @@ lore:mana
 lore-color-base:Light Red
 message-vis:{name} breathes raw magic.
 message-invis:You hear a scintillating roar.
+power:BREATH:50
 
 name:BR_HOLY_FIRE
 hit:100
@@ -477,6 +502,9 @@ lore:holy fire
 lore-color-base:White
 message-vis:{name} breathes holy fire.
 message-invis:You hear a hallowed roar.
+power:FIRE_MAGIC:10
+power:HOLY_MAGIC:25
+power:BREATH:25
 
 name:BR_HELLFIRE
 hit:100
@@ -487,6 +515,9 @@ lore:hellfire
 lore-color-base:Dark Red
 message-vis:{name} breathes hellfire.
 message-invis:You hear an accursed roar.
+power:FIRE_MAGIC:10
+power:NECROMANCY_MAGIC:25
+power:BREATH:25
 
 name:BOULDER
 hit:60
@@ -519,6 +550,7 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} casts a ball of acid.
 message-invis:Something mumbles.
+power:ACID_MAGIC:10
 
 name:BA_ELEC
 hit:100
@@ -531,6 +563,7 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} casts a ball of lightning.
 message-invis:Something mumbles.
+power:AIR_MAGIC:10
 
 name:BA_FIRE
 hit:100
@@ -550,6 +583,7 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} conjures up a firestorm.
 message-invis:Something murmurs deeply.
+power:FIRE_MAGIC:10
 
 name:BA_COLD
 hit:100
@@ -569,6 +603,7 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} calls up a blizzard.
 message-invis:Something chants coldly.
+power:COLD_MAGIC:10
 
 name:BA_POIS
 hit:100
@@ -587,6 +622,7 @@ lore-color-base:Orange
 lore-color-resist:Light Green
 message-vis:{name} unleashes a storm of corrosive toxins.
 message-invis:Something murmurs viciously.
+power:POISON_MAGIC:10
 
 name:BA_SHAR
 hit:100
@@ -604,6 +640,7 @@ lore-color-base:Light Red
 lore-color-resist:Light Green
 message-vis:{name} invokes a storm of knives!
 message-invis:Something chants powerfully.
+power:EARTH_MAGIC:25
 
 name:BA_NETH
 hit:100
@@ -621,6 +658,7 @@ lore-color-base:Orange
 lore-color-resist:Light Green
 message-vis:{name} creates a storm of nether magics.
 message-invis:Something intones with deadly menace.
+power:NECROMANCY_MAGIC:25
 
 name:BA_WATE
 hit:100
@@ -632,6 +670,7 @@ lore-color-base:Light Red
 lore-color-resist:Orange
 message-vis:{name} creates a whirlpool of water.
 message-invis:Something gurgles.
+power:WATER_MAGIC:25
 
 name:BA_MANA
 hit:100
@@ -652,6 +691,7 @@ lore:cast orbs of draining
 lore-color-base:Orange
 message-vis:{name} casts an orb of draining.
 message-invis:Something chants.
+power:HOLY_MAGIC:25
 
 name:BA_DARK
 hit:100
@@ -669,6 +709,7 @@ lore-color-base:Light Red
 lore-color-resist:Light Green
 message-vis:{name} invokes a storm of darkness.
 message-invis:Something chants powerfully.
+power:DARKNESS_MAGIC:25
 
 name:BA_LIGHT
 hit:100
@@ -686,6 +727,7 @@ lore-color-base:Light Red
 lore-color-resist:Light Green
 message-vis:{name} invokes a starburst.
 message-invis:Something chants powerfully.
+power:LIGHT_MAGIC:25
 
 name:STORM
 hit:100
@@ -709,6 +751,8 @@ lore-color-base:Light Red
 lore-color-resist:Orange
 message-vis:{name} creates a tempest of wind and water.
 message-invis:Something chants fluidly.
+power:WATER_MAGIC:35
+power:AIR_MAGIC:25
 
 name:DRAIN_MANA
 hit:100
@@ -796,6 +840,8 @@ lore-color-resist:Light Green
 message-vis:{name} points at {target} and screams the word 'DIE!'
 message-invis:Something screams the word 'DIE!'
 message-save:Your body spasms briefly.
+power:NECROMANCY_MAGIC:3
+power:HOLY_MAGIC:3
 
 name:BO_ACID
 hit:100
@@ -808,6 +854,7 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} casts a bolt of acid.
 message-invis:Something mumbles.
+power:ACID_MAGIC:15
 
 name:BO_ELEC
 hit:100
@@ -820,6 +867,7 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} casts a bolt of lightning.
 message-invis:Something mumbles.
+power:AIR_MAGIC:15
 
 name:BO_FIRE
 hit:100
@@ -832,6 +880,7 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} casts a bolt of fire.
 message-invis:Something mumbles.
+power:FIRE_MAGIC:15
 
 name:BO_COLD
 hit:100
@@ -844,6 +893,7 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} casts a bolt of frost.
 message-invis:Something mumbles.
+power:COLD_MAGIC:15
 
 name:BO_POIS
 hit:100
@@ -856,6 +906,7 @@ lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} spews a stream of poison.
 message-invis:Something retches.
+power:POISON_MAGIC:15
 
 name:BO_NETH
 hit:100
@@ -867,6 +918,7 @@ lore-color-base:Orange
 lore-color-resist:Light Green
 message-vis:{name} casts a bolt of nether.
 message-invis:Something mumbles.
+power:NECROMANCY_MAGIC:15
 
 name:BO_WATE
 hit:100
@@ -878,6 +930,7 @@ lore-color-base:Light Red
 lore-color-resist:Orange
 message-vis:{name} fires a jet of water.
 message-invis:Something gurgles.
+power:WATER_MAGIC:25
 
 name:BO_MANA
 hit:100
@@ -899,6 +952,7 @@ lore-color-base:Orange
 lore-color-resist:Yellow
 message-vis:{name} casts a bolt of plasma.
 message-invis:Something screams.
+power:FIRE_MAGIC:25
 
 name:BO_ICE
 hit:100
@@ -910,6 +964,7 @@ lore-color-base:Orange
 lore-color-resist:Yellow
 message-vis:{name} shoots a spear of ice.
 message-invis:Something mumbles.
+power:COLD_MAGIC:30
 
 name:MISSILE
 hit:100
@@ -931,6 +986,7 @@ lore-color-base:Orange
 lore-color-resist:Light Green
 message-vis:{name} shoots a spark of lightning at {target}.
 message-invis:You feel a crackling in the air.
+power:AIR_MAGIC:25
 
 name:BE_NETH
 hit:100
@@ -948,6 +1004,7 @@ lore-color-base:Light Red
 lore-color-resist:Light Green
 message-vis:{name} unleashes a ray of death.
 message-invis:Something intones with deadly menace.
+power:NECROMANCY_MAGIC:25
 
 name:BANSHEE_SCREAM
 hit:100
@@ -1034,6 +1091,7 @@ lore:heal-self
 lore-color-base:Yellow
 message-vis:{name} magically starts closing wounds.
 message-invis:Something mutters.
+power:HOLY_MAGIC:15
 
 name:HEAL_KIN
 hit:100
@@ -1044,6 +1102,7 @@ lore:heal kin
 lore-color-base:Yellow
 message-vis:{name} tries to heal {pronoun} comrades.
 message-invis:Something mutters.
+power:HOLY_MAGIC:25
 
 name:BLINK
 hit:100
@@ -1053,6 +1112,7 @@ lore:blink-self
 lore-color-base:Light Green
 message-vis:{name} blinks.
 message-invis:Something mutters.
+power:TELEPORTATION_MAGIC:15
 
 name:TPORT
 hit:100
@@ -1063,6 +1123,7 @@ lore:teleport-self
 lore-color-base:Light Green
 message-vis:{name} teleports away.
 message-invis:Something makes a soft 'pop'.
+power:TELEPORTATION_MAGIC:25
 
 name:TELE_TO
 msgt:TELEPORT
@@ -1072,6 +1133,7 @@ lore:teleport to
 lore-color-base:Yellow
 message-vis:{name} commands {target} to return.
 message-invis:Something commands you to return.
+power:TELEPORTATION_MAGIC:45
 
 name:TELE_SELF_TO
 msgt:TELEPORT
@@ -1081,6 +1143,7 @@ lore:teleport toward
 lore-color-base:Yellow
 message-vis:{name} blinks toward {target}.
 message-invis:Something mutters.
+power:TELEPORTATION_MAGIC:35
 
 name:TELE_AWAY
 msgt:TELEPORT
@@ -1092,6 +1155,7 @@ lore-color-base:Yellow
 message-vis:{name} commands {target} to go away.
 message-invis:Something commands you to go away.
 message-save:You feel very unstable for a second, but it passes.
+power:TELEPORTATION_MAGIC:30
 
 name:TELE_LEVEL
 msgt:TPLEVEL
@@ -1103,6 +1167,7 @@ lore-color-resist:Light Green
 message-vis:{name} commands {target} to go far away.
 message-invis:Something commands you to go far away.
 message-save:You feel unstable for a second, but it passes.
+power:TELEPORTATION_MAGIC:50
 
 name:DARKNESS
 hit:100
@@ -1113,6 +1178,7 @@ lore:create darkness
 lore-color-base:Light Green
 message-vis:{name} surrounds {target} in darkness.
 message-invis:Something mumbles.
+power:DARKNESS_MAGIC:15
 
 name:TRAPS
 msgt:CREATE_TRAP
@@ -1152,6 +1218,7 @@ lore:summon similar monsters
 lore-color-base:Orange
 message-vis:{name} summons {pronoun} kin.
 message-invis:You hear some things appear nearby!
+power:SUMMONING_MAGIC:20
 
 name:S_MONSTER
 msgt:SUM_MONSTER
@@ -1162,6 +1229,7 @@ lore:summon a monster
 lore-color-base:Orange
 message-vis:{name} summons a companion.
 message-invis:You hear something appear nearby!
+power:SUMMONING_MAGIC:25
 
 name:S_MONSTERS
 msgt:SUM_MONSTER
@@ -1172,6 +1240,7 @@ lore:summon monsters
 lore-color-base:Orange
 message-vis:{name} summons some friends.
 message-invis:You hear some things appear nearby!
+power:SUMMONING_MAGIC:30
 
 name:S_ANIMAL
 msgt:SUM_ANIMAL
@@ -1182,6 +1251,7 @@ lore:summon animals
 lore-color-base:Orange
 message-vis:{name} summons animals.
 message-invis:You hear some things appear nearby!
+power:SUMMONING_MAGIC:20
 
 name:S_SPIDER
 msgt:SUM_SPIDER
@@ -1192,6 +1262,7 @@ lore:summon spiders
 lore-color-base:Orange
 message-vis:{name} summons spiders.
 message-invis:You hear chittering things appear nearby!
+power:SUMMONING_MAGIC:20
 
 name:S_HOUND
 msgt:SUM_HOUND
@@ -1202,6 +1273,7 @@ lore:summon hounds
 lore-color-base:Orange
 message-vis:{name} summons hounds.
 message-invis:You hear barking things appear nearby!
+power:SUMMONING_MAGIC:20
 
 name:S_HYDRA
 msgt:SUM_HYDRA
@@ -1212,6 +1284,7 @@ lore:summon hydras
 lore-color-base:Orange
 message-vis:{name} summons hydras.
 message-invis:You hear some things appear nearby!
+power:SUMMONING_MAGIC:30
 
 name:S_AINU
 msgt:SUM_AINU
@@ -1222,6 +1295,8 @@ lore:summon an ainu
 lore-color-base:Orange
 message-vis:{name} summons an angel.
 message-invis:You hear something appear nearby!
+power:SUMMONING_MAGIC:50
+power:HOLY_MAGIC:50
 
 name:S_DEMON
 msgt:SUM_DEMON
@@ -1232,6 +1307,8 @@ lore:summon a demon
 lore-color-base:Orange
 message-vis:{name} summons a demon.
 message-invis:You hear something evil appear nearby!
+power:SUMMONING_MAGIC:20
+power:DEMONOLOGY_MAGIC:20
 
 name:S_UNDEAD
 msgt:SUM_UNDEAD
@@ -1242,6 +1319,8 @@ lore:summon an undead
 lore-color-base:Orange
 message-vis:{name} summons the undead.
 message-invis:You hear something creepy appear nearby!
+power:SUMMONING_MAGIC:20
+power:NECROMANCY_MAGIC:20
 
 name:S_DRAGON
 msgt:SUM_DRAGON
@@ -1252,6 +1331,7 @@ lore:summon a dragon
 lore-color-base:Orange
 message-vis:{name} summons a dragon.
 message-invis:You hear something appear nearby!
+power:SUMMONING_MAGIC:30
 
 name:S_HI_DEMON
 msgt:SUM_HI_DEMON
@@ -1262,6 +1342,8 @@ lore:summon greater demons
 lore-color-base:Light Red
 message-vis:{name} summons major demons.
 message-invis:You hear evil things appear nearby!
+power:SUMMONING_MAGIC:40
+power:DEMONOLOGY_MAGIC:40
 
 name:S_HI_UNDEAD
 msgt:SUM_HI_UNDEAD
@@ -1272,6 +1354,8 @@ lore:summon greater undead
 lore-color-base:Light Red
 message-vis:{name} summons fiends of darkness.
 message-invis:You hear creepy things appear nearby!
+power:SUMMONING_MAGIC:40
+power:NECROMANCY_MAGIC:40
 
 name:S_HI_DRAGON
 msgt:SUM_HI_DRAGON
@@ -1282,6 +1366,7 @@ lore:summon ancient dragons
 lore-color-base:Light Red
 message-vis:{name} summons ancient dragons.
 message-invis:You hear powerful things appear nearby!
+power:SUMMONING_MAGIC:55
 
 name:S_WRAITH
 msgt:SUM_WRAITH
@@ -1292,6 +1377,8 @@ lore:summon ringwraiths
 lore-color-base:Light Red
 message-vis:{name} summons ringwraiths.
 message-invis:You hear powerful things appear nearby!
+power:SUMMONING_MAGIC:50
+power:NECROMANCY_MAGIC:50
 
 name:S_UNIQUE
 msgt:SUM_UNIQUE
@@ -1302,3 +1389,4 @@ lore:summon uniques
 lore-color-base:Light Red
 message-vis:{name} summons {pronoun} servants.
 message-invis:You hear powerful things appear nearby!
+power:SUMMONING_MAGIC:60

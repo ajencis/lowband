@@ -903,7 +903,9 @@ blow:HIT:HURT:1d5
 flags:MALE
 flags:DROP_40
 flags:OPEN_DOOR
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | SPELLCASTER
+power:NECROMANCY_MAGIC
+power:HOLY_MAGIC
 spell-freq:12
 spells:HEAL | SCARE
 drop-base:prayer book:5:1:1
@@ -929,7 +931,7 @@ blow:HIT:HURT:1d4
 flags:MALE
 flags:DROP_40
 flags:OPEN_DOOR
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | SPELLCASTER
 spell-freq:12
 spells:BLIND | BLINK | CONF | MISSILE
 drop-base:magic book:5:1:1
@@ -2619,6 +2621,7 @@ blow:HIT:HURT:1d6
 flags:DROP_60
 flags:HURT_LIGHT
 flags:FORCE_SLEEP
+flags:SPELLCASTER
 drop-base:magic book:5:1:1
 drop-base:prayer book:5:1:1
 spell-freq:8
@@ -3072,6 +3075,7 @@ experience:40
 blow:HIT:HURT:1d8
 flags:OPEN_DOOR | BASH_DOOR
 flags:NO_FEAR
+power:TELEPORTATION_MAGIC
 spell-freq:3
 spells:BLINK | TELE_TO
 desc:It is a fast-moving demon that blinks quickly in and out of existence; no
@@ -5959,8 +5963,9 @@ rarity:2
 experience:75
 blow:HIT:FIRE:1d8
 flags:FORCE_SLEEP | OPEN_DOOR
-flags:NO_FEAR
+flags:NO_FEAR | SPELLCASTER
 flags:RAND_50 | ONLY_ITEM | DROP_60
+power:FIRE_MAGIC
 innate-freq:3
 spell-freq:2
 spell-power:10
@@ -8775,7 +8780,8 @@ blow:HIT:FIRE:4d6
 blow:GAZE:EXP_20
 flags:OPEN_DOOR | BASH_DOOR | TAKE_ITEM
 flags:NO_CONF | NO_SLEEP
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | SPELLCASTER
+power:FIRE_MAGIC
 spell-freq:4
 spells:BA_FIRE
 spells:BO_FIRE
@@ -10530,6 +10536,7 @@ blow:HIT:HURT:3d4
 flags:POWERFUL
 flags:DROP_1
 flags:IM_FIRE
+power:FIRE_MAGIC
 innate-freq:30
 spell-freq:12
 spells:BLIND | CONF
@@ -10944,6 +10951,7 @@ flags:POWERFUL
 flags:DROP_2
 flags:MOVE_BODY
 flags:IM_FIRE
+power:FIRE_MAGIC
 innate-freq:14
 spell-freq:5
 spells:BLIND | CONF
@@ -11051,6 +11059,7 @@ blow:CLAW:HURT:6d8
 blow:BITE:ELEC:7d8
 flags:BASH_DOOR
 flags:IM_ELEC
+power:AIR_MAGIC
 innate-freq:12
 spell-freq:8
 spells:BLIND | CONF | SCARE
@@ -11075,6 +11084,7 @@ blow:CLAW:HURT:6d8
 blow:BITE:COLD:7d8
 flags:BASH_DOOR
 flags:IM_COLD
+power:COLD_MAGIC
 innate-freq:12
 spell-freq:8
 spells:BLIND | CONF | SCARE
@@ -11099,6 +11109,7 @@ blow:CLAW:HURT:6d8
 blow:BITE:POISON:7d8
 flags:BASH_DOOR
 flags:IM_POIS
+power:POISON_MAGIC
 innate-freq:12
 spell-freq:8
 spells:BLIND | CONF | SCARE
@@ -11124,6 +11135,7 @@ flags:INVISIBLE
 flags:ONLY_ITEM
 flags:PASS_WALL | TAKE_ITEM
 flags:IM_COLD | IM_NETHER
+power:NECROMANCY_MAGIC
 innate-freq:12
 spell-freq:6
 spells:CONF | DARKNESS | SCARE | SLOW
@@ -11151,6 +11163,7 @@ flags:ATTR_FLICKER
 flags:ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_COLD
+power:EARTH_MAGIC
 innate-freq:12
 spell-freq:6
 spells:CONF | SCARE | SLOW
@@ -11179,6 +11192,8 @@ blow:BITE:CONFUSE:7d10
 flags:INVISIBLE
 flags:ONLY_ITEM
 flags:PASS_WALL
+power:DARKNESS_MAGIC:75
+power:LIGHT_MAGIC:75
 innate-freq:9
 spell-freq:10
 spells:BLIND | CONF
@@ -11293,6 +11308,7 @@ blow:CLAW:HURT:6d9
 blow:BITE:ACID:7d9
 flags:BASH_DOOR
 flags:IM_ACID
+power:ACID_MAGIC
 innate-freq:12
 spell-freq:8
 spells:BLIND | CONF | SCARE
@@ -11318,6 +11334,7 @@ blow:CLAW:HURT:6d9
 blow:BITE:FIRE:7d9
 flags:BASH_DOOR
 flags:IM_FIRE
+power:FIRE_MAGIC
 innate-freq:12
 spell-freq:8
 spells:BLIND | CONF | SCARE
@@ -11499,6 +11516,7 @@ flags:UNIQUE | MALE
 flags:DROP_GOOD | ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_FIRE
+power:FIRE_MAGIC
 innate-freq:8
 spell-freq:8
 spells:WOUND | CONF
@@ -11524,6 +11542,8 @@ blow:BITE:ACID:3d10
 blow:BITE:BLIND:3d10
 flags:SMART | DROP_1
 flags:IM_ACID | NO_FEAR
+power:FIRE_MAGIC:75
+power:ACID_MAGIC:75
 innate-freq:3
 spell-freq:3
 spells:BO_FIRE | BO_ACID
@@ -11555,6 +11575,11 @@ flags:BASH_DOOR
 flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE | IM_POIS
 flags:ATTR_MULTI
 innate-freq:6
+power:ACID_MAGIC:80
+power:COLD_MAGIC:80
+power:AIR_MAGIC:80
+power:FIRE_MAGIC:80
+power:POISON_MAGIC:80
 spell-freq:13
 spells:BLIND | CONF | SCARE
 spells:BR_ACID | BR_COLD | BR_ELEC | BR_FIRE | BR_POIS
@@ -11602,6 +11627,7 @@ flags:UNIQUE | MALE
 flags:DROP_GOOD | ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_COLD
+power:COLD_MAGIC
 innate-freq:8
 spell-freq:8
 spells:WOUND | CONF
@@ -11801,6 +11827,8 @@ flags:UNDEAD | COLD_BLOOD
 flags:ONLY_ITEM
 flags:BASH_DOOR | TAKE_ITEM
 flags:IM_COLD | IM_POIS | NO_STUN | IM_NETHER
+power:COLD_MAGIC:80
+power:NECROMANCY_MAGIC
 innate-freq:10
 spell-freq:12
 spells:CONF | SCARE
@@ -11828,6 +11856,8 @@ flags:ANIMAL
 flags:ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_ACID | IM_FIRE | IM_NEXUS
+power:FIRE_MAGIC
+power:TELEPORTATION_MAGIC
 innate-freq:10
 spell-freq:12
 spells:HOLD | SCARE
@@ -11962,7 +11992,7 @@ rarity:2
 experience:12000
 flags:SMART | ATTR_FLICKER | SPIRIT
 flags:NEVER_BLOW | NEVER_MOVE
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | SPELLCASTER
 spell-freq:1
 spells:BLIND | WOUND | CONF | DARKNESS | FORGET | SCARE
 spells:TELE_AWAY
@@ -12282,6 +12312,8 @@ blow:CRUSH:ACID:9d9
 flags:POWERFUL
 flags:DROP_3
 flags:IM_ACID | IM_POIS
+power:ACID_MAGIC
+power:POISON_MAGIC:75
 innate-freq:6
 spell-freq:10
 spells:ARROW | BLIND | CONF
@@ -12344,6 +12376,7 @@ flags:UNIQUE | MALE
 flags:DROP_GOOD | ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_FIRE
+power:FIRE_MAGIC
 innate-freq:5
 spell-freq:8
 spells:WOUND | CONF
@@ -12488,6 +12521,8 @@ flags:UNDEAD | COLD_BLOOD
 flags:ONLY_ITEM
 flags:BASH_DOOR | TAKE_ITEM
 flags:IM_COLD | IM_POIS | NO_STUN | IM_NETHER
+power:COLD_MAGIC:80
+power:NECROMANCY_MAGIC
 innate-freq:10
 spell-freq:12
 spells:CONF | SCARE
@@ -12571,6 +12606,7 @@ flags:INVISIBLE | POWERFUL
 flags:DROP_3
 flags:MOVE_BODY
 flags:IM_ACID | IM_COLD | IM_ELEC
+power:NECROMANCY_MAGIC:75
 spell-freq:6
 spells:SCARE
 spells:BA_COLD | BA_ELEC
@@ -12618,7 +12654,7 @@ depth:66
 rarity:2
 experience:18000
 flags:SMART | ATTR_FLICKER | SPIRIT
-flags:NEVER_BLOW | NEVER_MOVE
+flags:NEVER_BLOW | NEVER_MOVE | SPELLCASTER
 flags:FORCE_SLEEP
 spell-freq:1
 spells:BRAIN_SMASH
@@ -12941,6 +12977,8 @@ blow:HIT:PARALYZE:5d5
 flags:POWERFUL | REGENERATE
 flags:DROP_4
 flags:IM_COLD
+power:COLD_MAGIC
+power:EARTH_MAGIC:50
 innate-freq:20
 spell-freq:8
 spells:HOLD | SCARE | SLOW
@@ -13004,6 +13042,7 @@ flags:ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_ELEC
 innate-freq:8
+power:AIR_MAGIC
 spell-freq:5
 spells:BLIND | CONF | SCARE
 spells:BR_ELEC
@@ -13032,6 +13071,7 @@ flags:ATTR_FLICKER
 flags:ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_COLD
+power:COLD_MAGIC
 innate-freq:8
 spell-freq:5
 spells:BLIND | CONF | SCARE
@@ -13061,6 +13101,7 @@ flags:ATTR_FLICKER
 flags:ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_POIS
+power:POISON_MAGIC
 innate-freq:8
 spell-freq:5
 spells:BLIND | CONF | SCARE
@@ -13180,6 +13221,7 @@ flags:ATTR_FLICKER
 flags:ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_FIRE
+power:FIRE_MAGIC
 innate-freq:8
 spell-freq:5
 spells:BLIND | CONF | SCARE
@@ -13209,6 +13251,7 @@ flags:ATTR_FLICKER
 flags:ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_ACID
+power:ACID_MAGIC
 innate-freq:8
 spell-freq:5
 spells:BLIND | CONF | SCARE
@@ -13321,7 +13364,7 @@ rarity:2
 experience:23000
 flags:SMART | ATTR_FLICKER | SPIRIT
 flags:NEVER_BLOW | NEVER_MOVE
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | SPELLCASTER
 spell-freq:1
 spells:BRAIN_SMASH | WOUND | TRAPS
 spells:BA_WATE
@@ -13535,6 +13578,8 @@ flags:UNIQUE | MALE | NAME_COMMA
 flags:DROP_GOOD | DROP_GREAT | ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_FIRE
+power:FIRE_MAGIC
+power:POISON_MAGIC
 innate-freq:5
 spell-freq:3
 spells:BRAIN_SMASH | FORGET | SCARE
@@ -13619,6 +13664,7 @@ flags:POWERFUL | REGENERATE
 flags:DROP_4
 flags:MOVE_BODY
 flags:IM_FIRE
+power:SUMMONING_MAGIC
 innate-freq:12
 spell-freq:8
 spells:WOUND | SCARE
@@ -13862,6 +13908,8 @@ flags:ATTR_FLICKER
 flags:ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_COLD | NO_STUN
+power:AIR_MAGIC
+power:LIGHT_MAGIC:75
 innate-freq:5
 spell-freq:5
 spells:BLIND | CONF | SCARE
@@ -14037,6 +14085,11 @@ flags:ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE | IM_POIS
 flags:ATTR_MULTI
+power:ACID_MAGIC
+power:COLD_MAGIC
+power:AIR_MAGIC
+power:FIRE_MAGIC
+power:POISON_MAGIC
 innate-freq:5
 spell-freq:5
 spells:BLIND | CONF | SCARE
@@ -14204,7 +14257,7 @@ blow:TOUCH:POISON:5d5
 blow:TOUCH:POISON:5d5
 flags:UNIQUE | MALE | NAME_COMMA | SMART | SPIRIT | ATTR_FLICKER
 flags:DROP_4 | DROP_GOOD | DROP_GREAT | ONLY_ITEM
-flags:OPEN_DOOR | BASH_DOOR
+flags:OPEN_DOOR | BASH_DOOR | SPELLCASTER
 flags:FORCE_SLEEP
 spell-freq:2
 spell-power:110
@@ -14239,6 +14292,7 @@ flags:POWERFUL | ATTR_FLICKER
 flags:DROP_4
 flags:MOVE_BODY
 flags:IM_ELEC | IM_FIRE | IM_PLASMA
+power:FIRE_MAGIC:120
 innate-freq:5
 spell-freq:4
 spells:CONF | BA_FIRE | BO_PLAS | BA_DARK
@@ -14300,6 +14354,7 @@ flags:UNIQUE | MALE
 flags:DROP_GOOD | DROP_GREAT | ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE
+power:ACID_MAGIC
 innate-freq:4
 spell-freq:10
 spells:BR_ACID | BR_COLD | BR_ELEC | BR_FIRE | BR_POIS
@@ -14331,6 +14386,8 @@ flags:UNDEAD | COLD_BLOOD
 flags:ONLY_ITEM | PASS_WALL
 flags:BASH_DOOR | TAKE_ITEM
 flags:IM_COLD | IM_POIS | NO_STUN | IM_NETHER
+power:NECROMANCY_MAGIC
+power:COLD_MAGIC
 innate-freq:10
 spell-freq:12
 spells:CONF | SCARE
@@ -14358,6 +14415,8 @@ blow:BITE:HOLY_FIRE:7d14
 flags:ONLY_ITEM
 flags:BASH_DOOR | TAKE_ITEM
 flags:IM_FIRE | NO_STUN
+power:HOLY_MAGIC
+power:FIRE_MAGIC:50
 innate-freq:10
 spell-freq:12
 spells:CONF | SCARE
