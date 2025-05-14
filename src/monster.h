@@ -225,6 +225,7 @@ struct monster_spell {
 	int hit;					/* To-hit level for the attack */
 	struct effect *effect;		/* Effect(s) of the spell */
 	struct monster_spell_level *level;	/* Spell power dependent details */
+	bool knowable;				// L: is it possible for mosnters (that aren't specifically given it) to know this spell?
 
 	int powers[PP_MAX];			// L: which powers it uses	
 };

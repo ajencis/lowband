@@ -246,7 +246,7 @@ msgt:BR_ACID
 hit:100
 effect:BREATH:ACID:0:30
 dice:$D
-expr:D:CASTER_HP: / 3
+expr:D:CASTER_HP: * 2 / 3
 lore:acid
 lore-color-base:Orange
 lore-color-resist:Yellow
@@ -254,13 +254,14 @@ lore-color-immune:Light Green
 message-vis:{name} breathes acid.
 message-invis:You hear an acrid roar.
 power:ACID_MAGIC:10
+power:BREATH:10
 
 name:BR_ELEC
 msgt:BR_ELEC
 hit:100
 effect:BREATH:ELEC:0:30
 dice:$D
-expr:D:CASTER_HP: / 3
+expr:D:CASTER_HP: * 2 / 3
 lore:lightning
 lore-color-base:Orange
 lore-color-resist:Yellow
@@ -275,7 +276,7 @@ msgt:BR_FIRE
 hit:100
 effect:BREATH:FIRE:0:30
 dice:$D
-expr:D:CASTER_HP: / 3
+expr:D:CASTER_HP: * 2 / 3
 message-vis:{name} breathes fire.
 message-invis:You hear a scorching roar.
 lore:fire
@@ -290,7 +291,7 @@ msgt:BR_FROST
 hit:100
 effect:BREATH:COLD:0:30
 dice:$D
-expr:D:CASTER_HP: / 3
+expr:D:CASTER_HP: * 2 / 3
 lore:frost
 lore-color-base:Orange
 lore-color-resist:Yellow
@@ -305,7 +306,7 @@ msgt:BR_GAS
 hit:100
 effect:BREATH:POIS:0:30
 dice:$D
-expr:D:CASTER_HP: / 3
+expr:D:CASTER_HP: * 2 / 3
 lore:poison
 lore-color-base:Orange
 lore-color-resist:Yellow
@@ -320,7 +321,7 @@ msgt:BR_NETHER
 hit:100
 effect:BREATH:NETHER:0:30
 dice:$D
-expr:D:CASTER_HP: / 6
+expr:D:CASTER_HP: / 2
 lore:nether
 lore-color-base:Orange
 lore-color-resist:Light Green
@@ -334,7 +335,7 @@ msgt:BR_LIGHT
 hit:100
 effect:BREATH:LIGHT:0:30
 dice:$D
-expr:D:CASTER_HP: / 6
+expr:D:CASTER_HP: / 2
 lore:light
 lore-color-base:Orange
 lore-color-resist:Light Green
@@ -348,7 +349,7 @@ msgt:BR_DARK
 hit:100
 effect:BREATH:DARK:0:30
 dice:$D
-expr:D:CASTER_HP: / 6
+expr:D:CASTER_HP: / 2
 lore:darkness
 lore-color-base:Orange
 lore-color-resist:Light Green
@@ -362,20 +363,22 @@ msgt:BR_SOUND
 hit:100
 effect:BREATH:SOUND:0:30
 dice:$D
-expr:D:CASTER_HP: / 6
+expr:D:CASTER_HP: / 2
 lore:sound
 lore-color-base:Orange
 lore-color-resist:Yellow
 lore-color-immune:Light Green
 message-vis:{name} breathes sound.
 message-invis:You hear an echoing roar.
+power:SOUND_MAGIC:25
+power:BREATH:25
 
 name:BR_CHAO
 msgt:BR_CHAOS
 hit:100
 effect:BREATH:CHAOS:0:30
 dice:$D
-expr:D:CASTER_HP: / 6
+expr:D:CASTER_HP: / 2
 lore:chaos
 lore-color-base:Orange
 lore-color-resist:Light Green
@@ -387,7 +390,7 @@ msgt:BR_DISEN
 hit:100
 effect:BREATH:DISEN:0:30
 dice:$D
-expr:D:CASTER_HP: / 6
+expr:D:CASTER_HP: / 2
 lore:disenchantment
 lore-color-base:Light Red
 lore-color-resist:Light Green
@@ -399,7 +402,7 @@ msgt:BR_NEXUS
 hit:100
 effect:BREATH:NEXUS:0:30
 dice:$D
-expr:D:CASTER_HP: / 6
+expr:D:CASTER_HP: / 2
 lore:nexus
 lore-color-base:Light Red
 lore-color-resist:Yellow
@@ -414,7 +417,7 @@ msgt:BR_TIME
 hit:100
 effect:BREATH:TIME:0:30
 dice:$D
-expr:D:CASTER_HP: / 3
+expr:D:CASTER_HP: * 2 / 3
 lore:time
 lore-color-base:Light Red
 message-vis:{name} breathes time.
@@ -425,7 +428,7 @@ msgt:BR_INERTIA
 hit:100
 effect:BREATH:INERTIA:0:30
 dice:$D
-expr:D:CASTER_HP: / 6
+expr:D:CASTER_HP: / 2
 lore:inertia
 lore-color-base:Orange
 message-vis:{name} breathes inertia.
@@ -436,7 +439,7 @@ msgt:BR_GRAVITY
 hit:100
 effect:BREATH:GRAVITY:0:30
 dice:$D
-expr:D:CASTER_HP: / 3
+expr:D:CASTER_HP: * 2 / 3
 lore:gravity
 lore-color-base:Light Red
 message-vis:{name} breathes gravity.
@@ -447,7 +450,7 @@ msgt:BR_SHARDS
 hit:100
 effect:BREATH:SHARD:0:30
 dice:$D
-expr:D:CASTER_HP: / 6
+expr:D:CASTER_HP: / 2
 lore:shards
 lore-color-base:Orange
 lore-color-resist:Light Green
@@ -461,7 +464,7 @@ msgt:BR_PLASMA
 hit:100
 effect:BREATH:PLASMA:0:30
 dice:$D
-expr:D:CASTER_HP: / 6
+expr:D:CASTER_HP: / 2
 lore:plasma
 lore-color-base:Orange
 lore-color-resist:Yellow
@@ -475,7 +478,7 @@ msgt:BR_FORCE
 hit:100
 effect:BREATH:FORCE:0:30
 dice:$D
-expr:D:CASTER_HP: / 6
+expr:D:CASTER_HP: / 2
 lore:force
 lore-color-base:Orange
 lore-color-resist:Yellow
@@ -486,7 +489,7 @@ name:BR_MANA
 hit:100
 effect:BREATH:MANA:0:30
 dice:$D
-expr:D:CASTER_HP: / 3
+expr:D:CASTER_HP: * 2 / 3
 lore:mana
 lore-color-base:Light Red
 message-vis:{name} breathes raw magic.
@@ -497,7 +500,7 @@ name:BR_HOLY_FIRE
 hit:100
 effect:BREATH:HOLY_FIRE:0:30
 dice:$D
-expr:D:CASTER_HP: / 3
+expr:D:CASTER_HP: * 2 / 3
 lore:holy fire
 lore-color-base:White
 message-vis:{name} breathes holy fire.
@@ -510,7 +513,7 @@ name:BR_HELLFIRE
 hit:100
 effect:BREATH:HELLFIRE:0:30
 dice:$D
-expr:D:CASTER_HP: / 3
+expr:D:CASTER_HP: * 2 / 3
 lore:hellfire
 lore-color-base:Dark Red
 message-vis:{name} breathes hellfire.
@@ -523,7 +526,7 @@ name:BOULDER
 hit:60
 effect:BOLT:ARROW
 dice:$Dd12
-expr:D:SPELL_POWER:/ 7 + 1
+expr:D:SPELL_POWER: / 7 + 1
 lore:throw boulders
 lore-color-base:Yellow
 message-vis:{name} hurls a boulder.
@@ -752,6 +755,7 @@ lore-color-resist:Orange
 message-vis:{name} creates a tempest of wind and water.
 message-invis:Something chants fluidly.
 power:WATER_MAGIC:35
+power:COLD_MAGIC:15
 power:AIR_MAGIC:25
 
 name:DRAIN_MANA
@@ -763,6 +767,7 @@ lore:drain mana
 lore-color-base:Yellow
 message-vis:{name} drains your mana away.
 message-invis:Something moans.
+power:META_MAGIC:10
 
 name:MIND_BLAST
 hit:100
@@ -1007,6 +1012,7 @@ message-invis:Something intones with deadly menace.
 power:NECROMANCY_MAGIC:25
 
 name:BANSHEE_SCREAM
+knowable:0
 hit:100
 effect:PROJECT_LOS:BANSHEE:10:1
 dice:$Dd10
@@ -1028,6 +1034,7 @@ lore-color-resist:Light Green
 message-vis:{name} conjures up scary horrors.
 message-invis:Something makes scary noises.
 message-save:You fight off a sense of dread.
+power:ENCHANTMENT_MAGIC:10
 
 name:BLIND
 hit:100
@@ -1039,6 +1046,8 @@ lore-color-resist:Light Green
 message-vis:{name} sets off a blinding flash.
 message-invis:Something mumbles.
 message-save:You repel a sudden bleariness.
+power:ENCHANTMENT_MAGIC:10
+power:DARKNESS_MAGIC:10
 
 name:CONF
 hit:100
@@ -1050,6 +1059,7 @@ lore-color-resist:Light Green
 message-vis:{name} conjures up weird things.
 message-invis:Something messes with your mind.
 message-save:You retain your presence of mind.
+power:ENCHANTMENT_MAGIC:10
 
 name:SLOW
 hit:100
@@ -1199,8 +1209,10 @@ lore-color-resist:Light Green
 message-vis:{name} tries to make {target} forget things.
 message-invis:Something messes with your mind.
 message-save:You retain your presence of mind.
+power:ENCHANTMENT_MAGIC:10
 
 name:SHAPECHANGE
+knowable:0
 hit:100
 effect:MON_TIMED_INC:CHANGED
 dice:5+d10
@@ -1252,6 +1264,7 @@ lore-color-base:Orange
 message-vis:{name} summons animals.
 message-invis:You hear some things appear nearby!
 power:SUMMONING_MAGIC:20
+power:NATURE_MAGIC:10
 
 name:S_SPIDER
 msgt:SUM_SPIDER
@@ -1263,6 +1276,8 @@ lore-color-base:Orange
 message-vis:{name} summons spiders.
 message-invis:You hear chittering things appear nearby!
 power:SUMMONING_MAGIC:20
+power:NATURE_MAGIC:10
+power:POISON_MAGIC:10
 
 name:S_HOUND
 msgt:SUM_HOUND
@@ -1274,6 +1289,7 @@ lore-color-base:Orange
 message-vis:{name} summons hounds.
 message-invis:You hear barking things appear nearby!
 power:SUMMONING_MAGIC:20
+power:NATURE_MAGIC:10
 
 name:S_HYDRA
 msgt:SUM_HYDRA
@@ -1285,6 +1301,7 @@ lore-color-base:Orange
 message-vis:{name} summons hydras.
 message-invis:You hear some things appear nearby!
 power:SUMMONING_MAGIC:30
+power:NATURE_MAGIC:10
 
 name:S_AINU
 msgt:SUM_AINU

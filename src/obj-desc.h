@@ -48,7 +48,6 @@ enum {
 
 
 extern const char *inscrip_text[];
-extern const char *power_names[];
 
 void object_base_name(char *buf, size_t max, int tval, bool plural);
 void object_kind_name(char *buf, size_t max, const struct object_kind *kind,

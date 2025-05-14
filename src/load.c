@@ -42,6 +42,7 @@
 #include "object.h"
 #include "player-calcs.h"
 #include "player-history.h"
+#include "player-properties.h"
 #include "player-quest.h"
 #include "player-spell.h"
 #include "player-timed.h"
@@ -1160,6 +1161,8 @@ int rd_misc(void)
 	rd_u32b(&player->monster_xp);
 
 	rd_followers();
+
+	rd_s16b(&player->curr_noise);
 
 	return 0;
 }

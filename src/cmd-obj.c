@@ -1312,7 +1312,7 @@ static int gener_spell_is_castable(const struct player *p, int spell) {
 	if (spell < 0 || spell >= z_info->spell_max) return 2;
 	if (!(p->player_spell_flags[spell] & PY_SPELL_LEARNED)) return 2;
 	
-	if (!p->realm || !p->realm->innate) {
+	if (!p->realm || !p->realm->realm_special[RLM_SPCL_INNATE]) {
 		for (spellbook = p->gear; spellbook; spellbook = spellbook->next) {
 			if (spellbook->kind->spell && spellbook->kind->spell->sidx == spell) {
 				break;
@@ -1352,7 +1352,7 @@ void do_cmd_cast(struct command *cmd)
 
 	mana = player_spell_mana(ps);
 
-	if (player->realm && player->realm->hp_cast) {
+	if (player->realm && player->realm->realm_special[RLM_SPCL_HP_CAST]) {
 		if (mana > player->chp) {
 			msg("You do not have enough hit points to cast this spell.");
 			return;

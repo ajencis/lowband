@@ -434,14 +434,14 @@ static void make_noise(struct player *p)
 {
 	struct loc next = p->grid;
 	int y, x, d;
-	int noise = 0;
+	int noise = -p->curr_noise;
 	int noise_increment = p->timed[TMD_COVERTRACKS] ? 4 : 1;
     struct queue *queue = q_new(cave->height * cave->width);
 
 	/* Set all the grids to silence */
 	for (y = 1; y < cave->height - 1; y++) {
 		for (x = 1; x < cave->width - 1; x++) {
-			cave->noise.grids[y][x] = 0;
+			cave->noise.grids[y][x] = INT16_MAX;
 		}
 	}
 
@@ -473,7 +473,7 @@ static void make_noise(struct player *p)
 			if (square_isnoflow(cave, grid)) continue;
 
 			/* Skip grids that already have noise */
-			if (cave->noise.grids[grid.y][grid.x] != 0) continue;
+			if (cave->noise.grids[grid.y][grid.x] != INT16_MAX) continue;
 
 			/* Skip the player grid */
 			if (loc_eq(p->grid, grid)) continue;
@@ -859,6 +859,9 @@ void process_world(struct chunk *c)
 	/* Update noise and scent (not if resting) */
 	if (!player_is_resting(player) && !player->upkeep->generate_level) {
 		make_noise(player);
+		if (!(turn & 0x3)) {
+			if (player->curr_noise > 0) --player->curr_noise;
+		}
 		update_scent();
 	}
 

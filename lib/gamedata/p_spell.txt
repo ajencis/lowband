@@ -124,8 +124,7 @@ dice:1d$N
 expr:N:SPELL_POWER:+ 4 / 5
 desc:Summons foul necromantic minions.
 school:NECROMANCY
-school:SUMMONING
-school:FIRE
+school:DEMONOLOGY
 
 spell:Control Undead:10:0
 effect:PROJECT_LOS:CHARM_UNDEAD
@@ -334,9 +333,9 @@ dice:$Dd$S
 expr:D:SPELL_POWER:+ 5 / 6
 expr:S:SPELL_POWER:* 3
 desc:Strikes every monster in line of sight with sheets of ice from above.
-school:WATER
+school:COLD
 
-spell:Dark Vision:50
+spell:Unvision:50
 effect:DARKEN_LEVEL
 desc:Darkens, maps out, and senses all objects on the complete current
 desc: dungeon level.
@@ -526,3 +525,56 @@ spell:Create Illusory Wall:27
 effect:CREATE_ILLUSORY_WALL
 desc:Creates an illusory wall, which blocks sight and sound but not scent or movement.
 school:ILLUSION
+
+
+
+spell:Sound Bolt:1
+effect:BOLT:SOUND
+dice:$Dd$S
+expr:D:SPELL_POWER:+ 4 / 5
+expr:S:SPELL_POWER:+ 3 / 4
+desc:Throws a bolt of sound.
+school:SOUND
+
+spell:Sound Ball:20
+effect:BALL:SOUND:3
+dice:$Dd$S
+expr:D:SPELL_POWER:+ 1 / 2
+expr:S:SPELL_POWER:+ 4 / 5
+desc:Throws a ball of sound.
+school:SOUND
+
+
+spell:Disenchantment Bolt:1
+effect:BOLT:DISEN
+dice:$Dd$S
+expr:D:SPELL_POWER:+ 4 / 5
+expr:S:SPELL_POWER:+ 3 / 4
+desc:Throws a bolt of disenchantment.
+school:META
+
+spell:Disenchantment Ball:20
+effect:BALL:DISEN:3
+dice:$Dd$S
+expr:D:SPELL_POWER:+ 1 / 2
+expr:S:SPELL_POWER:+ 4 / 5
+desc:Throws a ball of disenchantment.
+school:META
+
+
+
+#spell:?:1
+#effect:BOLT:?
+#dice:$Dd$S
+#expr:D:SPELL_POWER:+ 4 / 5
+#expr:S:SPELL_POWER:+ 3 / 4
+#desc:?
+#school:?
+
+#spell:?:20
+#effect:BALL:?:3
+#dice:$Dd$S
+#expr:D:SPELL_POWER:+ 1 / 2
+#expr:S:SPELL_POWER:+ 4 / 5
+#desc:?
+#school:?

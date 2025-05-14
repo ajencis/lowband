@@ -169,7 +169,7 @@ struct square {
 };
 
 struct heatmap {
-	uint16_t **grids;
+	int16_t **grids;
 };
 
 struct connector {

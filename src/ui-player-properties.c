@@ -1090,7 +1090,7 @@ bool textui_powers_learn(struct player *p, int *max_learn, bool birth)
 			changed = p->extra_target[i] != data->temp_target[i];
 		}
 
-		if (!birth && changed && get_forced_check("Use these targets? ")) {
+		if (changed && (birth || get_forced_check("Use these targets? "))) {
 			memcpy(p->extra_target, data->temp_target, sizeof *p->extra_target * z_info->learn_max);
 			p->upkeep->update |= PU_BONUS;
 		}

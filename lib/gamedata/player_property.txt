@@ -474,6 +474,22 @@ parent:power:SUMMONING_MAGIC
 parent:skill:MAGIC
 
 type:power
+code:SOUND_MAGIC
+name:Sound Magic
+desc: can particularly effectively use sonic magic.
+cost:15
+rarity:5
+parent:skill:MAGIC
+
+type:power
+code:META_MAGIC
+name:Metamagic
+desc: can particularly effectively use metamagic.
+cost:15
+rarity:5
+parent:skill:MAGIC
+
+type:power
 code:UNLIGHT
 name:Unlight
 desc: can create a shroud of darkness that hides and protects.

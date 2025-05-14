@@ -65,7 +65,7 @@ enum
 enum
 {
 	PP_NONE,
-	#define PP(x, a, b, c, d, e, f) PP_##x,
+	#define PP(x) PP_##x,
 	#include "list-player-powers.h"
 	#undef PP
 	PP_MAX,
@@ -81,6 +81,17 @@ enum
 	#include "list-magic-schools.h"
 	#undef MS
 	MS_MAX,
+};
+
+/**
+ * L: special magic realm abilities
+ */
+enum
+{
+	#define RLM_SPCL(x) RLM_SPCL_##x,
+	#include "list-realm-special.h"
+	#undef RLM_SPCL
+	RLM_SPCL_MAX
 };
 
 enum {
@@ -350,9 +361,8 @@ struct magic_realm {
 	char *spell_noun;
 	char *book_noun;
 
-	int school_modifiers[MS_MAX];	/* L: which schools it does well */
-	bool innate;					/* L: does it learn spells? */
-	bool hp_cast;					/* L: does it cast from hp instead of mana? */
+	int school_modifiers[MS_MAX];		/* L: which schools it does well */
+	int realm_special[RLM_SPCL_MAX];	// L: special flags or abilities for the realm
 };
 
 /**
@@ -770,6 +780,8 @@ struct player {
 	bool *unlocked_classes;				// L: which classes the player has unlocked
 	bool *unlocked_races;				// L: unlocked races
 	uint16_t *unlocked_tomes;			// L: unlocked_powers with quantity
+
+	uint16_t curr_noise;						// L: how loud they currently are being
 };
 
 

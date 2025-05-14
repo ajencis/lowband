@@ -119,7 +119,7 @@ const char *list_obj_flag_names[] = {
 
 static const char *list_player_powers_names[] = {
 	"NONE",
-	#define PP(x, a, b, c, d, e, f) #x,
+	#define PP(x) #x,
 	#include "list-player-powers.h"
 	#undef PP
 	NULL
@@ -197,6 +197,14 @@ const char *player_info_flags[] =
 	NULL
 };
 
+static const char *realm_special_names[] =
+{
+	#define RLM_SPCL(x) #x,
+	#include "list-realm-special.h"
+	#undef RLM_SPCL
+	"MAX" 
+};
+
 static int school_idx_by_name(const char *name)
 {
 	int i;
@@ -206,6 +214,17 @@ static int school_idx_by_name(const char *name)
 		}
 	}
 	return MS_NONE;
+}
+
+static int realm_special_by_name(const char *name)
+{
+	int i;
+	for (i = N_ELEMENTS(realm_special_names) - 1; i >= 0; --i) {
+		if (streq(name, realm_special_names[i])) {
+			return i;
+		}
+	}
+	return -1;
 }
 
 errr grab_effect_data(struct parser *p, struct effect *effect)
@@ -3355,30 +3374,21 @@ static enum parser_error parse_realm_school_aptitude(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
-static enum parser_error parse_realm_innate(struct parser *p) 
+static enum parser_error parse_realm_special(struct parser *p)
 {
-	bool innate = parser_getint(p, "innate") ? true : false;
 	struct magic_realm *realm = parser_priv(p);
+	int which = realm_special_by_name(parser_getsym(p, "which"));
+	int amt = parser_getint(p, "amount");
 
 	if (!realm) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
 
-	realm->innate = innate;
-
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_realm_hp_cast(struct parser *p) 
-{
-	bool hp_cast = parser_getint(p, "hp") ? true : false;
-	struct magic_realm *realm = parser_priv(p);
-
-	if (!realm) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	if (which < 0 || which >= RLM_SPCL_MAX) {
+		return PARSE_ERROR_GENERIC;
 	}
 
-	realm->hp_cast = hp_cast;
+	realm->realm_special[which] = amt;
 
 	return PARSE_ERROR_NONE;
 }
@@ -3394,8 +3404,7 @@ static struct parser *init_parse_realm(void) {
 	parser_reg(p, "book-noun str book", parse_realm_book_noun);
 	parser_reg(p, "weight int weight", parse_realm_weight);
 	parser_reg(p, "school sym school int mod", parse_realm_school_aptitude);
-	parser_reg(p, "innate int innate", parse_realm_innate);
-	parser_reg(p, "hp-cast int hp", parse_realm_hp_cast);
+	parser_reg(p, "special sym which int amount", parse_realm_special);
 	return p;
 }
 
@@ -3852,7 +3861,6 @@ static enum parser_error parse_spell_name(struct parser *p) {
 
 	return PARSE_ERROR_NONE;
 }
-
 
 static enum parser_error parse_spell_effect(struct parser *p) {
 	struct player_spell *s = parser_priv(p);

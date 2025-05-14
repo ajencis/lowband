@@ -203,6 +203,7 @@ bool player_can_metaprogress(struct player *p)
 }
 
 
+
 /**
  * L: functions for players that are monsters
  */
@@ -366,7 +367,7 @@ bool check_player_monster(struct player *p, bool init)
 	//struct evolution *e = curr ? curr->evol : p->race->evol;
 	bool do_change = false;
 	uint32_t xpneed;
-	uint32_t currxp = init ? player_exp[5] : p->monster_xp;
+	uint32_t currxp = init ? 0 : p->monster_xp;
 
 	if (p->num_evol_choices <= 0 && !init) {
 		select_evolution(p);
@@ -400,30 +401,6 @@ bool check_player_monster(struct player *p, bool init)
 	}
 
 	if (currxp >= xpneed) do_change = true;
-
-	/*if (selected && (!init || numevols <= 1)) {
-		if (init) {
-			do_change = true;
-		}
-		else if (currxp >= xpneed) {
-			do_change = true;
-		}
-		else if (currxp > 0) {
-			uint32_t chance;
-			if (xpneed < 0x10000000 / 250) {
-				chance = xpneed * 250 / currxp;
-			}
-			else {
-				chance = 0x10000000 / currxp;
-			}
-			chance = MAX(chance, 25);
-			if (one_in_(chance)) {
-				p->monster_xp = 0;
-				do_change = true;
-				remove_first_evolution(p);
-			}
-		}
-	}*/
 
 	if (do_change) {
 		change_player_monster(p, selected, init);
@@ -516,37 +493,6 @@ bool select_evolution(struct player *p)
 	add_evolution(p, select);
 
 	return true;
-
-	//if (!last) return false;
-
-	/*choice_evol = curr_evol;
-	plog_fmt("nec=%i", p->num_evol_choices);
-	for (i = 0; i < p->num_evol_choices; ++i) {
-		plog_fmt("ce.r=%s/%i, p.ec[i]=%s/%i", choice_evol->race->name, choice_evol->race->ridx, p->evol_choices[i]->name, p->evol_choices[i]->ridx);
-		while (choice_evol->race->ridx != p->evol_choices[i]->ridx) {
-			choice_evol = choice_evol->next;
-			assert(choice_evol);
-		}
-		choice_evol = choice_evol->race->evol;
-		assert(choice_evol);
-	}*/
-
-	/*plog_fmt("ce->r=%s", choice_evol->race->name);
-
-	if (!choice_evol->race->evol) return false;
-
-	plog_fmt("ce->r->e->r=%s", choice_evol->race->evol->name);
-
-	if (!choice_evol->race->evol->next) {
-		add_evolution(p, choice_evol->race->evol->race);
-		return true;
-	}
-
-	select = evolution_choice_menu_select(choice_evol->race->evol);
-
-	add_evolution(p, select);
-
-	return true;*/
 }
 
 
@@ -585,7 +531,9 @@ const char *lookup_power_name(int power)
 {
 	assert(power > PP_NONE && power < PP_MAX);
 
-	return power_names[power];
+	struct player_ability *abil = lookup_player_ability(power, PY_ABIL_POWER);
+
+	return abil->name;
 }
 
 
@@ -752,7 +700,7 @@ bool learn_realm(struct player *p, const struct magic_realm *realm)
 
 	msg("You feel that you understand %s magic.", realm->name);
 
-	if (p->realm->innate) {
+	if (p->realm->realm_special[RLM_SPCL_INNATE]) {
 		player_learn_spell_xp(p, true, 0);
 	}
 
@@ -1123,7 +1071,7 @@ static void max_learnable_object(struct object *obj, int *learn_array, int array
 	int max_learn = tome_max_skill(obj);
 	if (max_learn) {
 		int tome_ind = obj->pval;
-		assert(tome_ind > TOME_NONE && tome_ind < array_max);
+		assert(tome_ind < array_max);
 
 		learn_array[tome_ind] = MAX(learn_array[tome_ind], max_learn);
 	}
@@ -1420,7 +1368,7 @@ bool player_learn_spell_xp(struct player *p, bool initial, int xp)
 	int forgottenind = 0;
 
 	// only some casters learn spells this way
-	if (!p->realm || !p->realm->innate) {
+	if (!p->realm || !p->realm->realm_special[RLM_SPCL_INNATE]) {
 		return false;
 	}
 
@@ -1972,10 +1920,10 @@ bool tomes_unlock(struct player *p)
 			}
 
 			if (prevent_unlock) {
-				msg("You would unlock %s [%s] but %s.", power_names[i], p->extra_powers[i], prevent_unlock);
+				msg("You would unlock %s [%s] but %s.", lookup_power_name(i), p->extra_powers[i], prevent_unlock);
 			}
 			else {
-				msg("Unlocked %s [%s]!", power_names[i], p->extra_powers[i]);
+				msg("Unlocked %s [%s]!", lookup_power_name(i), p->extra_powers[i]);
 				p->unlocked_tomes[i] = p->extra_powers[i];
 				did_unlock = true;
 			}
@@ -3031,7 +2979,7 @@ bool player_can_cast(const struct player *p, bool show_msg)
 		return false;
 	}
 
-	if (p->realm->hp_cast && pf_has(p->state.pflags, PF_UNDEAD)) {
+	if (p->realm->realm_special[RLM_SPCL_HP_CAST] && pf_has(p->state.pflags, PF_UNDEAD)) {
 		if (show_msg) {
 			msg("You have no blood with which to cast!");
 		}
@@ -3185,7 +3133,7 @@ bool player_can_cast_prereq(void)
  */
 bool player_can_study_prereq(void)
 {
-	if (player->realm && player->realm->innate) {
+	if (player->realm && player->realm->realm_special[RLM_SPCL_INNATE]) {
 		msg("You don't learn spells from books.");
 		return false;
 	}

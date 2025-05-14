@@ -34,24 +34,12 @@ enum
 /**
  * Object origin kinds
  */
-
 enum {
 	#define ORIGIN(a, b, c) ORIGIN_##a,
 	#include "list-origins.h"
 	#undef ORIGIN
 
 	ORIGIN_MAX
-};
-
-enum {
-	TOME_NONE,
-	#define PP(x, a, b, c, d, e, f) TOME_PP_##x,
-	#include "list-player-powers.h"
-	#undef PP
-	#define SKILL(x, a, b, c, d, e) TOME_SKILL_##x,
-	#include "list-skills.h"
-	#undef SKILL
-	TOME_MAX
 };
 
 /**

@@ -34,6 +34,7 @@
 #include "obj-util.h"
 #include "option.h"
 #include "player.h"
+#include "player-properties.h"
 #include "player-util.h"
 #include "savefile.h"
 #include "store.h"
@@ -767,6 +768,9 @@ void wr_misc(void)
 	wr_u32b(player->monster_xp);
 
 	wr_followers();
+
+	// L: noise
+	wr_s16b(player->curr_noise);
 }
 
 

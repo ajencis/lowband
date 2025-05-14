@@ -30,16 +30,6 @@
 #include "ui-knowledge.h"
 
 
-const char *power_names[] =
-{
-	"Illegible",
-	#define PP(x, a, b, c, d, e, f) a,
-	#include "list-player-powers.h"
-	#undef PP
-	"Illegible"
-};
-
-
 /**
  * Puts the object base kind's name into buf.
  */

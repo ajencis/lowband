@@ -42,6 +42,7 @@
 #include "player-birth.h"
 #include "player-calcs.h"
 #include "player-history.h"
+#include "player-properties.h"
 #include "player-quest.h"
 #include "player-spell.h"
 #include "player-timed.h"
@@ -109,6 +110,8 @@ struct birther
 
 	char *history;
 	char name[PLAYER_NAME_LEN];
+
+	uint16_t *extra_targets;
 };
 
 
@@ -139,7 +142,6 @@ static birther prev;
  * birth process.
  */
 static birther quickstart_prev;
-
 
 static void init_monsters(void)
 {
@@ -175,8 +177,9 @@ static void save_roller_data(birther *tosave)
 	tosave->au = player->au_birth;
 
 	/* Save the stats */
-	for (i = 0; i < STAT_MAX; i++)
+	for (i = 0; i < STAT_MAX; i++) {
 		tosave->stat[i] = player->stat_max_max[i];
+	}
 
 	if (tosave->history) {
 		string_free(tosave->history);
@@ -184,6 +187,12 @@ static void save_roller_data(birther *tosave)
 	tosave->history = player->history;
 	player->history = NULL;
 	my_strcpy(tosave->name, player->full_name, sizeof(tosave->name));
+
+	if (!tosave->extra_targets) {
+		tosave->extra_targets = mem_zalloc(sizeof *tosave->extra_targets * z_info->learn_max);
+	}
+
+	memcpy(tosave->extra_targets, player->extra_target, z_info->learn_max * sizeof *tosave->extra_targets);
 }
 
 
@@ -206,8 +215,9 @@ static void load_roller_data(birther *saved, birther *prev_player)
 	memset(&temp, 0, sizeof(birther));
 
 	/* Save the current data if we'll need it later */
-	if (prev_player)
+	if (prev_player) {
 		save_roller_data(&temp);
+	}
 
 	/* Load previous data */
 	player->race     = saved->race;
@@ -233,10 +243,17 @@ static void load_roller_data(birther *saved, birther *prev_player)
 	player->history = string_make(saved->history);
 	my_strcpy(player->full_name, saved->name, sizeof(player->full_name));
 
+	if (saved->extra_targets && OPT(player, birth_level_one_learn)) {
+		memcpy(player->extra_target, saved->extra_targets, z_info->learn_max * sizeof *player->extra_target);
+	}
+
 	/* Save the current data if the caller is interested in it. */
 	if (prev_player) {
 		if (prev_player->history) {
 			string_free(prev_player->history);
+		}
+		if (prev_player->extra_targets) {
+			mem_free(prev_player->extra_targets);
 		}
 		*prev_player = temp;
 	}

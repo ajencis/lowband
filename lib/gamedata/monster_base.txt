@@ -83,8 +83,8 @@ flags:ANIMAL | WEIRD_MIND
 flags:BASH_DOOR
 desc:Ant
 attr:HP:-2
-attr:AC:2
-attr:DAMAGE:1
+attr:AC:1
+attr:DAMAGE:2
 
 # Fast, not strong, annoying
 name:bat
@@ -122,7 +122,7 @@ flags:ANIMAL | CLEAR_WEB
 desc:Canine (Dog)
 body:Dog
 
-# Centipedes are mastly weak, sometimes quick, and their melee attacks are often
+# Centipedes are mostly weak, sometimes quick, and their melee attacks are often
 # early examples of different blow effects
 name:centipede
 glyph:c
@@ -187,7 +187,7 @@ attr:MAGIC:2
 attr:DAMAGE:-1
 attr:SPEED:-1
 stats:-2:1:1:1:0
-power:DIVINATION_MAGIC:20
+power:DIVINATION_MAGIC
 skill-magic:5
 skill-search:5
 obj-flags:SEE_INVIS
@@ -505,8 +505,8 @@ attr:SPEED:2
 attr:DAMAGE:-4
 attr:MAGIC:2
 stats:-3:2:1:0:1
-power:SUMMONING_MAGIC:40
-power:TELEPORTATION_MAGIC:20
+power:SUMMONING_MAGIC
+power:TELEPORTATION_MAGIC
 
 # Mostly early monsters, but later ones are dangerous.  Not fast for depth
 name:reptile
@@ -568,8 +568,10 @@ attr:HP:-1
 attr:SPEED:-2
 attr:DAMAGE:1
 stats:-1:-1:1:2:-1
-power:BACKSTAB:20
-power:POISON_MAGIC:20
+power:BACKSTAB
+power:POISON_MAGIC:50
+power:DARKNESS_MAGIC:50
+power:BREATH:25
 skill-stealth:5
 
 # Weak, except the odd one to surprise the unwary newcomer.  Always native to
@@ -631,9 +633,10 @@ attr:MAGIC:1
 attr:DAMAGE:-1
 stats:1:1:-2:2:-1
 power:POLEARM_SPECIALIZATION:20
-power:BACKSTAB:20
-power:DARKNESS_MAGIC:20
-power:UNLIGHT:40
+power:BACKSTAB
+power:NECROMANCY_MAGIC:75
+power:DARKNESS_MAGIC
+power:UNLIGHT
 skill-stealth:10
 
 # Always awake, elemental objects which engulf and breathe their element(s)

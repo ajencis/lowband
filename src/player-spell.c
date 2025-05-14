@@ -659,8 +659,13 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 
 	ref_spell = NULL;
 
+	// make a sound if we're a bard
+	if (player->realm->realm_special[RLM_SPCL_LOUD]) {
+		player->curr_noise = MAX(player->curr_noise, spell->slevel / 3 + 1);
+	}
+
 	/* Sufficient mana? */
-	if (player->realm && player->realm->hp_cast) {
+	if (player->realm && player->realm->realm_special[RLM_SPCL_HP_CAST]) {
 		// Use hp
 		take_hit(player, mana, "the strain of casting a spell");
 	} else if (mana <= availmana) {
@@ -877,6 +882,7 @@ int school_find_idx(const char *name)
 const char *school_idx_to_name(int idx)
 {
 	assert(idx > MS_NONE && idx < MS_MAX);
+
 	return school_names[idx].name;
 }
 
@@ -916,6 +922,27 @@ void get_innate_info(int innate_index, char *p, size_t len)
 }
 
 
+static bool spell_is_continuous(const struct player_spell *s)
+{
+	const struct effect *ef;
+
+	for (ef = s->effect; ef; ef = ef->next) {
+		switch (ef->index) {
+			case EF_COMMAND:
+			case EF_MON_TIMED_INC:
+			case EF_SHAPECHANGE:
+			case EF_SUMMON:
+			case EF_TIMED_INC:
+			case EF_TIMED_INC_NO_RES:
+			case EF_TIMED_SET:
+			case EF_TRANSFORM:
+				return true;
+		}
+	}
+
+	return false;
+}
+
 int gener_spell_power(const struct player *p, const struct player_spell *s)
 {
 	int numschools = 0, sumschools = 0;
@@ -927,6 +954,8 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 	int i;
 	int result, stepdown;
 	const struct magic_realm *r = p->realm;
+	bool is_continuous = spell_is_continuous(s);
+	int level = s->slevel;
 
 	for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
 		if (s->school[i] > MS_NONE) {
@@ -944,7 +973,14 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 
 	schoolbonus = MIN(schoolbonus, skill * 2);
 
-	result = skill + schoolbonus + realmbonus - s->slevel - antim + 1;
+	if (is_continuous) {
+		level -= level * p->realm->realm_special[RLM_SPCL_CONTINUOUS] * level / 100;
+	}
+	else {
+		level -= level * p->realm->realm_special[RLM_SPCL_INSTANT] * level / 100;
+	}
+
+	result = skill + schoolbonus + realmbonus - level - antim + 1;
 
 	if (result > 10 && power > 0) {
 		result = (result - 10) * (100 + power) / 100 + 10;

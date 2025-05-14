@@ -357,6 +357,43 @@ title:Warlock
 title:Sorcerer
 title:Arch-Mage
 
+#############################################
+name:Bard
+unlockable:1
+skill-disarm-phys:25:12
+skill-disarm-magic:35:15
+skill-device:36:15
+skill-save:15:4
+skill-stealth:8:1
+skill-search:8:12
+skill-melee:15:13
+skill-shoot:5:13
+skill-throw:5:13
+skill-dig:0:0
+skill-magic:10:15
+skill-health:10:10
+hitdie:0
+max-attacks:4
+min-weight:40
+strength-multiplier:2
+equip:food:Ration of Food:1:3:none
+equip:light:Wooden Torch:1:3:none
+equip:sword:Rapier:1:1:none
+equip:scroll:Word of Recall:1:1:birth_no_recall
+equip:spellbook:Magic Missile:1:1:none
+player-flags:CHOOSE_SPELLS
+realm:music
+title:Novice
+title:Apprentice
+title:Trickster
+title:Illusionist
+title:Spellbinder
+title:Evoker
+title:Conjurer
+title:Warlock
+title:Sorcerer
+title:Arch-Mage
+
 
 ############### DRUID ###############
 name:Druid

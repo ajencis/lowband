@@ -110,14 +110,6 @@ struct mon_player_match proj_pp_matches[] = {
 	{ -1, -1 }
 };
 
-int power_scalings[] = {
-	PP_SCALE_NONE,
-	#define PP(x, a, b, c, d, e, f) b,
-	#include "list-player-powers.h"
-	#undef PP
-	PP_SCALE_NONE
-};
-
 struct skill_stat_info skill_stats[] = {
 	#define SKILL(x, a, b, c, d, e) { SKILL_##x, c, d },
 	#include "list-skills.h"
@@ -761,7 +753,7 @@ static void calc_spells(struct player *p)
 
 
 	// L: if we're an innate caster and never got any spells known give them now
-	if (realm && realm->innate && lev >= 3 && num_known == 0) {
+	if (realm && realm->realm_special[RLM_SPCL_INNATE] && lev >= 3 && num_known == 0) {
 		player_learn_spell_xp(p, true, 0);
 	}
 
@@ -887,7 +879,7 @@ static void calc_spells(struct player *p)
 	if (old_spells != p->upkeep->new_spells) {
 		/* Message if needed */
 
-		if (p->upkeep->new_spells && realm && !realm->innate) {
+		if (p->upkeep->new_spells && realm && !realm->realm_special[RLM_SPCL_INNATE]) {
 			msg("You can learn %d new %s%s.",
 					p->upkeep->new_spells,
 					realm->spell_noun,
@@ -915,7 +907,7 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	levels = state->skills[SKILL_MAGIC];
 
 	/* Extract "effective" player level */
-	if (!realm || levels <= 0 || realm->hp_cast) {
+	if (!realm || levels <= 0 || realm->realm_special[RLM_SPCL_HP_CAST]) {
 		p->msp = 0;
 		p->csp = 0;
 		p->csp_frac = 0;
@@ -1325,22 +1317,6 @@ int skill_by_effect(int effect_ind, int effect_subtype)
 	return PP_NONE;
 }
 
-#if 0
-static bool calc_monster_spell(int counts[PP_MAX], const struct monster_spell *mspell)
-{
-	if (!mspell) return false;
-
-	int skill = skill_by_effect(mspell->effect->index, mspell->effect->subtype);
-
-	if (skill > PP_NONE) {
-		assert(skill < PP_MAX);
-		counts[skill]++;
-		return true;
-	}
-	return false;
-}
-#endif
-
 static bool calc_monster_blow(int counts[PP_MAX], const struct monster_blow *mb)
 {
 	bool effect = false;
@@ -1369,15 +1345,6 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int cur
 	int spell_counts[PP_MAX] = { 0 };
 	int blow_counts[PP_MAX] = { 0 };
 
-	/*for (i = 0; i < RSF_MAX; i++)
-	{
-		if (!rsf_has(mrace->spell_flags, i)) continue;
-		mspell = monster_spell_by_index(i);
-		if (calc_monster_spell(spell_counts, mspell)) {
-			++numcounts;
-		}
-	}*/
-
 	if (numcounts > 0) {
 		totalbonus = my_cbrt(mrace->spell_power * mrace->spell_power) * (4.0 + numcounts) / (9.0 + numcounts);
 		for (i = 0; i < PP_MAX; i++) {
@@ -1385,7 +1352,7 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int cur
 		}
 	}
 
-
+	
 	for (i = 0; i < z_info->mon_blows_max && mrace->blow[i].method; i++) {
 		mblow = &mrace->blow[i];
 		if (calc_monster_blow(blow_counts, mblow)) {
@@ -1404,7 +1371,7 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int cur
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->learn_index < 0) continue;
 		if (abil->type != PY_ABIL_POWER) continue;
-		int add = (mrace->powers[abil->index] * mrace->level + 50) / 100;
+		int add = mrace->powers[abil->index] / 5;
 		powers[abil->index] += add;
 	}
 
@@ -1412,7 +1379,7 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int cur
 	for (i = 0; i < MS_MAX; ++i) {
 		// monsters are specialized, take penalty to magic skills they don't get
 		if (powers[i] > 0) continue;
-		int penalty = my_sqrt(mrace->level);
+		int penalty = my_int_sqrt(mrace->level);
 		penalty = MIN(curr_powers[i] / 2, penalty);
 		penalty = MAX(0, penalty);
 		powers[i] -= penalty;

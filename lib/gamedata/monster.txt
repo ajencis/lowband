@@ -2647,6 +2647,7 @@ blow:BITE:HURT:1d5
 flags:DROP_40 | DROP_1 | ONLY_GOLD
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_ELEC
+power:AIR_MAGIC
 innate-freq:12
 spells:BR_ELEC
 desc:This hatchling dragon is still soft, its eyes unaccustomed to light and its
@@ -2671,6 +2672,7 @@ blow:BITE:HURT:1d5
 flags:DROP_40 | DROP_1 | ONLY_GOLD
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_COLD
+power:COLD_MAGIC
 innate-freq:12
 spells:BR_COLD
 desc:This hatchling dragon is still soft, its eyes unaccustomed to light and its
@@ -2695,6 +2697,7 @@ blow:BITE:HURT:1d5
 flags:DROP_40 | DROP_1 | ONLY_GOLD
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_POIS
+power:POISON_MAGIC
 innate-freq:12
 spells:BR_POIS
 desc:This hatchling dragon is still soft, its eyes unaccustomed to light and its
@@ -2719,6 +2722,7 @@ blow:BITE:HURT:1d5
 flags:DROP_40 | DROP_1 | ONLY_GOLD
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_ACID
+power:ACID_MAGIC
 innate-freq:12
 spells:BR_ACID
 desc:This hatchling dragon is still soft, its eyes unaccustomed to light and its
@@ -2743,6 +2747,7 @@ blow:BITE:HURT:1d5
 flags:DROP_40 | DROP_1 | ONLY_GOLD
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_FIRE
+power:FIRE_MAGIC
 innate-freq:12
 spells:BR_FIRE
 desc:This hatchling dragon is still soft, its eyes unaccustomed to light and its
@@ -2821,6 +2826,7 @@ blow:CLAW:HURT:1d3
 blow:BITE:HURT:1d5
 flags:DROP_40 | DROP_1 | ONLY_GOLD
 flags:OPEN_DOOR | BASH_DOOR | NO_STUN
+power:SOUND_MAGIC
 innate-freq:12
 spells:BR_SOUN
 desc:This hatchling dragon is still soft, its eyes unaccustomed to light and its
@@ -3054,6 +3060,8 @@ blow:CLAW:HURT:1d3
 blow:BITE:HURT:1d5
 flags:DROP_40
 flags:BASH_DOOR
+power:LIGHT_MAGIC:75
+power:DARKNESS_MAGIC:75
 innate-freq:15
 spell-freq:20
 spells:CONF | SCARE
@@ -3201,6 +3209,11 @@ flags:DROP_40 | DROP_1 | ONLY_GOLD
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE | IM_POIS
 flags:ATTR_MULTI
+power:AIR_MAGIC:75
+power:FIRE_MAGIC:75
+power:COLD_MAGIC:75
+power:ACID_MAGIC:75
+power:POISON_MAGIC:75
 innate-freq:12
 spells:BR_ACID | BR_COLD | BR_ELEC | BR_FIRE | BR_POIS
 desc:This hatchling dragon is still soft, its eyes unaccustomed to light and its
@@ -6843,7 +6856,8 @@ blow:GAZE:PARALYZE:1d4
 blow:GAZE:CONFUSE:1d4
 blow:BITE:HURT:1d8
 flags:NO_FEAR | NO_CONF | NO_SLEEP
-flags:FORCE_SLEEP | SPIRIT
+flags:FORCE_SLEEP | SPIRIT | SPELLCASTER
+power:ENCHANTMENT_MAGIC
 spell-freq:6
 spells:WOUND | FORGET | HOLD | SLOW
 desc:A lesser relative of the beholder: a globular body with a large toothy
@@ -7038,6 +7052,7 @@ blow:BITE:HURT:2d6
 flags:DROP_2
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_ELEC
+power:AIR_MAGIC
 innate-freq:15
 spell-freq:20
 spells:SCARE
@@ -7064,6 +7079,7 @@ blow:BITE:HURT:2d6
 flags:DROP_2
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_COLD
+power:COLD_MAGIC
 innate-freq:15
 spell-freq:20
 spells:SCARE
@@ -7090,6 +7106,7 @@ blow:BITE:HURT:2d6
 flags:DROP_2
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_POIS
+power:POISON_MAGIC
 innate-freq:15
 spell-freq:20
 spells:SCARE
@@ -7479,6 +7496,7 @@ blow:BITE:HURT:2d8
 flags:DROP_3
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_ACID
+power:ACID_MAGIC
 innate-freq:15
 spell-freq:20
 spells:SCARE
@@ -7504,6 +7522,7 @@ blow:CLAW:HURT:2d6
 blow:BITE:HURT:2d8
 flags:DROP_3
 flags:OPEN_DOOR | BASH_DOOR | NO_STUN
+power:SOUND_MAGIC
 innate-freq:15
 spell-freq:20
 spells:SCARE
@@ -7528,6 +7547,7 @@ experience:700
 blow:CLAW:HURT:2d6
 blow:CLAW:HURT:2d6
 blow:BITE:HURT:2d8
+power:FIRE_MAGIC
 flags:DROP_3
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_FIRE
@@ -7695,6 +7715,11 @@ flags:DROP_3
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE | IM_POIS
 flags:ATTR_MULTI
+power:AIR_MAGIC:80
+power:ACID_MAGIC:80
+power:COLD_MAGIC:80
+power:FIRE_MAGIC:80
+power:POISON_MAGIC:80
 innate-freq:8
 spell-freq:50
 spells:SCARE
@@ -7793,6 +7818,7 @@ flags:INVISIBLE
 flags:DROP_3 | ONLY_ITEM
 flags:PASS_WALL
 flags:NO_CONF | NO_SLEEP | IM_NETHER
+power:NECROMANCY_MAGIC
 innate-freq:25
 spell-freq:10
 spells:CONF | DARKNESS | SCARE | SLOW
@@ -7939,6 +7965,7 @@ blow:BITE:HURT:3d6
 flags:DROP_3 | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_COLD | NO_CONF | NO_SLEEP | NO_STUN
+power:SOUND_MAGIC
 innate-freq:12
 spell-freq:13
 spells:CONF | SCARE | SLOW
@@ -7990,6 +8017,8 @@ flags:INVISIBLE
 flags:DROP_3 | ONLY_ITEM
 flags:PASS_WALL
 flags:NO_CONF | NO_SLEEP
+power:DARKNESS_MAGIC:75
+power:LIGHT_MAGIC:75
 innate-freq:12
 spell-freq:13
 spells:CONF | SCARE | SLOW
@@ -8061,6 +8090,7 @@ blow:BITE:HURT:3d6
 flags:DROP_3 | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_COLD | NO_CONF | NO_SLEEP
+power:EARTH_MAGIC
 innate-freq:20
 spell-freq:8
 spells:CONF | SCARE | SLOW
@@ -8894,7 +8924,9 @@ blow:GAZE:DRAIN_CHARGES:5d2
 blow:GAZE:DRAIN_CHARGES:5d2
 flags:EVIL | SPIRIT
 flags:BASH_DOOR
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | SPELLCASTER
+power:ENCHANTMENT_MAGIC
+power:META_MAGIC
 spell-freq:5
 spells:WOUND | DRAIN_MANA | HOLD | TELE_AWAY
 spells:BA_COLD
@@ -9398,6 +9430,7 @@ blow:BITE:HURT:4d8
 flags:DROP_4
 flags:BASH_DOOR
 flags:IM_COLD | NO_CONF | NO_SLEEP
+power:COLD_MAGIC
 innate-freq:12
 spell-freq:20
 spells:SCARE
@@ -9425,6 +9458,7 @@ blow:BITE:HURT:4d8
 flags:DROP_4
 flags:BASH_DOOR
 flags:IM_ELEC | NO_CONF | NO_SLEEP
+power:AIR_MAGIC
 innate-freq:12
 spell-freq:20
 spells:SCARE
@@ -9452,6 +9486,7 @@ blow:BITE:HURT:4d8
 flags:DROP_4
 flags:BASH_DOOR
 flags:IM_POIS | NO_CONF | NO_SLEEP
+power:POISON_MAGIC
 innate-freq:12
 spell-freq:20
 spells:SCARE
@@ -9540,7 +9575,10 @@ blow:BITE:HURT:6d6
 flags:EVIL | SPIRIT
 flags:BASH_DOOR
 flags:NO_CONF | NO_SLEEP
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | SPELLCASTER
+power:ENCHANTMENT_MAGIC
+power:META_MAGIC
+power:DARKNESS_MAGIC
 spell-freq:2
 spells:BLIND | CONF | DARKNESS | DRAIN_MANA | FORGET | MIND_BLAST
 spells:SCARE | SLOW
@@ -9897,6 +9935,7 @@ blow:CLAW:HURT:2d4
 blow:BITE:HOLY_FIRE:3d6
 flags:DROP_3 | ONLY_ITEM
 flags:NO_CONF | NO_SLEEP
+power:HOLY_MAGIC
 innate-freq:25
 spell-freq:10
 spells:CONF | SCARE | SLOW
@@ -9925,6 +9964,7 @@ blow:BITE:HURT:4d10
 flags:DROP_4
 flags:BASH_DOOR
 flags:IM_FIRE | NO_CONF | NO_SLEEP
+power:FIRE_MAGIC
 innate-freq:12
 spell-freq:20
 spells:CONF | SCARE
@@ -9952,6 +9992,7 @@ blow:BITE:HURT:4d10
 flags:DROP_4
 flags:BASH_DOOR
 flags:NO_CONF | NO_SLEEP | NO_STUN
+power:SOUND_MAGIC
 innate-freq:12
 spell-freq:20
 spells:CONF | SCARE
@@ -9979,6 +10020,7 @@ blow:BITE:HURT:4d10
 flags:DROP_4
 flags:BASH_DOOR
 flags:IM_ACID | NO_CONF | NO_SLEEP
+power:ACID_MAGIC
 innate-freq:12
 spell-freq:20
 spells:SCARE
@@ -10267,6 +10309,11 @@ flags:BASH_DOOR
 flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE | IM_POIS | NO_CONF
 flags:NO_SLEEP
 flags:ATTR_MULTI
+power:ACID_MAGIC:85
+power:AIR_MAGIC:85
+power:COLD_MAGIC:85
+power:FIRE_MAGIC:85
+power:POISON_MAGIC:85
 innate-freq:10
 spell-freq:15
 spells:BLIND | CONF | SCARE
@@ -10563,8 +10610,12 @@ blow:BITE:EXP_40:7d6
 flags:UNDEAD | EVIL | COLD_BLOOD | SPIRIT
 flags:BASH_DOOR
 flags:IM_ACID | IM_COLD | IM_ELEC | IM_POIS | NO_CONF
-flags:NO_SLEEP | NO_STUN
+flags:NO_SLEEP | NO_STUN | SPELLCASTER
 flags:FORCE_SLEEP
+power:ENCHANTMENT_MAGIC
+power:META_MAGIC
+power:DARKNESS_MAGIC
+power:NECROMANCY_MAGIC
 spell-freq:2
 spells:BRAIN_SMASH | WOUND | CONF | DRAIN_MANA | FORGET | MIND_BLAST
 spells:SLOW
@@ -11358,6 +11409,7 @@ experience:2800
 blow:CLAW:HURT:6d9
 blow:CLAW:HURT:6d9
 blow:BITE:HURT:7d9
+power:SOUND_MAGIC
 flags:BASH_DOOR | NO_STUN
 innate-freq:12
 spell-freq:8
@@ -12771,6 +12823,10 @@ flags:FEMALE | EVIL | SMART | SPIRIT
 flags:BASH_DOOR
 flags:NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
+power:ENCHANTMENT_MAGIC
+power:META_MAGIC
+power:DARKNESS_MAGIC
+power:SUMMONING_MAGIC
 spell-freq:2
 spells:BLIND | BRAIN_SMASH | CONF | DRAIN_MANA | FORGET | SCARE
 spells:BA_ACID | BA_COLD | BA_DARK | BA_FIRE
@@ -13282,6 +13338,7 @@ flags:ATTR_FLICKER
 flags:ONLY_ITEM
 flags:BASH_DOOR
 flags:NO_STUN
+power:SOUND_MAGIC
 innate-freq:8
 spell-freq:5
 spells:BLIND | CONF | SCARE
@@ -13339,7 +13396,10 @@ blow:BITE:EXP_80:8d8
 flags:UNIQUE | MALE | NAME_COMMA | EVIL | SMART
 flags:BASH_DOOR
 flags:IM_ACID | IM_COLD | NO_CONF | NO_SLEEP | NO_HOLD
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | SPELLCASTER
+power:ENCHANTMENT_MAGIC
+power:META_MAGIC
+power:DARKNESS_MAGIC
 spell-freq:2
 spells:BLIND | BRAIN_SMASH | CONF | DRAIN_MANA | FORGET | SCARE
 spells:BA_ACID | BA_COLD | BA_DARK | BA_FIRE | BA_NETH
@@ -14514,6 +14574,7 @@ flags:SMART
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR
 flags:IM_FIRE
+power:FIRE_MAGIC:75
 innate-freq:5
 spells:BA_LIGHT | BA_HOLY | HEAL | HEAL_KIN | S_AINU | BA_FIRE
 desc:This kindly-seeming ancient human seems to glow with an inner light.

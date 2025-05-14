@@ -350,14 +350,14 @@ struct chunk *cave_new(int height, int width) {
 	c->feat_count = mem_zalloc((FEAT_MAX + 1) * sizeof(int));
 
 	c->squares = mem_zalloc(c->height * sizeof(struct square*));
-	c->noise.grids = mem_zalloc(c->height * sizeof(uint16_t*));
+	c->noise.grids = mem_zalloc(c->height * sizeof *c->noise.grids);
 	c->scent.grids = mem_zalloc(c->height * sizeof(uint16_t*));
 	for (y = 0; y < c->height; y++) {
 		c->squares[y] = mem_zalloc(c->width * sizeof(struct square));
 		for (x = 0; x < c->width; x++) {
 			c->squares[y][x].info = mem_zalloc(SQUARE_SIZE * sizeof(bitflag));
 		}
-		c->noise.grids[y] = mem_zalloc(c->width * sizeof(uint16_t));
+		c->noise.grids[y] = mem_zalloc(c->width * sizeof *c->noise.grids[y]);
 		c->scent.grids[y] = mem_zalloc(c->width * sizeof(uint16_t));
 	}
 

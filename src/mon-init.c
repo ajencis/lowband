@@ -106,7 +106,7 @@ static const char *mattr_names[] =
 static const char *power_names[] =
 {
 	"",
-	#define PP(x, a, b, c, d, e, f) #x,
+	#define PP(x) #x,
 	#include "list-player-powers.h"
 	#undef PP
 	""
@@ -1252,6 +1252,18 @@ static enum parser_error parse_mon_spell_power(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_mon_spell_knowable(struct parser *p)
+{
+	struct monster_spell *s = parser_priv(p);
+	bool knowable = parser_getint(p, "knowable") ? true : false;
+
+	if (!s) return PARSE_ERROR_MISSING_RECORD_HEADER;
+
+	s->knowable = knowable;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_mon_spell(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -1272,6 +1284,7 @@ static struct parser *init_parse_mon_spell(void) {
 	parser_reg(p, "message-miss str text", parse_mon_spell_miss_message);
 	parser_reg(p, "message-save str text", parse_mon_spell_save_message);
 	parser_reg(p, "power sym name int amount", parse_mon_spell_power);
+	parser_reg(p, "knowable int knowable", parse_mon_spell_knowable);
 	return p;
 }
 

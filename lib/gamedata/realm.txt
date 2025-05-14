@@ -17,7 +17,7 @@ school:HOLY:-15
 
 name:divine
 stat:WIS
-innate:1
+special:INNATE:1
 verb:recite
 spell-noun:prayer
 book-noun:prayer book
@@ -39,7 +39,7 @@ school:ILLUSION:-10
 
 name:nature
 stat:WIS
-innate:1
+special:INNATE:1
 verb:chant
 spell-noun:verse
 book-noun:nature book
@@ -60,7 +60,7 @@ school:ILLUSION:-5
 
 name:blood
 stat:INT
-hp-cast:1
+special:HP_CAST:1
 verb:perform
 spell-noun:rite
 book-noun:magic book
@@ -76,3 +76,15 @@ school:TELEPORTATION:-5
 school:ENCHANTMENT:-5
 school:SUMMONING:-5
 school:ILLUSION:-5
+
+name:music
+stat:WIS
+special:INSTANT:-33
+special:CONTINUOUS:25
+special:LOUD:1
+verb:perform
+spell-noun:piece
+book-noun:music sheet
+weight:300
+school:SOUND:50
+school:ENCHANTMENT:5

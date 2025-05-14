@@ -2144,7 +2144,6 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 
 	for (i = RSF_NONE + 1; i < RSF_MAX; ++i) {
 		bool on = false;
-		bool haspower = false;
 		int chance = level_mod;
 		const struct monster_spell *ms = monster_spell_by_index(i);
 		if (!mon_spell_is_innate(i)) {
@@ -2153,14 +2152,13 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 		}
 		if (!mon_spell_is_innate(i) && magic <= 0) continue;
 		if (!ms) continue;
+		if (!ms->knowable) continue;
 
 		for (j = 0; j < PP_MAX; ++j) {
 			int min = ms->powers[j];
 			int race_power = mon_power(mr, j);// mr->powers[j] * mr->level / 100;
 			int mod;
 			if (min <= 0) continue;
-
-			haspower = true;
 
 			mod = race_power - min;
 			if (race_power <= 0) mod *= 2; // mages without any specialty at all in the subject are unlikely to know
@@ -2169,9 +2167,7 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 			chance += mod;
 		}
 
-		if (!haspower) continue;
-
-		else if (is_player) {
+		if (is_player) {
 			if (chance >= 50) {
 				on = true;
 			}
