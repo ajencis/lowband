@@ -482,6 +482,16 @@ rarity:5
 parent:skill:MAGIC
 
 type:power
+code:LAW_MAGIC
+name:Law Magic
+desc: can particularly effectively use law magic.
+
+type:power
+code:CHAOS_MAGIC
+name:Chaos Magic
+desc: can particularly effectively use chaos magic.
+
+type:power
 code:META_MAGIC
 name:Metamagic
 desc: can particularly effectively use metamagic.

@@ -18,7 +18,10 @@
  */
 
 #include "angband.h"
+#include "init.h"
 #include "player-properties.h"
+#include "player-spell.h"
+#include "ui-player-properties.h"
 #include "game-input.h"
 
 /**
@@ -138,3 +141,64 @@ void do_cmd_abilities(void)
 
 	return;
 }
+
+
+
+const char *ability_subchoice_title(const struct player_ability *parent)
+{
+	if (parent->type == PY_ABIL_SKILL && parent->index == SKILL_MAGIC) {
+		return "realm";
+	}
+
+	return NULL;
+}
+
+int ability_subchoice_choices(struct player_ability *parent)
+{
+	if (parent->index == SKILL_MAGIC && parent->type == PY_ABIL_SKILL) {
+		return z_info->realm_max;
+	}
+
+	return 0;
+}
+
+const char *ability_subchoice_name(int id, const struct player_ability *parent)
+{
+	if (parent->index == SKILL_MAGIC && parent->type == PY_ABIL_SKILL) {
+		struct magic_realm *realm = realm_by_index(id);
+		assert(realm);
+		return realm->name;
+	}
+
+	return NULL;
+}
+
+static bool ability_needs_subchoice(struct player_ability *abil, struct player *p)
+{
+	int curr = 0;
+
+	if (p->extra_choice[abil->learn_index] >= 0) return false;
+	if (abil->type == PY_ABIL_POWER) curr = p->extra_powers[abil->index];
+	else if (abil->type == PY_ABIL_SKILL) curr = p->extra_skills[abil->index];
+
+	if (curr <= 0 && p->extra_target[abil->learn_index] <= 0) return false;
+	if (ability_subchoice_choices(abil) <= 0) return false;
+
+	return true;
+}
+
+bool make_ability_subchoice(struct player *p)
+{
+	struct player_ability *abil;
+	bool choice_made = false;
+
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (ability_needs_subchoice(abil, p)) {
+			choice_made = textui_ability_subchoice(p, abil) || choice_made;
+		}
+	}
+
+	return choice_made;
+}
+
+

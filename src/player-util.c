@@ -758,8 +758,7 @@ bool obj_can_learn_extra_from(const struct object *obj)
 	const struct player_ability *abil;
 
 	if (of_has(obj->flags, OF_REALM_LEARN)) {
-		if (player->realm) return false;
-		return true;
+		return false;
 	}
 
 	if (maxs <= 0) return false;
@@ -1296,7 +1295,7 @@ void skill_stat(const struct magic_realm *realm, int indices[STAT_MAX], int skil
 	*stat1 = STAT_NONE;
 	*stat2 = STAT_NONE;
 
-	if (skill == SKILL_MAGIC && realm) {\
+	if (skill == SKILL_MAGIC && realm) {
 		primary_stat = realm->stat;
 	}
 	else {
@@ -1324,7 +1323,7 @@ void skill_stat(const struct magic_realm *realm, int indices[STAT_MAX], int skil
 
 void player_skill_stats(struct player *p, struct player_state *ps, int skill, int *stat1, int *stat2)
 {
-	skill_stat(p->realm, p->state.stat_ind, skill, stat1, stat2);
+	skill_stat(get_player_realm(p), p->state.stat_ind, skill, stat1, stat2);
 }
 
 /**
@@ -1345,12 +1344,15 @@ int skill_stat_ind(const struct magic_realm *realm, int indices[STAT_MAX], int s
 	else if (stat1 != STAT_NONE) {
 		return indices[stat1];
 	}
+	else if (stat2 != STAT_NONE) {
+		return indices[stat2];
+	}
 	return -1;
 }
 
 int player_skill_stat_ind(struct player *p, struct player_state *ps, int skill)
 {
-	return skill_stat_ind(p->realm, ps->stat_ind, skill);
+	return skill_stat_ind(get_player_realm(p), ps->stat_ind, skill);
 }
 
 /**
@@ -1366,9 +1368,10 @@ bool player_learn_spell_xp(struct player *p, bool initial, int xp)
 	int learned_num = 0;
 	int forgotten[3] = { -1, -1, -1 }; // track which ones we forgot so we don't relearn them
 	int forgottenind = 0;
+	const struct magic_realm *realm = get_player_realm(p);
 
 	// only some casters learn spells this way
-	if (!p->realm || !p->realm->realm_special[RLM_SPCL_INNATE]) {
+	if (!realm || !realm->realm_special[RLM_SPCL_INNATE]) {
 		return false;
 	}
 
@@ -2958,7 +2961,9 @@ bool player_is_trapsafe(const struct player *p)
  */
 bool player_can_cast(const struct player *p, bool show_msg)
 {
-	if (p->state.skills[SKILL_MAGIC] <= 0) {
+	const struct magic_realm *realm = get_player_realm(p);
+
+	if (p->state.skills[SKILL_MAGIC] <= 0 || !realm) {
 		if (show_msg) {
 			msg("You do not know magic.");
 		}
@@ -2979,7 +2984,7 @@ bool player_can_cast(const struct player *p, bool show_msg)
 		return false;
 	}
 
-	if (p->realm->realm_special[RLM_SPCL_HP_CAST] && pf_has(p->state.pflags, PF_UNDEAD)) {
+	if (realm->realm_special[RLM_SPCL_HP_CAST] && pf_has(p->state.pflags, PF_UNDEAD)) {
 		if (show_msg) {
 			msg("You have no blood with which to cast!");
 		}
@@ -3133,13 +3138,17 @@ bool player_can_cast_prereq(void)
  */
 bool player_can_study_prereq(void)
 {
-	if (player->realm && player->realm->realm_special[RLM_SPCL_INNATE]) {
+	const struct magic_realm *realm = get_player_realm(player);
+
+	if (!realm || player->state.skills[SKILL_MAGIC] <= 0) {
+		msg("You don't know magic!");
+		return false;
+	}
+	if (realm->realm_special[RLM_SPCL_INNATE]) {
 		msg("You don't learn spells from books.");
 		return false;
 	}
-	if (player->state.skills[SKILL_MAGIC] > 0) return true;
-	msg("You don't know magic!");
-	return false;
+	return true;
 }
 
 /**

@@ -838,6 +838,9 @@ int rd_player(void)
 	for (i = 0; i < z_info->learn_max; ++i) {
 		rd_u16b(&player->extra_target[i]);
 	}
+	for (i = 0; i < z_info->learn_max; ++i) {
+		rd_s16b(&player->extra_choice[i]);
+	}
 
 	strip_bytes(4);
 

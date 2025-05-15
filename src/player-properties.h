@@ -35,6 +35,7 @@ enum player_ability_types {
     PY_ABIL_SKILL,
     PY_ABIL_PLAYER,
     PY_ABIL_OBJECT,
+    PY_ABIL_SPECIAL,
     PY_ABIL_MAX
 };
 
@@ -44,5 +45,10 @@ bool class_has_ability(const struct player_class *class,
 bool race_has_ability(const struct player_race *race,
 					  struct player_ability *ability);
 void do_cmd_abilities(void);
+
+const char *ability_subchoice_title(const struct player_ability *parent);
+int ability_subchoice_choices(struct player_ability *parent);
+const char *ability_subchoice_name(int id, const struct player_ability *parent);
+bool make_ability_subchoice(struct player *p);
 
 #endif /* !PLAYER_PROPS_H */

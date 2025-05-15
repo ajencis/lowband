@@ -77,7 +77,7 @@ enum
 enum
 {
 	MS_NONE,
-	#define MS(x, a, b) MS_##x,
+	#define MS(x) MS_##x,
 	#include "list-magic-schools.h"
 	#undef MS
 	MS_MAX,
@@ -766,6 +766,7 @@ struct player {
 	uint16_t extra_powers[PP_MAX];		/* L: if the player gained powers outside of their class */
 	uint16_t extra_skills[SKILL_MAX];	/* L: skills gained outside class/race */
 	uint16_t *extra_target;				// L: what the player wants to learn
+	int16_t *extra_choice;				// L: choices made regarding abilities, eg magic realm
 	int sp_burn;						/* L: temporary reduction of max mp */
 
 	uint8_t *player_spell_flags;		/* L: for nonclass spells */
@@ -781,7 +782,7 @@ struct player {
 	bool *unlocked_races;				// L: unlocked races
 	uint16_t *unlocked_tomes;			// L: unlocked_powers with quantity
 
-	uint16_t curr_noise;						// L: how loud they currently are being
+	int16_t curr_noise;					// L: how loud they currently are being
 };
 
 

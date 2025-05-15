@@ -24,6 +24,7 @@
 #include "mon-util.h"
 #include "player-calcs.h"
 #include "player-properties.h"
+#include "player-spell.h"
 #include "player-util.h"
 #include "ui-input.h"
 #include "ui-knowledge.h"
@@ -1031,6 +1032,8 @@ bool textui_powers_learn(struct player *p, int *max_learn, bool birth)
 	bool go_back;
 	int i;
 
+	make_ability_subchoice(p);
+
 	/*if (!OPT(p, birth_level_one_learn)) {
 		points = p->state.extra_points_max;
 	} else if (birth) {
@@ -1102,8 +1105,126 @@ bool textui_powers_learn(struct player *p, int *max_learn, bool birth)
 
 	ability_learn_menu_destroy(m);
 
+	make_ability_subchoice(p);
+
 	return !go_back;
 }
+
+
+
+
+struct ability_subchoice_menu_data {
+	const struct player_ability *abil;
+};
+
+static void ability_subchoice_browse(int oid, void *db, const region *loc)
+{
+	return;
+}
+
+static int ability_subchoice_valid(struct menu *menu, int oid)
+{
+	return MN_ROW_VALID;
+}
+
+static void ability_subchoice_display(struct menu *menu, int oid, bool cursor,
+		int row, int col, int width)
+{
+	struct ability_subchoice_menu_data *data = menu_priv(menu);
+
+	const char *base = ability_subchoice_name(oid, data->abil);
+	char name[80];
+
+	assert(base);
+
+	strnfmt(name, sizeof name, "%s", base);
+	my_strcap_full(name);
+
+	Term_gotoxy(col, row);
+	text_out_c(COLOUR_WHITE, "%s", name);
+}
+
+static bool ability_subchoice_handler(struct menu *m, const ui_event *e, int oid)
+{
+	struct ability_subchoice_menu_data *data = menu_priv(m);
+
+	if (e->type == EVT_SELECT) {
+		const char *name = ability_subchoice_name(oid, data->abil);
+		const char *type = ability_subchoice_title(data->abil);
+		return !get_check(format("Choose the %s %s? ", type, name));
+	}
+
+	return false;
+}
+
+static const menu_iter ability_subchoice_menu_iter = { 
+	NULL,
+	ability_subchoice_valid,
+	ability_subchoice_display,
+	ability_subchoice_handler,
+	NULL,
+	NULL
+};
+
+static struct menu *ability_subchoice_menu_new(struct player_ability *abil)
+{
+	struct menu *m;
+	struct ability_subchoice_menu_data *data;
+	char *title;
+	int n_choices = ability_subchoice_choices(abil);
+	const char *choice_name = ability_subchoice_title(abil);
+	region loc = { 25, 1, 50, 30 };
+
+	if (n_choices <= 0) return NULL;
+	assert(choice_name);
+
+	data = mem_zalloc(sizeof *data);
+	data->abil = abil;
+
+	title = mem_zalloc(80 * sizeof *title);
+	strnfmt(title, 80, "%s: choose which %s?", abil->name, choice_name);
+
+	loc.page_rows = n_choices + 3;
+
+	m = menu_new(MN_SKIN_SCROLL, &ability_subchoice_menu_iter);
+	m->title = title;
+	m->browse_hook = ability_subchoice_browse;
+	m->selections = all_letters_nohjkl;
+	menu_setpriv(m, n_choices, data);
+	menu_layout(m, &loc);
+
+	return m;
+}
+
+static void ability_subchoice_menu_destroy(struct menu *m)
+{
+	struct ability_subchoice_menu_data *data = menu_priv(m);
+
+	mem_free(data);
+
+	string_free((char *)m->title);
+	menu_free(m);
+}
+
+bool textui_ability_subchoice(struct player *p, struct player_ability *abil)
+{
+	if (p->extra_choice[abil->learn_index] >= 0) return false;
+
+	struct menu *m = ability_subchoice_menu_new(abil);
+	const ui_event evt = menu_select(m, 0, true);
+	bool made_choice = false;
+
+	if (evt.type == EVT_SELECT) {
+		int selection = m->cursor;
+		p->extra_choice[abil->learn_index] = selection;
+		made_choice = true;
+	}
+
+	ability_subchoice_menu_destroy(m);
+
+	return made_choice;
+}
+
 
 
 

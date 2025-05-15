@@ -35,6 +35,7 @@
 #include "obj-pile.h"
 #include "obj-util.h"
 #include "player-calcs.h"
+#include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "player.h"
@@ -346,8 +347,9 @@ static void prt_sp(int row, int col)
 	//uint8_t color = player_sp_attr(player);
 	int mana = available_mana(cave, player->grid);
 	bool show = false;
+	const struct magic_realm *realm = get_player_realm(player);
 
-	if (player->realm && player->state.skills[SKILL_MAGIC]) show = true;
+	if (realm && player->state.skills[SKILL_MAGIC]) show = true;
 	if (player->state.powers[PP_ANTIMAGIC]) show = true;
 	if (pf_has(player->state.pflags, PF_PHOENIX_RESURRECT)) show = true;
 

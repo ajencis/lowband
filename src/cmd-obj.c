@@ -1308,11 +1308,12 @@ void do_cmd_innate(struct command *cmd)
 
 static int gener_spell_is_castable(const struct player *p, int spell) {
 	struct object *spellbook;
+	const struct magic_realm *realm = get_player_realm(p);
 
 	if (spell < 0 || spell >= z_info->spell_max) return 2;
 	if (!(p->player_spell_flags[spell] & PY_SPELL_LEARNED)) return 2;
 	
-	if (!p->realm || !p->realm->realm_special[RLM_SPCL_INNATE]) {
+	if (!realm || !realm->realm_special[RLM_SPCL_INNATE]) {
 		for (spellbook = p->gear; spellbook; spellbook = spellbook->next) {
 			if (spellbook->kind->spell && spellbook->kind->spell->sidx == spell) {
 				break;

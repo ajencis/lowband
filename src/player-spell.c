@@ -27,6 +27,7 @@
 #include "obj-util.h"
 #include "object.h"
 #include "player-calcs.h"
+#include "player-properties.h"
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
@@ -48,18 +49,6 @@ struct spell_info_iteration_state {
 	random_value pre_rv;
 	random_value shared_rv;
 	bool have_shared;
-};
-
-/**
- * List of { school, name } pairs.
- */
-static const grouper school_names[] =
-{
-	{ MS_NONE, "" },
-	#define MS(a, b, c) { MS_##a, b },
-	#include "list-magic-schools.h"
-	#undef MS
-	{ MS_MAX, "" }
 };
 
 /**
@@ -617,9 +606,12 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 	/* Get the spell */
 	const struct player_spell *spell = player_spell_lookup(spell_index);
 	assert(spell);
+	const struct magic_realm *realm = get_player_realm(player);
 	int mana = player_spell_mana(spell);
 	int availmana = available_mana(cave, player->grid);
 	int chance = player_spell_fail(spell);
+
+	assert(realm);
 
 	/* L: save the spell for spellpower calc purposes */
 	ref_spell = spell;
@@ -660,12 +652,12 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 	ref_spell = NULL;
 
 	// make a sound if we're a bard
-	if (player->realm->realm_special[RLM_SPCL_LOUD]) {
+	if (realm->realm_special[RLM_SPCL_LOUD]) {
 		player->curr_noise = MAX(player->curr_noise, spell->slevel / 3 + 1);
 	}
 
 	/* Sufficient mana? */
-	if (player->realm && player->realm->realm_special[RLM_SPCL_HP_CAST]) {
+	if (realm && realm->realm_special[RLM_SPCL_HP_CAST]) {
 		// Use hp
 		take_hit(player, mana, "the strain of casting a spell");
 	} else if (mana <= availmana) {
@@ -866,24 +858,13 @@ void get_spell_info(int spell_index, char *p, size_t len)
 /**
  * L: functions for magic schools
  */
-int school_find_idx(const char *name)
-{
-	int i;
-
-	for (i = N_ELEMENTS(school_names) - 1; i > MS_NONE; --i)
-	{
-		if (streq(name, school_names[i].name)) {
-			return school_names[i].tval;
-		}
-	}
-	return -1;
-}
-
 const char *school_idx_to_name(int idx)
 {
 	assert(idx > MS_NONE && idx < MS_MAX);
 
-	return school_names[idx].name;
+	struct player_ability *abil = lookup_player_ability(idx, PY_ABIL_POWER);
+
+	return abil->name;
 }
 
 int innate_spell_mana(const struct monster_race *mon)
@@ -953,9 +934,11 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 	int ease = get_power_scale(p, PP_SPELL_EASE, 25);
 	int i;
 	int result, stepdown;
-	const struct magic_realm *r = p->realm;
+	const struct magic_realm *r = get_player_realm(p);
 	bool is_continuous = spell_is_continuous(s);
 	int level = s->slevel;
+
+	if (!r) return -s->slevel;
 
 	for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
 		if (s->school[i] > MS_NONE) {
@@ -974,10 +957,10 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 	schoolbonus = MIN(schoolbonus, skill * 2);
 
 	if (is_continuous) {
-		level -= level * p->realm->realm_special[RLM_SPCL_CONTINUOUS] * level / 100;
+		level -= level * r->realm_special[RLM_SPCL_CONTINUOUS] * level / 100;
 	}
 	else {
-		level -= level * p->realm->realm_special[RLM_SPCL_INSTANT] * level / 100;
+		level -= level * r->realm_special[RLM_SPCL_INSTANT] * level / 100;
 	}
 
 	result = skill + schoolbonus + realmbonus - level - antim + 1;
@@ -1076,6 +1059,11 @@ struct magic_realm *realm_by_index(int index)
 
 const struct magic_realm *get_player_realm(const struct player *p)
 {
+	struct player_ability *abil = lookup_player_ability(SKILL_MAGIC, PY_ABIL_SKILL);
+	int which = p->extra_choice[abil->learn_index];
+
+	return realm_by_index(which);
+
 	if (p->realm) return p->realm;
 	// return the first realm in the file if they don't currently have one
 	struct magic_realm *realm = realms;

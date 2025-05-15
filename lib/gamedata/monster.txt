@@ -7940,6 +7940,7 @@ flags:DROP_3 | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_DISEN | NO_CONF | NO_SLEEP
 flags:ATTR_MULTI
+power:CHAOS_MAGIC
 innate-freq:12
 spell-freq:13
 spells:CONF | SCARE | SLOW
@@ -7965,7 +7966,7 @@ blow:BITE:HURT:3d6
 flags:DROP_3 | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_COLD | NO_CONF | NO_SLEEP | NO_STUN
-power:SOUND_MAGIC
+power:LAW_MAGIC
 innate-freq:12
 spell-freq:13
 spells:CONF | SCARE | SLOW
@@ -7991,6 +7992,8 @@ blow:BITE:HURT:3d6
 flags:DROP_3 | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_COLD | IM_DISEN | NO_CONF | NO_SLEEP | NO_STUN
+power:LAW_MAGIC:75
+power:CHAOS_MAGIC:75
 innate-freq:9
 spell-freq:12
 spells:CONF | SCARE | SLOW
@@ -9414,6 +9417,7 @@ desc: full of red feathered arrows, and carries an insignia of a black serpent.
 name:mature white dragon
 short-name:mature white
 evolution:ancient white dragon
+evolution:shadow drake
 base:dragon
 color:w
 speed:115
@@ -9442,6 +9446,7 @@ desc:A large dragon, scales gleaming bright white.
 name:mature blue dragon
 short-name:mature blue
 evolution:ancient blue dragon
+evolution:aethereal drake
 base:dragon
 color:b
 speed:115
@@ -9470,6 +9475,7 @@ desc:A large dragon, scales tinted deep blue.
 name:mature green dragon
 short-name:mature green
 evolution:ancient green dragon
+evolution:chaos drake
 base:dragon
 color:g
 speed:115
@@ -9947,6 +9953,7 @@ desc:It is a dragon-like form seeming to bring an aura of calm to the dungeon.
 name:mature red dragon
 short-name:mature red
 evolution:ancient red dragon
+evolution:life drake
 base:dragon
 color:r
 speed:115
@@ -9976,6 +9983,7 @@ desc:A large dragon, scales tinted deep red.
 name:mature gold dragon
 short-name:mature gold
 evolution:ancient gold dragon
+evolution:law drake
 base:dragon
 color:y
 speed:115
@@ -10004,6 +10012,7 @@ desc:A large dragon with scales of gleaming gold.
 name:mature black dragon
 short-name:mature black
 evolution:ancient black dragon
+evolution:crystal drake
 base:dragon
 color:s
 speed:115
@@ -10291,6 +10300,7 @@ desc: muscular frame.  Despite his bulk, he strikes with stunning speed.
 name:mature multi-hued dragon
 short-name:mature multi
 evolution:ancient multi-hued dragon
+evolution:balance drake
 base:dragon
 color:v
 speed:115
@@ -13512,6 +13522,7 @@ flags:ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_DISEN
 flags:ATTR_MULTI
+power:CHAOS_MAGIC
 innate-freq:5
 spell-freq:5
 spells:BLIND | CONF | SCARE
@@ -13542,6 +13553,7 @@ flags:ATTR_FLICKER
 flags:ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_COLD | NO_STUN
+power:LAW_MAGIC
 innate-freq:5
 spell-freq:5
 spells:BLIND | CONF | SCARE
@@ -14113,6 +14125,8 @@ flags:ATTR_FLICKER
 flags:ONLY_ITEM
 flags:BASH_DOOR
 flags:IM_COLD | IM_DISEN | NO_STUN
+power:CHAOS_MAGIC
+power:LAW_MAGIC
 innate-freq:5
 spell-freq:5
 spells:BLIND | CONF | SCARE

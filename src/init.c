@@ -134,7 +134,7 @@ static const char *list_player_skill_names[] = {
 
 static const char *list_school_names[] = {
 	"NONE",
-	#define MS(x, a, b) #x,
+	#define MS(x) #x,
 	#include "list-magic-schools.h"
 	#undef MS
 	NULL

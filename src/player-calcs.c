@@ -716,7 +716,7 @@ static void calc_spells(struct player *p)
 	int i, j, k;
 	int num_allowed, num_known;
 	int lev = p->state.skills[SKILL_MAGIC];
-	const struct magic_realm *realm = p->realm;
+	const struct magic_realm *realm = get_player_realm(p);
 	const struct player_spell *spell;
 	int16_t old_spells;
 
@@ -902,7 +902,7 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 {
 	int i, msp, levels, cur_wgt, max_wgt;
 	struct monster_race *monr = lookup_player_monster(p);
-	const struct magic_realm *realm = player->realm;
+	const struct magic_realm *realm = get_player_realm(p);
 
 	levels = state->skills[SKILL_MAGIC];
 

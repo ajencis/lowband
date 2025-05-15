@@ -807,11 +807,7 @@ void process_world(struct chunk *c)
 					true);
 			}
 		}
-	} /*else {
-		player_dec_timed(player, TMD_FOOD, MAX(1, 500 / z_info->food_value),
-			false, true);
-		player->upkeep->update |= PU_BONUS;
-	}*/
+	}
 
 	/* Faint or starving */
 	if (player_timed_grade_eq(player, TMD_FOOD, "Faint")) {

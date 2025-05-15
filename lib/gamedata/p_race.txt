@@ -430,13 +430,13 @@ monster:baby green dragon
 monster:baby black dragon
 monster:baby gold dragon
 monster:baby multi-hued dragon
-monster:shadow drake
-monster:chaos drake
-monster:law drake
-monster:balance drake
-monster:aethereal drake
-monster:crystal drake
-monster:life drake
+#monster:shadow drake
+#monster:chaos drake
+#monster:law drake
+#monster:balance drake
+#monster:aethereal drake
+#monster:crystal drake
+#monster:life drake
 
 name:Tiefling
 monster:bodak

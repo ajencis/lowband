@@ -12,7 +12,7 @@
  * additional details in player_property.txt
  */
 
-#define MS(x, a, b) PP(x##_MAGIC)
+#define MS(x) PP(x##_MAGIC)
 #include "list-magic-schools.h"
 #undef MS
 PP(SWORD_SPECIALIZATION)

@@ -16,6 +16,11 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#ifndef INCLUDED_PLAYER_SPELL_H
+#define INCLUDED_PLAYER_SPELL_H
+
+#include "cmd-core.h"
+
 void player_spells_init(struct player *p);
 void player_spells_free(struct player *p);
 struct magic_realm *class_magic_realms(const struct player_class *c,
@@ -40,7 +45,6 @@ void spell_learn(int spell_index);
 bool spell_cast(int spell_index, int dir, struct command *cmd);
 bool gener_spell_cast(int spell_index, int dir, struct command *cmd);
 
-int school_find_idx(const char *name);
 const char *school_idx_to_name(int idx);
 
 extern void get_spell_info(int index, char *buf, size_t len);
@@ -67,3 +71,5 @@ bool can_autocast(const struct player_spell *ps);
 bool autocast(const struct player *p);
 
 bool spell_is_castable_innately(const struct monster_race *mr, int spell_index);
+
+#endif

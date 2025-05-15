@@ -384,6 +384,22 @@ lore-color-base:Orange
 lore-color-resist:Light Green
 message-vis:{name} breathes chaos.
 message-invis:You hear a cacophonous roar.
+power:CHAOS_MAGIC:30
+power:BREATH:30
+
+name:BR_WALL
+msgt:BR_FORCE
+hit:100
+effect:BREATH:FORCE:0:30
+dice:$D
+expr:D:CASTER_HP: / 2
+lore:force
+lore-color-base:Orange
+lore-color-resist:Yellow
+message-vis:{name} breathes force.
+message-invis:You hear a staccato roar.
+power:LAW_MAGIC:30
+power:BREATH:30
 
 name:BR_DISE
 msgt:BR_DISEN
@@ -396,6 +412,8 @@ lore-color-base:Light Red
 lore-color-resist:Light Green
 message-vis:{name} breathes disenchantment.
 message-invis:You hear a dissipating roar.
+power:META_MAGIC:25
+power:BREATH:25
 
 name:BR_NEXU
 msgt:BR_NEXUS
@@ -472,18 +490,6 @@ message-vis:{name} breathes plasma.
 message-invis:You hear a hissing roar.
 power:FIRE_MAGIC:40
 power:BREATH:25
-
-name:BR_WALL
-msgt:BR_FORCE
-hit:100
-effect:BREATH:FORCE:0:30
-dice:$D
-expr:D:CASTER_HP: / 2
-lore:force
-lore-color-base:Orange
-lore-color-resist:Yellow
-message-vis:{name} breathes force.
-message-invis:You hear a staccato roar.
 
 name:BR_MANA
 hit:100

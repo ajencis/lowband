@@ -1481,46 +1481,6 @@ static enum birth_stage get_evol_command(bool going_back)
 
 	check_player_birth_monster(player);
 	return back ? BIRTH_BACK : BIRTH_LEARN;
-
-	/*
-	if (going_back) {
-		plog("goign back");
-
-		choice_evol = next_evol(player);
-
-		// figure out the next choice that would be made
-		while (choice_evol) {
-			if (choice_evol->next) return BIRTH_MONSTER;
-			choice_evol = choice_evol->race->evol;
-		}
-
-		return BIRTH_BACK;
-	}
-	
-	if (go_forward) {
-		check_player_monster(player, true);
-		get_bonuses();
-		plog("remonstering player");
-		return BIRTH_LEARN;
-	}
-
-	if (!choice_evol->next) {
-		select = choice_evol->race;
-	}
-	else {
-		select = evolution_choice_menu_select(choice_evol, true);
-	}
-
-	if (select) {
-		add_evolution(player, select);
-	}
-	else if (previous_evolution_choice(player)) {
-		demonster_player(player);
-		return BIRTH_BACK;
-	}
-
-	return BIRTH_MONSTER;
-	*/
 }
 
 static enum birth_stage get_learn_command(bool going_back)

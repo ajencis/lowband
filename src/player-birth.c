@@ -512,6 +512,12 @@ void player_init(struct player *p)
 								  sizeof(struct curse_data));
 
 	p->extra_target = mem_zalloc(z_info->learn_max * sizeof *player->extra_target);
+	p->extra_choice = mem_zalloc(z_info->learn_max * sizeof *player->extra_choice);
+
+	// L: initialize extra_choice
+	for (i = 0; i < z_info->learn_max; ++i) {
+		p->extra_choice[i] = -1;
+	}
 
 	// L: metaprogression should persist
 	p->unlocked_classes = unlocked_classes_save;
@@ -1072,7 +1078,7 @@ void player_generate(struct player *p, const struct player_race *r,
 {
 	int i;
 
-	unlock_all(p);
+	//unlock_all(p);
 
 	if (!c) {
 		c = p->class;
@@ -1102,11 +1108,19 @@ void player_generate(struct player *p, const struct player_race *r,
 		p->player_hp[i] = p->player_hp[i - 1] + p->hitdie;
 	}
 
+	for (i = 0; i < z_info->realm_max; ++i) {
+		p->extra_choice[i] = -1;
+	}
+
 	/* Initial hitpoints */
 	p->mhp = p->player_hp[p->lev - 1];
 
 	/* L: copy realm over */
 	p->realm = c->realm;
+	if (c->realm) {
+		struct player_ability *magic = lookup_player_ability(SKILL_MAGIC, PY_ABIL_SKILL);
+		p->extra_choice[magic->learn_index] = c->realm->index;
+	}
 
 	/* Roll for age/height/weight */
 	get_ahw(p);

@@ -724,7 +724,6 @@ struct gener_spell_menu_data {
 
 static int gener_spell_menu_valid(struct menu *m, int oid)
 {
-	//plog("entering gsmv");
 	struct gener_spell_menu_data *d = menu_priv(m);
 
 	return d->is_valid(player, d->spells[oid]->sidx);
@@ -733,7 +732,6 @@ static int gener_spell_menu_valid(struct menu *m, int oid)
 static void gener_spell_menu_display(struct menu *m, int oid, bool cursor,
 		int row, int col, int wid)
 {
-	//plog("entering gsmd");
 	struct gener_spell_menu_data *d = menu_priv(m);
 	const struct player_spell *spell = d->spells[oid];
 	int spell_index = spell->sidx;
@@ -815,12 +813,10 @@ static void gener_spell_menu_display(struct menu *m, int oid, bool cursor,
 
 	my_strcat(out, format("%3i %4i %3i%%%s", level, mana, fail, comment), sizeof(out));
 	c_prt(attr, out, row, col);
-	//plog("done gsmd");
 }
 
 static bool gener_spell_menu_handler(struct menu *m, const ui_event *e, int oid)
 {
-	//plog("entering gsmh");
 	struct gener_spell_menu_data *d = menu_priv(m);
 
 	if (e->type == EVT_SELECT) {
@@ -1076,7 +1072,6 @@ static struct menu *gener_spell_menu_new(struct player *p,
 	loc.page_rows = d->n_splls + 3;
 	menu_layout(m, &loc);
 
-	//plog("done gsmn");
 	return m;
 }
 
@@ -1090,7 +1085,6 @@ static void gener_spell_menu_destroy(struct menu *m)
 
 static int gener_spell_menu_select(struct menu *m)
 {
-	//plog("entering gsms");
 	struct gener_spell_menu_data *d = menu_priv(m);
 	//char buf[80];
 	ui_event ue;
@@ -1103,7 +1097,6 @@ static int gener_spell_menu_select(struct menu *m)
 	ue = menu_select(m, 0, true);
 	screen_load();
 
-	//plog("done gsms");
 	return ue.type == EVT_ESCAPE ? -1 : d->selected_spell;
 }
 
@@ -1165,10 +1158,11 @@ int textui_get_gener_spell(struct player *p, const char *error,
 
 static int gener_spell_is_browsable(const struct player *p, int spell) {
 	struct object *spellbook;
+	const struct magic_realm *realm = get_player_realm(p);
 
 	if (spell < 0 || spell >= z_info->spell_max) return 2;
 	
-	if (!p->realm || !p->realm->realm_special[RLM_SPCL_INNATE]) {
+	if (!realm || !realm->realm_special[RLM_SPCL_INNATE]) {
 		for (spellbook = p->gear; spellbook; spellbook = spellbook->next) {
 			if (spellbook->kind->spell && spellbook->kind->spell->sidx == spell) {
 				break;

@@ -594,6 +594,10 @@ void player_cleanup_members(struct player *p)
 		mem_free(p->extra_target);
 		p->extra_target = NULL;
 	}
+	if (p->extra_choice) {
+		mem_free(p->extra_choice);
+		p->extra_choice = NULL;
+	}
 	if (p->evol_choices) {
 		mem_free(p->evol_choices);
 		p->evol_choices = NULL;
@@ -606,6 +610,7 @@ void player_cleanup_members(struct player *p)
  * Initialise player struct
  */
 static void init_player(void) {
+	int i;
 	/* Create the player array, initialised with 0 */
 	player = mem_zalloc(sizeof *player);
 
@@ -625,6 +630,11 @@ static void init_player(void) {
 	player->unlocked_tomes = mem_zalloc(z_info->learn_max * sizeof(*player->unlocked_tomes));
 
 	player->extra_target = mem_zalloc(z_info->learn_max * sizeof *player->extra_target);
+	player->extra_choice = mem_zalloc(z_info->learn_max * sizeof *player->extra_choice);
+	
+	for (i = 0; i < z_info->learn_max; ++i) {
+		player->extra_choice[i] = -1;
+	}
 
 	options_init_defaults(&player->opts);
 }
