@@ -39,6 +39,8 @@ extern const int *dist_offsets_y[10];
 extern const int *dist_offsets_x[10];
 extern const uint8_t side_dirs[20][8];
 
+int loc_to_dir(struct loc grid);
+
 enum {
 	DIR_UNKNOWN = 0,
 	DIR_NW = 7,

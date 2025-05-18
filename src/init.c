@@ -205,6 +205,14 @@ static const char *realm_special_names[] =
 	"MAX" 
 };
 
+static const char *ability_predicate_names[] =
+{
+	#define PRED(x) #x,
+	#include "list-ability-predicates.h"
+	#undef PRED
+	NULL
+};
+
 static int school_idx_by_name(const char *name)
 {
 	int i;
@@ -1510,6 +1518,24 @@ static enum parser_error parse_player_prop_parent(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_player_prop_prereq(struct parser *p)
+{
+	struct embryo_player_ability *embryo = parser_priv(p);
+	const char *prereq_name = parser_getsym(p, "id");
+	int prereq_id = code_index_in_array(ability_predicate_names, prereq_name);
+
+	if (!embryo) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	if (prereq_id < 0 || prereq_id >= ABIL_PRED_MAX) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	embryo->ability.prereqs[prereq_id] = true;
+
+	return PARSE_ERROR_NONE;
+}
+
 
 static struct parser *init_parse_player_prop(void) {
 	struct parser *p = parser_new();
@@ -1524,6 +1550,7 @@ static struct parser *init_parse_player_prop(void) {
 	parser_reg(p, "rarity int rarity", parse_player_prop_rarity);
 	parser_reg(p, "scale int scale", parse_player_prop_scale);
 	parser_reg(p, "parent sym parent-type sym parent-code", parse_player_prop_parent);
+	parser_reg(p, "prereq sym id", parse_player_prop_prereq);
 	return p;
 }
 
@@ -1627,6 +1654,8 @@ static errr finish_parse_player_prop(struct parser *p) {
 			new->cost = embryo->ability.cost;
 			new->rarity = embryo->ability.rarity;
 			new->scale = embryo->ability.scale;
+
+			memcpy(new->prereqs, embryo->ability.prereqs, sizeof *new->prereqs * ABIL_PRED_MAX);
 
 			while (embryo->boundui) {
 				boundui_cursor = embryo->boundui;

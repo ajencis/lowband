@@ -148,8 +148,8 @@ static const int adj_mag_stat[STAT_RANGE] =
  */
 void player_spells_init(struct player *p)
 {
-	p->player_spell_flags = mem_zalloc(z_info->spell_max * sizeof(uint8_t));
-	p->player_spell_order = mem_zalloc(z_info->spell_max * sizeof(uint8_t));
+	p->player_spell_flags = mem_zalloc(z_info->spell_max * sizeof *p->player_spell_flags);
+	p->player_spell_order = mem_zalloc(z_info->spell_max * sizeof *p->player_spell_order);
 }
 
 /**

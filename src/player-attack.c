@@ -31,6 +31,7 @@
 #include "mon-move.h"
 #include "mon-msg.h"
 #include "mon-predicate.h"
+#include "mon-spell.h"
 #include "mon-timed.h"
 #include "mon-util.h"
 #include "monster.h"
@@ -713,6 +714,53 @@ static void blow_side_effects(struct player *p, struct monster *mon)
 	}
 }
 
+static void do_breath_bite(struct player *p, struct loc grid)
+{
+	int i, sel, numsel;
+	struct monster_race *mr = lookup_player_monster(p);
+
+	if (!mr) return;
+
+	sel = -1;
+	numsel = 0;
+	for (i = 0; i < RSF_MAX; ++i) {
+		if (!rsf_has(mr->spell_flags, i)) continue;
+		if (!monster_spell_is_breath(i)) continue;
+		
+		++numsel;
+		if (one_in_(numsel)) sel = i;
+	}
+
+	if (sel != RSF_MAX) {
+		const struct monster_spell *ms = monster_spell_by_index(sel);
+		int rad = 1, dir;
+		struct effect *ef_src = NULL, ef_new;
+		struct loc diff = loc_diff(grid, p->grid);
+		bool dummy_id = false;
+		dir = loc_to_dir(diff);
+
+		msg_add_fmt("breathbite with msf %i", sel);
+
+		for (ef_src = ms->effect; ef_src; ef_src = ef_src->next) {
+			if (ef_src->index == EF_BREATH) {
+				break;
+			}
+		}
+
+		assert(ef_src);
+
+		memcpy(&ef_new, ef_src, sizeof ef_new);
+
+		for (i = 2; one_in_(i); ++i) {
+			++rad;
+		}
+
+		ef_new.radius = rad;
+
+		effect_do(&ef_new, source_player(), NULL, &dummy_id, true, dir, 0, 0, NULL);
+	}
+}
+
 /**
  * Apply blow after effects
  */
@@ -755,6 +803,12 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 				gone = true;
 			}
 		}
+
+		if (randint0(75) < aroll->special[ATK_SPCL_BREATH]) {
+			do_breath_bite(player, grid);
+
+			if (!square_monster(cave, grid)) gone = true;
+		} 
 	}
 
 	/* Apply earthquake brand */
@@ -826,6 +880,10 @@ static void unarmed_mod_attack(struct attack_roll *aroll, const struct player *p
 
 	if (ps->powers[PP_DEATH_TOUCH] > 0) {
 		aroll->special[ATK_SPCL_DEATH_TOUCH] += ps->powers[PP_DEATH_TOUCH] * 5 / 2;
+	}
+
+	if (ps->powers[PP_BREATH_BITE] > 0 && streq(aroll->name, "bite")) {
+		aroll->special[ATK_SPCL_BREATH] += ps->powers[PP_BREATH_BITE];
 	}
 
 	if (aroll->accuracy_stat == STAT_NONE && ps->powers[PP_UNARMED_STRIKE] > 15) aroll->accuracy_stat = STAT_DEX;

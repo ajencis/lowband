@@ -325,6 +325,7 @@ desc: can particularly effectively use at air magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:FIRE_MAGIC
@@ -333,6 +334,7 @@ desc: can particularly effectively use fire magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:EARTH_MAGIC
@@ -341,6 +343,7 @@ desc: can particularly effectively use earth magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:ACID_MAGIC
@@ -349,6 +352,7 @@ desc: can particularly effectively use acid magic.
 cost:5
 rarity:10
 parent:power:EARTH_MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:WATER_MAGIC
@@ -357,6 +361,7 @@ desc: can particularly effectively use water magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:COLD_MAGIC
@@ -365,6 +370,7 @@ desc: can particularly effectively use cold magic.
 cost:5
 rarity:10
 parent:power:WATER_MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:POISON_MAGIC
@@ -373,6 +379,7 @@ desc: can particularly effectively use poison magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:DIVINATION_MAGIC
@@ -381,6 +388,7 @@ desc: can particularly effectively use divination.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:TELEPORTATION_MAGIC
@@ -389,6 +397,7 @@ desc: can particularly effectively use teleportation magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:NECROMANCY_MAGIC
@@ -397,6 +406,7 @@ desc: can particularly effectively use necromancy.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:HOLY_MAGIC
@@ -405,6 +415,7 @@ desc: can particularly effectively use holy magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:NATURE_MAGIC
@@ -413,6 +424,7 @@ desc: can particularly effectively use nature magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:SUMMONING_MAGIC
@@ -421,6 +433,7 @@ desc: can particularly effectively use summoning magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:TRANSMUTATION_MAGIC
@@ -429,6 +442,7 @@ desc: can particularly effectively use transmutation magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:ENCHANTMENT_MAGIC
@@ -437,6 +451,7 @@ desc: can particularly effectively use enchantment magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:ILLUSION_MAGIC
@@ -445,6 +460,7 @@ desc: can particularly effectively use illusion magic.
 cost:10
 rarity:10
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:DARKNESS_MAGIC
@@ -454,6 +470,7 @@ cost:10
 rarity:7
 parent:power:NECROMANCY_MAGIC
 parent:power:DIVINATION_MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:LIGHT_MAGIC
@@ -463,6 +480,7 @@ cost:10
 rarity:7
 parent:power:HOLY_MAGIC
 parent:power:DIVINATION_MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:DEMONOLOGY_MAGIC
@@ -472,6 +490,7 @@ cost:15
 rarity:5
 parent:power:SUMMONING_MAGIC
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:SOUND_MAGIC
@@ -480,6 +499,7 @@ desc: can particularly effectively use sonic magic.
 cost:15
 rarity:5
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:LAW_MAGIC
@@ -658,8 +678,18 @@ parent:power:NECROMANCY_MAGIC
 
 type:power
 code:BREATH
-name:breathing
+name:Breathing
 desc: can breathe
+
+type:power
+code:BREATH_BITE
+name:Exhaling Bite
+desc: can breathe while biting
+cost:15
+rarity:3
+parent:skill:HEALTH
+prereq:HAS_BREATH
+prereq:HAS_BITE
 
 
 # L: skills

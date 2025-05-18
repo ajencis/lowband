@@ -182,7 +182,7 @@ static bool ability_parent_desc(const struct player_ability *abil, char *buf, si
 			if (parent_num == 1) label = "Its parent is ";
 			else if (numleft == parent_num) label = "Its parents are ";
 			else if (numleft > 1) label = ", ";
-			else if (parent_num == 2) label = "and ";
+			else if (parent_num == 2) label = " and ";
 			else label = ", and ";
 
 			name = abil->parent[i]->name;
@@ -423,6 +423,7 @@ struct ability_learn_menu_data {
 	int mode;
 	int *max_learnable;
 	int *extra_max_learnable;
+	int *valid;
 	uint16_t *temp_target;
 	//uint16_t *max_result;
 	bool birth;
@@ -520,13 +521,76 @@ static bool extra_target_valid(struct player *p, int *max_learnable, int oid, in
 }
 
 
+static void ability_learn_valid_refresh(struct menu *menu)
+{
+	int oid;
+	bool changed = true;
+	struct ability_learn_menu_data *data = menu_priv(menu);
+	const struct player_ability *abil;
+
+	for (oid = 0; oid < z_info->learn_max; ++oid) {
+		data->valid[oid] = MN_ROW_SKIP;
+		abil = ability_by_tome_id(oid);
+
+		if (abil->type == PY_ABIL_SKILL) {
+			data->valid[oid] = MN_ROW_VALID;
+			continue;
+		}
+		else if (abil->type != PY_ABIL_POWER) {
+			data->valid[oid] = MN_ROW_SKIP;
+			continue;
+		}
+
+		if (!ability_satisfies_all_prereqs(abil, data->p)) {
+			data->valid[oid] = MN_ROW_SKIP;
+		}
+		else if (data->birth) {
+			data->valid[oid] = MN_ROW_VALID;
+		}
+		else if (data->max_learnable[oid] > 0) {
+			data->valid[oid] = MN_ROW_VALID;
+		}
+
+		if (data->valid[oid] == MN_ROW_SKIP &&
+				(data->p->extra_powers[oid] > 0 || data->p->state.powers[oid] > 0)) {
+			data->valid[oid] = MN_ROW_INVALID;
+		}
+	}
+
+	while (changed) {
+		changed = false;
+
+		for (oid = 0; oid < z_info->learn_max; ++oid) {
+			abil = ability_by_tome_id(oid);
+
+			if (data->valid[oid] != MN_ROW_SKIP) {
+				int i;
+				for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
+					const struct player_ability *parent = abil->parent[i];
+					if (parent && data->valid[parent->learn_index] == MN_ROW_SKIP) {
+						data->valid[parent->learn_index] = MN_ROW_INVALID;
+						changed = true;
+					}
+				}
+			}
+		}
+	}
+}
+
+
 static int ability_learn_valid_mode(struct menu *menu, int oid, int mode)
 {
 	struct ability_learn_menu_data *data = menu_priv(menu);
+
+	return data->valid[oid];
 	const struct player_ability *abil = ability_by_tome_id(oid);
 	assert(abil);
 
 	if (oid < 0 || oid >= z_info->learn_max) return MN_ROW_SKIP;
+
+	if (!ability_satisfies_all_prereqs(abil, data->p)) {
+		return MN_ROW_SKIP;
+	}
 
 	if (abil->type == PY_ABIL_POWER) {
 		if (data->p->extra_powers[abil->index] <= 0 &&
@@ -669,7 +733,10 @@ static void ability_learn_set_mode(struct menu *m, int new_mode)
 	if (m->title) mem_free((char *)m->title);
 
 	m->title = new_title;
+
+	ability_learn_valid_refresh(m);
 	get_menu_filter(m);
+
 	loc.page_rows = menu_count(m) + 3;
 	loc.page_rows = MIN(loc.page_rows, Term->hgt - loc.row - 8);
 	menu_layout(m, &loc);
@@ -696,6 +763,8 @@ static void refresh_hypothetical_player(struct menu *m)
 	}
 
 	calc_bonuses(hypo, &hypo->state, false, false);
+
+	ability_learn_valid_refresh(m);
 
 	data->points = hypo->state.extra_points_max;
 }
@@ -891,6 +960,7 @@ static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode 
 	data->max_learnable = mem_zalloc(sizeof *data->max_learnable * z_info->learn_max);
 	data->temp_target = mem_zalloc(sizeof *data->temp_target * z_info->learn_max);
 	data->extra_max_learnable = mem_zalloc(sizeof *data->extra_max_learnable * z_info->learn_max);
+	data->valid = mem_zalloc(sizeof *data->valid * z_info->learn_max);
 	data->birth = birth;
 	data->p = p;
 
@@ -936,6 +1006,7 @@ static void ability_learn_menu_destroy(struct menu *m)
 	mem_free(data->max_learnable);
 	mem_free(data->temp_target);
 	mem_free(data->extra_max_learnable);
+	mem_free(data->valid);
 	mem_free(data);
 	mem_free((char *)m->title);
 

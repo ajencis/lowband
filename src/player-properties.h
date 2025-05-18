@@ -20,6 +20,11 @@
 #ifndef PLAYER_PROPS_H
 #define PLAYER_PROPS_H
 
+
+typedef bool (*abil_predicate)(const struct player_ability *abil, const struct player *p);
+
+extern abil_predicate ability_predicates[];
+
 enum {
     PLAYER_FLAG_NONE,
     PLAYER_FLAG_SPECIAL,
@@ -50,5 +55,6 @@ const char *ability_subchoice_title(const struct player_ability *parent);
 int ability_subchoice_choices(struct player_ability *parent);
 const char *ability_subchoice_name(int id, const struct player_ability *parent);
 bool make_ability_subchoice(struct player *p);
+bool ability_satisfies_all_prereqs(const struct player_ability *abil, const struct player *p);
 
 #endif /* !PLAYER_PROPS_H */

@@ -412,7 +412,7 @@ static bool mon_spell_is_valid(int index)
 	return index > RSF_NONE && index < RSF_MAX;
 }
 
-static bool monster_spell_is_breath(int index)
+bool monster_spell_is_breath(int index)
 {
 	return (mon_spell_types[index].type & RST_BREATH) ? true : false;
 }

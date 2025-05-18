@@ -79,6 +79,20 @@ const int16_t clockwise_ddd[9] =
 const struct loc clockwise_grid[9] =
 {{0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, 0}};
 
+// y, x
+static const int reverse_ddgrid[3][3] = {
+	{ 7, 8, 9 },
+	{ 4, 5, 6 },
+	{ 1, 2, 3 }
+};
+
+int loc_to_dir(struct loc grid) {
+	int x = SGN(grid.x) + 1;
+	int y = SGN(grid.y) + 1;
+
+	return reverse_ddgrid[y][x];
+}
+
 /**
  * Hack -- Precompute a bunch of calls to distance().
  *

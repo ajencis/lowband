@@ -18,11 +18,93 @@
  */
 
 #include "angband.h"
+#include "game-world.h"
 #include "init.h"
+#include "mon-spell.h"
 #include "player-properties.h"
 #include "player-spell.h"
+#include "player-util.h"
 #include "ui-player-properties.h"
 #include "game-input.h"
+
+
+
+/**
+ * L: Ability predicates
+ */
+
+static bool pred_HAS_BITE(const struct player_ability *abil, const struct player *p)
+{
+	int i;
+
+	for (i = 0; i < p->state.num_attacks; ++i) {
+		const struct attack_roll *aroll = &p->state.attacks[i];
+
+		if (streq(aroll->name, "bite")) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static bool pred_HAS_BREATH(const struct player_ability *abil, const struct player *p)
+{
+	struct monster_race *mr = lookup_player_monster(p);
+
+	if (!mr) return false;
+
+	return test_spells(mr->spell_flags, RST_BREATH);
+}
+
+static bool pred_HAS_MATCHING_SPELL(const struct player_ability *abil, const struct player *p)
+{
+	int i, j;
+
+	if (!character_generated) return true;
+
+	for (i = 0; i < z_info->spell_max; ++i) {
+		struct player_spell *ps = player_spell_lookup(i);
+		assert(ps);
+		if (!(p->player_spell_flags[i] & PY_SPELL_WORKED)) continue;
+		for (j = 0; j < MAX_SPELL_SCHOOLS; ++j) {
+			int school = ps->school[j];
+			if (school > MS_NONE) {
+				if (abil->index == school) {
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+
+abil_predicate ability_predicates[] = {
+    #define PRED(x) pred_##x,
+    #include "list-ability-predicates.h"
+    #undef PRED
+    NULL
+};
+
+
+
+bool ability_satisfies_all_prereqs(const struct player_ability *abil, const struct player *p)
+{
+	int i;
+
+	for (i = 0; i < ABIL_PRED_MAX; ++i) {
+		if (!abil->prereqs[i]) continue;
+		if (!ability_predicates[i](abil, p)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+
 
 /**
  * ------------------------------------------------------------------------

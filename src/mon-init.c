@@ -900,6 +900,7 @@ static enum parser_error parse_mon_spell_name(struct parser *p) {
 	s->next = h;
 	s->index = index;
 	s->level = mem_zalloc(sizeof(*(s->level)));
+	s->knowable = true;
 	parser_setpriv(p, s);
 	return PARSE_ERROR_NONE;
 }

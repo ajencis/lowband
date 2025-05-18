@@ -836,8 +836,9 @@ int cmd_get_innate(struct command *cmd, const char *arg, struct player *p,
 	if (!monr) return CMD_ARG_ABORTED;
 
 	if (cmd_get_arg_choice(cmd, arg, innate) == CMD_OK) {
-		if (!innate_filter || innate_filter(p, *innate))
+		if (!innate_filter || innate_filter(p, *innate)) {
 			return CMD_OK;
+		}
 	}
 
 	*innate = get_innate(p, monr, error, innate_filter);

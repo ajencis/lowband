@@ -100,6 +100,14 @@ enum {
 	#undef MON_TMD
 };
 
+// L: predicates for abilities
+enum {
+    #define PRED(x) ABIL_PRED_##x,
+    #include "list-ability-predicates.h"
+    #undef PRED
+    ABIL_PRED_MAX
+};
+
 #define PF_SIZE                FLAG_SIZE(PF_MAX)
 
 #define pf_has(f, flag)        flag_has_dbg(f, PF_SIZE, flag, #f, #flag)
@@ -187,6 +195,7 @@ enum attack_roll_special_effects {
 	#include "list-mon-timed.h"
 	#undef MON_TMD
 	ATK_SPCL_DEATH_TOUCH,
+	ATK_SPCL_BREATH,
 	ATK_SPCL_MAX
 };
 
@@ -480,6 +489,7 @@ struct player_ability {
 	int scale;						// L: does it scale other than linearly with level
 	int learn_index;				// L: what is its index of all learnable abilities
 	struct player_ability *parent[MAX_ABIL_PARENTS];	// L: what abilities are needed to learn first
+	bool prereqs[ABIL_PRED_MAX];		// L: index of prerequisites needed to learn it
 };
 
 /**

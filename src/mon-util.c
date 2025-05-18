@@ -2150,7 +2150,6 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 			if (magic <= 0) continue;
 			else chance = magic_mod;
 		}
-		if (!mon_spell_is_innate(i) && magic <= 0) continue;
 		if (!ms) continue;
 		if (!ms->knowable) continue;
 

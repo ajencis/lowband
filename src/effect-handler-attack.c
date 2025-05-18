@@ -763,13 +763,6 @@ bool effect_handler_BREATH(effect_handler_context_t *context)
 			diameter_of_source /= 2;
 		}
 	} else if (context->origin.what == SRC_PLAYER) {
-		//struct monster_race *monr = lookup_player_monster(player);
-		//int hp = player->chp;
-
-		/*if (monr)
-			hp = MAX(hp, monr->avg_hp * player->chp / player->mhp);
-		
-		dam = breath_dam(type, hp);*/
 
 		/* Ask for a target if no direction given */
 		if (context->dir == DIR_TARGET && target_okay()) {

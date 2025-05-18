@@ -82,5 +82,6 @@ int mon_spell_lore_damage(int index, const struct monster_race *race,
 						  bool know_hp);
 void get_mon_spell_name(char *buf, int bufsize, int index,
 						const struct monster_race *race);
+bool monster_spell_is_breath(int index);
 
 #endif /* MONSTER_SPELL_H */
