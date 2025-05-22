@@ -977,6 +977,13 @@ code:REALM_LEARN
 power:5
 desc:Learning
 
+name:spell holding
+type:flag
+subtype:misc ability
+code:SPELL_HOLD
+power:5
+desc:Spell Holding
+
 name:web walking
 type:flag
 code:PASS_WEB

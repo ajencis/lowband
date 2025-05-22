@@ -814,7 +814,7 @@ static bool gener_spell_can_study(const struct player_spell *spell)
 
 bool obj_can_study_gener(const struct object *obj)
 {
-	const struct player_spell *s = obj->kind->spell;
+	const struct player_spell *s = obj->spell;
 	
 	if (!s) {
 		return false;

@@ -1228,3 +1228,33 @@ bool spell_is_castable_innately(const struct monster_race *mr, int spell_index)
 	return false;
 }
 
+
+static int random_spell_weight(struct player_spell *spell, int level)
+{
+	int levmod = level ? 2 * level + 25 : 10;
+
+	return MAX(0, levmod - spell->slevel);
+}
+
+const struct player_spell *random_spell_at_level(int level)
+{
+	int total_count = 0, choice;
+	struct player_spell *curr;
+
+	for (curr = spells; curr; curr = curr->next) {
+		total_count += random_spell_weight(curr, level);
+	}
+
+	choice = randint0(total_count);
+
+	for (curr = spells; curr; curr = curr->next) {
+		choice -= random_spell_weight(curr, level);
+
+		if (choice < 0) return curr;
+	}
+
+	assert(!"got here");
+
+	return NULL;
+}
+

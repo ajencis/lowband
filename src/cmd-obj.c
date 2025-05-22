@@ -1223,7 +1223,7 @@ void do_cmd_study(struct command *cmd)
 		return;
 	}
 
-	const struct player_spell *spell = spellbook->kind->spell;
+	const struct player_spell *spell = spellbook->spell;
 
 	gener_spell_learn(player, spell, true);
 }
@@ -1315,7 +1315,7 @@ static int gener_spell_is_castable(const struct player *p, int spell) {
 	
 	if (!realm || !realm->realm_special[RLM_SPCL_INNATE]) {
 		for (spellbook = p->gear; spellbook; spellbook = spellbook->next) {
-			if (spellbook->kind->spell && spellbook->kind->spell->sidx == spell) {
+			if (spellbook->spell && spellbook->spell->sidx == spell) {
 				break;
 			}
 		}

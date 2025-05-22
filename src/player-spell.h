@@ -72,4 +72,6 @@ bool autocast(const struct player *p);
 
 bool spell_is_castable_innately(const struct monster_race *mr, int spell_index);
 
+const struct player_spell *random_spell_at_level(int level);
+
 #endif

@@ -342,7 +342,7 @@ static enum parser_error write_book_kind(struct class_book *book,
 	return PARSE_ERROR_NONE;
 }
 
-static enum parser_error write_gener_book_kind(struct player_spell *spell)
+/*static enum parser_error write_gener_book_kind(struct player_spell *spell)
 {
 	struct object_kind *temp, *kind;
 
@@ -350,7 +350,7 @@ static enum parser_error write_gener_book_kind(struct player_spell *spell)
 	z_info->ordinary_kind_max++;
 	temp = mem_realloc(k_info, (z_info->k_max + 1) * sizeof(*temp));
 	
-	/* Copy if no errors */
+	// Copy if no errors
 	if (!temp) {
 		return PARSE_ERROR_INTERNAL;
 	} else {
@@ -360,7 +360,7 @@ static enum parser_error write_gener_book_kind(struct player_spell *spell)
 	kind = &k_info[z_info->k_max - 1];
 	memset(kind, 0, sizeof(*kind));
 	
-	/* Copy the tval and base */
+	// Copy the tval and base
 	kind->tval = TV_BOOK;
 	kind->base = &kb_info[kind->tval];
 	assert(kind->base);
@@ -374,7 +374,7 @@ static enum parser_error write_gener_book_kind(struct player_spell *spell)
 	spell_to_obj(spell, kind);
 
 	return PARSE_ERROR_NONE;
-}
+}*/
 
 /**
  * Find the default paths to all of our important sub-directories.
@@ -4113,14 +4113,14 @@ static errr run_parse_spell(struct parser *p) {
 static errr finish_parse_spell(struct parser *p) {
 	spells = parser_priv(p);
 	parser_destroy(p);
-	struct player_spell *ps;
+	/*struct player_spell *ps;
 
 	for (ps = spells; ps; ps = ps->next) {
 		errr error = write_gener_book_kind(ps);
 		if (error != PARSE_ERROR_NONE) {
 			return error;
 		}
-	}
+	}*/
 	
 	return 0;
 }

@@ -90,14 +90,18 @@ static const char *obj_desc_get_basename(const struct object *obj, bool aware,
 {
 	bool show_flavor = !terse && obj->kind->flavor;
 
-	if (mode & ODESC_STORE)
+	if (mode & ODESC_STORE) {
 		show_flavor = false;
-	if (aware && p && !OPT(p, show_flavors)) show_flavor = false;
+	}
+	if (aware && p && !OPT(p, show_flavors)) {
+		show_flavor = false;
+	}
 
 	/* Artifacts are special */
 	if (obj->artifact && (aware || object_is_known_artifact(obj) || terse ||
-						  !obj->kind->flavor))
+						  !obj->kind->flavor)) {
 		return obj->kind->name;
+	}
 
 	/* Analyze the object */
 	switch (obj->tval)
@@ -125,6 +129,7 @@ static const char *obj_desc_get_basename(const struct object *obj, bool aware,
 		case TV_FOOD:
 		case TV_TOME:
 		case TV_OTHER_BOOK:
+		case TV_BOOK:
 		case TV_CONTAINER:
 			return obj->kind->name;
 
@@ -174,11 +179,11 @@ static const char *obj_desc_get_basename(const struct object *obj, bool aware,
 			else
 				return "& Necromantic Tome~ #";
 
-		case TV_BOOK:
+		/*case TV_BOOK:
 			if (terse)
 				return "& Book~";
 			else
-				return "& Spellbook~";
+				return "& Spellbook~";*/
 
 		/*case TV_OTHER_BOOK:
 			if (terse)
@@ -355,7 +360,7 @@ static size_t obj_desc_name(char *buf, size_t max, size_t end,
 	} else if ((obj->known->ego && !(mode & ODESC_NOEGO)) || (obj->ego && store)) {
 		strnfcat(buf, max, &end, " %s", obj->ego->name);
 	} else if (aware && !obj->artifact &&
-			(obj->kind->flavor || obj->kind->tval == TV_SCROLL || obj->kind->tval == TV_BOOK)) {
+			(obj->kind->flavor || obj->kind->tval == TV_SCROLL)) {
 		if (terse) {
 			strnfcat(buf, max, &end, " '%s'", obj->kind->name);
 		} else {
@@ -598,6 +603,16 @@ static size_t obj_desc_power_learn(const struct object *obj, char *buf, size_t m
 	return end;
 }
 
+static size_t obj_desc_spell(const struct object *obj, char *buf, size_t max,
+		size_t end, int mode)
+{
+	if (!obj->spell) return end;
+
+	strnfcat(buf, max, &end, " of %s", obj->spell->name);
+
+	return end;
+}
+
 /**
  * Add player-defined inscriptions or game-defined descriptions
  */
@@ -761,6 +776,8 @@ size_t object_desc(char *buf, size_t max, const struct object *obj,
 		end = obj_desc_charges(obj, buf, max, end, mode);
 
 		end = obj_desc_power_learn(obj, buf, max, end, mode);
+
+		end = obj_desc_spell(obj, buf, max, end, mode);
 
 		if (mode & ODESC_STORE) {
 			end = obj_desc_aware(obj, buf, max, end);

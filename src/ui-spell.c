@@ -1164,7 +1164,7 @@ static int gener_spell_is_browsable(const struct player *p, int spell) {
 	
 	if (!realm || !realm->realm_special[RLM_SPCL_INNATE]) {
 		for (spellbook = p->gear; spellbook; spellbook = spellbook->next) {
-			if (spellbook->kind->spell && spellbook->kind->spell->sidx == spell) {
+			if (spellbook->spell && spellbook->spell->sidx == spell) {
 				break;
 			}
 		}

@@ -480,6 +480,8 @@ struct object {
 	uint8_t origin_depth;		/**< What depth the item was found at */
 	const struct monster_race *origin_race;	/**< Monster race that dropped it */
 
+	const struct player_spell *spell;	// L: the spell it contains, if any
+
 	quark_t note; 			/**< Inscription index */
 };
 

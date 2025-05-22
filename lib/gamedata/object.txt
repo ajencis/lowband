@@ -5283,7 +5283,19 @@ desc: untrammelled yet inextricably intermingled and utterly mastered powers
 desc: elemental and ethereal.
 
 
+##### Spellbook base objects #####
 
+name:& spellbook~
+type:spellbook
+graphics:?:m
+level:0
+weight:15
+cost:100
+alloc:10:0 to 100
+attack:1d1:0:0
+armor:0:0
+power:10
+flags:SPELL_HOLD
 
 
 ##### Tome base objects #####

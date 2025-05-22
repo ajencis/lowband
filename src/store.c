@@ -253,12 +253,12 @@ static enum parser_error parse_always(struct parser *p) {
 		}
 
 		s->always_table[s->always_num++] = kind;
-	} else {
-		/* Books */
+	} /*else {
+		// Books
 		struct object_base *book_base = &kb_info[tval];
 		int i;
 
-		/* Run across all the books for this type, add the town books */
+		// Run across all the books for this type, add the town books
 		for (i = 1; i <= book_base->num_svals; i++) {
 			bool skip = true;
 			kind = lookup_kind(tval, i);
@@ -276,7 +276,7 @@ static enum parser_error parse_always(struct parser *p) {
 			}
 
 			if (!skip) {
-				/* Expand if necessary */
+				// Expand if necessary 
 				if (!s->always_num) {
 					s->always_size = 8;
 					s->always_table = mem_zalloc(s->always_size * sizeof *s->always_table);
@@ -288,7 +288,7 @@ static enum parser_error parse_always(struct parser *p) {
 				s->always_table[s->always_num++] = kind;
 			}
 		}
-	}
+	}*/
 
 	return PARSE_ERROR_NONE;
 }

@@ -203,6 +203,28 @@ void pile_insert_end(struct object **pile, struct object *obj)
 	pile_check_integrity("insert_end", *pile, obj);
 }
 
+void pile_insert_beginning(struct object **pile, struct object *obj)
+{
+	struct object *end;
+
+	assert(obj);
+
+	if (obj->prev) {
+		pile_integrity_fail(NULL, obj, __FILE__, __LINE__);
+	}
+
+	end = pile_last_item(obj);
+
+	if (*pile) {
+		end->next = *pile;
+		(*pile)->prev = end;
+	}
+
+	*pile = obj;
+
+	pile_check_integrity("insert_beginning", *pile, obj);
+}
+
 /**
  * Remove object 'obj' from pile 'pile'.
  */

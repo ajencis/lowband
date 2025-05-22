@@ -305,7 +305,7 @@ equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
 equip:sword:Rapier:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-equip:spellbook:Magic Missile:1:1:none
+equip:spellbook:spellbook:1:1:none
 player-flags:CHOOSE_SPELLS
 realm:arcane
 title:Novice
@@ -343,7 +343,7 @@ equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
 equip:sword:Rapier:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-equip:spellbook:Magic Missile:1:1:none
+equip:spellbook:spellbook:1:1:none
 player-flags:CHOOSE_SPELLS
 realm:arcane
 title:Novice
@@ -380,7 +380,7 @@ equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
 equip:sword:Rapier:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-equip:spellbook:Magic Missile:1:1:none
+equip:spellbook:spellbook:1:1:none
 player-flags:CHOOSE_SPELLS
 realm:music
 title:Novice
@@ -455,7 +455,7 @@ equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
 equip:sword:Rapier:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-equip:spellbook:Magic Missile:1:1:none
+equip:spellbook:spellbook:1:1:none
 player-flags:CHOOSE_SPELLS
 realm:blood
 title:Novice
@@ -573,7 +573,7 @@ strength-multiplier:3
 equip:food:Ration of Food:1:3:none
 equip:sword:Main Gauche:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-equip:spellbook:Nether Bolt:1:1:none
+equip:spellbook:spellbook:1:1:none
 player-flags:UNLIGHT | EVIL
 realm:arcane
 title:Acolyte

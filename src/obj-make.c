@@ -31,6 +31,7 @@
 #include "obj-slays.h"
 #include "obj-tval.h"
 #include "obj-util.h"
+#include "player-spell.h"
 #include "project.h"
 
 /**
@@ -889,6 +890,10 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 	/* Assign modifiers */
 	for (i = 0; i < OBJ_MOD_MAX; i++) {
 		obj->modifiers[i] = randcalc(k->modifiers[i], lev, rand_aspect);
+	}
+
+	if (of_has(obj->kind->flags, OF_SPELL_HOLD)) {
+		obj->spell = random_spell_at_level(lev);
 	}
 	
 	/* Assign charges (wands/staves only) */
