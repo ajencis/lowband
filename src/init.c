@@ -3386,19 +3386,29 @@ static enum parser_error parse_realm_school_aptitude(struct parser *p)
 {
 	struct magic_realm *realm = parser_priv(p);
 	const char *school_name = parser_getsym(p, "school");
+	int mod = parser_getint(p, "mod");
 	int school_ind;
 
 	if (!realm) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
 
-	school_ind = school_idx_by_name(school_name);
-
-	if (school_ind <= MS_NONE) {
-		return PARSE_ERROR_GENERIC;
+	// special: all schools
+	if (streq(school_name, "ALL")) {
+		int i;
+		for (i = 0; i < MS_MAX; ++i) {
+			realm->school_modifiers[i] += mod;
+		}
 	}
+	else {
+		school_ind = school_idx_by_name(school_name);
 
-	realm->school_modifiers[school_ind] = parser_getint(p, "mod");
+		if (school_ind <= MS_NONE) {
+			return PARSE_ERROR_GENERIC;
+		}
+
+		realm->school_modifiers[school_ind] += mod;
+	}
 
 	return PARSE_ERROR_NONE;
 }
@@ -3407,7 +3417,14 @@ static enum parser_error parse_realm_special(struct parser *p)
 {
 	struct magic_realm *realm = parser_priv(p);
 	int which = realm_special_by_name(parser_getsym(p, "which"));
-	int amt = parser_getint(p, "amount");
+	int amt;
+
+	if (parser_hasval(p, "amount")) {
+		amt = parser_getint(p, "amount");
+	}
+	else {
+		amt = 1;
+	}
 
 	if (!realm) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -3433,7 +3450,7 @@ static struct parser *init_parse_realm(void) {
 	parser_reg(p, "book-noun str book", parse_realm_book_noun);
 	parser_reg(p, "weight int weight", parse_realm_weight);
 	parser_reg(p, "school sym school int mod", parse_realm_school_aptitude);
-	parser_reg(p, "special sym which int amount", parse_realm_special);
+	parser_reg(p, "special sym which ?int amount", parse_realm_special);
 	return p;
 }
 

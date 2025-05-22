@@ -1235,6 +1235,8 @@ static struct chunk *cave_generate(struct player *p, int height, int width)
 
 	chunk->turn = turn;
 
+	object_lists_check_integrity(chunk, p->cave);
+
 	return chunk;
 }
 

@@ -739,8 +739,6 @@ static void do_breath_bite(struct player *p, struct loc grid)
 		bool dummy_id = false;
 		dir = loc_to_dir(diff);
 
-		msg_add_fmt("breathbite with msf %i", sel);
-
 		for (ef_src = ms->effect; ef_src; ef_src = ef_src->next) {
 			if (ef_src->index == EF_BREATH) {
 				break;

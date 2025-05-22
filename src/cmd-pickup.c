@@ -318,7 +318,7 @@ static uint8_t player_pickup_item(struct player *p, struct object *obj, bool men
 	uint8_t objs_picked_up = 0;
 
 	/* Always know what's on the floor */
-	square_know_pile(cave, p->grid, NULL);
+	square_know_pile(cave, p->grid, object_not_in_container_predicate);
 
 	/* Always pickup gold, effortlessly */
 	player_pickup_gold(p);

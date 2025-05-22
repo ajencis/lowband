@@ -5013,6 +5013,21 @@ attack:2d6:0:0
 armor:0:0
 
 
+##### Containers #####
+
+name:& bookshelf~
+type:container
+graphics:~:m
+level:0
+weight:1000
+cost:250
+alloc:10:1 to 100
+attack:2d2:0:0
+armor:0:0
+contains:spellbook
+contains:tome
+contains:book
+
 
 ##### Dragon Scale Mail #####
 
@@ -5268,80 +5283,151 @@ desc: untrammelled yet inextricably intermingled and utterly mastered powers
 desc: elemental and ethereal.
 
 
+
+
+
 ##### Tome base objects #####
 
-
-name:& Realm Tome~
+name:& realm tome~
 type:tome
 graphics:?:m
 level:0
 weight:15
 cost:500
-alloc:1:0 to 100
+alloc:0:0 to 100
 attack:1d1:0:0
 armor:0:0
 power:10
 flags:REALM_LEARN
 
-name:& Basic Tome~
+name:& basic tome~
 type:tome
 graphics:?:m
 level:0
 weight:15
 cost:1000
-alloc:3:0 to 100
+alloc:0:0 to 100
 attack:1d1:0:0
 armor:0:0
 power:10
 flags:POWER_LEARN_1
 
-name:& Tome~
+name:& tome~
 type:tome
 graphics:?:m
 level:0
 weight:15
 cost:3000
-alloc:3:20 to 100
+alloc:0:20 to 100
 attack:1d1:0:0
 armor:0:0
 power:10
 flags:POWER_LEARN_2
 
-name:& Advanced Tome~
+name:& advanced tome~
 type:tome
 graphics:?:m
 level:0
 weight:15
 cost:10000
-alloc:3:40 to 100
+alloc:0:40 to 100
 attack:1d1:0:0
 armor:0:0
 power:10
 flags:POWER_LEARN_3
 
-name:& Expert Tome~
+name:& expert tome~
 type:tome
 graphics:?:m
 level:0
 weight:15
 cost:30000
-alloc:3:60 to 100
+alloc:0:60 to 100
 attack:1d1:0:0
 armor:0:0
 power:10
 flags:POWER_LEARN_4
 
-name:& Master Tome~
+name:& master tome~
 type:tome
 graphics:?:m
 level:0
 weight:15
 cost:100000
-alloc:3:80 to 100
+alloc:0:80 to 100
 attack:1d1:0:0
 armor:0:0
 power:10
 flags:POWER_LEARN_5
+
+
+##### Normal books #####
+
+name:& ruined book~
+type:book
+graphics:?:M
+level:0
+weight:15
+cost:1
+alloc:25:0 to 100
+attack:1d1:0:0
+armor:0:0
+power:0
+
+name:& charred book~
+type:book
+graphics:?:M
+level:0
+weight:15
+cost:1
+alloc:25:0 to 100
+attack:1d1:0:0
+armor:0:0
+power:0
+
+name:& historical manuscript~
+type:book
+graphics:?:M
+level:0
+weight:15
+cost:250
+alloc:20:0 to 100
+attack:1d1:0:0
+armor:0:0
+power:0
+
+name:& natural philosophy manuscript~
+type:book
+graphics:?:M
+level:0
+weight:15
+cost:500
+alloc:17:0 to 100
+attack:1d1:0:0
+armor:0:0
+power:0
+
+name:& metaphysics manuscript~
+type:book
+graphics:?:M
+level:0
+weight:15
+cost:750
+alloc:15:0 to 100
+attack:1d1:0:0
+armor:0:0
+power:0
+
+name:& ethics manuscript~
+type:book
+graphics:?:M
+level:0
+weight:15
+cost:1000
+alloc:12:0 to 100
+attack:1d1:0:0
+armor:0:0
+power:0
 
 
 ##### Gold/gems #####

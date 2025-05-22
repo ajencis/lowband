@@ -1729,7 +1729,7 @@ void do_cmd_hold(struct command *cmd)
 		player->upkeep->energy_use = 0;
 	} else {
 		event_signal(EVENT_SEEFLOOR);
-		square_know_pile(cave, player->grid, NULL);
+		square_know_pile(cave, player->grid, object_not_in_container_predicate);
 	}
 }
 

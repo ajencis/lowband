@@ -4412,7 +4412,6 @@ name:imp
 base:minor demon
 color:g
 evolution:pit fiend
-evolution:barbazu
 speed:110
 hit-points:27
 hearing:20

@@ -475,6 +475,7 @@ void list_object(struct chunk *c, struct object *obj)
 		if (c->objects[i] == NULL) {
 			c->objects[i] = obj;
 			obj->oidx = i;
+
 			return;
 		}
 	}
@@ -484,15 +485,17 @@ void list_object(struct chunk *c, struct object *obj)
 	c->objects = mem_realloc(c->objects, newsize);
 	c->objects[c->obj_max] = obj;
 	obj->oidx = c->obj_max;
-	for (i = c->obj_max + 1; i <= c->obj_max + OBJECT_LIST_INCR; i++)
+	for (i = c->obj_max + 1; i <= c->obj_max + OBJECT_LIST_INCR; i++) {
 		c->objects[i] = NULL;
+	}
 	c->obj_max += OBJECT_LIST_INCR;
 
 	/* If we're on the current level, extend the known list */
 	if ((c == cave) && player->cave) {
 		player->cave->objects = mem_realloc(player->cave->objects, newsize);
-		for (i = player->cave->obj_max; i <= c->obj_max; i++)
+		for (i = player->cave->obj_max; i <= c->obj_max; i++) {
 			player->cave->objects[i] = NULL;
+		}
 		player->cave->obj_max = c->obj_max;
 	}
 }
@@ -529,8 +532,9 @@ void object_lists_check_integrity(struct chunk *c, struct chunk *c_k)
 			struct object *known_obj = c_k->objects[i];
 			if (obj) {
 				assert(obj->oidx == i);
-				if (!loc_is_zero(obj->grid))
+				if (!loc_is_zero(obj->grid)) {
 					assert(pile_contains(square_object(c, obj->grid), obj));
+				}
 			}
 			if (known_obj) {
 				assert (obj);

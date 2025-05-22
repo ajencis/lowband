@@ -1652,6 +1652,10 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	/* Put some objects in rooms */
 	alloc_objects(c, SET_ROOM, TYP_OBJECT,
 		Rand_normal(z_info->room_item_av * sp / 100, 3), c->depth, ORIGIN_FLOOR);
+	if (one_in_(3)) {
+		alloc_objects(c, SET_ROOM, TYP_CONTAINER,
+			Rand_normal(z_info->room_item_av * sp / 100 / 2, 3), c->depth, ORIGIN_FLOOR);
+	}
 
 	/* Put some objects/gold in the dungeon */
 	alloc_objects(c, SET_BOTH, TYP_OBJECT,
@@ -3303,6 +3307,10 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 	/* Put some objects in rooms */
 	alloc_objects(c, SET_ROOM, TYP_OBJECT,
 		Rand_normal(z_info->room_item_av, 3), c->depth, ORIGIN_FLOOR);
+	if (one_in_(3)) {
+		alloc_objects(c, SET_ROOM, TYP_CONTAINER,
+			Rand_normal(z_info->room_item_av / 2, 3), c->depth, ORIGIN_FLOOR);
+	}
 
 	/* Put some objects/gold in the dungeon */
 	alloc_objects(c, SET_BOTH, TYP_OBJECT,
@@ -3546,6 +3554,10 @@ struct chunk *moria_gen(struct player *p, int min_height, int min_width,
 	/* Put some objects in rooms */
 	alloc_objects(c, SET_ROOM, TYP_OBJECT,
 		Rand_normal(z_info->room_item_av, 3), c->depth, ORIGIN_FLOOR);
+	if (one_in_(3)) {
+		alloc_objects(c, SET_ROOM, TYP_CONTAINER,
+			Rand_normal(z_info->room_item_av / 2, 3), c->depth, ORIGIN_FLOOR);
+	}
 
 	/* Put some objects/gold in the dungeon */
 	alloc_objects(c, SET_BOTH, TYP_OBJECT,
@@ -4072,6 +4084,10 @@ struct chunk *lair_gen(struct player *p, int min_height, int min_width,
 	/* Put some objects in rooms */
 	alloc_objects(c, SET_ROOM, TYP_OBJECT,
 		Rand_normal(z_info->room_item_av, 3), c->depth, ORIGIN_FLOOR);
+	if (one_in_(3)) {
+		alloc_objects(c, SET_ROOM, TYP_CONTAINER,
+			Rand_normal(z_info->room_item_av / 2, 3), c->depth, ORIGIN_FLOOR);
+	}
 
 	/* Put some objects/gold in the dungeon */
 	alloc_objects(c, SET_BOTH, TYP_OBJECT,
@@ -4330,6 +4346,10 @@ struct chunk *gauntlet_gen(struct player *p, int min_height, int min_width,
 	/* Put some objects in rooms */
 	alloc_objects(c, SET_ROOM, TYP_OBJECT,
 		Rand_normal(z_info->room_item_av, 3), c->depth, ORIGIN_FLOOR);
+	if (one_in_(3)) {
+		alloc_objects(c, SET_ROOM, TYP_CONTAINER,
+			Rand_normal(z_info->room_item_av / 2, 3), c->depth, ORIGIN_FLOOR);
+	}
 
 	/* Put some objects/gold in the dungeon */
 	alloc_objects(c, SET_BOTH, TYP_OBJECT,

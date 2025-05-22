@@ -163,6 +163,8 @@ void map_info(struct loc grid, struct grid_data *g)
 			g->unseen_object = true;
 		} else if (ignore_known_item_ok(player, obj)) {
 			/* Item stays hidden */
+		} else if (object_container(obj, player->cave)) {
+			// L: can't see stuff in containers
 		} else if (!g->first_kind) {
 			g->first_kind = obj->kind;
 		} else {
@@ -234,7 +236,7 @@ void square_note_spot(struct chunk *c, struct loc grid)
 	if (!square_isseen(c, grid) && !square_isplayer(c, grid)) return;
 
 	/* Make the player know precisely what is on this grid */
-	square_know_pile(c, grid, NULL);
+	square_know_pile(c, grid, object_not_in_container_predicate);
 
 	// L: let the player know about items monsters wear
 	square_know_equipped_object(c, grid, NULL);
@@ -508,7 +510,7 @@ void wiz_light(struct chunk *c, struct player *p, bool full)
 
 			/* Memorize objects */
 			if (full) {
-				square_know_pile(c, grid, NULL);
+				square_know_pile(c, grid, object_not_in_container_predicate);
 			} else {
 				square_sense_pile(c, grid, NULL);
 			}
@@ -579,7 +581,7 @@ void wiz_dark(struct chunk *c, struct player *p, bool full)
 
 			/* Memorize objects */
 			if (full) {
-				square_know_pile(c, grid, NULL);
+				square_know_pile(c, grid, object_not_in_container_predicate);
 			} else {
 				square_sense_pile(c, grid, NULL);
 			}

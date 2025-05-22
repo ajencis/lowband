@@ -208,5 +208,13 @@ graphics:light umber
 # max-stack:5
 flags:HATES_FIRE | EASY_KNOW
 
+name:book:Book~
+graphics:light umber
+flags:HATES_FIRE
+
+name:container:Container~
+graphics:light umber
+flags:EASY_KNOW
+
 name:gold
 graphics:light yellow

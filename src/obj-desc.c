@@ -124,6 +124,8 @@ static const char *obj_desc_get_basename(const struct object *obj, bool aware,
 		case TV_LIGHT:
 		case TV_FOOD:
 		case TV_TOME:
+		case TV_OTHER_BOOK:
+		case TV_CONTAINER:
 			return obj->kind->name;
 
 		case TV_AMULET:
@@ -148,10 +150,11 @@ static const char *obj_desc_get_basename(const struct object *obj, bool aware,
 			return (show_flavor ? "& Scroll~ titled #" : "& Scroll~");
 
 		case TV_MAGIC_BOOK:
-			if (terse)
+			if (terse) {
 				return "& Book~ #";
-			else
+			} else {
 				return "& Book~ of Magic Spells #";
+			}
 
 		case TV_PRAYER_BOOK:
 			if (terse)
@@ -177,11 +180,11 @@ static const char *obj_desc_get_basename(const struct object *obj, bool aware,
 			else
 				return "& Spellbook~";
 
-		case TV_OTHER_BOOK:
+		/*case TV_OTHER_BOOK:
 			if (terse)
 				return "& Book~ #";
 			else
-				return "& Book of Mysteries~ #";
+				return "& Book of Mysteries~ #";*/
 
 		case TV_MUSHROOM:
 			return (show_flavor ? "& # Mushroom~" : "& Mushroom~");
@@ -306,6 +309,9 @@ size_t obj_desc_name_format(char *buf, size_t max, size_t end,
 
 	buf[end] = 0;
 
+	// L: default to uncapped, will be changed later if needed
+	my_struncap_full(buf);
+
 	return end;
 }
 
@@ -344,17 +350,19 @@ static size_t obj_desc_name(char *buf, size_t max, size_t end,
 	end = obj_desc_name_format(buf, max, end, basename, modstr, plural);
 
 	/* Append extra names of various kinds */
-	if (object_is_known_artifact(obj))
+	if (object_is_known_artifact(obj)) {
 		strnfcat(buf, max, &end, " %s", obj->artifact->name);
-	else if ((obj->known->ego && !(mode & ODESC_NOEGO)) || (obj->ego && store))
+	} else if ((obj->known->ego && !(mode & ODESC_NOEGO)) || (obj->ego && store)) {
 		strnfcat(buf, max, &end, " %s", obj->ego->name);
-	else if (aware && !obj->artifact &&
+	} else if (aware && !obj->artifact &&
 			(obj->kind->flavor || obj->kind->tval == TV_SCROLL || obj->kind->tval == TV_BOOK)) {
 		if (terse) {
 			strnfcat(buf, max, &end, " '%s'", obj->kind->name);
 		} else {
 			strnfcat(buf, max, &end, " of %s", obj->kind->name);
 		}
+
+		my_struncap_full(buf);
 	}
 
 	return end;
@@ -693,6 +701,7 @@ size_t object_desc(char *buf, size_t max, const struct object *obj,
 	bool spoil = mode & ODESC_SPOIL ? true : false;
 	bool terse = mode & ODESC_TERSE ? true : false;
 	bool cap = mode & ODESC_CAPITAL ? true : false;
+	bool uncap = mode & ODESC_LOWERCASE ? true : false;
 
 	size_t end = 0;
 
@@ -763,8 +772,12 @@ size_t object_desc(char *buf, size_t max, const struct object *obj,
 	if (cap) {
 		my_strcap(buf);
 	}
-	else if (mode & ODESC_LOWERCASE) {
+	else if (uncap) {
 		my_struncap_full(buf);
+	}
+	else {
+		// default behaviour is to uncap now
+
 	}
 
 	return end;

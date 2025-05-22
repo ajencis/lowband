@@ -23,6 +23,7 @@
 #include "init.h"
 #include "monster.h"
 #include "mon-spell.h"
+#include "mon-util.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
@@ -924,6 +925,24 @@ static bool spell_is_continuous(const struct player_spell *s)
 	return false;
 }
 
+static int realm_school_modifier(const struct player *p, const struct magic_realm *r, int school)
+{
+	int base = r->school_modifiers[school];
+	struct monster_race *mon;
+
+	if (!r->realm_special[RLM_SPCL_MON_APT]) return base;
+
+	mon = lookup_player_monster(p);
+
+	if (mon) {
+		int power = mon_power(mon, school);
+
+		base += power;
+	}
+
+	return base - 5;
+}
+
 int gener_spell_power(const struct player *p, const struct player_spell *s)
 {
 	int numschools = 0, sumschools = 0;
@@ -945,7 +964,7 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 			++numschools;
 			sumschools += p->state.powers[s->school[i]];
 			if (r) {
-				realmbonus += r->school_modifiers[s->school[i]];
+				realmbonus += realm_school_modifier(p, r, s->school[i]);
 			}
 		}
 	}

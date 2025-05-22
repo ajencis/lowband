@@ -3515,7 +3515,7 @@ void player_handle_post_move(struct player *p, bool eval_trap,
 		if (is_involuntary) {
 			cmdq_flush();
 		}
-		square_know_pile(cave, p->grid, NULL);
+		square_know_pile(cave, p->grid, object_not_in_container_predicate);
 	}
 
 	/* Discover invisible traps, set off visible ones */

@@ -1166,3 +1166,66 @@ min-combat:255:0:0
 type:dragon armor
 values:SPEED[d5]
 min-values:SPEED[0]
+
+
+### Books ###
+
+name:(rare)
+info:250:2
+alloc:10:5 to 100
+item:book:historical manuscript
+item:book:natural philosophy manuscript
+item:book:metaphysics manuscript
+item:book:ethics manuscript
+type:tome
+type:spellbook
+
+name:(obscure)
+info:500:1
+alloc:9:5 to 100
+item:book:historical manuscript
+item:book:natural philosophy manuscript
+item:book:metaphysics manuscript
+item:book:ethics manuscript
+type:tome
+type:spellbook
+
+name:(arcane)
+info:1000:2
+alloc:8:20 to 100
+item:book:historical manuscript
+item:book:natural philosophy manuscript
+item:book:metaphysics manuscript
+item:book:ethics manuscript
+type:tome
+type:spellbook
+
+name:(illuminated)
+info:2500:2
+alloc:7:35 to 100
+item:book:historical manuscript
+item:book:natural philosophy manuscript
+item:book:metaphysics manuscript
+item:book:ethics manuscript
+type:tome
+type:spellbook
+
+name:(gilded)
+info:5000:2
+alloc:6:50 to 100
+item:book:historical manuscript
+item:book:natural philosophy manuscript
+item:book:metaphysics manuscript
+item:book:ethics manuscript
+type:tome
+type:spellbook
+
+name:(original)
+info:10000:2
+alloc:5:65 to 100
+item:book:historical manuscript
+item:book:natural philosophy manuscript
+item:book:metaphysics manuscript
+item:book:ethics manuscript
+type:tome
+type:spellbook

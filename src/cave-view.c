@@ -614,34 +614,6 @@ static bool glow_can_light_wall(struct chunk *c, struct player *p,
 }
 
 /**
- * L: how dark the square in question can get
- * if the player is nearby and has PP_UNLIGHT it will be les than 0
- * otherwise it will be 0
- */
-/*static int square_min_light(struct chunk *c, struct loc grid, struct player *p)
-{
-	int result = 0, i;
-
-	if (p->state.powers[PP_UNLIGHT] > 0) {
-		int pdist = distance(player->grid, grid);
-		int darkness_max = get_power_scale(p, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2 - 1) + 1;
-
-		result = MIN(pdist - darkness_max, result);
-	}
-
-	for (i = 0; i < cave_monster_max(c); ++i) {
-		struct monster *mon = cave_monster(c, i);
-		if (!mon || !mon->race) continue;
-		int darkness = monster_darkness(mon);
-		int dist = distance(mon->grid, grid);
-
-		result = MIN(result, dist - darkness);
-	}
-
-	return result;
-}*/
-
-/**
  * Help calc_lighting():  add in the effect of a light source.
  * \param c Is the chunk to use.
  * \param p Is the player to use.
@@ -718,33 +690,6 @@ static void add_light(struct chunk *c, struct player *p, struct loc sgrid,
 			}
 		}
 	}
-
-	/*for (y = -radius; y <= radius; y++) {
-		for (x = -radius; x <= radius; x++) {
-			struct loc grid = loc_sum(sgrid, loc(x, y));
-			int dist = distance(sgrid, grid);
-			if (!square_in_bounds(c, grid)) continue;
-			if (dist > radius) continue;
-			// Don't propagate the light through walls.
-			if (!los(c, sgrid, grid)) continue;
-			
-			// Only light a wall if the face lit is possibly visible
-			// to the player.
-			if (!square_allowslos(c, grid) && !source_can_light_wall(c,
-					p, sgrid, grid)) continue;
-
-			// Adjust the light level
-			if (inten > 0) {
-				// Light getting less further away
-				c->squares[grid.y][grid.x].light +=
-					inten - dist;
-			} else {
-				// Light getting greater further away
-				c->squares[grid.y][grid.x].light +=
-					inten + dist;
-			}
-		}
-	}*/
 }
 
 /**
@@ -776,22 +721,6 @@ static void calc_lighting_aux(struct chunk *c, struct player *p, bool dark)
 			/* Squares with bright terrain have intensity 2 */
 			if (!dark && square_isbright(c, grid)) {
 				add_light(c, p, grid, 1, 2);
-				/*
-				c->squares[y][x].light += 2;
-				for (dir = 0; dir < 8; dir++) {
-					struct loc adj_grid = loc_sum(grid, ddgrid_ddd[dir]);
-					if (!square_in_bounds(c, adj_grid)) continue;
-					
-					// Only brighten a wall if the player
-					// is in position to view the face
-					// that's lit up.
-					
-					if (!square_allowslos(c, adj_grid) &&
-							!source_can_light_wall(
-							c, p, grid, adj_grid))
-							continue;
-					c->squares[adj_grid.y][adj_grid.x].light += 1;
-				}*/
 			}
 		}
 	}
@@ -911,11 +840,6 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 
 	/* Too far away */
 	if (d > z_info->max_sight) return;
-
-	/* UNLIGHT players have a special radius of view */
-	/*if (player_has(p, PF_UNLIGHT) && (p->state.cur_light <= 1)) {
-		close = d < (2 + p->lev / 6 - p->state.cur_light);
-	}*/
 
 	/* Special case for wall lighting. If we are a wall and the square in
 	 * the direction of the player is in LOS, we are in LOS. This avoids

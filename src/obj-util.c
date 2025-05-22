@@ -1341,3 +1341,28 @@ void alter_weapon_properties(struct object_kind *objs)
 		if (tval_is_launcher_k(curr)) alter_one_missile_weapon(curr);
 	}
 }
+
+bool object_can_contain(const struct object *container, const struct object *contained)
+{
+	return container->kind->contains[contained->kind->tval];
+}
+
+struct object *object_container(struct object *obj, struct chunk *c)
+{
+	struct object *sq_obj;
+
+	if (loc_is_zero(obj->grid)) return NULL;
+
+	for (sq_obj = obj->next; sq_obj; sq_obj = sq_obj->next) {
+		if (object_can_contain(sq_obj, obj)) return sq_obj;
+	}
+
+	return NULL;
+}
+
+bool object_not_in_container_predicate(const struct object *obj)
+{
+	if (!object_container((struct object *)obj, cave)) return true;
+	if (distance(obj->grid, player->grid) <= 1) return true;
+	return false;
+}

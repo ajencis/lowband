@@ -43,7 +43,7 @@ enum {
 					than obj->number as the number
 					of objects; not fully compatible
 					with ODESC_EXTRA */
-	ODESC_LOWERCASE = 0x800	/*!< L: uncapitalize the whole string */
+	ODESC_LOWERCASE = 0x800,	/*!< L: uncapitalize the whole string */
 };
 
 

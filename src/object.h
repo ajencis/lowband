@@ -243,6 +243,8 @@ struct object_kind {
 
 	const struct player_spell *spell;	/**< L: the spell it contains */
 
+	bool contains[TV_MAX];	// L: which tvals it can contain
+
 	/** Also saved in savefile **/
 
 	quark_t note_aware; 	/**< Autoinscription quark number */

@@ -2228,6 +2228,24 @@ static enum parser_error parse_object_proj_type(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_object_contains(struct parser *p) {
+	struct object_kind *k = parser_priv(p);
+	const char *contained = parser_getstr(p, "contains");
+	int tval;
+
+	if (!k) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	tval = tval_find_idx(contained);
+
+	assert(tval > -1);
+	
+	k->contains[tval] = true;
+
+	return PARSE_ERROR_NONE;
+}
+
 
 struct parser *init_parse_object(void) {
 	struct parser *p = parser_new();
@@ -2259,6 +2277,7 @@ struct parser *init_parse_object(void) {
 	parser_reg(p, "brand str code", parse_object_brand);
 	parser_reg(p, "curse sym name int power", parse_object_curse);
 	parser_reg(p, "proj-type sym proj", parse_object_proj_type);
+	parser_reg(p, "contains str contains", parse_object_contains);
 	return p;
 }
 

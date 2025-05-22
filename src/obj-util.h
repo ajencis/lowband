@@ -92,4 +92,8 @@ void mark_artifact_everseen(const struct artifact *art, bool seen);
 
 void alter_weapon_properties(struct object_kind *objs);
 
+bool object_can_contain(const struct object *container, const struct object *contained);
+struct object *object_container(struct object *obj, struct chunk *c);
+bool object_not_in_container_predicate(const struct object *obj);
+
 #endif /* OBJECT_UTIL_H */

@@ -36,7 +36,8 @@ enum
 	TYP_GOLD,	/*!< Gold */
 	TYP_OBJECT,	/*!< Object */
 	TYP_GOOD,	/*!< Good object */
-	TYP_GREAT	/*!< Great object */
+	TYP_GREAT,	/*!< Great object */
+    TYP_CONTAINER // L: containers
 };
 
 /**
@@ -431,6 +432,8 @@ void rand_dir(struct loc *offset);
 bool new_player_spot(struct chunk *c, struct player *p);
 void place_object(struct chunk *c, struct loc grid, int level, bool good,
 	bool great, uint8_t origin, int tval);
+void place_container(struct chunk *c, struct loc grid, int level, bool good,
+	bool great, uint8_t origin);
 void place_gold(struct chunk *c, struct loc grid, int level, uint8_t origin);
 void place_secret_door(struct chunk *c, struct loc grid);
 void place_closed_door(struct chunk *c, struct loc grid);

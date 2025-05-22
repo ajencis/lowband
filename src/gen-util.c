@@ -496,19 +496,20 @@ void place_random_stairs(struct chunk *c, struct loc grid, bool quest)
  * \param origin item origin
  * \param tval specified tval, if any
  */
-void place_object(struct chunk *c, struct loc grid, int level, bool good,
+static struct object *place_object_helper(struct chunk *c, struct loc grid, int level, bool good,
 		bool great, uint8_t origin, int tval)
 {
 	int32_t rating = 0;
+	uint32_t sqrating;
 	struct object *new_obj;
 	bool dummy = true;
 
-	if (!square_in_bounds(c, grid)) return;
-	if (!square_canputitem(c, grid)) return;
+	if (square_istrap(c, grid)) return NULL;
+	if (!square_in_bounds(c, grid)) return NULL;
 
 	/* Make an appropriate object */
 	new_obj = make_object(c, level, good, great, false, &rating, tval);
-	if (!new_obj) return;
+	if (!new_obj) return NULL;
 	new_obj->origin = origin;
 	new_obj->origin_depth = convert_depth_to_origin(c->depth);
 
@@ -518,25 +519,71 @@ void place_object(struct chunk *c, struct loc grid, int level, bool good,
 			mark_artifact_created(new_obj->artifact, false);
 		}
 		object_delete(c, NULL, &new_obj);
-		return;
-	} else {
-		uint32_t sqrating;
+		return NULL;
+	}
 
-		list_object(c, new_obj);
-		if (new_obj->artifact) {
-			c->good_item = true;
+	if (new_obj->artifact) {
+		c->good_item = true;
+	}
+
+	/* Avoid overflows */
+	if (rating > 2500000) {
+		rating = 2500000;
+	} else if (rating < -2500000) {
+		rating = -2500000;
+	}
+
+	sqrating = (rating / 100) * (rating / 100);
+	if (c->obj_rating < UINT32_MAX - sqrating) {
+		c->obj_rating += sqrating;
+	} else {
+		c->obj_rating = UINT32_MAX;
+	}
+
+	return new_obj;
+}
+
+void place_object(struct chunk *c, struct loc grid, int level, bool good,
+		bool great, uint8_t origin, int tval)
+{
+	if (!square_canputitem(c, grid)) return;
+
+	place_object_helper(c, grid, level, good, great, origin, tval);
+}
+
+void place_container(struct chunk *c, struct loc grid, int level, bool good,
+		bool great, uint8_t origin)
+{
+	struct object *new_obj;
+	struct object_kind *kind;
+	int i, j, num1, num2;
+
+	if (!square_in_bounds(c, grid)) return;
+	if (!square_canputitem(c, grid)) return;
+
+	new_obj = place_object_helper(c, grid, level, good, great, origin, TV_CONTAINER);
+
+	if (!new_obj) return;
+
+	kind = new_obj->kind;
+
+	num1 = randint0(10);
+	num2 = randint0(10);
+
+	for (i = 0; i < MIN(num1, num2); ++i) {
+		int selected_tv = -1;
+		int num_selections = 0;
+		for (j = 0; j < TV_MAX; ++j) {
+			if (kind->contains[j]) {
+				++num_selections;
+				if (one_in_(num_selections)) {
+					selected_tv = j;
+				}
+			}
 		}
-		/* Avoid overflows */
-		if (rating > 2500000) {
-			rating = 2500000;
-		} else if (rating < -2500000) {
-			rating = -2500000;
-		}
-		sqrating = (rating / 100) * (rating / 100);
-		if (c->obj_rating < UINT32_MAX - sqrating) {
-			c->obj_rating += sqrating;
-		} else {
-			c->obj_rating = UINT32_MAX;
+
+		if (selected_tv > 0) {
+			place_object_helper(c, grid, level, good && one_in_(2), great && one_in_(3), origin, selected_tv);
 		}
 	}
 }
@@ -767,6 +814,8 @@ void alloc_objects(struct chunk *c, int set, int typ, int num, int depth,
 		bool ok = alloc_object(c, set, typ, depth, origin);
 		if (!ok) l++;
 	}
+
+	object_lists_check_integrity(c, player->cave);
 }
 
 
@@ -826,6 +875,9 @@ bool alloc_object(struct chunk *c, int set, int typ, int depth, uint8_t origin)
 				break;
 			case TYP_GREAT:
 				place_object(c, grid, depth, true, one_in_(5), origin, 0);
+				break;
+			case TYP_CONTAINER:
+				place_container(c, grid, depth, false, false, origin);
 				break;
 			}
 			placed = true;

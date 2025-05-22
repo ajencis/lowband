@@ -1263,7 +1263,7 @@ static bool store_create_random(struct store *store, bool reset)
 		/*** Pre-generation filters ***/
 
 		/* No chests in stores XXX */
-		if (kind->tval == TV_CHEST) continue;
+		if (kind->tval == TV_CHEST || kind->tval == TV_CONTAINER) continue;
 
 		if (reset && !object_kind_stockable_on_reset(kind)) continue;
 
@@ -1622,6 +1622,7 @@ int find_inven(const struct object *obj)
 		{
 			/* Chests */
 			case TV_CHEST:
+			case TV_CONTAINER:
 			{
 				/* Never okay */
 				return 0;

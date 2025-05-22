@@ -909,8 +909,9 @@ bool floor_carry(struct chunk *c, struct loc grid, struct object *drop,
 	struct object *obj, *ignore = floor_get_oldest_ignored(player, c, grid);
 
 	/* Fail if the square can't hold objects */
-	if (!square_isobjectholding(c, grid))
+	if (!square_isobjectholding(c, grid)) {
 		return false;
+	}
 
 	/* Scan objects in that grid for combination */
 	for (obj = square_object(c, grid); obj; obj = obj->next) {
@@ -960,7 +961,9 @@ bool floor_carry(struct chunk *c, struct loc grid, struct object *drop,
 	pile_insert(&c->squares[grid.y][grid.x].obj, drop);
 
 	/* Record in the level list */
+	object_lists_check_integrity(c, player->cave);
 	list_object(c, drop);
+	object_lists_check_integrity(c, player->cave);
 
 	/* If there's a known version, put it in the player's view of the
 	 * cave but at an unknown location.  square_note_spot() will move
@@ -980,6 +983,8 @@ bool floor_carry(struct chunk *c, struct loc grid, struct object *drop,
 	if (ignore_item_ok(player, drop)) {
 		*note = false;
 	}
+
+	object_lists_check_integrity(c, player->cave);
 
 	/* Result */
 	return true;
