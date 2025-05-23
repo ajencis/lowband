@@ -343,9 +343,11 @@ static bool not_secret_door_nor_wall(struct chunk *c, struct loc grid)
  * opens into another corridor or a room into a secret door
  * then, put some treasure in the secret room
  */
-static void make_rooms_secret(struct chunk *c)
+static bool make_rooms_secret(struct chunk *c)
 {
 	int i, j;
+
+	bool made_secret = false;
 
 	for (i = 0; i < dun->cent_n; ++i) {
 		if (one_in_(2)) continue;
@@ -409,8 +411,12 @@ static void make_rooms_secret(struct chunk *c)
 				struct loc grid = secretlocs[j];
 				sqinfo_on(square(c, grid)->info, SQUARE_SECRET);
 			}
+
+			made_secret = true;
 		}
 	}
+
+	return made_secret;
 }
 
 
@@ -1479,6 +1485,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	int sp = p->depth / 2 + 50;
 	int ssp = my_int_sqrt(sp * 100);
 	int dun_unusual = dun->profile->dun_unusual;
+	bool has_secret;
 
 	bool **blocks_tried;
 	struct chunk *c;
@@ -1604,7 +1611,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	ensure_connectedness(c, true);
 
 	// L: make rooms that have only one connection secret
-	make_rooms_secret(c);
+	has_secret = make_rooms_secret(c);
 
 	/* Add some magma streamers */
 	for (i = 0; i < dun->profile->str.mag; i++) {
@@ -1629,7 +1636,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	/* Place some traps in the dungeon, reduce frequency by factor of 5 */
 	// L: no longer reduce trap frequency but only 1/3 of levels have traps
 	if (one_in_(3)) {
-		alloc_objects(c, SET_CORR, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
+		alloc_objects(c, SET_CORR | SET_NOT_AVOIDABLE, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
 	}
 
 	/* Determine the character location */
@@ -1653,8 +1660,12 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	alloc_objects(c, SET_ROOM, TYP_OBJECT,
 		Rand_normal(z_info->room_item_av * sp / 100, 3), c->depth, ORIGIN_FLOOR);
 	if (one_in_(3)) {
-		alloc_objects(c, SET_ROOM, TYP_CONTAINER,
+		alloc_objects(c, SET_ROOM | SET_BESIDE_WALL, TYP_CONTAINER,
 			Rand_normal(z_info->room_item_av * sp / 100 / 2, 3), c->depth, ORIGIN_FLOOR);
+	}
+
+	if (has_secret) {
+		alloc_objects(c, SET_ROOM | SET_IS_SECRET, TYP_GOLD, randint1(3), c->depth * 3 / 2, ORIGIN_SECRET);
 	}
 
 	/* Put some objects/gold in the dungeon */
@@ -1924,7 +1935,7 @@ struct chunk *labyrinth_gen(struct player *p, int min_height, int min_width,
 	alloc_objects(c, SET_BOTH, TYP_RUBBLE, randint1(k), c->depth, 0);
 
 	/* Place some traps in the dungeon */
-	alloc_objects(c, SET_CORR, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
+	alloc_objects(c, SET_CORR | SET_NOT_AVOIDABLE, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
 
 	/* Put some monsters in the dungeon */
 	for (i = z_info->level_monster_min + randint1(8) + k; i > 0; i--) {
@@ -2554,7 +2565,7 @@ struct chunk *cavern_gen(struct player *p, int min_height, int min_width,
 	alloc_objects(c, SET_BOTH, TYP_RUBBLE, randint1(k), c->depth, 0);
 
 	/* Place some traps in the dungeon, */
-	alloc_objects(c, SET_CORR, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
+	alloc_objects(c, SET_CORR | SET_NOT_AVOIDABLE, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
 
 	/* Determine the character location */
 	if (!new_player_spot(c, p)) {
@@ -3192,10 +3203,6 @@ static struct chunk *modified_chunk(struct player *p, int depth, int height,
 	do_traditional_tunneling(c);
 	ensure_connectedness(c, true);
 
-	// L: make rooms that have only one connection secret
-	make_rooms_secret(c);
-
-
 	/* Turn the outer permanent walls back to granite */
 	draw_rectangle(c, 0, 0, c->height - 1, c->width - 1, 
 		FEAT_GRANITE, SQUARE_NONE, true);
@@ -3235,6 +3242,7 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 {
 	int i, k;
 	int size_percent, y_size, x_size;
+	bool has_secret;
 	struct chunk *c;
 
 	size_percent = my_int_sqrt(p->depth) * 5 + 50;
@@ -3272,6 +3280,9 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 	handle_level_stairs(c, dun->persist, dun->quest,
 		rand_range(3, 4), rand_range(1, 2));
 
+	// L: make rooms that have only one connection secret
+	has_secret = make_rooms_secret(c);
+
 	/* General amount of rubble, traps and monsters */
 	k = MAX(MIN(c->depth / 3, 10), 2);
 
@@ -3281,7 +3292,7 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 	/* Place some traps in the dungeon, reduce frequency by factor of 5 */
 	// L: no longer reduce trap frequency but only 1/3 of levels have traps
 	if (one_in_(3)) {
-		alloc_objects(c, SET_CORR, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
+		alloc_objects(c, SET_CORR | SET_NOT_AVOIDABLE, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
 	}
 
 	/* Determine the character location */
@@ -3308,7 +3319,7 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 	alloc_objects(c, SET_ROOM, TYP_OBJECT,
 		Rand_normal(z_info->room_item_av, 3), c->depth, ORIGIN_FLOOR);
 	if (one_in_(3)) {
-		alloc_objects(c, SET_ROOM, TYP_CONTAINER,
+		alloc_objects(c, SET_ROOM | SET_BESIDE_WALL, TYP_CONTAINER,
 			Rand_normal(z_info->room_item_av / 2, 3), c->depth, ORIGIN_FLOOR);
 	}
 
@@ -3317,6 +3328,10 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 		Rand_normal(z_info->both_item_av, 3), c->depth, ORIGIN_FLOOR);
 	alloc_objects(c, SET_BOTH, TYP_GOLD,
 		Rand_normal(z_info->both_gold_av, 3), c->depth, ORIGIN_FLOOR);
+
+	if (has_secret) {
+		alloc_objects(c, SET_ROOM | SET_IS_SECRET, TYP_GOLD, randint1(3), c->depth * 3 / 2, ORIGIN_SECRET);
+	}
 
 	alloc_mana(c);
 
@@ -3444,9 +3459,6 @@ static struct chunk *moria_chunk(struct player *p, int depth, int height,
 	do_traditional_tunneling(c);
 	ensure_connectedness(c, true);
 
-	// L: make rooms that have only one connection secret
-	make_rooms_secret(c);
-
 
 	/* Turn the outer permanent walls back to granite */
 	draw_rectangle(c, 0, 0, c->height - 1, c->width - 1, 
@@ -3478,6 +3490,7 @@ struct chunk *moria_gen(struct player *p, int min_height, int min_width,
 {
 	int i, k;
 	int size_percent, y_size, x_size;
+	bool has_secret;
 	struct chunk *c;
 
     size_percent = my_int_sqrt(p->depth) * 5 + 50;
@@ -3495,22 +3508,28 @@ struct chunk *moria_gen(struct player *p, int min_height, int min_width,
 
 	c = moria_chunk(p, p->depth, MIN(z_info->dungeon_hgt, y_size),
 		MIN(z_info->dungeon_wid, x_size), dun->persist);
+	
 	if (!c) {
 		*p_error = "moria chunk could not be created";
 		return NULL;
 	}
+
+	// L: make rooms that have only one connection secret
+	has_secret = make_rooms_secret(c);
 
 	/* Generate permanent walls around the edge of the generated area */
 	draw_rectangle(c, 0, 0, c->height - 1, c->width - 1,
 		FEAT_PERM, SQUARE_NONE, true);
 
 	/* Add some magma streamers */
-	for (i = 0; i < dun->profile->str.mag; i++)
+	for (i = 0; i < dun->profile->str.mag; i++) {
 		build_streamer(c, FEAT_MAGMA, dun->profile->str.mc);
+	}
 
 	/* Add some quartz streamers */
-	for (i = 0; i < dun->profile->str.qua; i++)
+	for (i = 0; i < dun->profile->str.qua; i++) {
 		build_streamer(c, FEAT_QUARTZ, dun->profile->str.qc);
+	}
 
 	/* Place 3 or 4 down stairs and 1 or 2 up stairs near some walls */
 	handle_level_stairs(c, dun->persist, dun->quest,
@@ -3525,7 +3544,7 @@ struct chunk *moria_gen(struct player *p, int min_height, int min_width,
 	/* Place some traps in the dungeon, reduce frequency by factor of 5 */
 	// L: no longer reduce trap frequency but only 1/3 of levels have traps
 	if (one_in_(3)) {
-		alloc_objects(c, SET_CORR, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
+		alloc_objects(c, SET_CORR | SET_NOT_AVOIDABLE, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
 	}
 
 	/* Determine the character location */
@@ -3555,7 +3574,7 @@ struct chunk *moria_gen(struct player *p, int min_height, int min_width,
 	alloc_objects(c, SET_ROOM, TYP_OBJECT,
 		Rand_normal(z_info->room_item_av, 3), c->depth, ORIGIN_FLOOR);
 	if (one_in_(3)) {
-		alloc_objects(c, SET_ROOM, TYP_CONTAINER,
+		alloc_objects(c, SET_ROOM | SET_BESIDE_WALL, TYP_CONTAINER,
 			Rand_normal(z_info->room_item_av / 2, 3), c->depth, ORIGIN_FLOOR);
 	}
 
@@ -3564,6 +3583,10 @@ struct chunk *moria_gen(struct player *p, int min_height, int min_width,
 		Rand_normal(z_info->both_item_av, 3), c->depth, ORIGIN_FLOOR);
 	alloc_objects(c, SET_BOTH, TYP_GOLD,
 		Rand_normal(z_info->both_gold_av, 3), c->depth, ORIGIN_FLOOR);
+
+	if (has_secret) {
+		alloc_objects(c, SET_ROOM | SET_IS_SECRET, TYP_GOLD, randint1(3), c->depth * 3 / 2, ORIGIN_SECRET);
+	}
 
 	alloc_mana(c);
 
@@ -3677,6 +3700,7 @@ struct chunk *hard_centre_gen(struct player *p, int min_height, int min_width,
 	int i, k, cavern_area;
 	struct loc grid;
 	struct loc floor[4];
+	bool has_secret;
 
 	/* No persistent levels of this type for now */
 	if (dun->persist) {
@@ -3832,7 +3856,7 @@ struct chunk *hard_centre_gen(struct player *p, int min_height, int min_width,
 	ensure_connectedness(c, false);
 
 	// L: make rooms that have only one connection secret
-	make_rooms_secret(c);
+	has_secret = make_rooms_secret(c);
 
 
 	/* Free all the chunks */
@@ -3863,7 +3887,7 @@ struct chunk *hard_centre_gen(struct player *p, int min_height, int min_width,
 	alloc_objects(c, SET_BOTH, TYP_RUBBLE, randint1(k), c->depth, 0);
 
 	/* Place some traps in the dungeon */
-	alloc_objects(c, SET_CORR, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
+	alloc_objects(c, SET_CORR | SET_NOT_AVOIDABLE, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
 
 	/* Determine the character location */
 	if (!new_player_spot(c, p)) {
@@ -3886,6 +3910,10 @@ struct chunk *hard_centre_gen(struct player *p, int min_height, int min_width,
 		ORIGIN_CAVERN);
 	alloc_objects(c, SET_BOTH, TYP_GOOD, randint0(k / 4), c->depth,
 		ORIGIN_CAVERN);
+
+	if (has_secret) {
+		alloc_objects(c, SET_ROOM | SET_IS_SECRET, TYP_GOLD, randint1(3), c->depth * 3 / 2, ORIGIN_SECRET);
+	}
 
 	alloc_mana(c);
 
@@ -4078,14 +4106,14 @@ struct chunk *lair_gen(struct player *p, int min_height, int min_width,
 	/* Place some traps in the dungeon, reduce frequency by factor of 5 */
 	// L: no longer reduce trap frequency but only 1/3 of levels have traps
 	if (one_in_(3)) {
-		alloc_objects(c, SET_CORR, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
+		alloc_objects(c, SET_CORR &SET_NOT_AVOIDABLE, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
 	}
 
 	/* Put some objects in rooms */
 	alloc_objects(c, SET_ROOM, TYP_OBJECT,
 		Rand_normal(z_info->room_item_av, 3), c->depth, ORIGIN_FLOOR);
 	if (one_in_(3)) {
-		alloc_objects(c, SET_ROOM, TYP_CONTAINER,
+		alloc_objects(c, SET_ROOM | SET_BESIDE_WALL, TYP_CONTAINER,
 			Rand_normal(z_info->room_item_av / 2, 3), c->depth, ORIGIN_FLOOR);
 	}
 
@@ -4341,13 +4369,13 @@ struct chunk *gauntlet_gen(struct player *p, int min_height, int min_width,
 	alloc_objects(c, SET_CORR, TYP_RUBBLE, randint1(k), c->depth, 0);
 
 	/* Place some traps in the dungeon */
-	alloc_objects(c, SET_CORR, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
+	alloc_objects(c, SET_CORR &SET_NOT_AVOIDABLE, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
 
 	/* Put some objects in rooms */
 	alloc_objects(c, SET_ROOM, TYP_OBJECT,
 		Rand_normal(z_info->room_item_av, 3), c->depth, ORIGIN_FLOOR);
 	if (one_in_(3)) {
-		alloc_objects(c, SET_ROOM, TYP_CONTAINER,
+		alloc_objects(c, SET_ROOM | SET_BESIDE_WALL, TYP_CONTAINER,
 			Rand_normal(z_info->room_item_av / 2, 3), c->depth, ORIGIN_FLOOR);
 	}
 

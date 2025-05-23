@@ -24,9 +24,9 @@ enum
 	SET_ROOM = 0x02, /*!< Room */
 	SET_BOTH = 0x03, /*!< Anywhere */
     SET_NO_SECRET = 0x04, /*L: not in secret locations*/
-    SET_NO_SECRET_CORR = 0x05,
-    SET_NO_SECRET_ROOM = 0x06,
-    SET_NO_SECRET_BOTH = 0x07
+    SET_IS_SECRET = 0x08,
+    SET_BESIDE_WALL = 0x10,
+    SET_NOT_AVOIDABLE = 0x20
 };
 
 enum

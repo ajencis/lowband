@@ -543,20 +543,12 @@ static struct object *place_object_helper(struct chunk *c, struct loc grid, int 
 	return new_obj;
 }
 
-void place_object(struct chunk *c, struct loc grid, int level, bool good,
-		bool great, uint8_t origin, int tval)
-{
-	if (!square_canputitem(c, grid)) return;
-
-	place_object_helper(c, grid, level, good, great, origin, tval);
-}
-
 void place_container(struct chunk *c, struct loc grid, int level, bool good,
 		bool great, uint8_t origin)
 {
 	struct object *new_obj;
 	struct object_kind *kind;
-	int i, j, num1, num2;
+	int i, j, num;
 
 	if (!square_in_bounds(c, grid)) return;
 	if (!square_canputitem(c, grid)) return;
@@ -567,10 +559,10 @@ void place_container(struct chunk *c, struct loc grid, int level, bool good,
 
 	kind = new_obj->kind;
 
-	num1 = randint0(10);
-	num2 = randint0(10);
+	num = randint0(25) - 10;
+	num = MAX(num, 0);
 
-	for (i = 0; i < MIN(num1, num2); ++i) {
+	for (i = 0; i < num; ++i) {
 		int selected_tv = -1;
 		int num_selections = 0;
 		for (j = 0; j < TV_MAX; ++j) {
@@ -586,6 +578,14 @@ void place_container(struct chunk *c, struct loc grid, int level, bool good,
 			place_object_helper(c, grid, level, good && one_in_(2), great && one_in_(3), origin, selected_tv);
 		}
 	}
+}
+
+void place_object(struct chunk *c, struct loc grid, int level, bool good,
+		bool great, uint8_t origin, int tval)
+{
+	if (!square_canputitem(c, grid)) return;
+
+	place_object_helper(c, grid, level, good, great, origin, tval);
 }
 
 
@@ -837,6 +837,8 @@ bool alloc_object(struct chunk *c, int set, int typ, int depth, uint8_t origin)
 		loc(c->width - 2, c->height - 2));
 	struct loc grid;
 
+	bool messaged = false;
+
 	while (!placed && cave_find_get_grid(&grid, state)) {
 		/*
 		 * If we're ok with a corridor and we're in one, we're done.
@@ -844,15 +846,33 @@ bool alloc_object(struct chunk *c, int set, int typ, int depth, uint8_t origin)
 		 */
 		bool matched = ((set & SET_CORR) && !square_isroom(c, grid))
 			|| ((set & SET_ROOM) && square_isroom(c, grid));
+		
+		if (sqinfo_has(square(c, grid)->info, SQUARE_SECRET)) {
+			if (set & SET_NO_SECRET) matched = false;
+		}
+		else {
+			if (set & SET_IS_SECRET) matched = false;
+		}
 
-		if ((set & SET_NO_SECRET) && sqinfo_has(square(c, grid)->info, SQUARE_SECRET)) matched = false;
+		if ((set & SET_BESIDE_WALL) || (set & SET_NOT_AVOIDABLE)) {
+			bool n = square_isstrongwall(c, loc_sum(grid, loc(0, -1)));
+			bool s = square_isstrongwall(c, loc_sum(grid, loc(0, 1)));
+			bool e = square_isstrongwall(c, loc_sum(grid, loc(1, 0)));
+			bool w = square_isstrongwall(c, loc_sum(grid, loc(-1, 0)));
 
-		// L: traps should be places that players can't go around
-		if (typ == TYP_TRAP) {
-			bool ns = !square_ispassable(c, loc(grid.x, grid.y - 1)) && !square_ispassable(c, loc(grid.x, grid.y + 1));
-			bool ew = !square_ispassable(c, loc(grid.x - 1, grid.y)) && !square_ispassable(c, loc(grid.x + 1, grid.y));
+			if (set & SET_BESIDE_WALL) {
+				if (!n && !s && !e && !w) {
+					matched = false;
+				}
+			}
 
-			if (!ns && !ew) matched = false;
+			if (set & SET_NOT_AVOIDABLE) {
+				if ((!n || !s) && (!e || !w)) {
+					matched = false;
+				}
+			}
+
+			messaged = true;
 		}
 
 		if (square_isempty(c, grid) && matched) {

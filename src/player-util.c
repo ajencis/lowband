@@ -3653,8 +3653,8 @@ void search(struct player *p)
 
 				rf_on(get_lore(mon->race)->flags, RF_INVISIBLE);
 
-				monster_desc(mdesc, sizeof(mdesc), mon, MDESC_STANDARD);
-				msg("You have spotted a %s", mdesc);
+				monster_desc(mdesc, sizeof(mdesc), mon, MDESC_SHOW | MDESC_OBJE | MDESC_IND_VIS);
+				msg("You have spotted %s", mdesc);
 			}
 
 			/* Traps on chests */

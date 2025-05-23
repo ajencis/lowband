@@ -421,10 +421,12 @@ bool object_similar(const struct object *obj1, const struct object *obj2,
 	int i;
 
 	/* Equipment items don't stack */
-	if (object_is_equipped(player->body, obj1))
+	if (object_is_equipped(player->body, obj1)) {
 		return false;
-	if (object_is_equipped(player->body, obj2))
+	}
+	if (object_is_equipped(player->body, obj2)) {
 		return false;
+	}
 
 	/* If either item is unknown, do not stack */
 	if (mode & OSTACK_LIST && obj1->kind != obj1->known->kind) return false;
@@ -441,15 +443,25 @@ bool object_similar(const struct object *obj1, const struct object *obj2,
 
 	/* Different elements don't stack */
 	for (i = 0; i < ELEM_MAX; i++) {
-		if (obj1->el_info[i].res_level != obj2->el_info[i].res_level)
+		if (obj1->el_info[i].res_level != obj2->el_info[i].res_level) {
 			return false;
+		}
 		if ((obj1->el_info[i].flags & (EL_INFO_HATES | EL_INFO_IGNORE)) !=
-			(obj2->el_info[i].flags & (EL_INFO_HATES | EL_INFO_IGNORE)))
+				(obj2->el_info[i].flags & (EL_INFO_HATES | EL_INFO_IGNORE))) {
 			return false;
+		}
 	}
 
 	/* Artifacts never stack */
 	if (obj1->artifact || obj2->artifact) return false;
+
+	// L: need to be the same spell if any
+	if (obj1->spell && obj2->spell) {
+		if (obj1->spell->sidx != obj2->spell->sidx) return false;
+	}
+	else if (obj1->spell || obj2->spell) {
+		return false;
+	}
 
 	/* Analyze the items */
 	if (tval_is_chest(obj1)) {
@@ -459,19 +471,20 @@ bool object_similar(const struct object *obj1, const struct object *obj2,
 		// Tomes should not stack unless they're the same tome
 		return false;
 	} else if (tval_is_edible(obj1) || tval_is_potion(obj1) ||
-		tval_is_scroll(obj1) || tval_is_rod(obj1)) {
+			tval_is_scroll(obj1) || tval_is_rod(obj1)) {
 		/* Food, potions, scrolls and rods all stack nicely,
 		   since the kinds are identical, either both will be
 		   aware or both will be unaware */
 	} else if (tval_can_have_charges(obj1) || tval_is_money(obj1)) {
 		/* Gold, staves and wands stack most of the time */
 		/* Too much gold or too many charges */
-		if (obj1->pval + obj2->pval > MAX_PVAL)
+		if (obj1->pval + obj2->pval > MAX_PVAL) {
 			return false;
+		}
 
 		/* ... otherwise ok */
 	} else if (tval_is_weapon(obj1) || tval_is_armor(obj1) ||
-		tval_is_jewelry(obj1) || tval_is_light(obj1)) {
+			tval_is_jewelry(obj1) || tval_is_light(obj1)) {
 		bool obj1_is_known = object_fully_known(obj1);
 		bool obj2_is_known = object_fully_known(obj2);
 
@@ -486,9 +499,11 @@ bool object_similar(const struct object *obj1, const struct object *obj2,
 		if (obj1->to_a != obj2->to_a) return false;
 
 		/* Require all identical modifiers */
-		for (i = 0; i < OBJ_MOD_MAX; i++)
-			if (obj1->modifiers[i] != obj2->modifiers[i])
+		for (i = 0; i < OBJ_MOD_MAX; i++) {
+			if (obj1->modifiers[i] != obj2->modifiers[i]) {
 				return (false);
+			}
+		}
 
 		/* Require identical ego-item types */
 		if (obj1->ego != obj2->ego) return false;

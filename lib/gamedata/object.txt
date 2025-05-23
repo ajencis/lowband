@@ -5382,6 +5382,7 @@ level:0
 weight:15
 cost:1
 alloc:25:0 to 100
+pile:50:1d5
 attack:1d1:0:0
 armor:0:0
 power:0
@@ -5393,6 +5394,7 @@ level:0
 weight:15
 cost:1
 alloc:25:0 to 100
+pile:50:1d8
 attack:1d1:0:0
 armor:0:0
 power:0
@@ -5404,6 +5406,7 @@ level:0
 weight:15
 cost:250
 alloc:20:0 to 100
+pile:25:1d4
 attack:1d1:0:0
 armor:0:0
 power:0
@@ -5415,6 +5418,7 @@ level:0
 weight:15
 cost:500
 alloc:17:0 to 100
+pile:25:1d4
 attack:1d1:0:0
 armor:0:0
 power:0
@@ -5426,6 +5430,7 @@ level:0
 weight:15
 cost:750
 alloc:15:0 to 100
+pile:25:1d4
 attack:1d1:0:0
 armor:0:0
 power:0
@@ -5437,6 +5442,7 @@ level:0
 weight:15
 cost:1000
 alloc:12:0 to 100
+pile:25:1d4
 attack:1d1:0:0
 armor:0:0
 power:0

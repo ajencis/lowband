@@ -518,6 +518,7 @@ desc: can particularly effectively use metamagic.
 cost:15
 rarity:5
 parent:skill:MAGIC
+prereq:HAS_MATCHING_SPELL
 
 type:power
 code:UNLIGHT
