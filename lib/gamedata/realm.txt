@@ -85,6 +85,7 @@ name:sorcery
 stat:CON
 special:MON_APT
 special:INNATE
+special:SPELLS_KNOWN:-50
 verb:evoke
 spell-noun:spell
 book-noun:tome

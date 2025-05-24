@@ -244,9 +244,10 @@ static void view_ability_display(struct menu *menu, int oid, bool cursor,
 		}
 	case PLAYER_FLAG_POWER:
 		{
+			int curr = player->state.powers[choices[oid].index];
 			strnfmt(buf, sizeof(buf), "Power:  %s (level %i)", 
-				choices[oid].name, player->state.powers[choices[oid].index]);
-			color = COLOUR_GREEN;
+				choices[oid].name, curr);
+			color = curr > 0 ? COLOUR_GREEN : COLOUR_RED;
 			break;
 		}
 	case PLAYER_FLAG_SKILL:
@@ -275,82 +276,12 @@ static void view_ability_menu_browser(int oid, void *data, const region *loc)
 {
 	const struct player_ability *choices = data;
 	char buf[256] = "";
-	/*int monster_powers[PP_MAX] = { 0 };
-	int monster_skills[SKILL_MAX] = { 0 };
-	int race_skills[SKILL_MAX] = { 0 };
-	int race_x_skills[SKILL_MAX] = { 0 };
-	struct monster_race *mrace = lookup_player_monster(player);
-
-	player_race_r_skill(player->race, mrace ? true : false, race_skills);
-	player_race_x_skill(player->race, mrace ? true : false, race_x_skills);*/
 
 	/* Redirect output to the screen */
 	text_out_hook = text_out_to_screen;
 	text_out_wrap = 60;
 	text_out_indent = loc->col - 1;
 	text_out_pad = 1;
-
-	/* L: more info for powers and skills */
-	/*char extra[128];
-	extra[0] = '\0';
-	if (mrace) {
-		calc_monster_powers(mrace, monster_powers, &player->state);
-		calc_monster_skills(mrace, monster_skills);
-	}
-	if (choices[oid].group == PLAYER_FLAG_POWER || choices[oid].group == PLAYER_FLAG_SKILL) {
-		int cbase, cxtra, rbase, rxtra, tome, stat;
-		const char *stat_name = NULL;
-		if (choices[oid].group == PLAYER_FLAG_POWER) {
-			cbase = 0;
-			cxtra = player_class_power(player, choices[oid].index);
-			rbase = monster_powers[choices[oid].index];
-			rxtra = player_race_power(player, choices[oid].index);
-			tome = player->extra_powers[choices[oid].index] / 2;
-			stat = 0;
-		}
-		else {
-			int whichstat = player_skill_stat(player, choices[oid].index);
-			cbase = player_class_c_skill(player, choices[oid].index);
-			cxtra = player_class_x_skill(player, choices[oid].index) * 100 / 10;
-			rbase = race_skills[choices[oid].index] + monster_skills[choices[oid].index];
-			rxtra = race_x_skills[choices[oid].index] * 100 / 10;
-			tome = player->extra_skills[choices[oid].index];
-			if (whichstat != -1) {
-				int ind = player->state.stat_ind[whichstat];
-				int curr;
-				stat = adj_stat_skill_flat(ind, choices[oid].index);
-				curr = cbase + rbase + (cxtra + rxtra) * player->lev / 100 + tome;
-				curr = MAX(curr, 0);
-				stat += curr * adj_stat_skill_percent(ind, choices[oid].index) / 100;
-				stat_name = stat_idx_to_name(whichstat);
-			} else {
-				stat = 0;
-			}
-		}
-		int numleft = ((rxtra || rbase) ? 1 : 0) +
-				((cxtra || cbase) ? 1 : 0) +
-				(tome ? 1 : 0) +
-				(stat ? 1 : 0);
-		if (numleft > 0) {
-			my_strcat(extra, " You gain ", sizeof(extra));
-			if (cbase || cxtra) {
- 				add_scaling_desc(extra, "class", cbase, cxtra, numleft, sizeof(extra));
-				--numleft;
-			}
-			if (rbase || rxtra) {
-				add_scaling_desc(extra, "race", rbase, rxtra, numleft, sizeof(extra));
-				--numleft;
-			}
-			if (tome) {
-				add_scaling_desc(extra, "learning", tome, 0, numleft, sizeof(extra));
-				--numleft;
-			}
-			if (stat && stat_name) {
-				add_scaling_desc(extra, stat_name, stat, 0, numleft, sizeof(extra));
-				--numleft;
-			}
-		}
-	}*/
 
 	ability_desc(player, &choices[oid], buf, sizeof(buf), true, choices[oid].group);
 
@@ -782,10 +713,7 @@ static bool ability_learn_handler(struct menu *m, const ui_event *e, int oid)
 	struct ability_learn_menu_data *data = menu_priv(m);
 	const struct player_ability *abil = ability_by_tome_id(oid);
 
-	/*if (e->type == EVT_SELECT) {
-		return true;
-	}
-	else */if ((e->type == EVT_KBRD && e->key.code == '+') ||
+	if ((e->type == EVT_KBRD && e->key.code == '+') ||
 			(e->type == EVT_MOVE && target_dir(e->key) == 6)) {
 		data->temp_target[oid] = tome_next_increment(data->p, abil, data->temp_target[oid]);
 		on_change_target(m);
@@ -975,8 +903,6 @@ static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode 
 	}
 	memcpy(data->temp_target, p->extra_target, sizeof *data->temp_target * z_info->learn_max);
 
-	//if (OPT(p, birth_level_one_learn)) calc_max_level_powers(data, p);
-
 	menu_setpriv(m, z_info->learn_max, data);
 
 	get_max_learnable(m, p);
@@ -1104,17 +1030,6 @@ bool textui_powers_learn(struct player *p, int *max_learn, bool birth)
 	int i;
 
 	make_ability_subchoice(p);
-
-	/*if (!OPT(p, birth_level_one_learn)) {
-		points = p->state.extra_points_max;
-	} else if (birth) {
-		int intel = p->stat_max_max[STAT_INT];
-		int intbonus = adj_int_tome(intel);
-		points = LEARN_MAX;
-		points += intbonus;
-	} else {
-		points = 0;
-	}*/
 
 	if (OPT(p, birth_level_one_learn)) {
 		if (birth) {

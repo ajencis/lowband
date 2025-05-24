@@ -837,8 +837,6 @@ bool alloc_object(struct chunk *c, int set, int typ, int depth, uint8_t origin)
 		loc(c->width - 2, c->height - 2));
 	struct loc grid;
 
-	bool messaged = false;
-
 	while (!placed && cave_find_get_grid(&grid, state)) {
 		/*
 		 * If we're ok with a corridor and we're in one, we're done.
@@ -871,8 +869,6 @@ bool alloc_object(struct chunk *c, int set, int typ, int depth, uint8_t origin)
 					matched = false;
 				}
 			}
-
-			messaged = true;
 		}
 
 		if (square_isempty(c, grid) && matched) {
@@ -932,10 +928,11 @@ void vault_objects(struct chunk *c, struct loc grid, int depth, int num)
 			if (!square_canputitem(c, near)) continue;
 
 			/* Place an item or gold */
-			if (randint0(100) < 75)
+			if (randint0(100) < 75) {
 				place_object(c, near, depth, false, false, ORIGIN_SPECIAL, 0);
-			else
+			} else {
 				place_gold(c, near, depth, ORIGIN_VAULT);
+			}
 
 			/* Placement accomplished */
 			break;

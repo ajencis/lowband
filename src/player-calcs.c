@@ -738,6 +738,11 @@ static void calc_spells(struct player *p)
 	/* Number of 1/100 spells per level (or something - needs clarifying) */
 	num_allowed = adj_mag_study(p->state.stat_ind[realm->stat]) * lev / 100 + 3;
 
+	if (realm->realm_special[RLM_SPCL_SPELLS_KNOWN]) {
+		int mod = realm->realm_special[RLM_SPCL_SPELLS_KNOWN] + 100;
+		num_allowed = (num_allowed * mod + 99) / 100;
+	}
+
 	/* Assume none known */
 	num_known = 0;
 
@@ -1371,7 +1376,11 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int cur
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->learn_index < 0) continue;
 		if (abil->type != PY_ABIL_POWER) continue;
-		int add = mrace->powers[abil->index] / 5;
+		int base = mrace->powers[abil->index];
+		int add = base < 0 ? base / 2 : base / 5;
+		if (base < 0 && curr_powers[abil->index] > 0) {
+			powers[abil->index] += curr_powers[abil->index] * base / 100;
+		}
 		powers[abil->index] += add;
 	}
 
@@ -1616,22 +1625,6 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		else {
 			state->powers[i] = (int)((efflev * scale * fact + div * 100 - 1) / (div * 100));
 		}
-
-		/*else if (power_scalings[i] == PP_SCALE_SQUARE) {
-			int fact = efflev * efflev;
-			int div = 100 * 50;
-			state->powers[i] = (scale * fact + div - 1) / div;
-		}
-
-		else if (power_scalings[i] == PP_SCALE_SQRT) {
-			double fact = my_sqrt((double)efflev);
-			double div = 2.0 * my_sqrt((double)50);
-			state->powers[i] = (int)((scale * fact + div - 1) / div);
-		}
-
-		else {
-			state->powers[i] = (efflev * scale + 99) / 100;
-		}*/
 
 		state->powers[i] += MIN((p->extra_powers[i] + 1) / 2, p->lev * 3);
 	}

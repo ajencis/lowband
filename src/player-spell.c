@@ -1038,6 +1038,12 @@ int player_spell_fail(const struct player_spell *ps) {
 	int power = gener_spell_power(player, ps);
 	int ease = get_power_scale(player, PP_SPELL_EASE, 25);
 	int result;
+
+	int sqrt_pwr = my_int_sqrt(25 * (power + ease));
+	result = base - sqrt_pwr;
+
+	return MAX(0, MIN(base, result));
+
 	assert(NO_FAIL_LEVEL > 0);
 
 	result = ((NO_FAIL_LEVEL - power - ease) * base + NO_FAIL_LEVEL - 1) / NO_FAIL_LEVEL;

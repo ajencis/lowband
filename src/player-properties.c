@@ -186,7 +186,7 @@ static void view_abilities(void)
 
 	// L: powers get listed
 	for (ability = player_abilities; ability && num_abilities < MAX_ABILITIES; ability = ability->next) {
-		if ((ability->type == PY_ABIL_POWER) && player->state.powers[ability->index] > 0) {
+		if ((ability->type == PY_ABIL_POWER) && player->state.powers[ability->index] != 0) {
 			memcpy(&ability_list[num_abilities], ability,
 				   sizeof(struct player_ability));
 			ability_list[num_abilities++].group = PLAYER_FLAG_POWER;

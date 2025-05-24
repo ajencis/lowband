@@ -3891,7 +3891,7 @@ static enum parser_error parse_spell_name(struct parser *p) {
 	if (parser_hasval(p, "fail")) {
 		spell->sfail = parser_getint(p, "fail");
 	} else {
-		spell->sfail = spell->slevel / 3 + 10;
+		spell->sfail = spell->slevel / 5 + 40;
 	}
 
 	for (i = 0; i < MAX_SPELL_SCHOOLS; ++i) {
