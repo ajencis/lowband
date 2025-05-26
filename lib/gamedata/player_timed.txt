@@ -253,6 +253,16 @@ msgt:POISONED
 fail:2:POIS
 fail:5:OPP_POIS
 
+name:TOXIC
+desc:bad poisoning
+grade:o:10000:Toxic:You are badly poisoned!
+on-end:You are no longer badly poisoned.
+on-increase:You are more badly poisoned!
+on-decrease:You are less badly poisoned.
+msgt:POISONED
+fail:2:POIS
+fail:5:OPP_POIS
+
 name:CUT
 desc:wounds
 grade:y:10:Graze:You have been given a graze.
@@ -274,6 +284,16 @@ grade:r:10000:Knocked Out:You have been knocked out.
 on-end:You are no longer stunned.
 msgt:STUN
 fail:1:PROT_STUN
+
+name:DISEN
+desc:disenchantment
+grade:o:50:Disen:You are disenchanted.
+on-end:You are no longer disenchanted.
+
+name:CHARMED
+desc:charm
+grade:o:50:Charm:You are charmed.
+on-end:You are no longer charmed.
 
 # Note food grades are in percentages here, and are translated on parsing
 name:FOOD
@@ -602,3 +622,18 @@ name:PHOENIX_CD
 desc:recent resurrection
 grade:G:10000:ResCD:You cool down.
 on-end:You feel filled with flame.
+
+name:CHANGED
+desc:polymorph
+grade:G:10000:Change:You change.
+on-end:You revert formes.
+
+name:SUFFOCATE
+desc:suffocation
+grade:G:10000:Suffocate:You can't breathe.
+on-end:You can breathe again.
+
+name:SUMMONED
+desc:summoned
+grade:G:10000:Summoned:You are whisked elsewhere.
+on-end:You return.

@@ -37,14 +37,14 @@ struct timed_desc {
 	int timed;
 	const char *desc;
 } timed_descriptions[] = {
-	{ MON_TMD_SLEEP, "asleep"},
-	{ MON_TMD_HOLD, "held"},
-	{ MON_TMD_DISEN, "disenchanted" },
-	{ MON_TMD_CONF, "confused" },
-	{ MON_TMD_FEAR, "afraid" },
-	{ MON_TMD_STUN, "stunned" },
-	{ MON_TMD_SLOW, "slowed" },
-	{ MON_TMD_FAST, "hasted" },
+	{ TMD_ASLEEP, "asleep"},
+	{ TMD_PARALYZED, "held"},
+	{ TMD_DISEN, "disenchanted" },
+	{ TMD_CONFUSED, "confused" },
+	{ TMD_AFRAID, "afraid" },
+	{ TMD_STUN, "stunned" },
+	{ TMD_SLOW, "slowed" },
+	{ TMD_FAST, "hasted" },
 	{ -1, NULL }
 };
 
@@ -165,7 +165,7 @@ bool target_able(const struct monster *m)
 {
 	return m && m->race && monster_is_obvious(m) &&
 			projectable(cave, player->grid, m->grid, PROJECT_NONE) &&
-			!player->timed[TMD_IMAGE];
+			!player->mon.m_timed[TMD_IMAGE];
 }
 
 
@@ -385,7 +385,7 @@ bool target_accept(int y, int x)
 	if (square(cave, grid)->mon < 0) return true;
 
 	/* Handle hallucination */
-	if (player->timed[TMD_IMAGE]) return false;
+	if (player->mon.m_timed[TMD_IMAGE]) return false;
 
 	/* Obvious monsters */
 	if (square(cave, grid)->mon > 0) {

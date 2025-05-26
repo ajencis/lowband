@@ -345,8 +345,9 @@ static void process_command(cmd_context ctx, struct command *cmd)
 {
 	int oldrepeats = cmd->nrepeats;
 	/* Hack - command a monster */
-	int idx = cmd_idx(player->timed[TMD_COMMAND] ?
-		CMD_COMMAND_MONSTER : cmd->code);
+	/*int idx = cmd_idx(player->timed[TMD_COMMAND] ?
+		CMD_COMMAND_MONSTER : cmd->code);*/
+	int idx = cmd_idx(cmd->code);
 
 	/* Reset so that when selecting items, we look in the default location */
 	player->upkeep->command_wrk = 0;

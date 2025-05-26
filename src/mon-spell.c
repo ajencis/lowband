@@ -326,7 +326,7 @@ static int chance_of_spell_hit(const struct monster *mon,
 	int to_hit = chance_of_spell_hit_base(mon->race, spell);
 
 	/* Apply confusion hit reduction for each level of confusion */
-	for (int i = 0; i < monster_effect_level(mon, MON_TMD_CONF); i++) {
+	for (int i = 0; i < monster_effect_level(mon, TMD_CONFUSED); i++) {
 		to_hit = to_hit * (100 - CONF_HIT_REDUCTION) / 100;
 	}
 

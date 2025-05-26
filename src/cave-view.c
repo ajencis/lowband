@@ -918,7 +918,7 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 static void update_one(struct chunk *c, struct loc grid, struct player *p)
 {
 	/* Remove view if blind, check visible squares for traps */
-	if (p->timed[TMD_BLIND] ||
+	if (p->mon.m_timed[TMD_BLIND] ||
 			(of_has(p->state.flags, OF_BAD_VISION) && distance(p->grid, grid) > 5)) {
 		sqinfo_off(square(c, grid)->info, SQUARE_SEEN);
 		sqinfo_off(square(c, grid)->info, SQUARE_CLOSE_PLAYER);
@@ -980,7 +980,7 @@ void update_view(struct chunk *c, struct player *p)
 	 * modified in variants that have timed effects which allow a player
 	 * to move through impassable terrain.
 	 */
-	if (p->timed[TMD_BLIND] && square_isknown(c, p->grid)
+	if (p->mon.m_timed[TMD_BLIND] && square_isknown(c, p->grid)
 			&& !square_ispassable(p->cave, p->grid)) {
 		square_forget(c, p->grid);
 	}

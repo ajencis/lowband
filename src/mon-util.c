@@ -324,7 +324,7 @@ struct monster *get_commanded_monster(void)
 		if (!mon->race) continue;
 
 		/* Test for control */
-		if (mon->m_timed[MON_TMD_COMMAND]) return mon;
+		//if (mon->m_timed[MON_TMD_COMMAND]) return mon;
 	}
 
 	return NULL;
@@ -487,7 +487,7 @@ void update_mon(struct monster *mon, struct chunk *c, bool full)
 		}
 
 		/* Normal line of sight and player is not blind */
-		if (square_isview(c, mon->grid) && !player->timed[TMD_BLIND]) {
+		if (square_isview(c, mon->grid) && !player->mon.m_timed[TMD_BLIND]) {
 			/* Use "infravision" */
 			if (d <= player->state.see_infra) {
 				/* Learn about warm/cold blood */
@@ -866,7 +866,7 @@ void monster_swap(struct loc grid1, struct loc grid2)
 void monster_wake(struct monster *mon, bool notify, int aware_chance)
 {
 	int flag = notify ? MON_TMD_FLG_NOTIFY : MON_TMD_FLG_NOMESSAGE;
-	mon_clear_timed(mon, MON_TMD_SLEEP, flag);
+	mon_clear_timed(mon, TMD_ASLEEP, flag);
 	if (randint0(100) < aware_chance) {
 		mflag_on(mon->mflag, MFLAG_AWARE);
 	}
@@ -1296,7 +1296,7 @@ static void player_kill_monster(struct monster *mon, struct player *p,
 	monster_death(mon, p, false);
 
 	/* Bloodlust bonus */
-	if (p->timed[TMD_BLOODLUST]) {
+	if (p->mon.m_timed[TMD_BLOODLUST]) {
 		check_berserk(p, mon);
 		//player_inc_timed(p, TMD_BLOODLUST, 10, false, false, true);
 		player_over_exert(p, PY_EXERT_CONF, 5, 2);
@@ -1325,7 +1325,7 @@ static void player_kill_monster(struct monster *mon, struct player *p,
  */
 static bool monster_scared_by_damage(struct monster *mon, int dam)
 {
-	int current_fear = mon->m_timed[MON_TMD_FEAR];
+	int current_fear = mon->m_timed[TMD_AFRAID];
 
 	/* Pain can reduce or cancel existing fear, or cause fear */
 	if (current_fear) {
@@ -1334,10 +1334,10 @@ static bool monster_scared_by_damage(struct monster *mon, int dam)
 		/* Cure a little or all fear */
 		if (tmp < current_fear) {
 			/* Reduce fear */
-			mon_dec_timed(mon, MON_TMD_FEAR, tmp, MON_TMD_FLG_NOMESSAGE);
+			mon_dec_timed(mon, TMD_AFRAID, tmp, MON_TMD_FLG_NOMESSAGE);
 		} else {
 			/* Cure fear */
-			mon_clear_timed(mon, MON_TMD_FEAR, MON_TMD_FLG_NOMESSAGE);
+			mon_clear_timed(mon, TMD_AFRAID, MON_TMD_FLG_NOMESSAGE);
 			return false;
 		}
 	} else if (monster_can_be_scared(mon)) {
@@ -1359,7 +1359,7 @@ static bool monster_scared_by_damage(struct monster *mon, int dam)
 			}
 
 			/* Note fear */
-			mon_inc_timed(mon, MON_TMD_FEAR, time,
+			mon_inc_timed(mon, TMD_AFRAID, time,
 						  MON_TMD_FLG_NOMESSAGE | MON_TMD_FLG_NOFAIL);
 			return true;
 		}
@@ -1427,7 +1427,7 @@ bool mon_take_nonplayer_hit(int dam, struct monster *t_mon,
 	}
 
 	/* Sometimes a monster gets scared by damage */
-	if (!t_mon->m_timed[MON_TMD_FEAR] && dam > 0) {
+	if (!t_mon->m_timed[TMD_AFRAID] && dam > 0) {
 		(void) monster_scared_by_damage(t_mon, dam);
 	}
 
@@ -1461,7 +1461,7 @@ bool mon_take_hit(struct monster *mon, struct player *p, int dam, bool *fear,
 	/* If the hit doesn't kill, wake it up, make it aware of the player */
 	if (dam <= mon->hp) {
 		monster_wake(mon, false, 100);
-		mon_clear_timed(mon, MON_TMD_HOLD, MON_TMD_FLG_NOTIFY);
+		mon_clear_timed(mon, TMD_PARALYZED, MON_TMD_FLG_NOTIFY);
 	}
 
 	// L: monster usually becomes aware of the player
@@ -1481,7 +1481,7 @@ bool mon_take_hit(struct monster *mon, struct player *p, int dam, bool *fear,
 	if (dam == 0) return false;
 
 	/* Covering tracks is no longer possible */
-	p->timed[TMD_COVERTRACKS] = 0;
+	p->mon.m_timed[TMD_COVERTRACKS] = 0;
 
 	/* Hurt it */
 	mon->hp -= dam;
@@ -1548,16 +1548,16 @@ void monster_take_terrain_damage(struct monster *mon)
 
 void monster_take_timed_damage(struct monster *mon, int energy)
 {
-	if (mon->m_timed[MON_TMD_POISONED] > 0) {
-		int pois1 = (mon->m_timed[MON_TMD_POISONED] + 3) / 4;
-		int pois2 = (mon->m_timed[MON_TMD_POISONED] + 5) / 4;
+	if (mon->m_timed[TMD_POISONED] > 0) {
+		int pois1 = (mon->m_timed[TMD_POISONED] + 3) / 4;
+		int pois2 = (mon->m_timed[TMD_POISONED] + 5) / 4;
 		int pdam = (pois1 * pois2 + energy - 1) / energy;
 		if (pdam > 0) {
 			mon_take_nonplayer_hit(pdam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true);
 		}
 	}
-	if (mon->m_timed[MON_TMD_SUFFOCATING] > 0) {
-		int suff = mon->m_timed[MON_TMD_SUFFOCATING] * 2;
+	if (mon->m_timed[TMD_SUFFOCATE] > 0) {
+		int suff = mon->m_timed[TMD_SUFFOCATE] * 2;
 		int sdam = (suff + 50 + energy - 1) / energy;
 		if (sdam > 0) {
 			mon_take_nonplayer_hit(sdam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true);
@@ -1748,11 +1748,11 @@ void steal_monster_item(struct monster *mon, int midx)
 		}
 
 		/* Penalize some status conditions */
-		if (player->timed[TMD_BLIND] || player->timed[TMD_CONFUSED] ||
-			player->timed[TMD_IMAGE]) {
+		if (player->mon.m_timed[TMD_BLIND] || player->mon.m_timed[TMD_CONFUSED] ||
+			player->mon.m_timed[TMD_IMAGE]) {
 			steal_skill /= 4;
 		}
-		if (mon->m_timed[MON_TMD_SLEEP]) {
+		if (mon->m_timed[TMD_ASLEEP]) {
 			guard /= 2;
 		}
 
@@ -1795,7 +1795,7 @@ void steal_monster_item(struct monster *mon, int midx)
 			lore->thefts++;
 
 			/* Monster wakes a little */
-			mon_dec_timed(mon, MON_TMD_SLEEP, wake, MON_TMD_FLG_NOTIFY);
+			mon_dec_timed(mon, TMD_ASLEEP, wake, MON_TMD_FLG_NOTIFY);
 		} else if (monster_reaction / 2 < steal_skill) {
 			/* Decent attempt, at least */
 			char o_name[80];
@@ -1820,7 +1820,7 @@ void steal_monster_item(struct monster *mon, int midx)
 		}
 
 		/* Player hit and run */
-		if (player->timed[TMD_ATT_RUN]) {
+		if (player->mon.m_timed[TMD_ATT_RUN]) {
 			const char *near = "20";
 			msg("You vanish into the shadows!");
 			effect_simple(EF_TELEPORT, source_player(), near, 0, 0, 0, 0, 0,
@@ -2066,7 +2066,7 @@ void monster_attacked_get_angry(struct monster *mon, struct player *p, int dam)
 		return;
 	}
 
-	if (p->timed[TMD_CONFUSED]) {
+	if (p->mon.m_timed[TMD_CONFUSED]) {
 		pen = MIN(pen, MON_REACT_MAX - mon->reaction);
 	}
 

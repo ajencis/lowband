@@ -34,6 +34,7 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
+#include "player-enum.h"
 #include "player-timed.h"
 #include "target.h"
 
@@ -353,6 +354,7 @@ void delete_monster_idx(struct chunk *c, int m_idx)
 	struct monster *mon = cave_monster(c, m_idx);
 	struct loc grid;
 
+	assert(m_idx != PLAYER_MON_MIDX);
 	assert(m_idx > 0);
 	assert(square_in_bounds(c, mon->grid));
 	grid = mon->grid;
@@ -382,9 +384,9 @@ void delete_monster_idx(struct chunk *c, int m_idx)
 	}
 
 	/* Hack -- remove any command status */
-	if (mon->m_timed[MON_TMD_COMMAND]) {
+	/*if (mon->m_timed[MON_TMD_COMMAND]) {
 		(void) player_clear_timed(player, TMD_COMMAND, true, true);
-	}
+	}*/
 
 	/* Monster is gone from square and group */
 	square_set_mon(c, grid, 0);
@@ -1240,7 +1242,7 @@ static bool place_new_monster_one(struct chunk *c, struct loc grid,
 		int val = randint1(race->sleep / 10) + randint1(race->sleep / 10);
 		val = MIN(14, val);
 		int16_t q = 1 << val;
-		mon->m_timed[MON_TMD_SLEEP] = q;
+		mon->m_timed[TMD_ASLEEP] = q;
 	}
 
 	/* Uniques get a fixed amount of HP */

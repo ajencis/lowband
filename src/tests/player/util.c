@@ -129,14 +129,14 @@ static int test_adjust_hp_precise(void *state) {
 	int i;
 
 	for (i = 0; i < (int) N_ELEMENTS(cases); ++i) {
-		p->chp = cases[i].curr_in;
+		p->mon.hp = cases[i].curr_in;
 		p->chp_frac = cases[i].frac_in;
-		p->mhp = cases[i].max_in;
+		p->mon.maxhp = cases[i].max_in;
 		p->upkeep->redraw &= ~(PR_HP);
 		player_adjust_hp_precise(p, cases[i].gain_in);
-		eq(p->chp, cases[i].curr_out);
+		eq(p->mon.hp, cases[i].curr_out);
 		eq(p->chp_frac, cases[i].frac_out);
-		eq(p->mhp, cases[i].max_in);
+		eq(p->mon.maxhp, cases[i].max_in);
 		if (cases[i].signaled_out) {
 			require(p->upkeep->redraw & (PR_HP));
 		} else {

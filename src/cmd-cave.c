@@ -59,22 +59,22 @@
 
 static bool check_can_take_stairs(struct player *p, int time)
 {
-    if (p->timed[TMD_CUT])
+    if (p->mon.m_timed[TMD_CUT])
 	{
 		msg("You would bleed out on the stairs.");
 		return false;
 	}
-	else if (p->timed[TMD_POISONED])
+	else if (p->mon.m_timed[TMD_POISONED])
 	{
 		msg("You would die of poison on the stairs.");
 		return false;
 	}
-	else if (p->timed[TMD_BLOODLUST])
+	else if (p->mon.m_timed[TMD_BLOODLUST])
 	{
 		msg("There's no-one to fight on the stairs.");
 		return false;
 	}
-	else if (p->timed[TMD_FOOD] < 10 + time / 10)
+	else if (p->mon.m_timed[TMD_FOOD] < 10 + time / 10)
 	{
 		msg("You should eat before you take the stairs.");
 		return false;
@@ -809,9 +809,9 @@ static bool do_cmd_lock_door(struct loc grid)
 	i = player->state.skills[SKILL_DISARM_PHYS];
 
 	/* Penalize some conditions */
-	if (player->timed[TMD_BLIND] || no_light(player))
+	if (player->mon.m_timed[TMD_BLIND] || no_light(player))
 		i = i / 10;
-	if (player->timed[TMD_CONFUSED] || player->timed[TMD_IMAGE])
+	if (player->mon.m_timed[TMD_CONFUSED] || player->mon.m_timed[TMD_IMAGE])
 		i = i / 10;
 
 	/* Calculate lock "power" */
@@ -878,10 +878,10 @@ static bool do_cmd_disarm_aux(struct loc grid)
 		skill = player->state.skills[SKILL_DISARM_PHYS];
 
 	/* Penalize some conditions */
-	if (player->timed[TMD_BLIND] ||
+	if (player->mon.m_timed[TMD_BLIND] ||
 			no_light(player) ||
-			player->timed[TMD_CONFUSED] ||
-			player->timed[TMD_IMAGE])
+			player->mon.m_timed[TMD_CONFUSED] ||
+			player->mon.m_timed[TMD_IMAGE])
 		skill = skill / 10;
 
 	/* Extract trap power */
@@ -1227,7 +1227,7 @@ void move_player(int dir, bool disarm)
 		 * terrain.
 		 */
 		if (square_isdamaging(cave, grid)
-				&& !player->timed[TMD_CONFUSED]) {
+				&& !player->mon.m_timed[TMD_CONFUSED]) {
 			struct feature *feat = square_feat(cave, grid);
 			int dam_taken = player_check_terrain_damage(player,
 				grid, false);
@@ -1242,7 +1242,7 @@ void move_player(int dir, bool disarm)
 					step = false;
 				}
 			} else {
-				if (dam_taken > player->chp / 3) {
+				if (dam_taken > player->mon.hp / 3) {
 					step = get_check(feat->walk_msg);
 				}
 			}
@@ -1467,7 +1467,7 @@ void do_cmd_navigate_down(struct command *cmd)
 	int visible_monster_count = 0;
 
 	/* cancel if confused */
-	if (player->timed[TMD_CONFUSED]) {
+	if (player->mon.m_timed[TMD_CONFUSED]) {
 		msg("You cannot explore while confused.");
 	   	return;
 	}
@@ -1526,7 +1526,7 @@ void do_cmd_navigate_up(struct command *cmd)
 {
 	int visible_monster_count = 0;
 	/* cancel if confused */
-	if (player->timed[TMD_CONFUSED]) {
+	if (player->mon.m_timed[TMD_CONFUSED]) {
 		msg("You cannot explore while confused.");
 	   	return;
 	}
@@ -1586,7 +1586,7 @@ void do_cmd_explore(struct command *cmd)
 	bool visible_monster = false;
 	int y, x;
 	/* cancel if confused */
-	if (player->timed[TMD_CONFUSED]) {
+	if (player->mon.m_timed[TMD_CONFUSED]) {
 		cmd_cancel_repeat();
 		msg("You cannot explore while confused.");
 	   	return;
@@ -1673,7 +1673,7 @@ void do_cmd_pathfind(struct command *cmd)
 	/* XXX-AS Add better arg checking */
 	cmd_get_arg_point(cmd, "point", &grid);
 
-	if (player->timed[TMD_CONFUSED])
+	if (player->mon.m_timed[TMD_CONFUSED])
 		return;
 
 	assert(!player->upkeep->steps);
@@ -1964,7 +1964,7 @@ void do_cmd_mon_command(struct command *cmd)
 	switch (cmd->code) {
 		case CMD_READ_SCROLL: {
 			/* Actually 'r'elease monster */
-			mon_clear_timed(mon, MON_TMD_COMMAND, MON_TMD_FLG_NOTIFY);
+			//mon_clear_timed(mon, MON_TMD_COMMAND, MON_TMD_FLG_NOTIFY);
 			player_clear_timed(player, TMD_COMMAND, true, false);
 			break;
 		}
@@ -1972,7 +1972,7 @@ void do_cmd_mon_command(struct command *cmd)
 			int dir = DIR_UNKNOWN;
 			struct monster *t_mon = NULL;
 			bitflag f[RSF_SIZE];
-			bool seen = player->timed[TMD_BLIND] ? false : true;
+			bool seen = player->mon.m_timed[TMD_BLIND] ? false : true;
 			int spell_index;
 
 			/* Choose a target monster */
@@ -2214,7 +2214,7 @@ void do_cmd_diplomacy(struct command *cmd)
 	int new_cmd;
 	char mdesc[80];
 
-	if (player->timed[TMD_CONFUSED] > 0) {
+	if (player->mon.m_timed[TMD_CONFUSED] > 0) {
 		msg("You are too confused to talk!");
 		return;
 	}
@@ -2263,7 +2263,7 @@ void do_cmd_dip_hire(struct command *cmd) {
 	struct monster *mon = NULL;
 	struct loc target;
 
-	if (player->timed[TMD_CONFUSED] > 0) {
+	if (player->mon.m_timed[TMD_CONFUSED] > 0) {
 		msg("You are too confused to talk!");
 	}
 

@@ -255,7 +255,7 @@ typedef struct project_monster_handler_context_s {
 	int teleport_distance;
 	enum mon_messages hurt_msg;
 	enum mon_messages die_msg;
-	int mon_timed[MON_TMD_MAX];
+	int mon_timed[TMD_MAX];
 } project_monster_handler_context_t;
 typedef void (*project_monster_handler_f)(project_monster_handler_context_t *);
 
@@ -431,7 +431,7 @@ static void project_monster_scare(project_monster_handler_context_t *context, in
 	if (context->seen) rf_on(context->lore->flags, flag);
 
 	if (rf_has(context->mon->race->flags, flag)) {
-		context->mon_timed[MON_TMD_FEAR] =
+		context->mon_timed[TMD_AFRAID] =
 			adjust_radius(context, context->dam);
 		monster_wake(context->mon, false, 100);
 		if (context->seen) context->obvious = true;
@@ -491,7 +491,7 @@ static void project_monster_sleep(project_monster_handler_context_t *context, in
 	if (context->charm && rf_has(context->mon->race->flags, RF_ANIMAL)) {
 		context->dam += context->dam / 2;
 	}
-	context->mon_timed[MON_TMD_SLEEP] = context->dam;
+	context->mon_timed[TMD_ASLEEP] = context->dam;
 	if (context->dam > 0 && context->seen) context->obvious = true;
 	context->dam = 0;
 
@@ -509,7 +509,7 @@ static void project_monster_charm(project_monster_handler_context_t *context, in
 	if (context->charm && rf_has(context->mon->race->flags, RF_ANIMAL)) {
 		context->dam += context->dam / 2;
 	}
-	context->mon_timed[MON_TMD_CHARMED] = context->dam;
+	context->mon_timed[TMD_CHARMED] = context->dam;
 	if (context->dam > 0 && context->seen) context->obvious = true;
 	context->dam = 0;
 }
@@ -541,7 +541,7 @@ static void project_monster_handler_COLD(project_monster_handler_context_t *cont
 /* Poison */
 static void project_monster_handler_POIS(project_monster_handler_context_t *context)
 {
-	context->mon_timed[MON_TMD_POISONED] = randint1(context->dam) + 10;
+	context->mon_timed[TMD_POISONED] = randint1(context->dam) + 10;
 
 	project_monster_resist_element(context, RF_IM_POIS, 9);
 }
@@ -576,7 +576,7 @@ static void project_monster_handler_DARK(project_monster_handler_context_t *cont
 static void project_monster_handler_SOUND(project_monster_handler_context_t *context)
 {
 	if (one_in_(3)) {
-		context->mon_timed[MON_TMD_STUN] = adjust_radius(context, 5 + randint1(10));
+		context->mon_timed[TMD_STUN] = adjust_radius(context, 5 + randint1(10));
 	}
 
 	project_monster_breath(context, RSF_BR_SOUN, 2);
@@ -650,7 +650,7 @@ static void project_monster_handler_CHAOS(project_monster_handler_context_t *con
 		context->do_poly = 1;
 
 	/* Hide resistance message (as assigned in project_monster_breath()). */
-	context->mon_timed[MON_TMD_CONF] = adjust_radius(context, 10 + randint1(10));
+	context->mon_timed[TMD_CONFUSED] = adjust_radius(context, 10 + randint1(10));
 	project_monster_breath(context, RSF_BR_CHAO, 3);
 	context->hurt_msg = MON_MSG_NONE;
 }
@@ -663,7 +663,7 @@ static void project_monster_handler_DISEN(project_monster_handler_context_t *con
 	/* Affect monsters which don't resist, and have non-innate spells */
 	if (!rf_has(context->mon->race->flags, RF_IM_DISEN) &&
 		monster_has_non_innate_spells(context->mon)) {
-		context->mon_timed[MON_TMD_DISEN] = adjust_radius(context,
+		context->mon_timed[TMD_DISEN] = adjust_radius(context,
 														  5 + randint1(10));
 	}
 }
@@ -679,7 +679,7 @@ static void project_monster_handler_WATER(project_monster_handler_context_t *con
 static void project_monster_handler_ICE(project_monster_handler_context_t *context)
 {
 	if (one_in_(3)) {
-		context->mon_timed[MON_TMD_STUN] = adjust_radius(context, 5 + randint1(10));
+		context->mon_timed[TMD_STUN] = adjust_radius(context, 5 + randint1(10));
 	}
 
 	project_monster_hurt_immune(context, RF_HURT_COLD, RF_IM_COLD, 2, 9, MON_MSG_BADLY_FROZEN, MON_MSG_FREEZE_SHATTER);
@@ -711,7 +711,7 @@ static void project_monster_handler_FORCE(project_monster_handler_context_t *con
 	struct loc centre = origin_get_loc(context->origin);
 
 	if (one_in_(3)) {
-		context->mon_timed[MON_TMD_STUN] = adjust_radius(context,
+		context->mon_timed[TMD_STUN] = adjust_radius(context,
 														 5 + randint1(10));
 	}
 
@@ -851,7 +851,7 @@ static void project_monster_handler_TURN_LIVING(project_monster_handler_context_
 	}
 
 	if (monster_is_living(context->mon)) {
-		context->mon_timed[MON_TMD_FEAR] =
+		context->mon_timed[TMD_AFRAID] =
 			adjust_radius(context, context->dam);
 		if (context->seen) context->obvious = true;
 	} else {
@@ -864,7 +864,7 @@ static void project_monster_handler_TURN_LIVING(project_monster_handler_context_
 /* Turn monster (Use "dam" as "power") */
 static void project_monster_handler_TURN_ALL(project_monster_handler_context_t *context)
 {
-	context->mon_timed[MON_TMD_FEAR] = context->dam;
+	context->mon_timed[TMD_AFRAID] = context->dam;
 	context->dam = 0;
 }
 
@@ -912,7 +912,7 @@ static void project_monster_handler_MON_CLONE(project_monster_handler_context_t 
 	context->mon->hp = context->mon->maxhp;
 
 	/* Speed up */
-	mon_inc_timed(context->mon, MON_TMD_FAST, 50, MON_TMD_FLG_NOTIFY);
+	mon_inc_timed(context->mon, TMD_FAST, 50, MON_TMD_FLG_NOTIFY);
 
 	/* Attempt to clone. */
 	if (multiply_monster(context->mon) && context->seen)
@@ -960,7 +960,7 @@ static void project_monster_handler_MON_HEAL(project_monster_handler_context_t *
 /* Speed Monster (Ignore "dam") */
 static void project_monster_handler_MON_SPEED(project_monster_handler_context_t *context)
 {
-	context->mon_timed[MON_TMD_FAST] = context->dam;
+	context->mon_timed[TMD_FAST] = context->dam;
 	context->dam = 0;
 }
 
@@ -970,7 +970,7 @@ static void project_monster_handler_MON_SLOW(project_monster_handler_context_t *
 	if (context->charm && rf_has(context->mon->race->flags, RF_ANIMAL)) {
 		context->dam += context->dam / 2;
 	}
-	context->mon_timed[MON_TMD_SLOW] = context->dam;
+	context->mon_timed[TMD_SLOW] = context->dam;
 	context->dam = 0;
 }
 
@@ -980,7 +980,7 @@ static void project_monster_handler_MON_CONF(project_monster_handler_context_t *
 	if (context->charm && rf_has(context->mon->race->flags, RF_ANIMAL)) {
 		context->dam += context->dam / 2;
 	}
-	context->mon_timed[MON_TMD_CONF] = context->dam;
+	context->mon_timed[TMD_CONFUSED] = context->dam;
 	context->dam = 0;
 }
 
@@ -990,7 +990,7 @@ static void project_monster_handler_MON_HOLD(project_monster_handler_context_t *
 	if (context->charm && rf_has(context->mon->race->flags, RF_ANIMAL)) {
 		context->dam += context->dam / 2;
 	}
-	context->mon_timed[MON_TMD_HOLD] = context->dam;
+	context->mon_timed[TMD_PARALYZED] = context->dam;
 	context->dam = 0;
 }
 
@@ -1000,7 +1000,7 @@ static void project_monster_handler_MON_STUN(project_monster_handler_context_t *
 	if (context->charm && rf_has(context->mon->race->flags, RF_ANIMAL)) {
 		context->dam += context->dam / 2;
 	}
-	context->mon_timed[MON_TMD_STUN] = context->dam;
+	context->mon_timed[TMD_STUN] = context->dam;
 	context->dam = 0;
 }
 
@@ -1032,7 +1032,7 @@ static void project_monster_handler_MON_CRUSH(project_monster_handler_context_t 
 
 static void project_monster_handler_MON_POIS(project_monster_handler_context_t *context)
 {
-	context->mon_timed[MON_TMD_POISONED] = context->dam;
+	context->mon_timed[TMD_POISONED] = context->dam;
 	context->dam = 0;
 }
 
@@ -1067,7 +1067,7 @@ static void project_monster_handler_VAMPIRE(project_monster_handler_context_t *c
 	drain = undrainable ? 0 : context->dam;
 
 	if (drain > 0 && context->origin.what == SRC_PLAYER) {
-		if (player->chp < player->mhp) msg("You feel better");
+		if (player->mon.hp < player->mon.maxhp) msg("You feel better");
 		effect_simple(EF_HEAL_HP, context->origin, format("%d", drain), 0, 0, 0,
 				0, 0, NULL);
 		player_inc_timed(player, TMD_FOOD, drain, true, false, false);
@@ -1101,9 +1101,9 @@ static void project_monster_handler_BANSHEE(project_monster_handler_context_t *c
 
 	if (und) power /= 2;
 
-	if (mon_inc_timed(context->mon, MON_TMD_STUN, power * 2, flg)) {
-		if (mon_inc_timed(context->mon, MON_TMD_HOLD, power, flg)) {
-			if (!saving_throw(context->mon, MON_TMD_SUFFOCATING, power / 2, 0)) {
+	if (mon_inc_timed(context->mon, TMD_STUN, power * 2, flg)) {
+		if (mon_inc_timed(context->mon, TMD_PARALYZED, power, flg)) {
+			if (!saving_throw(context->mon, TMD_SUFFOCATE, power / 2, 0)) {
 				kill = true;
 				add_monster_message(context->mon, MON_MSG_COLLAPSE, true);
 			}
@@ -1343,7 +1343,7 @@ static void project_m_apply_side_effects(project_monster_handler_context_t *cont
 		/* Wake the monster up, don't notice the player */
 		monster_wake(mon, false, 0);
 	} else {
-		for (int i = 0; i < MON_TMD_MAX; i++) {
+		for (int i = 0; i < TMD_MAX; i++) {
 			if (context->mon_timed[i] > 0) {
 				mon_inc_timed(mon,
 							  i,

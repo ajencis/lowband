@@ -23,6 +23,7 @@
 #include "mon-make.h"
 #include "mon-util.h"
 #include "monster.h"
+#include "player-timed.h"
 
 /**
  * Allocate a new monster group
@@ -416,7 +417,7 @@ void monster_group_rouse(struct chunk *c, struct monster *mon)
 	while (entry) {
 		struct monster *friend = &c->monsters[entry->midx];
 		struct loc fgrid = friend->grid;
-		if (friend->m_timed[MON_TMD_SLEEP] && monster_can_see(c, mon, fgrid)) {
+		if (friend->m_timed[TMD_ASLEEP] && monster_can_see(c, mon, fgrid)) {
 			int dist = distance(mon->grid, fgrid);
 
 			/* Closer means more likely to be roused */

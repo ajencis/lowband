@@ -176,7 +176,7 @@ void msg_add_fmt(const char *fmt, ...)
 	/* End the Varargs Stuff */
 	va_end(vp);
 
-	/* Call plog */
+	/* Call message_add */
 	message_add(res, MSG_GENERIC);
 }
 

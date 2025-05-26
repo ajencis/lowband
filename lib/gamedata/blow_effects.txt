@@ -167,7 +167,7 @@ lore-color-resist:Light Green
 effect-type:flag
 resist:PROT_CONF
 lash-type:CHAOS
-mon-timed:CONF
+mon-timed:CONFUSED
 
 name:TERRIFY
 power:0
@@ -178,7 +178,7 @@ lore-color-resist:Light Green
 effect-type:flag
 resist:PROT_FEAR
 lash-type:CHAOS
-mon-timed:FEAR
+mon-timed:AFRAID
 
 name:PARALYZE
 power:0
@@ -189,7 +189,7 @@ lore-color-resist:Light Green
 effect-type:flag
 resist:FREE_ACT
 lash-type:NONE
-mon-timed:HOLD
+mon-timed:PARALYZED
 
 name:LOSE_STR
 power:0
@@ -306,7 +306,7 @@ lore-color-resist:Light Green
 effect-type:element
 resist:CHAOS
 lash-type:CHAOS
-mon-timed:CONF
+mon-timed:CONFUSED
 
 name:BLACK_BREATH
 power:0

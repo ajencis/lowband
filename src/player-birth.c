@@ -357,7 +357,7 @@ void get_bonuses(void)
 	update_stuff(player);
 
 	/* Fully healed */
-	player->chp = player->mhp;
+	player->mon.hp = player->mon.maxhp;
 
 	/* Fully rested */
 	player->csp = player->msp;
@@ -504,7 +504,7 @@ void player_init(struct player *p)
 								  sizeof(struct object *));
 	p->upkeep->quiver = mem_zalloc(z_info->quiver_size *
 								   sizeof(struct object *));
-	p->timed = mem_zalloc(TMD_MAX * sizeof(int16_t));
+	//p->timed = mem_zalloc(TMD_MAX * sizeof(int16_t));
 	p->obj_k = mem_zalloc(sizeof(struct object));
 	p->obj_k->brands = mem_zalloc(z_info->brand_max * sizeof(bool));
 	p->obj_k->slays = mem_zalloc(z_info->slay_max * sizeof(bool));
@@ -518,6 +518,8 @@ void player_init(struct player *p)
 	for (i = 0; i < z_info->learn_max; ++i) {
 		p->extra_choice[i] = -1;
 	}
+
+	p->mon.midx = PLAYER_MON_MIDX;
 
 	// L: metaprogression should persist
 	p->unlocked_classes = unlocked_classes_save;
@@ -1090,6 +1092,8 @@ void player_generate(struct player *p, const struct player_race *r,
 	p->class = c;
 	p->race = r;
 
+	//p->mon.race = lookup_monster("human");
+
 	/* Level 1 */
 	p->max_lev = p->lev = 1;
 
@@ -1113,7 +1117,7 @@ void player_generate(struct player *p, const struct player_race *r,
 	}
 
 	/* Initial hitpoints */
-	p->mhp = p->player_hp[p->lev - 1];
+	p->mon.maxhp = p->player_hp[p->lev - 1];
 
 	/* L: copy realm over */
 	p->realm = c->realm;
@@ -1126,7 +1130,7 @@ void player_generate(struct player *p, const struct player_race *r,
 	get_ahw(p);
 
 	/* Always start with a well fed player */
-	p->timed[TMD_FOOD] = PY_FOOD_FULL - 1;
+	p->mon.m_timed[TMD_FOOD] = PY_FOOD_FULL - 1;
 
 	if (!old_history) {
 		if (p->history) {

@@ -168,25 +168,25 @@ static void borg_update_kill_new(int i)
     kill->m_idx = square_monster(cave, loc(kill->pos.x, kill->pos.y))->midx;
 
     /* Is it sleeping */
-    if (m_ptr->m_timed[MON_TMD_SLEEP] == 0)
+    if (m_ptr->m_timed[TMD_ASLEEP] == 0)
         kill->awake = true;
     else
         kill->awake = false;
 
     /* Is it afraid */
-    if (m_ptr->m_timed[MON_TMD_FEAR] == 0)
+    if (m_ptr->m_timed[TMD_AFRAID] == 0)
         kill->afraid = false;
     else
         kill->afraid = true;
 
     /* Is it confused */
-    if (m_ptr->m_timed[MON_TMD_CONF] == 0)
+    if (m_ptr->m_timed[TMD_CONFUSED] == 0)
         kill->confused = false;
     else
         kill->confused = true;
 
     /* Is it stunned*/
-    if (m_ptr->m_timed[MON_TMD_STUN] == 0)
+    if (m_ptr->m_timed[TMD_STUN] == 0)
         kill->stunned = false;
     else
         kill->stunned = true;
@@ -289,25 +289,25 @@ static void borg_update_kill_old(int i)
     kill->injury = 100 - pct;
 
     /* Is it sleeping */
-    if (m_ptr->m_timed[MON_TMD_SLEEP] == 0)
+    if (m_ptr->m_timed[TMD_ASLEEP] == 0)
         kill->awake = true;
     else
         kill->awake = false;
 
     /* Is it afraid */
-    if (m_ptr->m_timed[MON_TMD_FEAR] == 0)
+    if (m_ptr->m_timed[TMD_AFRAID] == 0)
         kill->afraid = false;
     else
         kill->afraid = true;
 
     /* Is it confused */
-    if (m_ptr->m_timed[MON_TMD_CONF] == 0)
+    if (m_ptr->m_timed[TMD_CONFUSED] == 0)
         kill->confused = false;
     else
         kill->confused = true;
 
     /* Is it stunned*/
-    if (m_ptr->m_timed[MON_TMD_STUN] == 0)
+    if (m_ptr->m_timed[TMD_STUN] == 0)
         kill->stunned = false;
     else
         kill->stunned = true;

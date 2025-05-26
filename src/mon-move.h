@@ -41,4 +41,6 @@ void restore_monsters(void);
 bool monster_can_hear(struct monster *mon);
 bool monster_can_smell(struct monster *mon);
 
+bool process_monster_timed(struct monster *mon);
+
 #endif /* !MONSTER_MOVE_H */

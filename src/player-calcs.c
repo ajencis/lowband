@@ -997,13 +997,13 @@ static void calc_hitpoints(struct player *p)
 	mhp = p->state.skills[SKILL_HEALTH];
 
 	/* New maximum hitpoints */
-	if (p->mhp != mhp) {
+	if (p->mon.maxhp != mhp) {
 		/* Save new limit */
-		p->mhp = mhp;
+		p->mon.maxhp = mhp;
 
 		/* Enforce new limit */
-		if (p->chp >= mhp) {
-			p->chp = mhp;
+		if (p->mon.hp >= mhp) {
+			p->mon.hp = mhp;
 			p->chp_frac = 0;
 		}
 
@@ -1101,10 +1101,10 @@ int calc_unlocking_chance(const struct player *p, int lock_power,
 {
 	int skill = p->state.skills[SKILL_DISARM_PHYS];
 
-	if (lock_unseen || p->timed[TMD_BLIND]) {
+	if (lock_unseen || p->mon.m_timed[TMD_BLIND]) {
 		skill /= 10;
 	}
-	if (p->timed[TMD_CONFUSED] || p->timed[TMD_IMAGE]) {
+	if (p->mon.m_timed[TMD_CONFUSED] || p->mon.m_timed[TMD_IMAGE]) {
 		skill /= 10;
 	}
 
@@ -1851,9 +1851,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* Effects of food outside the "Fed" range */
 	if (!player_timed_grade_eq(p, TMD_FOOD, "Fed")) {
-		int excess = p->timed[TMD_FOOD] - PY_FOOD_FULL;
-		int lack = PY_FOOD_HUNGRY - p->timed[TMD_FOOD];
-		if ((excess > 0) && !p->timed[TMD_ATT_VAMP]) {
+		int excess = p->mon.m_timed[TMD_FOOD] - PY_FOOD_FULL;
+		int lack = PY_FOOD_HUNGRY - p->mon.m_timed[TMD_FOOD];
+		if ((excess > 0) && !p->mon.m_timed[TMD_ATT_VAMP]) {
 			/* Scale to units 1/10 of the range and subtract from speed */
 			excess = excess * 25 / (PY_FOOD_MAX - PY_FOOD_FULL);
 			state->speed -= excess;
@@ -1902,81 +1902,81 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		state->to_d -= 20;
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 5, 0);
 		if (update) {
-			p->timed[TMD_FASTCAST] = 0;
+			p->mon.m_timed[TMD_FASTCAST] = 0;
 		}
 	} else if (player_timed_grade_eq(p, TMD_STUN, "Stun")) {
 		state->to_h -= 5;
 		state->to_d -= 5;
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 10, 0);
 		if (update) {
-			p->timed[TMD_FASTCAST] = 0;
+			p->mon.m_timed[TMD_FASTCAST] = 0;
 		}
 	}
-	if (p->timed[TMD_INVULN]) {
+	if (p->mon.m_timed[TMD_INVULN]) {
 		state->to_a += 100;
 	}
-	if (p->timed[TMD_BLESSED]) {
+	if (p->mon.m_timed[TMD_BLESSED]) {
 		state->to_a += 5;
 		state->to_h += 10;
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], 1, 20, 0);
 	}
-	if (p->timed[TMD_SHIELD]) {
+	if (p->mon.m_timed[TMD_SHIELD]) {
 		state->to_a += 50;
 	}
-	if (p->timed[TMD_STONESKIN]) {
+	if (p->mon.m_timed[TMD_STONESKIN]) {
 		state->to_a += 40;
 		state->speed -= 5;
 	}
-	if (p->timed[TMD_HERO]) {
+	if (p->mon.m_timed[TMD_HERO]) {
 		state->to_h += 12;
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], 1, 20, 0);
 	}
-	if (p->timed[TMD_SHERO]) {
+	if (p->mon.m_timed[TMD_SHERO]) {
 		state->skills[SKILL_TO_HIT_MELEE] += 75;
 		state->to_a -= 10;
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 10, 0);
 	}
-	if (p->timed[TMD_FAST] || p->timed[TMD_SPRINT]) {
+	if (p->mon.m_timed[TMD_FAST] || p->mon.m_timed[TMD_SPRINT]) {
 		state->speed += 10;
 	}
-	if (p->timed[TMD_SLOW]) {
+	if (p->mon.m_timed[TMD_SLOW]) {
 		state->speed -= 10;
 	}
-	if (p->timed[TMD_SINFRA]) {
+	if (p->mon.m_timed[TMD_SINFRA]) {
 		state->see_infra += 5;
 	}
-	if (p->timed[TMD_TERROR]) {
+	if (p->mon.m_timed[TMD_TERROR]) {
 		state->speed += 10;
 	}
 	for (i = 0; i < TMD_MAX; ++i) {
-		if (p->timed[i] && timed_effects[i].temp_resist != -1
+		if (p->mon.m_timed[i] && timed_effects[i].temp_resist != -1
 				&& state->el_info[timed_effects[i].temp_resist].res_level
 				< 2) {
 			state->el_info[timed_effects[i].temp_resist].res_level++;
 		}
 	}
-	if (p->timed[TMD_CONFUSED]) {
+	if (p->mon.m_timed[TMD_CONFUSED]) {
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 4, 0);
 	}
-	if (p->timed[TMD_AMNESIA]) {
+	if (p->mon.m_timed[TMD_AMNESIA]) {
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 5, 0);
 	}
-	if (p->timed[TMD_POISONED]) {
+	if (p->mon.m_timed[TMD_POISONED]) {
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 20, 0);
 	}
-	if (p->timed[TMD_IMAGE]) {
+	if (p->mon.m_timed[TMD_IMAGE]) {
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 5, 0);
 	}
-	if (p->timed[TMD_BLOODLUST]) {
-		state->to_d += p->timed[TMD_BLOODLUST] / 5 + 1;
-		state->to_h += p->timed[TMD_BLOODLUST] * 2 / 3;
-		extra_blows += p->timed[TMD_BLOODLUST] * 4;
-		state->speed += p->timed[TMD_BLOODLUST] / 5 - 3;
-		state->dam_red += p->timed[TMD_BLOODLUST] * (p->mhp + 100) / 1000;
-		adjust_skill_scale(&state->skills[SKILL_STEALTH], -p->timed[TMD_BLOODLUST], 5, 10);
-		adjust_skill_scale(&state->skills[SKILL_SAVE], p->timed[TMD_BLOODLUST], 20, 10);
+	if (p->mon.m_timed[TMD_BLOODLUST]) {
+		state->to_d += p->mon.m_timed[TMD_BLOODLUST] / 5 + 1;
+		state->to_h += p->mon.m_timed[TMD_BLOODLUST] * 2 / 3;
+		extra_blows += p->mon.m_timed[TMD_BLOODLUST] * 4;
+		state->speed += p->mon.m_timed[TMD_BLOODLUST] / 5 - 3;
+		state->dam_red += p->mon.m_timed[TMD_BLOODLUST] * (p->mon.maxhp + 100) / 1000;
+		adjust_skill_scale(&state->skills[SKILL_STEALTH], -p->mon.m_timed[TMD_BLOODLUST], 5, 10);
+		adjust_skill_scale(&state->skills[SKILL_SAVE], p->mon.m_timed[TMD_BLOODLUST], 20, 10);
 	}
-	if (p->timed[TMD_STEALTH]) {
+	if (p->mon.m_timed[TMD_STEALTH]) {
 		state->skills[SKILL_STEALTH] += 10;
 	}
 

@@ -1374,7 +1374,7 @@ void leave_store(game_event_type type, game_event_data *data, void *user)
 		player->sp_burn = 0;
 
 		player->csp = player->msp;
-		player->chp = player->mhp;
+		player->mon.hp = player->mon.maxhp;
 
 		player->upkeep->update |= (PU_HP | PU_MANA);
 	}

@@ -52,7 +52,7 @@ int teardown_tests(void *state) {
 
 static void restore_to_full_health(void)
 {
-	player->chp = player->mhp;
+	player->mon.hp = player->mon.maxhp;
 	if (player->upkeep) player->upkeep->redraw |= (PR_HP);
 }
 
@@ -104,7 +104,7 @@ static int test_chain1_execute(void *state) {
 	notnull(ec);
 	require(completed);
 	require(ident);
-	eq(player->chp, player->mhp - 1);
+	eq(player->mon.hp, player->mon.maxhp - 1);
 	ok;
 }
 
@@ -125,7 +125,7 @@ static int test_chain2_execute(void *state) {
 	notnull(ec);
 	require(completed);
 	require(ident);
-	eq(player->chp, player->mhp - 1);
+	eq(player->mon.hp, player->mon.maxhp - 1);
 	ok;
 }
 
@@ -147,7 +147,7 @@ static int test_chain3_execute(void *state) {
 	notnull(ec);
 	require(completed);
 	require(ident);
-	eq(player->chp, player->mhp - 3);
+	eq(player->mon.hp, player->mon.maxhp - 3);
 	ok;
 }
 
@@ -209,7 +209,7 @@ static int test_random1_execute(void *state) {
 	notnull(ec);
 	require(completed);
 	require(ident);
-	eq(player->chp, player->mhp - 1);
+	eq(player->mon.hp, player->mon.maxhp - 1);
 	ok;
 }
 
@@ -232,8 +232,8 @@ static int test_random2_execute(void *state) {
 	notnull(ec);
 	require(completed);
 	require(ident);
-	require((player->chp == player->mhp - 1 || player->timed[TMD_BOLD]) &&
-		!(player->chp == player->mhp - 1 && player->timed[TMD_BOLD]));
+	require((player->mon.hp == player->mon.maxhp - 1 || player->timed[TMD_BOLD]) &&
+		!(player->mon.hp == player->mon.maxhp - 1 && player->timed[TMD_BOLD]));
 	ok;
 }
 
@@ -283,9 +283,9 @@ static int test_random_stats(void *state) {
 			completed = effect_do(ec, source_player(), NULL,
 				&ident, true, 0, 0, false, NULL);
 			if (!completed) break;
-			if (player->mhp - player->chp == 1) {
+			if (player->mon.maxhp - player->mon.hp == 1) {
 				++bins[0];
-			} else if (player->mhp - player->chp == 2) {
+			} else if (player->mon.maxhp - player->mon.hp == 2) {
 				++bins[1];
 			} else {
 				break;
@@ -332,9 +332,9 @@ static int test_nested_random_execute(void *state) {
 	notnull(ec);
 	require(completed);
 	require(ident);
-	require((player->chp == player->mhp - 1 || player->timed[TMD_BOLD] ||
-		(player->chp == player->mhp && !player->timed[TMD_BOLD])) &&
-		!(player->chp == player->mhp - 1 && player->timed[TMD_BOLD]));
+	require((player->mon.hp == player->mon.maxhp - 1 || player->timed[TMD_BOLD] ||
+		(player->mon.hp == player->mon.maxhp && !player->timed[TMD_BOLD])) &&
+		!(player->mon.hp == player->mon.maxhp - 1 && player->timed[TMD_BOLD]));
 	ok;
 }
 
@@ -400,7 +400,7 @@ static int test_select1_execute(void *state) {
 	notnull(ec);
 	require(completed);
 	require(ident);
-	eq(player->chp, player->mhp - 1);
+	eq(player->mon.hp, player->mon.maxhp - 1);
 	ok;
 }
 
@@ -434,10 +434,10 @@ static int test_select2_execute(void *state) {
 	require(ident);
 	require(choice == 0 || choice == 1);
 	if (choice == 0) {
-		require(player->chp == player->mhp - 1 &&
+		require(player->mon.hp == player->mon.maxhp - 1 &&
 			!player->timed[TMD_BOLD]);
 	} else {
-		require(player->chp == player->mhp && player->timed[TMD_BOLD]);
+		require(player->mon.hp == player->mon.maxhp && player->timed[TMD_BOLD]);
 	}
 	ok;
 }
@@ -495,9 +495,9 @@ static int test_nested_select_execute(void *state) {
 	notnull(ec);
 	require(completed);
 	require(ident);
-	require((player->chp == player->mhp - 1 || player->timed[TMD_BOLD] ||
-		(player->chp == player->mhp && !player->timed[TMD_BOLD])) &&
-		!(player->chp == player->mhp - 1 && player->timed[TMD_BOLD]));
+	require((player->mon.hp == player->mon.maxhp - 1 || player->timed[TMD_BOLD] ||
+		(player->mon.hp == player->mon.maxhp && !player->timed[TMD_BOLD])) &&
+		!(player->mon.hp == player->mon.maxhp - 1 && player->timed[TMD_BOLD]));
 	ok;
 }
 

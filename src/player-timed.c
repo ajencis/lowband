@@ -53,7 +53,7 @@ const char *list_player_flag_names[] = {
 };
 
 struct timed_effect_data timed_effects[TMD_MAX] = {
-	#define TMD(a, b, c)	{ #a, b, c, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 0, OF_NONE, false, -1, -1, -1 },
+	#define TMD(a, b, c, d, e, f, g, h, i, j)	{ #a, b, c, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 0, OF_NONE, false, -1, -1, -1 },
 	#include "list-player-timed.h"
 	#undef TMD
 };
@@ -81,7 +81,7 @@ int timed_name_to_idx(const char *name)
  * List of timed effect names
  */
 static const char *list_timed_effect_names[] = {
-	#define TMD(a, b, c) #a,
+	#define TMD(a, b, c, d, e, f, g, h, i, j) #a,
 	#include "list-player-timed.h"
 	#undef TMD
 	"MAX",
@@ -739,9 +739,9 @@ struct file_parser player_timed_parser = {
  */
 bool player_timed_grade_eq(struct player *p, int idx, const char *match)
 {
-	if (p->timed[idx]) {
+	if (p->mon.m_timed[idx]) {
 		struct timed_grade *grade = timed_effects[idx].grade;
-		while (p->timed[idx] > grade->max) {
+		while (p->mon.m_timed[idx] > grade->max) {
 			grade = grade->next;
 		}
 		if (grade->name && streq(grade->name, match)) return true;
@@ -803,7 +803,7 @@ bool player_set_timed(struct player *p, int idx, int v, bool notify,
 	v = MAX(v, effect->lower_bound);
 
 	/* No change */
-	if (p->timed[idx] == v) {
+	if (p->mon.m_timed[idx] == v) {
 		return false;
 	}
 
@@ -812,14 +812,14 @@ bool player_set_timed(struct player *p, int idx, int v, bool notify,
 		new_grade = new_grade->next;
 		if (!new_grade->next) break;
 	}
-	while (p->timed[idx] > current_grade->max) {
+	while (p->mon.m_timed[idx] > current_grade->max) {
 		current_grade = current_grade->next;
 		if (!current_grade->next) break;
 	}
 
 	/* Upper bound */
 	if (v > new_grade->max) {
-		if (p->timed[idx] == new_grade->max) {
+		if (p->mon.m_timed[idx] == new_grade->max) {
 			/*
 			 * No change:  tried to exceed the maximum possible and
 			 * already there
@@ -857,11 +857,11 @@ bool player_set_timed(struct player *p, int idx, int v, bool notify,
 			/* Finishing */
 			print_custom_message(weapon, effect->on_end,
 				MSG_RECOVER, p);
-		} else if (p->timed[idx] > v && effect->on_decrease) {
+		} else if (p->mon.m_timed[idx] > v && effect->on_decrease) {
 			/* Decrementing */
 			print_custom_message(weapon, effect->on_decrease,
 				effect->msgt, p);
-		} else if (v > p->timed[idx] && effect->on_increase) {
+		} else if (v > p->mon.m_timed[idx] && effect->on_increase) {
 			/* Incrementing */
 			print_custom_message(weapon, effect->on_increase,
 				effect->msgt, p);
@@ -874,7 +874,7 @@ bool player_set_timed(struct player *p, int idx, int v, bool notify,
 	 * That way any TIMED_INC or TIMED_INC_NO_RES effects in the effect
 	 * chains will honor can_disturb.
 	 */
-	if (v > 0 && !p->timed[idx]) {
+	if (v > 0 && !p->mon.m_timed[idx]) {
 		/* The effect starts. */
 		if (effect->on_begin_effect) {
 			bool ident = false;
@@ -895,7 +895,7 @@ bool player_set_timed(struct player *p, int idx, int v, bool notify,
 	}
 
 	/* Use the value */
-	p->timed[idx] = v;
+	p->mon.m_timed[idx] = v;
 	
 	if (notify) {
 		/* Disturb */
@@ -1014,7 +1014,7 @@ bool player_inc_check(struct player *p, int idx, bool lore)
 			 * solely a lore check or not.
 			 */
 			assert(f->idx >= 0 && f->idx < TMD_MAX);
-			if (p->timed[f->idx]) {
+			if (p->mon.m_timed[f->idx]) {
 				return false;
 			}
 			break;
@@ -1064,7 +1064,7 @@ bool player_inc_timed(struct player *p, int idx, int v, bool notify,
 
 	if (check == false || player_inc_check(p, idx, false) == true) {
 		if ((timed_effects[idx].flags & TMD_FLAG_NONSTACKING)
-				&& p->timed[idx] > 0) {
+				&& p->mon.m_timed[idx] > 0) {
 			/*
 			 * Block the increase if the effect is nonstacking and
 			 * already active.
@@ -1073,7 +1073,7 @@ bool player_inc_timed(struct player *p, int idx, int v, bool notify,
 		} else {
 			return player_set_timed(p,
 					idx,
-					p->timed[idx] + v,
+					p->mon.m_timed[idx] + v,
 					notify, can_disturb);
 		}
 	}
@@ -1105,7 +1105,7 @@ bool player_dec_timed(struct player *p, int idx, int v, bool notify,
 	int new_value;
 	assert(idx >= 0);
 	assert(idx < TMD_MAX);
-	new_value = p->timed[idx] - v;
+	new_value = p->mon.m_timed[idx] - v;
 
 	/* Obey `notify` if not finishing; if finishing, always notify */
 	if (new_value > 0) {

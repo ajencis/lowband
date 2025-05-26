@@ -939,7 +939,7 @@ bool borg_caution(void)
             borg_note(format(
                 "# Protected by Resistance (borg turns:%d; game turns:%d)",
                 borg.resistance / borg_game_ratio,
-                player->timed[TMD_OPP_ACID]));
+                player->mon.m_timed[TMD_OPP_ACID]));
         }
         if (borg.temp.shield) {
             borg_note("# Protected by Mystic Shield");

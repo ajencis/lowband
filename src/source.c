@@ -17,6 +17,7 @@
  */
 
 #include "source.h"
+#include "player-enum.h"
 
 struct source source_none(void)
 {
@@ -33,18 +34,23 @@ struct source source_trap(struct trap *trap)
 	return src;
 }
 
-struct source source_monster(int who)
-{
-	struct source src;
-	src.what = SRC_MONSTER;
-	src.which.monster = who;
-	return src;
-}
-
 struct source source_player(void)
 {
 	struct source src;
 	src.what = SRC_PLAYER;
+	return src;
+}
+
+struct source source_monster(int who)
+{
+	struct source src;
+
+	if (who == PLAYER_MON_MIDX) {
+		return source_player();
+	}
+
+	src.what = SRC_MONSTER;
+	src.which.monster = who;
 	return src;
 }
 

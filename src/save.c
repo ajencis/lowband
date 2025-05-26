@@ -226,9 +226,9 @@ static void wr_monster(const struct monster *mon)
 	wr_s16b(mon->maxhp);
 	wr_byte(mon->mspeed);
 	wr_byte(mon->energy);
-	wr_byte(MON_TMD_MAX);
+	wr_byte(TMD_MAX);
 
-	for (j = 0; j < MON_TMD_MAX; j++) {
+	for (j = 0; j < TMD_MAX; j++) {
 		wr_s16b(mon->m_timed[j]);
 	}
 
@@ -539,8 +539,8 @@ void wr_player(void)
 	wr_u16b(player->exp_frac);
 	wr_s16b(player->lev);
 
-	wr_s16b(player->mhp);
-	wr_s16b(player->chp);
+	wr_s16b(player->mon.maxhp);
+	wr_s16b(player->mon.hp);
 	wr_u16b(player->chp_frac);
 
 	wr_s16b(player->msp);
@@ -572,7 +572,7 @@ void wr_player(void)
 
 	/* Read all the effects, in a loop */
 	for (i = 0; i < TMD_MAX; i++) {
-		wr_s16b(player->timed[i]);
+		wr_s16b(player->mon.m_timed[i]);
 	}
 
 	/* Total energy used so far */

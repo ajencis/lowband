@@ -45,11 +45,11 @@ static int take1(struct player *p, struct monster *m, struct blow_method *blow,
 	cave = &test_cave;
 	m->race->blow[0].effect = eff;
 	m->race->blow[0].method = blow;
-	p->chp = p->mhp;
-	old = p->chp;
+	p->mon.hp = p->mon.maxhp;
+	old = p->mon.hp;
 	make_attack_normal(m, p);
-	new = p->chp;
-	p->chp = p->mhp;
+	new = p->mon.hp;
+	p->mon.hp = p->mon.maxhp;
 	return old - new;
 }
 

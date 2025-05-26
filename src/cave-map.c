@@ -104,7 +104,7 @@ void map_info(struct loc grid, struct grid_data *g)
 	g->in_view = (square_isseen(cave, grid)) ? true : false;
 	g->is_player = (square(cave, grid)->mon < 0) ? true : false;
 	g->m_idx = (g->is_player) ? 0 : square(cave, grid)->mon;
-	g->hallucinate = player->timed[TMD_IMAGE] ? true : false;
+	g->hallucinate = player->mon.m_timed[TMD_IMAGE] ? true : false;
 
 	if (g->in_view) {
 		bool lit = square_islit(cave, grid);
@@ -312,7 +312,7 @@ static void cave_light(struct point_set *ps)
 			if (monster_is_smart(mon)) chance = 100;
 
 			/* Sometimes monsters wake up, and become aware if they do */
-			if (mon->m_timed[MON_TMD_SLEEP] && (randint0(100) < chance)) {
+			if (mon->m_timed[TMD_ASLEEP] && (randint0(100) < chance)) {
 				monster_wake(mon, true, 100);
 			}
 		}

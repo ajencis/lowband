@@ -515,7 +515,7 @@ bool effect_handler_NOURISH(effect_handler_context_t *context)
 			context->origin.what != SRC_PLAYER || !context->aware);
 	} else if (context->subtype == 2) {
 		/* Set food level to amount, vomiting if necessary */
-		bool message = player->timed[TMD_FOOD] > amount;
+		bool message = player->mon.m_timed[TMD_FOOD] > amount;
 		if (message) {
 			msg("You vomit!");
 		}
@@ -523,7 +523,7 @@ bool effect_handler_NOURISH(effect_handler_context_t *context)
 			context->origin.what != SRC_PLAYER || !context->aware);
 	} else if (context->subtype == 3) {
 		/* Increase food level to amount if needed */
-		if (player->timed[TMD_FOOD] < amount) {
+		if (player->mon.m_timed[TMD_FOOD] < amount) {
 			player_set_timed(player, TMD_FOOD, MAX(amount + 1, 0),
 				false, context->origin.what != SRC_PLAYER
 				|| !context->aware);
@@ -567,7 +567,6 @@ bool effect_handler_TIMED_SET(effect_handler_context_t *context)
 		context->origin.what != SRC_PLAYER || !context->aware);
 	context->ident = true;
 	return true;
-
 }
 
 /**
@@ -580,11 +579,6 @@ bool effect_handler_TIMED_INC(effect_handler_context_t *context)
 	int amount = effect_calculate_value(context, true);
 	struct monster *t_mon = monster_target_monster(context);
 	struct loc decoy = cave_find_decoy(cave);
-
-	if (context->origin.what == SRC_PLAYER) {
-		t_mon = smite_target_get(context->dir);
-		if (!t_mon) return false;
-	}
 
 	context->ident = true;
 
@@ -601,27 +595,27 @@ bool effect_handler_TIMED_INC(effect_handler_context_t *context)
 		/* Will do until monster and player timed effects are fused */
 		switch (context->subtype) {
 			case TMD_CONFUSED: {
-				mon_tmd_effect = MON_TMD_CONF;
+				mon_tmd_effect = TMD_CONFUSED;
 				break;
 			}
 			case TMD_SLOW: {
-				mon_tmd_effect = MON_TMD_SLOW;
+				mon_tmd_effect = TMD_SLOW;
 				break;
 			}
 			case TMD_PARALYZED: {
-				mon_tmd_effect = MON_TMD_HOLD;
+				mon_tmd_effect = TMD_PARALYZED;
 				break;
 			}
 			case TMD_BLIND: {
-				mon_tmd_effect = MON_TMD_STUN;
+				mon_tmd_effect = TMD_STUN;
 				break;
 			}
 			case TMD_AFRAID: {
-				mon_tmd_effect = MON_TMD_FEAR;
+				mon_tmd_effect = TMD_AFRAID;
 				break;
 			}
 			case TMD_AMNESIA: {
-				mon_tmd_effect = MON_TMD_SLEEP;
+				mon_tmd_effect = TMD_ASLEEP;
 				break;
 			}
 			default: {
@@ -634,7 +628,7 @@ bool effect_handler_TIMED_INC(effect_handler_context_t *context)
 		return true;
 	}
 
-	if (!player->timed[context->subtype] || !context->other) {
+	if (!player->mon.m_timed[context->subtype] || !context->other) {
 		player_inc_timed(player, context->subtype, MAX(amount, 0), true,
 			context->origin.what != SRC_PLAYER || !context->aware,
 			true);
@@ -655,7 +649,7 @@ bool effect_handler_TIMED_INC_NO_RES(effect_handler_context_t *context)
 {
 	int amount = effect_calculate_value(context, false);
 
-	if (!player->timed[context->subtype] || !context->other)
+	if (!player->mon.m_timed[context->subtype] || !context->other)
 		player_inc_timed(player, context->subtype, MAX(amount, 0),
 			true,
 			context->origin.what != SRC_PLAYER || !context->aware,
@@ -710,7 +704,7 @@ bool effect_handler_TIMED_DEC(effect_handler_context_t *context)
 {
 	int amount = effect_calculate_value(context, true);
 	if (context->other)
-		amount = player->timed[context->subtype] / context->other;
+		amount = player->mon.m_timed[context->subtype] / context->other;
 	(void) player_dec_timed(player, context->subtype, MAX(amount, 0), true,
 		context->origin.what != SRC_PLAYER || !context->aware);
 	context->ident = true;
@@ -978,7 +972,7 @@ bool effect_handler_DRAIN_LIGHT(effect_handler_context_t *context)
 		if (obj->timeout < 1) obj->timeout = 1;
 
 		/* Notice */
-		if (!player->timed[TMD_BLIND]) {
+		if (!player->mon.m_timed[TMD_BLIND]) {
 			msg("Your light dims.");
 			context->ident = true;
 		}
@@ -1015,7 +1009,7 @@ bool effect_handler_DRAIN_MANA(effect_handler_context_t *context)
 
 	/* Target is another monster - disenchant it */
 	if (t_mon) {
-		mon_inc_timed(t_mon, MON_TMD_DISEN, MAX(drain, 0), 0);
+		mon_inc_timed(t_mon, TMD_DISEN, MAX(drain, 0), 0);
 		return true;
 	}
 
@@ -2275,7 +2269,7 @@ bool effect_handler_WAKE(effect_handler_context_t *context)
 			int dist = distance(origin, mon->grid);
 
 			/* Skip monsters too far away */
-			if ((dist < radius) && mon->m_timed[MON_TMD_SLEEP]) {
+			if ((dist < radius) && mon->m_timed[TMD_ASLEEP]) {
 				/* Monster wakes, closer means likelier to become aware */
 				monster_wake(mon, false, 100 - 2 * dist);
 				woken = true;
@@ -2417,7 +2411,7 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 	context->ident = true;
 
 	/* Message for the blind */
-	if (count && player->timed[TMD_BLIND]) {
+	if (count && player->mon.m_timed[TMD_BLIND]) {
 		msgt(message_type, "You hear %s appear nearby.",
 				(count > 1 ? "many things" : "something"));
 	}
@@ -3124,7 +3118,7 @@ bool effect_handler_DARKEN_LEVEL(effect_handler_context_t *context)
 bool effect_handler_LIGHT_AREA(effect_handler_context_t *context)
 {
 	/* Message */
-	if (!player->timed[TMD_BLIND])
+	if (!player->mon.m_timed[TMD_BLIND])
 		msg("You are surrounded by a white light.");
 
 	/* Light up the room */
@@ -3142,7 +3136,7 @@ bool effect_handler_LIGHT_AREA(effect_handler_context_t *context)
 bool effect_handler_DARKEN_AREA(effect_handler_context_t *context)
 {
 	struct loc target = player->grid;
-	bool message = player->timed[TMD_BLIND] ? false : true;
+	bool message = player->mon.m_timed[TMD_BLIND] ? false : true;
 	struct monster *mon = NULL;
 	struct monster *t_mon = monster_target_monster(context);
 	struct loc decoy = cave_find_decoy(cave);
@@ -3167,7 +3161,7 @@ bool effect_handler_DARKEN_AREA(effect_handler_context_t *context)
 	if (mon && monster_is_decoyed(mon)) {
 		target = decoy;
 		if (!los(cave, player->grid, decoy) ||
-			player->timed[TMD_BLIND]) {
+			player->mon.m_timed[TMD_BLIND]) {
 			decoy_unseen = true;
 		}
 		if (message && !decoy_unseen) {
@@ -3602,7 +3596,7 @@ bool effect_handler_COMMAND(effect_handler_context_t *context)
 	player_set_timed(player, TMD_COMMAND, MAX(amount, 0), false, false);
 
 	/* Monster is commanded */
-	mon_inc_timed(mon, MON_TMD_COMMAND, MAX(amount, 0), 0);
+	//mon_inc_timed(mon, MON_TMD_COMMAND, MAX(amount, 0), 0);
 
 	return true;
 }
@@ -3880,16 +3874,16 @@ bool effect_handler_REBIRTH(effect_handler_context_t *context)
 			player->upkeep->redraw |= (PR_HEALTH);
 		}
 		
-		mon_clear_timed(mon, MON_TMD_CONF, 0);
-		mon_clear_timed(mon, MON_TMD_FEAR, 0);
-		mon_clear_timed(mon, MON_TMD_HOLD, 0);
-		mon_clear_timed(mon, MON_TMD_POISONED, 0);
-		mon_clear_timed(mon, MON_TMD_STUN, 0);
-		mon_clear_timed(mon, MON_TMD_TOXIC, 0);
+		mon_clear_timed(mon, TMD_CONFUSED, 0);
+		mon_clear_timed(mon, TMD_AFRAID, 0);
+		mon_clear_timed(mon, TMD_PARALYZED, 0);
+		mon_clear_timed(mon, TMD_POISONED, 0);
+		mon_clear_timed(mon, TMD_STUN, 0);
+		mon_clear_timed(mon, TMD_TOXIC, 0);
 	} else {
-		player->chp += damroll(mana, mana * 3);
-		if (player->chp >= player->mhp) {
-			player->chp = player->mhp;
+		player->mon.hp += damroll(mana, mana * 3);
+		if (player->mon.hp >= player->mon.maxhp) {
+			player->mon.hp = player->mon.maxhp;
 			player->chp_frac = 0;
 		}
 		player->upkeep->redraw |= PR_HP;

@@ -285,7 +285,7 @@ bool player_has_temporary_brand(const struct player *p, int idx)
 	int i = 0;
 
 	while (i < TMD_MAX) {
-		if (timed_effects[i].temp_brand == idx && p->timed[i]) {
+		if (timed_effects[i].temp_brand == idx && p->mon.m_timed[i]) {
 			return true;
 		}
 		++i;
@@ -304,7 +304,7 @@ bool player_has_temporary_slay(const struct player *p, int idx)
 	int i = 0;
 
 	while (i < TMD_MAX) {
-		if (timed_effects[i].temp_slay == idx && p->timed[i]) {
+		if (timed_effects[i].temp_slay == idx && p->mon.m_timed[i]) {
 			return true;
 		}
 		++i;

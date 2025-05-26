@@ -26,6 +26,7 @@
 #include "mon-summon.h"
 #include "mon-util.h"
 #include "parser.h"
+#include "player-timed.h"
 
 /**
  * The "type" of the current "summon specific"
@@ -493,7 +494,7 @@ struct monster *summon_specific(struct loc grid, int lev, int type, bool delay, 
 	    mon->faction = faction;
 	}
 	if (!summ->permanent) {
-		mon->m_timed[MON_TMD_SUMMONED] = lev / 2 + randint1(lev) + randint1(50);
+		mon->m_timed[TMD_SUMMONED] = lev / 2 + randint1(lev) + randint1(50);
 	}
 
 	/* If delay, try to let the player act before the summoned monsters,
@@ -517,7 +518,7 @@ struct monster *summon_specific(struct loc grid, int lev, int type, bool delay, 
 		mon->energy = 0;
 		if (turns > 0) {
 			/* Set timer directly to avoid resistance */
-			mon->m_timed[MON_TMD_HOLD] = MIN(turns, 32767);
+			mon->m_timed[TMD_PARALYZED] = MIN(turns, 32767);
 		}
 	}
 

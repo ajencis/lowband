@@ -312,7 +312,7 @@ void play_ambient_sound(void)
 }
 
 /**
- * Helper for process_world -- decrement player->timed[] and curse effect fields
+ * Helper for process_world -- decrement player->mon.m_timed[] and curse effect fields
  */
 static void decrease_timeouts(void)
 {
@@ -322,7 +322,7 @@ static void decrease_timeouts(void)
 	/* Most timed effects decrement by 1 */
 	for (i = 0; i < TMD_MAX; i++) {
 		int decr = 1;
-		if (!player->timed[i]) {
+		if (!player->mon.m_timed[i]) {
 			continue;
 		}
 
@@ -367,20 +367,22 @@ static void decrease_timeouts(void)
 				break;
 			}
 
+			#if 0
 			case TMD_COMMAND:
 			{
 				struct monster *mon = get_commanded_monster();
 				if (!los(cave, player->grid, mon->grid)) {
 					/* Out of sight is out of mind */
-					mon_clear_timed(mon, MON_TMD_COMMAND, MON_TMD_FLG_NOTIFY);
+					//mon_clear_timed(mon, MON_TMD_COMMAND, MON_TMD_FLG_NOTIFY);
 					player_clear_timed(player, TMD_COMMAND,
 						true, true);
 				} else {
 					/* Keep monster timer aligned */
-					mon_dec_timed(mon, MON_TMD_COMMAND, decr, 0);
+					//mon_dec_timed(mon, MON_TMD_COMMAND, decr, 0);
 				}
 				break;
 			}
+			#endif
 		}
 		/* Decrement the effect */
 		player_dec_timed(player, i, decr, false, true);
@@ -435,7 +437,7 @@ static void make_noise(struct player *p)
 	struct loc next = p->grid;
 	int y, x, d;
 	int noise = -p->curr_noise;
-	int noise_increment = p->timed[TMD_COVERTRACKS] ? 4 : 1;
+	int noise_increment = p->mon.m_timed[TMD_COVERTRACKS] ? 4 : 1;
     struct queue *queue = q_new(cave->height * cave->width);
 
 	/* Set all the grids to silence */
@@ -524,7 +526,7 @@ static void update_scent(void)
 	}
 
 	/* Scentless player */
-	if (player->timed[TMD_COVERTRACKS]) return;
+	if (player->mon.m_timed[TMD_COVERTRACKS]) return;
 
 	/* Lay down new scent around the player */
 	for (y = 0; y < 5; y++) {
@@ -680,15 +682,17 @@ void process_world(struct chunk *c)
 
 				assert(sq->mana >= 0);
 
-				player_adjust_hp_precise(player, (int32_t)((double)INT16_MAX * quantity * my_sqrt(player->mhp) / 10.0));
+				player_adjust_hp_precise(player, (int32_t)((double)INT16_MAX * quantity * my_sqrt(player->mon.maxhp) / 10.0));
 			}
 		}
 	}
 
+	process_monster_timed(&player->mon);
+
 	/*** Damage (or healing) over Time ***/
 
 	/* Take damage from poison */
-	if (player->timed[TMD_POISONED]) {
+	if (player->mon.m_timed[TMD_POISONED]) {
 		take_hit(player, player_apply_damage_reduction(player, 1),
 			"poison");
 		if (player->is_dead) {
@@ -696,20 +700,20 @@ void process_world(struct chunk *c)
 		}
 	}
 
-	if (player->timed[TMD_RAD_POIS]) {
+	if (player->mon.m_timed[TMD_RAD_POIS]) {
 		struct loc g = player->grid;
 		effect_simple(EF_PROJECT_LOS, source_player(), "2d9", PROJ_MON_POIS, 0, 0, g.y, g.x, NULL);
 	}
 
-	if (player->timed[TMD_CALL_STORM] && !(turn % 50)) {
+	if (player->mon.m_timed[TMD_CALL_STORM] && !(turn % 50)) {
 		struct loc l = player->grid;
-		char *dam = format("2d%i", my_int_sqrt(player->timed[TMD_CALL_STORM]) + 49);
+		char *dam = format("2d%i", my_int_sqrt(player->mon.m_timed[TMD_CALL_STORM]) + 49);
 		int rad = one_in_(3) ? 1 : 0;
 		effect_simple(EF_RANDOM_MON_DAMAGE, source_player(), dam, PROJ_ELEC, rad, 0, l.y, l.x, NULL);
 	}
 
 	/* Take damage from cuts, worse from serious cuts */
-	if (player->timed[TMD_CUT]) {
+	if (player->mon.m_timed[TMD_CUT]) {
 		if (player_has(player, PF_ROCK)) {
 			/* Rock players just maintain */
 			i = 0;
@@ -731,23 +735,23 @@ void process_world(struct chunk *c)
 	}
 
 	/* Side effects of diminishing bloodlust */
-	if (player->timed[TMD_BLOODLUST] && !p_berserker) {
+	if (player->mon.m_timed[TMD_BLOODLUST] && !p_berserker) {
 		player_over_exert(player, PY_EXERT_HP | PY_EXERT_CUT | PY_EXERT_SLOW,
-						  MAX(0, 25 - player->timed[TMD_BLOODLUST]),
-						  player->chp / 10);
+						  MAX(0, 25 - player->mon.m_timed[TMD_BLOODLUST]),
+						  player->mon.hp / 10);
 		if (player->is_dead) {
 			return;
 		}
 	}
 
 	/* Timed healing */
-	if (player->timed[TMD_HEAL]) {
+	if (player->mon.m_timed[TMD_HEAL]) {
 		bool ident = false;
 		effect_simple(EF_HEAL_HP, source_player(), "30", 0, 0, 0, 0, 0, &ident);
 	}
 
 	/* Effects of Black Breath */
-	if (player->timed[TMD_BLACKBREATH]) {
+	if (player->mon.m_timed[TMD_BLACKBREATH]) {
 		if (one_in_(2)) {
 			msg("The Black Breath sickens you.");
 			player_stat_dec(player, STAT_CON, false);
@@ -780,7 +784,7 @@ void process_world(struct chunk *c)
 			i = (i * 128) / z_info->food_value;
 
 			/* L: if you're healing you digest faster */
-			if (player->chp < player->mhp) {
+			if (player->mon.hp < player->mon.maxhp) {
 				i *= 3;
 			}
 
@@ -799,10 +803,10 @@ void process_world(struct chunk *c)
 		}
 
 		/* Fast metabolism */
-		if (player->timed[TMD_HEAL]) {
+		if (player->mon.m_timed[TMD_HEAL]) {
 			player_dec_timed(player, TMD_FOOD,
 				8 * z_info->food_value, false, true);
-			if (player->timed[TMD_FOOD] < PY_FOOD_HUNGRY) {
+			if (player->mon.m_timed[TMD_FOOD] < PY_FOOD_HUNGRY) {
 				player_set_timed(player, TMD_HEAL, 0, true,
 					true);
 			}
@@ -812,7 +816,7 @@ void process_world(struct chunk *c)
 	/* Faint or starving */
 	if (player_timed_grade_eq(player, TMD_FOOD, "Faint")) {
 		/* Faint occasionally */
-		if (!player->timed[TMD_PARALYZED] && one_in_(10)) {
+		if (!player->mon.m_timed[TMD_PARALYZED] && one_in_(10)) {
 			/* Message */
 			msg("You faint from the lack of food.");
 			disturb(player);
@@ -823,7 +827,7 @@ void process_world(struct chunk *c)
 		}
 	} else if (player_timed_grade_eq(player, TMD_FOOD, "Starving")) {
 		/* Calculate damage */
-		i = (PY_FOOD_STARVE - player->timed[TMD_FOOD]) / 10;
+		i = (PY_FOOD_STARVE - player->mon.m_timed[TMD_FOOD]) / 10;
 
 		/* Take damage */
 		take_hit(player, player_apply_damage_reduction(player, i),
@@ -839,7 +843,7 @@ void process_world(struct chunk *c)
 	}
 
 	/* Regenerate Hit Points if needed */
-	if (player->chp < player->mhp) {
+	if (player->mon.hp < player->mon.maxhp) {
 		player_regen_hp(player);
 	}
 
@@ -1043,7 +1047,7 @@ static void process_player_cleanup(void)
 		/* Do nothing else if player has auto-dropped stuff */
 		if (!player->upkeep->dropping) {
 			/* Hack -- constant hallucination */
-			if (player->timed[TMD_IMAGE]) {
+			if (player->mon.m_timed[TMD_IMAGE]) {
 				player->upkeep->redraw |= (PR_MAP);
 			}
 
@@ -1135,21 +1139,21 @@ void process_player(void)
 		/* Dwarves detect treasure */
 		if (player_has(player, PF_SEE_ORE)) {
 			/* Only if they are in good shape */
-			if (!player->timed[TMD_IMAGE] &&
-					!player->timed[TMD_CONFUSED] &&
-					!player->timed[TMD_AMNESIA] &&
-					!player->timed[TMD_STUN] &&
-					!player->timed[TMD_PARALYZED] &&
-					!player->timed[TMD_TERROR] &&
-					!player->timed[TMD_AFRAID]) {
+			if (!player->mon.m_timed[TMD_IMAGE] &&
+					!player->mon.m_timed[TMD_CONFUSED] &&
+					!player->mon.m_timed[TMD_AMNESIA] &&
+					!player->mon.m_timed[TMD_STUN] &&
+					!player->mon.m_timed[TMD_PARALYZED] &&
+					!player->mon.m_timed[TMD_TERROR] &&
+					!player->mon.m_timed[TMD_AFRAID]) {
 				effect_simple(EF_DETECT_ORE, source_none(), "0", 0, 0, 0, 3, 3, NULL);
 			}
 		}
 
 		/* Paralyzed or Knocked Out player gets no turn */
-		if (player->timed[TMD_PARALYZED] ||
+		if (player->mon.m_timed[TMD_PARALYZED] ||
 				player_timed_grade_eq(player, TMD_STUN, "Knocked Out") ||
-				player->timed[TMD_PHOENIX]) {
+				player->mon.m_timed[TMD_PHOENIX]) {
 			cmdq_push(CMD_SLEEP);
 		}
 

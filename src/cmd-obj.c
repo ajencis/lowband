@@ -516,7 +516,7 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 			activation_message(obj, player);
 		} else if (obj->kind->effect_msg) {
 			msgt(snd, "%s", obj->kind->effect_msg);
-		} else if (obj->kind->vis_msg && !player->timed[TMD_BLIND]) {
+		} else if (obj->kind->vis_msg && !player->mon.m_timed[TMD_BLIND]) {
 			msgt(snd, "%s", obj->kind->vis_msg);
 		} else {
 			/* Make a noise! */
@@ -1282,7 +1282,7 @@ void do_cmd_innate(struct command *cmd)
 			fail) != CMD_OK)
 		return;
 	
-	if (mana > player->chp) {
+	if (mana > player->mon.hp) {
 		msg("You do not have enough HP to use this innate power.");
 		return;
 	}
@@ -1354,7 +1354,7 @@ void do_cmd_cast(struct command *cmd)
 	mana = player_spell_mana(ps);
 
 	if (player->realm && player->realm->realm_special[RLM_SPCL_HP_CAST]) {
-		if (mana > player->chp) {
+		if (mana > player->mon.hp) {
 			msg("You do not have enough hit points to cast this spell.");
 			return;
 		}

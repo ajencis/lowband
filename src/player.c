@@ -351,7 +351,7 @@ void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract)
 		}
 	}
 
-	if (p->timed[TMD_PHOENIX_CD]) {
+	if (p->mon.m_timed[TMD_PHOENIX_CD]) {
 		int dec = (new_amt + randint0(p->lev)) / p->lev;
 		player_dec_timed(player, TMD_PHOENIX_CD, dec, true, true);
 	}
@@ -413,7 +413,7 @@ void player_flags_timed(struct player *p, bitflag f[OF_SIZE])
 	int i;
 
 	for (i = 0; i < TMD_MAX; ++i) {
-		if (p->timed[i] && timed_effects[i].oflag_dup != OF_NONE
+		if (p->mon.m_timed[i] && timed_effects[i].oflag_dup != OF_NONE
 				&& i != TMD_TRAPSAFE) {
 			of_on(f, timed_effects[i].oflag_dup);
 		}
@@ -425,9 +425,9 @@ uint8_t player_hp_attr(struct player *p)
 {
 	uint8_t attr;
 	
-	if (p->chp >= p->mhp)
+	if (p->mon.hp >= p->mon.maxhp)
 		attr = COLOUR_L_GREEN;
-	else if (p->chp > (p->mhp * p->opts.hitpoint_warn) / 10)
+	else if (p->mon.hp > (p->mon.maxhp * p->opts.hitpoint_warn) / 10)
 		attr = COLOUR_YELLOW;
 	else
 		attr = COLOUR_RED;
@@ -538,7 +538,6 @@ void player_cleanup_members(struct player *p)
 	if (p->obj_k) {
 		object_free(p->obj_k);
 	}
-	mem_free(p->timed);
 	if (p->upkeep) {
 		if (p->upkeep->follow) {
 			struct follower *curr = p->upkeep->follow;
@@ -618,7 +617,7 @@ static void init_player(void) {
 	player->upkeep = mem_zalloc(sizeof(struct player_upkeep));
 	player->upkeep->inven = mem_zalloc((z_info->pack_size + 1) * sizeof(struct object *));
 	player->upkeep->quiver = mem_zalloc(z_info->quiver_size * sizeof(struct object *));
-	player->timed = mem_zalloc(TMD_MAX * sizeof(int16_t));
+	//player->timed = mem_zalloc(TMD_MAX * sizeof(int16_t));
 	player->obj_k = object_new();
 	player->obj_k->brands = mem_zalloc(z_info->brand_max * sizeof(bool));
 	player->obj_k->slays = mem_zalloc(z_info->slay_max * sizeof(bool));
@@ -632,9 +631,12 @@ static void init_player(void) {
 	player->extra_target = mem_zalloc(z_info->learn_max * sizeof *player->extra_target);
 	player->extra_choice = mem_zalloc(z_info->learn_max * sizeof *player->extra_choice);
 	
+
 	for (i = 0; i < z_info->learn_max; ++i) {
 		player->extra_choice[i] = -1;
 	}
+	
+	player->mon.midx = PLAYER_MON_MIDX;
 
 	options_init_defaults(&player->opts);
 }

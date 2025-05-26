@@ -648,7 +648,7 @@ bool savefile_load(const char *path, bool cheat_death)
 
 	if (player->is_dead && cheat_death) {
 			player->is_dead = false;
-			player->chp = player->mhp;
+			player->mon.hp = player->mon.maxhp;
 			player->noscore |= NOSCORE_WIZARD;
 	}
 

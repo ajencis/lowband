@@ -20,7 +20,6 @@
 #ifndef MON_BLOWS_H
 #define MON_BLOWS_H
 
-#include "player.h"
 #include "monster.h"
 
 struct blow_message {

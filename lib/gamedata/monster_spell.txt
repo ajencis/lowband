@@ -137,6 +137,7 @@
 # - {target} is the target of the spell - player or (rarely) another monster
 
 name:SHRIEK
+knowable:0
 msgt:SHRIEK
 hit:100
 effect:WAKE
@@ -540,6 +541,7 @@ message-invis:You hear a grunt of exertion.
 message-miss:{name} hurls a boulder, but misses.
 
 name:WEAVE
+knowable:0
 msgt:CREATE_TRAP
 hit:100
 effect:WEB

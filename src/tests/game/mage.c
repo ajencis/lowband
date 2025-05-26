@@ -61,7 +61,7 @@ static int test_magic_missile(void *state) {
 	prepare_next_level(player);
 	on_new_level();
 	notnull(cave);
-	eq(player->chp, player->mhp);
+	eq(player->mon.hp, player->mon.maxhp);
 	eq(player->timed[TMD_FOOD], PY_FOOD_FULL - 1);
 
 	cmdq_push(CMD_STUDY);

@@ -328,8 +328,8 @@ static void prt_hp(int row, int col)
 
 	put_str("HP ", row, col);
 
-	strnfmt(max_hp, sizeof(max_hp), "%4d", player->mhp);
-	strnfmt(cur_hp, sizeof(cur_hp), "%4d", player->chp);
+	strnfmt(max_hp, sizeof(max_hp), "%4d", player->mon.maxhp);
+	strnfmt(cur_hp, sizeof(cur_hp), "%4d", player->mon.hp);
 	
 	c_put_str(color, cur_hp, row, col + 3);
 	c_put_str(COLOUR_WHITE, "/", row, col + 7);
@@ -396,7 +396,7 @@ uint8_t monster_health_attr(void)
 		attr = COLOUR_DARK;
 
 	} else if (!monster_is_visible(mon) || mon->hp < 0 ||
-			   player->timed[TMD_IMAGE]) {
+			   player->mon.m_timed[TMD_IMAGE]) {
 		/* The monster health is "unknown" */
 		attr = COLOUR_WHITE;
 
@@ -422,28 +422,28 @@ uint8_t monster_health_attr(void)
 		if (pct >= 100) attr = COLOUR_L_GREEN;
 
 		/* Afraid */
-		if (mon->m_timed[MON_TMD_FEAR]) attr = COLOUR_VIOLET;
+		if (mon->m_timed[TMD_AFRAID]) attr = COLOUR_VIOLET;
 
 		/* Disenchanted */
-		if (mon->m_timed[MON_TMD_DISEN]) attr = COLOUR_L_UMBER;
+		if (mon->m_timed[TMD_DISEN]) attr = COLOUR_L_UMBER;
 
 		/* Commanded */
-		if (mon->m_timed[MON_TMD_COMMAND]) attr = COLOUR_L_PURPLE;
+		//if (mon->m_timed[MON_TMD_COMMAND]) attr = COLOUR_L_PURPLE;
 
 		/* L: Poisoned */
-		if (mon->m_timed[MON_TMD_POISONED]) attr = COLOUR_GREEN;
+		if (mon->m_timed[TMD_POISONED]) attr = COLOUR_GREEN;
 
 		/* Confused */
-		if (mon->m_timed[MON_TMD_CONF]) attr = COLOUR_UMBER;
+		if (mon->m_timed[TMD_CONFUSED]) attr = COLOUR_UMBER;
 
 		/* Stunned */
-		if (mon->m_timed[MON_TMD_STUN]) attr = COLOUR_L_BLUE;
+		if (mon->m_timed[TMD_STUN]) attr = COLOUR_L_BLUE;
 
 		/* Asleep */
-		if (mon->m_timed[MON_TMD_SLEEP]) attr = COLOUR_BLUE;
+		if (mon->m_timed[TMD_ASLEEP]) attr = COLOUR_BLUE;
 
 		/* Held */
-		if (mon->m_timed[MON_TMD_HOLD]) attr = COLOUR_BLUE;
+		if (mon->m_timed[TMD_PARALYZED]) attr = COLOUR_BLUE;
 	}
 
 	return attr;
@@ -463,7 +463,7 @@ static int prt_health_aux(int row, int col)
 
 	/* Tracking an unseen, hallucinatory, or dead monster */
 	if (!monster_is_visible(mon) || /* Unseen */
-		(player->timed[TMD_IMAGE]) || /* Hallucination */
+		(player->mon.m_timed[TMD_IMAGE]) || /* Hallucination */
 		(mon->hp < 0)) { /* Dead (?) */
 		/* The monster health is "unknown" */
 		Term_putstr(col, row, 12, attr, "[----------]");
@@ -714,8 +714,8 @@ static int prt_hp_short(int row, int col)
 	put_str("HP:", row, col);
 	col += 3;
 
-	strnfmt(max_hp, sizeof(max_hp), "%d", player->mhp);
-	strnfmt(cur_hp, sizeof(cur_hp), "%d", player->chp);
+	strnfmt(max_hp, sizeof(max_hp), "%d", player->mon.maxhp);
+	strnfmt(cur_hp, sizeof(cur_hp), "%d", player->mon.hp);
 	
 	c_put_str(color, cur_hp, row, col);
 	col += strlen(cur_hp);
@@ -1300,10 +1300,10 @@ static size_t prt_tmd(int row, int col)
 		if (i == TMD_FOOD && pf_has(player->state.pflags, PF_NO_FOOD)) {
 			continue;
 		}
-		if (player->timed[i]) {
+		if (player->mon.m_timed[i]) {
 
 			struct timed_grade *grade = timed_effects[i].grade;
-			while (player->timed[i] > grade->max) {
+			while (player->mon.m_timed[i] > grade->max) {
 				grade = grade->next;
 			}
 			if (!grade->name) continue;
@@ -1313,7 +1313,7 @@ static size_t prt_tmd(int row, int col)
 			/* Food meter */
 			if (i == TMD_FOOD) {
 				// 100% is not yet overfull
-				char *meter = format("%d %%", player->timed[i] * 101 / PY_FOOD_FULL);
+				char *meter = format("%d %%", player->mon.m_timed[i] * 101 / PY_FOOD_FULL);
 				c_put_str(grade->color, meter, row, col + len);
 				len += strlen(meter) + 1;
 			}
@@ -2692,7 +2692,7 @@ static void see_floor_items(game_event_type type, game_event_data *data,
 	int floor_max = z_info->floor_size;
 	struct object **floor_list = mem_zalloc(floor_max * sizeof(*floor_list));
 	int floor_num = 0;
-	bool blind = ((player->timed[TMD_BLIND]) || (no_light(player)));
+	bool blind = ((player->mon.m_timed[TMD_BLIND]) || (no_light(player)));
 
 	const char *p = "see";
 	bool can_pickup = false;

@@ -328,7 +328,7 @@ static int32_t effect_value_base_weapon_damage(void)
 
 static int32_t effect_value_base_player_hp(void)
 {
-	return player->chp;
+	return player->mon.hp;
 }
 
 static int32_t effect_value_base_monster_percent_hp_gone(void)
@@ -349,7 +349,7 @@ static int32_t effect_value_base_caster_hp(void)
 	}
 	// Else assume the player is casting
 	else {
-		return player->chp;
+		return player->mon.hp;
 	}
 
 	return power;

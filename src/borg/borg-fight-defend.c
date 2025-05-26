@@ -3526,7 +3526,7 @@ bool borg_defend(int p1)
             if (borg_spell(RESISTANCE)) {
                 borg_note(format("# Refreshing Resistance.  "
                                  "borg.resistance=%d, player->=%d, (ratio=%d)",
-                    borg.resistance, player->timed[TMD_OPP_ACID],
+                    borg.resistance, player->mon.m_timed[TMD_OPP_ACID],
                     borg_game_ratio));
                 borg_attempting_refresh_resist = true;
                 borg.resistance                = 25000;

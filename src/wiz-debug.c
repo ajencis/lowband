@@ -34,7 +34,7 @@ void wiz_cheat_death(void)
 	player->is_dead = false;
 
 	/* Restore hit & spell points */
-	player->chp = player->mhp;
+	player->mon.hp = player->mon.maxhp;
 	player->chp_frac = 0;
 	player->csp = player->msp;
 	player->csp_frac = 0;

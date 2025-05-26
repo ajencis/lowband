@@ -595,19 +595,19 @@ static void melee_effect_timed(melee_effect_handler_context_t *context,
 		/* Will do until monster and player timed effects are fused */
 		switch (type) {
 			case TMD_CONFUSED: {
-				mon_tmd_effect = MON_TMD_CONF;
+				mon_tmd_effect = TMD_CONFUSED;
 				break;
 			}
 			case TMD_PARALYZED: {
-				mon_tmd_effect = MON_TMD_HOLD;
+				mon_tmd_effect = TMD_PARALYZED;
 				break;
 			}
 			case TMD_BLIND: {
-				mon_tmd_effect = MON_TMD_STUN;
+				mon_tmd_effect = TMD_STUN;
 				break;
 			}
 			case TMD_AFRAID: {
-				mon_tmd_effect = MON_TMD_FEAR;
+				mon_tmd_effect = TMD_AFRAID;
 				break;
 			}
 			default: {
@@ -763,7 +763,7 @@ static void melee_effect_handler_POISON(melee_effect_handler_context_t *context)
 
 	if (!context->p) {
 		assert(context->t_mon);
-		mon_inc_timed(context->t_mon, MON_TMD_POISONED, 10 + randint1(context->rlev), 0);
+		mon_inc_timed(context->t_mon, TMD_POISONED, 10 + randint1(context->rlev), 0);
 		context->obvious = true;
 		return;
 	}
@@ -882,7 +882,7 @@ static void melee_effect_handler_EAT_GOLD(melee_effect_handler_context_t *contex
     context->obvious = true;
 
     /* Attempt saving throw (unless paralyzed) based on dex and level */
-    if (!current_player->timed[TMD_PARALYZED] &&
+    if (!current_player->mon.m_timed[TMD_PARALYZED] &&
         (randint0(100) < (adj_dex_safe(current_player->state.stat_ind[STAT_DEX])
 						  + current_player->lev))) {
         /* Saving throw message */
@@ -952,7 +952,7 @@ static void melee_effect_handler_EAT_ITEM(melee_effect_handler_context_t *contex
 			context->p->lev;
 
 		/* Saving throw (unless paralyzed) based on dex and level */
-		if (!context->p->timed[TMD_PARALYZED] && (randint0(100) < chance)) {
+		if (!context->p->mon.m_timed[TMD_PARALYZED] && (randint0(100) < chance)) {
 			/* Saving throw message */
 			msg("You grab hold of your backpack!");
 
@@ -1114,7 +1114,7 @@ static void melee_effect_handler_TERRIFY(melee_effect_handler_context_t *context
 static void melee_effect_handler_PARALYZE(melee_effect_handler_context_t *context)
 {
 	/* Hack -- Prevent perma-paralysis via damage */
-	if (context->p && context->p->timed[TMD_PARALYZED] && (context->damage < 1))
+	if (context->p && context->p->mon.m_timed[TMD_PARALYZED] && (context->damage < 1))
 		context->damage = 1;
 
 	melee_effect_timed(context, TMD_PARALYZED, 3 + randint1(context->rlev),

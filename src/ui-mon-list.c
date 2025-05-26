@@ -210,7 +210,7 @@ static void monster_list_format_section(const monster_list_t *list, textblock *t
  */
 static bool monster_list_format_special(const monster_list_t *list, textblock *tb, int max_lines, int max_width, size_t *max_height_result, size_t *max_width_result)
 {
-	if (player->timed[TMD_IMAGE] > 0) {
+	if (player->mon.m_timed[TMD_IMAGE] > 0) {
 		/* Hack - message needs newline to calculate width properly. */
 		const char *message = "Your hallucinations are too wild to see things clearly.\n";
 

@@ -140,7 +140,7 @@ static bool monster_can_cast(struct monster *mon, bool innate)
 	if (!chance) return false;
 
 	/* Taunted monsters are likely just to attack */
-	if (player->timed[TMD_TAUNT]) {
+	if (player->mon.m_timed[TMD_TAUNT]) {
 		chance /= 2;
 	}
 
@@ -220,7 +220,7 @@ static void remove_bad_spells(struct monster *mon, bitflag f[RSF_SIZE])
 	}
 
 	/* Don't haste if hasted with time remaining */
-	if (mon->m_timed[MON_TMD_FAST] > 10) {
+	if (mon->m_timed[TMD_FAST] > 10) {
 		rsf_off(f2, RSF_HASTE);
 	}
 
@@ -364,12 +364,12 @@ static int monster_spell_failrate(struct monster *mon, int spell)
 		failrate = 25 - (power + 3) / 4;
 
 		/* Fear adds 20% */
-		if (mon->m_timed[MON_TMD_FEAR]) {
+		if (mon->m_timed[TMD_AFRAID]) {
 			failrate += 20;
 		}
 
 		/* Confusion and diesnchantment add 50% */
-		if (mon->m_timed[MON_TMD_CONF] || mon->m_timed[MON_TMD_DISEN]) {
+		if (mon->m_timed[TMD_CONFUSED] || mon->m_timed[TMD_DISEN]) {
 			failrate += 50;
 		}
 	}
@@ -402,7 +402,7 @@ static int chance_of_monster_hit(const struct monster *mon,
 	int to_hit = chance_of_monster_hit_base(mon->race, effect);
 
 	/* Apply stun hit reduction if applicable */
-	if (mon->m_timed[MON_TMD_STUN]) {
+	if (mon->m_timed[TMD_STUN]) {
 		to_hit = to_hit * (100 - STUN_HIT_REDUCTION) / 100;
 	}
 
@@ -448,7 +448,7 @@ bool make_ranged_attack(struct monster *mon)
 	int thrown_spell, failrate;
 	bitflag f[RSF_SIZE];
 	char m_name[80];
-	bool seen = (player->timed[TMD_BLIND] == 0) && monster_is_visible(mon);
+	bool seen = (player->mon.m_timed[TMD_BLIND] == 0) && monster_is_visible(mon);
 	bool innate = false;
 	int melee_dist = 1;
 	int target_dist;
@@ -541,7 +541,7 @@ bool make_ranged_attack(struct monster *mon)
 				if (!rsf_has(f, i)) continue;
 				const struct monster_spell *ms = monster_spell_by_index(i);
 				if (ms->effect->index == EF_TIMED_INC || ms->effect->index == EF_TIMED_INC_NO_RES) {
-					int curr = player->timed[ms->effect->subtype];
+					int curr = player->mon.m_timed[ms->effect->subtype];
 					if (randint0(25) < curr) {
 						rsf_off(f, i);
 					}
@@ -745,7 +745,7 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 			disturb(p);
 
 			/* Hack -- Apply "protection from evil" */
-			if (p->timed[TMD_PROTEVIL] > 0) {
+			if (p->mon.m_timed[TMD_PROTEVIL] > 0) {
 				/* Learn about the evil flag */
 				if (monster_is_visible(mon)) {
 					rf_on(lore->flags, RF_EVIL);
@@ -771,7 +771,7 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 			damage = randcalc(dice, rlev, RANDOMISE);
 
 			/* Reduce damage when stunned */
-			if (mon->m_timed[MON_TMD_STUN]) {
+			if (mon->m_timed[TMD_STUN]) {
 				damage = (damage * (100 - STUN_DAM_REDUCTION)) / 100;
 			}
 
@@ -976,7 +976,7 @@ bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 			damage = randcalc(dice, rlev, RANDOMISE);
 
 			/* Reduce damage when stunned */
-			if (mon->m_timed[MON_TMD_STUN]) {
+			if (mon->m_timed[TMD_STUN]) {
 				damage = (damage * (100 - STUN_DAM_REDUCTION)) / 100;
 			}
 
@@ -1026,7 +1026,7 @@ bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 
 				/* Apply the stun */
 				if (amt)
-					(void)mon_inc_timed(t_mon, MON_TMD_STUN, amt, 0);
+					(void)mon_inc_timed(t_mon, TMD_STUN, amt, 0);
 			}
 		} else {
 			/* Visible monster missed monster, so notify if appropriate. */

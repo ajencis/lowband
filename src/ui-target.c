@@ -424,7 +424,7 @@ static bool aux_hallucinate(struct chunk *c, struct player *p,
 	const char *name_strange = "something strange";
 	char out_val[TARGET_OUT_VAL_SIZE];
 
-	if (!p->timed[TMD_IMAGE]) return false;
+	if (!p->mon.m_timed[TMD_IMAGE]) return false;
 
 	/* Hallucination messes things up */
 	/* Display a message */

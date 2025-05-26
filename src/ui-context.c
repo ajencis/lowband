@@ -511,7 +511,7 @@ int context_menu_cave(struct chunk *c, int y, int x, int adjacent, int mx,
 	menu_dynamic_calc_location(m, mx, my);
 	region_erase_bordered(&m->boundary);
 
-	if (player->timed[TMD_IMAGE]) {
+	if (player->mon.m_timed[TMD_IMAGE]) {
 		prt("(Enter to select command, ESC to cancel) You see something strange:", 0, 0);
 	} else if (square(c, grid)->mon) {
 		char m_name[80];
@@ -1039,7 +1039,7 @@ void textui_process_click(ui_event e)
 			}
 		}
 	} else if (e.mouse.button == 1) {
-		if (player->timed[TMD_CONFUSED]) {
+		if (player->mon.m_timed[TMD_CONFUSED]) {
 			cmdq_push(CMD_WALK);
 		} else {
 			if (e.mouse.mods & KC_MOD_SHIFT) {

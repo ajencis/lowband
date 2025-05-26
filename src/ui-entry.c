@@ -818,7 +818,7 @@ void compute_ui_entry_values_for_player(const struct ui_entry *entry,
 		player_flags(p, (*cache)->untimed);
 		of_wipe((*cache)->timed);
 		player_flags_timed(p, (*cache)->timed);
-		if (p->timed[TMD_TRAPSAFE]) {
+		if (p->mon.m_timed[TMD_TRAPSAFE]) {
 			of_on((*cache)->timed, OF_TRAP_IMMUNE);
 		}
 	}
@@ -1244,7 +1244,7 @@ static int get_timed_element_effect(const struct player *p, int ind)
 	int i;
 
 	for (i = 0; i < TMD_MAX; ++i) {
-		if (p->timed[i] && timed_effects[i].temp_resist == ind) {
+		if (p->mon.m_timed[i] && timed_effects[i].temp_resist == ind) {
 			return 1;
 		}
 	}
@@ -1259,29 +1259,29 @@ static int get_timed_modifier_effect(const struct player *p, int ind)
 	/* Mimics calculations made in player-calcs.c. */
 	switch (ind) {
 	case OBJ_MOD_BLOWS:
-		result = (p->timed[TMD_BLOODLUST]) ?
-			p->timed[TMD_BLOODLUST] / 20 : 0;
+		result = (p->mon.m_timed[TMD_BLOODLUST]) ?
+			p->mon.m_timed[TMD_BLOODLUST] / 20 : 0;
 		break;
 
 	case OBJ_MOD_INFRA:
-		result = (p->timed[TMD_SINFRA]) ? 5 : 0;
+		result = (p->mon.m_timed[TMD_SINFRA]) ? 5 : 0;
 		break;
 
 	case OBJ_MOD_SPEED:
-		result = (p->timed[TMD_FAST] || p->timed[TMD_SPRINT]) ? 10 : 0;
-		if (p->timed[TMD_STONESKIN]) {
+		result = (p->mon.m_timed[TMD_FAST] || p->mon.m_timed[TMD_SPRINT]) ? 10 : 0;
+		if (p->mon.m_timed[TMD_STONESKIN]) {
 			result -= 5;
 		}
-		if (p->timed[TMD_SLOW]) {
+		if (p->mon.m_timed[TMD_SLOW]) {
 			result -= 10;
 		}
-		if (p->timed[TMD_TERROR]) {
+		if (p->mon.m_timed[TMD_TERROR]) {
 			result += 10;
 		}
 		break;
 
 	case OBJ_MOD_STEALTH:
-		result = (p->timed[TMD_STEALTH]) ? 10 : 0;
+		result = (p->mon.m_timed[TMD_STEALTH]) ? 10 : 0;
 		break;
 
 	default:

@@ -25,6 +25,7 @@
 #include "mon-timed.h"
 #include "mon-util.h"
 #include "player-calcs.h"
+#include "player-timed.h"
 
 /**
  * The different ways increases can stack - see mon_inc_timed()
@@ -48,8 +49,8 @@ static struct mon_timed_effect {
 	int message_end;
 	int message_increase;
 } effects[] = {
-	#define MON_TMD(a, b, c, d, e, f, g, h) { #a, b, STACK_##c, d, e, f, g, h },
-	#include "list-mon-timed.h"
+	#define TMD(a, b, c, d, e, f, g, h, i, j) { #a, d, STACK_##e, f, g, h, i, j },
+	#include "list-player-timed.h"
 	#undef MON_TMD
 };
 
@@ -60,7 +61,7 @@ static struct mon_timed_effect {
  */
 int mon_timed_name_to_idx(const char *name)
 {
-    for (size_t i = 0; i < MON_TMD_MAX; i++) {
+    for (size_t i = 0; i < TMD_MAX; i++) {
         if (streq(name, effects[i].name)) {
 			return i;
 		}
@@ -94,7 +95,7 @@ static bool does_resist(const struct monster *mon, int effect_type, int timer, i
 {
 	assert(mon != NULL);
 	assert(effect_type >= 0);
-	assert(effect_type < MON_TMD_MAX);
+	assert(effect_type < TMD_MAX);
 
 	struct mon_timed_effect *effect = &effects[effect_type];
 	struct monster_lore *lore = get_lore(mon->race);
@@ -139,7 +140,7 @@ static bool mon_set_timed(struct monster *mon,
 	assert(mon != NULL);
 	assert(mon->race != NULL);
 	assert(effect_type >= 0);
-	assert(effect_type < MON_TMD_MAX);
+	assert(effect_type < TMD_MAX);
 	assert(timer >= 0);
 
 	struct mon_timed_effect *effect = &effects[effect_type];
@@ -167,10 +168,10 @@ static bool mon_set_timed(struct monster *mon,
 
 		/* When monster command by player (Necromancer power) expires,
 		* don't leave stale monster -> monster target */
-		if (effect_type == MON_TMD_COMMAND) {
+		/*if (effect_type == MON_TMD_COMMAND) {
 			mon->target.midx = 0;
 			mon->target.who = TARGET_WHO_NONE;
-		}
+		}*/
 	} else if (old_timer == 0) {
 		/* Turning on, usually mention */
 		m_note = effect->message_begin;
@@ -195,7 +196,7 @@ static bool mon_set_timed(struct monster *mon,
 	}
 
 	/* Special case - deal with monster shapechanges */
-	if (effect_type == MON_TMD_CHANGED) {
+	if (effect_type == TMD_CHANGED) {
 		if (timer > old_timer) {
 			if (!monster_change_shape(mon)) {
 				m_note = MON_MSG_SHAPE_FAIL;
@@ -258,7 +259,7 @@ bool add_mon_timed_message(struct monster *mon, int effect_type, bool delay, int
 bool mon_inc_timed(struct monster *mon, int effect_type, int timer, int flag)
 {
 	assert(effect_type >= 0);
-	assert(effect_type < MON_TMD_MAX);
+	assert(effect_type < TMD_MAX);
 	assert(timer > 0); /* For negative amounts, we use mon_dec_timed instead */
 
 	struct mon_timed_effect *effect = &effects[effect_type];
@@ -305,7 +306,7 @@ bool mon_inc_timed(struct monster *mon, int effect_type, int timer, int flag)
 bool mon_dec_timed(struct monster *mon, int effect_type, int timer, int flag)
 {
 	assert(effect_type >= 0);
-	assert(effect_type < MON_TMD_MAX);
+	assert(effect_type < TMD_MAX);
 	assert(timer > 0); /* For negative amounts, we use mon_inc_timed instead */
 
 	int new_level = mon->m_timed[effect_type] - timer;
@@ -324,7 +325,7 @@ bool mon_dec_timed(struct monster *mon, int effect_type, int timer, int flag)
 bool mon_clear_timed(struct monster *mon, int effect_type, int flag)
 {
 	assert(effect_type >= 0);
-	assert(effect_type < MON_TMD_MAX);
+	assert(effect_type < TMD_MAX);
 
 	if (mon->m_timed[effect_type] == 0) {
 		return false;

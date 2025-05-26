@@ -858,8 +858,8 @@ int rd_player(void)
 		return (-1);
 	}
 
-	rd_s16b(&player->mhp);
-	rd_s16b(&player->chp);
+	rd_s16b(&player->mon.maxhp);
+	rd_s16b(&player->mon.hp);
 	rd_u16b(&player->chp_frac);
 
 	rd_s16b(&player->msp);
@@ -879,7 +879,7 @@ int rd_player(void)
 	if (player->recall_depth <= 0) player->recall_depth = player->max_depth;
 
 	/* Hack -- Reset cause of death */
-	if (player->chp >= 0)
+	if (player->mon.hp >= 0)
 		my_strcpy(player->died_from, "(alive and well)",
 				  sizeof(player->died_from));
 
@@ -907,15 +907,15 @@ int rd_player(void)
 	if (num <= TMD_MAX) {
 		/* Read all the effects */
 		for (i = 0; i < num; i++)
-			rd_s16b(&player->timed[i]);
+			rd_s16b(&player->mon.m_timed[i]);
 
 		/* Initialize any entries not read */
 		if (num < TMD_MAX)
-			memset(player->timed + num, 0, (TMD_MAX - num) * sizeof(int16_t));
+			memset(player->mon.m_timed + num, 0, (TMD_MAX - num) * sizeof(int16_t));
 	} else {
 		/* Probably in trouble anyway */
 		for (i = 0; i < TMD_MAX; i++)
-			rd_s16b(&player->timed[i]);
+			rd_s16b(&player->mon.m_timed[i]);
 
 		/* Discard unused entries */
 		strip_bytes(2 * (num - TMD_MAX));

@@ -2975,47 +2975,47 @@ void borg_notice_player(void)
         borg.goal.recalling = player->word_recall * 1000;
     if (borg.goal.recalling && !player->word_recall)
         borg.goal.recalling = 0;
-    if (!borg.temp.prot_from_evil && player->timed[TMD_PROTEVIL])
-        borg.temp.prot_from_evil = (player->timed[TMD_PROTEVIL] ? true : false);
+    if (!borg.temp.prot_from_evil && player->mon.m_timed[TMD_PROTEVIL])
+        borg.temp.prot_from_evil = (player->mon.m_timed[TMD_PROTEVIL] ? true : false);
     if (!borg.temp.fast
-        && (player->timed[TMD_FAST] || player->timed[TMD_SPRINT]
-            || player->timed[TMD_TERROR]))
-        (borg.temp.fast = (player->timed[TMD_FAST] || player->timed[TMD_SPRINT]
-                              || player->timed[TMD_TERROR])
+        && (player->mon.m_timed[TMD_FAST] || player->mon.m_timed[TMD_SPRINT]
+            || player->mon.m_timed[TMD_TERROR]))
+        (borg.temp.fast = (player->mon.m_timed[TMD_FAST] || player->mon.m_timed[TMD_SPRINT]
+                              || player->mon.m_timed[TMD_TERROR])
                               ? true
                               : false);
-    borg.temp.res_acid = (player->timed[TMD_OPP_ACID] ? true : false);
-    borg.temp.res_elec = (player->timed[TMD_OPP_ELEC] ? true : false);
-    borg.temp.res_fire = (player->timed[TMD_OPP_FIRE] ? true : false);
-    borg.temp.res_cold = (player->timed[TMD_OPP_COLD] ? true : false);
-    borg.temp.res_pois = (player->timed[TMD_OPP_POIS] ? true : false);
-    borg.temp.bless    = (player->timed[TMD_BLESSED] ? true : false);
+    borg.temp.res_acid = (player->mon.m_timed[TMD_OPP_ACID] ? true : false);
+    borg.temp.res_elec = (player->mon.m_timed[TMD_OPP_ELEC] ? true : false);
+    borg.temp.res_fire = (player->mon.m_timed[TMD_OPP_FIRE] ? true : false);
+    borg.temp.res_cold = (player->mon.m_timed[TMD_OPP_COLD] ? true : false);
+    borg.temp.res_pois = (player->mon.m_timed[TMD_OPP_POIS] ? true : false);
+    borg.temp.bless    = (player->mon.m_timed[TMD_BLESSED] ? true : false);
     borg.temp.shield
-        = (player->timed[TMD_SHIELD] || player->timed[TMD_STONESKIN] ? true
+        = (player->mon.m_timed[TMD_SHIELD] || player->mon.m_timed[TMD_STONESKIN] ? true
                                                                      : false);
-    borg.temp.fastcast   = (player->timed[TMD_FASTCAST] ? true : false);
-    borg.temp.hero       = (player->timed[TMD_HERO] ? true : false);
-    borg.temp.berserk    = (player->timed[TMD_SHERO] ? true : false);
-    borg.temp.regen      = (player->timed[TMD_HEAL] ? true : false);
-    borg.temp.venom      = (player->timed[TMD_ATT_POIS] ? true : false);
-    borg.temp.smite_evil = (player->timed[TMD_ATT_EVIL] ? true : false);
-    if (!borg.see_inv && player->timed[TMD_SINVIS])
+    borg.temp.fastcast   = (player->mon.m_timed[TMD_FASTCAST] ? true : false);
+    borg.temp.hero       = (player->mon.m_timed[TMD_HERO] ? true : false);
+    borg.temp.berserk    = (player->mon.m_timed[TMD_SHERO] ? true : false);
+    borg.temp.regen      = (player->mon.m_timed[TMD_HEAL] ? true : false);
+    borg.temp.venom      = (player->mon.m_timed[TMD_ATT_POIS] ? true : false);
+    borg.temp.smite_evil = (player->mon.m_timed[TMD_ATT_EVIL] ? true : false);
+    if (!borg.see_inv && player->mon.m_timed[TMD_SINVIS])
         borg.see_inv = 1000;
 
     /* if hasting, it doesn't count as 'borg_speed'.  The speed */
     /* gained from hasting is counted separately. */
     if (borg.temp.fast) {
-        if (player->timed[TMD_FAST] || player->timed[TMD_SPRINT])
+        if (player->mon.m_timed[TMD_FAST] || player->mon.m_timed[TMD_SPRINT])
             borg.trait[BI_SPEED] -= 10;
-        else if (player->timed[TMD_TERROR])
+        else if (player->mon.m_timed[TMD_TERROR])
             borg.trait[BI_SPEED] -= 5;
     }
 
     /* Extract "Cur HP xxxxx" */
-    borg.trait[BI_CURHP] = player->chp;
+    borg.trait[BI_CURHP] = player->mon.hp;
 
     /* Extract "Max HP xxxxx" */
-    borg.trait[BI_MAXHP] = player->mhp;
+    borg.trait[BI_MAXHP] = player->mon.maxhp;
 
     /* Extract "Cur SP xxxxx" (or zero) */
     borg.trait[BI_CURSP] = player->csp;
@@ -3034,19 +3034,19 @@ void borg_notice_player(void)
     borg.trait[BI_ISFORGET]                               = false;
 
     /* Check for "Weak" */
-    if (player->timed[TMD_FOOD] < PY_FOOD_WEAK)
+    if (player->mon.m_timed[TMD_FOOD] < PY_FOOD_WEAK)
         borg.trait[BI_ISWEAK] = borg.trait[BI_ISHUNGRY] = true;
 
     /* Check for "Hungry" */
-    else if (player->timed[TMD_FOOD] < PY_FOOD_HUNGRY)
+    else if (player->mon.m_timed[TMD_FOOD] < PY_FOOD_HUNGRY)
         borg.trait[BI_ISHUNGRY] = true;
 
     /* Check for "Normal" */
-    else if (player->timed[TMD_FOOD] < PY_FOOD_FULL) /* Nothing */
+    else if (player->mon.m_timed[TMD_FOOD] < PY_FOOD_FULL) /* Nothing */
         ;
 
     /* Check for "Full" */
-    else if (player->timed[TMD_FOOD] < PY_FOOD_MAX)
+    else if (player->mon.m_timed[TMD_FOOD] < PY_FOOD_MAX)
         borg.trait[BI_ISFULL] = true;
 
     /* Check for "Gorged" */
@@ -3054,43 +3054,43 @@ void borg_notice_player(void)
         borg.trait[BI_ISGORGED] = borg.trait[BI_ISFULL] = true;
 
     /* Check for "Blind" */
-    if (player->timed[TMD_BLIND])
+    if (player->mon.m_timed[TMD_BLIND])
         borg.trait[BI_ISBLIND] = true;
 
     /* Check for "Confused" */
-    if (player->timed[TMD_CONFUSED])
+    if (player->mon.m_timed[TMD_CONFUSED])
         borg.trait[BI_ISCONFUSED] = true;
 
     /* Check for "Afraid" */
-    if (player->timed[TMD_AFRAID])
+    if (player->mon.m_timed[TMD_AFRAID])
         borg.trait[BI_ISAFRAID] = true;
 
     /* Check for "Poisoned" */
-    if (player->timed[TMD_POISONED])
+    if (player->mon.m_timed[TMD_POISONED])
         borg.trait[BI_ISPOISONED] = true;
 
     /* Check for any text */
-    if (player->timed[TMD_CUT])
+    if (player->mon.m_timed[TMD_CUT])
         borg.trait[BI_ISCUT] = true;
 
     /* Check for Stun */
-    if (player->timed[TMD_STUN] && (player->timed[TMD_STUN] <= 50))
+    if (player->mon.m_timed[TMD_STUN] && (player->mon.m_timed[TMD_STUN] <= 50))
         borg.trait[BI_ISSTUN] = true;
 
     /* Check for Heavy Stun */
-    if (player->timed[TMD_STUN] > 50)
+    if (player->mon.m_timed[TMD_STUN] > 50)
         borg.trait[BI_ISHEAVYSTUN] = true;
 
     /* Check for Paralyze */
-    if (player->timed[TMD_PARALYZED] > 50)
+    if (player->mon.m_timed[TMD_PARALYZED] > 50)
         borg.trait[BI_ISPARALYZED] = true;
 
     /* Check for "Hallucinating" */
-    if (player->timed[TMD_IMAGE])
+    if (player->mon.m_timed[TMD_IMAGE])
         borg.trait[BI_ISIMAGE] = true;
 
     /* Check for "Amnesia" */
-    if (player->timed[TMD_AMNESIA])
+    if (player->mon.m_timed[TMD_AMNESIA])
         borg.trait[BI_ISFORGET] = true;
 
     /* Check for "Study" */

@@ -19,7 +19,7 @@
 #ifndef MONSTER_TIMED_H
 #define MONSTER_TIMED_H
 
-#include "player.h"
+#include "player-enum.h"
 
 /**
  * Monster timed effect constants

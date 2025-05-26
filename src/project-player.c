@@ -830,11 +830,11 @@ static int project_player_handler_BANSHEE(project_player_handler_context_t *cont
 	if (und) power /= 2;
 
 	if (randint0(100) >= save) {
-		player->timed[TMD_STUN] += power * 2;
+		player->mon.m_timed[TMD_STUN] += power * 2;
 		if (randint0(100) >= save) {
-			player->timed[TMD_PARALYZED] += power;
+			player->mon.m_timed[TMD_PARALYZED] += power;
 			if (randint0(100) >= save) {
-				return player->chp + 1;
+				return player->mon.hp + 1;
 			}
 		}
 	}
@@ -876,7 +876,7 @@ static const project_player_handler_f player_handlers[] = {
 bool project_p(struct source origin, int r, struct loc grid, int dam, int typ,
 			   int power, bool self)
 {
-	bool blind = (player->timed[TMD_BLIND] ? true : false);
+	bool blind = (player->mon.m_timed[TMD_BLIND] ? true : false);
 	bool seen = !blind;
 	bool obvious = true;
 

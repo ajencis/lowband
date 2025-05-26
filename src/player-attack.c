@@ -315,10 +315,10 @@ void apply_deadliness(int *die_average, int deadliness)
  */
 static bool is_debuffed(const struct monster *monster)
 {
-	return monster->m_timed[MON_TMD_CONF] > 0 ||
-			monster->m_timed[MON_TMD_HOLD] > 0 ||
-			monster->m_timed[MON_TMD_FEAR] > 0 ||
-			monster->m_timed[MON_TMD_STUN] > 0;
+	return monster->m_timed[TMD_CONFUSED] > 0 ||
+			monster->m_timed[TMD_PARALYZED] > 0 ||
+			monster->m_timed[TMD_AFRAID] > 0 ||
+			monster->m_timed[TMD_STUN] > 0;
 }
 
 /**
@@ -706,10 +706,10 @@ static int player_damage_bonus(struct player_state *state)
 static void blow_side_effects(struct player *p, struct monster *mon)
 {
 	/* Confusion attack */
-	if (p->timed[TMD_ATT_CONF]) {
+	if (p->mon.m_timed[TMD_ATT_CONF]) {
 		player_clear_timed(p, TMD_ATT_CONF, true, false);
 
-		mon_inc_timed(mon, MON_TMD_CONF, (10 + randint0(p->lev) / 10),
+		mon_inc_timed(mon, TMD_CONFUSED, (10 + randint0(p->lev) / 10),
 					  MON_TMD_FLG_NOTIFY);
 	}
 }
@@ -775,7 +775,7 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
 
 		monster_desc(mdesc, sizeof mdesc, mon, MDESC_TARG | MDESC_CAPITAL);
 		
-		for (i = 0; i < MON_TMD_MAX && !gone; i++) {
+		for (i = 0; i < TMD_MAX && !gone; i++) {
 			if (!aroll->special[i]) continue;
 			int power = randint0(aroll->special[i] + 1) + aroll->special[i] / 2;
 			if (power > 25) {
@@ -1279,7 +1279,7 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 	aroll->attack_skill = mb->method->skill;
 	aroll->obj = NULL;
 	aroll->blows = 100;
-	for (j = 0; j < MON_TMD_MAX; j++) {
+	for (j = 0; j < TMD_MAX; j++) {
 		if (mb->effect->mtimed == j) {
 			aroll->special[j] += 50 + mr->level;
 		}
@@ -1378,11 +1378,11 @@ static int backstab_power(struct monster *mon)
 	int power = 0;
 	assert(mon);
 
-	if (mon->m_timed[MON_TMD_SLEEP]) power = MAX(power, 2);
-	if (mon->m_timed[MON_TMD_HOLD]) power = MAX(power, 2);
-	if (mon->m_timed[MON_TMD_SLOW]) power = MAX(power, 1);
-	if (mon->m_timed[MON_TMD_FEAR]) power = MAX(power, 1);
-	if (mon->m_timed[MON_TMD_STUN]) power = MAX(power, 1);
+	if (mon->m_timed[TMD_ASLEEP]) power = MAX(power, 2);
+	if (mon->m_timed[TMD_PARALYZED]) power = MAX(power, 2);
+	if (mon->m_timed[TMD_SLOW]) power = MAX(power, 1);
+	if (mon->m_timed[TMD_AFRAID]) power = MAX(power, 1);
+	if (mon->m_timed[TMD_STUN]) power = MAX(power, 1);
 
 	if (square_iswebbed(cave, mon->grid)) {
 		if (!rf_has(mon->race->flags, RF_PASS_WALL) && !rf_has(mon->race->flags, RF_PASS_WEB)) {
@@ -1487,7 +1487,7 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 
 		if (mon_will_attack_player(mon, p) && mon->target.who == TARGET_WHO_PLAYER) {
 			docleave = true;
-		} else if (p->timed[TMD_BLOODLUST]) {
+		} else if (p->mon.m_timed[TMD_BLOODLUST]) {
 			docleave = true;
 		} else if (get_check(format("Attack %s? ", mdesc))) {
 			docleave = true;
@@ -1565,7 +1565,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 
 	/* Disturb the monster */
 	monster_wake(mon, false, 100);
-	mon_clear_timed(mon, MON_TMD_HOLD, MON_TMD_FLG_NOMESSAGE);
+	mon_clear_timed(mon, TMD_PARALYZED, MON_TMD_FLG_NOMESSAGE);
 
 	/* See if the player hit */
 	success = test_hit(chance_of_melee_hit(p, aroll, mon), mon_ac(mon));
@@ -1575,7 +1575,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 		msgt(MSG_MISS, "You miss %s.", m_name);
 
 		/* Small chance of bloodlust side-effects */
-		if (p->timed[TMD_BLOODLUST] && one_in_(50)) {
+		if (p->mon.m_timed[TMD_BLOODLUST] && one_in_(50)) {
 			msg("You feel strange...");
 			player_over_exert(p, PY_EXERT_SCRAMBLE, 20, 20);
 		}
@@ -1693,13 +1693,13 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	check_berserk(p, mon);
 
 	/* Small chance of bloodlust side-effects */
-	if (p->timed[TMD_BLOODLUST] && one_in_(50)) {
+	if (p->mon.m_timed[TMD_BLOODLUST] && one_in_(50)) {
 		msg("You feel something give way!");
 		player_over_exert(p, PY_EXERT_CON, 20, 0);
 	}
 
 	if (!stop) {
-		if (p->timed[TMD_ATT_VAMP] && monster_is_living(mon)) {
+		if (p->mon.m_timed[TMD_ATT_VAMP] && monster_is_living(mon)) {
 			effect_simple(EF_HEAL_HP, source_player(), format("%d", drain),
 						  0, 0, 0, 0, 0, NULL);
 		}
@@ -1792,12 +1792,12 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 
 	/* Stunning. */
 	if (bash_quality + p->lev > randint1(200 + mon->race->level * 8)) {
-		mon_inc_timed(mon, MON_TMD_STUN, randint0(p->lev / 5) + 4, 0);
+		mon_inc_timed(mon, TMD_STUN, randint0(p->lev / 5) + 4, 0);
 	}
 
 	/* Confusion. */
 	if (bash_quality + p->lev > randint1(300 + mon->race->level * 12)) {
-		mon_inc_timed(mon, MON_TMD_CONF, randint0(p->lev / 5) + 4, 0);
+		mon_inc_timed(mon, TMD_CONFUSED, randint0(p->lev / 5) + 4, 0);
 	}
 
 	/* The player will sometimes stumble. */
@@ -1827,7 +1827,7 @@ void py_attack(struct player *p, struct loc grid)
 	struct monster *mon = square_monster(cave, grid);
 	struct attack_roll aroll;
 	int i;
-	int pretimed[MON_TMD_MAX];
+	int pretimed[TMD_MAX];
 	int backstab;
 	bool backstab_msg = false;
 	int dist = distance(p->grid, grid);
@@ -1867,7 +1867,7 @@ void py_attack(struct player *p, struct loc grid)
 		monster_become_aware(mon);
 	}
 
-	for (i = 0; i < MON_TMD_MAX; i++) {
+	for (i = 0; i < TMD_MAX; i++) {
 		pretimed[i] = (int)mon->m_timed[i];
 	}
 
@@ -1958,7 +1958,7 @@ void py_attack(struct player *p, struct loc grid)
 
 	/* Hack - delay timed messages */
 	if (!slain && monster_is_visible(mon)) {
-		for (i = 0; i < MON_TMD_MAX; i++) {
+		for (i = 0; i < TMD_MAX; i++) {
 			add_mon_timed_message(mon, i, true, pretimed[i], (int)mon->m_timed[i]);
 		}
 	}
@@ -2033,7 +2033,7 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 	path_n = project_path(cave, path_g, range, grid, target, 0);
 
 	/* Calculate potenital piercing */
-	if (p->timed[TMD_POWERSHOT] && obj && tval_is_sharp_missile(obj)) {
+	if (p->mon.m_timed[TMD_POWERSHOT] && obj && tval_is_sharp_missile(obj)) {
 		pierce = p->state.ammo_mult;
 	}
 
@@ -2187,7 +2187,7 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 	}
 
 	/* Terminate piercing */
-	if (p->timed[TMD_POWERSHOT]) {
+	if (p->mon.m_timed[TMD_POWERSHOT]) {
 		player_clear_timed(p, TMD_POWERSHOT, true, false);
 	}
 

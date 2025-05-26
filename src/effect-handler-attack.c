@@ -47,7 +47,7 @@ static void get_target(struct source origin, int dir, struct loc *grid,
 
 			if (!monster) break;
 
-			conf_level = monster_effect_level(monster, MON_TMD_CONF);
+			conf_level = monster_effect_level(monster, TMD_CONFUSED);
 			while (conf_level) {
 				accuracy *= (100 - CONF_RANDOM_CHANCE);
 				accuracy /= 100;
@@ -141,7 +141,7 @@ static bool ball_spell(effect_handler_context_t *context, uint8_t diameter_of_so
 
 			assert(mon);
 
-			conf_level = monster_effect_level(mon, MON_TMD_CONF);
+			conf_level = monster_effect_level(mon, TMD_CONFUSED);
 			while (conf_level) {
 				accuracy *= (100 - CONF_RANDOM_CHANCE);
 				accuracy /= 100;
@@ -220,7 +220,7 @@ bool effect_handler_BOLT(effect_handler_context_t *context)
 	int flg = PROJECT_STOP | PROJECT_KILL | PROJECT_OVER;
 	(void) project_aimed(context->origin, context->subtype, context->dir, dam,
 						 flg, context->obj);
-	if (!player->timed[TMD_BLIND]) {
+	if (!player->mon.m_timed[TMD_BLIND]) {
 		context->ident = true;
 	}
 	return true;
@@ -237,7 +237,7 @@ bool effect_handler_BEAM(effect_handler_context_t *context)
 	int flg = PROJECT_BEAM | PROJECT_KILL;
 	(void) project_aimed(context->origin, context->subtype, context->dir, dam,
 						 flg, context->obj);
-	if (!player->timed[TMD_BLIND]) {
+	if (!player->mon.m_timed[TMD_BLIND]) {
 		context->ident = true;
 	}
 	return true;
@@ -301,10 +301,10 @@ bool effect_handler_HEAL_HP(effect_handler_context_t *context)
 	context->ident = true;
 
 	/* No healing needed */
-	if (player->chp >= player->mhp) return (true);
+	if (player->mon.hp >= player->mon.maxhp) return (true);
 
 	/* Figure percentage healing level */
-	num = ((player->mhp - player->chp) * context->value.m_bonus) / 100;
+	num = ((player->mon.maxhp - player->mon.hp) * context->value.m_bonus) / 100;
 
 	/* Enforce minimum */
 	minh = context->value.base
@@ -319,11 +319,11 @@ bool effect_handler_HEAL_HP(effect_handler_context_t *context)
 	}
 
 	/* Gain hitpoints */
-	player->chp += num;
+	player->mon.hp += num;
 
 	/* Enforce maximum */
-	if (player->chp >= player->mhp) {
-		player->chp = player->mhp;
+	if (player->mon.hp >= player->mon.maxhp) {
+		player->mon.hp = player->mon.maxhp;
 		player->chp_frac = 0;
 	}
 
@@ -365,7 +365,7 @@ bool effect_handler_MON_HEAL_HP(effect_handler_context_t *context)
 	/* Get the monster possessive ("his"/"her"/"its") */
 	monster_desc(m_poss, sizeof(m_poss), mon, MDESC_PRO_VIS | MDESC_POSS);
 
-	seen = (!player->timed[TMD_BLIND] && monster_is_visible(mon));
+	seen = (!player->mon.m_timed[TMD_BLIND] && monster_is_visible(mon));
 
 	/* Heal some */
 	mon->hp += amount;
@@ -389,8 +389,8 @@ bool effect_handler_MON_HEAL_HP(effect_handler_context_t *context)
 		player->upkeep->redraw |= (PR_HEALTH);
 
 	/* Cancel fear */
-	if (mon->m_timed[MON_TMD_FEAR]) {
-		mon_clear_timed(mon, MON_TMD_FEAR, MON_TMD_FLG_NOMESSAGE);
+	if (mon->m_timed[TMD_AFRAID]) {
+		mon_clear_timed(mon, TMD_AFRAID, MON_TMD_FLG_NOMESSAGE);
 		msg("%s recovers %s courage.", m_name, m_poss);
 	}
 
@@ -425,7 +425,7 @@ bool effect_handler_MON_HEAL_KIN(effect_handler_context_t *context)
 	/* Get the monster possessive ("his"/"her"/"its") */
 	monster_desc(m_poss, sizeof(m_poss), mon, MDESC_PRO_VIS | MDESC_POSS);
 
-	seen = (!player->timed[TMD_BLIND] && monster_is_visible(mon));
+	seen = (!player->mon.m_timed[TMD_BLIND] && monster_is_visible(mon));
 
 	/* Heal some */
 	mon->hp = MIN(mon->hp + amount, mon->maxhp);
@@ -443,8 +443,8 @@ bool effect_handler_MON_HEAL_KIN(effect_handler_context_t *context)
 		player->upkeep->redraw |= (PR_HEALTH);
 
 	/* Cancel fear */
-	if (mon->m_timed[MON_TMD_FEAR]) {
-		mon_clear_timed(mon, MON_TMD_FEAR, MON_TMD_FLG_NOMESSAGE);
+	if (mon->m_timed[TMD_AFRAID]) {
+		mon_clear_timed(mon, TMD_AFRAID, MON_TMD_FLG_NOMESSAGE);
 		msg("%s recovers %s courage.", m_name, m_poss);
 	}
 
@@ -730,7 +730,7 @@ bool effect_handler_BREATH(effect_handler_context_t *context)
 
 		flg |= PROJECT_PLAY;
 
-		conf_level = monster_effect_level(mon, MON_TMD_CONF);
+		conf_level = monster_effect_level(mon, TMD_CONFUSED);
 		while (conf_level) {
 			accuracy *= (100 - CONF_RANDOM_CHANCE);
 			accuracy /= 100;
@@ -1064,7 +1064,7 @@ bool effect_handler_STAR(effect_handler_context_t *context)
 	int flg = PROJECT_THRU | PROJECT_BEAM | PROJECT_GRID | PROJECT_KILL;
 
 	/* Describe */
-	if (!player->timed[TMD_BLIND])
+	if (!player->mon.m_timed[TMD_BLIND])
 		msg("Light shoots in all directions!");
 
 	for (i = 0; i < 8; i++) {

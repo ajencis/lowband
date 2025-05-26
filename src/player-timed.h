@@ -20,14 +20,14 @@
 #ifndef PLAYER_TIMED_H
 #define PLAYER_TIMED_H
 
-#include "player.h"
+#include "player-enum.h"
 
 /**
  * Timed effects
  */
 enum
 {
-	#define TMD(a, b, c) TMD_##a,
+	#define TMD(a, b, c, d, e, f, g, h, i, j) TMD_##a,
 	#include "list-player-timed.h"
 	#undef TMD
 	TMD_MAX

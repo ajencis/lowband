@@ -460,14 +460,14 @@ int16_t spell_chance(int spell_index)
 	if (chance > 50) chance = 50;
 
 	/* Stunning makes spells harder (after minfail) */
-	if (player->timed[TMD_STUN] > 50) {
+	if (player->mon.m_timed[TMD_STUN] > 50) {
 		chance += 25;
-	} else if (player->timed[TMD_STUN]) {
+	} else if (player->mon.m_timed[TMD_STUN]) {
 		chance += 15;
 	}
 
 	/* Amnesia makes spells very difficult */
-	if (player->timed[TMD_AMNESIA]) {
+	if (player->mon.m_timed[TMD_AMNESIA]) {
 		chance = 50 + chance / 2;
 	}
 
@@ -1140,7 +1140,7 @@ static bool will_autocast(struct player_spell *ps, const struct player *p)
 	for (ef = ps->effect; ef; ef = ef->next) {
 
 		if (ef->index == EF_TIMED_INC) {
-			if (p->timed[ef->subtype] < 5) {
+			if (p->mon.m_timed[ef->subtype] < 5) {
 				return true;
 			}
 		}
@@ -1160,7 +1160,7 @@ static bool will_autocast(struct player_spell *ps, const struct player *p)
 				min = MAX(min, PY_FOOD_HUNGRY);
 			}
 
-			if (min >= p->timed[TMD_FOOD]) {
+			if (min >= p->mon.m_timed[TMD_FOOD]) {
 				return true;
 			}
 		}
@@ -1168,21 +1168,21 @@ static bool will_autocast(struct player_spell *ps, const struct player *p)
 		else if (ef->index == EF_HEAL_HP) {
 			random_value rv = { 0, 0, 0, 0 };
 			int amt;
-			int warning = (p->mhp * p->opts.hitpoint_warn / 10);
+			int warning = (p->mon.maxhp * p->opts.hitpoint_warn / 10);
 
 			dice_roll(ef->dice, &rv);
 			amt = randcalc(rv, 0, AVERAGE);
 
-			if (p->chp + amt < p->mhp) {
+			if (p->mon.hp + amt < p->mon.maxhp) {
 				return true;
 			}
-			if (p->chp < warning) {
+			if (p->mon.hp < warning) {
 				return true;
 			}
 		}
 
 		else if (ef->index == EF_CURE) {
-			if (p->timed[ef->subtype]) {
+			if (p->mon.m_timed[ef->subtype]) {
 				return true;
 			}
 		}

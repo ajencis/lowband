@@ -595,8 +595,8 @@ bool do_cmd_open_chest(struct loc grid, struct object *obj)
 		i = player->state.skills[SKILL_DISARM_PHYS];
 
 		/* Penalize some conditions */
-		if (player->timed[TMD_BLIND] || no_light(player)) i = i / 10;
-		if (player->timed[TMD_CONFUSED] || player->timed[TMD_IMAGE]) i = i / 10;
+		if (player->mon.m_timed[TMD_BLIND] || no_light(player)) i = i / 10;
+		if (player->mon.m_timed[TMD_CONFUSED] || player->mon.m_timed[TMD_IMAGE]) i = i / 10;
 
 		/* Extract the difficulty */
 		j = i - obj->pval;
@@ -686,10 +686,10 @@ bool do_cmd_disarm_chest(struct object *obj)
 	}
 
 	/* Penalize some conditions */
-	if (player->timed[TMD_BLIND] || no_light(player)) {
+	if (player->mon.m_timed[TMD_BLIND] || no_light(player)) {
 		skill /= 10;
 	}
-	if (player->timed[TMD_CONFUSED] || player->timed[TMD_IMAGE]) {
+	if (player->mon.m_timed[TMD_CONFUSED] || player->mon.m_timed[TMD_IMAGE]) {
 		skill /= 10;
 	}
 

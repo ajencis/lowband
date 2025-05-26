@@ -235,6 +235,24 @@ base:player
 color:w
 
 
+##### Playable #####
+
+#name:human
+#base:person
+#color:w
+#speed:110
+#hit-points:5
+#hearing:4
+#armor-class:-25
+#sleepiness:40
+#depth:0
+#rarity:2
+#experience:0
+#blow:HIT:HURT:1d5
+#desc:A human.
+
+
+
 ##### Monster races proper #####
 
 ### Dungeon level 0 ###
@@ -1465,6 +1483,8 @@ rarity:1
 experience:15
 blow:HIT:HURT:1d8
 flags:DROP_40
+power:HOLY_MAGIC
+power:NECROMANCY_MAGIC
 spell-freq:5
 spells:WOUND | CONF | HEAL | MISSILE
 drop-base:magic book:5:1:1
@@ -1508,6 +1528,7 @@ flags:MALE
 flags:DROP_60
 flags:OPEN_DOOR
 flags:FORCE_SLEEP
+power:BOW_SPECIALIZATION
 innate-freq:3
 spell-freq:10
 spells:HASTE
@@ -1537,6 +1558,7 @@ flags:MALE
 flags:DROP_60
 flags:OPEN_DOOR
 flags:FORCE_SLEEP
+power:HOLY_MAGIC
 spell-freq:9
 spells:HEAL
 drop-base:prayer book:3:1:1
@@ -1560,6 +1582,7 @@ rarity:1
 experience:13
 blow:HIT:HURT:1d2
 blow:HIT:HURT:1d2
+power:ENCHANTMENT_MAGIC
 flags:OPEN_DOOR
 flags:FORCE_SLEEP
 spell-freq:8
@@ -1670,6 +1693,7 @@ rarity:1
 experience:20
 blow:HIT:HURT:1d9
 flags:DROP_40
+power:BOW_SPECIALIZATION
 innate-freq:2
 spells:ARROW
 friends-base:30:1d2:kobold
@@ -1902,6 +1926,8 @@ rarity:2
 experience:15
 blow:BITE:COLD:1d6
 flags:IM_COLD
+power:COLD_MAGIC
+power:BREATH
 innate-freq:10
 spells:BR_COLD
 desc:It is a large fly that drips frost.
@@ -1921,6 +1947,8 @@ experience:16
 blow:BITE:POISON:1d6
 flags:RAND_25
 flags:IM_POIS
+power:POISON_MAGIC
+power:BREATH
 innate-freq:10
 spells:BR_POIS
 desc:A vast, foul-smelling dragonfly.
@@ -2027,6 +2055,7 @@ experience:15
 blow:HIT:HURT:1d8
 flags:DROP_20
 flags:HURT_LIGHT
+power:BOW_SPECIALIZATION:75
 innate-freq:15
 spells:ARROW
 friends:30:1d3:Crow
@@ -2064,6 +2093,8 @@ rarity:2
 experience:18
 flags:NEVER_BLOW | RAND_25
 flags:IM_ACID
+power:BREATH
+power:ACID_MAGIC
 innate-freq:10
 spells:BR_ACID
 desc:The size of a large bird, this fly drips caustic acid.
@@ -2083,6 +2114,8 @@ experience:18
 blow:BITE:HURT:1d3
 flags:RAND_25
 flags:NO_STUN
+power:SOUND_MAGIC
+power:BREATH
 innate-freq:10
 spells:BR_SOUN
 desc:Large beating wings support this dazzling insect.  A loud buzzing noise
@@ -2104,6 +2137,7 @@ rarity:3
 experience:10
 blow:BITE:HURT:1d3
 blow:BITE:HURT:1d2
+power:NECROMANCY_MAGIC
 spell-freq:9
 spell-power:4
 spells:WOUND
@@ -2127,6 +2161,7 @@ experience:20
 blow:HIT:HURT:1d8
 flags:DROP_20
 flags:HURT_LIGHT
+power:BOW_SPECIALIZATION:75
 innate-freq:13
 spells:ARROW
 friends:50:1d8:snaga
@@ -2358,6 +2393,8 @@ flags:UNIQUE | MALE | NAME_COMMA | EVIL
 flags:DROP_1 | DROP_GOOD | DROP_GREAT | ONLY_ITEM
 flags:OPEN_DOOR | TAKE_ITEM
 flags:FORCE_SLEEP
+power:POISON_MAGIC
+power:ENCHANTMENT_MAGIC:125
 spell-freq:5
 spells:HEAL | SLOW | TRAPS
 spells:BA_POIS
@@ -2421,6 +2458,8 @@ blow:BITE:FIRE:3d6
 flags:RAND_25
 flags:IM_FIRE
 flags:FORCE_SLEEP
+power:FIRE_MAGIC
+power:BREATH
 innate-freq:9
 spells:BR_FIRE
 desc:A large black and yellow lizard.  You'd better run away!
@@ -2489,6 +2528,7 @@ experience:25
 blow:HIT:HURT:1d8
 flags:DROP_20
 flags:HURT_LIGHT
+power:BOW_SPECIALIZATION
 innate-freq:12
 spells:ARROW
 desc:A small orc with wide and snuffling nostrils.
@@ -2509,6 +2549,8 @@ blow:HIT:HURT:2d4
 flags:MALE | EVIL
 flags:DROP_1
 flags:OPEN_DOOR | TAKE_ITEM
+power:HAFTED_SPECIALIZATION
+power:SLING_SPECIALIZATION
 innate-freq:8
 spells:SHOT | WHIP
 desc:An uncultured brute with a club, a sling and a whip.
@@ -2622,6 +2664,7 @@ flags:DROP_60
 flags:HURT_LIGHT
 flags:FORCE_SLEEP
 flags:SPELLCASTER
+power:NECROMANCY_MAGIC
 drop-base:magic book:5:1:1
 drop-base:prayer book:5:1:1
 spell-freq:8

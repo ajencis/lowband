@@ -1678,7 +1678,7 @@ void dungeon_change_level(struct player *p, int dlev)
 int player_apply_damage_reduction(struct player *p, int dam)
 {
 	/* Mega-Hack -- Apply "invulnerability" */
-	if (p->timed[TMD_INVULN] && (dam < 9000)) return 0;
+	if (p->mon.m_timed[TMD_INVULN] && (dam < 9000)) return 0;
 
 	dam -= p->state.dam_red;
 	if (dam > 0 && p->state.perc_dam_red) {
@@ -1693,11 +1693,11 @@ static bool phoenix_resurrect(struct player *p)
 	int avail_mana = available_mana(cave, p->grid);
 
 	if (!pf_has(p->state.pflags, PF_PHOENIX_RESURRECT)) return false;
-	if (p->timed[TMD_PHOENIX_CD]) return false;
+	if (p->mon.m_timed[TMD_PHOENIX_CD]) return false;
 	if (avail_mana < 5) return false;
 
-	p->chp = 0;
-	p->timed[TMD_PHOENIX] = 1;
+	p->mon.hp = 0;
+	p->mon.m_timed[TMD_PHOENIX] = 1;
 
 	return true;
 }
@@ -1720,14 +1720,14 @@ static bool phoenix_resurrect(struct player *p)
  */
 void take_hit(struct player *p, int dam, const char *kb_str)
 {
-	int old_chp = p->chp;
+	int old_chp = p->mon.hp;
 
-	int warning = (p->mhp * p->opts.hitpoint_warn / 10);
+	int warning = (p->mon.maxhp * p->opts.hitpoint_warn / 10);
 
 	/* Paranoia */
 	if (p->is_dead || dam <= 0) return;
 
-	if (p->timed[TMD_PHOENIX]) return;
+	if (p->mon.m_timed[TMD_PHOENIX]) return;
 
 	/* Disturb */
 	disturb(p);
@@ -1735,8 +1735,8 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 	assert(dam >= 0);
 
 	/* Hurt the player */
-	if ((int)p->chp - dam < INT16_MIN) p->chp = INT16_MIN;
-	else p->chp -= dam;
+	if ((int)p->mon.hp - dam < INT16_MIN) p->mon.hp = INT16_MIN;
+	else p->mon.hp -= dam;
 
 	/* Reward COMBAT_REGEN characters with mana for their lost hitpoints
 	 * Unenviable task of separating what should and should not cause rage
@@ -1746,7 +1746,7 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 			&& !streq(kb_str, "a fatal wound") && !streq(kb_str, "starvation")) {
 		/* lose X% of hitpoints get X% of spell points */
 		int32_t sp_gain = (((int32_t)MAX(p->msp, 10)) * 65536)
-			/ (int32_t)p->mhp * dam;
+			/ (int32_t)p->mon.maxhp * dam;
 		player_adjust_mana_precise(p, sp_gain);
 	}
 
@@ -1754,10 +1754,10 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 	p->upkeep->redraw |= (PR_HP);
 
 	/* Dead player */
-	if (p->chp < 0) {
+	if (p->mon.hp < 0) {
 		/* From hell's heart I stab at thee */
-		if (p->timed[TMD_BLOODLUST]
-				&& (p->chp + (p->timed[TMD_BLOODLUST] * (p->mhp + 25) / 125) >= 0)) {
+		if (p->mon.m_timed[TMD_BLOODLUST]
+				&& (p->mon.hp + (p->mon.m_timed[TMD_BLOODLUST] * (p->mon.maxhp + 25) / 125) >= 0)) {
 			if (randint0(10)) {
 				msg("Your lust for blood keeps you alive!");
 			} else {
@@ -1797,7 +1797,7 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 	}
 
 	/* Hitpoint warning */
-	if (p->chp < warning) {
+	if (p->mon.hp < warning) {
 		/* Hack -- bell on first notice */
 		if (old_chp > warning) {
 			bell();
@@ -1824,17 +1824,17 @@ bool check_berserk(struct player *p, struct monster *mon)
 	if (!pf_has(p->state.pflags, PF_BERSERKER)) {
 		return false;
 	}
-	if (p->timed[TMD_SLOW]) {
+	if (p->mon.m_timed[TMD_SLOW]) {
 		// too tired to berserk
 		return false;
 	}
 	// somewhere between the amount of hp lost and the ratio of hp lost to max hp
 	// 25 max hp = up to 25 increase; 100 max hp = up to 40 increase (with max roll at 0 hp)
-	int increase = (randint1(p->mhp) - p->chp * 2 / 3) * 50 / (p->mhp + 25);
+	int increase = (randint1(p->mon.maxhp) - p->mon.hp * 2 / 3) * 50 / (p->mon.maxhp + 25);
 	
 	if (increase >= 0) {
 		// higher increase the less you are already
-		increase -= p->timed[TMD_BLOODLUST] / 3 - 5;
+		increase -= p->mon.m_timed[TMD_BLOODLUST] / 3 - 5;
 
 		return player_inc_timed(p, TMD_BLOODLUST, MAX(increase, 0), true, true, false);
 	}
@@ -2170,21 +2170,21 @@ void player_regen_hp(struct player *p)
 {
 	int32_t hp_gain;
 	int percent = 0; // max 32k -> 50% of mhp; more accurately "pertwobytes"
-	int fed_pct, old_chp = p->chp;
+	int fed_pct, old_chp = p->mon.hp;
 
 	/* Default regeneration */
-	if (p->timed[TMD_FOOD] >= PY_FOOD_FULL) {
+	if (p->mon.m_timed[TMD_FOOD] >= PY_FOOD_FULL) {
 		percent = PY_REGEN_FULL;
-	} else if (p->timed[TMD_FOOD] >= PY_FOOD_WEAK) {
+	} else if (p->mon.m_timed[TMD_FOOD] >= PY_FOOD_WEAK) {
 		percent = PY_REGEN_NORMAL;
-	} else if (p->timed[TMD_FOOD] >= PY_FOOD_FAINT) {
+	} else if (p->mon.m_timed[TMD_FOOD] >= PY_FOOD_FAINT) {
 		percent = PY_REGEN_WEAK;
-	} else if (p->timed[TMD_FOOD] >= PY_FOOD_STARVE) {
+	} else if (p->mon.m_timed[TMD_FOOD] >= PY_FOOD_STARVE) {
 		percent = PY_REGEN_FAINT;
 	}
 
 	// L: regeneration is now much more food-based
-	fed_pct = p->timed[TMD_FOOD] / z_info->food_value - 100;
+	fed_pct = p->mon.m_timed[TMD_FOOD] / z_info->food_value - 100;
 	if (fed_pct > 0) fed_pct *= 2;
 	percent = MAX(percent + fed_pct, 0);
 
@@ -2192,7 +2192,7 @@ void player_regen_hp(struct player *p)
 	if (player_of_has(p, OF_HI_REGEN)) {
 		percent *= 25;
 	}
-	else if (player_of_has(p, OF_REGEN) || p->timed[TMD_REGEN]) {
+	else if (player_of_has(p, OF_REGEN) || p->mon.m_timed[TMD_REGEN]) {
 		percent *= 3;
 	}
 	if (player_resting_can_regenerate(p)) {
@@ -2205,17 +2205,17 @@ void player_regen_hp(struct player *p)
 	}
 
 	/* Various things interfere with physical healing */
-	if (p->timed[TMD_PARALYZED]) percent = 0;
-	if (p->timed[TMD_POISONED]) percent = 0;
-	if (p->timed[TMD_STUN]) percent = 0;
-	if (p->timed[TMD_CUT]) percent = 0;
+	if (p->mon.m_timed[TMD_PARALYZED]) percent = 0;
+	if (p->mon.m_timed[TMD_POISONED]) percent = 0;
+	if (p->mon.m_timed[TMD_STUN]) percent = 0;
+	if (p->mon.m_timed[TMD_CUT]) percent = 0;
 
 	/* Extract the new hitpoints */
-	hp_gain = p->mhp * percent + PY_REGEN_HPBASE;
+	hp_gain = p->mon.maxhp * percent + PY_REGEN_HPBASE;
 	player_adjust_hp_precise(p, hp_gain);
 
 	/* Notice changes */
-	if (old_chp != p->chp) {
+	if (old_chp != p->mon.hp) {
 		equip_learn_flag(p, OF_REGEN);
 		equip_learn_flag(p, OF_IMPAIR_HP);
 	}
@@ -2243,7 +2243,7 @@ void player_regen_mana(struct player *p)
 	percent /= 25;
 
 	/* Various things speed up regeneration, but shouldn't punish healthy BGs */
-	if (!(player_has(p, PF_COMBAT_REGEN) && p->chp > p->mhp / 2)) {
+	if (!(player_has(p, PF_COMBAT_REGEN) && p->mon.hp > p->mon.maxhp / 2)) {
 		if (player_of_has(p, OF_REGEN)) {
 			percent *= 2;
 		}
@@ -2288,7 +2288,7 @@ void player_regen_mana(struct player *p)
 
 void player_adjust_hp_precise(struct player *p, int32_t hp_gain)
 {
-	int16_t old_16 = p->chp;
+	int16_t old_16 = p->mon.hp;
 	/* Load it all into 4 byte format */
 	int32_t old_32 = ((int32_t) old_16) * 65536 + p->chp_frac, new_32;
 
@@ -2309,27 +2309,27 @@ void player_adjust_hp_precise(struct player *p, int32_t hp_gain)
 		 */
 		int32_t remainder = new_32 % 65536;
 
-		p->chp = (int16_t) (new_32 / 65536);
+		p->mon.hp = (int16_t) (new_32 / 65536);
 		if (remainder) {
 			assert(remainder < 0);
 			p->chp_frac = (uint16_t) (65536 + remainder);
-			assert(p->chp > INT16_MIN);
-			p->chp -= 1;
+			assert(p->mon.hp > INT16_MIN);
+			p->mon.hp -= 1;
 		} else {
 			p->chp_frac = 0;
 		}
 	} else {
-		p->chp = (int16_t)(new_32 >> 16);   /* div 65536 */
+		p->mon.hp = (int16_t)(new_32 >> 16);   /* div 65536 */
 		p->chp_frac = (uint16_t)(new_32 & 0xFFFF); /* mod 65536 */
 	}
 
 	/* Fully healed */
-	if (p->chp >= p->mhp) {
-		p->chp = p->mhp;
+	if (p->mon.hp >= p->mon.maxhp) {
+		p->mon.hp = p->mon.maxhp;
 		p->chp_frac = 0;
 	}
 
-	if (p->chp != old_16) {
+	if (p->mon.hp != old_16) {
 		p->upkeep->redraw |= (PR_HP);
 	}
 }
@@ -2412,10 +2412,10 @@ int32_t player_adjust_mana_precise(struct player *p, int32_t sp_gain)
 void convert_mana_to_hp(struct player *p, int32_t sp_long) {
 	int32_t hp_gain, sp_ratio;
 
-	if (sp_long <= 0 || p->msp == 0 || p->mhp == p->chp) return;
+	if (sp_long <= 0 || p->msp == 0 || p->mon.maxhp == p->mon.hp) return;
 
 	/* Total HP from max */
-	hp_gain = ((int32_t)(p->mhp - p->chp)) * 65536;
+	hp_gain = ((int32_t)(p->mon.maxhp - p->mon.hp)) * 65536;
 	hp_gain -= (int32_t)p->chp_frac;
 
 	/* Spend X% of SP get X/2% of lost HP. E.g., at 50% HP get X/4% */
@@ -2464,7 +2464,7 @@ void player_update_light(struct player *p)
 				p->upkeep->redraw |= (PR_EQUIP);
 
 			/* Hack -- Special treatment when blind */
-			if (p->timed[TMD_BLIND]) {
+			if (p->mon.m_timed[TMD_BLIND]) {
 				/* Hack -- save some light for later */
 				if (obj->timeout == 0) obj->timeout++;
 			} else if (obj->timeout == 0) {
@@ -2579,7 +2579,7 @@ static bool player_bloodlust_attack_monster(struct player *p, struct monster *mo
 	if (player_can_attack_monster(p, mon) && target_set_monster(mon)) {
 		char mdesc[80];
 
-		if (p->timed[TMD_IMAGE]) {
+		if (p->mon.m_timed[TMD_IMAGE]) {
 			my_strcpy(mdesc, "something", sizeof(mdesc));
 		} else {
 			monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG);
@@ -2639,7 +2639,7 @@ static bool player_bloodlust_charge_monster(struct player *p, struct monster *mo
 		if (distance(p->grid, mon->grid) <= distance(targ_grid_abs, mon->grid)) continue;
 		
 		char mdesc[80];
-		if (p->timed[TMD_IMAGE]) {
+		if (p->mon.m_timed[TMD_IMAGE]) {
 			my_strcpy(mdesc, "something", sizeof(mdesc));
 		} else {
 			monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG);
@@ -2660,10 +2660,10 @@ static bool player_bloodlust_charge_monster(struct player *p, struct monster *mo
 
 bool bloodlust_override(struct player *p, struct chunk *c)
 {
-	int currtmd = p->timed[TMD_BLOODLUST];
+	int currtmd = p->mon.m_timed[TMD_BLOODLUST];
 	struct monster *target;
 
-	if (p->timed[TMD_PARALYZED] || p->timed[TMD_COMMAND]) return false;
+	if (p->mon.m_timed[TMD_PARALYZED] || p->mon.m_timed[TMD_COMMAND]) return false;
 
 	if (p->skip_cmd_coercion) return false;
 	//if (currtmd <= (randint0(30) + 5)) return false;
@@ -2680,7 +2680,7 @@ bool bloodlust_override(struct player *p, struct chunk *c)
 
 	player_over_exert(p, PY_EXERT_CONF, 100, currtmd * 2);
 	player_over_exert(p, PY_EXERT_FAINT, 75, currtmd * 3 / 2);
-	player_over_exert(p, PY_EXERT_CUT, 50, p->mhp / 10);
+	player_over_exert(p, PY_EXERT_CUT, 50, p->mon.maxhp / 10);
 
 	player_dec_timed(p, TMD_BLOODLUST, currtmd, true, false);
 
@@ -2947,7 +2947,7 @@ bool player_is_shapechanged(const struct player *p)
  */
 bool player_is_trapsafe(const struct player *p)
 {
-	if (p->timed[TMD_TRAPSAFE]) return true;
+	if (p->mon.m_timed[TMD_TRAPSAFE]) return true;
 	if (player_of_has(p, OF_TRAP_IMMUNE)) return true;
 	return false;
 }
@@ -2970,14 +2970,14 @@ bool player_can_cast(const struct player *p, bool show_msg)
 		return false;
 	}
 
-	if (p->timed[TMD_BLIND] || no_light(p)) {
+	if (p->mon.m_timed[TMD_BLIND] || no_light(p)) {
 		if (show_msg) {
 			msg("You cannot see!");
 		}
 		return false;
 	}
 
-	if (p->timed[TMD_CONFUSED]) {
+	if (p->mon.m_timed[TMD_CONFUSED]) {
 		if (show_msg) {
 			msg("You are too confused!");
 		}
@@ -3050,7 +3050,7 @@ bool player_can_study(const struct player *p, bool show_msg)
  */
 bool player_can_read(const struct player *p, bool show_msg)
 {
-	if (p->timed[TMD_BLIND]) {
+	if (p->mon.m_timed[TMD_BLIND]) {
 		if (show_msg)
 			msg("You can't see anything.");
 
@@ -3064,14 +3064,14 @@ bool player_can_read(const struct player *p, bool show_msg)
 		return false;
 	}
 
-	if (p->timed[TMD_CONFUSED]) {
+	if (p->mon.m_timed[TMD_CONFUSED]) {
 		if (show_msg)
 			msg("You are too confused to read!");
 
 		return false;
 	}
 
-	if (p->timed[TMD_AMNESIA]) {
+	if (p->mon.m_timed[TMD_AMNESIA]) {
 		if (show_msg)
 			msg("You can't remember how to read!");
 
@@ -3161,7 +3161,7 @@ bool player_can_read_prereq(void)
 	 * Accommodate hacks elsewhere:  'r' is overloaded to mean
 	 * release a commanded monster when TMD_COMMAND is active.
 	 */
-	return (player->timed[TMD_COMMAND]) ?
+	return (player->mon.m_timed[TMD_COMMAND]) ?
 		true : player_can_read(player, true);
 }
 
@@ -3248,7 +3248,7 @@ bool player_confuse_dir(struct player *p, int *dp, bool too)
 {
 	int dir = *dp;
 
-	if (p->timed[TMD_CONFUSED]) {
+	if (p->mon.m_timed[TMD_CONFUSED]) {
 		if ((dir == 5) || (randint0(100) < 75)) {
 			/* Random direction */
 			dir = ddd[randint0(8)];
@@ -3393,22 +3393,22 @@ void player_resting_complete_special(struct player *p)
 	if (!player_resting_is_special(p->upkeep->resting)) return;
 
 	if (p->upkeep->resting == REST_ALL_POINTS) {
-		if ((p->chp == p->mhp) && (p->csp == p->msp))
+		if ((p->mon.hp == p->mon.maxhp) && (p->csp == p->msp))
 			/* Stop resting */
 			disturb(p);
 	} else if (p->upkeep->resting == REST_COMPLETE) {
-		if ((p->chp == p->mhp) &&
+		if ((p->mon.hp == p->mon.maxhp) &&
 			(p->csp == p->msp || player_has(p, PF_COMBAT_REGEN) || !p->floor_mana) &&
-			!p->timed[TMD_BLIND] && !p->timed[TMD_CONFUSED] &&
-			!p->timed[TMD_POISONED] && !p->timed[TMD_AFRAID] &&
-			!p->timed[TMD_TERROR] && !p->timed[TMD_STUN] &&
-			!p->timed[TMD_CUT] && !p->timed[TMD_SLOW] &&
-			!p->timed[TMD_PARALYZED] && !p->timed[TMD_IMAGE] &&
+			!p->mon.m_timed[TMD_BLIND] && !p->mon.m_timed[TMD_CONFUSED] &&
+			!p->mon.m_timed[TMD_POISONED] && !p->mon.m_timed[TMD_AFRAID] &&
+			!p->mon.m_timed[TMD_TERROR] && !p->mon.m_timed[TMD_STUN] &&
+			!p->mon.m_timed[TMD_CUT] && !p->mon.m_timed[TMD_SLOW] &&
+			!p->mon.m_timed[TMD_PARALYZED] && !p->mon.m_timed[TMD_IMAGE] &&
 			!p->word_recall && !p->deep_descent)
 			/* Stop resting */
 			disturb(p);
 	} else if (p->upkeep->resting == REST_SOME_POINTS) {
-		if ((p->chp == p->mhp) || (p->csp == p->msp)) {
+		if ((p->mon.hp == p->mon.maxhp) || (p->csp == p->msp)) {
 			/* Stop resting */
 			disturb(p);
 		}
@@ -3573,12 +3573,12 @@ void disturb(struct player *p)
 static bool player_can_search(struct player *p)
 {
 	if (p->searched_this_turn) return false;
-	if (p->timed[TMD_BLIND]) return false;
-	if (p->timed[TMD_CONFUSED]) return false;
-	if (p->timed[TMD_PHOENIX]) return false;
-	if (p->timed[TMD_PARALYZED]) return false;
+	if (p->mon.m_timed[TMD_BLIND]) return false;
+	if (p->mon.m_timed[TMD_CONFUSED]) return false;
+	if (p->mon.m_timed[TMD_PHOENIX]) return false;
+	if (p->mon.m_timed[TMD_PARALYZED]) return false;
 	if (player_timed_grade_eq(p, TMD_STUN, "Knocked Out")) return false;
-	if (p->timed[TMD_PHOENIX]) return false;
+	if (p->mon.m_timed[TMD_PHOENIX]) return false;
 	if (no_light(p)) return false;
 
 	return true;
@@ -3692,9 +3692,9 @@ void player_start_turn(struct player *p)
 		p->xp_this_turn = 0;
 	}
 
-	if (p->timed[TMD_PHOENIX]) {
-		p->timed[TMD_PHOENIX]--;
-		if (!p->timed[TMD_PHOENIX]) {
+	if (p->mon.m_timed[TMD_PHOENIX]) {
+		p->mon.m_timed[TMD_PHOENIX]--;
+		if (!p->mon.m_timed[TMD_PHOENIX]) {
 			bool id;
 			effect_simple(EF_REBIRTH, source_player(), "0d0", 0, 0, 0, 0, 0, &id);
 		}
@@ -3708,7 +3708,7 @@ void player_start_turn(struct player *p)
 bool player_is_invisible(struct player *p)
 {
 	if (of_has(p->state.flags, OF_INVISIBILITY)) return true;
-	if (p->timed[TMD_INVIS]) return true;
+	if (p->mon.m_timed[TMD_INVIS]) return true;
 
 	return false;
 }

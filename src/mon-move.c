@@ -24,6 +24,7 @@
 
 #include "angband.h"
 #include "cave.h"
+#include "effects.h"
 #include "game-world.h"
 #include "init.h"
 #include "monster.h"
@@ -113,13 +114,13 @@ bool monster_can_see_player(struct monster *mon)
 {
 	int p_sq_light = square_light(cave, player->grid);
 
-	if (mon->m_timed[MON_TMD_SLEEP]) {
+	if (mon->m_timed[TMD_ASLEEP]) {
 		return false;
 	}
 	if (!los(cave, mon->grid, player->grid)) {
 		return false;
 	}
-	if (player->timed[TMD_COVERTRACKS] && (mon->cdis > z_info->max_sight / 4)) {
+	if (player->mon.m_timed[TMD_COVERTRACKS] && (mon->cdis > z_info->max_sight / 4)) {
 		return false;
 	}
 	if (player_is_invisible(player) && 
@@ -134,7 +135,7 @@ bool monster_can_see_player(struct monster *mon)
 
 static bool monster_cannot_target_player(struct monster *mon)
 {
-	if (player->timed[TMD_PHOENIX]) return true;
+	if (player->mon.m_timed[TMD_PHOENIX]) return true;
 
 	return false;
 }
@@ -240,7 +241,7 @@ bool mon_will_follow_player(const struct monster *mon, const struct player *p)
 	leader = leader->reaction != MON_REACT_NONE ? leader : mon;
 
 	if (leader->faction == '@') return true;
-	if (leader->m_timed[MON_TMD_CHARMED]) return true;
+	if (leader->m_timed[TMD_CHARMED]) return true;
 
 	return false;
 }
@@ -252,7 +253,7 @@ bool mon_will_attack_player(const struct monster *mon, const struct player *p)
 
 	if (mon_will_follow_player(leader, p)) return false;
 	if (leader->reaction >= MON_REACT_NEUTRAL) return false;
-	if (p->timed[TMD_PHOENIX]) return false;
+	if (p->mon.m_timed[TMD_PHOENIX]) return false;
 
 	// assume enemy for now
 	return true;
@@ -609,7 +610,7 @@ static void get_move_find_range(struct monster *mon)
 	int flee_range = z_info->max_sight + z_info->flee_range;
 
 	/* All "afraid" monsters will run away */
-	if (mon->m_timed[MON_TMD_FEAR] || rf_has(mon->race->flags, RF_FRIGHTENED)) {
+	if (mon->m_timed[TMD_AFRAID] || rf_has(mon->race->flags, RF_FRIGHTENED)) {
 		mon->min_range = flee_range;
 	} else if (mon->group_info[PRIMARY_GROUP].role == MON_GROUP_BODYGUARD) {
 		/* Bodyguards don't flee */
@@ -619,7 +620,7 @@ static void get_move_find_range(struct monster *mon)
 		mon->min_range = 1;
 
 		/* Taunted monsters just want to get in your face */
-		if (player->timed[TMD_TAUNT]) return;
+		if (player->mon.m_timed[TMD_TAUNT]) return;
 
 		/* Examine player power (level) */
 		p_lev = player->lev;
@@ -636,8 +637,8 @@ static void get_move_find_range(struct monster *mon)
 			mon->min_range = flee_range;
 		} else if (m_lev - 5 < p_lev) {
 			/* Examine player health */
-			p_chp = player->chp;
-			p_mhp = player->mhp;
+			p_chp = player->mon.hp;
+			p_mhp = player->mon.maxhp;
 
 			/* Examine monster health */
 			m_chp = mon->hp;
@@ -1310,7 +1311,7 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 		}
 
 		/* Not in an empty space and strong player */
-		if ((open < 5) && (player->chp > player->mhp / 2)) {
+		if ((open < 5) && (player->mon.hp > player->mon.maxhp / 2)) {
 			/* Find hiding place for an ambush */
 			if (get_move_find_hiding(mon)) {
 				done = true;
@@ -1488,7 +1489,7 @@ static enum monster_stagger monster_turn_should_stagger(struct monster *mon)
 	int chance = 0, confused_chance, roll;
 
 	/* Increase chance of being erratic for every level of confusion */
-	int conf_level = monster_effect_level(mon, MON_TMD_CONF);
+	int conf_level = monster_effect_level(mon, TMD_CONFUSED);
 	while (conf_level) {
 		int accuracy = 100 - chance;
 		accuracy *= (100 - CONF_ERRATIC_CHANCE);
@@ -1540,8 +1541,8 @@ static void monster_display_confused_move_msg(struct monster *mon,
  */
 static void monster_slightly_stun_by_move(struct monster *mon)
 {
-	if (mon->m_timed[MON_TMD_STUN] < 5 && one_in_(3)) {
-		mon_inc_timed(mon, MON_TMD_STUN, 3, 0);
+	if (mon->m_timed[TMD_STUN] < 5 && one_in_(3)) {
+		mon_inc_timed(mon, TMD_STUN, 3, 0);
 	}
 }
 
@@ -2172,10 +2173,10 @@ static void monster_turn(struct monster *mon)
 	}
 
 	/* Out of options - monster is paralyzed by fear (unless attacked) */
-	if (!did_something && mon->m_timed[MON_TMD_FEAR]) {
-		int amount = mon->m_timed[MON_TMD_FEAR];
-		mon_clear_timed(mon, MON_TMD_FEAR, MON_TMD_FLG_NOMESSAGE);
-		mon_inc_timed(mon, MON_TMD_HOLD, amount, MON_TMD_FLG_NOTIFY);
+	if (!did_something && mon->m_timed[TMD_AFRAID]) {
+		int amount = mon->m_timed[TMD_AFRAID];
+		mon_clear_timed(mon, TMD_AFRAID, MON_TMD_FLG_NOMESSAGE);
+		mon_inc_timed(mon, TMD_PARALYZED, amount, MON_TMD_FLG_NOTIFY);
 	}
 
 	/* If we see an unaware monster do something, become aware of it */
@@ -2212,7 +2213,7 @@ static bool monster_check_active(struct monster *mon)
 	} else if (monster_taking_terrain_damage(cave, mon)) {
 		/* Monster is taking damage from the terrain */
 		mflag_on(mon->mflag, MFLAG_ACTIVE);
-	} else if (mon->m_timed[MON_TMD_POISONED] || mon->m_timed[MON_TMD_TOXIC]) {
+	} else if (mon->m_timed[TMD_POISONED] || mon->m_timed[TMD_TOXIC]) {
 		// L: monster is taking ongoing damage
 		mflag_on(mon->mflag, MFLAG_ACTIVE);
 	} else {
@@ -2257,7 +2258,7 @@ static void monster_reduce_sleep(struct monster *mon)
 		int local_noise = cave->noise.grids[mon->grid.y][mon->grid.x];
 		int local_smell = cave->scent.grids[mon->grid.y][mon->grid.x];
 		bool woke_up = false;
-		int curr = mon->m_timed[MON_TMD_SLEEP];
+		int curr = mon->m_timed[TMD_ASLEEP];
 		// L: monster wakes up faster if it's louder or they can smell but not if they can see
 		int distfact = MAX(0, 40 - local_noise * 2 - local_smell - stealth) / 4;
 		// L: sleep reduction increases exponentially
@@ -2276,7 +2277,7 @@ static void monster_reduce_sleep(struct monster *mon)
 
 		/* Monster wakes up a bit */
 		if (sred) {
-			mon_dec_timed(mon, MON_TMD_SLEEP, sred, MON_TMD_FLG_NOTIFY);
+			mon_dec_timed(mon, TMD_ASLEEP, sred, MON_TMD_FLG_NOTIFY);
 		}
 
 		/* Update knowledge */
@@ -2296,65 +2297,65 @@ static void monster_reduce_sleep(struct monster *mon)
  *
  * Returns true if the monster is skipping its turn.
  */
-static bool process_monster_timed(struct monster *mon)
+bool process_monster_timed(struct monster *mon)
 {
 	/* If the monster is asleep or just woke up, then it doesn't act */
-	if (mon->m_timed[MON_TMD_SLEEP]) {
+	if (mon->m_timed[TMD_ASLEEP]) {
 		monster_reduce_sleep(mon);
 		return true;
 	}
 
-	if (mon->m_timed[MON_TMD_FAST])
-		mon_dec_timed(mon, MON_TMD_FAST, 1, 0);
+	if (mon->m_timed[TMD_FAST])
+		mon_dec_timed(mon, TMD_FAST, 1, 0);
 
-	if (mon->m_timed[MON_TMD_SLOW])
-		mon_dec_timed(mon, MON_TMD_SLOW, 1, 0);
+	if (mon->m_timed[TMD_SLOW])
+		mon_dec_timed(mon, TMD_SLOW, 1, 0);
 
-	if (mon->m_timed[MON_TMD_HOLD])
-		mon_dec_timed(mon, MON_TMD_HOLD, 1, 0);
+	if (mon->m_timed[TMD_PARALYZED])
+		mon_dec_timed(mon, TMD_PARALYZED, 1, 0);
 
-	if (mon->m_timed[MON_TMD_DISEN])
-		mon_dec_timed(mon, MON_TMD_DISEN, 1, 0);
+	if (mon->m_timed[TMD_DISEN])
+		mon_dec_timed(mon, TMD_DISEN, 1, 0);
 
-	if (mon->m_timed[MON_TMD_STUN])
-		mon_dec_timed(mon, MON_TMD_STUN, 1, MON_TMD_FLG_NOTIFY);
+	if (mon->m_timed[TMD_STUN])
+		mon_dec_timed(mon, TMD_STUN, 1, MON_TMD_FLG_NOTIFY);
 
-	if (mon->m_timed[MON_TMD_CONF]) {
-		mon_dec_timed(mon, MON_TMD_CONF, 1, MON_TMD_FLG_NOTIFY);
+	if (mon->m_timed[TMD_CONFUSED]) {
+		mon_dec_timed(mon, TMD_CONFUSED, 1, MON_TMD_FLG_NOTIFY);
 	}
 
-	if (mon->m_timed[MON_TMD_CHANGED]) {
-		mon_dec_timed(mon, MON_TMD_CHANGED, 1, MON_TMD_FLG_NOTIFY);
+	if (mon->m_timed[TMD_CHANGED]) {
+		mon_dec_timed(mon, TMD_CHANGED, 1, MON_TMD_FLG_NOTIFY);
 	}
 
-	if (mon->m_timed[MON_TMD_FEAR]) {
+	if (mon->m_timed[TMD_AFRAID]) {
 		int d = randint1(mon->race->level / 10 + 1);
-		mon_dec_timed(mon, MON_TMD_FEAR, d, MON_TMD_FLG_NOTIFY);
+		mon_dec_timed(mon, TMD_AFRAID, d, MON_TMD_FLG_NOTIFY);
 	}
 
-	if (mon->m_timed[MON_TMD_TOXIC]) {
-		mon_dec_timed(mon, MON_TMD_TOXIC, 1, 0);
-		mon_inc_timed(mon, MON_TMD_POISONED, 5, 0);
-	} else if (mon->m_timed[MON_TMD_POISONED]) {
-		mon_dec_timed(mon, MON_TMD_POISONED, 1, 0);
+	if (mon->m_timed[TMD_TOXIC]) {
+		mon_dec_timed(mon, TMD_TOXIC, 1, 0);
+		mon_inc_timed(mon, TMD_POISONED, 5, 0);
+	} else if (mon->m_timed[TMD_POISONED]) {
+		mon_dec_timed(mon, TMD_POISONED, 1, 0);
 	}
 
-	if (mon->m_timed[MON_TMD_SUFFOCATING]) {
-		mon_dec_timed(mon, MON_TMD_SUFFOCATING, 1, 0);
+	if (mon->m_timed[TMD_SUFFOCATE]) {
+		mon_dec_timed(mon, TMD_SUFFOCATE, 1, 0);
 		if (one_in_(3)) {
-			mon_inc_timed(mon, MON_TMD_SLOW, 5, 0);
+			mon_inc_timed(mon, TMD_SLOW, 5, 0);
 		}
 		if (one_in_(3)) {
-			mon_inc_timed(mon, MON_TMD_STUN, 5, 0);
+			mon_inc_timed(mon, TMD_STUN, 5, 0);
 		}
 		if (one_in_(3)) {
-			mon_inc_timed(mon, MON_TMD_CONF, 5, 0);
+			mon_inc_timed(mon, TMD_CONFUSED, 5, 0);
 		}
 	}
 
-	if (mon->m_timed[MON_TMD_SUMMONED]) {
-		mon_dec_timed(mon, MON_TMD_SUMMONED, 1, 0);
-		if (!mon->m_timed[MON_TMD_SUMMONED]) {
+	if (mon->m_timed[TMD_SUMMONED]) {
+		mon_dec_timed(mon, TMD_SUMMONED, 1, 0);
+		if (!mon->m_timed[TMD_SUMMONED]) {
 			char mdesc[80];
 			monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG | MDESC_CAPITAL);
 			msg("%s vanishes!", mdesc);
@@ -2363,11 +2364,33 @@ static bool process_monster_timed(struct monster *mon)
 		}
 	}
 
+	// L: these are typically only player timed effcts (currently)
+	
+	if (mon->m_timed[TMD_RAD_POIS]) {
+		struct loc g = mon->grid;
+		effect_simple(EF_PROJECT_LOS, source_monster(mon->midx), "2d9", PROJ_MON_POIS, 0, 0, g.y, g.x, NULL);
+	}
+	
+	if (mon->m_timed[TMD_CALL_STORM] && one_in_(5)) {
+		struct loc l = mon->grid;
+		char *dam = format("2d%i", my_int_sqrt(mon->m_timed[TMD_CALL_STORM]) + 49);
+		int rad = one_in_(3) ? 1 : 0;
+		effect_simple(EF_RANDOM_MON_DAMAGE, source_monster(mon->midx), dam, PROJ_ELEC, rad, 0, l.y, l.x, NULL);
+	}
+
+	/* Timed healing */
+	if (mon->m_timed[TMD_HEAL]) {
+		bool ident = false;
+		effect_simple(EF_HEAL_HP, source_monster(mon->midx), "30", 0, 0, 0, 0, 0, &ident);
+	}
+
+	// L: player stuff end
+
 	/* Always miss turn if held or commanded, one in STUN_MISS_CHANCE chance
 	 * of missing if stunned,  */
-	if (mon->m_timed[MON_TMD_HOLD] || mon->m_timed[MON_TMD_COMMAND]) {
+	if (mon->m_timed[TMD_PARALYZED] /*|| mon->m_timed[MON_TMD_COMMAND]*/) {
 		return true;
-	} else if (mon->m_timed[MON_TMD_STUN]) {
+	} else if (mon->m_timed[TMD_STUN]) {
 		return one_in_(STUN_MISS_CHANCE);
 	} else {
 		return false;
@@ -2432,7 +2455,7 @@ void process_monsters(int minimum_energy)
 	bool regen = false;
 	bool targcheck = false;
 
-	/* Regenerate hitpoints and mana every 127 game turns */
+	/* Regenerate hitpoints and mana every 128 game turns */
 	if (!(turn & 0x7f)) {
 		regen = true;
 		// Recheck monsters' targets every 2000ish turns
@@ -2479,10 +2502,10 @@ void process_monsters(int minimum_energy)
 
 		/* Calculate the net speed */
 		mspeed = mon->mspeed;
-		if (mon->m_timed[MON_TMD_FAST])
+		if (mon->m_timed[TMD_FAST])
 			mspeed += 10;
-		if (mon->m_timed[MON_TMD_SLOW]) {
-			int slow_level = monster_effect_level(mon, MON_TMD_SLOW);
+		if (mon->m_timed[TMD_SLOW]) {
+			int slow_level = monster_effect_level(mon, TMD_SLOW);
 			mspeed -= (2 * slow_level);
 		}
 
@@ -2578,7 +2601,7 @@ void restore_monsters(void)
 		/* Handle timed effects */
 		status_red = num_turns * turn_energy(mon->mspeed) / z_info->move_energy;
 		if (status_red > 0) {
-			for (status = 0; status < MON_TMD_MAX; status++) {
+			for (status = 0; status < TMD_MAX; status++) {
 				if (mon->m_timed[status]) {
 					mon_dec_timed(mon, status, status_red, 0);
 				}

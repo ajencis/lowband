@@ -46,7 +46,7 @@ desc:Poisons a monster, causing it to take damage over time.
 school:POISON
 
 spell:Sleep:3
-effect:MON_TIMED_INC:SLEEP
+effect:MON_TIMED_INC:ASLEEP
 dice:$Dd$S
 expr:D:SPELL_POWER:+ 3 / 4
 expr:S:SPELL_POWER:+ 0
@@ -255,7 +255,7 @@ school:AIR
 school:NATURE
 
 spell:Suffocate:60
-effect:MON_TIMED_INC:SUFFOCATING
+effect:MON_TIMED_INC:SUFFOCATE
 dice:$Dd$S
 expr:D:SPELL_POWER:+ 4 / 5
 expr:S:SPELL_POWER:+ 5 / 6

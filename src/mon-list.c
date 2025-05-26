@@ -22,6 +22,7 @@
 #include "mon-list.h"
 #include "mon-predicate.h"
 #include "project.h"
+#include "player-timed.h"
 
 /**
  * Allocate a new monster list based on the size of the current cave's monster
@@ -190,7 +191,7 @@ void monster_list_collect(monster_list_t *list)
 		field = (los) ? MONSTER_LIST_SECTION_LOS : MONSTER_LIST_SECTION_ESP;
 		entry->count[field]++;
 
-		if (mon->m_timed[MON_TMD_SLEEP] > 0)
+		if (mon->m_timed[TMD_ASLEEP] > 0)
 			entry->asleep[field]++;
 
 		/* Store the location offset from the player; this is only used for

@@ -94,7 +94,7 @@ static int test_newgame(void *state) {
 	prepare_next_level(player);
 	on_new_level();
 	notnull(cave);
-	eq(player->chp, player->mhp);
+	eq(player->mon.hp, player->mon.maxhp);
 	eq(player->timed[TMD_FOOD], PY_FOOD_FULL - 1);
 
 	/* Should be all set up to save properly now */
@@ -114,7 +114,7 @@ static int test_loadgame(void *state) {
 
 	eq(player->is_dead, false);
 	notnull(cave);
-	eq(player->chp, player->mhp);
+	eq(player->mon.hp, player->mon.maxhp);
 	eq(player->timed[TMD_FOOD], PY_FOOD_FULL - 1);
 
 	ok;

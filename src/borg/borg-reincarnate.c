@@ -571,7 +571,7 @@ void reincarnate_borg(void)
     borg_respawning = 5;
 
     /* fully healed and rested */
-    player->chp = player->mhp;
+    player->mon.hp = player->mon.maxhp;
     player->csp = player->msp;
     player->upkeep->energy_use = 100;
 

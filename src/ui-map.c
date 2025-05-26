@@ -283,14 +283,17 @@ void grid_data_as_text(struct grid_data *g, int *ap, wchar_t *cp, int *tap,
 		}
 	} else if (g->is_player) {
 		struct monster_race *race = &r_info[0];
-		if (lookup_player_monster(player)) {
-			race = lookup_player_monster(player);
+		struct monster_race *pmon = lookup_player_monster(player);
+
+		if (pmon) {
+			race = pmon;
 		}
 
 		/* Get the "player" attr */
 		a = monster_x_attr[race->ridx];
+
 		if ((OPT(player, hp_changes_color)) && !(a & 0x80)) {
-			switch(player->chp * 10 / player->mhp)
+			switch(player->mon.hp * 10 / player->mon.maxhp)
 			{
 			case 10:
 			case  9: 

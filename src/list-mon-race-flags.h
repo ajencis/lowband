@@ -3,6 +3,7 @@
  * \brief monster race flags
  *
  */
+
 /* symbol			type					descr	*/
 RF(NONE,			RFT_NONE,		0,		"")
 RF(UNIQUE,			RFT_OBV,		5,		"")
@@ -100,4 +101,5 @@ RF(INNATE_MAGIC,	RFT_OBV,		0,		"")
 RF(PHOENIX_RESURRECT,RFT_OBV,		-5,		"")
 RF(DARK_AURA,		RFT_OBV,		-2,		"")
 RF(LIGHT_AURA,		RFT_OBV,		0,		"")
+RF(PLAYABLE,		RFT_OBV,		0,		"")
 /* end flags */

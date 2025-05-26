@@ -671,8 +671,8 @@ static const char *show_speed(void)
 {
 	static char buffer[10];
 	int tmp = player->state.speed;
-	if (player->timed[TMD_FAST]) tmp -= 10;
-	if (player->timed[TMD_SLOW]) tmp += 10;
+	if (player->mon.m_timed[TMD_FAST]) tmp -= 10;
+	if (player->mon.m_timed[TMD_SLOW]) tmp += 10;
 	if (tmp == 110) return "Normal";
 	int multiplier = 10 * extract_energy[tmp] / extract_energy[110];
 	int int_mul = multiplier / 10;
@@ -709,7 +709,7 @@ static struct panel *get_panel_topleft(void) {
 	panel_line(p, COLOUR_L_BLUE, "Race", "%s", buf);
 	panel_line(p, COLOUR_L_BLUE, "Class", "%s", player->class->name);
 	panel_line(p, COLOUR_L_BLUE, "Title", "%s", show_title());
-	panel_line(p, COLOUR_L_BLUE, "HP", "%d/%d", player->chp, player->mhp);
+	panel_line(p, COLOUR_L_BLUE, "HP", "%d/%d", player->mon.hp, player->mon.maxhp);
 	panel_line(p, COLOUR_L_BLUE, "SP", "%d/%d", player->csp, player->msp);
 
 	return p;
@@ -983,8 +983,8 @@ static struct panel *get_panel_skills(void) {
 
 	/* Speed */
 	skill = player->state.speed;
-	if (player->timed[TMD_FAST]) skill -= 10;
-	if (player->timed[TMD_SLOW]) skill += 10;
+	if (player->mon.m_timed[TMD_FAST]) skill -= 10;
+	if (player->mon.m_timed[TMD_SLOW]) skill += 10;
 	attr = skill < 110 ? COLOUR_L_UMBER : COLOUR_L_GREEN;
 	panel_line(p, attr, "Speed", "%s", show_speed());
 	++hgt;

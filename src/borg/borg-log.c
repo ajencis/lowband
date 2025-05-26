@@ -370,68 +370,68 @@ void borg_write_map(bool ask)
     /* Dump the player state */
     file_putf(borg_map_file, "Current speed: %d. \n", borg.trait[BI_SPEED]);
 
-    if (player->timed[TMD_BLIND]) {
+    if (player->mon.m_timed[TMD_BLIND]) {
         file_putf(borg_map_file, "You cannot see.\n");
     }
-    if (player->timed[TMD_CONFUSED]) {
+    if (player->mon.m_timed[TMD_CONFUSED]) {
         file_putf(borg_map_file, "You are confused.\n");
     }
-    if (player->timed[TMD_AFRAID]) {
+    if (player->mon.m_timed[TMD_AFRAID]) {
         file_putf(borg_map_file, "You are terrified.\n");
     }
-    if (player->timed[TMD_CUT]) {
+    if (player->mon.m_timed[TMD_CUT]) {
         file_putf(borg_map_file, "You are bleeding.\n");
     }
-    if (player->timed[TMD_STUN]) {
+    if (player->mon.m_timed[TMD_STUN]) {
         file_putf(borg_map_file, "You are stunned.\n");
     }
-    if (player->timed[TMD_POISONED]) {
+    if (player->mon.m_timed[TMD_POISONED]) {
         file_putf(borg_map_file, "You are poisoned.\n");
     }
-    if (player->timed[TMD_IMAGE]) {
+    if (player->mon.m_timed[TMD_IMAGE]) {
         file_putf(borg_map_file, "You are hallucinating.\n");
     }
     if (player_of_has(player, OF_AGGRAVATE)) {
         file_putf(borg_map_file, "You aggravate monsters.\n");
     }
-    if (player->timed[TMD_BLESSED]) {
+    if (player->mon.m_timed[TMD_BLESSED]) {
         file_putf(borg_map_file, "You feel rightous.\n");
     }
-    if (player->timed[TMD_HERO]) {
+    if (player->mon.m_timed[TMD_HERO]) {
         file_putf(borg_map_file, "You feel heroic.\n");
     }
-    if (player->timed[TMD_SHERO]) {
+    if (player->mon.m_timed[TMD_SHERO]) {
         file_putf(borg_map_file, "You are in a battle rage.\n");
     }
-    if (player->timed[TMD_PROTEVIL]) {
+    if (player->mon.m_timed[TMD_PROTEVIL]) {
         file_putf(borg_map_file, "You are protected from evil.\n");
     }
-    if (player->timed[TMD_SHIELD]) {
+    if (player->mon.m_timed[TMD_SHIELD]) {
         file_putf(borg_map_file, "You are protected by a mystic shield.\n");
     }
-    if (player->timed[TMD_INVULN]) {
+    if (player->mon.m_timed[TMD_INVULN]) {
         file_putf(borg_map_file, "You are temporarily invulnerable.\n");
     }
-    if (player->timed[TMD_CONFUSED]) {
+    if (player->mon.m_timed[TMD_CONFUSED]) {
         file_putf(borg_map_file, "Your hands are glowing dull red.\n");
     }
     if (player->word_recall) {
         file_putf(borg_map_file, "You will soon be recalled.  (%d turns)\n",
             player->word_recall);
     }
-    if (player->timed[TMD_OPP_FIRE]) {
+    if (player->mon.m_timed[TMD_OPP_FIRE]) {
         file_putf(borg_map_file, "You resist fire exceptionally well.\n");
     }
-    if (player->timed[TMD_OPP_ACID]) {
+    if (player->mon.m_timed[TMD_OPP_ACID]) {
         file_putf(borg_map_file, "You resist acid exceptionally well.\n");
     }
-    if (player->timed[TMD_OPP_ELEC]) {
+    if (player->mon.m_timed[TMD_OPP_ELEC]) {
         file_putf(borg_map_file, "You resist elec exceptionally well.\n");
     }
-    if (player->timed[TMD_OPP_COLD]) {
+    if (player->mon.m_timed[TMD_OPP_COLD]) {
         file_putf(borg_map_file, "You resist cold exceptionally well.\n");
     }
-    if (player->timed[TMD_OPP_POIS]) {
+    if (player->mon.m_timed[TMD_OPP_POIS]) {
         file_putf(borg_map_file, "You resist poison exceptionally well.\n");
     }
     file_putf(borg_map_file, "\n\n");

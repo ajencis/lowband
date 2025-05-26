@@ -25,7 +25,10 @@
 #include "cave.h"
 #include "target.h"
 #include "mon-timed.h"
+#include "player-timed.h"
 #include "mon-blows.h"
+#include "obj-properties.h"
+#include "player-enum.h"
 
 /**
  * L: Monster powers
@@ -49,6 +52,12 @@ enum
 	#undef MFLAG
 	MFLAG_MAX
 };
+
+/*enum {
+	#define MON_TMD(a, b, c, d, e, f, g, h) MON_TMD_##a,
+	#include "list-mon-timed.h"
+	#undef MON_TMD
+};*/
 
 #define MFLAG_SIZE                FLAG_SIZE(MFLAG_MAX)
 
@@ -451,7 +460,7 @@ struct monster {
 	int16_t hp;							/* Current Hit points */
 	int16_t maxhp;						/* Max Hit points */
 
-	int16_t m_timed[MON_TMD_MAX];		/* Timed monster status effects */
+	int16_t m_timed[TMD_MAX];		/* Timed monster status effects */
 
 	uint8_t mspeed;						/* Monster "speed" */
 	uint8_t energy;						/* Monster "energy" */

@@ -377,7 +377,7 @@ bool projectable(struct chunk *c, struct loc grid1, struct loc grid2, int flg)
 	int max_range = z_info->max_range;
 
 	/* Check for shortened projection range */
-	if ((flg & PROJECT_SHORT) && player->timed[TMD_COVERTRACKS]) {
+	if ((flg & PROJECT_SHORT) && player->mon.m_timed[TMD_COVERTRACKS]) {
 		max_range /= 4;
 	}
 
@@ -603,7 +603,7 @@ bool project(struct source origin, int rad, struct loc finish,
 	bool drawing = false;
 
 	/* Is the player blind? */
-	bool blind = (player->timed[TMD_BLIND] ? true : false);
+	bool blind = (player->mon.m_timed[TMD_BLIND] ? true : false);
 
 	/* Number of grids in the "path" */
 	int num_path_grids = 0;

@@ -437,7 +437,7 @@ void do_cmd_wiz_advance(struct command *cmd)
 	}
 
 	/* Heal the player */
-	player->chp = player->mhp;
+	player->mon.hp = player->mon.maxhp;
 	player->chp_frac = 0;
 
 	/* Restore mana */
@@ -957,7 +957,7 @@ void do_cmd_wiz_cure_all(struct command *cmd)
 	effect_simple(EF_RESTORE_EXP, source_none(), "0", 0, 0, 0, 0, 0, NULL);
 
 	/* Heal the player */
-	player->chp = player->mhp;
+	player->mon.hp = player->mon.maxhp;
 	player->chp_frac = 0;
 
 	/* Restore mana */

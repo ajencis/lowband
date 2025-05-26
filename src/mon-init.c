@@ -34,6 +34,7 @@
 #include "object.h"
 #include "player-properties.h"
 #include "player-spell.h"
+#include "player-timed.h"
 #include "project.h"
 #include "ui-visuals.h"
 
@@ -87,13 +88,13 @@ static const char *skill_names[] =
 	""
 };
 
-static const char *mtimed_names[] =
+/*static const char *mtimed_names[] =
 {
 	#define MON_TMD(x, a, b, c, d, e, f, g) #x,
 	#include "list-mon-timed.h"
 	#undef MON_TMD
 	""
-};
+};*/
 
 static const char *mattr_names[] =
 {
@@ -109,6 +110,14 @@ static const char *power_names[] =
 	#define PP(x) #x,
 	#include "list-player-powers.h"
 	#undef PP
+	""
+};
+
+static const char *ptimed_names[] =
+{
+	#define TMD(a, b, c, d, e, f, g, h, i, j) #a,
+	#include "list-player-timed.h"
+	#undef TMD
 	""
 };
 
@@ -171,7 +180,7 @@ static int skill_index_by_name(const char *name)
 /**
  * Return the index of an skill from its name.
  */
-static int mtimed_index_by_name(const char *name)
+/*static int mtimed_index_by_name(const char *name)
 {
 	size_t i;
 	for (i = 0; i < N_ELEMENTS(mtimed_names); i++) {
@@ -181,7 +190,7 @@ static int mtimed_index_by_name(const char *name)
 	}
 
 	return -1;
-}
+}*/
 
 static struct player_body *player_body_by_name(const char *name)
 {
@@ -702,15 +711,15 @@ static enum parser_error parse_eff_lash_type(struct parser *p) {
 
 static enum parser_error parse_eff_mtimed(struct parser *p) {
 	struct blow_effect *eff = parser_priv(p);
-	int mtimed;
+	int timed;
 	assert(eff);
 
-	mtimed = mtimed_index_by_name(parser_getsym(p, "mtimed"));
-	if (mtimed < 0) {
+	timed = code_index_in_array(ptimed_names, parser_getsym(p, "timed"));
+	if (timed < 0) {
 		return PARSE_ERROR_GENERIC;
 	}
 
-	eff->mtimed = mtimed;
+	eff->mtimed = timed;
 	return PARSE_ERROR_NONE;
 }
 
@@ -727,7 +736,7 @@ static struct parser *init_parse_eff(void) {
 	parser_reg(p, "effect-type str type", parse_eff_effect_type);
 	parser_reg(p, "resist str resist", parse_eff_resist);
 	parser_reg(p, "lash-type str type", parse_eff_lash_type);
-	parser_reg(p, "mon-timed sym mtimed", parse_eff_mtimed);
+	parser_reg(p, "mon-timed sym timed", parse_eff_mtimed);
 	return p;
 }
 
