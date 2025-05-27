@@ -314,7 +314,7 @@ void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract)
 	uint32_t new_fract, extra_fract, new_amt;
 
 	if (p->max_lev >= PY_MAX_LEVEL) tolev = PY_MAX_EXP;
-	else tolev = player_exp[p->max_lev-1];
+	else tolev = player_exp[p->max_lev - 1];
 
 	new_amt = amount * 100;
 	new_amt /= p->state.expfact;
@@ -343,6 +343,7 @@ void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract)
 	}
 
 	p->xp_this_turn += new_amt;
+
 	if (p->lev >= 10) {
 		if (p->monster_xp < UINT32_MAX - new_amt) {
 			p->monster_xp += new_amt;
@@ -361,6 +362,18 @@ void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract)
 	}
 
 	adjust_level(p, true, false);
+}
+
+int player_min_xp_depth(struct player *p)
+{
+	int64_t eff_xp = p->max_exp * p->state.expfact / 100;
+	int i;
+
+	for (i = 1; i < PY_MAX_LEVEL; ++i) {
+		if (player_exp[i] > eff_xp) break;
+	}
+
+	return i * 3 / 2;
 }
 
 void player_exp_lose(struct player *p, int32_t amount, bool permanent)

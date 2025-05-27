@@ -1256,6 +1256,7 @@ void on_new_level(void)
 	/* Announce (or repeat) the feeling */
 	if (player->depth) {
 		display_feeling(false);
+		display_xp_feeling();
 	}
 
 	/* Check the surroundings */

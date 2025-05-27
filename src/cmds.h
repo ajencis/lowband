@@ -45,6 +45,7 @@ void do_cmd_rest(struct command *cmd);
 void do_cmd_sleep(struct command *cmd);
 void display_feeling(bool obj_only);
 void display_mana_feeling(void);
+void display_xp_feeling(void);
 void do_cmd_feeling(void);
 void do_cmd_mon_command(struct command *cmd);
 void do_cmd_diplomacy(struct command *cmd);

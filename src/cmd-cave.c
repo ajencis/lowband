@@ -1936,10 +1936,19 @@ void display_mana_feeling(void)
 	msg("%s", mana_feeling_text[mana_feeling]);
 }
 
+void display_xp_feeling(void)
+{
+	if (cave->depth <= 0) return;
+	if (cave->depth >= player_min_xp_depth(player)) return;
+
+	msg("You feel you can't learn any more from this depth.");
+}
+
 
 void do_cmd_feeling(void)
 {
 	display_feeling(false);
+	display_xp_feeling();
 }
 
 /**

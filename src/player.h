@@ -585,6 +585,7 @@ bool player_restore_mana(struct player *p, int amt);
 size_t player_random_name(char *buf, size_t buflen);
 void player_safe_name(char *safe, size_t safelen, const char *name, bool strip_suffix);
 void player_cleanup_members(struct player *p);
+int player_min_xp_depth(struct player *p);
 
 /* player-race.c */
 struct player_race *player_id2race(guid id);

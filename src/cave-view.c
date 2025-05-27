@@ -889,10 +889,14 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 
 	if (los(c, p->grid, loc(xc, yc))) {
 		const struct square *sqr = square(c, grid);
+		int mindepth = player_min_xp_depth(p);
+		bool valid_level = c->depth >= mindepth;
+
 		become_viewable(c, grid, p, close);
+
 		/* L: give exp for exploration */
-		if (!sqinfo_has(sqr->info, SQUARE_GAVE_EXP) && (c->depth > 0)) {
-			c->squares_everseen++;
+		if (sqinfo_has(sqr->info, SQUARE_SEEN) && !sqinfo_has(sqr->info, SQUARE_GAVE_EXP) && valid_level) {
+			++c->squares_everseen;
 			sqinfo_on(sqr->info, SQUARE_GAVE_EXP);
 
 			if (c->squares_everseen > 100) {
@@ -933,7 +937,7 @@ static void update_one(struct chunk *c, struct loc grid, struct player *p)
 			sqinfo_off(square(c, grid)->info, SQUARE_FEEL);
 			/* Don't display feeling if it will display for the new level */
 			if ((c->feeling_squares == z_info->feeling_need) &&
-				!p->upkeep->only_partial) {
+					!p->upkeep->only_partial) {
 				display_feeling(true);
 				p->upkeep->redraw |= PR_FEELING;
 			}
