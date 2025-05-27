@@ -1188,7 +1188,7 @@ void player_know_object(struct player *p, struct object *obj)
 			object_desc(o_name, sizeof(o_name), obj,
 				ODESC_PREFIX | ODESC_FULL, p);
 			msg("You have %s (%c).", o_name, gear_to_label(p, obj));
-		} else if (cave && square_holds_object(cave, p->grid, obj)) {
+		} else if (cave && square_holds_object(cave, p->mon.grid, obj)) {
 			object_desc(o_name, sizeof(o_name), obj,
 				ODESC_PREFIX | ODESC_FULL, p);
 			msg("On the ground: %s.", o_name);

@@ -1227,8 +1227,8 @@ bool target_set_interactive(int mode, int x, int y)
 	/* If we haven't been given an initial location, start on the
 	   player, otherwise  honour it by going into "free targetting" mode. */
 	if (x == -1 || y == -1 || !square_in_bounds_fully(cave, loc(x, y))) {
-		x = player->grid.x;
-		y = player->grid.y;
+		x = player->mon.grid.x;
+		y = player->mon.grid.y;
 	} else {
 		show_interesting = false;
 	}
@@ -1276,13 +1276,13 @@ bool target_set_interactive(int mode, int x, int y)
 
 		/* Find the path. */
 		path_n = project_path(cave, path_g, z_info->max_range,
-			loc(player->grid.x, player->grid.y), loc(x, y),
+			loc(player->mon.grid.x, player->mon.grid.y), loc(x, y),
 			PROJECT_THRU | PROJECT_INFO);
 
 		/* Draw the path in "target" mode. If there is one */
 		if (mode & (TARGET_KILL))
 			path_drawn = draw_path(path_n, path_g, path_char, path_attr,
-					player->grid.y, player->grid.x);
+					player->mon.grid.y, player->mon.grid.x);
 
 		/* Describe and Prompt */
 		ui_event press = target_set_interactive_aux(y, x,
@@ -1311,8 +1311,8 @@ bool target_set_interactive(int mode, int x, int y)
 				} else {
 					bell();
 					if (!square_in_bounds(cave, loc(x, y))) {
-						x = player->grid.x;
-						y = player->grid.y;
+						x = player->mon.grid.x;
+						y = player->mon.grid.y;
 					}
 				}
 			}
@@ -1381,8 +1381,8 @@ bool target_set_interactive(int mode, int x, int y)
 
 		} else if (event_is_key(press, 'p')) {
 			/* Focus the player and switch to free mode */
-			y = player->grid.y;
-			x = player->grid.x;
+			y = player->mon.grid.y;
+			x = player->mon.grid.x;
 			show_interesting = false;
 
 			/* Recenter around player */

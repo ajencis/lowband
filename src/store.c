@@ -1746,7 +1746,7 @@ void do_cmd_buy(struct command *cmd)
 	char o_name[80];
 	int price;
 
-	struct store *store = store_at(cave, player->grid);
+	struct store *store = store_at(cave, player->mon.grid);
 
 	if (!store) {
 		msg("You cannot purchase items when not in a store.");
@@ -1877,7 +1877,7 @@ void do_cmd_retrieve(struct command *cmd)
 
 	struct object *obj, *known_obj, *picked_item;
 
-	struct store *store = store_at(cave, player->grid);
+	struct store *store = store_at(cave, player->mon.grid);
 	if (!store) return;
 
 	if (store->feat != FEAT_HOME) {
@@ -1936,7 +1936,7 @@ void do_cmd_retrieve(struct command *cmd)
  */
 bool store_will_buy_tester(const struct object *obj)
 {
-	struct store *store = store_at(cave, player->grid);
+	struct store *store = store_at(cave, player->mon.grid);
 	if (!store) return false;
 
 	return store_will_buy(store, obj);
@@ -1949,7 +1949,7 @@ void do_cmd_sell(struct command *cmd)
 {
 	int amt;
 	struct object dummy_item;
-	struct store *store = store_at(cave, player->grid);
+	struct store *store = store_at(cave, player->mon.grid);
 	int price, dummy, value;
 	char o_name[120];
 	char label;
@@ -2089,7 +2089,7 @@ void do_cmd_stash(struct command *cmd)
 {
 	int amt;
 	struct object dummy;
-	struct store *store = store_at(cave, player->grid);
+	struct store *store = store_at(cave, player->mon.grid);
 	char o_name[120];
 	char label;
 

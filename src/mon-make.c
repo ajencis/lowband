@@ -1189,7 +1189,7 @@ static bool place_new_monster_one(struct chunk *c, struct loc grid,
 	if (square_monster(c, grid)) return false;
 
 	/* Not where the player already is */
-	if (loc_eq(player->grid, grid)) return false;
+	if (loc_eq(player->mon.grid, grid)) return false;
 
 	/* Prevent monsters from being placed where they cannot walk, but allow
 	 * other feature types */

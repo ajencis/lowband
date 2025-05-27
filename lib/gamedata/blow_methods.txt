@@ -294,3 +294,17 @@ slot:HAT
 lash-type:AWAY_ALL
 power:-2
 
+name:SING
+cut:0
+stun:0
+miss:0
+phys:0
+player-usable:1
+msg:MON_BEG
+act:sings
+fact:sing
+desc:sing
+slot:HAT
+lash-type:SOUND
+power:1
+

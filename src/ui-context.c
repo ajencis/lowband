@@ -271,10 +271,10 @@ int context_menu_player(int mx, int my)
 	}
 
 	/* if player is on stairs add option to use them */
-	if (square_isupstairs(cave, player->grid)) {
+	if (square_isupstairs(cave, player->mon.grid)) {
 		ADD_LABEL("Go Up", CMD_GO_UP, MN_ROW_VALID);
 	}
-	else if (square_isdownstairs(cave, player->grid)) {
+	else if (square_isdownstairs(cave, player->mon.grid)) {
 		ADD_LABEL("Go Down", CMD_GO_DOWN, MN_ROW_VALID);
 	}
 
@@ -290,7 +290,7 @@ int context_menu_player(int mx, int my)
 	menu_dynamic_add_label(m, "Inventory", 'i', MENU_VALUE_INVENTORY, labels);
 
 	/* if object under player add pickup option */
-	obj = square_object(cave, player->grid);
+	obj = square_object(cave, player->mon.grid);
 	if (obj && !ignore_item_ok(player, obj)) {
 			menu_row_validity_t valid;
 
@@ -389,7 +389,7 @@ int context_menu_player(int mx, int my)
 			break;
 
 		case MENU_VALUE_LOOK:
-			if (target_set_interactive(TARGET_LOOK, player->grid.x, player->grid.y))
+			if (target_set_interactive(TARGET_LOOK, player->mon.grid.x, player->mon.grid.y))
 				msg("Target Selected.");
 			break;
 
@@ -623,7 +623,7 @@ int context_menu_cave(struct chunk *c, int y, int x, int adjacent, int mx,
 		case CMD_RUN:
 			cmdq_push(selected);
 			cmd_set_arg_direction(cmdq_peek(), "direction",
-								  motion_dir(player->grid, loc(x, y)));
+								  motion_dir(player->mon.grid, loc(x, y)));
 			break;
 
 		case CMD_CAST:
@@ -724,7 +724,7 @@ int context_menu_object(struct object *obj)
 	}
 
 	if (object_is_carried(player, obj)) {
-		if (!square_isshop(cave, player->grid)) {
+		if (!square_isshop(cave, player->mon.grid)) {
 			ADD_LABEL("Drop", CMD_DROP, MN_ROW_VALID);
 
 			if (obj->number > 1) {
@@ -733,7 +733,7 @@ int context_menu_object(struct object *obj)
 				menu_dynamic_add_label(m, "Drop All", cmdkey,
 									   MENU_VALUE_DROP_ALL, labels);
 			}
-		} else if (square(cave, player->grid)->feat == FEAT_HOME) {
+		} else if (square(cave, player->mon.grid)->feat == FEAT_HOME) {
 			ADD_LABEL("Drop", CMD_DROP, MN_ROW_VALID);
 
 			if (obj->number > 1) {
@@ -815,7 +815,7 @@ int context_menu_object(struct object *obj)
 
 		case MENU_VALUE_DROP_ALL:
 			/* Drop entire stack without confirmation. */
-			if (square_isshop(cave, player->grid))
+			if (square_isshop(cave, player->mon.grid))
 				cmdq_push(CMD_STASH);
 			else
 				cmdq_push(CMD_DROP);
@@ -880,9 +880,9 @@ int context_menu_object(struct object *obj)
 
 		/* If we're in a store, change the "drop" command to "stash". */
 		if (selected == CMD_DROP &&
-			square_isshop(cave, player->grid)) {
+			square_isshop(cave, player->mon.grid)) {
 			struct command *gc = cmdq_peek();
-			if (square(cave, player->grid)->feat == FEAT_HOME)
+			if (square(cave, player->mon.grid)->feat == FEAT_HOME)
 				gc->code = CMD_STASH;
 			else
 				gc->code = CMD_SELL;
@@ -1001,7 +1001,7 @@ void textui_process_click(ui_event e)
 	if (!square_in_bounds_fully(cave, loc(x, y))) return;
 
 	/* XXX show context menu here */
-	if (loc_eq(player->grid, loc(x, y))) {
+	if (loc_eq(player->mon.grid, loc(x, y))) {
 		if (e.mouse.mods & KC_MOD_SHIFT) {
 			/* shift-click - cast magic */
 			if (e.mouse.button == 1) {
@@ -1013,9 +1013,9 @@ void textui_process_click(ui_event e)
 			/* ctrl-click - use feature / use inventory item */
 			/* switch with default */
 			if (e.mouse.button == 1) {
-				if (square_isupstairs(cave, player->grid))
+				if (square_isupstairs(cave, player->mon.grid))
 					cmdq_push(CMD_GO_UP);
-				else if (square_isdownstairs(cave, player->grid))
+				else if (square_isdownstairs(cave, player->mon.grid))
 					cmdq_push(CMD_GO_DOWN);
 			} else if (e.mouse.button == 2) {
 				cmdq_push(CMD_USE);
@@ -1046,12 +1046,12 @@ void textui_process_click(ui_event e)
 				/* shift-click - run */
 				cmdq_push(CMD_RUN);
 				cmd_set_arg_direction(cmdq_peek(), "direction",
-									  motion_dir(player->grid, loc(x, y)));
+									  motion_dir(player->mon.grid, loc(x, y)));
 			} else if (e.mouse.mods & KC_MOD_CONTROL) {
 				/* control-click - alter */
 				cmdq_push(CMD_ALTER);
 				cmd_set_arg_direction(cmdq_peek(), "direction",
-									  motion_dir(player->grid, loc(x, y)));
+									  motion_dir(player->mon.grid, loc(x, y)));
 			} else if (e.mouse.mods & KC_MOD_ALT) {
 				/* alt-click - look */
 				if (target_set_interactive(TARGET_LOOK, x, y)) {
@@ -1060,11 +1060,11 @@ void textui_process_click(ui_event e)
 			} else {
 				/* Pathfind does not work well on trap detection borders,
 				 * so if the click is next to the player, force a walk step */
-				if ((y - player->grid.y >= -1) && (y - player->grid.y <= 1)	&&
-					(x - player->grid.x >= -1) && (x - player->grid.x <= 1)) {
+				if ((y - player->mon.grid.y >= -1) && (y - player->mon.grid.y <= 1)	&&
+					(x - player->mon.grid.x >= -1) && (x - player->mon.grid.x <= 1)) {
 					cmdq_push(CMD_WALK);
 					cmd_set_arg_direction(cmdq_peek(), "direction",
-										  motion_dir(player->grid, loc(x, y)));
+										  motion_dir(player->mon.grid, loc(x, y)));
 				} else {
 					cmdq_push(CMD_PATHFIND);
 					cmd_set_arg_point(cmdq_peek(), "point", loc(x, y));
@@ -1096,8 +1096,8 @@ void textui_process_click(ui_event e)
 			cmd_set_arg_target(cmdq_peek(), "target", DIR_TARGET);
 		} else {
 			/* see if the click was adjacent to the player */
-			if ((y - player->grid.y >= -1) && (y - player->grid.y <= 1)	&&
-				(x - player->grid.x >= -1) && (x - player->grid.x <= 1)) {
+			if ((y - player->mon.grid.y >= -1) && (y - player->mon.grid.y <= 1)	&&
+				(x - player->mon.grid.x >= -1) && (x - player->mon.grid.x <= 1)) {
 				context_menu_cave(cave,y,x,1,e.mouse.x, e.mouse.y);
 			} else {
 				context_menu_cave(cave,y,x,0,e.mouse.x, e.mouse.y);

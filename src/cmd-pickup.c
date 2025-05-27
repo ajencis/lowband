@@ -47,7 +47,7 @@ static void player_pickup_gold(struct player *p)
 	int32_t total_gold = 0L;
 	char name[30] = "";
 
-	struct object *obj = square_object(cave, p->grid), *next;
+	struct object *obj = square_object(cave, p->mon.grid), *next;
 
 	int sound_msg;
 	bool verbal = false;
@@ -82,9 +82,9 @@ static void player_pickup_gold(struct player *p)
 
 		/* Delete the gold */
 		if (obj->known) {
-			square_delete_object(p->cave, p->grid, obj->known, false, false);
+			square_delete_object(p->cave, p->mon.grid, obj->known, false, false);
 		}
-		square_delete_object(cave, p->grid, obj, false, false);
+		square_delete_object(cave, p->mon.grid, obj, false, false);
 		obj = next;
 	}
 
@@ -253,10 +253,10 @@ static void player_pickup_aux(struct player *p, struct object *obj,
 	/* Carry the object, prompting for number if necessary */
 	if (max == obj->number) {
 		if (obj->known) {
-			square_excise_object(p->cave, p->grid, obj->known);
+			square_excise_object(p->cave, p->mon.grid, obj->known);
 			delist_object(p->cave, obj->known);
 		}
-		square_excise_object(cave, p->grid, obj);
+		square_excise_object(cave, p->mon.grid, obj);
 		delist_object(cave, obj);
 		inven_carry(p, obj, true, domsg);
 	} else {
@@ -318,13 +318,13 @@ static uint8_t player_pickup_item(struct player *p, struct object *obj, bool men
 	uint8_t objs_picked_up = 0;
 
 	/* Always know what's on the floor */
-	square_know_pile(cave, p->grid, object_not_in_container_predicate);
+	square_know_pile(cave, p->mon.grid, object_not_in_container_predicate);
 
 	/* Always pickup gold, effortlessly */
 	player_pickup_gold(p);
 
 	/* Nothing else to pick up -- return */
-	if (!square_object(cave, p->grid)) {
+	if (!square_object(cave, p->mon.grid)) {
 		mem_free(floor_list);
 		return objs_picked_up;
 	}
@@ -410,14 +410,14 @@ int do_autopickup(struct player *p)
 	uint8_t objs_picked_up = 0;
 
 	/* Nothing to pick up -- return */
-	if (!square_object(cave, p->grid))
+	if (!square_object(cave, p->mon.grid))
 		return 0;
 
 	/* Always pickup gold, effortlessly */
 	player_pickup_gold(p);
 
 	/* Scan the remaining objects */
-	obj = square_object(cave, p->grid);
+	obj = square_object(cave, p->mon.grid);
 	while (obj) {
 		next = obj->next;
 

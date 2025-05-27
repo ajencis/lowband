@@ -22,6 +22,8 @@ slot:HAT:head
 slot:GLOVES:hands
 slot:BOOTS:feet
 
+body:Empty
+
 body:Beholder
 slot:RING:eyestalk
 slot:RING:eyestalk
@@ -311,3 +313,21 @@ slot:CLOAK:back
 slot:HAT:head
 slot:BOOTS:claws
 
+body:Cherub
+slot:WEAPON:right human hand
+slot:WEAPON:left human hand
+slot:BOW:shooting
+slot:RING:right human hand
+slot:RING:left human hand
+slot:AMULET:lion neck
+slot:AMULET:cherub neck
+slot:AMULET:human neck
+slot:AMULET:human neck
+slot:LIGHT:light
+slot:HAT:lion head
+slot:HAT:cherub head
+slot:HAT:human head
+slot:HAT:eagle head
+slot:GLOVES:human hands
+slot:BOOTS:feet
+slot:BOOTS:feet

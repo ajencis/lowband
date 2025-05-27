@@ -426,7 +426,7 @@ struct loc origin_get_loc(struct source origin)
 		case SRC_PLAYER:
 		case SRC_OBJECT:	/* Currently only worn cursed objects use this */
 		case SRC_CHEST_TRAP:
-			return player->grid;
+			return player->mon.grid;
 
 		case SRC_NONE:
 			return loc(-1, -1);

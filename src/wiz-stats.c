@@ -1697,7 +1697,7 @@ static void calc_cave_distances(int **cave_dist)
 	ngrids = mem_alloc(cap_new * sizeof(*ngrids));
 
 	/* The player's location is the first one to test. */
-	ogrids[0] = player->grid;
+	ogrids[0] = player->mon.grid;
 	n_old = 1;
 
 	/* Distance from player starts at 0 */
@@ -2860,9 +2860,9 @@ void disconnect_stats(int nsim, bool stop_on_disconnect)
 			}
 		}
 
-		if ((use_stairs && !square_isupstairs(cave, player->grid))
+		if ((use_stairs && !square_isupstairs(cave, player->mon.grid))
 				|| (!use_stairs
-				&& !square_ispassable(cave, player->grid))) {
+				&& !square_ispassable(cave, player->mon.grid))) {
 			has_bad_start = true;
 			bad_starts++;
 			if (gs.level_type >= 0) {

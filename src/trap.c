@@ -593,8 +593,8 @@ extern void hit_trap(struct loc grid, int delayed)
 
 		/* Some traps drop you onto them */
 		if (trf_has(trap->kind->flags, TRF_PIT)
-				&& !loc_eq(player->grid, trap->grid)) {
-			monster_swap(player->grid, trap->grid);
+				&& !loc_eq(player->mon.grid, trap->grid)) {
+			monster_swap(player->mon.grid, trap->grid);
 			/*
 			 * Don't retrigger the trap, but handle the
 			 * other side effects of an involuntary move of the

@@ -89,14 +89,14 @@ static bool monster_near_permwall(const struct monster *mon)
 	int path_grids, j;
 
 	/* If player is in LOS, there's no need to go around walls */
-    if (projectable(cave, mon->grid, player->grid, PROJECT_SHORT)) return false;
+    if (projectable(cave, mon->grid, player->mon.grid, PROJECT_SHORT)) return false;
 
     /* PASS_WALL & KILL_WALL monsters occasionally flow for a turn anyway */
     if (randint0(99) < 5) return true;
 
 	/* Find the shortest path */
 	path_grids = project_path(cave, gp, z_info->max_sight, mon->grid,
-		player->grid, PROJECT_ROCK);
+		player->mon.grid, PROJECT_ROCK);
 
 	/* See if we can "see" the player without hitting permanent wall */
 	for (j = 0; j < path_grids; j++) {
@@ -112,12 +112,12 @@ static bool monster_near_permwall(const struct monster *mon)
  */
 bool monster_can_see_player(struct monster *mon)
 {
-	int p_sq_light = square_light(cave, player->grid);
+	int p_sq_light = square_light(cave, player->mon.grid);
 
 	if (mon->m_timed[TMD_ASLEEP]) {
 		return false;
 	}
-	if (!los(cave, mon->grid, player->grid)) {
+	if (!los(cave, mon->grid, player->mon.grid)) {
 		return false;
 	}
 	if (player->mon.m_timed[TMD_COVERTRACKS] && (mon->cdis > z_info->max_sight / 4)) {
@@ -370,7 +370,7 @@ static void mon_find_target(struct chunk *c, struct monster *mon)
 	if (mon_will_attack_player(mon, player) &&
 			(monster_can_see_player(mon) || monster_can_hear(mon) || monster_can_smell(mon) ||
 				mflag_has(mon->mflag, MFLAG_AWARE))) {
-		int dist = distance(mon->grid, player->grid) + 1;
+		int dist = distance(mon->grid, player->mon.grid) + 1;
 		assert(dist > 0);
 		int currscore = 100 / dist + player->lev / 4;
 		if (!found || currscore >= score) {
@@ -721,7 +721,7 @@ static bool get_move_bodyguard(struct monster *mon)
 		/* Get the location */
 		struct loc grid = loc_sum(mon->grid, ddgrid_ddd[i]);
 		int new_dist = distance(grid, leader->grid);
-		int char_dist = distance(grid, player->grid);
+		int char_dist = distance(grid, player->mon.grid);
 
 		/* Bounds check */
 		if (!square_in_bounds(cave, grid)) {
@@ -783,7 +783,7 @@ static bool get_move_advance(struct monster *mon, bool *track)
 {
 	int i;
 	struct loc target = monster_is_decoyed(mon) ? cave_find_decoy(cave) :
-		player->grid;
+		player->mon.grid;
 
 	int base_hearing = mon->race->hearing
 		- player->state.skills[SKILL_STEALTH] / 15;
@@ -971,7 +971,7 @@ static bool get_move_find_safety(struct monster *mon)
 			/* Check for absence of shot (more or less) */
 			if (!square_isview(cave, grid)) {
 				/* Calculate distance from player */
-				dis = distance(grid, player->grid);
+				dis = distance(grid, player->mon.grid);
 
 				/* Remember if further than previous */
 				if (dis > gdis) {
@@ -1008,7 +1008,7 @@ static bool get_move_find_hiding(struct monster *mon)
 	const int *y_offsets, *x_offsets;
 
 	/* Closest distance to get */
-	min = distance(player->grid, mon->grid) * 3 / 4 + 2;
+	min = distance(player->mon.grid, mon->grid) * 3 / 4 + 2;
 
 	/* Start with adjacent locations, spread further */
 	for (d = 1; d < 10; d++) {
@@ -1034,7 +1034,7 @@ static bool get_move_find_hiding(struct monster *mon)
 			if (!square_isview(cave, grid) &&
 				projectable(cave, mon->grid, grid, PROJECT_STOP)) {
 				/* Calculate distance from player */
-				dis = distance(grid, player->grid);
+				dis = distance(grid, player->mon.grid);
 
 				/* Remember if closer than previous */
 				if (dis < gdis && dis >= min) {
@@ -2198,7 +2198,7 @@ static bool monster_check_active(struct monster *mon)
 {
 	// is the monster resting alongside the player?
 	bool rwp = mon_will_follow_player(mon, player) &&
-			distance(mon->grid, player->grid) < 5 &&
+			distance(mon->grid, player->mon.grid) < 5 &&
 			player_is_resting(player);
 	
 	if (mon->target.who != TARGET_WHO_NONE && !rwp) {

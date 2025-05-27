@@ -1610,13 +1610,13 @@ static void run_init(int dir)
 	shortright = shortleft = false;
 
 	/* Find the destination grid */
-	grid = loc_sum(player->grid, ddgrid[dir]);
+	grid = loc_sum(player->mon.grid, ddgrid[dir]);
 
 	/* Extract cycle index */
 	i = chome[dir];
 
 	/* Check for nearby or distant wall */
-	if (see_wall(cycle[i + 1], player->grid)) {
+	if (see_wall(cycle[i + 1], player->mon.grid)) {
 		/* Wall diagonally left of player's current grid */
 		run_break_left = true;
 		shortleft = true;
@@ -1627,7 +1627,7 @@ static void run_init(int dir)
 	}
 
 	/* Check for nearby or distant wall */
-	if (see_wall(cycle[i - 1], player->grid)) {
+	if (see_wall(cycle[i - 1], player->mon.grid)) {
 		/* Wall diagonally right of player's current grid */
 		run_break_right = true;
 		shortright = true;
@@ -1648,7 +1648,7 @@ static void run_init(int dir)
 				run_old_dir = cycle[i - 1];
 			else if (deepright && !deepleft)
 				run_old_dir = cycle[i + 1];
-		} else if (see_wall(cycle[i], player->grid)) {
+		} else if (see_wall(cycle[i], player->mon.grid)) {
 			if (shortleft && !shortright)
 				run_old_dir = cycle[i - 2];
 			else if (shortright && !shortleft)
@@ -1690,7 +1690,7 @@ static bool run_test(const struct player *p)
 		new_dir = cycle[chome[prev_dir] + i];
 
 		/* New location */
-		grid = loc_sum(p->grid, ddgrid[new_dir]);
+		grid = loc_sum(p->mon.grid, ddgrid[new_dir]);
 
 		/* Visible monsters abort running */
 		if (square(cave, grid)->mon > 0) {
@@ -1767,7 +1767,7 @@ static bool run_test(const struct player *p)
 		new_dir = cycle[chome[prev_dir] + i];
 		
 		/* New location */
-		grid = loc_sum(p->grid, loc_sum(ddgrid[prev_dir], ddgrid[new_dir]));
+		grid = loc_sum(p->mon.grid, loc_sum(ddgrid[prev_dir], ddgrid[new_dir]));
 		
 		/* HACK: Ugh. Sometimes we come up with illegal bounds. This will
 		 * treat the symptom but not the disease. */
@@ -1786,7 +1786,7 @@ static bool run_test(const struct player *p)
 		/* Hack -- look again */
 		for (i = -max; i < 0; i++) {
 			new_dir = cycle[chome[prev_dir] + i];
-			grid = loc_sum(p->grid, ddgrid[new_dir]);
+			grid = loc_sum(p->mon.grid, ddgrid[new_dir]);
 
 			/* Unknown grid or non-wall */
 			if (!square_isknown(cave, grid) || square_ispassable(cave, grid)) {
@@ -1805,7 +1805,7 @@ static bool run_test(const struct player *p)
 		/* Hack -- look again */
 		for (i = max; i > 0; i--) {
 			new_dir = cycle[chome[prev_dir] + i];
-			grid = loc_sum(p->grid, ddgrid[new_dir]);
+			grid = loc_sum(p->mon.grid, ddgrid[new_dir]);
 
 			/* Unknown grid or non-wall */
 			if (!square_isknown(cave, grid) || square_ispassable(cave, grid)) {
@@ -1840,7 +1840,7 @@ static bool run_test(const struct player *p)
 	}
 
 	/* About to hit a known wall, stop */
-		if (see_wall(run_cur_dir, p->grid))
+		if (see_wall(run_cur_dir, p->mon.grid))
 		return true;
 
 	/* Failure */
@@ -1893,7 +1893,7 @@ void run_step(int dir)
 			struct object *obj;
 
 			assert(player->upkeep->steps);
-			grid = loc_sum(player->grid, ddgrid[next_step_dir]);
+			grid = loc_sum(player->mon.grid, ddgrid[next_step_dir]);
 
 			/*
 			 * Automatically deal with some impassable
@@ -2028,7 +2028,7 @@ void run_step(int dir)
 		if (rf_has(ally->race->flags, RF_NEVER_MOVE) || rf_has(ally->race->flags, RF_RAND_50)) {
 			continue;
 		}
-		int adist = distance(ally->grid, player->grid);
+		int adist = distance(ally->grid, player->mon.grid);
 		if (adist > 4 && adist < 7) {
 			wait = true;
 		}

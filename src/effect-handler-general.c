@@ -677,7 +677,7 @@ bool effect_handler_MON_TIMED_INC(effect_handler_context_t *context)
 			target_get(&grid);
 		} else {
 			// Use the adjacent grid in the given direction as target
-			grid = loc_sum(player->grid, ddgrid[context->dir]);
+			grid = loc_sum(player->mon.grid, ddgrid[context->dir]);
 		}
 		mon = square_monster(cave, grid);*/
 		if (!mon) {
@@ -728,17 +728,17 @@ bool effect_handler_GLYPH(effect_handler_context_t *context)
 	}
 
 	/* See if the effect works */
-	if (!square_istrappable(cave, player->grid)) {
+	if (!square_istrappable(cave, player->mon.grid)) {
 		msg("There is no clear floor on which to cast the spell.");
 		return false;
 	}
 
 	/* Push objects off the grid */
-	if (square_object(cave, player->grid))
-		push_object(player->grid);
+	if (square_object(cave, player->mon.grid))
+		push_object(player->mon.grid);
 
 	/* Create a glyph */
-	square_add_glyph(cave, player->grid, context->subtype);
+	square_add_glyph(cave, player->mon.grid, context->subtype);
 
 	return true;
 }
@@ -755,7 +755,7 @@ bool effect_handler_WEB(effect_handler_context_t *context)
 	/* Get the monster creating */
 	if (context->origin.what == SRC_PLAYER) {
 		power = innate_spell_power(player, RSF_WEAVE);
-		origin = player->grid;
+		origin = player->mon.grid;
 	}
 	else if (cave->mon_current > 0) {
 		struct monster *mon = cave_monster(cave, cave->mon_current);
@@ -1372,10 +1372,10 @@ bool effect_handler_DETECT_TRAPS(effect_handler_context_t *context)
 	struct object *obj;
 
 	/* Pick an area to detect */
-	y1 = player->grid.y - context->y;
-	y2 = player->grid.y + context->y;
-	x1 = player->grid.x - context->x;
-	x2 = player->grid.x + context->x;
+	y1 = player->mon.grid.y - context->y;
+	y2 = player->mon.grid.y + context->y;
+	x1 = player->mon.grid.x - context->x;
+	x2 = player->mon.grid.x + context->x;
 
 	if (y1 < 0) y1 = 0;
 	if (x1 < 0) x1 = 0;
@@ -1449,10 +1449,10 @@ bool effect_handler_DETECT_DOORS(effect_handler_context_t *context)
 	bool doors = false;
 
 	/* Pick an area to detect */
-	y1 = player->grid.y - context->y;
-	y2 = player->grid.y + context->y;
-	x1 = player->grid.x - context->x;
-	x2 = player->grid.x + context->x;
+	y1 = player->mon.grid.y - context->y;
+	y2 = player->mon.grid.y + context->y;
+	x1 = player->mon.grid.x - context->x;
+	x2 = player->mon.grid.x + context->x;
 
 	if (y1 < 0) y1 = 0;
 	if (x1 < 0) x1 = 0;
@@ -1522,10 +1522,10 @@ bool effect_handler_DETECT_STAIRS(effect_handler_context_t *context)
 	bool stairs = false;
 
 	/* Pick an area to detect */
-	y1 = player->grid.y - context->y;
-	y2 = player->grid.y + context->y;
-	x1 = player->grid.x - context->x;
-	x2 = player->grid.x + context->x;
+	y1 = player->mon.grid.y - context->y;
+	y2 = player->mon.grid.y + context->y;
+	x1 = player->mon.grid.x - context->x;
+	x2 = player->mon.grid.x + context->x;
 
 	if (y1 < 0) y1 = 0;
 	if (x1 < 0) x1 = 0;
@@ -1574,10 +1574,10 @@ bool effect_handler_DETECT_ORE(effect_handler_context_t *context)
 	bool gold_buried = false;
 
 	/* Pick an area to detect */
-	y1 = player->grid.y - context->y;
-	y2 = player->grid.y + context->y;
-	x1 = player->grid.x - context->x;
-	x2 = player->grid.x + context->x;
+	y1 = player->mon.grid.y - context->y;
+	y2 = player->mon.grid.y + context->y;
+	x1 = player->mon.grid.x - context->x;
+	x2 = player->mon.grid.x + context->x;
 
 	if (y1 < 0) y1 = 0;
 	if (x1 < 0) x1 = 0;
@@ -1636,10 +1636,10 @@ static bool sense_stuff(effect_handler_context_t *context,
 	bool have_stuff = false;
 
 	/* Pick an area to sense */
-	y1 = player->grid.y - context->y;
-	y2 = player->grid.y + context->y;
-	x1 = player->grid.x - context->x;
-	x2 = player->grid.x + context->x;
+	y1 = player->mon.grid.y - context->y;
+	y2 = player->mon.grid.y + context->y;
+	x1 = player->mon.grid.x - context->x;
+	x2 = player->mon.grid.x + context->x;
 
 	if (y1 < 0) y1 = 0;
 	if (x1 < 0) x1 = 0;
@@ -1688,10 +1688,10 @@ static bool detect_stuff(effect_handler_context_t *context,
 	bool have_stuff = false;
 
 	/* Pick an area to detect */
-	y1 = player->grid.y - context->y;
-	y2 = player->grid.y + context->y;
-	x1 = player->grid.x - context->x;
-	x2 = player->grid.x + context->x;
+	y1 = player->mon.grid.y - context->y;
+	y2 = player->mon.grid.y + context->y;
+	x1 = player->mon.grid.x - context->x;
+	x2 = player->mon.grid.x + context->x;
 
 	if (y1 < 0) y1 = 0;
 	if (x1 < 0) x1 = 0;
@@ -1823,10 +1823,10 @@ static bool detect_monsters(int y_dist, int x_dist, monster_predicate pred)
 	bool monsters = false;
 
 	/* Set the detection area */
-	y1 = player->grid.y - y_dist;
-	y2 = player->grid.y + y_dist;
-	x1 = player->grid.x - x_dist;
-	x2 = player->grid.x + x_dist;
+	y1 = player->mon.grid.y - y_dist;
+	y2 = player->mon.grid.y + y_dist;
+	x1 = player->mon.grid.x - x_dist;
+	x2 = player->mon.grid.x + x_dist;
 
 	if (y1 < 0) y1 = 0;
 	if (x1 < 0) x1 = 0;
@@ -2030,7 +2030,7 @@ bool effect_handler_CREATE_STAIRS(effect_handler_context_t *context)
 	context->ident = true;
 
 	/* Only allow stairs to be created on empty floor */
-	if (!square_isfloor(cave, player->grid)) {
+	if (!square_isfloor(cave, player->mon.grid)) {
 		msg("There is no empty floor here.");
 		return false;
 	}
@@ -2042,10 +2042,10 @@ bool effect_handler_CREATE_STAIRS(effect_handler_context_t *context)
 	}
 
 	/* Push objects off the grid */
-	if (square_object(cave, player->grid))
-		push_object(player->grid);
+	if (square_object(cave, player->mon.grid))
+		push_object(player->mon.grid);
 
-	square_add_stairs(cave, player->grid, player->depth);
+	square_add_stairs(cave, player->mon.grid, player->depth);
 
 	return true;
 }
@@ -2246,7 +2246,7 @@ bool effect_handler_RECHARGE(effect_handler_context_t *context)
 bool effect_handler_ACQUIRE(effect_handler_context_t *context)
 {
 	int num = effect_calculate_value(context, true);
-	acquirement(player->grid, player->depth, num, true);
+	acquirement(player->mon.grid, player->depth, num, true);
 	context->ident = true;
 	return true;
 }
@@ -2309,7 +2309,7 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 		struct monster *mon = cave_monster(cave, context->origin.which.monster);
 		int rlev;
         bool isplayer = context->origin.what == SRC_PLAYER;
-		struct loc srcgrid = isplayer ? player->grid : mon->grid;
+		struct loc srcgrid = isplayer ? player->mon.grid : mon->grid;
 		wchar_t faction;
 		bool illusory = summon_type == summon_name_to_idx("ILLUSIONS");
         
@@ -2398,7 +2398,7 @@ bool effect_handler_SUMMON(effect_handler_context_t *context)
 	} else {
 		/* If not a monster summon, it's simple */
 		while (summon_max) {
-			struct monster *summoned = summon_specific(player->grid, player->depth + level_boost,
+			struct monster *summoned = summon_specific(player->mon.grid, player->depth + level_boost,
 					summon_type, true, one_in_(4), 0);
 			if (summoned) {
 				count += summoned->race->level;
@@ -2634,7 +2634,7 @@ bool effect_handler_TELEPORT(effect_handler_context_t *context)
 			return true;
 		}
 
-		start = player->grid;
+		start = player->mon.grid;
 
 		/* Check for a no teleport grid */
 		if (square_isno_teleport(cave, start) &&
@@ -2828,7 +2828,7 @@ bool effect_handler_TELEPORT_TO(effect_handler_context_t *context)
 
 		/* Player being teleported */
 		player_moves = true;
-		start = player->grid;
+		start = player->mon.grid;
 
 		/* Check for a no teleport grid */
 		if (square_isno_teleport(cave, start)) {
@@ -2852,7 +2852,7 @@ bool effect_handler_TELEPORT_TO(effect_handler_context_t *context)
 		/* Spell cast by monster */
 		if (context->subtype) {
 			/* Monster teleporting to player */
-			aim = player->grid;
+			aim = player->mon.grid;
 			dis = 2;
 		} else {
 			/* Player being teleported to monster */
@@ -2951,7 +2951,7 @@ bool effect_handler_TELEPORT_LEVEL(effect_handler_context_t *context)
 	}
 
 	/* Check for a no teleport grid */
-	if (square_isno_teleport(cave, player->grid)) {
+	if (square_isno_teleport(cave, player->mon.grid)) {
 		msg("Teleportation forbidden!");
 		return true;
 	}
@@ -3037,7 +3037,7 @@ bool effect_handler_RUBBLE(effect_handler_context_t *context)
 	 * necessary.
 	 */
 	int rubble_grids = randint1(3);
-	int open_grids = count_neighbors(NULL, cave, player->grid,
+	int open_grids = count_neighbors(NULL, cave, player->mon.grid,
 		square_isempty, false);
 
 	if (rubble_grids > open_grids) {
@@ -3051,7 +3051,7 @@ bool effect_handler_RUBBLE(effect_handler_context_t *context)
 		/* Look around the player */
 		for (int d = 0; d < 8; d++) {
 			/* Extract adjacent (legal) location */
-			struct loc grid = loc_sum(player->grid, ddgrid_ddd[d]);
+			struct loc grid = loc_sum(player->mon.grid, ddgrid_ddd[d]);
 			if (!square_in_bounds_fully(cave, grid)) continue;
 			if (!square_isempty(cave, grid)) continue;
 
@@ -3122,7 +3122,7 @@ bool effect_handler_LIGHT_AREA(effect_handler_context_t *context)
 		msg("You are surrounded by a white light.");
 
 	/* Light up the room */
-	light_room(player->grid, true);
+	light_room(player->mon.grid, true);
 
 	/* Assume seen */
 	context->ident = true;
@@ -3135,7 +3135,7 @@ bool effect_handler_LIGHT_AREA(effect_handler_context_t *context)
  */
 bool effect_handler_DARKEN_AREA(effect_handler_context_t *context)
 {
-	struct loc target = player->grid;
+	struct loc target = player->mon.grid;
 	bool message = player->mon.m_timed[TMD_BLIND] ? false : true;
 	struct monster *mon = NULL;
 	struct monster *t_mon = monster_target_monster(context);
@@ -3160,7 +3160,7 @@ bool effect_handler_DARKEN_AREA(effect_handler_context_t *context)
 	/* Check for decoy */
 	if (mon && monster_is_decoyed(mon)) {
 		target = decoy;
-		if (!los(cave, player->grid, decoy) ||
+		if (!los(cave, player->mon.grid, decoy) ||
 			player->mon.m_timed[TMD_BLIND]) {
 			decoy_unseen = true;
 		}
@@ -3451,7 +3451,7 @@ bool effect_handler_CREATE_ARROWS(effect_handler_context_t *context)
 
 	/* Make some arrows */
 	arrows = make_object(cave, player->lev, good, great, false, NULL, TV_ARROW);
-	drop_near(cave, &arrows, 0, player->grid, true, true);
+	drop_near(cave, &arrows, 0, player->mon.grid, true, true);
 
 	return true;
 }
@@ -3680,7 +3680,7 @@ bool effect_handler_BIZARRE(effect_handler_context_t *context)
 		{
 			/* Mana Ball */
 			int flg = PROJECT_THRU | PROJECT_STOP | PROJECT_GRID | PROJECT_ITEM | PROJECT_KILL;
-			struct loc target = loc_sum(player->grid, ddgrid[context->dir]);
+			struct loc target = loc_sum(player->mon.grid, ddgrid[context->dir]);
 
 			/* Ask for a target if no direction given */
 			if ((context->dir == DIR_TARGET) && target_okay()) {
@@ -3701,7 +3701,7 @@ bool effect_handler_BIZARRE(effect_handler_context_t *context)
 		{
 			/* Mana Bolt */
 			int flg = PROJECT_STOP | PROJECT_KILL | PROJECT_THRU;
-			struct loc target = loc_sum(player->grid, ddgrid[context->dir]);
+			struct loc target = loc_sum(player->mon.grid, ddgrid[context->dir]);
 
 			/* Use an actual target */
 			if ((context->dir == DIR_TARGET) && target_okay())
@@ -3781,7 +3781,7 @@ bool effect_handler_CREATE_WALL(effect_handler_context_t *context)
 	if (context->dir == DIR_TARGET && target_okay()) {
 		target_get(&target);
 	} else {
-		target = loc_sum(player->grid, ddgrid[context->dir]);
+		target = loc_sum(player->mon.grid, ddgrid[context->dir]);
 	}
 
 	if (!square_in_bounds_fully(cave, target)) {
@@ -3817,7 +3817,7 @@ bool effect_handler_CREATE_ILLUSORY_WALL(effect_handler_context_t *context)
 	if (context->dir == DIR_TARGET && target_okay()) {
 		target_get(&target);
 	} else {
-		target = loc_sum(player->grid, ddgrid[context->dir]);
+		target = loc_sum(player->mon.grid, ddgrid[context->dir]);
 	}
 
 	if (!square_in_bounds_fully(cave, target)) {
@@ -3854,7 +3854,7 @@ bool effect_handler_REBIRTH(effect_handler_context_t *context)
 	bool ident;
 
 	if (context->origin.what == SRC_PLAYER) {
-		ogrid = player->grid;
+		ogrid = player->mon.grid;
 		origin = source_player();
 	}
 	else if (context->origin.what == SRC_MONSTER) {
@@ -3946,21 +3946,21 @@ static bool echo_move_pred(struct chunk *c, struct loc movefrom, struct loc move
 	int flg = PROJECT_AWARE;
 
 	// ensure we don't see past walls by going around them (at least walls that are directly n/s/e/w)
-	if (!loc_eq(movefrom, player->grid)) {
-		if (moveto.x == player->grid.x && movefrom.x != player->grid.x) return false;
-		if (moveto.y == player->grid.y && movefrom.y != player->grid.y) return false;
+	if (!loc_eq(movefrom, player->mon.grid)) {
+		if (moveto.x == player->mon.grid.x && movefrom.x != player->mon.grid.x) return false;
+		if (moveto.y == player->mon.grid.y && movefrom.y != player->mon.grid.y) return false;
 	}
 
 	// ... or nw, ne, sw, se
-	if (!loc_eq(movefrom, player->grid) &&
-			ABS(moveto.x - player->grid.x) == ABS(moveto.y - player->grid.y) &&
-			ABS(movefrom.x - player->grid.x) != ABS(movefrom.y - player->grid.y)) {
+	if (!loc_eq(movefrom, player->mon.grid) &&
+			ABS(moveto.x - player->mon.grid.x) == ABS(moveto.y - player->mon.grid.y) &&
+			ABS(movefrom.x - player->mon.grid.x) != ABS(movefrom.y - player->mon.grid.y)) {
 		return false;
 	}
 
 	if (square_isprojectable(c, movefrom) &&
 			!physical_monster(square_monster(c, movefrom)) &&
-			(loc_eq(player->grid, movefrom) || projectable(c, player->grid, movefrom, flg))) {
+			(loc_eq(player->mon.grid, movefrom) || projectable(c, player->mon.grid, movefrom, flg))) {
 		return true;
 	}
 
@@ -3972,7 +3972,7 @@ bool effect_handler_ECHOLOCATE(effect_handler_context_t *context)
 	if (context->origin.what != SRC_PLAYER) return false;
 
 	struct loc locs[1000];
-	struct loc center = player->grid;
+	struct loc center = player->mon.grid;
 	int locsnum = all_contiguous_locs(cave, center, locs, N_ELEMENTS(locs), NULL, echo_move_pred);
 	int i;
 

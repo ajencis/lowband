@@ -860,8 +860,8 @@ void display_map(int *cy, int *cx)
 	/*** Display the player ***/
 
 	/* Player location */
-	row = (player->grid.y * map_hgt / cave->height);
-	col = (player->grid.x * map_wid / cave->width);
+	row = (player->mon.grid.y * map_hgt / cave->height);
+	col = (player->mon.grid.x * map_wid / cave->width);
 
 	if (tile_width > 1)
 		col = col - (col % tile_width);
@@ -869,7 +869,7 @@ void display_map(int *cy, int *cx)
 		row = row - (row % tile_height);
 
 	/* Get the terrain at the player's spot. */
-	map_info(player->grid, &g);
+	map_info(player->mon.grid, &g);
 	g.lighting = LIGHTING_LIT;
 	grid_data_as_text(&g, &a, &c, &ta, &tc);
 

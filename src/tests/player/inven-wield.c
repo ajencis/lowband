@@ -24,8 +24,8 @@ static bool find_empty_spot(struct chunk *c, struct player *p)
 	int ntry = 0;
 
 	while (ntry < 100) {
-		if (square_isobjectholding(c, p->grid) &&
-				square_object(c, p->grid) == NULL) {
+		if (square_isobjectholding(c, p->mon.grid) &&
+				square_object(c, p->mon.grid) == NULL) {
 			return true;
 		}
 
@@ -90,7 +90,7 @@ static bool empty_gear(struct player *p) {
 
 static bool empty_floor(struct chunk *c, struct player *p) {
 	while (1) {
-		struct object *obj = square_object(c, p->grid);
+		struct object *obj = square_object(c, p->mon.grid);
 		bool none_left;
 
 		if (!obj) {
@@ -358,7 +358,7 @@ static int test_inven_wield_floor_single_empty(void *state) {
 	obj = setup_object(TV_BOOTS, 1, 1);
 	require(obj != NULL);
 	note = false;
-	require(floor_carry(cave, player->grid, obj, &note));
+	require(floor_carry(cave, player->mon.grid, obj, &note));
 	old_weight = player->upkeep->total_weight;
 	old_slots = pack_slots_used(player);
 	slot = wield_slot(obj);
@@ -371,7 +371,7 @@ static int test_inven_wield_floor_single_empty(void *state) {
 	require(old_weight + object_weight_one(obj)
 		== player->upkeep->total_weight);
 	require(pack_slots_used(player) == old_slots);
-	require(square_object(cave, player->grid) == NULL);
+	require(square_object(cave, player->mon.grid) == NULL);
 	ok;
 }
 
@@ -388,7 +388,7 @@ static int test_inven_wield_floor_stack_empty(void *state) {
 	obj = setup_object(TV_CROWN, 1, 4);
 	require(obj != NULL);
 	note = false;
-	require(floor_carry(cave, player->grid, obj, &note));
+	require(floor_carry(cave, player->mon.grid, obj, &note));
 	old_weight = player->upkeep->total_weight;
 	old_slots = pack_slots_used(player);
 	slot = wield_slot(obj);
@@ -405,7 +405,7 @@ static int test_inven_wield_floor_stack_empty(void *state) {
 	require(old_weight + object_weight_one(split)
 		== player->upkeep->total_weight);
 	require(pack_slots_used(player) == old_slots);
-	require(square_object(cave, player->grid) == obj);
+	require(square_object(cave, player->mon.grid) == obj);
 	ok;
 }
 
@@ -431,7 +431,7 @@ static int test_inven_wield_floor_single_filled(void *state) {
 	obj2 = setup_object(TV_AMULET, 2, 1);
 	require(obj2 != NULL);
 	note = false;
-	require(floor_carry(cave, player->grid, obj2, &note));
+	require(floor_carry(cave, player->mon.grid, obj2, &note));
 	inven_wield(obj2, slot);
 	require(object_is_equipped(player->body, obj2));
 	require(object_is_carried(player, obj2));
@@ -443,7 +443,7 @@ static int test_inven_wield_floor_single_filled(void *state) {
 	require(old_weight + object_weight_one(obj2)
 		== player->upkeep->total_weight);
 	require(pack_slots_used(player) == old_slots + 1);
-	require(square_object(cave, player->grid) == NULL);
+	require(square_object(cave, player->mon.grid) == NULL);
 	ok;
 }
 
@@ -470,7 +470,7 @@ static int test_inven_wield_floor_stack_filled(void *state) {
 	obj2 = setup_object(TV_HAFTED, 1, 3);
 	require(obj2 != NULL);
 	note = false;
-	require(floor_carry(cave, player->grid, obj2, &note));
+	require(floor_carry(cave, player->mon.grid, obj2, &note));
 	require(wield_slot(obj2) == slot);
 	inven_wield(obj2, slot);
 	/* The wielded one is split off. */
@@ -488,7 +488,7 @@ static int test_inven_wield_floor_stack_filled(void *state) {
 	require(old_weight + object_weight_one(obj2)
 		== player->upkeep->total_weight);
 	require(pack_slots_used(player) == old_slots + 1);
-	require(square_object(cave, player->grid) == obj2);
+	require(square_object(cave, player->mon.grid) == obj2);
 	ok;
 }
 
@@ -527,7 +527,7 @@ static int test_inven_wield_pack_full_no_overflow(void *state) {
 	require(player->upkeep->equip_cnt == 1);
 	require(old_weight == player->upkeep->total_weight);
 	require(pack_slots_used(player) == old_slots);
-	require(square_object(cave, player->grid) == NULL);
+	require(square_object(cave, player->mon.grid) == NULL);
 	ok;
 }
 
@@ -573,7 +573,7 @@ static int test_inven_wield_pack_full_overflow(void *state) {
 	require(old_weight - object_weight_one(obj1)
 		== player->upkeep->total_weight);
 	require(pack_slots_used(player) == old_slots);
-	require(square_object(cave, player->grid) == obj1);
+	require(square_object(cave, player->mon.grid) == obj1);
 	ok;
 }
 
@@ -600,7 +600,7 @@ static int test_inven_wield_floor_full_overflow(void *state) {
 	obj2 = setup_object(TV_BOW, 2, 1);
 	require(obj2 != NULL);
 	note = false;
-	require(floor_carry(cave, player->grid, obj2, &note));
+	require(floor_carry(cave, player->mon.grid, obj2, &note));
 	require(wield_slot(obj2) == slot);
 	inven_wield(obj2, slot);
 	require(object_is_equipped(player->body, obj2));
@@ -613,7 +613,7 @@ static int test_inven_wield_floor_full_overflow(void *state) {
 	require(old_weight - object_weight_one(obj1) + object_weight_one(obj2)
 		== player->upkeep->total_weight);
 	require(pack_slots_used(player) == old_slots);
-	require(square_object(cave, player->grid) == obj1);
+	require(square_object(cave, player->mon.grid) == obj1);
 	ok;
 }
 

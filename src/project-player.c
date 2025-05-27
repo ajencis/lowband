@@ -531,7 +531,7 @@ static int project_player_handler_FORCE(project_player_handler_context_t *contex
 	struct loc centre = origin_get_loc(context->origin);
 
 	/* Player gets pushed in a random direction if on the trap */
-	if (context->origin.what == SRC_TRAP &&	loc_eq(player->grid, centre)) {
+	if (context->origin.what == SRC_TRAP &&	loc_eq(player->mon.grid, centre)) {
 		int d = randint0(8);
 		centre = loc_sum(centre, ddgrid_ddd[d]);
 	}

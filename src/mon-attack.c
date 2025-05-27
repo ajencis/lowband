@@ -87,7 +87,7 @@ static void monster_get_target_dist_grid(struct monster *mon, int *dist,
 	if (who == TARGET_WHO_PLAYER && monster_is_decoyed(mon)) {
 		targ_grid = cave_find_decoy(cave);
 	} else if (who == TARGET_WHO_PLAYER) {
-		targ_grid = player->grid;
+		targ_grid = player->mon.grid;
 	} else if (who == TARGET_WHO_MONSTER) {
 		struct monster *target_mon = cave_monster(cave, mon->target.midx);
 		assert(target_mon && target_mon->race);
@@ -125,7 +125,7 @@ static bool monster_can_cast(struct monster *mon, bool innate)
 
 	monster_get_target_dist_grid(mon, &tdist, &tgrid);
 
-	target_is_player = tgrid.x == player->grid.x && tgrid.y == player->grid.y;
+	target_is_player = tgrid.x == player->mon.grid.x && tgrid.y == player->mon.grid.y;
 
 	/* L: friendly monsters won't cast spells at the player */
 	if (!mon_will_attack_player(mon, player) && target_is_player) return false;
@@ -489,7 +489,7 @@ bool make_ranged_attack(struct monster *mon)
 		if (!monster_can_see_player(mon)) {
 			return false;
 		}
-		target_grid = t_player->grid;
+		target_grid = t_player->mon.grid;
 	} else {
 		return false;
 	}
@@ -677,7 +677,7 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 	char m_name[80];
 	char ddesc[80];
 	bool blinked = false;
-	int dist = distance(mon->grid, player->grid);
+	int dist = distance(mon->grid, player->mon.grid);
 	bool did_attack = false;
 	struct object *bestweap = monster_best_weapon(mon);
 	double weapval = bestweap ? bestweap->dd * (bestweap->ds + 1) / 2.0 + bestweap->to_d + bestweap->to_h / 2.0 : 0.0;
@@ -693,7 +693,7 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 
 	/* Scan through all blows */
 	for (ap_cnt = 0; ap_cnt < z_info->mon_blows_max; ap_cnt++) {
-		struct loc pgrid = p->grid;
+		struct loc pgrid = p->mon.grid;
 		bool visible = monster_is_visible(mon) || (mon->race->light > 0);
 		bool obvious = false;
 		melee_effect_handler_f effect_handler = NULL;
@@ -891,7 +891,7 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 		}
 
 		/* Skip the other blows if the player has moved */
-		if (!loc_eq(p->grid, pgrid)) break;
+		if (!loc_eq(p->mon.grid, pgrid)) break;
 	}
 
 	/* Blink away */

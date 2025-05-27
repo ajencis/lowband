@@ -108,7 +108,7 @@ void do_cmd_redraw(void)
 			target_get(&target);
 			move_cursor_relative(target.y, target.x);
 		} else {
-			move_cursor_relative(player->grid.y, player->grid.x);
+			move_cursor_relative(player->mon.grid.y, player->mon.grid.x);
 		}
 	}
 

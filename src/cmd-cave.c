@@ -94,7 +94,7 @@ static bool clear_web(struct player *p)
 	if (pf_has(p->state.pflags, PF_PASS_WALL)) {
 		return false;
 	}
-	if (square_iswebbed(cave, p->grid)) {
+	if (square_iswebbed(cave, p->mon.grid)) {
 		if (adj_str_web(p->state.stat_ind[STAT_STR]) < randint1(100)) {
 			msg("You struggle against the web.");
 			player->upkeep->energy_use = z_info->move_energy;
@@ -105,7 +105,7 @@ static bool clear_web(struct player *p)
 
 		msg("You clear the web.");
 		assert(web);
-		square_remove_all_traps_of_type(cave, player->grid, web->tidx);
+		square_remove_all_traps_of_type(cave, player->mon.grid, web->tidx);
 		return true;
 	}
 	return false;
@@ -121,7 +121,7 @@ void do_cmd_go_up(struct command *cmd)
 	int time;
 
 	/* Verify stairs */
-	if (!square_isupstairs(cave, player->grid)) {
+	if (!square_isupstairs(cave, player->mon.grid)) {
 		do_cmd_navigate_up(cmd);
 		return;
 	}
@@ -171,7 +171,7 @@ void do_cmd_go_down(struct command *cmd)
 	int time; int posstime;
 
 	/* Verify stairs */
-	if (!square_isdownstairs(cave, player->grid)) {
+	if (!square_isdownstairs(cave, player->mon.grid)) {
 		do_cmd_navigate_down(cmd);
 		return;
 	}
@@ -327,7 +327,7 @@ void do_cmd_open(struct command *cmd)
 		 * an option if there's a chest nearby.
 		 */
 		if (n_closed_doors + n_locked_chests == 1) {
-			dir = motion_dir(player->grid, grid1);
+			dir = motion_dir(player->mon.grid, grid1);
 			cmd_set_arg_direction(cmd, "direction", dir);
 		} else if (cmd_get_direction(cmd, "direction", &dir, n_locked_chests > 0)) {
 			return;
@@ -335,7 +335,7 @@ void do_cmd_open(struct command *cmd)
 	}
 
 	/* Get location */
-	grid = loc_sum(player->grid, ddgrid[dir]);
+	grid = loc_sum(player->mon.grid, ddgrid[dir]);
 
 	/* Check for chest */
 	obj = chest_check(player, grid, CHEST_OPENABLE);
@@ -353,7 +353,7 @@ void do_cmd_open(struct command *cmd)
 	/* Apply confusion */
 	if (player_confuse_dir(player, &dir, false)) {
 		/* Get location */
-		grid = loc_sum(player->grid, ddgrid[dir]);
+		grid = loc_sum(player->mon.grid, ddgrid[dir]);
 
 		/* Check for chest */
 		obj = chest_check(player, grid, CHEST_OPENABLE);
@@ -479,7 +479,7 @@ void do_cmd_close(struct command *cmd)
 
 		/* Count open doors */
 		if (count_feats(&grid1, square_isopendoor, false) == 1) {
-			dir = motion_dir(player->grid, grid1);
+			dir = motion_dir(player->mon.grid, grid1);
 			cmd_set_arg_direction(cmd, "direction", dir);
 		} else if (cmd_get_direction(cmd, "direction", &dir, false)) {
 			return;
@@ -487,7 +487,7 @@ void do_cmd_close(struct command *cmd)
 	}
 
 	/* Get location */
-	grid = loc_sum(player->grid, ddgrid[dir]);
+	grid = loc_sum(player->mon.grid, ddgrid[dir]);
 
 	/* Verify legality */
 	if (!do_cmd_close_test(player, grid)) {
@@ -502,7 +502,7 @@ void do_cmd_close(struct command *cmd)
 	/* Apply confusion */
 	if (player_confuse_dir(player, &dir, false)) {
 		/* Get location */
-		grid = loc_sum(player->grid, ddgrid[dir]);
+		grid = loc_sum(player->mon.grid, ddgrid[dir]);
 	}
 
 	/* Monster - alert, then attack */
@@ -729,7 +729,7 @@ void do_cmd_tunnel(struct command *cmd)
 		return;
 
 	/* Get location */
-	grid = loc_sum(player->grid, ddgrid[dir]);
+	grid = loc_sum(player->mon.grid, ddgrid[dir]);
 
 	/* Oops */
 	if (!do_cmd_tunnel_test(player, grid)) {
@@ -744,7 +744,7 @@ void do_cmd_tunnel(struct command *cmd)
 	/* Apply confusion */
 	if (player_confuse_dir(player, &dir, false)) {
 		/* Get location */
-		grid = loc_sum(player->grid, ddgrid[dir]);
+		grid = loc_sum(player->mon.grid, ddgrid[dir]);
 	}
 
 	/* Attack any monster we run into */
@@ -944,7 +944,7 @@ void do_cmd_disarm(struct command *cmd)
 		n_unldoor = count_feats(&grid1, square_isunlockeddoor, false);
 
 		if (n_traps + n_chests + n_unldoor == 1) {
-			dir = motion_dir(player->grid, grid1);
+			dir = motion_dir(player->mon.grid, grid1);
 			cmd_set_arg_direction(cmd, "direction", dir);
 		} else if (cmd_get_direction(cmd, "direction", &dir, n_chests > 0)) {
 			/* If there are chests to disarm, 5 is allowed as a direction */
@@ -953,7 +953,7 @@ void do_cmd_disarm(struct command *cmd)
 	}
 
 	/* Get location */
-	grid = loc_sum(player->grid, ddgrid[dir]);
+	grid = loc_sum(player->mon.grid, ddgrid[dir]);
 
 	/* Check for chests */
 	obj = chest_check(player, grid, CHEST_TRAPPED);
@@ -971,7 +971,7 @@ void do_cmd_disarm(struct command *cmd)
 	/* Apply confusion */
 	if (player_confuse_dir(player, &dir, false)) {
 		/* Get location */
-		grid = loc_sum(player->grid, ddgrid[dir]);
+		grid = loc_sum(player->mon.grid, ddgrid[dir]);
 
 		/* Check for chests */
 		obj = chest_check(player, grid, CHEST_TRAPPED);
@@ -1023,7 +1023,7 @@ static void do_cmd_alter_aux(int dir)
 	struct object *o_chest_trapped;
 
 	/* Get location */
-	grid = loc_sum(player->grid, ddgrid[dir]);
+	grid = loc_sum(player->mon.grid, ddgrid[dir]);
 
 	/* Take a turn */
 	player->upkeep->energy_use = z_info->move_energy;
@@ -1031,7 +1031,7 @@ static void do_cmd_alter_aux(int dir)
 	/* Apply confusion */
 	if (player_confuse_dir(player, &dir, false)) {
 		/* Get location */
-		grid = loc_sum(player->grid, ddgrid[dir]);
+		grid = loc_sum(player->mon.grid, ddgrid[dir]);
 	}
 
 	/* Check for closed chest */
@@ -1084,7 +1084,7 @@ void do_cmd_alter(struct command *cmd)
 static void do_cmd_steal_aux(int dir)
 {
 	/* Get location */
-	struct loc grid = loc_sum(player->grid, ddgrid[dir]);
+	struct loc grid = loc_sum(player->mon.grid, ddgrid[dir]);
 
 	/* Take a turn */
 	player->upkeep->energy_use = z_info->move_energy;
@@ -1092,7 +1092,7 @@ static void do_cmd_steal_aux(int dir)
 	/* Apply confusion */
 	if (player_confuse_dir(player, &dir, false)) {
 		/* Get location */
-		grid = loc_sum(player->grid, ddgrid[dir]);
+		grid = loc_sum(player->mon.grid, ddgrid[dir]);
 	}
 
 	/* Attack or steal from monsters */
@@ -1125,7 +1125,7 @@ void do_cmd_steal(struct command *cmd)
  */
 void move_player(int dir, bool disarm)
 {
-	struct loc grid = loc_sum(player->grid, ddgrid[dir]);
+	struct loc grid = loc_sum(player->mon.grid, ddgrid[dir]);
 
 	int m_idx = square(cave, grid)->mon;
 	struct monster *mon = cave_monster(cave, m_idx);
@@ -1204,7 +1204,7 @@ void move_player(int dir, bool disarm)
 		 */
 	} else {
 		/* See if trap detection status will change */
-		bool old_dtrap = square_isdtrap(cave, player->grid);
+		bool old_dtrap = square_isdtrap(cave, player->mon.grid);
 		bool new_dtrap = square_isdtrap(cave, grid);
 		step = true;
 
@@ -1259,7 +1259,7 @@ void move_player(int dir, bool disarm)
 		}
 		
 		/* Move player */
-		monster_swap(player->grid, grid);
+		monster_swap(player->mon.grid, grid);
 		player_handle_post_move(player, true, false);
 		cmdq_push(CMD_AUTOPICKUP);
 		/*
@@ -1372,7 +1372,7 @@ void do_cmd_walk(struct command *cmd)
 	}
 	
 	/* Verify walkability */
-	grid = loc_sum(player->grid, ddgrid[dir]);
+	grid = loc_sum(player->mon.grid, ddgrid[dir]);
 	if (!do_cmd_walk_test(player, grid)) {
 		return;
 	}
@@ -1406,7 +1406,7 @@ void do_cmd_jump(struct command *cmd)
 		player->upkeep->energy_use = z_info->move_energy;
 
 	/* Verify walkability */
-	grid = loc_sum(player->grid, ddgrid[dir]);
+	grid = loc_sum(player->mon.grid, ddgrid[dir]);
 	if (!do_cmd_walk_test(player, grid))
 		return;
 
@@ -1439,7 +1439,7 @@ void do_cmd_run(struct command *cmd)
 
 	/* Get location */
 	if (dir) {
-		grid = loc_sum(player->grid, ddgrid[dir]);
+		grid = loc_sum(player->mon.grid, ddgrid[dir]);
 		if (!do_cmd_walk_test(player, grid))
 			return;
 			
@@ -1484,7 +1484,7 @@ void do_cmd_navigate_down(struct command *cmd)
 		for (int x = 0; x < cave->width; x++) {
 			struct loc grid = loc(x, y);
 			
-			if (loc_eq(grid, player->grid)) continue;
+			if (loc_eq(grid, player->mon.grid)) continue;
 
 			if (square_isoccupied(cave, grid)) {
 				int m_idx = square(cave, grid)->mon;
@@ -1503,7 +1503,7 @@ void do_cmd_navigate_down(struct command *cmd)
 	}
 
 	assert(!player->upkeep->steps);
-	player->upkeep->step_count = path_nearest_known(player, player->grid,
+	player->upkeep->step_count = path_nearest_known(player, player->mon.grid,
 		square_isdownstairs, &player->upkeep->path_dest,
 		&player->upkeep->steps);
 	if (player->upkeep->step_count > 0) {
@@ -1543,7 +1543,7 @@ void do_cmd_navigate_up(struct command *cmd)
 		for (int x = 0; x < cave->width; x++) {
 			struct loc grid = loc(x, y);
 
-			if (loc_eq(grid, player->grid)) continue;
+			if (loc_eq(grid, player->mon.grid)) continue;
 
 			if (square_isoccupied(cave, grid)) {
 				int m_idx = square(cave, grid)->mon;
@@ -1562,7 +1562,7 @@ void do_cmd_navigate_up(struct command *cmd)
 	}
 
 	assert(!player->upkeep->steps);
-	player->upkeep->step_count = path_nearest_known(player, player->grid,
+	player->upkeep->step_count = path_nearest_known(player, player->mon.grid,
 		square_isupstairs, &player->upkeep->path_dest,
 		&player->upkeep->steps);
 	if (player->upkeep->step_count > 0) {
@@ -1604,7 +1604,7 @@ void do_cmd_explore(struct command *cmd)
 		for (x = 0; x < cave->width && !visible_monster; x++) {
 			struct loc grid = loc(x, y);
 			
-			if (loc_eq(grid, player->grid)) continue;
+			if (loc_eq(grid, player->mon.grid)) continue;
 
 			if (square_isoccupied(cave, grid)) {
 				int m_idx = square(cave, grid)->mon;
@@ -1624,7 +1624,7 @@ void do_cmd_explore(struct command *cmd)
 
 	assert(!player->upkeep->steps);
 
-	player->upkeep->step_count = path_nearest_known(player, player->grid,
+	player->upkeep->step_count = path_nearest_known(player, player->mon.grid,
 			square_hasunknownitem, &player->upkeep->path_dest, &player->upkeep->steps);
 			
 	if (player->upkeep->step_count > 0) {
@@ -1635,10 +1635,10 @@ void do_cmd_explore(struct command *cmd)
 		return;
 	}
 
-	player->upkeep->step_count = path_nearest_unknown(player, player->grid,
+	player->upkeep->step_count = path_nearest_unknown(player, player->mon.grid,
 		&player->upkeep->path_dest, &player->upkeep->steps);
 
-	if (count_neighbors(NULL, cave, player->grid, square_isknown, true) < 9) {
+	if (count_neighbors(NULL, cave, player->mon.grid, square_isknown, true) < 9) {
 		// don't keep exploring if we're not getting new knowledge
 		cmd_cancel_repeat();
 	}
@@ -1678,7 +1678,7 @@ void do_cmd_pathfind(struct command *cmd)
 
 	assert(!player->upkeep->steps);
 	player->upkeep->step_count =
-		find_path(player, player->grid, grid, &player->upkeep->steps);
+		find_path(player, player->mon.grid, grid, &player->upkeep->steps);
 	if (player->upkeep->step_count > 0) {
 		player->upkeep->path_dest = grid;
 		player->upkeep->running = player->upkeep->step_count;
@@ -1710,9 +1710,9 @@ void do_cmd_hold(struct command *cmd)
 	do_autopickup(player);
 
 	/* Enter a store if we are on one, otherwise look at the floor */
-	if (square_isshop(cave, player->grid)) {
+	if (square_isshop(cave, player->mon.grid)) {
 		if (player_is_shapechanged(player)) {
-			if (square(cave, player->grid)->feat != FEAT_HOME) {
+			if (square(cave, player->mon.grid)->feat != FEAT_HOME) {
 				msg("There is a scream and the door slams shut!");
 			}
 			return;
@@ -1729,7 +1729,7 @@ void do_cmd_hold(struct command *cmd)
 		player->upkeep->energy_use = 0;
 	} else {
 		event_signal(EVENT_SEEFLOOR);
-		square_know_pile(cave, player->grid, object_not_in_container_predicate);
+		square_know_pile(cave, player->mon.grid, object_not_in_container_predicate);
 	}
 }
 
@@ -2167,7 +2167,7 @@ static int hiring_price(struct monster *mon, struct player *p)
 	assert(mon && mon->race);
 	struct monster_race *pmonr = lookup_player_monster(p);
 	int lev = MAX(mon->race->level, mon->race->level / 2 + 5);
-	int dist = distance(mon->grid, player->grid) + 10; // no yelling from a distance!
+	int dist = distance(mon->grid, player->mon.grid) + 10; // no yelling from a distance!
 	int uniq = monster_is_unique(mon) ? 3 : 1;
 	int allied = pmonr && mon->race->d_char == pmonr->d_char ? 2 : 3; // already friends :)
 
@@ -2290,10 +2290,10 @@ void do_cmd_dip_hire(struct command *cmd) {
 		}
 	} else if (dir != DIR_UNKNOWN) {
 		int i, range = z_info->max_sight;
-		struct loc direction = loc_sum(player->grid, loc(range * ddx[dir], range * ddy[dir]));
+		struct loc direction = loc_sum(player->mon.grid, loc(range * ddx[dir], range * ddy[dir]));
 		int path_n;
 		struct loc path_g[256];
-		path_n = project_path(cave, path_g, range, player->grid, direction, 0);
+		path_n = project_path(cave, path_g, range, player->mon.grid, direction, 0);
 		for (i = 0; i < path_n; i++) {
 			target = path_g[i];
 			mon = square_monster(cave, target);
@@ -2366,10 +2366,10 @@ void do_cmd_dip_gift(struct command *cmd)
 		}
 	} else if (dir != DIR_UNKNOWN) {
 		int i, range = z_info->max_sight;
-		struct loc direction = loc_sum(player->grid, loc(range * ddx[dir], range * ddy[dir]));
+		struct loc direction = loc_sum(player->mon.grid, loc(range * ddx[dir], range * ddy[dir]));
 		int path_n;
 		struct loc path_g[256];
-		path_n = project_path(cave, path_g, range, player->grid, direction, 0);
+		path_n = project_path(cave, path_g, range, player->mon.grid, direction, 0);
 		for (i = 0; i < path_n; i++) {
 			target = path_g[i];
 			mon = square_monster(cave, target);

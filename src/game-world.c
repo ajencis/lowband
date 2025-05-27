@@ -371,7 +371,7 @@ static void decrease_timeouts(void)
 			case TMD_COMMAND:
 			{
 				struct monster *mon = get_commanded_monster();
-				if (!los(cave, player->grid, mon->grid)) {
+				if (!los(cave, player->mon.grid, mon->grid)) {
 					/* Out of sight is out of mind */
 					//mon_clear_timed(mon, MON_TMD_COMMAND, MON_TMD_FLG_NOTIFY);
 					player_clear_timed(player, TMD_COMMAND,
@@ -434,7 +434,7 @@ static void decrease_timeouts(void)
  */
 static void make_noise(struct player *p)
 {
-	struct loc next = p->grid;
+	struct loc next = p->mon.grid;
 	int y, x, d;
 	int noise = -p->curr_noise;
 	int noise_increment = p->mon.m_timed[TMD_COVERTRACKS] ? 4 : 1;
@@ -478,7 +478,7 @@ static void make_noise(struct player *p)
 			if (cave->noise.grids[grid.y][grid.x] != INT16_MAX) continue;
 
 			/* Skip the player grid */
-			if (loc_eq(p->grid, grid)) continue;
+			if (loc_eq(p->mon.grid, grid)) continue;
 
 			/* Save the noise */
 			cave->noise.grids[grid.y][grid.x] = noise;
@@ -537,8 +537,8 @@ static void update_scent(void)
 			bool add_scent = false;
 
 			/* Initialize */
-			scent.y = y + player->grid.y - 2;
-			scent.x = x + player->grid.x - 2;
+			scent.y = y + player->mon.grid.y - 2;
+			scent.x = x + player->mon.grid.x - 2;
 
 			/* Ignore invalid or non-scent-carrying grids */
 			if (!square_in_bounds(cave, scent)) continue;
@@ -631,7 +631,7 @@ void process_world(struct chunk *c)
 
 	/* Check for creature generation */
 	if (one_in_(z_info->alloc_monster_chance) && !player->upkeep->generate_level) {
-		(void)pick_and_place_distant_monster(c, player->grid,
+		(void)pick_and_place_distant_monster(c, player->mon.grid,
 			z_info->max_sight + 5, true, player->depth);
 	}
 
@@ -660,16 +660,16 @@ void process_world(struct chunk *c)
 		int dist, quantity;
 		int totaldrained = 0;
 		struct square *sq;
-		for (x = player->grid.x - rad; x <= player->grid.x + rad; ++x) {
-			for (y = player->grid.y - rad; y <= player->grid.y + rad; ++y) {
+		for (x = player->mon.grid.x - rad; x <= player->mon.grid.x + rad; ++x) {
+			for (y = player->mon.grid.y - rad; y <= player->mon.grid.y + rad; ++y) {
 				if (!square_in_bounds_fully(cave, loc(x, y))) continue;
 				if (square_feat(c, loc(x, y))->fidx == FEAT_PERM) continue;
 
 				sq = &cave->squares[y][x];
-				dist = distance(player->grid, loc(x, y));
+				dist = distance(player->mon.grid, loc(x, y));
 
 				if (dist > rad) continue;
-				if (!los(c, player->grid, loc(x, y))) continue;
+				if (!los(c, player->mon.grid, loc(x, y))) continue;
 
 				quantity = (power - dist * 100 + randint0(1000)) / 1000;
 				quantity = MIN(quantity, sq->mana);
@@ -701,12 +701,12 @@ void process_world(struct chunk *c)
 	}
 
 	if (player->mon.m_timed[TMD_RAD_POIS]) {
-		struct loc g = player->grid;
+		struct loc g = player->mon.grid;
 		effect_simple(EF_PROJECT_LOS, source_player(), "2d9", PROJ_MON_POIS, 0, 0, g.y, g.x, NULL);
 	}
 
 	if (player->mon.m_timed[TMD_CALL_STORM] && !(turn % 50)) {
-		struct loc l = player->grid;
+		struct loc l = player->mon.grid;
 		char *dam = format("2d%i", my_int_sqrt(player->mon.m_timed[TMD_CALL_STORM]) + 49);
 		int rad = one_in_(3) ? 1 : 0;
 		effect_simple(EF_RANDOM_MON_DAMAGE, source_player(), dam, PROJ_ELEC, rad, 0, l.y, l.x, NULL);
@@ -969,7 +969,7 @@ void process_world(struct chunk *c)
 		if (curr->delay <= 0) {
 			struct loc egrid = player->upkeep->entered;
 
-			if (!square(c, egrid)->mon && !loc_eq(egrid, player->grid)) {
+			if (!square(c, egrid)->mon && !loc_eq(egrid, player->mon.grid)) {
 				int new_midx;
 				struct monster *new_mon;
 
@@ -1039,7 +1039,7 @@ static void process_player_cleanup(void)
 		}
 
 		/* Player can be damaged by terrain */
-		player_take_terrain_damage(player, player->grid);
+		player_take_terrain_damage(player, player->mon.grid);
 
 		// L: mark the player as not having searched this turn
 		player->searched_this_turn = false;
@@ -1210,7 +1210,7 @@ void on_new_level(void)
 		health_track(player->upkeep, NULL);
 	}
 
-	player->upkeep->entered = player->grid;
+	player->upkeep->entered = player->mon.grid;
 
 	/* L: new level, new mana */
 	player->floor_mana = randint0(player->depth) + randint0(player->depth) +
@@ -1272,7 +1272,7 @@ void on_new_level(void)
 static void increase_follower_delay(struct player *p)
 {
 	struct follower *foll;
-	int increase = distance(p->grid, p->upkeep->entered);
+	int increase = distance(p->mon.grid, p->upkeep->entered);
 	for (foll = p->upkeep->follow; foll; foll = foll->next) {
 		foll->delay += increase;
 	}
@@ -1295,7 +1295,7 @@ static void monsters_to_followers(struct chunk *c)
 
 		memcpy(fmon, mon, sizeof(*fmon));
 
-		follow->delay = distance(player->grid, mon->grid);
+		follow->delay = distance(player->mon.grid, mon->grid);
 		fmon->group_info[PRIMARY_GROUP].index = 0;
 		fmon->group_info[PRIMARY_GROUP].role = 0;
 		fmon->grid = loc(0, 0);

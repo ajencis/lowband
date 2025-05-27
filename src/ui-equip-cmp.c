@@ -2562,7 +2562,7 @@ static int initialize_summary(struct player *p,
 	if (cave) {
 		visitor.selfunc = select_seen_wearable;
 		visitor.selfunc_closure = p;
-		apply_visitor_to_pile(square_object(cave, p->grid), &visitor);
+		apply_visitor_to_pile(square_object(cave, p->mon.grid), &visitor);
 	}
 	visitor.selfunc = select_wearable;
 	visitor.selfunc_closure = NULL;
@@ -2602,7 +2602,7 @@ static int initialize_summary(struct player *p,
 		add_obj_data.src = EQUIP_SOURCE_FLOOR;
 		visitor.selfunc = select_seen_wearable;
 		visitor.selfunc_closure = p;
-		apply_visitor_to_pile(square_object(cave, p->grid), &visitor);
+		apply_visitor_to_pile(square_object(cave, p->mon.grid), &visitor);
 	}
 	add_obj_data.src = EQUIP_SOURCE_HOME;
 	visitor.selfunc = select_wearable;

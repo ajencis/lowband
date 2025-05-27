@@ -488,7 +488,7 @@ static bool source_can_light_wall(struct chunk *c, struct player *p,
 	 * visible to the player and the player can see whichever of those is
 	 * lit by the light source.
 	 */
-	pn = next_grid(wgrid, motion_dir(wgrid, p->grid));
+	pn = next_grid(wgrid, motion_dir(wgrid, p->mon.grid));
 	if (loc_eq(pn, wgrid)) return true;
 
 	/*
@@ -544,7 +544,7 @@ static bool source_can_light_wall(struct chunk *c, struct player *p,
 static bool glow_can_light_wall(struct chunk *c, struct player *p,
 		struct loc wgrid)
 {
-	struct loc pn = next_grid(wgrid, motion_dir(wgrid, p->grid)), chk;
+	struct loc pn = next_grid(wgrid, motion_dir(wgrid, p->mon.grid)), chk;
 
 	/*
 	 * If the player is in the wall grid, the player will see the lit face.
@@ -727,7 +727,7 @@ static void calc_lighting_aux(struct chunk *c, struct player *p, bool dark)
 
 	/* Light around the player */
 	if ((light > 0 && !dark) || (light < 0 && dark)) {
-		add_light(c, p, p->grid, -1, light);
+		add_light(c, p, p->mon.grid, -1, light);
 	}
 
 	/* Scan monster list and add monster light or darkness */
@@ -749,7 +749,7 @@ static void calc_lighting_aux(struct chunk *c, struct player *p, bool dark)
 		if (!light || (light > 0 ? dark : !dark)) continue;
 
 		/* Skip if the player can't see it. */
-		/*if (distance(p->grid, mon->grid) - radius > z_info->max_sight) {
+		/*if (distance(p->mon.grid, mon->grid) - radius > z_info->max_sight) {
 			continue;
 		}*/
 
@@ -759,7 +759,7 @@ static void calc_lighting_aux(struct chunk *c, struct player *p, bool dark)
 
 static void calc_lighting(struct chunk *c, struct player *p)
 {
-	int old_light = square_light(c, p->grid);
+	int old_light = square_light(c, p->mon.grid);
 	int x, y;
 
 	for (x = 0; x < c->width; ++x) {
@@ -772,7 +772,7 @@ static void calc_lighting(struct chunk *c, struct player *p)
 	calc_lighting_aux(c, p, false);
 
 	/* Update light level indicator */
-	if (square_light(c, p->grid) != old_light) {
+	if (square_light(c, p->mon.grid) != old_light) {
 		p->upkeep->redraw |= PR_LIGHT;
 	}
 }
@@ -806,8 +806,8 @@ static void become_viewable(struct chunk *c, struct loc grid, struct player *p,
 	if (lit_for_player(c, grid, p)) {
 		if (!square_allowslos(c, grid)) {
 			/* For walls, check for a lit grid closer to the player */
-			int xc = (x < p->grid.x) ? (x + 1) : (x > p->grid.x) ? (x - 1) : x;
-			int yc = (y < p->grid.y) ? (y + 1) : (y > p->grid.y) ? (y - 1) : y;
+			int xc = (x < p->mon.grid.x) ? (x + 1) : (x > p->mon.grid.x) ? (x - 1) : x;
+			int yc = (y < p->mon.grid.y) ? (y + 1) : (y > p->mon.grid.y) ? (y - 1) : y;
 			if (lit_for_player(c, loc(xc, yc), p)) {
 				sqinfo_on(square(c, grid)->info, SQUARE_SEEN);
 			}
@@ -830,7 +830,7 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 	int y = grid.y;
 	int xc = x, yc = y;
 
-	int d = distance(grid, p->grid);
+	int d = distance(grid, p->mon.grid);
 	bool close = d < p->state.cur_light;
 
 	int unlight = unlight_radius(p);
@@ -851,15 +851,15 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 	 * algorithm runs into the adjacent wall cell.
 	 */
 	if (!square_allowslos(c, grid)) {
-		int dx = x - p->grid.x;
-		int dy = y - p->grid.y;
+		int dx = x - p->mon.grid.x;
+		int dy = y - p->mon.grid.y;
 		int ax = ABS(dx);
 		int ay = ABS(dy);
 		int sx = dx > 0 ? 1 : -1;
 		int sy = dy > 0 ? 1 : -1;
 
-		xc = (x < p->grid.x) ? (x + 1) : (x > p->grid.x) ? (x - 1) : x;
-		yc = (y < p->grid.y) ? (y + 1) : (y > p->grid.y) ? (y - 1) : y;
+		xc = (x < p->mon.grid.x) ? (x + 1) : (x > p->mon.grid.x) ? (x - 1) : x;
+		yc = (y < p->mon.grid.y) ? (y + 1) : (y > p->mon.grid.y) ? (y - 1) : y;
 
 		/* Check that the cell we're trying to steal LOS from isn't a
 		 * wall. If we don't do this, double-thickness walls will have
@@ -887,7 +887,7 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 		}
 	}
 
-	if (los(c, p->grid, loc(xc, yc))) {
+	if (los(c, p->mon.grid, loc(xc, yc))) {
 		const struct square *sqr = square(c, grid);
 		int mindepth = player_min_xp_depth(p);
 		bool valid_level = c->depth >= mindepth;
@@ -923,7 +923,7 @@ static void update_one(struct chunk *c, struct loc grid, struct player *p)
 {
 	/* Remove view if blind, check visible squares for traps */
 	if (p->mon.m_timed[TMD_BLIND] ||
-			(of_has(p->state.flags, OF_BAD_VISION) && distance(p->grid, grid) > 5)) {
+			(of_has(p->state.flags, OF_BAD_VISION) && distance(p->mon.grid, grid) > 5)) {
 		sqinfo_off(square(c, grid)->info, SQUARE_SEEN);
 		sqinfo_off(square(c, grid)->info, SQUARE_CLOSE_PLAYER);
 	} else if (square_isseen(c, grid)) {
@@ -962,7 +962,7 @@ void update_view(struct chunk *c, struct player *p)
 {
 	int x, y;
 
-	bool p_sq_lit = lit_for_player(c, p->grid, p);
+	bool p_sq_lit = lit_for_player(c, p->mon.grid, p);
 
 	/* Record the current view */
 	mark_wasseen(c);
@@ -971,11 +971,11 @@ void update_view(struct chunk *c, struct player *p)
 	calc_lighting(c, p);
 
 	/* Assume we can view the player grid */
-	sqinfo_on(square(c, p->grid)->info, SQUARE_VIEW);
-	if (p->state.cur_light > 0 || square_islit(c, p->grid) ||
+	sqinfo_on(square(c, p->mon.grid)->info, SQUARE_VIEW);
+	if (p->state.cur_light > 0 || square_islit(c, p->mon.grid) ||
 			p_sq_lit) {
-		sqinfo_on(square(c, p->grid)->info, SQUARE_SEEN);
-		sqinfo_on(square(c, p->grid)->info, SQUARE_CLOSE_PLAYER);
+		sqinfo_on(square(c, p->mon.grid)->info, SQUARE_SEEN);
+		sqinfo_on(square(c, p->mon.grid)->info, SQUARE_CLOSE_PLAYER);
 	}
 
 	/*
@@ -984,9 +984,9 @@ void update_view(struct chunk *c, struct player *p)
 	 * modified in variants that have timed effects which allow a player
 	 * to move through impassable terrain.
 	 */
-	if (p->mon.m_timed[TMD_BLIND] && square_isknown(c, p->grid)
-			&& !square_ispassable(p->cave, p->grid)) {
-		square_forget(c, p->grid);
+	if (p->mon.m_timed[TMD_BLIND] && square_isknown(c, p->mon.grid)
+			&& !square_ispassable(p->cave, p->mon.grid)) {
+		square_forget(c, p->mon.grid);
 	}
 
 	/* Squares we have LOS to get marked as in the view, and perhaps seen */
@@ -1010,5 +1010,5 @@ void update_view(struct chunk *c, struct player *p)
  */
 bool no_light(const struct player *p)
 {
-	return (!square_isseen(cave, p->grid));
+	return (!square_isseen(cave, p->mon.grid));
 }

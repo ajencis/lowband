@@ -1505,7 +1505,7 @@ int unlight_power_state(struct player_state *ps, struct player *p)
 {
 	if (!cave || !character_dungeon) return 0;
 	if (ps->powers[PP_UNLIGHT] <= 0) return 0;
-	int bonus = -square_light(cave, p->grid);
+	int bonus = -square_light(cave, p->mon.grid);
 	int malus = get_power_scale_state(ps, PP_UNLIGHT, UNLIGHT_MAX_POWER, p->lev);
 	return bonus - malus;
 }
@@ -1520,7 +1520,7 @@ int glow_power_state(struct player_state *ps, struct player *p)
 {
 	if (!cave || !character_dungeon) return 0;
 	if (ps->powers[PP_GLOW] <= 0) return 0;
-	int bonus = square_light(cave, p->grid);
+	int bonus = square_light(cave, p->mon.grid);
 	int malus = get_power_scale_state(ps, PP_GLOW, UNLIGHT_MAX_POWER, p->lev);
 	return bonus - malus;
 }
@@ -1546,7 +1546,7 @@ int player_grid_visibility(struct loc grid, struct player *p, struct chunk *c)
 	int brightest = 10;
 	int light = square_light(c, grid);
 	int unl_rad = unlight_radius(p);
-	int dist = distance(p->grid, grid);
+	int dist = distance(p->mon.grid, grid);
 	bool p_is_unlight = p->state.powers[PP_UNLIGHT] ? true : false;
 
 	darkest -= get_power_scale(p, PP_UNLIGHT, UNLIGHT_MAX_POWER * 4);
@@ -1690,7 +1690,7 @@ int player_apply_damage_reduction(struct player *p, int dam)
 
 static bool phoenix_resurrect(struct player *p)
 {
-	int avail_mana = available_mana(cave, p->grid);
+	int avail_mana = available_mana(cave, p->mon.grid);
 
 	if (!pf_has(p->state.pflags, PF_PHOENIX_RESURRECT)) return false;
 	if (p->mon.m_timed[TMD_PHOENIX_CD]) return false;
@@ -2238,7 +2238,7 @@ void player_regen_mana(struct player *p)
 	percent = PY_REGEN_NORMAL;
 
 	/* L: Limited abount of mana per floor */
-	percent *= square(cave, player->grid)->mana;
+	percent *= square(cave, player->mon.grid)->mana;
 	percent += 24;
 	percent /= 25;
 
@@ -2558,9 +2558,9 @@ static struct monster *player_nearest_monster(struct player *p, struct chunk *c)
 
 		if (!mon || !mon->race) continue;
 		if (!monster_is_visible(mon)) continue;
-		if (!projectable(c, p->grid, mon->grid, PROJECT_INFO)) continue;
+		if (!projectable(c, p->mon.grid, mon->grid, PROJECT_INFO)) continue;
 		if (monster_is_camouflaged(mon)) continue;
-		int dist = distance(p->grid, mon->grid);
+		int dist = distance(p->mon.grid, mon->grid);
 		if (closest && dist > closestdist) continue;
 		// no check for allies in a berserker rage
 
@@ -2603,7 +2603,7 @@ static bool player_bloodlust_attack_monster(struct player *p, struct monster *mo
 static bool player_bloodlust_charge_monster(struct player *p, struct monster *mon, struct chunk *c)
 {
 	int i, dir;
-	struct loc difference = loc_diff(mon->grid, p->grid);
+	struct loc difference = loc_diff(mon->grid, p->mon.grid);
 	struct loc target_grid = difference;
 	struct loc target_grids[3] = { 0 };
 
@@ -2632,11 +2632,11 @@ static bool player_bloodlust_charge_monster(struct player *p, struct monster *mo
 			if (loc_eq(ddgrid[dir], target_grids[i])) break;
 		}
 
-		targ_grid_abs = loc_sum(p->grid, ddgrid[dir]);
+		targ_grid_abs = loc_sum(p->mon.grid, ddgrid[dir]);
 		
 		if (!square_ispassable(c, targ_grid_abs)) continue;
 		if (square_monster(c, targ_grid_abs)) continue;
-		if (distance(p->grid, mon->grid) <= distance(targ_grid_abs, mon->grid)) continue;
+		if (distance(p->mon.grid, mon->grid) <= distance(targ_grid_abs, mon->grid)) continue;
 		
 		char mdesc[80];
 		if (p->mon.m_timed[TMD_IMAGE]) {
@@ -3471,7 +3471,7 @@ void player_place(struct chunk *c, struct player *p, struct loc grid)
 	assert(!square_monster(c, grid));
 
 	/* Save player location */
-	p->grid = grid;
+	p->mon.grid = grid;
 
 	/* Mark cave grid */
 	square_set_mon(c, grid, -1);
@@ -3494,9 +3494,9 @@ void player_handle_post_move(struct player *p, bool eval_trap,
 		bool is_involuntary)
 {
 	/* Handle store doors, or notice objects */
-	if (square_isshop(cave, p->grid)) {
+	if (square_isshop(cave, p->mon.grid)) {
 		if (player_is_shapechanged(p)) {
-			if (square(cave, p->grid)->feat != FEAT_HOME) {
+			if (square(cave, p->mon.grid)->feat != FEAT_HOME) {
 				msg("There is a scream and the door slams shut!");
 			}
 			return;
@@ -3515,13 +3515,13 @@ void player_handle_post_move(struct player *p, bool eval_trap,
 		if (is_involuntary) {
 			cmdq_flush();
 		}
-		square_know_pile(cave, p->grid, object_not_in_container_predicate);
+		square_know_pile(cave, p->mon.grid, object_not_in_container_predicate);
 	}
 
 	/* Discover invisible traps, set off visible ones */
-	if (eval_trap && square_isplayertrap(cave, p->grid)
-			&& !square_isdisabledtrap(cave, p->grid)) {
-		hit_trap(p->grid, 0);
+	if (eval_trap && square_isplayertrap(cave, p->mon.grid)
+			&& !square_isdisabledtrap(cave, p->mon.grid)) {
+		hit_trap(p->mon.grid, 0);
 	}
 
 	/* Update view and search */
@@ -3608,8 +3608,8 @@ void search(struct player *p)
 
 	/* Search the nearby grids, which are always in bounds */
 	// L: add less nearby grids for better searchers, which are not always in bounds
-	for (grid.y = (p->grid.y - rad); grid.y <= (p->grid.y + rad); grid.y++) {
-		for (grid.x = (p->grid.x - rad); grid.x <= (p->grid.x + rad); grid.x++) {
+	for (grid.y = (p->mon.grid.y - rad); grid.y <= (p->mon.grid.y + rad); grid.y++) {
+		for (grid.x = (p->mon.grid.x - rad); grid.x <= (p->mon.grid.x + rad); grid.x++) {
 			int dist;
 			struct object *obj;
 			struct monster *mon = square_monster(cave, grid);
@@ -3619,7 +3619,7 @@ void search(struct player *p)
 			if (!square_in_bounds_fully(cave, grid)) continue;
 			if (!square_isview(cave, grid)) continue;
 
-			dist = distance(p->grid, grid);
+			dist = distance(p->mon.grid, grid);
 
 			if (dist > detectpower / 25) continue;
 

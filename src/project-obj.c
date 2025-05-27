@@ -612,7 +612,7 @@ bool project_o(struct source origin, int r, struct loc grid, int dam, int typ,
 				}
 
 				/* Prevent command repetition, if necessary. */
-				if (loc_eq(grid, player->grid)) {
+				if (loc_eq(grid, player->mon.grid)) {
 					cmd_disable_repeat_floor_item();
 				}
 

@@ -348,7 +348,7 @@ static void path_analyse(struct chunk *c, struct loc grid)
 	}
 
 	/* Plot the path. */
-	path_n = project_path(c, path_g, z_info->max_range, player->grid,
+	path_n = project_path(c, path_g, z_info->max_range, player->mon.grid,
 		grid, PROJECT_NONE);
 
 	/* Project along the path */
@@ -427,7 +427,7 @@ void update_mon(struct monster *mon, struct chunk *c, bool full)
 	int d;
 
 	/* If still generating the level, measure distances from the middle */
-	struct loc pgrid = character_dungeon ? player->grid :
+	struct loc pgrid = character_dungeon ? player->mon.grid :
 		loc(c->width / 2, c->height / 2);
 
 	/* Seen at all */
@@ -737,7 +737,7 @@ void monster_swap(struct loc grid1, struct loc grid2)
 {
 	int m1, m2;
 	struct monster *mon;
-	struct loc pgrid = player->grid;
+	struct loc pgrid = player->mon.grid;
 
 	/* Monsters */
 	m1 = cave->squares[grid1.y][grid1.x].mon;
@@ -780,8 +780,8 @@ void monster_swap(struct loc grid1, struct loc grid2)
 		player->upkeep->redraw |= (PR_MONLIST);
 	} else if (m1 < 0) {
 		/* Player */
-		player->grid = grid2;
-		player_leaving(pgrid, player->grid);
+		player->mon.grid = grid2;
+		player_leaving(pgrid, player->mon.grid);
 
 		/* Update the trap detection status */
 		player->upkeep->redraw |= (PR_DTRAP);
@@ -832,8 +832,8 @@ void monster_swap(struct loc grid1, struct loc grid2)
 		player->upkeep->redraw |= (PR_MONLIST);
 	} else if (m2 < 0) {
 		/* Player */
-		player->grid = grid1;
-		player_leaving(pgrid, player->grid);
+		player->mon.grid = grid1;
+		player_leaving(pgrid, player->mon.grid);
 
 		/* Update the trap detection status */
 		player->upkeep->redraw |= (PR_DTRAP);
@@ -1784,7 +1784,7 @@ void steal_monster_item(struct monster *mon, int midx)
 					object_desc(o_name, sizeof(o_name), obj,
 						ODESC_PREFIX | ODESC_FULL,
 						player);
-					drop_near(cave, &obj, 0, player->grid, true, true);
+					drop_near(cave, &obj, 0, player->mon.grid, true, true);
 					msg("You drop %s.", o_name);
 				} else {
 					inven_carry(player, obj, true, true);

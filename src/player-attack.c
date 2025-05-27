@@ -163,7 +163,7 @@ static int chance_of_missile_hit(const struct player *p,
 {
 	int chance = chance_of_missile_hit_base(p, missile, launcher);
 	/* Penalize for distance */
-	chance -= distance(p->grid, mon->grid);
+	chance -= distance(p->mon.grid, mon->grid);
 	/* Non-visible targets have a to-hit penalty of 50% */
 	return monster_is_obvious(mon) ? chance : chance / 2;
 }
@@ -735,7 +735,7 @@ static void do_breath_bite(struct player *p, struct loc grid)
 		const struct monster_spell *ms = monster_spell_by_index(sel);
 		int rad = 1, dir;
 		struct effect *ef_src = NULL, ef_new;
-		struct loc diff = loc_diff(grid, p->grid);
+		struct loc diff = loc_diff(grid, p->mon.grid);
 		bool dummy_id = false;
 		dir = loc_to_dir(diff);
 
@@ -1213,7 +1213,7 @@ bool monster_can_be_attacked(struct player *p, const struct attack_roll *aroll,
 		}
 		return false;
 	}
-	if (distance(p->grid, mon->grid) > aroll->range) {
+	if (distance(p->mon.grid, mon->grid) > aroll->range) {
 		if (buf) {
 			my_strcpy(buf, "You cannot reach that far!", bufsize);
 		}
@@ -1473,8 +1473,8 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 		}
 	}*/
 
-	for (i = 0, end = grid; i < maxspin; ++i, end = clockwise_orbit(p->grid, end, rad)) {
-		struct monster *mon = monster_in_direction(p->grid, end, rad);
+	for (i = 0, end = grid; i < maxspin; ++i, end = clockwise_orbit(p->mon.grid, end, rad)) {
+		struct monster *mon = monster_in_direction(p->mon.grid, end, rad);
 		char mdesc[80];
 		bool docleave = false;
 
@@ -1830,7 +1830,7 @@ void py_attack(struct player *p, struct loc grid)
 	int pretimed[TMD_MAX];
 	int backstab;
 	bool backstab_msg = false;
-	int dist = distance(p->grid, grid);
+	int dist = distance(p->mon.grid, grid);
 	bool can_attack = false;
 	char buf[128] = { '\0' };
 	int which;
@@ -1994,7 +1994,7 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 	struct loc path_g[256];
 
 	/* Start at the player */
-	struct loc grid = p->grid;
+	struct loc grid = p->mon.grid;
 
 	/* Predict the "target" location */
 	struct loc target = loc_sum(grid, loc(99 * ddx[dir], 99 * ddy[dir]));
@@ -2300,10 +2300,10 @@ void do_cmd_melee(struct command *cmd)
 		}
 	}
 	else if (dir != DIR_UNKNOWN) {
-		struct loc direction = loc_sum(player->grid, loc(range * ddx[dir], range * ddy[dir]));
+		struct loc direction = loc_sum(player->mon.grid, loc(range * ddx[dir], range * ddy[dir]));
 		int path_n;
 		struct loc path_g[256];
-		path_n = project_path(cave, path_g, range, player->grid, direction, 0);
+		path_n = project_path(cave, path_g, range, player->mon.grid, direction, 0);
 		for (i = 0; i < path_n; i++) {
 			target = path_g[i];
 			foe = square_monster(cave, target);
@@ -2318,7 +2318,7 @@ void do_cmd_melee(struct command *cmd)
 		player->upkeep->energy_use = z_info->move_energy / 2;
 		return;
 	}
-	if (distance(player->grid, target) > range) {
+	if (distance(player->mon.grid, target) > range) {
 		player->upkeep->energy_use = z_info->move_energy / 2;
 		msg("You can't attack that far.");
 		return;

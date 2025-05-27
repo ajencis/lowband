@@ -648,7 +648,7 @@ static void pre_turn_refresh(void)
 			target_get(&target);
 			move_cursor_relative(target.y, target.x);
 		} else {
-			move_cursor_relative(player->grid.y, player->grid.x);
+			move_cursor_relative(player->mon.grid.y, player->mon.grid.x);
 		}
 
 		for (j = 0; j < ANGBAND_TERM_MAX; j++) {

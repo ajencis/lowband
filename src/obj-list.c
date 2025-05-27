@@ -157,7 +157,7 @@ static bool object_list_should_ignore_object(const struct player *p,
 void object_list_collect(object_list_t *list)
 {
 	int i;
-	struct loc pgrid = player->grid;
+	struct loc pgrid = player->mon.grid;
 
 	if (list == NULL || list->entries == NULL)
 		return;
@@ -371,7 +371,7 @@ void object_list_format_name(const object_list_entry_t *entry,
 	bool has_singular_prefix;
 	bool los = false;
 	int field;
-	struct loc pgrid = player->grid;
+	struct loc pgrid = player->mon.grid;
 	struct object *base_obj;
 	struct loc grid;
 	bool object_is_recognized_artifact;

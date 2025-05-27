@@ -202,7 +202,7 @@ static void show_obj(int obj_num, int row, int col, bool cursor,
 
 	/* Price */
 	if (mode & OLIST_PRICE) {
-		struct store *store = store_at(cave, player->grid);
+		struct store *store = store_at(cave, player->mon.grid);
 		if (store) {
 			int price = price_item(store, obj, true, obj->number);
 

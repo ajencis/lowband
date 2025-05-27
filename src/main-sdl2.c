@@ -4154,7 +4154,7 @@ static void refresh_angband_terms(struct my_app *a)
 
 		Term_clear();
 		handle_stuff(player);
-		move_cursor_relative(player->grid.x, player->grid.y);
+		move_cursor_relative(player->mon.grid.x, player->mon.grid.y);
 
 		Term_redraw_all();
 	}
@@ -4470,7 +4470,7 @@ static void term_view_map_tile(struct subwindow *subwindow)
 		}
 	}
 
-	SDL_Rect cursor = {player->grid.x * tile.w, player->grid.y * tile.h, tile.w,
+	SDL_Rect cursor = {player->mon.grid.x * tile.w, player->mon.grid.y * tile.h, tile.w,
 					   tile.h};
 
 	/* render cursor around player */
@@ -4506,8 +4506,8 @@ static void term_view_map_text(struct subwindow *subwindow)
 	}
 
 	SDL_Rect cursor = {
-		player->grid.x * subwindow->font_width,
-		player->grid.y * subwindow->font_height,
+		player->mon.grid.x * subwindow->font_width,
+		player->mon.grid.y * subwindow->font_height,
 		subwindow->font_width,
 		subwindow->font_height
 	};

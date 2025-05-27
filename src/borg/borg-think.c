@@ -369,7 +369,7 @@ bool borg_think(void)
     if ((0 == borg_what_text(1, 3, 4, &t_a, buf))
         && (streq(buf, "Stor") || streq(buf, "Home"))) {
         /* Cheat the store number */
-        shop_num = square_shopnum(cave, player->grid);
+        shop_num = square_shopnum(cave, player->mon.grid);
 
         /* Clear the goal (the goal was probably going to a shop number) */
         borg.goal.type = 0;

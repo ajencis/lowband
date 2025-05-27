@@ -1653,7 +1653,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 
 	/* Put some monsters in the dungeon */
 	for (; i > 0; i--) {
-		pick_and_place_distant_monster(c, p->grid, 0, true, c->depth);
+		pick_and_place_distant_monster(c, p->mon.grid, 0, true, c->depth);
 	}
 
 	/* Put some objects in rooms */
@@ -1939,7 +1939,7 @@ struct chunk *labyrinth_gen(struct player *p, int min_height, int min_width,
 
 	/* Put some monsters in the dungeon */
 	for (i = z_info->level_monster_min + randint1(8) + k; i > 0; i--) {
-		pick_and_place_distant_monster(c, p->grid, 0, true, c->depth);
+		pick_and_place_distant_monster(c, p->mon.grid, 0, true, c->depth);
 	}
 
 	/* Put some objects/gold in the dungeon */
@@ -2576,7 +2576,7 @@ struct chunk *cavern_gen(struct player *p, int min_height, int min_width,
 
 	/* Put some monsters in the dungeon */
 	for (i = randint1(8) + k; i > 0; i--) {
-		pick_and_place_distant_monster(c, p->grid, 0, true, c->depth);
+		pick_and_place_distant_monster(c, p->mon.grid, 0, true, c->depth);
 	}
 
 	/* Put some objects/gold in the dungeon */
@@ -3075,7 +3075,7 @@ struct chunk *town_gen(struct player *p, int min_height, int min_width,
 	for (i = 0; i < residents; i++) {
 		int maxdepth = MAX(0, turn / 1000 - 5000);
 		int depth = one_in_(2) ? c_new->depth : randint0(maxdepth + 1);
-		pick_and_place_distant_monster(c_new, p->grid, 3, true,	depth);
+		pick_and_place_distant_monster(c_new, p->mon.grid, 3, true,	depth);
 	}
 
 	alloc_mana(c_new);
@@ -3312,7 +3312,7 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 
 	/* Put some monsters in the dungeon */
 	for (; i > 0; i--) {
-		pick_and_place_distant_monster(c, p->grid, 0, true, c->depth);
+		pick_and_place_distant_monster(c, p->mon.grid, 0, true, c->depth);
 	}
 
 	/* Put some objects in rooms */
@@ -3564,7 +3564,7 @@ struct chunk *moria_gen(struct player *p, int min_height, int min_width,
 
 	/* Put some monsters in the dungeon */
 	for (; i > 0; i--) {
-		pick_and_place_distant_monster(c, p->grid, 0, true, c->depth);
+		pick_and_place_distant_monster(c, p->mon.grid, 0, true, c->depth);
 	}
 
 	/* Remove our restrictions. */
@@ -3900,7 +3900,7 @@ struct chunk *hard_centre_gen(struct player *p, int min_height, int min_width,
 
 	/* Put some monsters in the dungeon */
 	for (i = randint1(8) + k; i > 0; i--) {
-		pick_and_place_distant_monster(c, p->grid, 0, true, c->depth);
+		pick_and_place_distant_monster(c, p->mon.grid, 0, true, c->depth);
 	}
 
 	/* Put some objects/gold in the dungeon */
@@ -4044,7 +4044,7 @@ struct chunk *lair_gen(struct player *p, int min_height, int min_width,
 
 	/* Put some monsters in the dungeon */
 	for (; i > 0; i--) {
-		pick_and_place_distant_monster(normal, p->grid, 0, true,
+		pick_and_place_distant_monster(normal, p->mon.grid, 0, true,
 			normal->depth);
 	}
 
@@ -4285,13 +4285,13 @@ struct chunk *gauntlet_gen(struct player *p, int min_height, int min_width,
 	 * below do.
 	 */
 	if (arrival == right) {
-		p_loc_in_r = p->grid;
-		p_loc_in_l.x = line2 + p->grid.x;
-		p_loc_in_l.y = p->grid.y;
+		p_loc_in_r = p->mon.grid;
+		p_loc_in_l.x = line2 + p->mon.grid.x;
+		p_loc_in_l.y = p->mon.grid.y;
 	} else {
-		p_loc_in_l = p->grid;
-		p_loc_in_r.x = p->grid.x - line2;
-		p_loc_in_r.y = p->grid.y;
+		p_loc_in_l = p->mon.grid;
+		p_loc_in_r.x = p->mon.grid.x - line2;
+		p_loc_in_r.y = p->mon.grid.y;
 	}
 
 	/* Pick some monsters for the left cavern */

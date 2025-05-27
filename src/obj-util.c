@@ -1363,6 +1363,6 @@ struct object *object_container(struct object *obj, struct chunk *c)
 bool object_not_in_container_predicate(const struct object *obj)
 {
 	if (!object_container((struct object *)obj, cave)) return true;
-	if (distance(obj->grid, player->grid) <= 1) return true;
+	if (distance(obj->grid, player->mon.grid) <= 1) return true;
 	return false;
 }

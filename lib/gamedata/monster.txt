@@ -238,7 +238,7 @@ color:w
 ##### Playable #####
 
 #name:human
-#base:person
+#base:player
 #color:w
 #speed:110
 #hit-points:5
@@ -3539,6 +3539,7 @@ blow:HIT:HURT:1d3
 flags:COLD_BLOOD | INVISIBLE
 flags:RAND_25 | RAND_50 | BASH_DOOR
 flags:IM_ELEC
+power:AIR_MAGIC:150
 desc:A whirlwind of sentient air.
 
 name:skeleton human
@@ -4560,6 +4561,7 @@ blow:HIT:HURT:2d4
 flags:COLD_BLOOD
 flags:RAND_25 | BASH_DOOR
 flags:IM_ACID | IM_WATER
+power:WATER_MAGIC:150
 desc:A whirlpool of sentient liquid.
 
 name:giant red scorpion
@@ -4596,6 +4598,7 @@ blow:HIT:HURT:1d8
 flags:COLD_BLOOD
 flags:RAND_25 | PASS_WALL
 flags:HURT_ROCK | IM_COLD | IM_ELEC
+power:EARTH_MAGIC:150
 desc:A whirling form of sentient rock.
 
 ### Dungeon level 18 ###
@@ -4689,6 +4692,7 @@ blow:HIT:FIRE:2d6
 blow:HIT:FIRE:2d6
 flags:RAND_25 | BASH_DOOR
 flags:IM_FIRE | HURT_COLD
+power:FIRE_MAGIC:150
 desc:A whirlwind of sentient flame.
 
 name:fire hound
@@ -8089,6 +8093,7 @@ blow:HIT:FIRE:4d6
 flags:RAND_25 | BASH_DOOR | KILL_BODY | KILL_ITEM
 flags:IM_ACID | IM_ELEC | IM_FIRE | HURT_COLD
 flags:FORCE_SLEEP
+power:FIRE_MAGIC:175
 spell-freq:6
 spells:BO_FIRE
 desc:It is a towering inferno of flames.
@@ -8112,6 +8117,7 @@ flags:COLD_BLOOD
 flags:RAND_25 | BASH_DOOR | KILL_BODY | KILL_ITEM
 flags:IM_ACID | IM_COLD | IM_WATER
 flags:FORCE_SLEEP
+power:WATER_MAGIC:175
 spell-freq:6
 spells:BO_COLD
 desc:It is a towering tempest of water.
@@ -8316,6 +8322,7 @@ flags:COLD_BLOOD
 flags:PASS_WALL | KILL_BODY | KILL_ITEM
 flags:HURT_ROCK | IM_COLD | IM_ELEC
 flags:FORCE_SLEEP
+power:EARTH_MAGIC:175
 spell-freq:8
 spells:BO_ACID
 desc:It is a towering form composed of rock with fists of awesome power.
@@ -8339,6 +8346,7 @@ flags:COLD_BLOOD
 flags:RAND_25 | BASH_DOOR | KILL_BODY | KILL_ITEM
 flags:IM_ACID | IM_COLD | IM_ELEC
 flags:FORCE_SLEEP
+power:AIR_MAGIC:175
 spell-freq:8
 spells:BO_ELEC
 desc:It is a towering tornado of winds.
@@ -8454,6 +8462,7 @@ blow:HIT:HURT:1d6
 flags:EVIL | COLD_BLOOD | INVISIBLE
 flags:RAND_50 | OPEN_DOOR | BASH_DOOR
 flags:IM_ELEC
+power:AIR_MAGIC:175
 desc:It is impossible to define its form but its violence is legendary.
 
 name:gravity hound
@@ -8749,6 +8758,8 @@ flags:COLD_BLOOD | POWERFUL
 flags:BASH_DOOR | KILL_BODY | KILL_ITEM
 flags:IM_ACID | IM_COLD
 flags:FORCE_SLEEP
+power:WATER_MAGIC:150
+power:EARTH_MAGIC:150
 spell-freq:5
 spells:BA_ACID
 spells:BO_ACID
@@ -8770,6 +8781,8 @@ blow:ENGULF:HURT:2d6
 flags:BASH_DOOR | KILL_BODY | KILL_ITEM
 flags:IM_COLD | IM_ELEC | IM_FIRE
 flags:FORCE_SLEEP
+power:FIRE_MAGIC:150
+power:AIR_MAGIC:150
 spell-freq:5
 spells:DARKNESS
 spells:BO_FIRE
@@ -8999,6 +9012,7 @@ flags:COLD_BLOOD | POWERFUL
 flags:BASH_DOOR | KILL_BODY | KILL_ITEM
 flags:IM_ACID | IM_COLD | IM_ELEC | HURT_FIRE
 flags:FORCE_SLEEP
+power:COLD_MAGIC:175
 spell-freq:5
 spells:BA_COLD
 spells:BO_ICE
@@ -9064,6 +9078,8 @@ flags:POWERFUL
 flags:PASS_WALL | KILL_BODY | KILL_ITEM
 flags:IM_ACID | IM_ELEC | IM_FIRE | HURT_COLD
 flags:FORCE_SLEEP
+power:FIRE_MAGIC:150
+power:EARTH_MAGIC:150
 spell-freq:7
 spells:BA_FIRE
 spells:BO_PLAS
@@ -9249,6 +9265,7 @@ flags:INVISIBLE | SMART
 flags:RAND_50 | PASS_WALL
 flags:IM_ACID | IM_COLD | IM_ELEC | IM_FIRE
 flags:FORCE_SLEEP
+power:FIRE_MAGIC:175
 spell-freq:2
 spells:BLINK | WOUND | CONF | TPORT
 message-vis:WOUND:{name} crackles softly.
@@ -11122,28 +11139,6 @@ desc: Gondolin.
 
 ### Dungeon level 50 ###
 
-name:cherub
-evolution:seraph
-base:angel
-color:W
-speed:130
-hit-points:8000
-hearing:50
-smell:50
-armor-class:192
-sleepiness:10
-depth:90
-rarity:1
-experience:40000
-blow:HIT:HURT:9d12
-blow:HIT:HURT:9d12
-flags:SMART
-flags:DROP_4 | DROP_GOOD | ONLY_ITEM
-flags:OPEN_DOOR
-innate-freq:5
-spells:BA_HOLY | HEAL_KIN
-desc:This happy baby seems to glow with an inner light.
-
 name:ancient blue dragon
 short-name:ancient blue
 evolution:great storm wyrm
@@ -12236,30 +12231,6 @@ desc: strength and priestly wisdom are a true match for any adventurer.
 ########## DUNGEON LEVELS 60-69 ##########
 
 
-### Dungeon level 60 ###
-
-name:seraph
-evolution:archangel
-base:angel
-color:W
-speed:130
-hit-points:8000
-hearing:50
-smell:50
-armor-class:192
-sleepiness:10
-depth:90
-rarity:1
-experience:40000
-blow:HIT:HURT:9d12
-blow:HIT:HURT:9d12
-flags:SMART
-flags:DROP_4 | DROP_GOOD | ONLY_ITEM
-flags:OPEN_DOOR
-innate-freq:5
-spells:BA_LIGHT | BA_HOLY | HEAL_KIN
-desc:This kindly-seeming young human appears to glow with an inner light.
-
 name:Gilim, the Giant of Eruman
 base:giant
 color:w
@@ -12303,6 +12274,7 @@ blow:HIT:SHATTER:10d10
 flags:COLD_BLOOD | POWERFUL
 flags:PASS_WALL | KILL_BODY | KILL_ITEM
 flags:HURT_ROCK | IM_ELEC
+power:EARTH_MAGIC:200
 innate-freq:6
 spell-freq:6
 spells:BOULDER | BR_SHAR | BA_SHAR
@@ -12654,6 +12626,7 @@ blow:ENGULF:ACID:6d10
 flags:COLD_BLOOD | POWERFUL
 flags:BASH_DOOR | KILL_BODY | KILL_ITEM
 flags:IM_ACID | IM_WATER | IM_COLD
+power:WATER_MAGIC:200
 innate-freq:5
 spell-freq:5
 spells:BA_WATE | BO_WATE
@@ -13106,9 +13079,11 @@ desc: spikes.
 
 ### Dungeon level 70 ###
 
-name:archangel
-evolution:planetar
+name:ophan
+plural:ophanim
+evolution:cherub
 base:angel
+body:Empty
 color:W
 speed:130
 hit-points:8000
@@ -13119,8 +13094,9 @@ sleepiness:10
 depth:90
 rarity:1
 experience:40000
-blow:HIT:HURT:9d12
-blow:HIT:HURT:9d12
+blow:GAZE:TURN_EVIL:9d12
+blow:GAZE:HURT:9d12
+blow:CRUSH:HURT:9d12
 flags:SMART
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR
@@ -13926,9 +13902,11 @@ desc: any ordinary man ever could.
 
 ### Dungeon level 80 ###
 
-name:planetar
-evolution:solar
+name:cherub
+plural:cherubim
+evolution:seraph
 base:angel
+body:Cherub
 color:W
 speed:130
 hit-points:8000
@@ -13940,11 +13918,12 @@ depth:80
 rarity:1
 experience:40000
 blow:GAZE:TURN_EVIL:9d12
-blow:HIT:HURT:9d12
+blow:BITE:HURT:9d12
 blow:HIT:HURT:9d12
 flags:SMART
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR
+power:SWORD_SPECIALIZATION:50
 innate-freq:5
 spells:BA_LIGHT | BA_HOLY | HEAL | HEAL_KIN | S_AINU
 desc:This kindly-seeming old human appears to glow with an inner light.
@@ -14611,8 +14590,10 @@ desc: the heat of his body.
 
 ### Dungeon level 90 ###
 
-name:solar
+name:seraph
+plural:seraphim
 base:angel
+body:Humanoid
 color:W
 speed:130
 hit-points:8000
@@ -14623,13 +14604,14 @@ sleepiness:10
 depth:90
 rarity:1
 experience:40000
-blow:GAZE:TURN_EVIL:9d12
-blow:HIT:FIRE:9d12
-blow:HIT:FIRE:9d12
+blow:SING:TURN_EVIL:9d12
+blow:SING:HOLY_FIRE:9d12
+blow:SING:HURT:9d12
 flags:SMART
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR
 flags:IM_FIRE
+power:SOUND_MAGIC:75
 power:FIRE_MAGIC:75
 innate-freq:5
 spells:BA_LIGHT | BA_HOLY | HEAL | HEAL_KIN | S_AINU | BA_FIRE

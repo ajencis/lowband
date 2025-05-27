@@ -35,8 +35,8 @@ static int choose_direction(struct chunk *c, struct player *p) {
 		if (dir >= 9) {
 			return -1;
 		}
-		grid.x = p->grid.x + ddx_ddd[dir];
-		grid.y = p->grid.y + ddy_ddd[dir];
+		grid.x = p->mon.grid.x + ddx_ddd[dir];
+		grid.y = p->mon.grid.y + ddy_ddd[dir];
 		if (square_isempty(c, grid)) {
 			return ddd[dir];
 		}
@@ -155,7 +155,7 @@ static int test_stairs2(void *state) {
 		cmdq_push(CMD_WALK);
 		cmd_set_arg_direction(cmdq_peek(), "direction", dir);
 		run_game_loop();
-		if (!square_monster(cave, loc_sum(player->grid,
+		if (!square_monster(cave, loc_sum(player->mon.grid,
 				ddgrid[reverse_direction(dir)]))) {
 			cmdq_push(CMD_WALK);
 			cmd_set_arg_direction(cmdq_peek(), "direction",
@@ -201,11 +201,11 @@ static int test_drop_pickup(void *state) {
 				player->upkeep->inven[0]);
 			cmd_set_arg_number(cmdq_peek(), "quantity", 1);
 			run_game_loop();
-			eq(square_object(cave, player->grid)->number, 1);
+			eq(square_object(cave, player->mon.grid)->number, 1);
 			cmdq_push(CMD_AUTOPICKUP);
 			run_game_loop();
 		}
-		null(square_object(cave, player->grid));
+		null(square_object(cave, player->mon.grid));
 	}
 
 	ok;
@@ -235,15 +235,15 @@ static int test_drop_eat(void *state) {
 		cmd_set_arg_number(cmdq_peek(), "quantity",
 					   player->upkeep->inven[0]->number);
 		run_game_loop();
-		eq(square_object(cave, player->grid)->number, num);
+		eq(square_object(cave, player->mon.grid)->number, num);
 		cmdq_push(CMD_EAT);
 		cmd_set_arg_item(cmdq_peek(), "item",
-					 square_object(cave, player->grid));
+					 square_object(cave, player->mon.grid));
 		run_game_loop();
 		if (num > 1) {
-			eq(square_object(cave, player->grid)->number, num - 1);
+			eq(square_object(cave, player->mon.grid)->number, num - 1);
 		} else {
-			null(square_object(cave, player->grid));
+			null(square_object(cave, player->mon.grid));
 		}
 	}
 

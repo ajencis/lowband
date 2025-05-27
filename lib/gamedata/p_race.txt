@@ -447,7 +447,7 @@ name:Reptilian
 monster:2-headed hydra
 
 name:Aasimar
-monster:cherub
+monster:ophan
 
 name:Sling
 monster:cave spider

@@ -1204,7 +1204,7 @@ static void melee_effect_handler_SHATTER(melee_effect_handler_context_t *context
 		if (randint1(value) > 40) {
 			int dist = 1 + value / 40;
 			if (context->p) {
-				thrust_away(context->mon->grid, context->p->grid, dist);
+				thrust_away(context->mon->grid, context->p->mon.grid, dist);
 			} else {
 				thrust_away(context->mon->grid, context->t_mon->grid, dist);
 			}

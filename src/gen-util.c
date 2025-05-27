@@ -416,9 +416,9 @@ bool new_player_spot(struct chunk *c, struct player *p)
 
 	/* Try to find a good place to put the player */
 	if (OPT(p, birth_levels_persist) &&
-			square_in_bounds_fully(c, p->grid) &&
-			square_isstairs(c, p->grid)) {
-		grid = p->grid;
+			square_in_bounds_fully(c, p->mon.grid) &&
+			square_isstairs(c, p->mon.grid)) {
+		grid = p->mon.grid;
 	} else if (!find_start(c, &grid)) {
 		msg("Failed to place player; please report.  Restarting generation.");
 		dump_level_simple(NULL, "Player Placement Failure", c);

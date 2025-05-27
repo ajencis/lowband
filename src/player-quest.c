@@ -188,7 +188,7 @@ void player_quests_free(struct player *p)
  */
 static void build_quest_stairs(struct player *p, struct loc grid)
 {
-	struct loc new_grid = p->grid;
+	struct loc new_grid = p->mon.grid;
 
 	/* Stagger around */
 	while (!square_changeable(cave, grid) &&

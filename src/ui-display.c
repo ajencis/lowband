@@ -345,7 +345,7 @@ static void prt_sp(int row, int col)
 	//char cur_sp[32], max_sp[32];
 	char manastr[32];
 	//uint8_t color = player_sp_attr(player);
-	int mana = available_mana(cave, player->grid);
+	int mana = available_mana(cave, player->mon.grid);
 	bool show = false;
 	const struct magic_realm *realm = get_player_realm(player);
 
@@ -729,7 +729,7 @@ static int prt_sp_short(int row, int col)
 {
 	if (!character_dungeon) return 0;
 
-	int mana = available_mana(cave, player->grid);
+	int mana = available_mana(cave, player->mon.grid);
 	char manastr[32];
 
 	strnfmt(manastr, sizeof(manastr), "%i", mana);
@@ -942,7 +942,7 @@ static void hp_colour_change(game_event_type type, game_event_data *data,
 							 void *user)
 {
 	if ((OPT(player, hp_changes_color)) && (use_graphics == GRAPHICS_NONE))
-		square_light_spot(cave, player->grid);
+		square_light_spot(cave, player->mon.grid);
 }
 
 
@@ -1172,7 +1172,7 @@ static size_t prt_level_feeling(int row, int col)
  */
 static size_t prt_light(int row, int col)
 {
-	int light = square_light(cave, player->grid);
+	int light = square_light(cave, player->mon.grid);
 
 	if (light > 0) {
 		c_put_str(COLOUR_YELLOW, format("Light %d ", light), row, col);
@@ -1227,12 +1227,12 @@ static int longest_terrain_name(void)
  */
 static size_t prt_terrain(int row, int col)
 {
-	struct feature *feat = square_feat(cave, player->grid);
-	struct trap *trap = square_trap(cave, player->grid);
+	struct feature *feat = square_feat(cave, player->mon.grid);
+	struct trap *trap = square_trap(cave, player->mon.grid);
 	char buf[30];
 	uint8_t attr;
 
-	if (trap && !square_isinvis(cave, player->grid)) {
+	if (trap && !square_isinvis(cave, player->mon.grid)) {
 		my_strcpy(buf, trap->kind->name, sizeof(buf));
 		attr = trap->kind->d_attr;
 	} else {
@@ -1251,9 +1251,9 @@ static size_t prt_terrain(int row, int col)
 static size_t prt_dtrap(int row, int col)
 {
 	/* The player is in a trap-detected grid */
-	if (square_isdtrap(cave, player->grid)) {
+	if (square_isdtrap(cave, player->mon.grid)) {
 		/* The player is on the border */
-		if (square_dtrap_edge(cave, player->grid))
+		if (square_dtrap_edge(cave, player->mon.grid))
 			c_put_str(COLOUR_YELLOW, "DTrap ", row, col);
 		else
 			c_put_str(COLOUR_L_GREEN, "DTrap ", row, col);
@@ -1378,7 +1378,7 @@ static size_t prt_unlight(int row, int col)
 
 /*static size_t prt_mana(int row, int col)
 {
-	int mana = square(cave, player->grid)->mana;
+	int mana = square(cave, player->mon.grid)->mana;
 	char *str = format("Mana %i", mana);
 	put_str(str, row, col);
 	return strlen(str) + 1;
@@ -1514,7 +1514,7 @@ static void update_maps(game_event_type type, game_event_data *data, void *user)
 		int wid = (t == angband_term[0]) ? SCREEN_WID / 2 :
 			t->wid / (tile_width * 2);
 
-		if (panel_should_modify(t, player->grid.y - hgt, player->grid.x - wid)) {
+		if (panel_should_modify(t, player->mon.grid.y - hgt, player->mon.grid.x - wid)) {
 			return;
 		}
 	}

@@ -201,7 +201,7 @@ void rune_autoinscribe(struct player *p, int i)
 
 	/* Autoinscribe each object on the ground */
 	if (cave)
-		for (obj = square_object(cave, p->grid); obj; obj = obj->next)
+		for (obj = square_object(cave, p->mon.grid); obj; obj = obj->next)
 			if (object_has_rune(obj, i))
 				rune_add_autoinscription(obj, i);
 
@@ -337,7 +337,7 @@ void autoinscribe_ground(struct player *p)
 	struct object *obj;
 
 	/* Autoinscribe each object in the pile */
-	for (obj = square_object(cave, p->grid); obj; obj = obj->next)
+	for (obj = square_object(cave, p->mon.grid); obj; obj = obj->next)
 		apply_autoinscription(p, obj);
 }
 
@@ -677,7 +677,7 @@ void ignore_drop(struct player *p)
 			}
 
 			/* We're allowed to drop it. */
-			if (!square_isshop(cave, p->grid)) {
+			if (!square_isshop(cave, p->mon.grid)) {
 				struct command *drop_cmd;
 
 				p->upkeep->dropping = true;

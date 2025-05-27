@@ -613,7 +613,7 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 					}
 					if (from_floor) {
 						drop_near(cave, &wcopy, 0,
-							player->grid, false,
+							player->mon.grid, false,
 							true);
 					} else {
 						inven_carry(player, wcopy,
@@ -743,10 +743,10 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 	player->upkeep->redraw |= (PR_INVEN | PR_EQUIP | PR_OBJECT);
 
 	/* Hack to make Glyph of Warding work properly */
-	if (square_trap_specific(cave, player->grid, rune->tidx)) {
+	if (square_trap_specific(cave, player->mon.grid, rune->tidx)) {
 		/* Push objects off the grid */
-		if (square_object(cave, player->grid))
-			push_object(player->grid);
+		if (square_object(cave, player->mon.grid))
+			push_object(player->mon.grid);
 	}
 }
 
@@ -990,7 +990,7 @@ static void refill_lamp(struct object *lamp, struct object *obj)
 			if (object_is_carried(player, obj) && inven_carry_okay(used))
 				inven_carry(player, used, true, true);
 			else
-				drop_near(cave, &used, 0, player->grid, false, true);
+				drop_near(cave, &used, 0, player->mon.grid, false, true);
 		} else
 			/* Empty a single lantern */
 			obj->timeout = 0;
@@ -1330,7 +1330,7 @@ static int gener_spell_is_castable(const struct player *p, int spell) {
 
 void do_cmd_cast(struct command *cmd)
 {
-	int spell_index, mana, availmana = available_mana(cave, player->grid);
+	int spell_index, mana, availmana = available_mana(cave, player->mon.grid);
 	int dir;
 	const struct player_spell *ps;
 	const char *fail = "You don't know any spells.";

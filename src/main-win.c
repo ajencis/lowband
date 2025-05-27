@@ -2571,7 +2571,7 @@ static void windows_map_aux(void)
 	}
 
 	/* Highlight the player */
-	Term_curs_win(player->grid.x - min_x, player->grid.y - min_y);
+	Term_curs_win(player->mon.grid.x - min_x, player->mon.grid.y - min_y);
 }
 
 

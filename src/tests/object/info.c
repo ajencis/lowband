@@ -105,10 +105,10 @@ int setup_tests(void **state)
 	/* Give the player something to attack. */
 	fill_in_monster_base(&ts->target_base);
 	fill_in_monster_race(&ts->target_race, &ts->target_base);
-	place_new_monster(cave, loc(player->grid.x + 1, player->grid.y),
+	place_new_monster(cave, loc(player->mon.grid.x + 1, player->mon.grid.y),
 		&ts->target_race, false, false, gi, ORIGIN_DROP_WIZARD);
 	ts->target = square_monster(cave,
-		loc(player->grid.x + 1, player->grid.y));
+		loc(player->mon.grid.x + 1, player->mon.grid.y));
 
 	*state = ts;
 	return 0;

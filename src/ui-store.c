@@ -1294,7 +1294,7 @@ static void refresh_stock(game_event_type type, game_event_data *unused, void *u
  */
 void enter_store(game_event_type type, game_event_data *data, void *user)
 {
-	struct store *store = store_at(cave, player->grid);
+	struct store *store = store_at(cave, player->mon.grid);
 
 	/* Check that we're on a store */
 	if (!store) {
@@ -1313,7 +1313,7 @@ void enter_store(game_event_type type, game_event_data *data, void *user)
  */
 void use_store(game_event_type type, game_event_data *data, void *user)
 {
-	struct store *store = store_at(cave, player->grid);
+	struct store *store = store_at(cave, player->mon.grid);
 	struct store_context ctx;
 
 	/* Check that we're on a store */
@@ -1368,7 +1368,7 @@ void leave_store(game_event_type type, game_event_data *data, void *user)
 	sound(MSG_STORE_LEAVE);
 
 	/* L: home heals you */
-	if (store_at(cave, player->grid)->feat == FEAT_HOME) {
+	if (store_at(cave, player->mon.grid)->feat == FEAT_HOME) {
 		//msg("You feel refreshed after resting at home.");
         
 		player->sp_burn = 0;

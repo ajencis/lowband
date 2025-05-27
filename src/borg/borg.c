@@ -676,7 +676,7 @@ void do_cmd_borg(void)
 #endif /* BABLOS */
 
     /* *HACK* set the player location */
-    borg.c = player->grid;
+    borg.c = player->mon.grid;
 
     /* Simple help */
     if (cmd == '?') {

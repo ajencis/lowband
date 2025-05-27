@@ -402,7 +402,7 @@ bool chunk_copy(struct chunk *dest, struct player *p, struct chunk *source,
 			/* Player */
 			if (square(source, grid)->mon == -1) {
 				dest->squares[dest_grid.y][dest_grid.x].mon = -1;
-				p->grid = dest_grid;
+				p->mon.grid = dest_grid;
 			}
 		}
 	}

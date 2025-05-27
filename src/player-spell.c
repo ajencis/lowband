@@ -609,7 +609,7 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 	assert(spell);
 	const struct magic_realm *realm = get_player_realm(player);
 	int mana = player_spell_mana(spell);
-	int availmana = available_mana(cave, player->grid);
+	int availmana = available_mana(cave, player->mon.grid);
 	int chance = player_spell_fail(spell);
 
 	assert(realm);
@@ -663,12 +663,12 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 		take_hit(player, mana, "the strain of casting a spell");
 	} else if (mana <= availmana) {
 		/* Use some mana */
-		cave->squares[player->grid.y][player->grid.x].mana -= mana;
-		square_average_mana(cave, player->grid);
+		cave->squares[player->mon.grid.y][player->mon.grid.x].mana -= mana;
+		square_average_mana(cave, player->mon.grid);
 	} else {
 		int oops = mana - availmana;
-		cave->squares[player->grid.y][player->grid.x].mana -= availmana;
-		square_average_mana(cave, player->grid);
+		cave->squares[player->mon.grid.y][player->mon.grid.x].mana -= availmana;
+		square_average_mana(cave, player->mon.grid);
 
 		/* Over-exert the player */
 		player_over_exert(player, PY_EXERT_FAINT, 100, 5 * oops + 1);
@@ -1200,7 +1200,7 @@ static bool will_autocast(struct player_spell *ps, const struct player *p)
 		}
 
 		else if (ef->index == EF_LIGHT_AREA) {
-			if (!square_isglow(cave, p->grid)) {
+			if (!square_isglow(cave, p->mon.grid)) {
 				return true;
 			}
 		}

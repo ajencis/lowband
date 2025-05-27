@@ -606,10 +606,10 @@ struct monster *smite_target_get(int dir)
 		}
 	} else if (dir != DIR_UNKNOWN) {
 		int i, range = z_info->max_sight;
-		struct loc direction = loc_sum(player->grid, loc(range * ddx[dir], range * ddy[dir]));
+		struct loc direction = loc_sum(player->mon.grid, loc(range * ddx[dir], range * ddy[dir]));
 		int path_n;
 		struct loc path_g[256], target;
-		path_n = project_path(cave, path_g, range, player->grid, direction, 0);
+		path_n = project_path(cave, path_g, range, player->mon.grid, direction, 0);
 		for (i = 0; i < path_n; i++) {
 			target = path_g[i];
 			struct monster *mon = square_monster(cave, target);

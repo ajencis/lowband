@@ -421,7 +421,7 @@ struct player {
 
 	struct monster mon;	// L: player as a monster
 
-	struct loc grid;	/* Player location */
+	//struct loc grid;	/* Player location */
 	struct loc old_grid;/* Player location before leaving for an arena */
 
 	uint8_t hitdie;		/* Hit dice (sides) */
@@ -444,8 +444,6 @@ struct player {
 	uint32_t exp;		/* Cur experience */
 	uint16_t exp_frac;	/* Cur exp frac (times 2^16) */
 
-	//int16_t mhp;		/* Max hit pts */
-	//int16_t chp;		/* Cur hit pts */
 	uint16_t chp_frac;	/* Cur hit frac (times 2^16) */
 
 	int16_t msp;		/* Max mana pts */
@@ -457,8 +455,6 @@ struct player {
 	int16_t stat_cur[STAT_MAX];	/* Current "natural" stat values */
 	int16_t stat_map[STAT_MAX];	/* Tracks remapped stats from temp stat swap */
 	int16_t stat_max_max[STAT_MAX]; /* Cap of increases to stats */
-
-	//int16_t *timed;				/* Timed effects */
 
 	int16_t word_recall;		/* Word of recall counter */
 	int16_t deep_descent;		/* Deep Descent counter */

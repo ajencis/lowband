@@ -164,7 +164,7 @@ void look_mon_desc(char *buf, size_t max, int m_idx)
 bool target_able(const struct monster *m)
 {
 	return m && m->race && monster_is_obvious(m) &&
-			projectable(cave, player->grid, m->grid, PROJECT_NONE) &&
+			projectable(cave, player->mon.grid, m->grid, PROJECT_NONE) &&
 			!player->mon.m_timed[TMD_IMAGE];
 }
 
@@ -293,8 +293,8 @@ void target_release(void)
  */
 int cmp_distance(const void *a, const void *b)
 {
-	int py = player->grid.y;
-	int px = player->grid.x;
+	int py = player->mon.grid.y;
+	int px = player->mon.grid.x;
 
 	const struct loc *pa = a;
 	const struct loc *pb = b;
@@ -426,8 +426,8 @@ void coords_desc(char *buf, int size, int y, int x)
 	const char *east_or_west;
 	const char *north_or_south;
 
-	int py = player->grid.y;
-	int px = player->grid.x;
+	int py = player->mon.grid.y;
+	int px = player->mon.grid.x;
 
 	if (y > py)
 		north_or_south = "S";
@@ -498,10 +498,10 @@ struct point_set *target_get_monsters(int mode, monster_predicate pred,
 		/* Get the current panel */
 		get_panel(&min_y, &min_x, &max_y, &max_x);
 	} else {
-		min_y = player->grid.y - z_info->max_range;
-		max_y = player->grid.y + z_info->max_range + 1;
-		min_x = player->grid.x - z_info->max_range;
-		max_x = player->grid.x + z_info->max_range + 1;
+		min_y = player->mon.grid.y - z_info->max_range;
+		max_y = player->mon.grid.y + z_info->max_range + 1;
+		min_x = player->mon.grid.x - z_info->max_range;
+		max_x = player->mon.grid.x + z_info->max_range + 1;
 	}
 
 	/* Scan for targets */

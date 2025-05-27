@@ -660,7 +660,7 @@ static struct menu *diplomacy_menu_new(struct player *p, struct monster *mon,
 		d->commands[d->num_commands] = CMD_DIP_HIRE;
 		++d->num_commands;
 	}
-	if (distance(mon->grid, player->grid) <= 2) {
+	if (distance(mon->grid, player->mon.grid) <= 2) {
 		d->commands[d->num_commands] = CMD_DIP_GIFT;
 		++d->num_commands;
 	}

@@ -300,7 +300,7 @@ static void wiz_drop_object(struct object *obj)
 	obj->origin_depth = convert_depth_to_origin(player->depth);
 
 	/* Drop the object from heaven. */
-	drop_near(cave, &obj, 0, player->grid, true, true);
+	drop_near(cave, &obj, 0, player->mon.grid, true, true);
 }
 
 
@@ -337,7 +337,7 @@ static void wiz_hack_map(struct chunk *c, struct player *p,
 			(*func)(c, closure, grid, &show, &color);
 			if (!show) continue;
 
-			if (loc_eq(grid, p->grid)) {
+			if (loc_eq(grid, p->mon.grid)) {
 				print_rel(L'@', color, y, x);
 			} else if (square_ispassable(c, grid)) {
 				print_rel(L'*', color, y, x);
@@ -405,7 +405,7 @@ void do_cmd_wiz_acquire(struct command *cmd)
 		cmd_set_arg_number(cmd, "quantity", n);
 	}
 
-	acquirement(player->grid, player->depth, n, great);
+	acquirement(player->mon.grid, player->depth, n, great);
 }
 
 
@@ -913,17 +913,17 @@ void do_cmd_wiz_create_trap(struct command *cmd)
 		cmd_set_arg_number(cmd, "index", tidx);
 	}
 
-	if (!square_isfloor(cave, player->grid)
-			|| square_isplayertrap(cave, player->grid)
-			|| square_iswebbed(cave, player->grid)
-			|| square_object(cave, player->grid)) {
+	if (!square_isfloor(cave, player->mon.grid)
+			|| square_isplayertrap(cave, player->mon.grid)
+			|| square_iswebbed(cave, player->mon.grid)
+			|| square_object(cave, player->mon.grid)) {
 		msg("You can't place a trap there!");
 	} else if (player->depth == 0) {
 		msg("You can't place a trap in the town!");
 	} else if (tidx < 1 || tidx >= z_info->trap_max) {
 		msg("Trap not found.");
 	} else {
-		place_trap(cave, player->grid, tidx, 0);
+		place_trap(cave, player->mon.grid, tidx, 0);
 		/* Can not repeat since there's now a trap here. */
 		cmd_disable_repeat();
 	}
@@ -2643,7 +2643,7 @@ void do_cmd_wiz_summon_named(struct command *cmd)
 		struct loc grid;
 
 		/* Pick an empty location. */
-		if (i >= 10 || scatter_ext(cave, &grid, 1, player->grid, 1,
+		if (i >= 10 || scatter_ext(cave, &grid, 1, player->mon.grid, 1,
 				true, square_isempty) == 0) {
 			msg("Could not place monster.");
 			break;
