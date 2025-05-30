@@ -1908,6 +1908,9 @@ void py_attack(struct player *p, struct loc grid)
 		}
 
 		blow_energy = 100 * z_info->move_energy / aroll.blows;
+		blow_energy *= 2;
+		blow_energy /= p->state.num_blows + 1;
+		
 		cleaveblowenergy = (blow_energy * (100 - cleavediscount) + 99) / 100;
 
 		if (doingcleave) {

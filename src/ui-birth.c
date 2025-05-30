@@ -334,16 +334,21 @@ static void race_help(int i, void *db, const region *l)
 {
 	int j;
 	struct player_race *r = player_id2race(i);
+	struct monster_race *mon = race_to_monster(r);
 	//int len = (STAT_MAX + 1) / 2;
 
 	struct player_ability *ability;
 	int n_flags = 0;
 	int flag_space = 5;
-	int race_skills[SKILL_MAX] = { 0 };
+	int race_skills[SKILL_MAX];
+	int race_powers[PP_MAX];
 	struct element_info race_elem_info[ELEM_MAX] = { 0 };
 
-	player_race_r_skill(r, false, race_skills);
+	//player_race_r_skill(r, false, race_skills);
 	player_race_elem_info(r, false, race_elem_info);
+
+	memcpy(race_skills, mon->skills, sizeof race_skills);
+	memcpy(race_powers, mon->powers, sizeof race_powers);
 
 	if (!r) return;
 
@@ -399,14 +404,14 @@ static void race_help(int i, void *db, const region *l)
 				   (race_elem_info[ability->index].res_level != ability->value)) {
 			continue;
 		} else if ((ability->type == PY_ABIL_POWER) &&
-		           (!r->r_powers[ability->index])) {
+		           (!race_powers[ability->index])) {
             continue;
 		} else if ((ability->type == PY_ABIL_SKILL)) {
 			continue;
 		}
 
 		if (ability->type == PY_ABIL_POWER) {
-		    text_out_e("\n%s [%i%%]", ability->name, r->r_powers[ability->index]);
+		    text_out_e("\n%s [%i%%]", ability->name, race_powers[ability->index]);
 		} else {
 			text_out_e("\n%s", ability->name);
 		}
@@ -427,6 +432,7 @@ static void class_help(int i, void *db, const region *l)
 {
 	struct player_class *c = player_id2class(i);
 	const struct player_race *r = player->race;
+	const struct monster_race *mr = race_to_monster(r);
 
 	struct player_ability *ability;
 	int n_flags = 0;
@@ -441,7 +447,7 @@ static void class_help(int i, void *db, const region *l)
 	text_out_indent = CLASS_AUX_COL;
 	Term_gotoxy(CLASS_AUX_COL, TABLE_ROW);
 	
-	skill_help(r->r_skills, c->c_skills, r->r_mhp + c->c_mhp,
+	skill_help(mr->skills, c->c_skills, r->r_mhp + c->c_mhp,
 			   r->r_exp + c->c_exp, -1);
 
 	if (c->magic.total_spells) {
@@ -1422,13 +1428,12 @@ static enum birth_stage point_based_command(void)
 static struct evolution *next_evol(struct player *p)
 {
 	if (p->evol_choices) return p->evol_choices[p->num_evol_choices - 1]->evol;
-	else if (p->curr_monster_race) return p->curr_monster_race->evol;
+	else if (p->mon.race) return p->mon.race->evol;
 	else return p->race->evol;
 }
 
 static void check_player_birth_monster(struct player *p)
 {
-	demonster_player(p);
 	check_player_monster(p, true);
 	get_bonuses();
 	display_player_xtra_info();
@@ -1879,12 +1884,14 @@ int textui_do_birth(void)
 
 				next = menu_question(current_stage, menu, command);
 
-				if (next == BIRTH_BACK)
+				if (next == BIRTH_BACK) {
 					next = current_stage - 1;
+				}
 
 				/* Make sure the character gets reset before quickstarting */
-				if (next == BIRTH_QUICKSTART) 
+				if (next == BIRTH_QUICKSTART) {
 					next = BIRTH_RESET;
+				}
 
 				break;
 			}

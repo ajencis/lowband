@@ -2187,6 +2187,8 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 
 void rearrange_monster(struct monster_race *mr, bool is_player)
 {
+	if (is_player && rf_has(mr->flags, RF_PLAYABLE)) return;
+
 	int power = mr->level;
 	if (!is_player) power += randint0(mr->level / 5 + 1) - randint0(mr->level / 5 + 1);
 	int blows = 0;

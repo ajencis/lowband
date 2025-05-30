@@ -481,16 +481,18 @@ void display_player_stat_info(void)
 	for (i = 0; i < STAT_MAX; i++) {
 		int maxmax;
 		/* Reduced or normal */
-		if (player->stat_cur[i] < player->stat_max[i])
+		if (player->stat_cur[i] < player->stat_max[i]) {
 			/* Use lowercase stat name */
 			put_str(stat_names_reduced[i], row+i, col);
-		else
+		} else {
 			/* Assume uppercase stat name */
 			put_str(stat_names[i], row+i, col);
+		}
 
 		/* Indicate natural maximum */
-		if (player->stat_max[i] == player->stat_max_max[i])
+		if (player->stat_max[i] == player->stat_max_max[i]) {
 			put_str("!", row+i, col+3);
+		}
 
 		/* Internal "natural" maximum value */
 		cnv_stat(player->stat_max[i], buf, sizeof(buf));

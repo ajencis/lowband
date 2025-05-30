@@ -169,8 +169,9 @@ static void prt_stat(int stat, int row, int col)
 	}
 
 	/* Indicate natural maximum */
-	if (player->stat_max[stat] == player->stat_max_max[stat])
+	if (player->stat_max[stat] == player->stat_max_max[stat]) {
 		put_str("!", row, col + 3);
+	}
 }
 
 static int fmt_title(char buf[], int max, bool short_mode)
@@ -463,8 +464,8 @@ static int prt_health_aux(int row, int col)
 
 	/* Tracking an unseen, hallucinatory, or dead monster */
 	if (!monster_is_visible(mon) || /* Unseen */
-		(player->mon.m_timed[TMD_IMAGE]) || /* Hallucination */
-		(mon->hp < 0)) { /* Dead (?) */
+			(player->mon.m_timed[TMD_IMAGE]) || /* Hallucination */
+			(mon->hp < 0)) { /* Dead (?) */
 		/* The monster health is "unknown" */
 		Term_putstr(col, row, 12, attr, "[----------]");
 	} else { /* Visible */

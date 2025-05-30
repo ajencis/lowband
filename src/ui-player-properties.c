@@ -63,8 +63,8 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 {
 	int monster_powers[PP_MAX] = { 0 };
 	int monster_skills[SKILL_MAX] = { 0 };
-	int race_skills[SKILL_MAX] = { 0 };
-	int race_x_skills[SKILL_MAX] = { 0 };
+	//int race_skills[SKILL_MAX] = { 0 };
+	//int race_x_skills[SKILL_MAX] = { 0 };
 	struct monster_race *mrace = lookup_player_monster(p);
 
 	// L: hack for hypothetical players
@@ -73,8 +73,8 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 
 	assert(bufsize > 0);
 
-	player_race_r_skill(p->race, mrace ? true : false, race_skills);
-	player_race_x_skill(p->race, mrace ? true : false, race_x_skills);
+	//player_race_r_skill(p->race, mrace ? true : false, race_skills);
+	//player_race_x_skill(p->race, mrace ? true : false, race_x_skills);
 
 	memset(buf, '\0', bufsize * sizeof *buf);
 
@@ -99,7 +99,7 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 			cbase = 0;
 			cxtra = player_class_power(p, ability->index);
 			rbase = monster_powers[ability->index];
-			rxtra = player_race_power(p, ability->index);
+			rxtra = 0;// player_race_power(p, ability->index);
 			tome = player->extra_powers[ability->index] / 2;
 			stat = 0;
 		}
@@ -107,9 +107,10 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 			int stat1, stat2;
 			player_skill_stats(p, &p->state, ability->index, &stat1, &stat2);
 			cbase = player_class_c_skill(p, ability->index);
-			cxtra = player_class_x_skill(p, ability->index) * 100 / 10;
-			rbase = race_skills[ability->index] + monster_skills[ability->index];
-			rxtra = race_x_skills[ability->index] * 100 / 10;
+			cxtra = player_class_x_skill(p, ability->index) * 100 / PY_MAX_LEVEL;
+			rbase = monster_skills[ability->index];
+			//rxtra = race_x_skills[ability->index] * 100 / 10;
+			rxtra = 0;
 			tome = p->extra_skills[ability->index];
 			if (stat1 != STAT_NONE) {
 				int ind = player_skill_stat_ind(p, &p->state, ability->index);
@@ -1001,7 +1002,7 @@ static struct player *hypothetical_player(const struct player *p)
 	if (hypo->num_evol_choices > 0) {
 		memcpy(hypo_race, hypo->evol_choices[hypo->num_evol_choices - 1], sizeof *hypo_race);
 		rearrange_monster(hypo_race, true);
-		hypo->curr_monster_race = hypo_race;
+		hypo->mon.race = hypo_race;
 	}
 
 	hypo->max_lev = PY_MAX_LEVEL;
@@ -1013,7 +1014,7 @@ static struct player *hypothetical_player(const struct player *p)
 static void free_hypothetical_player(struct player *hypo)
 {
 	if (hypo) {
-		mem_free(hypo->curr_monster_race);
+		mem_free(hypo->mon.race);
 		mem_free(hypo);
 	}
 }

@@ -229,6 +229,7 @@ attr:AC:1
 attr:HP:-2
 attr:SPEED:1
 player-flags:NO_FOOD
+stats:-2:0:-1:2:1
 
 # Giants are big, strong humanoids which hit hard and throw boulders.  They
 # may be associated with an element and have some spells, but their focus is
@@ -339,6 +340,7 @@ flags:OPEN_DOOR | BASH_DOOR | SPIRIT | CLEAR_WEB
 flags:SAPIENT
 desc:Kobold
 body:Humanoid
+stats:-2:1:-2:2:1
 
 # Powerful undead spellcasters, tending to drain dexterity and charges in melee
 name:lich
@@ -482,6 +484,8 @@ flags:SAPIENT
 flags:GEAR
 desc:Orc
 body:Humanoid
+stats:0:-1:1:-2:2
+
 
 name:person
 glyph:p
@@ -618,6 +622,7 @@ attr:SPEED:-1
 attr:HP:1
 attr:DAMAGE:1
 attr:AC:-1
+stats:2:-1:-2:-1:2
 
 # Powerful undead which drain experience
 name:vampire
@@ -750,6 +755,7 @@ attr:AC:-1
 attr:SPEED:-2
 attr:DAMAGE:3
 attr:MAGIC:-1
+stats:1:-2:-1:-1:3
 player-flags:NO_FOOD
 
 ##### Special templates #####

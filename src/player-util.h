@@ -66,6 +66,7 @@ bool races_unlock(struct player *p);
 bool tomes_unlock(struct player *p);
 bool player_can_metaprogress(struct player *p);
 
+struct monster_race *race_to_monster(const struct player_race *r);
 struct monster_race *lookup_player_monster(const struct player *p);
 void change_player_monster(struct player *p, const struct monster_race *mon, bool init);
 bool check_player_monster(struct player *p, bool init);
@@ -75,6 +76,8 @@ void remove_first_evolution(struct player *p);
 void remove_last_evolution(struct player *p);
 bool add_evolution(struct player *p, const struct monster_race *mr);
 bool select_evolution(struct player *p);
+int expected_monster_evol_level(const struct monster_race *mr);
+int expected_max_evol_level(const struct player *p);
 
 int get_power_scale_state(const struct player_state *ps, int power, int scaleto, int level);
 int get_power_scale(const struct player *p, int power, int scaleto);

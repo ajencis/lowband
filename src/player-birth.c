@@ -155,7 +155,10 @@ static int birth_stat(struct player *p, int stat)
 {
 	int use = p->stat_max_max[stat];
 	if (use > 18) use = (use - 18) / 10 + 18;
-	use -= p->race->r_adj[stat];
+	assert(p->mon.race);
+	int radj = p->mon.race->stat_mod[stat];
+	use -= radj;
+	//use -= p->race->r_adj[stat];
 	use += p->race->evol ? 0 : 1;
 
 	return MIN(p->stat_max_max[stat], use / 2 + 5);
@@ -293,7 +296,8 @@ static void get_stats(int stat_use[STAT_MAX])
 		j = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 
 		/* Save that value */
-		player->stat_max_max[i] = j + player->race->r_adj[i];
+		int radj = player->mon.race->stat_mod[i];
+		player->stat_max_max[i] = j + radj;// player->race->r_adj[i];
 		if (player->stat_max_max[i] > 18) {
 			player->stat_max_max[i] = (player->stat_max_max[i] - 18) / 10 + 18;
 		}
@@ -366,8 +370,8 @@ void get_bonuses(void)
 
 void demonster_player(struct player *p)
 {
-	mem_free(p->curr_monster_race);
-	p->curr_monster_race = NULL;
+	mem_free(p->mon.race);
+	p->mon.race = NULL;
 	get_bonuses();
 }
 
@@ -753,8 +757,9 @@ static void player_outfit(struct player *p)
 	}
 
 	/* Sanity check */
-	if (p->au < 0)
+	if (p->au < 0) {
 		p->au = 0;
+	}
 
 	/* Now try wielding everything */
 	wield_all(p);
@@ -778,7 +783,8 @@ static void recalculate_stats(int *stats_local_local, int points_left_local)
 
 	/* L: Variable stat maxes */
 	for (i = 0; i < STAT_MAX; i++) {
-		player->stat_max_max[i] = MAX(stats_local_local[i] + player->race->r_adj[i], 3);
+		int radj = player->mon.race->stat_mod[i];
+		player->stat_max_max[i] = MAX(stats_local_local[i] + radj, 3);// player->race->r_adj[i], 3);
 		if (player->stat_max_max[i] > 18) player->stat_max_max[i] = (player->stat_max_max[i] - 18) * 10 + 18;
 		player->stat_cur[i] = player->stat_max[i] =	player->stat_birth[i]
 		                    = birth_stat(player, i);
@@ -1079,8 +1085,8 @@ void player_generate(struct player *p, const struct player_race *r,
 					 const struct player_class *c, bool old_history)
 {
 	int i;
-
-	//unlock_all(p);
+	struct monster_race *mr;
+	char mon_name[80];
 
 	if (!c) {
 		c = p->class;
@@ -1092,7 +1098,12 @@ void player_generate(struct player *p, const struct player_race *r,
 	p->class = c;
 	p->race = r;
 
-	//p->mon.race = lookup_monster("human");
+	strncpy(mon_name, p->race->name, sizeof mon_name);
+	my_struncap_full(mon_name);
+
+	mr = lookup_monster(mon_name);
+	if (!mr) mr = lookup_monster("human");
+	change_player_monster(p, mr, true);
 
 	/* Level 1 */
 	p->max_lev = p->lev = 1;
@@ -1409,8 +1420,8 @@ void do_cmd_accept_character(struct command *cmd)
 	player_learn_innate(player);
 
 	// L: remove evolution as necessary
-	if (player->evol_choices && player->curr_monster_race) {
-		if (player->evol_choices[0]->ridx == player->curr_monster_race->ridx) {
+	if (player->evol_choices && player->mon.race) {
+		if (player->evol_choices[0]->ridx == player->mon.race->ridx) {
 			remove_first_evolution(player);
 		}
 	}

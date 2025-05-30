@@ -344,7 +344,7 @@ void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract)
 
 	p->xp_this_turn += new_amt;
 
-	if (p->lev >= 10) {
+	if (p->lev >= 10 && p->num_evol_choices > 0) {
 		if (p->monster_xp < UINT32_MAX - new_amt) {
 			p->monster_xp += new_amt;
 		} else {
@@ -614,7 +614,7 @@ void player_cleanup_members(struct player *p)
 		mem_free(p->evol_choices);
 		p->evol_choices = NULL;
 	}
-	mem_free(p->curr_monster_race);
+	mem_free(p->mon.race);
 }
 
 

@@ -734,12 +734,12 @@ int rd_player(void)
 			note(format("Invalid monster race (%i).", tmp32u));
 			return -1;
 		}
-		player->curr_monster_race = mem_zalloc(sizeof(struct monster_race));
-		memcpy(player->curr_monster_race, &r_info[tmp32u], sizeof(*player->curr_monster_race));
-		rearrange_monster(player->curr_monster_race, true);
+		player->mon.race = mem_zalloc(sizeof(struct monster_race));
+		memcpy(player->mon.race, &r_info[tmp32u], sizeof(*player->mon.race));
+		rearrange_monster(player->mon.race, true);
 	}
 	else {
-		player->curr_monster_race = NULL;
+		player->mon.race = NULL;
 	}
 
 	rd_s16b(&tmp16s);

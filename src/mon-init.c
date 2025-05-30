@@ -1723,6 +1723,10 @@ static enum parser_error parse_monster_name(struct parser *p) {
 	struct monster_race *r = mem_zalloc(sizeof *r);
 	r->next = h;
 	r->name = string_make(parser_getstr(p, "name"));
+
+	// L: hack: flags stats as having not been determined yet
+	r->stat_mod[STAT_STR] = INT_MIN;
+
 	parser_setpriv(p, r);
 	return PARSE_ERROR_NONE;
 }
@@ -1731,8 +1735,9 @@ static enum parser_error parse_monster_base(struct parser *p) {
 	struct monster_race *r = parser_priv(p);
 
 	r->base = lookup_monster_base(parser_getsym(p, "base"));
-	if (r->base == NULL)
+	if (r->base == NULL) {
 		return PARSE_ERROR_INVALID_MONSTER_BASE;
+	}
 
 	/* The template sets the default display character */
 	r->d_char = r->base->d_char;
@@ -1740,8 +1745,9 @@ static enum parser_error parse_monster_base(struct parser *p) {
 	// L: template gives default body as well
 	r->body = r->base->body;
 
-	// L: and default powers
+	// L: and default powers and skills
 	memcpy(r->powers, r->base->powers, sizeof *r->powers * PP_MAX);
+	memcpy(r->skills, r->base->skills, sizeof *r->skills * SKILL_MAX);
 
 	/* Give the monster its default flags */
 	rf_union(r->flags, r->base->flags);
@@ -2396,6 +2402,49 @@ static enum parser_error parse_monster_powers(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_monster_skills(struct parser *p)
+{
+	struct monster_race *r = parser_priv(p);
+	int skill = code_index_in_array(skill_names, parser_getsym(p, "which"));
+	int amt = parser_getint(p, "amt");
+
+	if (!r) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	if (skill < 0 || skill >= SKILL_MAX) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	r->skills[skill] = amt;
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_monster_stats(struct parser *p)
+{
+	struct monster_race *r = parser_priv(p);
+	int st, in, ws, dx, cn;
+
+	if (!r) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	st = parser_getint(p, "str");
+	in = parser_getint(p, "int");
+	ws = parser_getint(p, "wis");
+	dx = parser_getint(p, "dex");
+	cn = parser_getint(p, "con");
+
+	r->stat_mod[STAT_STR] = st;
+	r->stat_mod[STAT_INT] = in;
+	r->stat_mod[STAT_WIS] = ws;
+	r->stat_mod[STAT_DEX] = dx;
+	r->stat_mod[STAT_CON] = cn;
+
+	return PARSE_ERROR_NONE;
+}
+
 struct parser *init_parse_monster(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -2437,6 +2486,8 @@ struct parser *init_parse_monster(void) {
 	parser_reg(p, "evolution str evol", parse_monster_evolution);
 	parser_reg(p, "body str body", parse_monster_body);
 	parser_reg(p, "power sym name ?int amt", parse_monster_powers);
+	parser_reg(p, "skill sym which int amt", parse_monster_skills);
+	parser_reg(p, "stats int str int int int wis int dex int con", parse_monster_stats);
 	return p;
 }
 
@@ -2552,6 +2603,21 @@ static errr finish_parse_monster(struct parser *p) {
 			}
 			string_free(e->name);
 			e->name = NULL;
+		}
+
+		if (race->stat_mod[STAT_STR] == INT_MIN) {
+			int j;
+
+			for (j = 0; j < STAT_MAX; ++j) {
+				int base = race->base->stats[j];
+
+				if (base <= 0 || race->level == 0) {
+					race->stat_mod[j] = base;
+				}
+				else {
+					race->stat_mod[j] = (race->level * base + 33) / 50;
+				}
+			}
 		}
 	}
 

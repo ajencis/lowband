@@ -203,13 +203,24 @@ bool player_can_metaprogress(struct player *p)
 }
 
 
-
 /**
  * L: functions for players that are monsters
  */
+struct monster_race *race_to_monster(const struct player_race *r)
+{
+	char name[80];
+	struct monster_race *result;
+	my_strcpy(name, r->name, sizeof name);
+	my_struncap_full(name);
+	result = lookup_monster(name);
+	assert(result);
+	return result;
+}
+
 struct monster_race *lookup_player_monster(const struct player *p)
 {
-	return p->curr_monster_race;
+	assert(p->mon.race);
+	return p->mon.race;
 }
 
 static void change_player_body(struct player *p, struct player_body *new)
@@ -342,8 +353,8 @@ void remove_last_evolution(struct player *p)
 void change_player_monster(struct player *p, const struct monster_race *mon, bool init)
 {
 	assert(mon);
-	disturb(p);
 	if (!init) {
+		disturb(p);
 		msg("You transform into a%s %s.", is_a_vowel(mon->name[0]) ? "n" : "", mon->name);
 	}
 
@@ -351,10 +362,12 @@ void change_player_monster(struct player *p, const struct monster_race *mon, boo
 		change_player_body(p, mon->body);
 	}
 
-	mem_free(p->curr_monster_race);
-	p->curr_monster_race = mem_zalloc(sizeof(struct monster_race));
-	memcpy(p->curr_monster_race, mon, sizeof(*p->curr_monster_race));
-	rearrange_monster(p->curr_monster_race, true);
+	if (!p->mon.race) {
+		p->mon.race = mem_zalloc(sizeof *p->mon.race);
+	}
+
+	memcpy(p->mon.race, mon, sizeof *p->mon.race);
+	rearrange_monster(p->mon.race, true);
 
 	player->upkeep->redraw |= (PR_MAP | PR_MISC);
 	player->upkeep->update |= (PU_BONUS | PU_HP);
@@ -374,7 +387,7 @@ bool check_player_monster(struct player *p, bool init)
 	}
 
 	if (!p->evol_choices) return false;
-	if (init && p->curr_monster_race) return false;
+	if (init && p->mon.race) return false;
 	//assert(p->evol_choices);
 
 	selected = p->evol_choices[0];
@@ -477,7 +490,7 @@ bool select_evolution(struct player *p)
 	const struct monster_race *select;
 
 	if (p->evol_choices) choice_evol = p->evol_choices[p->num_evol_choices - 1]->evol;
-	else choice_evol = p->curr_monster_race ? p->curr_monster_race->evol : p->race->evol;
+	else choice_evol = p->mon.race ? p->mon.race->evol : p->race->evol;
 
 	if (!choice_evol) return false;
 
@@ -495,6 +508,28 @@ bool select_evolution(struct player *p)
 	return true;
 }
 
+int expected_monster_evol_level(const struct monster_race *mr)
+{
+	const struct evolution *evol;
+	int sum = 0, div = 0;
+
+	for (evol = mr->evol; evol; evol = evol->next) {
+		sum += expected_monster_evol_level(evol->race);
+		div += 1;
+	}
+
+	if (div > 0) return sum / div;
+	return mr->level;
+}
+
+int expected_max_evol_level(const struct player *p)
+{
+	const struct monster_race *curr;
+
+	curr = p->evol_choices ? p->evol_choices[0] : lookup_player_monster(p);
+
+	return expected_monster_evol_level(curr);
+}
 
 
 
@@ -1209,7 +1244,7 @@ int class_x_skill(const struct player_class *c, int extra, int skill)
 	int xtra = c->x_skills[skill];
 	// extra-learning makes class reflect known skills
 	if (pf_has(c->pflags, PF_EXTRA_LEARNING)) {
-		xtra = MAX(xtra, extra * 3 / 4 / 5);
+		xtra = MAX(xtra, extra * 3 / 4);
 	}
 	return xtra;
 }

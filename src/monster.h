@@ -53,12 +53,6 @@ enum
 	MFLAG_MAX
 };
 
-/*enum {
-	#define MON_TMD(a, b, c, d, e, f, g, h) MON_TMD_##a,
-	#include "list-mon-timed.h"
-	#undef MON_TMD
-};*/
-
 #define MFLAG_SIZE                FLAG_SIZE(MFLAG_MAX)
 
 #define mflag_has(f, flag)        flag_has_dbg(f, MFLAG_SIZE, flag, #f, #flag)
@@ -439,6 +433,8 @@ struct monster_race {
 	struct evolution *evol;		/* L: monster into which it evolves */
 
 	int powers[PP_MAX];
+	int skills[SKILL_MAX];
+	int stat_mod[STAT_MAX];		// L: its stat modifiers for a player
 };
 
 
