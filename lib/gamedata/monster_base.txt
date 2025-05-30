@@ -203,7 +203,7 @@ flags:NONLIVING
 desc:Elemental
 attr:MAGIC:1
 attr:HP:-1
-stats:1:-1:1:-1:1
+stats:0:0:0:0:0
 
 # Fast moving, bash doors, hit hard in melee
 name:feline
@@ -553,6 +553,7 @@ attr:AC:3
 attr:HP:-4
 attr:MAGIC:1
 player-flags:NO_FOOD
+stats:-1:1:-1:2:-1
 
 # Snakes are typically slow, but have high armor class
 name:snake

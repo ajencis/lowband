@@ -474,3 +474,5 @@ monster:phoenix
 
 name:Batling
 monster:fruit bat
+
+name:Skeletal

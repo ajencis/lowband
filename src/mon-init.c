@@ -32,6 +32,7 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
+#include "player-calcs.h"
 #include "player-properties.h"
 #include "player-spell.h"
 #include "player-timed.h"
@@ -118,6 +119,14 @@ static const char *ptimed_names[] =
 	#define TMD(a, b, c, d, e, f, g, h, i, j) #a,
 	#include "list-player-timed.h"
 	#undef TMD
+	""
+};
+
+static const char *element_names[] = 
+{
+	#define ELEM(x) #x,
+	#include "list-elements.h"
+	#undef ELEM
 	""
 };
 
@@ -224,6 +233,44 @@ static int power_index_by_name(const char *name)
 		}
 	}
 	return -1;
+}
+
+static bool flag_to_elem_info(const char *flag, struct element_info el_info[ELEM_MAX])
+{
+	char elem_name[24];
+	int elem_num, res_lev;
+
+	if (strstr(flag, "RES_") == flag) {
+		strnfmt(elem_name, sizeof elem_name, "%s", flag + 4);
+		res_lev = 1;
+	}
+	else if (strstr(flag, "IM_") == flag) {
+		strnfmt(elem_name, sizeof elem_name, "%s", flag + 3);
+		res_lev = 3;
+	}
+	else if (strstr(flag, "HURT_") == flag) {
+		strnfmt(elem_name, sizeof elem_name, "%s", flag + 5);
+		res_lev = -1;
+	}
+	else if (strstr(flag, "NTRL_") == flag) {
+		strnfmt(elem_name, sizeof elem_name, "%s", flag + 5);
+		res_lev = 0;
+	}
+	else {
+		return false;
+	}
+
+	elem_num = code_index_in_array(element_names, elem_name);
+
+	if (elem_num < 0) {
+		return false;
+	}
+
+	assert(elem_num >= 0 && elem_num < ELEM_MAX);
+
+	el_info[elem_num].res_level = res_lev;
+
+	return true;
 }
 
 /**
@@ -511,10 +558,11 @@ static errr finish_parse_meth(struct parser *p) {
 	for (meth = parser_priv(p); meth; meth = next, count++) {
 		memcpy(&blow_methods[count], meth, sizeof(*meth));
 		next = meth->next;
-		if (next)
+		if (next) {
 			blow_methods[count].next = &blow_methods[count + 1];
-		else
+		} else {
 			blow_methods[count].next = NULL;
+		}
 
 		mem_free(meth);
 	}
@@ -1387,14 +1435,17 @@ static enum parser_error parse_mon_base_flags(struct parser *p) {
 	char *flags;
 	char *s;
 
-	if (!rb)
+	if (!rb) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	if (!parser_hasval(p, "flags"))
+	} if (!parser_hasval(p, "flags")) {
 		return PARSE_ERROR_NONE;
+	}
 	flags = string_make(parser_getstr(p, "flags"));
 	s = strtok(flags, " |");
 	while (s) {
-		if (grab_flag(rb->flags, RF_SIZE, r_info_flags, s)) {
+		if (flag_to_elem_info(s, rb->elem_info)) {
+		}
+		else if (grab_flag(rb->flags, RF_SIZE, r_info_flags, s)) {
 			plog(format("bad monster base flag: %s", s));
 			string_free(flags);
 			return PARSE_ERROR_INVALID_FLAG;
@@ -1749,6 +1800,9 @@ static enum parser_error parse_monster_base(struct parser *p) {
 	memcpy(r->powers, r->base->powers, sizeof *r->powers * PP_MAX);
 	memcpy(r->skills, r->base->skills, sizeof *r->skills * SKILL_MAX);
 
+	// L: and default element info
+	memcpy(r->el_info, r->base->elem_info, sizeof *r->el_info * ELEM_MAX);
+
 	/* Give the monster its default flags */
 	rf_union(r->flags, r->base->flags);
 
@@ -1920,14 +1974,19 @@ static enum parser_error parse_monster_flags(struct parser *p) {
 	char *flags;
 	char *s;
 
-	if (!r)
+	if (!r) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	if (!parser_hasval(p, "flags"))
+	}
+	if (!parser_hasval(p, "flags")) {
 		return PARSE_ERROR_NONE;
+	}
 	flags = string_make(parser_getstr(p, "flags"));
 	s = strtok(flags, " |");
 	while (s) {
-		if (grab_flag(r->flags, RF_SIZE, r_info_flags, s)) {
+		// L: generic element flags
+		if (flag_to_elem_info(s, r->el_info)) {
+		}
+		else if (grab_flag(r->flags, RF_SIZE, r_info_flags, s)) {
 			plog(format("bad monster race flag: %s", s));
 			string_free(flags);
 			return PARSE_ERROR_INVALID_FLAG;
@@ -2573,6 +2632,8 @@ static errr finish_parse_monster(struct parser *p) {
 		struct monster_friends *f;
 		struct monster_shape *s;
 		struct evolution *e;
+		int j;
+
 		for (f = race->friends; f; f = f->next) {
 			if (!my_stricmp(f->name, "same")) {
 				f->race = race;
@@ -2605,9 +2666,8 @@ static errr finish_parse_monster(struct parser *p) {
 			e->name = NULL;
 		}
 
+		// L: get default stats
 		if (race->stat_mod[STAT_STR] == INT_MIN) {
-			int j;
-
 			for (j = 0; j < STAT_MAX; ++j) {
 				int base = race->base->stats[j];
 

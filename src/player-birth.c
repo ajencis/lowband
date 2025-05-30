@@ -158,8 +158,6 @@ static int birth_stat(struct player *p, int stat)
 	assert(p->mon.race);
 	int radj = p->mon.race->stat_mod[stat];
 	use -= radj;
-	//use -= p->race->r_adj[stat];
-	use += p->race->evol ? 0 : 1;
 
 	return MIN(p->stat_max_max[stat], use / 2 + 5);
 }

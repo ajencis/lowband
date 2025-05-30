@@ -1534,8 +1534,9 @@ void monster_take_terrain_damage(struct monster *mon)
 	/* Damage the monster */
 	if (square_isfiery(cave, mon->grid)) {
 		bool fear = false;
+		int res_level = mon->race->el_info[ELEM_FIRE].res_level;
 
-		if (!rf_has(mon->race->flags, RF_IM_FIRE)) {
+		if (res_level < 3) {//!rf_has(mon->race->flags, RF_IM_FIRE)) {
 			mon_take_nonplayer_hit(100 + randint1(100), mon, MON_MSG_CATCH_FIRE,
 								   MON_MSG_DISINTEGRATES, false);
 		}
@@ -2185,9 +2186,24 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 	}
 }
 
+static int level_to_hp(int level)
+{
+	return (int)(MAX(level + 25.0, level * 2.5) * (my_sqrt(level) + 1) / 11.0);
+}
+
+static void normal_monster(struct monster_race *mr)
+{
+	mr->ac = 0;
+	mr->speed = 110;
+	mr->avg_hp = level_to_hp(mr->level);
+}
+
 void rearrange_monster(struct monster_race *mr, bool is_player)
 {
-	if (is_player && rf_has(mr->flags, RF_PLAYABLE)) return;
+	if (is_player && rf_has(mr->flags, RF_PLAYABLE)) {
+		normal_monster(mr);
+		return;
+	}
 
 	int power = mr->level;
 	if (!is_player) power += randint0(mr->level / 5 + 1) - randint0(mr->level / 5 + 1);
@@ -2280,7 +2296,7 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 
 	// calculate its stats based on power
 	//mr->avg_hp = MAX(hp / 2 + 5, hp) * MAX((hp + 1) / 2 + 10, hp) / 10; // 1000ish for level 100
-	mr->avg_hp = (int)(MAX(hp + 25.0, hp * 2.5) * (my_sqrt(hp) + 1) / 10.0); // 250ish for level 100
+	mr->avg_hp = level_to_hp(hp); // 250ish for level 100
 	mr->ac = ac; // 100ish for level 100
 	mr->speed = 105 + (spe * 30 + 49) / 100; // 135ish for level 100
 	mr->spell_power = spellcaster ? mag : 0; // 100ish for level 100

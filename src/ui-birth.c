@@ -344,8 +344,11 @@ static void race_help(int i, void *db, const region *l)
 	int race_powers[PP_MAX];
 	struct element_info race_elem_info[ELEM_MAX] = { 0 };
 
+	assert(mon);
+
 	//player_race_r_skill(r, false, race_skills);
-	player_race_elem_info(r, false, race_elem_info);
+	memcpy(race_elem_info, r->el_info, sizeof *race_elem_info * ELEM_MAX);
+	//player_race_elem_info(r, false, race_elem_info);
 
 	memcpy(race_skills, mon->skills, sizeof race_skills);
 	memcpy(race_powers, mon->powers, sizeof race_powers);
@@ -363,11 +366,11 @@ static void race_help(int i, void *db, const region *l)
 		int sind = j & 1 ? j / 2 + (STAT_MAX + 1) / 2 : j / 2;
 
 		const char *name = stat_names_reduced[sind];
-		int adj = r->r_adj[sind];
+		int adj = mon->stat_mod[sind];
 		char out[5];
 
-		if (r->evol) {
-			const struct monster_race *mr = r->evol->race;
+		if (mon->evol) {
+			const struct monster_race *mr = mon->evol->race;
 			while (mr->evol) {
 				mr = mr->evol->race;
 			}
@@ -1428,8 +1431,7 @@ static enum birth_stage point_based_command(void)
 static struct evolution *next_evol(struct player *p)
 {
 	if (p->evol_choices) return p->evol_choices[p->num_evol_choices - 1]->evol;
-	else if (p->mon.race) return p->mon.race->evol;
-	else return p->race->evol;
+	else return p->mon.race->evol;
 }
 
 static void check_player_birth_monster(struct player *p)

@@ -316,9 +316,10 @@ static int monster_elemental_damage(melee_effect_handler_context_t *context,
 	int hurt_flag = RF_NONE;
 	int imm_flag = RF_NONE;
 	int damage = 0;
+	int res_level = context->t_mon->race->el_info[type].res_level;
 
 	/* Deal with elemental types */
-	switch (type) {
+	/*switch (type) {
 		case PROJ_ACID: {
 			imm_flag = RF_IM_ACID;
 			break;
@@ -346,19 +347,25 @@ static int monster_elemental_damage(melee_effect_handler_context_t *context,
 			break;
 		}
 		default: return 0;
-	}
+	}*/
+
+
 
 	rf_on(lore->flags, imm_flag);
 	if (hurt_flag) {
 		rf_on(lore->flags, hurt_flag);
 	}
 
-	if (rf_has(context->t_mon->race->flags, imm_flag)) {
+	if (res_level >= 3) {  //rf_has(context->t_mon->race->flags, imm_flag)) {
 		*hurt_msg = MON_MSG_RESIST_A_LOT;
 		*die_msg = MON_MSG_DIE;
 		damage = context->damage / 9;
-	} else if (rf_has(context->t_mon->race->flags, hurt_flag)) {
+	} else if (res_level < 0) { //rf_has(context->t_mon->race->flags, hurt_flag)) {
 		damage = context->damage * 2;
+	} else if (res_level > 0) {
+		*hurt_msg = MON_MSG_RESIST_A_LOT;
+		*die_msg = MON_MSG_DIE;
+		damage = context->damage / 2;
 	} else {
 		*hurt_msg = MON_MSG_NONE;
 		*die_msg = MON_MSG_DIE;

@@ -47,7 +47,7 @@
 
 
 /* L: matching monster resists to player_resists */
-struct mon_player_match elem_matches[] = {
+/*struct mon_player_match elem_matches[] = {
 	{ RF_IM_ACID, ELEM_ACID },
 	{ RF_IM_ELEC, ELEM_ELEC },
 	{ RF_IM_FIRE, ELEM_FIRE },
@@ -59,7 +59,7 @@ struct mon_player_match elem_matches[] = {
 	{ RF_IM_NEXUS, ELEM_NEXUS },
 	{ RF_IM_DISEN, ELEM_DISEN },
 	{ RF_NONE, -1 }
-};
+};*/
 
 struct mon_player_match of_matches[] = {
 	{ RF_PASS_WEB, OF_PASS_WEB },
@@ -302,6 +302,7 @@ static int unarmoured_ac_bonus(struct player_state *s, int wgt)
 	return bonus;
 }
 
+#if 0
 static int monster_modify_stat(int which, struct monster_race *mr)
 {
 	return mr->stat_mod[which];
@@ -310,6 +311,7 @@ static int monster_modify_stat(int which, struct monster_race *mr)
 	if (actual < 0) actual = MAX(actual, curr);
 	return actual;
 }
+#endif
 
 
 #if 0
@@ -1452,11 +1454,11 @@ static void calc_monster(struct player *p, struct player_state *state,
 		return;
 	}
 
-	for (i = 0; elem_matches[i].mval != RF_NONE; ++i) {
-		if (rf_has(mrace->flags, elem_matches[i].mval)) {
-			assert(elem_matches[i].pval < ELEM_MAX);
-			state->el_info[elem_matches[i].pval].res_level = 3;
-		}
+	for (i = 0; i < ELEM_MAX; ++i) {
+		int mon_res = mrace->el_info[i].res_level;
+		int new_res = state->el_info[i].res_level + mon_res;
+		if (i == ELEM_ACID) msg_add_fmt("mon_res = %i, new_res = %i", mon_res, new_res);
+		state->el_info[i].res_level = MAX(MIN(new_res, 3), -1);
 	}
 
 	for (i = 0; of_matches[i].mval != RF_NONE; ++i) {
@@ -1584,7 +1586,8 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	/* Extract race/class info */
 	state->see_infra = p->race->infra;
 
-	player_race_elem_info(p->race, mrace ? true : false, race_elem_info);
+	//player_race_elem_info(p->race, mrace ? true : false, race_elem_info);
+	memcpy(race_elem_info, mrace->el_info, sizeof *race_elem_info * ELEM_MAX);
 	for (i = 0; i < ELEM_MAX; i++) {
 		vuln[i] = false;
 		if (race_elem_info[i].res_level == -1) {
@@ -1732,12 +1735,14 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 			/* Apply element info, noting vulnerabilites for later processing */
 			for (j = 0; j < ELEM_MAX; j++) {
 				if (!known_only || obj->known->el_info[j].res_level) {
-					if (obj->el_info[j].res_level == -1)
+					if (obj->el_info[j].res_level == -1) {
 						vuln[j] = true;
+					}
 
 					/* OK because res_level hasn't included vulnerability yet */
-					if (obj->el_info[j].res_level > state->el_info[j].res_level)
+					if (obj->el_info[j].res_level > state->el_info[j].res_level) {
 						state->el_info[j].res_level = obj->el_info[j].res_level;
+					}
 				}
 			}
 

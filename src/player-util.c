@@ -490,7 +490,7 @@ bool select_evolution(struct player *p)
 	const struct monster_race *select;
 
 	if (p->evol_choices) choice_evol = p->evol_choices[p->num_evol_choices - 1]->evol;
-	else choice_evol = p->mon.race ? p->mon.race->evol : p->race->evol;
+	else choice_evol = p->mon.race->evol;
 
 	if (!choice_evol) return false;
 
@@ -1271,26 +1271,26 @@ int player_class_c_skill(struct player *p, int skill)
 	return class_c_skill(p->class, p->extra_skills[skill], skill);
 }
 
-void player_race_r_skill(const struct player_race *r, bool evolved, int skills[SKILL_MAX])
+void player_race_r_skill(const struct monster_race *r, bool evolved, int skills[SKILL_MAX])
 {
 	int i;
 	for (i = 0; i < SKILL_MAX; i++) {
-		skills[i] = r->r_skills[i];
+		skills[i] = r->skills[i];
 	}
 	// juvenile monsters get the bonuses of their evolved forms
-	if (!evolved && r->evol) {
+	if (r->level == 0 && r->evol) {
 		for (i = 0; i < SKILL_MAX; i++) {
 			int bonus = 25;
 			struct evolution *evol;
 			for (evol = r->evol; evol; evol = evol->next) {
-				bonus = MIN(evol->race->base->skills[i], bonus);
+				bonus = MIN(evol->race->skills[i], bonus);
 			}
 			skills[i] += bonus;
 		}
 	}
 }
 
-void player_race_x_skill(const struct player_race *r, bool evolved, int skills[SKILL_MAX])
+void player_race_x_skill(const struct monster_race *r, bool evolved, int skills[SKILL_MAX])
 {
 	player_race_r_skill(r, evolved, skills);
 }
@@ -1298,6 +1298,7 @@ void player_race_x_skill(const struct player_race *r, bool evolved, int skills[S
 void player_race_elem_info(const struct player_race *r, bool evolved, struct element_info el_info[ELEM_MAX])
 {
 	int i;
+	//struct monster_race *mr = race_to_monster(r);
 
 	for (i = 0; i < ELEM_MAX; i++) {
 		el_info[i].res_level = r->el_info[i].res_level;
@@ -1305,14 +1306,15 @@ void player_race_elem_info(const struct player_race *r, bool evolved, struct ele
 
 	if (!evolved && r->evol) {
 		bool evol_does_resist[ELEM_MAX] = { false };
-		for (i = 0; elem_matches[i].mval != RF_NONE; i++) {
+		for (i = 0; i < ELEM_MAX; i++) {
 			struct evolution *e;
-			int elem = elem_matches[i].pval;
-			evol_does_resist[elem] = true;
+			int evol_resist = 1;
+			evol_does_resist[i] = true;
 			for (e = r->evol; e; e = e->next) {
-				if (!rf_has(e->race->flags, elem_matches[i].mval)) {
+				evol_resist = MIN(evol_resist, e->race->el_info[i].res_level);
+				/*if (!rf_has(e->race->flags, elem_matches[i].mval)) {
 					evol_does_resist[elem] = false;
-				}
+				}*/
 			}
 		}
 		for (i = 0; i < ELEM_MAX; ++i) {

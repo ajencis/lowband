@@ -243,7 +243,7 @@ color:w
 speed:110
 hit-points:5
 hearing:4
-armor-class:-25
+armor-class:0
 sleepiness:40
 depth:0
 rarity:10
@@ -769,6 +769,22 @@ experience:0
 blow:HIT:HURT:1d1
 flags:PLAYABLE
 desc:A batling.
+
+name:skeletal
+evolution:skeleton human
+base:person
+color:w
+speed:110
+hit-points:5
+hearing:4
+armor-class:-25
+sleepiness:40
+depth:0
+rarity:15
+experience:0
+blow:HIT:HURT:1d1
+flags:PLAYABLE
+desc:A skeletal.
 
 
 
@@ -2309,7 +2325,7 @@ experience:15
 blow:TOUCH:EAT_FOOD:1d1
 flags:DROP_40 | DROP_60
 flags:RAND_25 | RAND_50
-flags-off:IM_COLD
+flags:NTRL_COLD
 desc:It is a very ugly green ghost with a voracious appetite.
 
 name:green jelly
@@ -4059,9 +4075,13 @@ flags:COLD_BLOOD | INVISIBLE
 flags:RAND_25 | RAND_50 | BASH_DOOR
 flags:IM_ELEC
 power:AIR_MAGIC:150
+stats:0:0:0:2:0
 desc:A whirlwind of sentient air.
 
 name:skeleton human
+evolution:eye druj
+evolution:hand druj
+evolution:skull druj
 base:skeleton
 color:w
 speed:110
@@ -4838,7 +4858,6 @@ flags:DROP_4
 flags:OPEN_DOOR | BASH_DOOR | TAKE_ITEM
 flags:IM_ACID | IM_COLD | IM_ELEC
 flags:NO_CONF | NO_SLEEP
-flags-off:HURT_COLD
 desc:It is a strange, vast gelatinous structure that assumes cubic proportions
 desc: as it lines all four walls of the corridors it patrols.  Through its
 desc: transparent jelly structure you can see treasures it has engulfed, and a
@@ -5093,6 +5112,7 @@ blow:HIT:HURT:2d4
 flags:COLD_BLOOD
 flags:RAND_25 | BASH_DOOR
 flags:IM_ACID | IM_WATER
+stats:0:0:2:0:0
 power:WATER_MAGIC:150
 desc:A whirlpool of sentient liquid.
 
@@ -5131,6 +5151,7 @@ flags:COLD_BLOOD
 flags:RAND_25 | PASS_WALL
 flags:HURT_ROCK | IM_COLD | IM_ELEC
 power:EARTH_MAGIC:150
+stats:0:0:0:0:2
 desc:A whirling form of sentient rock.
 
 ### Dungeon level 18 ###
@@ -5225,6 +5246,7 @@ blow:HIT:FIRE:2d6
 flags:RAND_25 | BASH_DOOR
 flags:IM_FIRE | HURT_COLD
 power:FIRE_MAGIC:150
+stats:0:2:0:0:0
 desc:A whirlwind of sentient flame.
 
 name:fire hound
@@ -5482,7 +5504,6 @@ experience:64
 blow:SPORE:FIRE:4d4
 flags:EMPTY_MIND | STUPID
 flags:IM_FIRE
-flags-off:HURT_FIRE
 desc:It is a strange red growth on the dungeon floor; it seems to burn with
 desc: flame.
 
@@ -8610,6 +8631,8 @@ desc: drake's eyes glare with white hatred from the shadows.
 name:fire elemental
 base:elemental
 evolution:will o' the wisp
+evolution:magma elemental
+evolution:smoke elemental
 color:r
 speed:110
 hit-points:135
@@ -8628,11 +8651,14 @@ flags:FORCE_SLEEP
 power:FIRE_MAGIC:175
 spell-freq:6
 spells:BO_FIRE
+stats:0:3:0:0:0
 desc:It is a towering inferno of flames.
 
 name:water elemental
 base:elemental
 evolution:great water elemental
+evolution:ooze elemental
+evolution:ice elemental
 color:b
 speed:110
 hit-points:113
@@ -8652,6 +8678,7 @@ flags:FORCE_SLEEP
 power:WATER_MAGIC:175
 spell-freq:6
 spells:BO_COLD
+stats:0:0:0:3:0
 desc:It is a towering tempest of water.
 
 name:crystal drake
@@ -8838,6 +8865,8 @@ desc:It is a skeletal form dressed in robes.  It radiates vastly evil power.
 name:earth elemental
 base:elemental
 evolution:great earth elemental
+evolution:ooze elemental
+evolution:magma elemental
 color:u
 speed:100
 hit-points:165
@@ -8857,11 +8886,13 @@ flags:FORCE_SLEEP
 power:EARTH_MAGIC:175
 spell-freq:8
 spells:BO_ACID
+stats:0:0:0:0:3
 desc:It is a towering form composed of rock with fists of awesome power.
 
 name:air elemental
 base:elemental
 evolution:invisible stalker
+evolution:smoke elemental
 color:B
 speed:120
 hit-points:90
@@ -8881,6 +8912,7 @@ flags:FORCE_SLEEP
 power:AIR_MAGIC:175
 spell-freq:8
 spells:BO_ELEC
+stats:0:0:0:3:0
 desc:It is a towering tornado of winds.
 
 name:Eog golem
@@ -8995,6 +9027,7 @@ flags:EVIL | COLD_BLOOD | INVISIBLE
 flags:RAND_50 | OPEN_DOOR | BASH_DOOR
 flags:IM_ELEC
 power:AIR_MAGIC:175
+stats:0:0:0:3:0
 desc:It is impossible to define its form but its violence is legendary.
 
 name:gravity hound
@@ -9295,6 +9328,7 @@ power:EARTH_MAGIC:150
 spell-freq:5
 spells:BA_ACID
 spells:BO_ACID
+stats:0:0:2:0:2
 desc:It is a towering mass of filth, an eyesore of ooze.
 
 name:smoke elemental
@@ -9318,6 +9352,7 @@ power:AIR_MAGIC:150
 spell-freq:5
 spells:DARKNESS
 spells:BO_FIRE
+stats:0:2:0:2:0
 desc:It is a towering blackened form, crackling with heat.
 
 name:xorn
@@ -9548,6 +9583,7 @@ power:COLD_MAGIC:175
 spell-freq:5
 spells:BA_COLD
 spells:BO_ICE
+stats:0:0:3:0:0
 desc:It is a towering glacier of ice.
 
 name:mummified troll
@@ -9615,6 +9651,7 @@ power:EARTH_MAGIC:150
 spell-freq:7
 spells:BA_FIRE
 spells:BO_PLAS
+stats:0:2:0:0:2
 desc:It is a towering glowing form of molten hate.
 
 name:killer iridescent beetle
@@ -9803,6 +9840,7 @@ spells:BLINK | WOUND | CONF | TPORT
 message-vis:WOUND:{name} crackles softly.
 message-invis:BLINK:Something crackles softly.
 message-invis:WOUND:Something crackles softly.
+stats:0:3:0:0:0
 desc:A strange ball of glowing light.  It disappears and reappears and seems to
 desc: draw you to it.  You seem somehow compelled to stand still and watch its
 desc: strange dancing motion.
@@ -11465,7 +11503,6 @@ blow:SPORE:EXP_80:5d5
 flags:EVIL
 flags:IM_ACID | IM_COLD | IM_ELEC
 flags:FORCE_SLEEP | ATTR_FLICKER
-flags-off: HURT_FIRE
 desc:It is the epitome of all that is evil, in a mold.  Its lifeless form draws
 desc: power from sucking the souls of those that approach it, a nimbus of pure
 desc: evil surrounds it.  Luckily for you, it can't move.
@@ -11543,7 +11580,7 @@ flags:DROP_2 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR
 flags:IM_ACID | IM_FIRE | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP
-flags-off:HURT_COLD
+flags:NTRL_COLD
 spell-freq:4
 spells:WOUND | HOLD | SCARE
 spells:BA_ACID
@@ -12810,6 +12847,7 @@ power:EARTH_MAGIC:200
 innate-freq:6
 spell-freq:6
 spells:BOULDER | BR_SHAR | BA_SHAR
+stats:0:0:0:0:4
 desc:Appearing as a giant of stone, this mighty elemental seems to draw its
 desc: power from the very fabric of the dungeon.
 
@@ -13163,6 +13201,7 @@ innate-freq:5
 spell-freq:5
 spells:BA_WATE | BO_WATE
 spells:BR_COLD
+stats:0:0:4:0:0
 desc:A mighty column of water, terrible as a mounting wave that strides to the
 desc: land.
 
@@ -13350,7 +13389,6 @@ blow:HIT:CONFUSE:6d6
 blow:HIT:CONFUSE:6d6
 flags:UNIQUE | FEMALE | NAME_COMMA | SMART
 flags:DROP_4 | DROP_GOOD | ONLY_ITEM
-flags-off:HURT_FIRE
 spell-freq:3
 spells:BLIND | BRAIN_SMASH | WOUND | DRAIN_MANA
 spells:BA_NETH
@@ -13556,10 +13594,9 @@ flags:SMART | ATTR_FLICKER
 flags:DROP_2 | ONLY_ITEM
 flags:OPEN_DOOR
 flags:UNDEAD | EVIL | COLD_BLOOD | SPIRIT
-flags:HURT_LIGHT| NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
+flags:HURT_LIGHT | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
 flags:IM_COLD | IM_POIS | IM_NETHER
 flags:FORCE_SLEEP
-flags-off:HURT_COLD
 innate-freq:25
 spell-freq:4
 spells:BLIND | BRAIN_SMASH | SCARE
@@ -15075,7 +15112,6 @@ flags:DROP_4 | DROP_GOOD | ONLY_ITEM
 flags:OPEN_DOOR | BASH_DOOR | MOVE_BODY
 flags:IM_COLD | IM_DISEN | NO_CONF | NO_SLEEP | NO_HOLD
 flags:ATTR_MULTI | FORCE_SLEEP
-flags-off:HURT_COLD
 innate-freq:2
 spells:BR_COLD | BR_DISE | BR_FIRE
 desc:The Tarrasque is a massive reptile of legend, rumoured to be unkillable and

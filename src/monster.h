@@ -23,12 +23,13 @@
 #include "z-bitflag.h"
 #include "z-rand.h"
 #include "cave.h"
-#include "target.h"
 #include "mon-timed.h"
-#include "player-timed.h"
 #include "mon-blows.h"
+#include "object.h"
 #include "obj-properties.h"
 #include "player-enum.h"
+#include "player-timed.h"
+#include "target.h"
 
 /**
  * L: Monster powers
@@ -268,6 +269,8 @@ struct monster_base {
 
 	struct player_body *body;	/* L: default body */
 
+	struct element_info elem_info[ELEM_MAX];	// L: resists etc
+
 	int attributes[MA_MAX];		/* L: strengths and weaknesses */
 	int stats[STAT_MAX];		/* L: stat bonuses for players */
 	int powers[PP_MAX];				/* L: power bonuses for players */
@@ -404,6 +407,7 @@ struct monster_race {
 
 	bitflag flags[RF_SIZE];         /* Flags */
 	bitflag spell_flags[RSF_SIZE];  /* Spell flags */
+	struct element_info el_info[ELEM_MAX];	// L: Element info
 
 	struct monster_blow *blow; /* Melee blows */
 
