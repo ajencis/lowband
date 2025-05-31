@@ -1325,6 +1325,7 @@ int skill_by_effect(int effect_ind, int effect_subtype)
 	return PP_NONE;
 }
 
+#if 0
 static int calc_monster_stats(const struct player *p, int which)
 {
 	if (which >= STAT_MAX || which <= STAT_NONE) return 0;
@@ -1345,6 +1346,7 @@ static int calc_monster_stats(const struct player *p, int which)
 	
 	return result;
 }
+#endif
 
 static bool calc_monster_blow(int counts[PP_MAX], const struct monster_blow *mb)
 {
@@ -1457,7 +1459,6 @@ static void calc_monster(struct player *p, struct player_state *state,
 	for (i = 0; i < ELEM_MAX; ++i) {
 		int mon_res = mrace->el_info[i].res_level;
 		int new_res = state->el_info[i].res_level + mon_res;
-		if (i == ELEM_ACID) msg_add_fmt("mon_res = %i, new_res = %i", mon_res, new_res);
 		state->el_info[i].res_level = MAX(MIN(new_res, 3), -1);
 	}
 
@@ -1817,7 +1818,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
         /* L: Class doesn't affect stats any more, race affects them elsewhere */
 		add = state->stat_add[i];
 		if (mrace) {
-			add += calc_monster_stats(p, i);
+			//add += calc_monster_stats(p, i);
 			//add += modify_stat_value(use, calc_monster_stats(p, i));
 		}
 		state->stat_top[i] = modify_stat_value(p->stat_max[i], add);
@@ -1996,13 +1997,16 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 5, 0);
 	}
 	if (p->mon.m_timed[TMD_BLOODLUST]) {
-		state->to_d += p->mon.m_timed[TMD_BLOODLUST] / 5 + 1;
-		state->to_h += p->mon.m_timed[TMD_BLOODLUST] * 2 / 3;
-		extra_blows += p->mon.m_timed[TMD_BLOODLUST] * 4;
-		state->speed += p->mon.m_timed[TMD_BLOODLUST] / 5 - 3;
-		state->dam_red += p->mon.m_timed[TMD_BLOODLUST] * (p->mon.maxhp + 100) / 1000;
-		adjust_skill_scale(&state->skills[SKILL_STEALTH], -p->mon.m_timed[TMD_BLOODLUST], 5, 10);
-		adjust_skill_scale(&state->skills[SKILL_SAVE], p->mon.m_timed[TMD_BLOODLUST], 20, 10);
+		int p_berserk = get_power_scale_state(state, PP_BERSERK, 150, p->lev);
+		int bonus = p->mon.m_timed[TMD_BLOODLUST] * (100 + p_berserk) / 100;
+
+		state->to_d += bonus / 5 + 1;
+		state->to_h += bonus * 2 / 3;
+		extra_blows += bonus * 4;
+		state->speed += bonus / 5 - 3;
+		state->dam_red += bonus * (p->mon.maxhp + 100) / 1000;
+		adjust_skill_scale(&state->skills[SKILL_STEALTH], -bonus, 5, 10);
+		adjust_skill_scale(&state->skills[SKILL_SAVE], bonus, 20, 10);
 	}
 	if (p->mon.m_timed[TMD_STEALTH]) {
 		state->skills[SKILL_STEALTH] += 10;

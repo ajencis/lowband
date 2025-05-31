@@ -490,7 +490,7 @@ void display_player_stat_info(void)
 		}
 
 		/* Indicate natural maximum */
-		if (player->stat_max[i] == player->stat_max_max[i]) {
+		if (player->stat_max[i] == stat_max_max(player, i)) {
 			put_str("!", row+i, col+3);
 		}
 
@@ -507,7 +507,7 @@ void display_player_stat_info(void)
 		c_put_str(COLOUR_L_GREEN, buf, row+i, col+15);
 
 		/* L: maxima */
-        maxmax = player->stat_max_max[i];
+        maxmax = stat_max_max(player, i);
 		maxmax = modify_stat_value(maxmax, player->state.stat_add[i]);
 		cnv_stat(maxmax, buf, sizeof(buf));
 		c_put_str(COLOUR_L_GREEN, buf, row+i, col+21);

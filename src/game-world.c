@@ -580,7 +580,7 @@ static void update_scent(void)
 void process_world(struct chunk *c)
 {
 	int i, y, x;
-	bool p_berserker = pf_has(player->state.pflags, PF_BERSERKER);
+	bool p_berserker = player->state.powers[PP_BERSERK] > 0;// pf_has(player->state.pflags, PF_BERSERKER);
 
 	/* Compact the monster list if we're approaching the limit */
 	if (cave_monster_count(c) + 32 > z_info->level_monster_max) {

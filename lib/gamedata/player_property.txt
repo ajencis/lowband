@@ -135,11 +135,6 @@ code:LONG_LIMBS
 name:Long Limbs
 desc:You can reach farther.
 
-type:player
-code:BERSERKER
-name:Berserker
-desc:You enter a berserk rage when fighting.
-
 
 # Object flags
 
@@ -680,17 +675,25 @@ parent:power:NECROMANCY_MAGIC
 type:power
 code:BREATH
 name:Breathing
-desc: can breathe
+desc: can breathe.
 
 type:power
 code:BREATH_BITE
 name:Exhaling Bite
-desc: can breathe while biting
+desc: can breathe while biting.
 cost:15
 rarity:3
 parent:skill:HEALTH
 prereq:HAS_BREATH
 prereq:HAS_BITE
+
+type:power
+code:BERSERK
+name:Berserking
+desc: can enter a berserker rage.
+cost:10
+rarity:4
+parent:skill:TO_HIT_MELEE
 
 
 # L: skills

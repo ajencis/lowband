@@ -54,6 +54,16 @@
 
 
 
+int stat_max_max(struct player *p, int stat)
+{
+	assert(stat > STAT_NONE && stat < STAT_MAX);
+
+	int base = player->stat_max_max[stat];
+	int bonus = player->mon.race->stat_mod[stat];
+
+	return base + bonus;
+}
+
 
 /**
  * L: unlock all classes that should be unlocked
@@ -352,6 +362,8 @@ void remove_last_evolution(struct player *p)
 
 void change_player_monster(struct player *p, const struct monster_race *mon, bool init)
 {
+	int i;
+
 	assert(mon);
 	if (!init) {
 		disturb(p);
@@ -368,6 +380,11 @@ void change_player_monster(struct player *p, const struct monster_race *mon, boo
 
 	memcpy(p->mon.race, mon, sizeof *p->mon.race);
 	rearrange_monster(p->mon.race, true);
+
+	for (i = STAT_NONE + 1; i < STAT_MAX; ++i) {
+		p->stat_max[i] = MIN(p->stat_max[i], stat_max_max(p, i));
+		p->stat_cur[i] = MIN(p->stat_cur[i], p->stat_max[i]);
+	}
 
 	player->upkeep->redraw |= (PR_MAP | PR_MISC);
 	player->upkeep->update |= (PU_BONUS | PU_HP);
@@ -455,13 +472,13 @@ bool player_increase_stat(struct player *p)
 	int i;
 	bool dummy = false;
 	for (i = 0; i < STAT_MAX; i++) {
-		if (p->stat_max[i] < p->stat_max_max[i]) {
+		if (p->stat_max[i] < stat_max_max(p, i)) {
 			++num;
 			if (one_in_(num)) {
 				choice = i;
 			}
 		}
-		if (p->stat_cur[i] < p->stat_max_max[i]) {
+		if (p->stat_cur[i] < stat_max_max(p, i)) {
 			++backup_num;
 			if (one_in_(backup_num)) {
 				backup_choice = i;
@@ -1848,6 +1865,8 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 
 bool check_berserk(struct player *p, struct monster *mon)
 {
+	int p_berserk = get_power_scale(p, PP_BERSERK, 25);
+
 	if (!mon || !mon->race) {
 		return false;
 	}
@@ -1858,7 +1877,7 @@ bool check_berserk(struct player *p, struct monster *mon)
 	if (p->is_dead) {
 		return false;
 	}
-	if (!pf_has(p->state.pflags, PF_BERSERKER)) {
+	if (p_berserk <= 0) {
 		return false;
 	}
 	if (p->mon.m_timed[TMD_SLOW]) {
@@ -1867,7 +1886,7 @@ bool check_berserk(struct player *p, struct monster *mon)
 	}
 	// somewhere between the amount of hp lost and the ratio of hp lost to max hp
 	// 25 max hp = up to 25 increase; 100 max hp = up to 40 increase (with max roll at 0 hp)
-	int increase = (randint1(p->mon.maxhp) - p->mon.hp * 2 / 3) * 50 / (p->mon.maxhp + 25);
+	int increase = (randint1(p->mon.maxhp) - p->mon.hp * 2 / 3) * (p_berserk + 25) / (p->mon.maxhp + 25);
 	
 	if (increase >= 0) {
 		// higher increase the less you are already

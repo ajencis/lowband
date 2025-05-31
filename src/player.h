@@ -514,8 +514,7 @@ struct player {
 	struct player_state state;			/* Calculatable state */
 	struct player_state known_state;	/* What the player can know of the above */
 	struct player_upkeep *upkeep;		/* Temporary player-related values */
-
-	struct monster_race *curr_monster_race;	/* L: if the player is a monster */
+	
 	const struct monster_race **evol_choices;	// L: which monster the player is choosing to evolve into
 	int num_evol_choices;				// L: how many evolution choices the player has made
 

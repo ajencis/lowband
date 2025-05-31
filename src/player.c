@@ -179,11 +179,11 @@ bool player_stat_inc(struct player *p, int stat)
 	}
 
 	/* L: impose maxima based on birth */
-	if (p->stat_cur[stat] > p->stat_max_max[stat])
-	    p->stat_cur[stat] = p->stat_max_max[stat];
+	p->stat_cur[stat] = MIN(p->stat_cur[stat], stat_max_max(p, stat));
 
-	if (p->stat_cur[stat] > p->stat_max[stat])
+	if (p->stat_cur[stat] > p->stat_max[stat]) {
 		p->stat_max[stat] = p->stat_cur[stat];
+	}
 	
 	p->upkeep->update |= PU_BONUS;
 	return true;

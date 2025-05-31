@@ -996,7 +996,7 @@ static struct player *hypothetical_player(const struct player *p)
 	memcpy(hypo, p, sizeof *hypo);
 
 	for (i = 0; i < STAT_MAX; ++i) {
-		hypo->stat_cur[i] = hypo->stat_max_max[i];
+		hypo->stat_cur[i] = stat_max_max(hypo, i);
 	}
 
 	if (hypo->num_evol_choices > 0) {

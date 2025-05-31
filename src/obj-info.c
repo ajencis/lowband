@@ -37,6 +37,7 @@
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
+#include "player-util.h"
 #include "project.h"
 #include "z-textblock.h"
 
@@ -921,8 +922,8 @@ static int obj_known_blows(const struct object *obj, int max_num,
 
 	/* Check to see if extra STR or DEX would yield extra blows */
 	// L: limit it to possible stats with current equipment
-	dex_plus_bound = MIN(player->stat_max_max[STAT_DEX] + state.stat_add[STAT_DEX], STAT_RANGE) - state.stat_ind[STAT_DEX];
-	str_plus_bound = MIN(player->stat_max_max[STAT_DEX] + state.stat_add[STAT_STR], STAT_RANGE) - state.stat_ind[STAT_STR];
+	dex_plus_bound = MIN(stat_max_max(player, STAT_DEX) + state.stat_add[STAT_DEX], STAT_RANGE) - state.stat_ind[STAT_DEX];
+	str_plus_bound = MIN(stat_max_max(player, STAT_DEX) + state.stat_add[STAT_STR], STAT_RANGE) - state.stat_ind[STAT_STR];
 
 	/* Re-calculate with increased stats */
 	for (dex_plus = 0; dex_plus < dex_plus_bound; dex_plus++) {

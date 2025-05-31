@@ -261,6 +261,7 @@ skill-throw:10:75
 skill-dig:0:0
 skill-magic:-25:0
 skill-health:15:95
+power:BERSERK:100
 hitdie:10
 max-attacks:6
 min-weight:30
@@ -271,7 +272,6 @@ equip:potion:Berserk Strength:1:1:none
 equip:hafted:Throwing Axe:1:1:none
 equip:soft armour:Soft Leather Armour:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-player-flags:BERSERKER
 title:Rookie
 title:Soldier
 title:Swordsman

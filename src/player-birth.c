@@ -151,15 +151,71 @@ static void init_monsters(void)
 	}
 }
 
+static void sum_stat_mods(int base[STAT_MAX], const int add[STAT_MAX])
+{
+	int i;
+
+	for (i = 0; i < STAT_MAX; ++i) {
+		base[i] += add[i];
+	}
+}
+
+static void total_evolution_stats(struct player *p, int array[STAT_MAX])
+{
+	struct monster_race *curr = lookup_player_monster(p);
+	struct evolution *evol;
+
+	memset(array, 0, sizeof *array * STAT_MAX);
+
+	if (!curr->evol) {
+		sum_stat_mods(array, curr->stat_mod);
+		return;
+	}
+
+	for (evol = curr->evol; evol; evol = evol->next) {
+		sum_stat_mods(array, evol->race->stat_mod);
+	}
+}
+
+// lower order is lower stat
+static int stat_order(struct player *p, int stat)
+{
+	int i;
+	int order = 0;
+	int race_stats[STAT_MAX];
+
+	total_evolution_stats(p, race_stats);
+
+	for (i = 0; i < STAT_MAX; ++i) {
+		if (race_stats[stat] > race_stats[i]) ++order;
+		else if (race_stats[stat] == race_stats[i] && i > stat) ++order;
+	}
+
+	return order;
+}
+
 static int birth_stat(struct player *p, int stat)
 {
-	int use = p->stat_max_max[stat];
-	if (use > 18) use = (use - 18) / 10 + 18;
+	int radj, use;
+
+	use = stat_max_max(p, stat);
 	assert(p->mon.race);
-	int radj = p->mon.race->stat_mod[stat];
+	radj = p->mon.race->stat_mod[stat];
 	use -= radj;
 
-	return MIN(p->stat_max_max[stat], use / 2 + 5);
+	// L: further penalties for races with more potential
+	if (p->mon.race->evol) {
+		int total_pen = expected_max_evol_level(p) / 5;
+		int order = stat_order(p, stat);
+		int penalty = total_pen / STAT_MAX + ((total_pen % STAT_MAX) > order ? 1 : 0);
+		use -= penalty;
+	}
+
+	use = use / 2 + 5;
+
+	if (use > 18) use = (use - 18) / 10 + 18;
+
+	return MIN(stat_max_max(p, stat), use);
 }
 
 /**
@@ -294,8 +350,7 @@ static void get_stats(int stat_use[STAT_MAX])
 		j = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 
 		/* Save that value */
-		int radj = player->mon.race->stat_mod[i];
-		player->stat_max_max[i] = j + radj;// player->race->r_adj[i];
+		player->stat_max_max[i] = j;
 		if (player->stat_max_max[i] > 18) {
 			player->stat_max_max[i] = (player->stat_max_max[i] - 18) / 10 + 18;
 		}
@@ -781,8 +836,7 @@ static void recalculate_stats(int *stats_local_local, int points_left_local)
 
 	/* L: Variable stat maxes */
 	for (i = 0; i < STAT_MAX; i++) {
-		int radj = player->mon.race->stat_mod[i];
-		player->stat_max_max[i] = MAX(stats_local_local[i] + radj, 3);// player->race->r_adj[i], 3);
+		player->stat_max_max[i] = MAX(stats_local_local[i], 3);// player->race->r_adj[i], 3);
 		if (player->stat_max_max[i] > 18) player->stat_max_max[i] = (player->stat_max_max[i] - 18) * 10 + 18;
 		player->stat_cur[i] = player->stat_max[i] =	player->stat_birth[i]
 		                    = birth_stat(player, i);

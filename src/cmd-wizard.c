@@ -419,7 +419,7 @@ void do_cmd_wiz_advance(struct command *cmd)
 
 	/* Max stats */
 	for (i = 0; i < STAT_MAX; i++) {
-		player->stat_cur[i] = player->stat_max[i] = player->stat_max_max[i];
+		player->stat_cur[i] = player->stat_max[i] = stat_max_max(player, i);
 	}
 
 	player->upkeep->update |= PU_BONUS;
@@ -1318,7 +1318,7 @@ void do_cmd_wiz_edit_player_stat(struct command *cmd)
 		return;
 	}
 
-	strnfmt(prompt, sizeof(prompt), "%s (3-%i): ", stat_idx_to_name(stat), player->stat_max_max[stat]);
+	strnfmt(prompt, sizeof(prompt), "%s (3-%i): ", stat_idx_to_name(stat), stat_max_max(player, stat));
 
 	/* Set default value. */
 	strnfmt(s, sizeof(s), "%d", player->stat_max[stat]);
@@ -1331,7 +1331,7 @@ void do_cmd_wiz_edit_player_stat(struct command *cmd)
 	}
 
 	/* Limit to the range of [3, 118]. */
-	newv = MIN(player->stat_max_max[stat], MAX(3, newv));
+	newv = MIN(stat_max_max(player, stat), MAX(3, newv));
 
 	player->stat_cur[stat] = player->stat_max[stat] = newv;
 

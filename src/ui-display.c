@@ -169,7 +169,7 @@ static void prt_stat(int stat, int row, int col)
 	}
 
 	/* Indicate natural maximum */
-	if (player->stat_max[stat] == player->stat_max_max[stat]) {
+	if (player->stat_max[stat] >= stat_max_max(player, stat)) {
 		put_str("!", row, col + 3);
 	}
 }

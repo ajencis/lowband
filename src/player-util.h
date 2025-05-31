@@ -49,7 +49,7 @@ enum {
  * negative numbers, as postive numbers are taken to be a turncount,
  * and zero means "not resting". 
  */
-enum 
+enum
 {
 	REST_COMPLETE = -2,
 	REST_ALL_POINTS = -1,
@@ -60,6 +60,8 @@ enum
  * Minimum number of turns required for regeneration to kick in during resting.
  */
 #define REST_REQUIRED_FOR_REGEN 5
+
+int stat_max_max(struct player *p, int stat);
 
 bool unlock_all(struct player *p);
 bool races_unlock(struct player *p);
