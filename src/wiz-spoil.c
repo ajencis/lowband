@@ -563,10 +563,11 @@ void spoil_mon_desc(const char *fname)
 		strnfmt(rar, sizeof(rar), "%d", race->rarity);
 
 		/* Speed */
-		if (race->speed >= 110)
+		if (race->speed >= 110) {
 			strnfmt(spd, sizeof(spd), "+%d", (race->speed - 110));
-		else
+		} else {
 			strnfmt(spd, sizeof(spd), "-%d", (110 - race->speed));
+		}
 
 		/* Armor Class */
 		strnfmt(ac, sizeof(ac), "%d", race->ac);

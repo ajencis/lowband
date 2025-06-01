@@ -256,6 +256,7 @@ xcopy $(MSBuildProjectDirectory)\lib\* $(OutDir)lib\ /DESY /exclude:$(MSBuildPro
     <ClCompile Include="src\main-win.c" />
     <ClCompile Include="src\message.c" />
     <ClCompile Include="src\mon-attack.c" />
+    <ClCompile Include="src\mon-calcs.c" />
     <ClCompile Include="src\mon-blows.c" />
     <ClCompile Include="src\mon-desc.c" />
     <ClCompile Include="src\mon-group.c" />

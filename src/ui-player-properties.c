@@ -694,7 +694,7 @@ static void refresh_hypothetical_player(struct menu *m)
 		}
 	}
 
-	calc_bonuses(hypo, &hypo->state, false, false);
+	calc_bonuses(hypo, &hypo->mon, &hypo->state, false, false);
 
 	ability_learn_valid_refresh(m);
 

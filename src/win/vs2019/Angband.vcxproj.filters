@@ -333,6 +333,9 @@
     <ClCompile Include="src\mon-blows.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\mon-calcs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src\mon-desc.c">
       <Filter>Source Files</Filter>
     </ClCompile>

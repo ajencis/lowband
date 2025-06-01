@@ -21,6 +21,7 @@
 #include "game-world.h"
 #include "init.h"
 #include "obj-gear.h"
+#include "mon-calcs.h"
 #include "mon-group.h"
 #include "mon-lore.h"
 #include "mon-make.h"
@@ -1146,6 +1147,9 @@ int16_t place_monster(struct chunk *c, struct loc grid, struct monster *mon,
 	if (origin && new_mon->race->mimic_kinds) {
 		mon_create_mimicked_object(c, new_mon, m_idx);
 	}
+
+	mflag_on(mon->mflag, MFLAG_UPDATE);
+	update_mon_state(mon);
 
 	/* Result */
 	return m_idx;

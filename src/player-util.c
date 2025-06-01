@@ -24,6 +24,7 @@
 #include "game-world.h"
 #include "generate.h"
 #include "init.h"
+#include "mon-calcs.h"
 #include "mon-desc.h"
 #include "mon-lore.h"
 #include "mon-util.h"
@@ -547,7 +548,6 @@ int expected_max_evol_level(const struct player *p)
 
 	return expected_monster_evol_level(curr);
 }
-
 
 
 int get_power_scale_state(const struct player_state *ps, int power, int scaleto, int level)
@@ -2585,7 +2585,7 @@ struct object *player_best_digger(struct player *p, bool forbid_stack)
 		 */
 		local_state.stat_ind[STAT_STR] = 0;
 		local_state.stat_ind[STAT_DEX] = 0;
-		calc_bonuses(p, &local_state, true, false);
+		calc_bonuses(p, &p->mon, &local_state, true, false);
 		score = local_state.skills[SKILL_DIGGING];
 
 		/* Swap back. */
@@ -3740,6 +3740,16 @@ void search(struct player *p)
  */
 void player_start_turn(struct player *p)
 {
+	int i;
+
+	for (i = 1; i < cave_monster_max(cave); ++i) {
+		struct monster *mon = cave_monster(cave, i);
+
+		if (mon) {
+			update_mon_state(mon);
+		}
+	}
+
 	if (p->xp_this_turn) {
 		check_learn_powers(p, p->xp_this_turn);
 		check_player_monster(p, false);

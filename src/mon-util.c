@@ -1687,6 +1687,8 @@ bool monster_equip(struct chunk *c, struct monster *mon, struct object *obj)
 	}
 	pile_insert(&mon->equipped_obj, obj);
 
+	mflag_on(mon->mflag, MFLAG_UPDATE);
+
 	/* Result */
 	return true;
 }
@@ -1733,7 +1735,7 @@ void steal_monster_item(struct monster *mon, int midx)
 		/* Base monster protection and player stealing skill */
 		bool unique = monster_is_unique(mon);
 		int guard = (mon->race->level * (unique ? 4 : 3)) / 4 +
-			mon->mspeed - player->state.speed;
+			mon->state.speed - player->state.speed;
 		int steal_skill = player->state.skills[SKILL_STEALTH] / 5 +
 			adj_dex_th(player->state.stat_ind[STAT_DEX]);
 		int monster_reaction;
@@ -1969,6 +1971,8 @@ bool monster_change_shape(struct monster *mon)
 					  mon->grid.y, mon->grid.x, NULL);
 	}
 
+	mflag_on(mon->mflag, MFLAG_UPDATE);
+
 	return mon->original_race != NULL;
 }
 
@@ -2086,6 +2090,7 @@ void monster_become_aware(struct monster *mon)
 
 int mon_ac(struct monster *mon)
 {
+	return mon->state.ac + mon->state.to_a;
 	int base = mon->race->ac, ac = 0, to_a = 0;
 	struct object *obj;
 
@@ -2368,3 +2373,4 @@ void rearrange_monsters(struct monster_race *mraces, uint32_t seed)
 	}
 	Rand_quick = false;
 }
+

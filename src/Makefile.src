@@ -193,6 +193,7 @@ ANGFILES0 = \
 	message.o \
 	mon-attack.o \
 	mon-blows.o \
+	mon-calcs.o \
 	mon-desc.o \
 	mon-group.o \
 	mon-init.o \

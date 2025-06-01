@@ -434,6 +434,22 @@ depgen:
  obj-make.h obj-pile.h obj-slays.h obj-tval.h obj-util.h player-calcs.h \
  player-timed.h list-player-timed.h player-util.h project.h \
  list-projections.h
+./mon-calcs.o: mon-calcs.c angband.h h-basic.h z-bitflag.h z-form.h \
+ z-virt.h z-color.h z-util.h z-rand.h config.h game-event.h z-type.h \
+ message.h list-message.h player.h guid.h obj-properties.h z-file.h \
+ list-tvals.h list-object-flags.h list-kind-flags.h list-stats.h \
+ list-object-modifiers.h object.h z-quark.h z-dice.h z-expression.h \
+ list-elements.h list-origins.h option.h list-options.h \
+ list-player-flags.h effects.h source.h player-attack.h cmd-core.h cmds.h \
+ cave.h list-square-flags.h list-terrain-flags.h list-terrain.h \
+ list-effects.h init.h datafile.h parser.h list-parser-errors.h monster.h \
+ target.h mon-predicate.h mon-timed.h list-mon-timed.h mon-blows.h \
+ list-mon-temp-flags.h list-mon-race-flags.h list-mon-spells.h \
+ mon-attack.h mon-desc.h mon-lore.h z-textblock.h mon-make.h mon-msg.h \
+ list-mon-message.h mon-util.h obj-desc.h obj-gear.h list-equip-slots.h \
+ obj-make.h obj-pile.h obj-slays.h obj-tval.h obj-util.h player-calcs.h \
+ player-timed.h list-player-timed.h player-util.h project.h \
+ list-projections.h
 ./mon-desc.o: mon-desc.c angband.h h-basic.h z-bitflag.h z-form.h z-virt.h \
  z-color.h z-util.h z-rand.h config.h game-event.h z-type.h message.h \
  list-message.h player.h guid.h obj-properties.h z-file.h list-tvals.h \

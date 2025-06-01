@@ -1834,7 +1834,7 @@ void py_attack(struct player *p, struct loc grid)
 	bool can_attack = false;
 	char buf[128] = { '\0' };
 	int which;
-	int totalblows = 0;
+	int totalblows = 0, numblows = 0;
 	int cleavediscount = 35 + get_power_scale(p, PP_WHIRLWIND, 25);
 	bool doingcleave = false;
 
@@ -1854,7 +1854,10 @@ void py_attack(struct player *p, struct loc grid)
 		aroll = p->state.attacks[i];
 		thisblowworks = monster_can_be_attacked(p, &aroll, mon, buf, sizeof(buf));
 		can_attack = can_attack || thisblowworks;
-		if (thisblowworks) totalblows += aroll.blows;
+		if (thisblowworks) {
+			totalblows += aroll.blows;
+			++numblows;
+		}
 	}
 
 	if (!can_attack) {
@@ -1907,9 +1910,7 @@ void py_attack(struct player *p, struct loc grid)
 			continue;
 		}
 
-		blow_energy = 100 * z_info->move_energy / aroll.blows;
-		blow_energy *= 2;
-		blow_energy /= p->state.num_blows + 1;
+		blow_energy = 200 * z_info->move_energy / aroll.blows / (numblows + 1);
 		
 		cleaveblowenergy = (blow_energy * (100 - cleavediscount) + 99) / 100;
 

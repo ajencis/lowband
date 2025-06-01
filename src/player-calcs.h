@@ -146,7 +146,7 @@ int equipped_item_slot(struct player_body body, struct object *obj);
 void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int curr_powers[PP_MAX]);
 void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX]);
 void calc_inventory(struct player *p);
-void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
+void calc_bonuses(struct player *p, struct monster *mon, struct player_state *state, bool known_only,
 				  bool update);
 void calc_digging_chances(struct player_state *state, int chances[DIGGING_MAX]);
 int calc_unlocking_chance(const struct player *p, int lock_power,
@@ -161,6 +161,8 @@ void track_object(struct player_upkeep *upkeep, struct object *obj);
 void track_object_kind(struct player_upkeep *upkeep, struct object_kind *kind);
 void track_object_cancel(struct player_upkeep *upkeep);
 bool tracked_object_is(struct player_upkeep *upkeep, struct object *obj);
+
+void adjust_skill_scale(int *v, int num, int den, int minv);
 
 void notice_stuff(struct player *p);
 void update_stuff(struct player *p);

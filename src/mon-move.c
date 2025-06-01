@@ -29,6 +29,7 @@
 #include "init.h"
 #include "monster.h"
 #include "mon-attack.h"
+#include "mon-calcs.h"
 #include "mon-desc.h"
 #include "mon-group.h"
 #include "mon-lore.h"
@@ -565,6 +566,8 @@ static bool monster_turn_equip_item(struct monster *mon)
 		assert(player->cave->objects[to_unequip->oidx] == to_unequip->known);
 		assert(cave->objects[to_unequip->oidx] == to_unequip);
 		did_something = true;
+
+		mflag_on(mon->mflag, MFLAG_UPDATE);
 	}
 	else if (to_equip) {
 		if (to_equip->number > 1) {
@@ -2486,6 +2489,8 @@ void process_monsters(int minimum_energy)
 			mon_check_target(cave, mon);
 		}
 
+		update_mon_state(mon);
+
 		/* Not enough energy to move yet */
 		if (mon->energy < minimum_energy) continue;
 
@@ -2501,13 +2506,13 @@ void process_monsters(int minimum_energy)
 		}
 
 		/* Calculate the net speed */
-		mspeed = mon->mspeed;
-		if (mon->m_timed[TMD_FAST])
+		mspeed = mon->state.speed;
+		/*if (mon->m_timed[TMD_FAST])
 			mspeed += 10;
 		if (mon->m_timed[TMD_SLOW]) {
 			int slow_level = monster_effect_level(mon, TMD_SLOW);
 			mspeed -= (2 * slow_level);
-		}
+		}*/
 
 		/* Give this monster some energy */
 		mon->energy += turn_energy(mspeed);
@@ -2537,6 +2542,8 @@ void process_monsters(int minimum_energy)
 				if (take_turn) {
 					/* The monster takes its turn */
 					monster_turn(mon);
+
+					msg_add_fmt("mon %s's speed =%i", mon->race->name, mspeed);
 				}
 
 				/*
@@ -2599,7 +2606,7 @@ void restore_monsters(void)
 		regen_monster(mon, num_turns / 100);
 
 		/* Handle timed effects */
-		status_red = num_turns * turn_energy(mon->mspeed) / z_info->move_energy;
+		status_red = num_turns * turn_energy(mon->state.speed) / z_info->move_energy;
 		if (status_red > 0) {
 			for (status = 0; status < TMD_MAX; status++) {
 				if (mon->m_timed[status]) {

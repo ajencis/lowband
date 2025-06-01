@@ -501,7 +501,7 @@ struct monster *summon_specific(struct loc grid, int lev, int type, bool delay, 
 	 * including holding faster monsters for the required number of turns */
 	if (delay) {
 		int p_e_per_turn = turn_energy(player->state.speed);
-		int m_e_per_turn = turn_energy(mon->mspeed);
+		int m_e_per_turn = turn_energy(mon->state.speed);
 		/*
 		 * Number of turns for player to move from zero energy, tp, is
 		 * z_info->move_energy / p_e_per_turn.  Number of turns for

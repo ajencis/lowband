@@ -212,19 +212,22 @@ static bool mon_set_timed(struct monster *mon,
 	/* Print a message if there is one, if the effect allows for it, and if
 	 * either the monster is visible, or we're trying to ID something */
 	if (m_note &&
-		!(flag & MON_TMD_FLG_NOMESSAGE) &&
-		(flag & MON_TMD_FLG_NOTIFY)
+			!(flag & MON_TMD_FLG_NOMESSAGE) &&
+			(flag & MON_TMD_FLG_NOTIFY)
 		&& monster_is_obvious(mon)) {
 			add_monster_message(mon, m_note, true);
 	}
 
 	/* Update the visuals, as appropriate. */
 	if (update) {
-		if (player->upkeep->health_who == mon)
+		if (player->upkeep->health_who == mon) {
 			player->upkeep->redraw |= (PR_HEALTH);
+		}
 
 		player->upkeep->redraw |= (PR_MONLIST);
 	}
+
+	mflag_on(mon->mflag, MFLAG_UPDATE);
 
 	return !resisted;
 }

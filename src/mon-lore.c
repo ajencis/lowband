@@ -1070,8 +1070,9 @@ void lore_append_toughness(textblock *tb, const struct monster_race *race,
 		/* Hitpoints */
 		textblock_append(tb, "%s has a", lore_pronoun_nominative(msex, true));
 
-		if (!rf_has(known_flags, RF_UNIQUE))
+		if (!rf_has(known_flags, RF_UNIQUE)) {
 			textblock_append(tb, "n average");
+		}
 
 		textblock_append(tb, " life rating of ");
 		textblock_append_c(tb, COLOUR_L_BLUE, "%d", race->avg_hp);

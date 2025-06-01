@@ -184,6 +184,7 @@ ADD_LIBRARY(OurCoreLib OBJECT
         src/message.c
         src/mon-attack.c
         src/mon-blows.c
+        src/mon-calcs.c
         src/mon-desc.c
         src/mon-group.c
         src/mon-init.c

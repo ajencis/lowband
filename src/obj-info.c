@@ -898,7 +898,7 @@ static int obj_known_blows(const struct object *obj, int max_num,
 	memcpy(&state, &player->state, sizeof(state));
 	state.stat_ind[STAT_STR] = 0; //Hack - NRM
 	state.stat_ind[STAT_DEX] = 0; //Hack - NRM
-	calc_bonuses(player, &state, true, false);
+	calc_bonuses(player, &player->mon, &state, true, false);
 
 	/* First entry is always the current num of blows. */
 	possible_blows[num].str_plus = 0;
@@ -938,7 +938,7 @@ static int obj_known_blows(const struct object *obj, int max_num,
 
 			state.stat_ind[STAT_STR] = str_plus; //Hack - NRM
 			state.stat_ind[STAT_DEX] = dex_plus; //Hack - NRM
-			calc_bonuses(player, &state, true, false);
+			calc_bonuses(player, &player->mon, &state, true, false);
 
 			new_blows = state.attacks[blownum].blows;
 
@@ -1085,7 +1085,7 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 	memcpy(&state, &player->state, sizeof(state));
 	state.stat_ind[STAT_STR] = 0; //Hack - NRM
 	state.stat_ind[STAT_DEX] = 0; //Hack - NRM
-	calc_bonuses(player, &state, true, false);
+	calc_bonuses(player, &player->mon, &state, true, false);
 
 	/* Stop pretending */
 	player->body.slots[weapon_slot].obj = current_weapon;
@@ -1775,7 +1775,7 @@ static void obj_known_misc_combat(const struct object *obj, bool *thrown_effect,
 		memcpy(&state, &player->state, sizeof(state));
 		state.stat_ind[STAT_STR] = 0; //Hack - NRM
 		state.stat_ind[STAT_DEX] = 0; //Hack - NRM
-		calc_bonuses(player, &state, true, false);
+		calc_bonuses(player, &player->mon, &state, true, false);
 
 		/* Stop pretending */
 		player->body.slots[weapon_slot].obj = current;
@@ -1878,7 +1878,7 @@ static bool obj_known_digging(struct object *obj, int deciturns[])
 	memcpy(&state, &player->state, sizeof(state));
 	state.stat_ind[STAT_STR] = 0; //Hack - NRM
 	state.stat_ind[STAT_DEX] = 0; //Hack - NRM
-	calc_bonuses(player, &state, true, false);
+	calc_bonuses(player, &player->mon, &state, true, false);
 
 	/* Stop pretending */
 	player->body.slots[slot].obj = current;

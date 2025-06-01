@@ -455,6 +455,8 @@ struct monster {
 	struct monster_race *original_race;	/* Changed monster's original race */
 	int midx;
 
+	struct player_state state;			// L: state
+
 	struct loc grid;					/* Location on map */
 
 	int16_t hp;							/* Current Hit points */

@@ -1145,7 +1145,7 @@ void calc_blows(struct player *p, int wgt, struct attack_roll *aroll,
 	// max 600 * 100 / 100
 	int blows = MAX(0, baseblows) * skill / div;
 
-	aroll->blows = blows + extra_blows;
+	aroll->blows = blows + extra_blows + 100;
 }
 
 /**
@@ -1191,7 +1191,7 @@ int weight_remaining(struct player *p)
  * adjustment; use zero for this to get a pure relative adjustment.  Must be
  * be non-negative.
  */
-static void adjust_skill_scale(int *v, int num, int den, int minv)
+void adjust_skill_scale(int *v, int num, int den, int minv)
 {
 	if (den < 0) {
 		den *= -1;
@@ -1551,7 +1551,7 @@ static void calc_glow(struct player_state *ps, struct player *p)
  * information of objects; thus it returns what the player _knows_
  * the character state to be.
  */
-void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
+void calc_bonuses(struct player *p, struct monster *mon, struct player_state *state, bool known_only,
 				  bool update)
 {
 	int i, j, hold;
@@ -1567,7 +1567,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	bitflag f[OF_SIZE];
 	bitflag collect_f[OF_SIZE];
 	bool vuln[ELEM_MAX];
-	struct monster_race *mrace = lookup_player_monster(p);
+	struct monster_race *mrace = mon->race;
 	int avail_hands, attack_div;
 	//int race_skills[SKILL_MAX] = { 0 }, race_x_skills[SKILL_MAX] = { 0 };
 	struct element_info race_elem_info[ELEM_MAX] = { 0 };
@@ -2231,8 +2231,8 @@ static void update_bonuses(struct player *p)
 	 * Calculate bonuses
 	 * ------------------------------------ */
 
-	calc_bonuses(p, &state, false, true);
-	calc_bonuses(p, &known_state, true, true);
+	calc_bonuses(p, &p->mon, &state, false, true);
+	calc_bonuses(p, &p->mon, &known_state, true, true);
 
 
 	/* ------------------------------------
