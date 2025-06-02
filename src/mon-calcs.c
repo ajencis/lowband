@@ -11,34 +11,105 @@
 #include "player-util.h"
 
 
-static int mon_ac(struct monster *mon)
+
+struct mon_player_match of_matches[] = {
+	{ RF_PASS_WEB, OF_PASS_WEB },
+	{ RF_INVISIBLE, OF_INVISIBILITY },
+	{ RF_HI_REGEN, OF_HI_REGEN },
+	{ RF_NONE, -1 }
+};
+
+struct mon_player_match pf_matches[] = {
+	{ RF_UNDEAD, PF_UNDEAD },
+	{ RF_EVIL, PF_EVIL },
+	{ RF_PASS_WALL, PF_PASS_WALL },
+	{ RF_PHOENIX_RESURRECT, PF_PHOENIX_RESURRECT },
+	{ RF_NONE, -1 }
+};
+
+
+int mon_power(const struct monster_race *mon, int power)
 {
-	int base = mon->race->ac, ac = 0, to_a = 0;
+	int scale = mon->powers[power];
+
+	if (scale <= 0) return scale;
+
+	int normal = scale * mon->level / 100;
+	int special = scale * mon->level / 50 + scale * scale / 50 - 100 * 100 / 50;
+
+	// a low-level monster with slow scaling doesn't get the power at all;
+	return MAX(0, MIN(normal, special));
+}
+
+static void get_mon_ac(struct monster *mon, struct player_state *state)
+{
+	int base_ac = mon->race->ac / 3, base_to = mon->race->ac - base_ac;
+	int ac = 0, to_a = 0;
 	struct object *obj;
 
 	for (obj = mon->equipped_obj; obj; obj = obj->next) {
 		ac += obj->ac;
-		to_a = object_to_ac(obj);
+		to_a += object_to_ac(obj);
 	}
 
-	return MAX(base, ac) + MIN(base, ac) / 2 + to_a;
+	ac = MAX(base_ac, ac) + MIN(base_ac, ac) / 2;
+	to_a = MAX(base_to, to_a) + MIN(base_to, to_a) / 2;
+
+	state->ac = ac;
+	state->to_a = to_a;
 }
 
 
 void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 {
-    int i, extra_blows = 0;
+	int i, extra_blows = 0;
+	struct element_info race_elem_info[ELEM_MAX] = { 0 };
+	struct monster_race *mrace = mon->race;
 
-    memset(state, 0, sizeof *state);
+	memset(state, 0, sizeof *state);
 
-    state->ac = mon_ac(mon);
-    state->speed = mon->race->speed;
+	get_mon_ac(mon, state);
+	state->speed = mon->race->speed;
 
-    for (i = 0; i < PP_MAX; ++i) {
-        state->powers[i] = mon->abilities[i];
-    }
-    
-    
+	pf_wipe(state->pflags);
+	of_wipe(state->flags);
+
+	pf_union(state->pflags, mrace->base->pflags);
+	of_union(state->flags, mrace->base->oflags);
+
+
+	for (i = 0; i < PP_MAX; ++i) {
+		state->powers[i] = mon_power(mrace, i);
+	}
+	for (i = 0; i < SKILL_MAX; i++) {
+		if (i == SKILL_HEALTH) state->skills[i] = mrace->avg_hp;
+		else state->skills[i] = mrace->skills[i] * (mrace->level + 66) / 66;
+	}
+
+
+	memcpy(race_elem_info, mrace->el_info, sizeof *race_elem_info * ELEM_MAX);
+	for (i = 0; i < ELEM_MAX; i++) {
+		state->el_info[i].res_level = race_elem_info[i].res_level;
+	}
+	
+
+	state->el_info[ELEM_HOLY_FIRE].res_level = state->el_info[ELEM_HOLY_ORB].res_level * 2 + state->el_info[ELEM_FIRE].res_level;
+	state->el_info[ELEM_HELLFIRE].res_level = state->el_info[ELEM_FIRE].res_level + pf_has(state->pflags, PF_EVIL) ? 0 : -1;
+
+
+	for (i = 0; of_matches[i].mval != RF_NONE; ++i) {
+		if (rf_has(mrace->flags, of_matches[i].mval)) {
+			of_on(state->flags, of_matches[i].pval);
+		}
+	}
+
+	for (i = 0; pf_matches[i].mval != RF_NONE; ++i) {
+		if (rf_has(mrace->flags, pf_matches[i].mval)) {
+			pf_on(state->pflags, pf_matches[i].pval);
+		}
+	}
+
+		
 	if (mon->m_timed[TMD_INVULN]) {
 		state->to_a += 100;
 	}
@@ -111,13 +182,12 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	}
 }
 
-
 void update_mon_state(struct monster *mon)
 {
-    if (mflag_has(mon->mflag, MFLAG_UPDATE)) {
-        calc_mon_bonuses(mon, &mon->state);
-        mflag_off(mon->mflag, MFLAG_UPDATE);
-    }
+	if (mflag_has(mon->mflag, MFLAG_UPDATE)) {
+		calc_mon_bonuses(mon, &mon->state);
+		mflag_off(mon->mflag, MFLAG_UPDATE);
+	}
 }
 
 

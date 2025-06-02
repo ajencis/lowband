@@ -316,7 +316,7 @@ void play_ambient_sound(void)
  */
 static void decrease_timeouts(void)
 {
-	int adjust = (adj_con_fix(player->state.stat_ind[STAT_CON]) + 1);
+	int adjust = (adj_con_fix(player->mon.state.stat_ind[STAT_CON]) + 1);
 	int i;
 
 	/* Most timed effects decrement by 1 */
@@ -580,7 +580,7 @@ static void update_scent(void)
 void process_world(struct chunk *c)
 {
 	int i, y, x;
-	bool p_berserker = player->state.powers[PP_BERSERK] > 0;// pf_has(player->state.pflags, PF_BERSERKER);
+	bool p_berserker = player->mon.state.powers[PP_BERSERK] > 0;// pf_has(player->state.pflags, PF_BERSERKER);
 
 	/* Compact the monster list if we're approaching the limit */
 	if (cave_monster_count(c) + 32 > z_info->level_monster_max) {
@@ -625,7 +625,7 @@ void process_world(struct chunk *c)
 	}
 
 	/* Check for light change */
-	if (player->state.powers[PP_UNLIGHT] > 0) {
+	if (player->mon.state.powers[PP_UNLIGHT] > 0) {
 		player->upkeep->update |= PU_BONUS;
 	}
 
@@ -654,7 +654,7 @@ void process_world(struct chunk *c)
 		assert(square(cave, loc(x, y))->mana >= 0);
 	}
 
-	if (player->state.powers[PP_ANTIMAGIC] > 0) {
+	if (player->mon.state.powers[PP_ANTIMAGIC] > 0) {
 		int power = get_power_scale(player, PP_ANTIMAGIC, 1500); // chance in 1000 to drain mana
 		int rad = MAX(MIN((power + 99) / 100, power / 75 - 3), 0);
 		int dist, quantity;
@@ -771,14 +771,14 @@ void process_world(struct chunk *c)
 	/*** Check the Food, and Regenerate ***/
 
 	/* Digest */
-	if (pf_has(player->state.pflags, PF_NO_FOOD)) {
+	if (pf_has(player->mon.state.pflags, PF_NO_FOOD)) {
 		player_set_timed(player, TMD_FOOD, z_info->food_value * 25, false, false);
 	}
 	else {
 		/* Digest normally */
 		if (!(turn % 100)) {
 			/* Basic digestion rate based on speed */
-			i = turn_energy(player->state.speed);
+			i = turn_energy(player->mon.state.speed);
 
 			/* Adjust for food value */
 			i = (i * 128) / z_info->food_value;
@@ -838,14 +838,18 @@ void process_world(struct chunk *c)
 	}
 
 	// L: echolocate if we can
-	if (one_in_(3) && pf_has(player->state.pflags, PF_ECHOLOCATE)) {
+	if (one_in_(3) && pf_has(player->mon.state.pflags, PF_ECHOLOCATE)) {
 		effect_simple(EF_ECHOLOCATE, source_player(), "0d0", 0, 0, 0, 0, 0, NULL);
 	}
 
 	/* Regenerate Hit Points if needed */
-	if (player->mon.hp < player->mon.maxhp) {
-		player_regen_hp(player);
+	for (i = 1; i < cave_monster_max(c); ++i) {
+		struct monster *mon = cave_monster(c, i);
+		if (mon && mon->race) {
+			regen_hp(mon);
+		}
 	}
+	regen_hp(&player->mon);
 
 	/* Regenerate or lose mana */
 	player_regen_mana(player);
@@ -1425,7 +1429,7 @@ void run_game_loop(void)
 			}
 
 			/* Give the player some energy */
-			player->energy += turn_energy(player->state.speed);
+			player->energy += turn_energy(player->mon.state.speed);
 
 			/* Count game turns */
 			turn++;

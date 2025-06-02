@@ -177,7 +177,7 @@ static int compute_unlocked_penalty(struct player *p)
  */
 static int compute_locked_penalty(struct player *p)
 {
-	int chance = calc_unlocking_chance(p, 7, p->state.cur_light < 1
+	int chance = calc_unlocking_chance(p, 7, p->mon.state.cur_light < 1
 		&& unlight_power(p) < 1);
 	int penalty;
 
@@ -235,12 +235,12 @@ static int compute_rubble_penalty(struct player *p)
 			best_digger->number = 1;
 		}
 		p->body.slots[weapon_slot].obj = best_digger;
-		memcpy(&local_state, &p->state, sizeof(local_state));
+		memcpy(&local_state, &p->mon.state, sizeof(local_state));
 		calc_bonuses(p, &p->mon, &local_state, false, true);
 		used_state = &local_state;
 	} else {
 		swapped_digger = false;
-		used_state = &p->state;
+		used_state = &p->mon.state;
 	}
 	calc_digging_chances(used_state, digging_chances);
 	if (swapped_digger) {

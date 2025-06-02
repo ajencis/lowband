@@ -592,7 +592,7 @@ bool do_cmd_open_chest(struct loc grid, struct object *obj)
 		flag = false;
 
 		/* Get the "disarm" factor */
-		i = player->state.skills[SKILL_DISARM_PHYS];
+		i = player->mon.state.skills[SKILL_DISARM_PHYS];
 
 		/* Penalize some conditions */
 		if (player->mon.m_timed[TMD_BLIND] || no_light(player)) i = i / 10;
@@ -659,7 +659,7 @@ bool do_cmd_open_chest(struct loc grid, struct object *obj)
  */
 bool do_cmd_disarm_chest(struct object *obj)
 {
-	int skill = player->state.skills[SKILL_DISARM_PHYS], diff;
+	int skill = player->mon.state.skills[SKILL_DISARM_PHYS], diff;
 	struct chest_trap *traps;
 	bool physical = false;
 	bool magic = false;
@@ -678,10 +678,10 @@ bool do_cmd_disarm_chest(struct object *obj)
 	/* Physical disarming is the default, if there are magic traps we adjust */ 
 	if (magic) {
 		if (physical) {
-			skill = (player->state.skills[SKILL_DISARM_MAGIC] +
-					 player->state.skills[SKILL_DISARM_PHYS]) / 2;
+			skill = (player->mon.state.skills[SKILL_DISARM_MAGIC] +
+					 player->mon.state.skills[SKILL_DISARM_PHYS]) / 2;
 		} else {
-			skill = player->state.skills[SKILL_DISARM_MAGIC];
+			skill = player->mon.state.skills[SKILL_DISARM_MAGIC];
 		}
 	}
 

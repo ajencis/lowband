@@ -147,7 +147,7 @@ static bool monster_cannot_target_player(struct monster *mon)
 bool monster_can_hear(struct monster *mon)
 {
 	int base_hearing = mon->race->hearing
-		- player->state.skills[SKILL_STEALTH] / 15;
+		- player->mon.state.skills[SKILL_STEALTH] / 15;
 	if (cave->noise.grids[mon->grid.y][mon->grid.x] == 0) {
 		return false;
 	}
@@ -789,7 +789,7 @@ static bool get_move_advance(struct monster *mon, bool *track)
 		player->mon.grid;
 
 	int base_hearing = mon->race->hearing
-		- player->state.skills[SKILL_STEALTH] / 15;
+		- player->mon.state.skills[SKILL_STEALTH] / 15;
 	int current_noise = base_hearing
 		- cave->noise.grids[mon->grid.y][mon->grid.x];
 	int best_scent = 0;
@@ -2257,7 +2257,7 @@ static void monster_reduce_sleep(struct monster *mon)
 			equip_learn_flag(player, OF_AGGRAVATE);
 		}
 	} else {
-		int stealth = player->state.skills[SKILL_STEALTH] / 5;
+		int stealth = player->mon.state.skills[SKILL_STEALTH] / 5;
 		int local_noise = cave->noise.grids[mon->grid.y][mon->grid.x];
 		int local_smell = cave->scent.grids[mon->grid.y][mon->grid.x];
 		bool woke_up = false;
@@ -2400,6 +2400,7 @@ bool process_monster_timed(struct monster *mon)
 	}
 }
 
+#if 0
 /**
  * Monster regeneration of HPs.
  */
@@ -2432,6 +2433,7 @@ static void regen_monster(struct monster *mon, int num)
 		}
 	}
 }
+#endif
 
 
 /**
@@ -2455,12 +2457,11 @@ void process_monsters(int minimum_energy)
 	int mspeed;
 
 	/* Only process some things every so often */
-	bool regen = false;
 	bool targcheck = false;
 
 	/* Regenerate hitpoints and mana every 128 game turns */
 	if (!(turn & 0x7f)) {
-		regen = true;
+		//regen = true;
 		// Recheck monsters' targets every 2000ish turns
 		if (!(turn & 0x7ff)) {
 			targcheck = true;
@@ -2501,9 +2502,10 @@ void process_monsters(int minimum_energy)
 		mflag_on(mon->mflag, MFLAG_HANDLED);
 
 		/* Handle monster regeneration if requested */
-		if (regen) {
+		// L: done elsewhere
+		/*if (regen) {
 			regen_monster(mon, 1);
-		}
+		}*/
 
 		/* Calculate the net speed */
 		mspeed = mon->state.speed;
@@ -2542,8 +2544,6 @@ void process_monsters(int minimum_energy)
 				if (take_turn) {
 					/* The monster takes its turn */
 					monster_turn(mon);
-
-					msg_add_fmt("mon %s's speed =%i", mon->race->name, mspeed);
 				}
 
 				/*
@@ -2603,7 +2603,7 @@ void restore_monsters(void)
 		mon = cave_monster(cave, i);
 
 		/* Regenerate */
-		regen_monster(mon, num_turns / 100);
+		//regen_monster(mon, num_turns / 100);
 
 		/* Handle timed effects */
 		status_red = num_turns * turn_energy(mon->state.speed) / z_info->move_energy;

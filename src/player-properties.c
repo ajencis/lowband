@@ -37,8 +37,8 @@ static bool pred_HAS_BITE(const struct player_ability *abil, const struct player
 {
 	int i;
 
-	for (i = 0; i < p->state.num_attacks; ++i) {
-		const struct attack_roll *aroll = &p->state.attacks[i];
+	for (i = 0; i < p->mon.state.num_attacks; ++i) {
+		const struct attack_roll *aroll = &p->mon.state.attacks[i];
 
 		if (streq(aroll->name, "bite")) {
 			return true;
@@ -186,7 +186,7 @@ static void view_abilities(void)
 
 	// L: powers get listed
 	for (ability = player_abilities; ability && num_abilities < MAX_ABILITIES; ability = ability->next) {
-		if ((ability->type == PY_ABIL_POWER) && player->state.powers[ability->index] != 0) {
+		if ((ability->type == PY_ABIL_POWER) && player->mon.state.powers[ability->index] != 0) {
 			memcpy(&ability_list[num_abilities], ability,
 				   sizeof(struct player_ability));
 			ability_list[num_abilities++].group = PLAYER_FLAG_POWER;
@@ -195,7 +195,7 @@ static void view_abilities(void)
 
 	// L: skills get listed too!
 	for (ability = player_abilities; ability && num_abilities < MAX_ABILITIES; ability = ability->next) {
-		if ((ability->type == PY_ABIL_SKILL) && player->state.skills[ability->index] > 0) {
+		if ((ability->type == PY_ABIL_SKILL) && player->mon.state.skills[ability->index] > 0) {
 			memcpy(&ability_list[num_abilities], ability, sizeof(ability_list[0]));
 			ability_list[num_abilities++].group = PLAYER_FLAG_SKILL;
 		}

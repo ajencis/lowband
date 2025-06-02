@@ -577,6 +577,7 @@ void player_init(struct player *p)
 	}
 
 	p->mon.midx = PLAYER_MON_MIDX;
+	p->mon.player = p;
 
 	// L: metaprogression should persist
 	p->unlocked_classes = unlocked_classes_save;
@@ -1013,8 +1014,8 @@ static void generate_stats(int st[STAT_MAX], int spent[STAT_MAX],
 							left, true)) {
 						maxed[STAT_DEX] = true;
 					}
-					if (player->state.num_blows / 10 > blows) {
-						blows = player->state.num_blows / 10;
+					if (player->mon.state.num_blows / 10 > blows) {
+						blows = player->mon.state.num_blows / 10;
 						dex_break = st[STAT_DEX];
 					}
 				} else {

@@ -969,7 +969,7 @@ bool player_inc_check(struct player *p, int idx, bool lore)
 				}
 			} else {
 				equip_learn_element(p, f->idx);
-				if (p->state.el_info[f->idx].res_level > 0) {
+				if (p->mon.state.el_info[f->idx].res_level > 0) {
 					return false;
 				}
 			}
@@ -987,7 +987,7 @@ bool player_inc_check(struct player *p, int idx, bool lore)
 				}
 			} else {
 				equip_learn_element(p, f->idx);
-				if (p->state.el_info[f->idx].res_level < 0) {
+				if (p->mon.state.el_info[f->idx].res_level < 0) {
 					return false;
 				}
 			}
@@ -1020,7 +1020,7 @@ bool player_inc_check(struct player *p, int idx, bool lore)
 			break;
 		
 		case TMD_FAIL_SAVE:
-			if (randint0(100) < p->state.skills[SKILL_SAVE]) {
+			if (randint0(100) < p->mon.state.skills[SKILL_SAVE]) {
 				return false;
 			}
 			break;

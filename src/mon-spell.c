@@ -367,7 +367,7 @@ void do_mon_spell(int index, struct monster *mon, bool seen)
 	spell_message(mon, spell, seen, hits);
 
 	if (hits) {
-		int save = player->state.skills[SKILL_SAVE];
+		int save = player->mon.state.skills[SKILL_SAVE];
 		struct monster_spell_level *level = spell->level;
 
 		if (!mon_spell_is_innate(index)) {
@@ -399,7 +399,7 @@ void do_mon_spell(int index, struct monster *mon, bool seen)
  */
 static const struct mon_spell_info {
 	uint16_t index;				/* Numerical index (RSF_FOO) */
-	int type;				/* Type bitflag */
+	int type;					/* Type bitflag */
 } mon_spell_types[] = {
     #define RSF(a, b)	{ RSF_##a, b },
     #include "list-mon-spells.h"

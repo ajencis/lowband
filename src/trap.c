@@ -415,7 +415,7 @@ bool square_reveal_trap(struct chunk *c, struct loc grid, bool always,
 		}
 		
 		/* Skip traps the player doesn't notice */
-		if (!always && player->state.skills[SKILL_SEARCH] < trap->power) {
+		if (!always && player->mon.state.skills[SKILL_SEARCH] < trap->power) {
 			trap = trap->next;
 			continue;
 		}
@@ -501,7 +501,7 @@ extern void hit_trap(struct loc grid, int delayed)
 	for (trap = square_trap(cave, grid); trap; trap = next_trap) {
 		int flag;
 		bool saved = false;
-		int defadj = player->state.skills[SKILL_HEALTH] - cave->depth * 3 / 2;
+		int defadj = player->mon.state.skills[SKILL_HEALTH] - cave->depth * 3 / 2;
 
 		next_trap = trap->next;
 
@@ -550,7 +550,7 @@ extern void hit_trap(struct loc grid, int delayed)
 
 		/* Test for save due to saving throw */
 		if (trf_has(trap->kind->flags, TRF_SAVE_THROW) &&
-				(randint0(100) < (player->state.skills[SKILL_SAVE] + 
+				(randint0(100) < (player->mon.state.skills[SKILL_SAVE] + 
 					defadj > 0 ? randint0(defadj) : -randint0(-defadj)))) {
 			saved = true;
 		}

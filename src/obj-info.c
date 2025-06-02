@@ -644,10 +644,10 @@ static void calculate_missile_crits(struct player_state *state, int weight,
 
 	if (launched) {
 		crit_chance += z_info->r_crit_chance_launched_toh_skill_scl
-			* player->state.skills[SKILL_TO_HIT_BOW];
+			* player->mon.state.skills[SKILL_TO_HIT_BOW];
 	} else {
 		crit_chance += z_info->r_crit_chance_thrown_toh_skill_scl
-			* player->state.skills[SKILL_TO_HIT_THROW];
+			* player->mon.state.skills[SKILL_TO_HIT_THROW];
 	}
 	crit_chance = MIN(z_info->r_crit_chance_range, MAX(0, crit_chance));
 
@@ -895,7 +895,7 @@ static int obj_known_blows(const struct object *obj, int max_num,
 	player->body.slots[weapon_slot].obj = (struct object *) obj;
 
 	/* Calculate the player's hypothetical state */
-	memcpy(&state, &player->state, sizeof(state));
+	memcpy(&state, &player->mon.state, sizeof(state));
 	state.stat_ind[STAT_STR] = 0; //Hack - NRM
 	state.stat_ind[STAT_DEX] = 0; //Hack - NRM
 	calc_bonuses(player, &player->mon, &state, true, false);
@@ -1067,7 +1067,7 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 	int bow_slot = slot_by_type(player, EQUIP_BOW, true);
 	struct object *bow = slot_object(player, bow_slot);
 	bool weapon = tval_is_melee_weapon(obj) && !throw;
-	bool ammo   = (player->state.ammo_tval == obj->tval) && (bow) && !throw;
+	bool ammo   = (player->mon.state.ammo_tval == obj->tval) && (bow) && !throw;
 	int melee_adj_mult = (ammo || throw) ? 0 : 1;
 	int multiplier = 1;
 
@@ -1082,7 +1082,7 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 		player->body.slots[weapon_slot].obj = (struct object *) obj;
 
 	/* Calculate the player's hypothetical state */
-	memcpy(&state, &player->state, sizeof(state));
+	memcpy(&state, &player->mon.state, sizeof(state));
 	state.stat_ind[STAT_STR] = 0; //Hack - NRM
 	state.stat_ind[STAT_DEX] = 0; //Hack - NRM
 	calc_bonuses(player, &player->mon, &state, true, false);
@@ -1109,14 +1109,14 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 
 		old_blows = state.num_blows;
 	} else if (ammo) {
-		calculate_missile_crits(&player->state, object_weight_one(obj),
+		calculate_missile_crits(&player->mon.state, object_weight_one(obj),
 			plus, true, &crit_mult, &crit_add, &crit_div,
 			&crit_round_mult, &crit_round_add, &crit_scl_round);
 
 		dam += (object_to_dam(obj->known) * 10);
 		dam += (object_to_dam(bow->known) * 10);
 	} else {
-		calculate_missile_crits(&player->state, object_weight_one(obj),
+		calculate_missile_crits(&player->mon.state, object_weight_one(obj),
 			plus, false, &crit_mult, &crit_add, &crit_div,
 			&crit_round_mult, &crit_round_add, &crit_scl_round);
 
@@ -1124,7 +1124,7 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 		dam *= 2 + object_weight_one(obj) / 12;
 	}
 
-	if (ammo) multiplier = player->state.ammo_mult;
+	if (ammo) multiplier = player->mon.state.ammo_mult;
 
 	/* Get the brands */
 	total_brands = mem_zalloc(z_info->brand_max * sizeof(bool));
@@ -1195,8 +1195,8 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 				+ (round * old_blows) / crit_div;
 			total_dam = temp0 / 100 + ((temp0 % 100 >= 50) ? 1 : 0);
 		} else if (ammo) {
-			temp0 = total_dam * player->state.num_shots
-				+ (round * player->state.num_shots) / crit_div;
+			temp0 = total_dam * player->mon.state.num_shots
+				+ (round * player->mon.state.num_shots) / crit_div;
 			total_dam = temp0 / 10 + ((temp0 % 10 >= 5) ? 1 : 0);
 		} else {
 			total_dam += (round > (crit_div + 1) / 2) ? 1 : 0;
@@ -1226,8 +1226,8 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 				+ (round * old_blows) / crit_div;
 			total_dam = temp0 / 100 + ((temp0 % 100 >= 50) ? 1 : 0);
 		} else if (ammo) {
-			temp0 = total_dam * player->state.num_shots
-				+ (round * player->state.num_shots) / crit_div;
+			temp0 = total_dam * player->mon.state.num_shots
+				+ (round * player->mon.state.num_shots) / crit_div;
 			total_dam = temp0 / 10 + ((temp0 % 10 >= 5) ? 1 : 0);
 		} else {
 			total_dam += (round >= (crit_div + 1) / 2) ? 1 : 0;
@@ -1250,8 +1250,8 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 			+ (round * old_blows) / crit_div;
 		total_dam = temp0 / 100 + ((temp0 % 100 >= 50) ? 1 : 0);
 	} else if (ammo) {
-		temp0 = total_dam * player->state.num_shots
-			+ (round * player->state.num_shots) / crit_div;
+		temp0 = total_dam * player->mon.state.num_shots
+			+ (round * player->mon.state.num_shots) / crit_div;
 		total_dam = temp0 / 10 + ((temp0 % 10 >= 5) ? 1 : 0);
 	} else {
 		total_dam += (round > (crit_div + 1) / 2) ? 1 : 0;
@@ -1312,7 +1312,7 @@ bool o_obj_known_damage(const struct object *obj, int *normal_damage,
 	int bow_slot = slot_by_type(player, EQUIP_WEAPON, true);
 	struct object *bow = slot_object(player, bow_slot);
 	bool weapon = tval_is_melee_weapon(obj) && !throw;
-	bool ammo   = (player->state.ammo_tval == obj->tval) && (bow) && !throw;
+	bool ammo   = (player->mon.state.ammo_tval == obj->tval) && (bow) && !throw;
 	int multiplier = 1;
 
 	struct player_state state;
@@ -1742,7 +1742,7 @@ static void obj_known_misc_combat(const struct object *obj, bool *thrown_effect,
 {
 	struct object *bow = slot_object(player, slot_by_type(player, EQUIP_BOW, true));
 	bool weapon = tval_is_melee_weapon(obj);
-	bool ammo   = (player->state.ammo_tval == obj->tval) && (bow);
+	bool ammo   = (player->mon.state.ammo_tval == obj->tval) && (bow);
 
 	*thrown_effect = *heavy = false;
 	*range = *break_chance = 0;
@@ -1755,7 +1755,7 @@ static void obj_known_misc_combat(const struct object *obj, bool *thrown_effect,
 	}
 
 	if (ammo)
-		*range = 10 * MIN(6 + 2 * player->state.ammo_mult, z_info->max_range);
+		*range = 10 * MIN(6 + 2 * player->mon.state.ammo_mult, z_info->max_range);
 
 	/* Add breakage chance */
 	*break_chance = breakage_chance(obj, true);
@@ -1772,7 +1772,7 @@ static void obj_known_misc_combat(const struct object *obj, bool *thrown_effect,
 		player->body.slots[weapon_slot].obj = (struct object *) obj;
 
 		/* Calculate the player's hypothetical state */
-		memcpy(&state, &player->state, sizeof(state));
+		memcpy(&state, &player->mon.state, sizeof(state));
 		state.stat_ind[STAT_STR] = 0; //Hack - NRM
 		state.stat_ind[STAT_DEX] = 0; //Hack - NRM
 		calc_bonuses(player, &player->mon, &state, true, false);
@@ -1793,7 +1793,7 @@ static bool describe_combat(textblock *tb, const struct object *obj)
 {
 	struct object *bow = slot_object(player, slot_by_type(player, EQUIP_BOW, true));
 	bool weapon = tval_is_melee_weapon(obj);
-	bool ammo   = (player->state.ammo_tval == obj->tval) && (bow);
+	bool ammo   = (player->mon.state.ammo_tval == obj->tval) && (bow);
 	bool throwing_weapon = weapon && of_has(obj->flags, OF_THROWING);
 	bool rock = tval_is_ammo(obj) && of_has(obj->flags, OF_THROWING);
 
@@ -1875,7 +1875,7 @@ static bool obj_known_digging(struct object *obj, int deciturns[])
 	player->body.slots[slot].obj = obj;
 
 	/* Calculate the player's hypothetical state */
-	memcpy(&state, &player->state, sizeof(state));
+	memcpy(&state, &player->mon.state, sizeof(state));
 	state.stat_ind[STAT_STR] = 0; //Hack - NRM
 	state.stat_ind[STAT_DEX] = 0; //Hack - NRM
 	calc_bonuses(player, &player->mon, &state, true, false);
@@ -2140,7 +2140,7 @@ static bool describe_effect(textblock *tb, const struct object *obj,
 	} else {
 		int level = obj->artifact ?
 			obj->artifact->level : obj->kind->level;
-		int boost = MAX((player->state.skills[SKILL_DEVICE] - level) / 2, 0);
+		int boost = MAX((player->mon.state.skills[SKILL_DEVICE] - level) / 2, 0);
 		const char *prefix;
 		textblock *tbe;
 
@@ -2169,7 +2169,7 @@ static bool describe_effect(textblock *tb, const struct object *obj,
 
 	if (min_time || max_time) {
 		/* Sometimes adjust for player speed */
-		int multiplier = turn_energy(player->state.speed);
+		int multiplier = turn_energy(player->mon.state.speed);
 		if (!subjective) multiplier = 10;
 
 		textblock_append(tb, "Takes ");
@@ -2186,7 +2186,7 @@ static bool describe_effect(textblock *tb, const struct object *obj,
 		}
 
 		textblock_append(tb, " turns to recharge");
-		if (subjective && player->state.speed != 110)
+		if (subjective && player->mon.state.speed != 110)
 			textblock_append(tb, " at your current speed");
 
 		textblock_append(tb, ".\n");

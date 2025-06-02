@@ -654,7 +654,7 @@ bool check_hit(struct player *p, int to_hit)
 	equip_learn_on_defend(p);
 
 	/* Check if the player was hit */
-	return test_hit(to_hit, p->state.ac + p->state.to_a);
+	return test_hit(to_hit, p->mon.state.ac + p->mon.state.to_a);
 }
 
 /**
@@ -787,7 +787,7 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 					rlev,
 					method,
 					// L: only armour itself affects damage reduction
-					p->state.ac,
+					p->mon.state.ac,
 					ddesc,
 					obvious,
 					blinked,

@@ -343,7 +343,7 @@ struct player_history {
 	size_t length;					/**< Current length */
 };
 
-#define player_has(p, flag)       (pf_has(p->state.pflags, (flag)))
+#define player_has(p, flag)       (pf_has(p->mon.state.pflags, (flag)))
 
 /**
  * Temporary, derived, player-related variables used during play but not saved
@@ -511,7 +511,7 @@ struct player {
 	struct object *obj_k;				/* Object knowledge ("runes") */
 	struct chunk *cave;					/* Known version of current level */
 
-	struct player_state state;			/* Calculatable state */
+	//struct player_state state;			/* Calculatable state */
 	struct player_state known_state;	/* What the player can know of the above */
 	struct player_upkeep *upkeep;		/* Temporary player-related values */
 	

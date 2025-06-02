@@ -92,7 +92,7 @@ int breakage_chance(const struct object *obj, bool hit_target) {
 int chance_of_melee_hit_base(const struct player *p, struct attack_roll *aroll)
 {
 	int bonus = aroll->to_hit;
-	int total = p->state.skills[aroll->attack_skill] + bonus * BTH_PLUS_ADJ;
+	int total = p->mon.state.skills[aroll->attack_skill] + bonus * BTH_PLUS_ADJ;
 	return MAX(total, 0);
 }
 
@@ -331,7 +331,7 @@ static int critical_shot(const struct player *p,
 		int weight, int plus,
 		int dam, bool launched, uint32_t *msg_type)
 {
-	int to_h = p->state.to_h + plus;
+	int to_h = p->mon.state.to_h + plus;
 	int chance, new_dam;
 
 	if (is_debuffed(monster)) {
@@ -343,10 +343,10 @@ static int critical_shot(const struct player *p,
 		+ z_info->r_crit_chance_offset;
 	if (launched) {
 		chance += z_info->r_crit_chance_launched_toh_skill_scl
-			* p->state.skills[SKILL_TO_HIT_BOW];
+			* p->mon.state.skills[SKILL_TO_HIT_BOW];
 	} else {
 		chance += z_info->r_crit_chance_thrown_toh_skill_scl
-			* p->state.skills[SKILL_TO_HIT_THROW];
+			* p->mon.state.skills[SKILL_TO_HIT_THROW];
 	}
 
 	if (randint1(z_info->r_crit_chance_range) > chance
@@ -993,7 +993,7 @@ static void get_melee_attack(struct attack_roll *aroll, struct player_state *ps,
 
 	melee_crit_chance(aroll, p, ps);
 
-	if (pf_has(p->state.pflags, PF_LONG_LIMBS)) {
+	if (pf_has(p->mon.state.pflags, PF_LONG_LIMBS)) {
 		aroll->range = MAX(aroll->range, 2);
 	}
 }
@@ -1138,7 +1138,7 @@ struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_sta
 static bool get_shooter_ranged_attack(struct player *p, struct object *ammo, 
 								struct attack_roll *aroll)
 {
-	struct attack_roll *shooter_roll = &p->state.ranged_attack;
+	struct attack_roll *shooter_roll = &p->mon.state.ranged_attack;
 	if (!shooter_roll->obj) return false;
 	
 	memcpy(aroll, shooter_roll, sizeof(*shooter_roll));
@@ -1171,23 +1171,23 @@ static void get_thrown_ranged_attack(struct player *p, struct object *thrown, st
 	aroll->obj = thrown;
 	
 	if (aroll->accuracy_stat != -1) {
-		aroll->to_hit += adj_dex_th(p->state.stat_ind[aroll->accuracy_stat]);
+		aroll->to_hit += adj_dex_th(p->mon.state.stat_ind[aroll->accuracy_stat]);
 	}
-	aroll->dsides += adj_str_td(p->state.stat_ind[aroll->damage_stat]);
+	aroll->dsides += adj_str_td(p->mon.state.stat_ind[aroll->damage_stat]);
 
 	if (of_has(thrown->flags, OF_THROWING)) {
-		aroll->to_hit += p->state.to_h;
-		aroll->to_dam += player_damage_bonus(&p->state);
+		aroll->to_hit += p->mon.state.to_h;
+		aroll->to_dam += player_damage_bonus(&p->mon.state);
 
 		specialization_mod_attack(aroll, thrown);
 		
-		aroll->ddice = aroll->ddice * (p->state.skills[aroll->attack_skill] + 33) / 33;
+		aroll->ddice = aroll->ddice * (p->mon.state.skills[aroll->attack_skill] + 33) / 33;
 	}
 
 	aroll->dsides = MAX(aroll->dsides, 1);
 	aroll->ddice = MAX(aroll->ddice, 1);
 	
-	calc_blows(p, thrown->weight, aroll, &player->state, 0);
+	calc_blows(p, thrown->weight, aroll, &player->mon.state, 0);
 }
 
 static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow, bool ranged)
@@ -1229,8 +1229,8 @@ bool player_can_attack_monster(struct player *p, struct monster *mon)
 {
 	int i;
 
-	for (i = 0; i < p->state.num_attacks; ++i) {
-		if (monster_can_be_attacked(p, &p->state.attacks[i], mon, NULL, 0)) {
+	for (i = 0; i < p->mon.state.num_attacks; ++i) {
+		if (monster_can_be_attacked(p, &p->mon.state.attacks[i], mon, NULL, 0)) {
 			return true;
 		}
 	}
@@ -1726,7 +1726,7 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 	struct object *weapon = slot_object(p, slot_by_type(p, EQUIP_WEAPON, true));
 	struct object *shield = NULL;
 	int i;
-	int nblows = p->state.num_blows / 100;
+	int nblows = p->mon.state.num_blows / 100;
 	int bash_quality, bash_dam, energy_lost;
 
 	for (i = 0; i < p->body.count; i++) {
@@ -1736,8 +1736,8 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 	}
 
 	/* Bashing chance depends on melee skill, DEX, and a level bonus. */
-	int bash_chance = p->state.skills[SKILL_TO_HIT_MELEE] / 8 +
-		adj_dex_th(p->state.stat_ind[STAT_DEX]) / 2;
+	int bash_chance = p->mon.state.skills[SKILL_TO_HIT_MELEE] / 8 +
+		adj_dex_th(p->mon.state.stat_ind[STAT_DEX]) / 2;
 
 	/* No shield, no bash */
 	if (!shield) return false;
@@ -1760,7 +1760,7 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 	}
 
 	/* Calculate attack quality, a mix of momentum and accuracy. */
-	bash_quality = p->state.skills[SKILL_TO_HIT_MELEE] / 4 + p->wt / 8 +
+	bash_quality = p->mon.state.skills[SKILL_TO_HIT_MELEE] / 4 + p->wt / 8 +
 		p->upkeep->total_weight / 80 + object_weight_one(shield) / 2;
 
 	/* Calculate damage.  Big shields are deadly. */
@@ -1770,7 +1770,7 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 	bash_dam *= bash_quality / 40 + p->lev / 14;
 
 	/* Strength bonus. */
-	bash_dam += adj_str_td(p->state.stat_ind[STAT_STR]);
+	bash_dam += adj_str_td(p->mon.state.stat_ind[STAT_STR]);
 
 	/* Paranoia. */
 	if (bash_dam <= 0) return false;
@@ -1801,7 +1801,7 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 	}
 
 	/* The player will sometimes stumble. */
-	if (35 + adj_dex_th(p->state.stat_ind[STAT_DEX]) < randint1(60)) {
+	if (35 + adj_dex_th(p->mon.state.stat_ind[STAT_DEX]) < randint1(60)) {
 		energy_lost = randint1(50) + 25;
 		/* Lose 26-75% of a turn due to stumbling after shield bash. */
 		msgt(MSG_GENERIC, "You stumble!");
@@ -1843,15 +1843,15 @@ void py_attack(struct player *p, struct loc grid)
 		return;
 	}
 
-	if (p->state.num_attacks <= 0) {
+	if (p->mon.state.num_attacks <= 0) {
 		msg("You don't have any way to attack!");
 		return;
 	}
 
 	// L: check to see if we can actually target the monster
-	for (i = 0; i < p->state.num_attacks; ++i) {
+	for (i = 0; i < p->mon.state.num_attacks; ++i) {
 		bool thisblowworks;
-		aroll = p->state.attacks[i];
+		aroll = p->mon.state.attacks[i];
 		thisblowworks = monster_can_be_attacked(p, &aroll, mon, buf, sizeof(buf));
 		can_attack = can_attack || thisblowworks;
 		if (thisblowworks) {
@@ -1902,7 +1902,7 @@ void py_attack(struct player *p, struct loc grid)
 	while (!slain) {
 		int cleavechance = 0;
 		int cleaveblowenergy;
-		aroll = p->state.attacks[which];
+		aroll = p->mon.state.attacks[which];
 
 		struct loc tgrid = mon->grid;
 
@@ -1951,7 +1951,7 @@ void py_attack(struct player *p, struct loc grid)
 			}
 		}
 
-		if (!doingcleave) which = (which + 1) % p->state.num_attacks;
+		if (!doingcleave) which = (which + 1) % p->mon.state.num_attacks;
 	}
 
 	if (!slain) {
@@ -2038,7 +2038,7 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 
 	/* Calculate potenital piercing */
 	if (p->mon.m_timed[TMD_POWERSHOT] && obj && tval_is_sharp_missile(obj)) {
-		pierce = p->state.ammo_mult;
+		pierce = p->mon.state.ammo_mult;
 	}
 
 	/* Hack -- Handle stuff */
@@ -2293,8 +2293,8 @@ void do_cmd_melee(struct command *cmd)
 		return;
 	}
 
-	for (i = 0; i < player->state.num_attacks; i++) {
-		range = MAX(range, player->state.attacks[i].range);
+	for (i = 0; i < player->mon.state.num_attacks; i++) {
+		range = MAX(range, player->mon.state.attacks[i].range);
 	}
 
 	if (dir == DIR_TARGET) {
@@ -2336,10 +2336,10 @@ void do_cmd_melee(struct command *cmd)
  */
 void do_cmd_fire(struct command *cmd) {
 	int dir;
-	int range = MIN(6 + 2 * player->state.ammo_mult, z_info->max_range);
-	int shots = player->state.num_shots;
+	int range = MIN(6 + 2 * player->mon.state.ammo_mult, z_info->max_range);
+	int shots = player->mon.state.num_shots;
 
-	struct attack_roll aroll = player->state.ranged_attack;
+	struct attack_roll aroll = player->mon.state.ranged_attack;
 
 	struct object *bow = aroll.obj;// slot_object(player, slot_by_type(player, EQUIP_BOW, true));
 	struct object *obj = NULL;
@@ -2364,7 +2364,7 @@ void do_cmd_fire(struct command *cmd) {
 	}
 
 	/* Require a usable launcher */
-	if (!bow || !player->state.ammo_tval) {
+	if (!bow || !player->mon.state.ammo_tval) {
 		msg("You have nothing to fire with.");
 		return;
 	}
@@ -2376,7 +2376,7 @@ void do_cmd_fire(struct command *cmd) {
 	}
 
 	/* Check the ammo can be used with the launcher */
-	if (obj->tval != player->state.ammo_tval) {
+	if (obj->tval != player->mon.state.ammo_tval) {
 		msg("That ammo cannot be fired by your current weapon.");
 		return;
 	}
@@ -2399,7 +2399,7 @@ void do_cmd_fire(struct command *cmd) {
 void do_cmd_throw(struct command *cmd) {
 	int dir;
 	int shots = 10;
-	int str = adj_str_blow(player->state.stat_ind[STAT_STR]);
+	int str = adj_str_blow(player->mon.state.stat_ind[STAT_STR]);
 	//ranged_attack attack = make_ranged_throw;
 	struct attack_roll aroll = { 0 };
 
@@ -2455,7 +2455,7 @@ void do_cmd_fire_at_nearest(void) {
 	struct object *bow = slot_object(player, slot_by_type(player, EQUIP_BOW, true));
 
 	/* Require a usable launcher */
-	if (!bow || !player->state.ammo_tval) {
+	if (!bow || !player->mon.state.ammo_tval) {
 		msg("You have nothing to fire with.");
 		return;
 	}
@@ -2464,7 +2464,7 @@ void do_cmd_fire_at_nearest(void) {
 	for (i = 0; i < z_info->quiver_size; i++) {
 		if (!player->upkeep->quiver[i])
 			continue;
-		if (player->upkeep->quiver[i]->tval != player->state.ammo_tval)
+		if (player->upkeep->quiver[i]->tval != player->mon.state.ammo_tval)
 			continue;
 		ammo = player->upkeep->quiver[i];
 		break;

@@ -455,6 +455,7 @@ struct monster {
 	struct monster_race *original_race;	/* Changed monster's original race */
 	int midx;
 
+	struct player *player;				// L: its player if it is one
 	struct player_state state;			// L: state
 
 	struct loc grid;					/* Location on map */
@@ -490,7 +491,7 @@ struct monster {
 	wchar_t faction;					/* L: general group of monsters */
 	int16_t reaction;					/* L: how much it likes the player */
 
-	bool abilities[PP_MAX];					// L: any powers it knows
+	bool powers[PP_MAX];					// L: any powers it knows
 };
 
 /** Variables **/

@@ -524,7 +524,7 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 		}
 
 		/* Boost damage effects if skill > difficulty */
-		boost = MAX((player->state.skills[SKILL_DEVICE] - level) / 2, 0);
+		boost = MAX((player->mon.state.skills[SKILL_DEVICE] - level) / 2, 0);
 
 		/*
 		 * If the object is on the floor, tentatively deduct the
@@ -1209,7 +1209,7 @@ void do_cmd_study(struct command *cmd)
 		return;
 	}
 
-	if (player->state.skills[SKILL_MAGIC] <= 0) {
+	if (player->mon.state.skills[SKILL_MAGIC] <= 0) {
 		msg("You do not know magic.");
 		return;
 	}

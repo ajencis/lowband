@@ -25,6 +25,7 @@
 #include "game-input.h"
 #include "game-world.h"
 #include "init.h"
+#include "mon-calcs.h"
 #include "mon-msg.h"
 #include "mon-spell.h"
 #include "mon-util.h"
@@ -60,7 +61,8 @@
 	{ RF_IM_DISEN, ELEM_DISEN },
 	{ RF_NONE, -1 }
 };*/
-
+ 
+#if 0
 struct mon_player_match of_matches[] = {
 	{ RF_PASS_WEB, OF_PASS_WEB },
 	{ RF_INVISIBLE, OF_INVISIBILITY },
@@ -75,6 +77,7 @@ struct mon_player_match pf_matches[] = {
 	{ RF_PHOENIX_RESURRECT, PF_PHOENIX_RESURRECT },
 	{ RF_NONE, -1 }
 };
+#endif
 
 struct mon_player_match elem_pp_matches[] = {
 	{ ELEM_ACID, PP_EARTH_MAGIC },
@@ -409,11 +412,11 @@ bool earlier_object(struct object *orig, struct object *new, bool store)
 	/* Usable ammo is before other ammo */
 	if (tval_is_ammo(orig) && tval_is_ammo(new)) {
 		/* First favour usable ammo */
-		if ((player->state.ammo_tval == orig->tval) &&
-			(player->state.ammo_tval != new->tval))
+		if ((player->mon.state.ammo_tval == orig->tval) &&
+			(player->mon.state.ammo_tval != new->tval))
 			return false;
-		if ((player->state.ammo_tval != orig->tval) &&
-			(player->state.ammo_tval == new->tval))
+		if ((player->mon.state.ammo_tval != orig->tval) &&
+			(player->mon.state.ammo_tval == new->tval))
 			return true;
 	}
 
@@ -718,7 +721,7 @@ static void calc_spells(struct player *p)
 {
 	int i, j, k;
 	int num_allowed, num_known;
-	int lev = p->state.skills[SKILL_MAGIC];
+	int lev = p->mon.state.skills[SKILL_MAGIC];
 	const struct magic_realm *realm = get_player_realm(p);
 	const struct player_spell *spell;
 	int16_t old_spells;
@@ -739,7 +742,7 @@ static void calc_spells(struct player *p)
 	old_spells = p->upkeep->new_spells;
 
 	/* Number of 1/100 spells per level (or something - needs clarifying) */
-	num_allowed = adj_mag_study(p->state.stat_ind[realm->stat]) * lev / 100 + 3;
+	num_allowed = adj_mag_study(p->mon.state.stat_ind[realm->stat]) * lev / 100 + 3;
 
 	if (realm->realm_special[RLM_SPCL_SPELLS_KNOWN]) {
 		int mod = realm->realm_special[RLM_SPCL_SPELLS_KNOWN] + 100;
@@ -997,7 +1000,7 @@ static void calc_hitpoints(struct player *p)
 
 	/* Calculate hitpoints */
 	// L: basically allhandled elsewhere now
-	mhp = p->state.skills[SKILL_HEALTH];
+	mhp = p->mon.state.skills[SKILL_HEALTH];
 
 	/* New maximum hitpoints */
 	if (p->mon.maxhp != mhp) {
@@ -1035,7 +1038,7 @@ static void calc_light(struct player *p, struct player_state *state,
 	/* Ascertain lightness if in the town */
 	if (!p->depth && is_daytime() && update) {
 		/* Update the visuals if necessary*/
-		if (p->state.cur_light != state->cur_light) {
+		if (p->mon.state.cur_light != state->cur_light) {
 			p->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
 		}
 
@@ -1065,7 +1068,7 @@ static void calc_light(struct player *p, struct player_state *state,
 			amt = 0;
 		}
 
-		/* Alter p->state.cur_light if reasonable */
+		/* Alter p->mon.state.cur_light if reasonable */
 	    state->cur_light += amt;
 	}
 }
@@ -1102,7 +1105,7 @@ void calc_digging_chances(struct player_state *state, int chances[DIGGING_MAX])
 int calc_unlocking_chance(const struct player *p, int lock_power,
 		bool lock_unseen)
 {
-	int skill = p->state.skills[SKILL_DISARM_PHYS];
+	int skill = p->mon.state.skills[SKILL_DISARM_PHYS];
 
 	if (lock_unseen || p->mon.m_timed[TMD_BLIND]) {
 		skill /= 10;
@@ -1171,7 +1174,7 @@ int weight_remaining(struct player *p)
 	int i;
 
 	/* Weight limit based only on strength */
-	i = 5 * adj_str_wgt(p->state.stat_ind[STAT_STR]) + 50
+	i = 5 * adj_str_wgt(p->mon.state.stat_ind[STAT_STR]) + 50
 		- p->upkeep->total_weight - 1;
 
 	/* Return the result */
@@ -1448,6 +1451,10 @@ static void calc_monster(struct player *p, struct player_state *state,
 						 bool vuln[ELEM_MAX], int *moves)
 {
 	struct monster_race *mrace = lookup_player_monster(p);
+
+	if (rf_has(mrace->flags, RF_NEVER_MOVE)) *moves -= 25;
+	return;
+
 	int i;
 	int powers[PP_MAX] = { 0 };
 	int skills[SKILL_MAX] = { 0 };
@@ -1460,18 +1467,6 @@ static void calc_monster(struct player *p, struct player_state *state,
 		int mon_res = mrace->el_info[i].res_level;
 		int new_res = state->el_info[i].res_level + mon_res;
 		state->el_info[i].res_level = MAX(MIN(new_res, 3), -1);
-	}
-
-	for (i = 0; of_matches[i].mval != RF_NONE; ++i) {
-		if (rf_has(mrace->flags, of_matches[i].mval)) {
-			of_on(state->flags, of_matches[i].pval);
-		}
-	}
-
-	for (i = 0; pf_matches[i].mval != RF_NONE; ++i) {
-		if (rf_has(mrace->flags, pf_matches[i].mval)) {
-			pf_on(state->pflags, pf_matches[i].pval);
-		}
 	}
 
 	state->speed += mrace->speed / 2 - 55;
@@ -1566,12 +1561,11 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	int num_weapons = 0;
 	bitflag f[OF_SIZE];
 	bitflag collect_f[OF_SIZE];
-	bool vuln[ELEM_MAX];
 	struct monster_race *mrace = mon->race;
 	int avail_hands, attack_div;
 	//int race_skills[SKILL_MAX] = { 0 }, race_x_skills[SKILL_MAX] = { 0 };
-	struct element_info race_elem_info[ELEM_MAX] = { 0 };
 	bool has_feet = false;
+	bool vuln[ELEM_MAX] = { false };
 
 	/* Hack to allow calculating hypothetical blows for extra STR, DEX - NRM */
 	int str_ind = state->stat_ind[STAT_STR];
@@ -1580,27 +1574,14 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	/* Reset */
 	memset(state, 0, sizeof *state);
 
-	/* Set various defaults */
-	state->speed = 110;
-	state->num_blows = 100;
+	// L: base monster calcs
+	calc_mon_bonuses(mon, state);
 
 	/* Extract race/class info */
 	state->see_infra = p->race->infra;
 
-	//player_race_elem_info(p->race, mrace ? true : false, race_elem_info);
-	memcpy(race_elem_info, mrace->el_info, sizeof *race_elem_info * ELEM_MAX);
-	for (i = 0; i < ELEM_MAX; i++) {
-		vuln[i] = false;
-		if (race_elem_info[i].res_level == -1) {
-			vuln[i] = true;
-		} else {
-			state->el_info[i].res_level = race_elem_info[i].res_level;
-		}
-	}
-
 	/* Base pflags */
-	pf_wipe(state->pflags);
-	pf_copy(state->pflags, p->race->pflags);
+	pf_union(state->pflags, p->race->pflags);
 	pf_union(state->pflags, p->class->pflags);
 
 	/* Extract the player flags */
@@ -1608,6 +1589,8 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 
 	/* L: get powers */
 	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
+		state->powers[i] /= 2;
+
 		struct player_ability *abil = lookup_player_ability(i, PY_ABIL_POWER);
 		assert(abil);
 
@@ -1641,15 +1624,15 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 		}
 
 		if ((scale <= 0) || (efflev <= 0)) {
-			state->powers[i] = 0;
+			state->powers[i] += 0;
 		}
 
 		else if (p->lev >= PY_MAX_LEVEL) {
-			state->powers[i] = (p->lev * scale + 99) / 100;
+			state->powers[i] += (p->lev * scale + 99) / 100;
 		}
 
 		else {
-			state->powers[i] = (int)((efflev * scale * fact + div * 100 - 1) / (div * 100));
+			state->powers[i] += (int)((efflev * scale * fact + div * 100 - 1) / (div * 100));
 		}
 
 		state->powers[i] += MIN((p->extra_powers[i] + 1) / 2, p->lev * 3);
@@ -1737,7 +1720,8 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 			for (j = 0; j < ELEM_MAX; j++) {
 				if (!known_only || obj->known->el_info[j].res_level) {
 					if (obj->el_info[j].res_level == -1) {
-						vuln[j] = true;
+						--state->el_info[j].res_level;
+						//vuln[j] = true;
 					}
 
 					/* OK because res_level hasn't included vulnerability yet */
@@ -1807,9 +1791,6 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 			state->el_info[i].res_level--;
 		}
 	}
-
-	state->el_info[ELEM_HOLY_FIRE].res_level = state->el_info[ELEM_HOLY_ORB].res_level * 2 + state->el_info[ELEM_FIRE].res_level;
-	state->el_info[ELEM_HELLFIRE].res_level = state->el_info[ELEM_FIRE].res_level + pf_has(state->pflags, PF_EVIL) ? 0 : -1;
 
 	/* Calculate the various stat values */
 	for (i = 0; i < STAT_MAX; i++) {
@@ -2223,7 +2204,7 @@ static void update_bonuses(struct player *p)
 {
 	int i;
 
-	struct player_state state = p->state;
+	struct player_state state = p->mon.state;
 	struct player_state known_state = p->known_state;
 
 
@@ -2242,17 +2223,17 @@ static void update_bonuses(struct player *p)
 	/* Analyze stats */
 	for (i = 0; i < STAT_MAX; i++) {
 		/* Notice changes */
-		if (state.stat_top[i] != p->state.stat_top[i])
+		if (state.stat_top[i] != p->mon.state.stat_top[i])
 			/* Redisplay the stats later */
 			p->upkeep->redraw |= (PR_STATS);
 
 		/* Notice changes */
-		if (state.stat_use[i] != p->state.stat_use[i])
+		if (state.stat_use[i] != p->mon.state.stat_use[i])
 			/* Redisplay the stats later */
 			p->upkeep->redraw |= (PR_STATS);
 
 		/* Notice changes */
-		if (state.stat_ind[i] != p->state.stat_ind[i]) {
+		if (state.stat_ind[i] != p->mon.state.stat_ind[i]) {
 			/* Change in CON affects Hitpoints */
 			if (i == STAT_CON)
 				p->upkeep->update |= (PU_HP);
@@ -2263,41 +2244,41 @@ static void update_bonuses(struct player *p)
 	}
 
 	// L: update exp if needed
-	if (state.expfact != p->state.expfact) {
+	if (state.expfact != p->mon.state.expfact) {
 		p->upkeep->redraw |= PR_EXP;
 	}
 
 	// L: redraw status if learning ability changed
-	if (state.extra_points_max != p->state.extra_points_max ||
-			state.extra_points_used != p->state.extra_points_used) {
+	if (state.extra_points_max != p->mon.state.extra_points_max ||
+			state.extra_points_used != p->mon.state.extra_points_used) {
 		p->upkeep->redraw |= PR_STATUS;
 	}
 
 	// L: update spells if magic skill changed
-	if (state.skills[SKILL_MAGIC] != p->state.skills[SKILL_MAGIC]) {
+	if (state.skills[SKILL_MAGIC] != p->mon.state.skills[SKILL_MAGIC]) {
 		p->upkeep->update |= PU_SPELLS;
 	}
 
-	if (state.skills[SKILL_HEALTH] != p->state.skills[SKILL_HEALTH]) {
+	if (state.skills[SKILL_HEALTH] != p->mon.state.skills[SKILL_HEALTH]) {
 		p->upkeep->update |= PU_HP;
 	}
 
 
 	/* Hack -- Telepathy Change */
 	if (of_has(state.flags, OF_TELEPATHY) !=
-			of_has(p->state.flags, OF_TELEPATHY)) {
+			of_has(p->mon.state.flags, OF_TELEPATHY)) {
 		/* Update monster visibility */
 		p->upkeep->update |= (PU_MONSTERS);
 	}
 	/* Hack -- See Invis Change */
 	if (of_has(state.flags, OF_SEE_INVIS) !=
-			of_has(p->state.flags, OF_SEE_INVIS)) {
+			of_has(p->mon.state.flags, OF_SEE_INVIS)) {
 		/* Update monster visibility */
 		p->upkeep->update |= (PU_MONSTERS);
 	}
 
 	/* Redraw speed (if needed) */
-	if (state.speed != p->state.speed) {
+	if (state.speed != p->mon.state.speed) {
 		p->upkeep->redraw |= (PR_SPEED);
 	}
 
@@ -2308,20 +2289,20 @@ static void update_bonuses(struct player *p)
 	}
 
 	/* Notice changes in the "light radius" */
-	if (p->state.cur_light != state.cur_light) {
+	if (p->mon.state.cur_light != state.cur_light) {
 		/* Update the visuals */
 		p->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
 	}
 
 	/* Notice changes to the weight limit. */
-	if (weight_limit(&p->state) != weight_limit(&state)) {
+	if (weight_limit(&p->mon.state) != weight_limit(&state)) {
 		p->upkeep->redraw |= (PR_INVEN);
 	}
 
 	/* Hack -- handle partial mode */
 	if (!p->upkeep->only_partial) {
 		/* Take note when "heavy bow" changes */
-		if (p->state.heavy_shoot != state.heavy_shoot) {
+		if (p->mon.state.heavy_shoot != state.heavy_shoot) {
 			/* Message */
 			if (state.heavy_shoot) {
 				msg("You have trouble wielding such a heavy bow.");
@@ -2333,7 +2314,7 @@ static void update_bonuses(struct player *p)
 		}
 
 		/* Take note when "heavy weapon" changes */
-		if (p->state.heavy_wield != state.heavy_wield) {
+		if (p->mon.state.heavy_wield != state.heavy_wield) {
 			/* Message */
 			if (state.heavy_wield) {
 				msg("You have trouble wielding such a heavy weapon.");
@@ -2345,7 +2326,7 @@ static void update_bonuses(struct player *p)
 		}
 
 		/* Take note when "illegal weapon" changes */
-		if (p->state.bless_wield != state.bless_wield) {
+		if (p->mon.state.bless_wield != state.bless_wield) {
 			/* Message */
 			if (state.bless_wield) {
 				msg("You feel attuned to your weapon.");
@@ -2355,7 +2336,7 @@ static void update_bonuses(struct player *p)
 		}
 
 		/* Take note when "armor state" changes */
-		if (p->state.cumber_armor != state.cumber_armor) {
+		if (p->mon.state.cumber_armor != state.cumber_armor) {
 			/* Message */
 			if (state.cumber_armor) {
 				msg("The weight of your armor encumbers your movement.");
@@ -2365,7 +2346,7 @@ static void update_bonuses(struct player *p)
 		}
 	}
 
-	memcpy(&p->state, &state, sizeof(state));
+	memcpy(&p->mon.state, &state, sizeof(state));
 	memcpy(&p->known_state, &known_state, sizeof(known_state));
 }
 
@@ -2493,7 +2474,7 @@ void update_stuff(struct player *p)
 
 	if (p->upkeep->update & (PU_TORCH)) {
 		p->upkeep->update &= ~(PU_TORCH);
-		calc_light(p, &p->state, true);
+		calc_light(p, &p->mon.state, true);
 	}
 
 	if (p->upkeep->update & (PU_HP)) {
@@ -2503,7 +2484,7 @@ void update_stuff(struct player *p)
 
 	if (p->upkeep->update & (PU_MANA)) {
 		p->upkeep->update &= ~(PU_MANA);
-		calc_mana(p, &p->state, true);
+		calc_mana(p, &p->mon.state, true);
 	}
 
 	if (p->upkeep->update & (PU_SPELLS)) {

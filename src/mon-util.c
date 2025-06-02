@@ -21,6 +21,7 @@
 #include "effects.h"
 #include "game-world.h"
 #include "init.h"
+#include "mon-calcs.h"
 #include "mon-desc.h"
 #include "mon-group.h"
 #include "mon-list.h"
@@ -83,6 +84,7 @@ struct object *monster_best_weapon(struct monster *m)
 
 bool give_monster_powers(struct monster *mon)
 {
+	#if 0
 	assert(mon);
 	//bool isleader = true;
 	//struct monster *leader = NULL;
@@ -99,18 +101,17 @@ bool give_monster_powers(struct monster *mon)
 		}
 	}*/
 	
-	for (abil = player_abilities; abil; abil = abil->next) {
+	/*for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->learn_index < 0) continue;
 		if (abil->type != PY_ABIL_POWER) continue;
 		int i = abil->index;
 
 		if (mb->powers[i]) {
-			mon->abilities[i] = true;
+			mon->powers[i] = true;
 			given = true;
 		}
-	}
+	}*/
 
-	#if 0
 	if (rf_has(mr->flags, RF_SAPIENT)) {
 		while (one_in_(10)) {
 			// randint0(30 - (-1) - 1) + (-1) + 1 = randint0()
@@ -139,7 +140,7 @@ bool give_monster_powers(struct monster *mon)
 
 	#endif
 
-	return given;
+	return false;
 }
 
 bool player_can_learn_from_monster(struct player *p, struct monster *mon)
@@ -151,7 +152,7 @@ bool player_can_learn_from_monster(struct player *p, struct monster *mon)
 
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->type != PY_ABIL_POWER) continue;
-		if (mon->abilities[abil->index]) continue;
+		if (mon->powers[abil->index]) continue;
 		if (mon->race->level <= max_target[abil->learn_index]) continue;
 		
 		mem_free(max_target);
@@ -489,7 +490,7 @@ void update_mon(struct monster *mon, struct chunk *c, bool full)
 		/* Normal line of sight and player is not blind */
 		if (square_isview(c, mon->grid) && !player->mon.m_timed[TMD_BLIND]) {
 			/* Use "infravision" */
-			if (d <= player->state.see_infra) {
+			if (d <= player->mon.state.see_infra) {
 				/* Learn about warm/cold blood */
 				rf_on(lore->flags, RF_COLD_BLOOD);
 
@@ -1004,7 +1005,7 @@ void update_smart_learn(struct monster *mon, struct player *p, int flag,
 
 	/* Learn the pflag */
 	if (pflag) {
-		if (pf_has(p->state.pflags, pflag)) {
+		if (pf_has(p->mon.state.pflags, pflag)) {
 			of_on(mon->known_pstate.pflags, pflag);
 		} else {
 			of_off(mon->known_pstate.pflags, pflag);
@@ -1014,7 +1015,7 @@ void update_smart_learn(struct monster *mon, struct player *p, int flag,
 	/* Learn the element */
 	if (element_ok) {
 		mon->known_pstate.el_info[element].res_level
-			= p->state.el_info[element].res_level;
+			= p->mon.state.el_info[element].res_level;
 	}
 }
 
@@ -1735,9 +1736,9 @@ void steal_monster_item(struct monster *mon, int midx)
 		/* Base monster protection and player stealing skill */
 		bool unique = monster_is_unique(mon);
 		int guard = (mon->race->level * (unique ? 4 : 3)) / 4 +
-			mon->state.speed - player->state.speed;
-		int steal_skill = player->state.skills[SKILL_STEALTH] / 5 +
-			adj_dex_th(player->state.stat_ind[STAT_DEX]);
+			mon->state.speed - player->mon.state.speed;
+		int steal_skill = player->mon.state.skills[SKILL_STEALTH] / 5 +
+			adj_dex_th(player->mon.state.stat_ind[STAT_DEX]);
 		int monster_reaction;
 
 		/* No object */
@@ -1765,7 +1766,7 @@ void steal_monster_item(struct monster *mon, int midx)
 
 		/* Try and steal */
 		if (monster_reaction < steal_skill) {
-			int wake = 35 - player->state.skills[SKILL_STEALTH] / 5;
+			int wake = 35 - player->mon.state.skills[SKILL_STEALTH] / 5;
 
 			/* Success! */
 			obj->held_m_idx = 0;
@@ -2102,21 +2103,6 @@ int mon_ac(struct monster *mon)
 	return MAX(base, ac) + MIN(base, ac) / 2 + to_a;
 }
 
-int mon_power(struct monster_race *mon, int power)
-{
-	//assert(abil->type == PY_ABIL_POWER);
-
-	int scale = mon->powers[power];
-
-	if (scale < 0) return scale;
-
-	int normal = scale * mon->level / 100;
-	int special = scale * mon->level / 50 + scale * scale / 50 - 100 * 100 / 50;
-
-	// a low-level monster with slow scaling doesn't get the power at all;
-	return MAX(0, MIN(normal, special));
-}
-
 
 static bool race_has_drops(struct monster_race *mr)
 {
@@ -2193,7 +2179,7 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 
 static int level_to_hp(int level)
 {
-	return (int)(MAX(level + 25.0, level * 2.5) * (my_sqrt(level) + 1) / 11.0);
+	return (int)(MAX(level + 25.0, level * 2.5) * (my_sqrt(level) + 1.0) / 11.0);
 }
 
 static void normal_monster(struct monster_race *mr)
@@ -2287,11 +2273,12 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 	}
 
 	// give it bonuses for its base's strengths and weaknesses
-	dam += rb->attributes[MA_DAMAGE] * (dam + power) / 5;
-	hp  += rb->attributes[MA_HP]     * (hp  + power) / 5;
-	ac  += rb->attributes[MA_AC]     * (ac  + power) / 5;
-	spe += rb->attributes[MA_SPEED]  * (spe + power) / 5;
-	mag += rb->attributes[MA_MAGIC]  * (mag + power) / 5;
+	// +10 doubles and -10 reduces to 0 (+ n * 10 %)
+	dam += rb->attributes[MA_DAMAGE] * (dam + power) / 10 / 2;
+	hp  += rb->attributes[MA_HP]     * (hp  + power) / 10 / 2;
+	ac  += rb->attributes[MA_AC]     * (ac  + power) / 10 / 2;
+	spe += rb->attributes[MA_SPEED]  * (spe + power) / 10 / 2;
+	mag += rb->attributes[MA_MAGIC]  * (mag + power) / 10 / 2;
 
 	dam = MAX(0, dam);
 	hp  = MAX(0, hp );

@@ -366,7 +366,7 @@ static bool rd_monster(struct chunk *c, struct monster *mon)
 
 	for (i = 0; i < PP_MAX; ++i) {
 		rd_byte(&tmp8u);
-		mon->abilities[i] = tmp8u;
+		mon->powers[i] = tmp8u;
 	}
 
 	rd_s16b(&mon->reaction);

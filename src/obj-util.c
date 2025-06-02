@@ -874,7 +874,7 @@ bool obj_can_wear_k(const struct object_kind *obj)
 /* Can only fire an item with the right tval */
 bool obj_can_fire(const struct object *obj)
 {
-	return obj->tval == player->state.ammo_tval;
+	return obj->tval == player->mon.state.ammo_tval;
 }
 
 /**
@@ -932,7 +932,7 @@ bool obj_is_useable(const struct object *obj)
 		return true;
 
 	if (tval_is_ammo(obj))
-		return obj->tval == player->state.ammo_tval;
+		return obj->tval == player->mon.state.ammo_tval;
 
 	return false;
 }
@@ -999,7 +999,7 @@ bool obj_is_unvisited(const struct object *o)
 int get_use_device_chance(const struct object *obj)
 {
 	int lev, fail, x;
-	int skill = player->state.skills[SKILL_DEVICE];
+	int skill = player->mon.state.skills[SKILL_DEVICE];
 
 	/* Extract the item level, which is the difficulty rating */
 	if (obj->artifact)

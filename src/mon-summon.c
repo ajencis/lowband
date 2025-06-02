@@ -500,7 +500,7 @@ struct monster *summon_specific(struct loc grid, int lev, int type, bool delay, 
 	/* If delay, try to let the player act before the summoned monsters,
 	 * including holding faster monsters for the required number of turns */
 	if (delay) {
-		int p_e_per_turn = turn_energy(player->state.speed);
+		int p_e_per_turn = turn_energy(player->mon.state.speed);
 		int m_e_per_turn = turn_energy(mon->state.speed);
 		/*
 		 * Number of turns for player to move from zero energy, tp, is

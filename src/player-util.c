@@ -575,7 +575,7 @@ int get_power_scale_state(const struct player_state *ps, int power, int scaleto,
 
 int get_power_scale(const struct player *p, int power, int scaleto)
 {
-	return get_power_scale_state(&p->state, power, scaleto, p->lev);
+	return get_power_scale_state(&p->mon.state, power, scaleto, p->lev);
 }
 
 
@@ -981,7 +981,7 @@ static int tome_max_learnable_parents_array(const struct player_ability *abil, i
 
 static int tome_max_learnable_parents(const struct player_ability *abil, struct player *p)
 {
-	return tome_max_learnable_parents_array(abil, p->state.powers, p->state.skills);
+	return tome_max_learnable_parents_array(abil, p->mon.state.powers, p->mon.state.skills);
 }
 
 static int player_extra_target(struct player *p, const struct player_ability *abil)
@@ -1008,11 +1008,11 @@ bool check_learn_powers(struct player *p, int xpgain)
 		}
 
 		if (abil->type == PY_ABIL_POWER) {
-			curr_total = p->state.powers[abil->index];
+			curr_total = p->mon.state.powers[abil->index];
 			curr_lrnd = p->extra_powers[abil->index];
 		}
 		else {
-			curr_total = p->state.skills[abil->index];
+			curr_total = p->mon.state.skills[abil->index];
 			curr_lrnd = p->extra_skills[abil->index];
 		}
 
@@ -1181,7 +1181,7 @@ bool tome_max_learnable_extra_array(bool metaprog, int *learn_array, int *extra_
 bool tome_max_learnable_extra(struct player *p, int *learn_array, int *extra_array)
 {
 	return tome_max_learnable_extra_array(!OPT(p, birth_no_metaprogression), learn_array, extra_array,
-			p->state.powers, p->state.skills, p);
+			p->mon.state.powers, p->mon.state.skills, p);
 }
 
 void tome_max_learnable(struct player *p, int *learn_array)
@@ -1377,7 +1377,7 @@ void skill_stat(const struct magic_realm *realm, int indices[STAT_MAX], int skil
 
 void player_skill_stats(struct player *p, struct player_state *ps, int skill, int *stat1, int *stat2)
 {
-	skill_stat(get_player_realm(p), p->state.stat_ind, skill, stat1, stat2);
+	skill_stat(get_player_realm(p), p->mon.state.stat_ind, skill, stat1, stat2);
 }
 
 /**
@@ -1430,7 +1430,7 @@ bool player_learn_spell_xp(struct player *p, bool initial, int xp)
 	}
 
 	// don't get spells until skill 3
-	if (p->state.skills[SKILL_MAGIC] < 3) {
+	if (p->mon.state.skills[SKILL_MAGIC] < 3) {
 		return false;
 	}
 
@@ -1439,7 +1439,7 @@ bool player_learn_spell_xp(struct player *p, bool initial, int xp)
 			return false;
 		}
 
-		int freq = p->state.skills[SKILL_MAGIC];
+		int freq = p->mon.state.skills[SKILL_MAGIC];
 		freq = MIN(turn * 13 / z_info->day_length / 10, freq);
 		freq = MAX(freq, 3);
 		freq = freq * freq / xp;
@@ -1546,7 +1546,7 @@ int antimagic_fail_increase(struct player *p)
 
 int antimagic_radius(struct player *p)
 {
-	if (p->state.powers[PP_ANTIMAGIC] <= 0) return 0;
+	if (p->mon.state.powers[PP_ANTIMAGIC] <= 0) return 0;
 	return get_power_scale(p, PP_ANTIMAGIC, 3) + 2;
 }
 
@@ -1566,7 +1566,7 @@ int unlight_power_state(struct player_state *ps, struct player *p)
 
 int unlight_power(struct player *p)
 {
-	return unlight_power_state(&p->state, p);
+	return unlight_power_state(&p->mon.state, p);
 }
 
 
@@ -1581,7 +1581,7 @@ int glow_power_state(struct player_state *ps, struct player *p)
 
 int glow_power(struct player *p)
 {
-	return glow_power_state(&p->state, p);
+	return glow_power_state(&p->mon.state, p);
 }
 
 /**
@@ -1601,7 +1601,7 @@ int player_grid_visibility(struct loc grid, struct player *p, struct chunk *c)
 	int light = square_light(c, grid);
 	int unl_rad = unlight_radius(p);
 	int dist = distance(p->mon.grid, grid);
-	bool p_is_unlight = p->state.powers[PP_UNLIGHT] ? true : false;
+	bool p_is_unlight = p->mon.state.powers[PP_UNLIGHT] ? true : false;
 
 	darkest -= get_power_scale(p, PP_UNLIGHT, UNLIGHT_MAX_POWER * 4);
 	brightest -= get_power_scale(p, PP_UNLIGHT, 10);
@@ -1734,9 +1734,9 @@ int player_apply_damage_reduction(struct player *p, int dam)
 	/* Mega-Hack -- Apply "invulnerability" */
 	if (p->mon.m_timed[TMD_INVULN] && (dam < 9000)) return 0;
 
-	dam -= p->state.dam_red;
-	if (dam > 0 && p->state.perc_dam_red) {
-		dam -= (dam * p->state.perc_dam_red) / 100 ;
+	dam -= p->mon.state.dam_red;
+	if (dam > 0 && p->mon.state.perc_dam_red) {
+		dam -= (dam * p->mon.state.perc_dam_red) / 100 ;
 	}
 
 	return (dam < 0) ? 0 : dam;
@@ -1746,7 +1746,7 @@ static bool phoenix_resurrect(struct player *p)
 {
 	int avail_mana = available_mana(cave, p->mon.grid);
 
-	if (!pf_has(p->state.pflags, PF_PHOENIX_RESURRECT)) return false;
+	if (!pf_has(p->mon.state.pflags, PF_PHOENIX_RESURRECT)) return false;
 	if (p->mon.m_timed[TMD_PHOENIX_CD]) return false;
 	if (avail_mana < 5) return false;
 
@@ -2099,7 +2099,7 @@ bool races_unlock(struct player *p)
  */
 int energy_per_move(struct player *p)
 {
-	int num = p->state.num_moves;
+	int num = p->mon.state.num_moves;
 	int energy = z_info->move_energy;
 
 	/*
@@ -2275,6 +2275,81 @@ void player_regen_hp(struct player *p)
 		equip_learn_flag(p, OF_REGEN);
 		equip_learn_flag(p, OF_IMPAIR_HP);
 	}
+}
+
+void regen_hp(struct monster *mon)
+{
+	int32_t hp_gain;
+	int percent = 0; // max 32k -> 50% of mhp; more accurately "pertwobytes"
+	int fed_pct, old_chp = mon->hp;
+	struct player *p = mon->player;
+	int food;
+	
+	if (!p || pf_has(mon->state.pflags, PF_NO_FOOD)) {
+		food = 50 * z_info->food_value;
+	} else {
+		food = mon->m_timed[TMD_FOOD];
+	}
+
+	if (mon->hp >= mon->maxhp) return;
+
+	/* Default regeneration */
+	if (food >= PY_FOOD_FULL) {
+		percent = PY_REGEN_FULL;
+	} else if (food >= PY_FOOD_WEAK) {
+		percent = PY_REGEN_NORMAL;
+	} else if (food >= PY_FOOD_FAINT) {
+		percent = PY_REGEN_WEAK;
+	} else if (food >= PY_FOOD_STARVE) {
+		percent = PY_REGEN_FAINT;
+	}
+
+	fed_pct = food / z_info->food_value - 100;
+		
+	if (fed_pct > 0) fed_pct *= 2;
+	percent = MAX(percent + fed_pct, 0);
+
+	/* Various things speed up regeneration */
+	if (of_has(mon->state.flags, OF_HI_REGEN)) {
+		percent *= 25;
+	}
+	else if (of_has(mon->state.flags, OF_REGEN) || mon->m_timed[TMD_REGEN]) {
+		percent *= 3;
+	}
+	/*if (player_resting_can_regenerate(p)) {
+		percent *= 2;
+	}*/
+
+	/* Some things slow it down */
+	if (of_has(mon->state.flags, OF_IMPAIR_HP)) {
+		percent /= 2;
+	}
+
+	/* Various things interfere with physical healing */
+	if (mon->m_timed[TMD_PARALYZED]) percent = 0;
+	if (mon->m_timed[TMD_POISONED]) percent = 0;
+	if (mon->m_timed[TMD_STUN]) percent = 0;
+	if (mon->m_timed[TMD_CUT]) percent = 0;
+
+	/* Extract the new hitpoints */
+	hp_gain = mon->maxhp * percent + PY_REGEN_HPBASE;
+	if (p) {
+		player_adjust_hp_precise(p, hp_gain);
+		/* Notice changes */
+		if (old_chp != p->mon.hp) {
+			equip_learn_flag(p, OF_REGEN);
+			equip_learn_flag(p, OF_IMPAIR_HP);
+		}
+	} else {
+		int amt = hp_gain >> 16;
+		int amt_frac = hp_gain - amt;
+		if (amt_frac < randint0(1 << 15)) {
+			++amt;
+		}
+		mon->hp += amt;
+	}
+
+	mon->hp = MIN(mon->hp, mon->maxhp);
 }
 
 
@@ -2847,7 +2922,7 @@ int player_check_terrain_damage(struct player *p, struct loc grid, bool actual)
 
 	if (square_isfiery(cave, grid)) {
 		int base_dam = 100 + randint1(100);
-		int res = p->state.el_info[ELEM_FIRE].res_level;
+		int res = p->mon.state.el_info[ELEM_FIRE].res_level;
 
 		/* Fire damage */
 		dam_taken = adjust_dam(p, ELEM_FIRE, base_dam, RANDOMISE, res,
@@ -3019,7 +3094,7 @@ bool player_can_cast(const struct player *p, bool show_msg)
 {
 	const struct magic_realm *realm = get_player_realm(p);
 
-	if (p->state.skills[SKILL_MAGIC] <= 0 || !realm) {
+	if (p->mon.state.skills[SKILL_MAGIC] <= 0 || !realm) {
 		if (show_msg) {
 			msg("You do not know magic.");
 		}
@@ -3040,7 +3115,7 @@ bool player_can_cast(const struct player *p, bool show_msg)
 		return false;
 	}
 
-	if (realm->realm_special[RLM_SPCL_HP_CAST] && pf_has(p->state.pflags, PF_UNDEAD)) {
+	if (realm->realm_special[RLM_SPCL_HP_CAST] && pf_has(p->mon.state.pflags, PF_UNDEAD)) {
 		if (show_msg) {
 			msg("You have no blood with which to cast!");
 		}
@@ -3147,7 +3222,7 @@ bool player_can_read(const struct player *p, bool show_msg)
 bool player_can_fire(struct player *p, bool show_msg)
 {
 	// L: keep track of this when calcing bonuses
-	if (!p->state.has_ranged_attack) {
+	if (!p->mon.state.has_ranged_attack) {
 		if (show_msg) {
 			msg("You have nothing to fire with.");
 		}
@@ -3196,7 +3271,7 @@ bool player_can_study_prereq(void)
 {
 	const struct magic_realm *realm = get_player_realm(player);
 
-	if (!realm || player->state.skills[SKILL_MAGIC] <= 0) {
+	if (!realm || player->mon.state.skills[SKILL_MAGIC] <= 0) {
 		msg("You don't know magic!");
 		return false;
 	}
@@ -3500,7 +3575,7 @@ void player_set_resting_repeat_count(struct player *p, int16_t count)
 bool player_of_has(const struct player *p, int flag)
 {
 	assert(p);
-	return of_has(p->state.flags, flag);
+	return of_has(p->mon.state.flags, flag);
 }
 
 /**
@@ -3508,7 +3583,7 @@ bool player_of_has(const struct player *p, int flag)
  */
 bool player_resists(const struct player *p, int element)
 {
-	return (p->state.el_info[element].res_level > 0);
+	return (p->mon.state.el_info[element].res_level > 0);
 }
 
 /**
@@ -3516,7 +3591,7 @@ bool player_resists(const struct player *p, int element)
  */
 bool player_is_immune(const struct player *p, int element)
 {
-	return (p->state.el_info[element].res_level == 3);
+	return (p->mon.state.el_info[element].res_level == 3);
 }
 
 /**
@@ -3648,7 +3723,7 @@ void search(struct player *p)
 	if (!player_can_search(p)) return;
 
 	struct loc grid;
-	int basepower = p->state.skills[SKILL_SEARCH];// - cave->depth / 4;
+	int basepower = p->mon.state.skills[SKILL_SEARCH];// - cave->depth / 4;
 	int toroll = basepower /*MAX(cave->depth / 4, basepower)*/ + p->search_turn + 25;
 	int roll1 = randint0(toroll) + p->search_turn; // L: higher rolls more likely as you keep searching
 	int roll2 = randint0(toroll);
@@ -3773,7 +3848,7 @@ void player_start_turn(struct player *p)
 
 bool player_is_invisible(struct player *p)
 {
-	if (of_has(p->state.flags, OF_INVISIBILITY)) return true;
+	if (of_has(p->mon.state.flags, OF_INVISIBILITY)) return true;
 	if (p->mon.m_timed[TMD_INVIS]) return true;
 
 	return false;

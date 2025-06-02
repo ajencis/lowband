@@ -592,7 +592,7 @@ static void melee_effect_timed(melee_effect_handler_context_t *context,
 {
 	/* Take damage */
 	if (monster_damage_target(context, false)) return;
-	assert(context->p->state.skills);
+	assert(context->p->mon.state.skills);
 
 	/* Handle status */
 	if (context->t_mon) {
@@ -625,7 +625,7 @@ static void melee_effect_timed(melee_effect_handler_context_t *context,
 			mon_inc_timed(context->t_mon, mon_tmd_effect, amount, 0);
 			context->obvious = true;
 		}
-	} else if (save && randint0(100) < context->p->state.skills[SKILL_SAVE]) {
+	} else if (save && randint0(100) < context->p->mon.state.skills[SKILL_SAVE]) {
 		/* Attempt a saving throw if desired. */
 		if (save_msg != NULL) {
 			msg("%s", save_msg);
@@ -779,7 +779,7 @@ static void melee_effect_handler_POISON(melee_effect_handler_context_t *context)
 		return;
 	}
 
-	if (randint0(100) < player->state.skills[SKILL_SAVE]) {
+	if (randint0(100) < player->mon.state.skills[SKILL_SAVE]) {
 		msg("You are nauseous for a moment, but the feeling passes");
 	}
 
@@ -890,7 +890,7 @@ static void melee_effect_handler_EAT_GOLD(melee_effect_handler_context_t *contex
 
     /* Attempt saving throw (unless paralyzed) based on dex and level */
     if (!current_player->mon.m_timed[TMD_PARALYZED] &&
-        (randint0(100) < (adj_dex_safe(current_player->state.stat_ind[STAT_DEX])
+        (randint0(100) < (adj_dex_safe(current_player->mon.state.stat_ind[STAT_DEX])
 						  + current_player->lev))) {
         /* Saving throw message */
         msg("You quickly protect your money pouch!");
@@ -955,7 +955,7 @@ static void melee_effect_handler_EAT_ITEM(melee_effect_handler_context_t *contex
 
 	/* Steal from player or monster */
 	if (context->p) {
-		int chance = adj_dex_safe(context->p->state.stat_ind[STAT_DEX]) +
+		int chance = adj_dex_safe(context->p->mon.state.stat_ind[STAT_DEX]) +
 			context->p->lev;
 
 		/* Saving throw (unless paralyzed) based on dex and level */
@@ -1284,7 +1284,7 @@ static void melee_effect_handler_BLACK_BREATH(melee_effect_handler_context_t *co
 	if (!one_in_(5)) {
 		return;
 	}
-	else if (randint0(250) < player->state.skills[SKILL_SAVE]) {
+	else if (randint0(250) < player->mon.state.skills[SKILL_SAVE]) {
 		// L: difficult save
 		msg("You feel a shadow pass over you  -  then leave.");
 	}
@@ -1338,7 +1338,7 @@ static void melee_effect_handler_VAMPIRE(melee_effect_handler_context_t *context
  */
 static void melee_effect_handler_SMITE_EVIL(melee_effect_handler_context_t *context)
 {
-	if (pf_has(player->state.pflags, PF_EVIL)) {
+	if (pf_has(player->mon.state.pflags, PF_EVIL)) {
 		context->damage = context->damage * 3 / 2;
 	}
 	else {
@@ -1351,7 +1351,7 @@ static void melee_effect_handler_SMITE_EVIL(melee_effect_handler_context_t *cont
  */
 static void melee_effect_handler_TURN_EVIL(melee_effect_handler_context_t *context)
 {
-	if (pf_has(player->state.pflags, PF_EVIL)) {
+	if (pf_has(player->mon.state.pflags, PF_EVIL)) {
 		melee_effect_timed(context, TMD_AFRAID, randint1(context->damage), OF_PROT_FEAR, true, "You stand your ground!");
 	}
 	context->damage /= 2;

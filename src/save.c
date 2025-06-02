@@ -274,7 +274,7 @@ static void wr_monster(const struct monster *mon)
 	wr_byte(mon->group_info[SUMMON_GROUP].role);
 
 	for (i = 0; i < PP_MAX; ++i) {
-		wr_byte(mon->abilities[i]);
+		wr_byte(mon->powers[i]);
 	}
 
 	wr_s16b(mon->reaction);

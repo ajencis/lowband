@@ -89,7 +89,7 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 	my_strcat(buf, "\n", bufsize);
 
 	if (mrace) {
-		calc_monster_powers(mrace, monster_powers, player->state.powers);
+		calc_monster_powers(mrace, monster_powers, player->mon.state.powers);
 		calc_monster_skills(mrace, monster_skills);
 	}
 	if (group == PLAYER_FLAG_POWER || group == PLAYER_FLAG_SKILL) {
@@ -105,7 +105,7 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 		}
 		else {
 			int stat1, stat2;
-			player_skill_stats(p, &p->state, ability->index, &stat1, &stat2);
+			player_skill_stats(p, &p->mon.state, ability->index, &stat1, &stat2);
 			cbase = player_class_c_skill(p, ability->index);
 			cxtra = player_class_x_skill(p, ability->index) * 100 / PY_MAX_LEVEL;
 			rbase = monster_skills[ability->index];
@@ -113,7 +113,7 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 			rxtra = 0;
 			tome = p->extra_skills[ability->index];
 			if (stat1 != STAT_NONE) {
-				int ind = player_skill_stat_ind(p, &p->state, ability->index);
+				int ind = player_skill_stat_ind(p, &p->mon.state, ability->index);
 				int curr;
 				stat = adj_stat_skill_flat(ind, ability->index);
 				curr = cbase + rbase + (cxtra + rxtra) * p->lev / 100 + tome;
@@ -245,7 +245,7 @@ static void view_ability_display(struct menu *menu, int oid, bool cursor,
 		}
 	case PLAYER_FLAG_POWER:
 		{
-			int curr = player->state.powers[choices[oid].index];
+			int curr = player->mon.state.powers[choices[oid].index];
 			strnfmt(buf, sizeof(buf), "Power:  %s (level %i)", 
 				choices[oid].name, curr);
 			color = curr > 0 ? COLOUR_GREEN : COLOUR_RED;
@@ -254,7 +254,7 @@ static void view_ability_display(struct menu *menu, int oid, bool cursor,
 	case PLAYER_FLAG_SKILL:
 		{
 			strnfmt(buf, sizeof(buf), "Skill:  %s (level %i)",
-				choices[oid].name, player->state.skills[choices[oid].index]);
+				choices[oid].name, player->mon.state.skills[choices[oid].index]);
 			color = COLOUR_L_BLUE;
 			break;
 		}
@@ -405,8 +405,8 @@ static const struct player_ability *abil_parent(const struct player_ability *abi
 	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
 		currparent = abil->parent[i];
 		if (currparent) {
-			if (currparent->type == PY_ABIL_POWER) currknown = p->state.powers[currparent->index];
-			else if (currparent->type == PY_ABIL_SKILL) currknown = p->state.skills[currparent->index];
+			if (currparent->type == PY_ABIL_POWER) currknown = p->mon.state.powers[currparent->index];
+			else if (currparent->type == PY_ABIL_SKILL) currknown = p->mon.state.skills[currparent->index];
 			else continue;
 
 			if (currknown > bestknown || !bestparent) {
@@ -484,7 +484,7 @@ static void ability_learn_valid_refresh(struct menu *menu)
 		}
 
 		if (data->valid[oid] == MN_ROW_SKIP &&
-				(data->p->extra_powers[oid] > 0 || data->p->state.powers[oid] > 0)) {
+				(data->p->extra_powers[oid] > 0 || data->p->mon.state.powers[oid] > 0)) {
 			data->valid[oid] = MN_ROW_INVALID;
 		}
 	}
@@ -526,7 +526,7 @@ static int ability_learn_valid_mode(struct menu *menu, int oid, int mode)
 
 	if (abil->type == PY_ABIL_POWER) {
 		if (data->p->extra_powers[abil->index] <= 0 &&
-				data->p->state.powers[abil->index] <= 0) {
+				data->p->mon.state.powers[abil->index] <= 0) {
 			// if it's the full menu show all powers
 			// if it's the partial menu only show learned powers
 			if (mode == AL_MODE_ALL) {
@@ -566,11 +566,11 @@ static void ability_learn_display(struct menu *m, int oid, bool cursor,
 	if (oid < 0 || oid >= z_info->learn_max) return;
 
 	if (power) {
-		total_level = data->p->state.powers[abil->index];
+		total_level = data->p->mon.state.powers[abil->index];
 		learn_level = data->p->extra_powers[abil->index];
 	}
 	else {
-		total_level = data->p->state.skills[abil->index];
+		total_level = data->p->mon.state.skills[abil->index];
 		learn_level = data->p->extra_skills[abil->index];
 	}
 	strcpy(name, abil->name);
@@ -694,11 +694,11 @@ static void refresh_hypothetical_player(struct menu *m)
 		}
 	}
 
-	calc_bonuses(hypo, &hypo->mon, &hypo->state, false, false);
+	calc_bonuses(hypo, &hypo->mon, &hypo->mon.state, false, false);
 
 	ability_learn_valid_refresh(m);
 
-	data->points = hypo->state.extra_points_max;
+	data->points = hypo->mon.state.extra_points_max;
 }
 
 static void on_change_target(struct menu *m)
@@ -826,8 +826,8 @@ static void ability_learn_browse(int oid, void *db, const region *loc)
 {
 	struct ability_learn_menu_data *data = db;
 
-	int points_left = data->points - data->p->state.extra_points_used;
-	int more_points_used = calc_extra_points_array(data->p, data->temp_target) - data->p->state.extra_points_used;
+	int points_left = data->points - data->p->mon.state.extra_points_used;
+	int more_points_used = calc_extra_points_array(data->p, data->temp_target) - data->p->mon.state.extra_points_used;
 	//int row = loc->row + loc->page_rows, col = loc->col - loc->width;
 	//row = 20, col = 15;
 	uint8_t more_pts_attr = more_points_used > points_left ? COLOUR_L_RED : COLOUR_L_GREEN;
@@ -920,7 +920,7 @@ static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode 
 
 	ability_learn_set_mode(m, mode);
 	refresh_hypothetical_player(m);
-	data->points = data->p->state.extra_points_max;
+	data->points = data->p->mon.state.extra_points_max;
 
 	return m;
 }

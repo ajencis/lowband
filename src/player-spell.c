@@ -22,6 +22,7 @@
 #include "effects.h"
 #include "init.h"
 #include "monster.h"
+#include "mon-calcs.h"
 #include "mon-spell.h"
 #include "mon-util.h"
 #include "obj-tval.h"
@@ -324,8 +325,8 @@ int caster_level_bonus(const struct player *p, const struct class_spell *spell)
 	int bonus = 0;
 	struct monster_race *mon = lookup_player_monster(p);
 
-	if (p->state.powers[spell->school] > 0) {
-		bonus += (p->state.powers[spell->school] * 50 + 49) / 50;
+	if (p->mon.state.powers[spell->school] > 0) {
+		bonus += (p->mon.state.powers[spell->school] * 50 + 49) / 50;
 	}
 
 	if (mon) {
@@ -393,7 +394,7 @@ bool spell_okay_to_browse(const struct player *p, int spell_index)
 static int fail_adjust(struct player *p, const struct class_spell *spell)
 {
 	int stat = spell->realm->stat;
-	return adj_mag_stat(p->state.stat_ind[stat]);
+	return adj_mag_stat(p->mon.state.stat_ind[stat]);
 }
 
 /**
@@ -402,7 +403,7 @@ static int fail_adjust(struct player *p, const struct class_spell *spell)
 static int min_fail(struct player *p, const struct class_spell *spell)
 {
 	int stat = spell->realm->stat;
-	return adj_mag_fail[p->state.stat_ind[stat]];
+	return adj_mag_fail[p->mon.state.stat_ind[stat]];
 }
 
 /**
@@ -412,7 +413,7 @@ int16_t spell_chance(int spell_index)
 {
 	int chance = 100, minfail;
 
-	int curr_unlight = player->state.powers[PP_UNLIGHT] ?
+	int curr_unlight = player->mon.state.powers[PP_UNLIGHT] ?
 			unlight_power(player) - get_power_scale(player, PP_UNLIGHT, 5) :
 			0;
 
@@ -883,7 +884,7 @@ int innate_spell_power(struct player *p, int spell)
 	const struct monster_spell *ms = monster_spell_by_index(spell);
 	int base = mr ? mr->spell_power : p->lev;
 	int powerind = skill_by_effect(ms->effect->index, ms->effect->subtype);
-	int powerlevel = powerind > PP_NONE ? 0 : p->state.powers[powerind];
+	int powerlevel = powerind > PP_NONE ? 0 : p->mon.state.powers[powerind];
 	int powerbonus = MIN(powerlevel, base);
 
 	return base + powerbonus;
@@ -947,7 +948,7 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 {
 	int numschools = 0, sumschools = 0;
 	int schoolbonus = 0, realmbonus = 0;
-	int skill = p->state.skills[SKILL_MAGIC];
+	int skill = p->mon.state.skills[SKILL_MAGIC];
 	int antim = get_power_scale(p, PP_ANTIMAGIC, 25);
 	int power = get_power_scale(p, PP_SPELL_POWER, 50);
 	int ease = get_power_scale(p, PP_SPELL_EASE, 25);
@@ -962,7 +963,7 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 	for (i = 0; i < MAX_SPELL_SCHOOLS; i++) {
 		if (s->school[i] > MS_NONE) {
 			++numschools;
-			sumschools += p->state.powers[s->school[i]];
+			sumschools += p->mon.state.powers[s->school[i]];
 			if (r) {
 				realmbonus += realm_school_modifier(p, r, s->school[i]);
 			}

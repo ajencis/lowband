@@ -94,7 +94,7 @@ static void spell_menu_display(struct menu *m, int oid, bool cursor,
 			get_spell_info(spell_index, help, sizeof(help));
 			comment = help;
 			attr = COLOUR_WHITE;
-			//if (player->state.powers[spell->school]) attr = COLOUR_L_WHITE;
+			//if (player->mon.state.powers[spell->school]) attr = COLOUR_L_WHITE;
 		} else {
 			comment = " untried";
 			attr = COLOUR_L_GREEN;

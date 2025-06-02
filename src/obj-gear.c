@@ -305,8 +305,8 @@ const char *equip_mention(struct player *p, int slot)
 	int type = p->body.slots[slot].type;
 
 	/* Heavy */
-	if ((type == EQUIP_WEAPON && p->state.heavy_wield) ||
-			(type == EQUIP_WEAPON && p->state.heavy_shoot))
+	if ((type == EQUIP_WEAPON && p->mon.state.heavy_wield) ||
+			(type == EQUIP_WEAPON && p->mon.state.heavy_shoot))
 		return slot_table[type].heavy_describe;
 	else if (slot_table[type].name_in_desc)
 		return format(slot_table[type].mention, p->body.slots[slot].name);
@@ -324,8 +324,8 @@ const char *equip_describe(struct player *p, int slot)
 	int type = p->body.slots[slot].type;
 
 	/* Heavy */
-	if ((type == EQUIP_WEAPON && p->state.heavy_wield) ||
-			(type == EQUIP_WEAPON && p->state.heavy_shoot))
+	if ((type == EQUIP_WEAPON && p->mon.state.heavy_wield) ||
+			(type == EQUIP_WEAPON && p->mon.state.heavy_shoot))
 		return slot_table[type].heavy_describe;
 	else if (slot_table[type].name_in_desc)
 		return format(slot_table[type].describe, p->body.slots[slot].name);

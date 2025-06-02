@@ -665,7 +665,7 @@ static void lore_multiplier_speed(textblock *tb, const struct monster_race *race
 
 	textblock_append(tb, " normal speed, which is ");
 	multiplier = 100 * extract_energy[race->speed]
-		/ extract_energy[player->state.speed];
+		/ extract_energy[player->mon.state.speed];
 	int_mul = multiplier / 100;
 	dec_mul = multiplier % 100;
 	if (!dec_mul) {
@@ -676,12 +676,12 @@ static void lore_multiplier_speed(textblock *tb, const struct monster_race *race
 		strnfmt(buf, sizeof(buf), "%d.%02dx", int_mul, dec_mul);
 	}
 
-	if (player->state.speed > race->speed) {
+	if (player->mon.state.speed > race->speed) {
 		attr = COLOUR_L_GREEN;
-	} else if (player->state.speed < race->speed) {
+	} else if (player->mon.state.speed < race->speed) {
 		attr = COLOUR_RED;
 	}
-	if (player->state.speed == race->speed) {
+	if (player->mon.state.speed == race->speed) {
 		textblock_append(tb, "the same as you");
 	} else {
 		textblock_append_c(tb, attr, "%s", buf);
@@ -1084,7 +1084,7 @@ void lore_append_toughness(textblock *tb, const struct monster_race *race,
 
 		/* Player's base chance to hit */
 		random_chance c;
-		struct attack_roll aroll = player->state.attacks[0];
+		struct attack_roll aroll = player->mon.state.attacks[0];
 		hit_chance(&c, chance_of_melee_hit_base(player, &aroll), race->ac);
 		int percent = random_chance_scaled(c, 100);
 
@@ -1712,7 +1712,7 @@ void lore_append_attack(textblock *tb, const struct monster_race *race,
 			/* Describe hit chances */
 			random_chance c;
 			hit_chance(&c, chance_of_monster_hit_base(race, race->blow[i].effect),
-				player->state.ac + player->state.to_a);
+				player->mon.state.ac + player->mon.state.to_a);
 			int percent = random_chance_scaled(c, 100);
 			textblock_append_c(tb, COLOUR_L_BLUE, "%d", percent);
 			textblock_append(tb, "%%)");

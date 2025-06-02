@@ -91,11 +91,11 @@ static bool clear_web(struct player *p)
 	if (player_of_has(p, OF_PASS_WEB)) {
 		return false;
 	}
-	if (pf_has(p->state.pflags, PF_PASS_WALL)) {
+	if (pf_has(p->mon.state.pflags, PF_PASS_WALL)) {
 		return false;
 	}
 	if (square_iswebbed(cave, p->mon.grid)) {
-		if (adj_str_web(p->state.stat_ind[STAT_STR]) < randint1(100)) {
+		if (adj_str_web(p->mon.state.stat_ind[STAT_STR]) < randint1(100)) {
 			msg("You struggle against the web.");
 			player->upkeep->energy_use = z_info->move_energy;
 			return true;
@@ -609,7 +609,7 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 	struct object *current_weapon = slot_object(player, weapon_slot);
 	struct object *best_digger = NULL;
 	struct player_state local_state;
-	struct player_state *used_state = &player->state;
+	struct player_state *used_state = &player->mon.state;
 	int oldn = 1, dig_idx;
 	const char *with_clause = current_weapon == NULL ? "with your hands" : "with your weapon";
 
@@ -628,7 +628,7 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 			best_digger->number = 1;
 		}
 		player->body.slots[weapon_slot].obj = best_digger;
-		memcpy(&local_state, &player->state, sizeof(local_state));
+		memcpy(&local_state, &player->mon.state, sizeof(local_state));
 		calc_bonuses(player, &player->mon, &local_state, false, true);
 		used_state = &local_state;
 	}
@@ -806,7 +806,7 @@ static bool do_cmd_lock_door(struct loc grid)
 	if (!do_cmd_disarm_test(player, grid)) return false;
 
 	/* Get the "disarm" factor */
-	i = player->state.skills[SKILL_DISARM_PHYS];
+	i = player->mon.state.skills[SKILL_DISARM_PHYS];
 
 	/* Penalize some conditions */
 	if (player->mon.m_timed[TMD_BLIND] || no_light(player))
@@ -873,9 +873,9 @@ static bool do_cmd_disarm_aux(struct loc grid)
 
 	/* Get the base disarming skill */
 	if (trf_has(trap->flags, TRF_MAGICAL))
-		skill = player->state.skills[SKILL_DISARM_MAGIC];
+		skill = player->mon.state.skills[SKILL_DISARM_MAGIC];
 	else
-		skill = player->state.skills[SKILL_DISARM_PHYS];
+		skill = player->mon.state.skills[SKILL_DISARM_PHYS];
 
 	/* Penalize some conditions */
 	if (player->mon.m_timed[TMD_BLIND] ||
@@ -1155,7 +1155,7 @@ void move_player(int dir, bool disarm)
 		/* No move made so no energy spent. */
 		player->upkeep->energy_use = 0;
 	} else if (!square_ispassable(cave, grid) &&
-			(!pf_has(player->state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
+			(!pf_has(player->mon.state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
 		disturb(player);
 
 		/* Notice unknown obstacles, mention known obstacles */
@@ -1312,7 +1312,7 @@ static bool do_cmd_walk_test(struct player *p, struct loc grid)
 	 * that does not agree with the player's memory then update the
 	 * player's memory
 	 */
-	if (!square_ispassable(cave, grid) && (!pf_has(p->state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
+	if (!square_ispassable(cave, grid) && (!pf_has(p->mon.state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
 		if (square_isrubble(cave, grid)) {
 			/* Rubble */
 			msgt(MSG_HITWALL, "There is a pile of rubble in the way!");
@@ -2433,7 +2433,7 @@ void do_cmd_dip_learn(struct command *cmd)
 
 	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
 
-		if (mon->abilities[i]) {
+		if (mon->powers[i]) {
 			extra_max_learn[i] = mon->race->level;
 			/*int new_target = MIN(mon->race->level, player->extra_target[i]);
 			if (max_learn[i] < new_target) {

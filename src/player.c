@@ -230,7 +230,7 @@ bool player_at_max_level(struct player *p)
 {
 	if (p->lev >= PY_MAX_LEVEL) return true;
 	
-    if (p->lev >= (50 + adj_int_lev(p->state.stat_ind[STAT_INT]))) return true;
+    if (p->lev >= (50 + adj_int_lev(p->mon.state.stat_ind[STAT_INT]))) return true;
 
 	if (player_exp[p->lev-1] > PY_MAX_EXP) return true;
 
@@ -317,13 +317,13 @@ void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract)
 	else tolev = player_exp[p->max_lev - 1];
 
 	new_amt = amount * 100;
-	new_amt /= p->state.expfact;
+	new_amt /= p->mon.state.expfact;
 
 	new_fract = fract * 100;
-	new_fract /= p->state.expfact;
+	new_fract /= p->mon.state.expfact;
 
-	extra_fract = (amount * 100 - new_amt * p->state.expfact) * UINT16_MAX;
-	extra_fract /= p->state.expfact;
+	extra_fract = (amount * 100 - new_amt * p->mon.state.expfact) * UINT16_MAX;
+	extra_fract /= p->mon.state.expfact;
 
 	new_fract += extra_fract;
 	new_fract += p->exp_frac;
@@ -366,7 +366,7 @@ void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract)
 
 int player_min_xp_depth(struct player *p)
 {
-	int64_t eff_xp = p->max_exp * p->state.expfact / 100;
+	int64_t eff_xp = p->max_exp * p->mon.state.expfact / 100;
 	int i;
 
 	for (i = 1; i < PY_MAX_LEVEL; ++i) {
@@ -636,7 +636,7 @@ static void init_player(void) {
 	player->obj_k->slays = mem_zalloc(z_info->slay_max * sizeof(bool));
 	player->obj_k->curses = mem_zalloc(z_info->curse_max *
 									   sizeof(struct curse_data));
-									   
+					   
 	player->unlocked_classes = mem_zalloc(z_info->c_max * sizeof(*player->unlocked_classes));
 	player->unlocked_races = mem_zalloc(z_info->pr_max * sizeof(*player->unlocked_races));
 	player->unlocked_tomes = mem_zalloc(z_info->learn_max * sizeof(*player->unlocked_tomes));
@@ -650,6 +650,7 @@ static void init_player(void) {
 	}
 	
 	player->mon.midx = PLAYER_MON_MIDX;
+	player->mon.player = player;
 
 	options_init_defaults(&player->opts);
 }

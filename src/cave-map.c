@@ -110,8 +110,8 @@ void map_info(struct loc grid, struct grid_data *g)
 		bool lit = square_islit(cave, grid);
 
 		if (sqinfo_has(square(cave, grid)->info, SQUARE_CLOSE_PLAYER)) {
-			if (player->state.powers[PP_UNLIGHT] > 0 &&
-					player->state.cur_light <= 1) {
+			if (player->mon.state.powers[PP_UNLIGHT] > 0 &&
+					player->mon.state.cur_light <= 1) {
 				g->lighting = (lit) ?
 					LIGHTING_LOS : LIGHTING_DARK;
 			} else if (lit) {

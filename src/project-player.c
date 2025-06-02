@@ -51,7 +51,7 @@ int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 	uint32_t sav;
 
 	/* L: saving throw reduces damage */
-	sav = (uint32_t)MAX(p->state.skills[SKILL_SAVE], 0);
+	sav = (uint32_t)MAX(p->mon.state.skills[SKILL_SAVE], 0);
 
 	dam = dam * (100 - sav / 4 - randint0(sav / 2)) / 100;
 	dam = MAX(dam, 0);
@@ -60,7 +60,7 @@ int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 	if (p && p->race) {
 		/* Ice is a special case */
 		int res_type = (type == PROJ_ICE) ? PROJ_COLD : type;
-		resist = res_type < ELEM_MAX ? p->state.el_info[res_type].res_level : 0;
+		resist = res_type < ELEM_MAX ? p->mon.state.el_info[res_type].res_level : 0;
 
 		/* Notice element stuff */
 		if (actual) {
@@ -236,7 +236,7 @@ static int project_player_handler_POIS(project_player_handler_context_t *context
 				msg("The venom stings your skin!");
 				inven_damage(player, PROJ_ACID, dam);
 				xtra += adjust_dam(player, PROJ_ACID, dam, RANDOMISE,
-								 player->state.el_info[PROJ_ACID].res_level,
+								 player->mon.state.el_info[PROJ_ACID].res_level,
 								 true);
 			}
 		}
@@ -366,7 +366,7 @@ static int project_player_handler_NEXUS(project_player_handler_context_t *contex
 	}
 
 	/* Stat swap */
-	if (randint0(100) < player->state.skills[SKILL_SAVE]) {
+	if (randint0(100) < player->mon.state.skills[SKILL_SAVE]) {
 		msg("You avoid the effect!");
 	} else {
 		player_inc_timed(player, TMD_SCRAMBLE, randint0(20) + 20, true,
@@ -377,7 +377,7 @@ static int project_player_handler_NEXUS(project_player_handler_context_t *contex
 		effect_simple(EF_TELEPORT_TO, context->origin, "0", 0, 0, 0,
 					  mon->grid.y, mon->grid.x, NULL);
 	} else if (one_in_(4)) { /* Teleport level */
-		if (randint0(100) < player->state.skills[SKILL_SAVE]) {
+		if (randint0(100) < player->mon.state.skills[SKILL_SAVE]) {
 			msg("You avoid the effect!");
 			return 0;
 		}
@@ -613,7 +613,7 @@ static int project_player_handler_LIGHT_WEAK(project_player_handler_context_t *c
 static int project_player_handler_DARK_WEAK(project_player_handler_context_t *context)
 {
 	if (player_resists(player, ELEM_DARK)) {
-		if (player->state.powers[PP_UNLIGHT] <= 0) {
+		if (player->mon.state.powers[PP_UNLIGHT] <= 0) {
 			msg("You resist the effect!");
 		}
 		return 0;
@@ -824,8 +824,8 @@ static int project_player_handler_HELLFIRE(project_player_handler_context_t *con
 
 static int project_player_handler_BANSHEE(project_player_handler_context_t *context)
 {
-	bool und = pf_has(player->state.flags, PF_UNDEAD);
-	int save = player->state.skills[SKILL_SAVE];
+	bool und = pf_has(player->mon.state.flags, PF_UNDEAD);
+	int save = player->mon.state.skills[SKILL_SAVE];
 	int power = context->dam;
 	if (und) power /= 2;
 
@@ -893,7 +893,7 @@ bool project_p(struct source origin, int r, struct loc grid, int dam, int typ,
 		power,
 		obvious
 	};
-	int res_level = typ < ELEM_MAX ? player->state.el_info[typ].res_level : 0;
+	int res_level = typ < ELEM_MAX ? player->mon.state.el_info[typ].res_level : 0;
 
 	/* Decoy has been hit */
 	if (square_isdecoyed(cave, grid) && context.dam) {

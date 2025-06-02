@@ -160,11 +160,11 @@ static void prt_stat(int stat, int row, int col)
 	/* Injured or healthy stat */
 	if (player->stat_cur[stat] < player->stat_max[stat]) {
 		put_str(stat_names_reduced[stat], row, col);
-		cnv_stat(player->state.stat_use[stat], tmp, sizeof(tmp));
+		cnv_stat(player->mon.state.stat_use[stat], tmp, sizeof(tmp));
 		c_put_str(COLOUR_YELLOW, tmp, row, col + 6);
 	} else {
 		put_str(stat_names[stat], row, col);
-		cnv_stat(player->state.stat_use[stat], tmp, sizeof(tmp));
+		cnv_stat(player->mon.state.stat_use[stat], tmp, sizeof(tmp));
 		c_put_str(COLOUR_L_GREEN, tmp, row, col + 6);
 	}
 
@@ -350,9 +350,9 @@ static void prt_sp(int row, int col)
 	bool show = false;
 	const struct magic_realm *realm = get_player_realm(player);
 
-	if (realm && player->state.skills[SKILL_MAGIC]) show = true;
-	if (player->state.powers[PP_ANTIMAGIC]) show = true;
-	if (pf_has(player->state.pflags, PF_PHOENIX_RESURRECT)) show = true;
+	if (realm && player->mon.state.skills[SKILL_MAGIC]) show = true;
+	if (player->mon.state.powers[PP_ANTIMAGIC]) show = true;
+	if (pf_has(player->mon.state.pflags, PF_PHOENIX_RESURRECT)) show = true;
 
 	if (!show) return;
 
@@ -502,7 +502,7 @@ static void prt_health(int row, int col)
 
 static int prt_speed_aux(char buf[], int max, uint8_t *attr)
 {
-	int i = player->state.speed;
+	int i = player->mon.state.speed;
 	const char *type = NULL;
 
 	*attr = COLOUR_WHITE;
@@ -641,13 +641,13 @@ static int prt_stat_short(int stat, int row, int col)
 	/* Injured or healthy stat */
 	if (player->stat_cur[stat] < player->stat_max[stat]) {
 		put_str(format("%c:", stat_names_reduced[stat][0]), row, col);		
-		cnv_stat(player->state.stat_use[stat], tmp, sizeof(tmp));
+		cnv_stat(player->mon.state.stat_use[stat], tmp, sizeof(tmp));
 		/* Trim whitespace */
 		strskip(tmp,' ', 0);
 		c_put_str(COLOUR_YELLOW, tmp, row, col + 2);
 	} else {
 		put_str(format("%c:", stat_names[stat][0]), row, col);
-		cnv_stat(player->state.stat_use[stat], tmp, sizeof(tmp));
+		cnv_stat(player->mon.state.stat_use[stat], tmp, sizeof(tmp));
 		/* Trim whitespace */
 		strskip(tmp,' ', 0);
 		if (player->stat_max[stat] == 18+100) {
@@ -1189,7 +1189,7 @@ static size_t prt_light(int row, int col)
  */
 static size_t prt_moves(int row, int col)
 {
-	int i = player->state.num_moves;
+	int i = player->mon.state.num_moves;
 
 	/* 1 move is normal and requires no display */
 	if (i > 0) {
@@ -1298,7 +1298,7 @@ static size_t prt_tmd(int row, int col)
 	size_t i, len = 0;
 
 	for (i = 0; i < TMD_MAX; i++) {
-		if (i == TMD_FOOD && pf_has(player->state.pflags, PF_NO_FOOD)) {
+		if (i == TMD_FOOD && pf_has(player->mon.state.pflags, PF_NO_FOOD)) {
 			continue;
 		}
 		if (player->mon.m_timed[i]) {
@@ -1340,7 +1340,7 @@ static size_t prt_unignore(int row, int col)
 
 static size_t prt_learn(int row, int col)
 {
-	int pts = player->state.extra_points_max - player->state.extra_points_used;
+	int pts = player->mon.state.extra_points_max - player->mon.state.extra_points_used;
 	if (pts > 0) {
 		char *str = format("Lrn %i", pts);
 		put_str(str, row, col);
@@ -1352,7 +1352,7 @@ static size_t prt_learn(int row, int col)
 
 static size_t prt_unlight(int row, int col)
 {
-	if (player->state.powers[PP_GLOW] > 0) {
+	if (player->mon.state.powers[PP_GLOW] > 0) {
 		int power = glow_power(player);
 		char buf[80];
 
@@ -1363,7 +1363,7 @@ static size_t prt_unlight(int row, int col)
 		return strlen(buf) + 1;
 	}
 	
-	if (player->state.powers[PP_UNLIGHT] > 0) {
+	if (player->mon.state.powers[PP_UNLIGHT] > 0) {
 		int power = unlight_power(player);
 		char buf[80];
 

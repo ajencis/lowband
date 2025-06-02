@@ -701,7 +701,7 @@ static void add_light(struct chunk *c, struct player *p, struct loc sgrid,
 static void calc_lighting_aux(struct chunk *c, struct player *p, bool dark)
 {
 	int k, x, y;
-	int light = p->state.cur_light;
+	int light = p->mon.state.cur_light;
 	struct loc grid;
 
 	/* Starting values based on permanent light */
@@ -816,7 +816,7 @@ static void become_viewable(struct chunk *c, struct loc grid, struct player *p,
 		}
 	}
 	
-	if (p->state.powers[PP_UNLIGHT] > 0 && square_light(c, grid) < 0) {
+	if (p->mon.state.powers[PP_UNLIGHT] > 0 && square_light(c, grid) < 0) {
 		sqinfo_on(square(c, grid)->info, SQUARE_SEEN);
 	}
 }
@@ -831,7 +831,7 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
 	int xc = x, yc = y;
 
 	int d = distance(grid, p->mon.grid);
-	bool close = d < p->state.cur_light;
+	bool close = d < p->mon.state.cur_light;
 
 	int unlight = unlight_radius(p);
 	int light = square_light(c, grid);
@@ -923,7 +923,7 @@ static void update_one(struct chunk *c, struct loc grid, struct player *p)
 {
 	/* Remove view if blind, check visible squares for traps */
 	if (p->mon.m_timed[TMD_BLIND] ||
-			(of_has(p->state.flags, OF_BAD_VISION) && distance(p->mon.grid, grid) > 5)) {
+			(of_has(p->mon.state.flags, OF_BAD_VISION) && distance(p->mon.grid, grid) > 5)) {
 		sqinfo_off(square(c, grid)->info, SQUARE_SEEN);
 		sqinfo_off(square(c, grid)->info, SQUARE_CLOSE_PLAYER);
 	} else if (square_isseen(c, grid)) {
@@ -972,7 +972,7 @@ void update_view(struct chunk *c, struct player *p)
 
 	/* Assume we can view the player grid */
 	sqinfo_on(square(c, p->mon.grid)->info, SQUARE_VIEW);
-	if (p->state.cur_light > 0 || square_islit(c, p->mon.grid) ||
+	if (p->mon.state.cur_light > 0 || square_islit(c, p->mon.grid) ||
 			p_sq_lit) {
 		sqinfo_on(square(c, p->mon.grid)->info, SQUARE_SEEN);
 		sqinfo_on(square(c, p->mon.grid)->info, SQUARE_CLOSE_PLAYER);

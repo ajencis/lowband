@@ -499,22 +499,22 @@ void display_player_stat_info(void)
 		c_put_str(COLOUR_L_GREEN, buf, row+i, col+5);
 
 		/* Equipment Bonus */
-		strnfmt(buf, sizeof(buf), "%+3d", player->state.stat_add[i]);
+		strnfmt(buf, sizeof(buf), "%+3d", player->mon.state.stat_add[i]);
 		c_put_str(COLOUR_L_BLUE, buf, row+i, col+12);
 
 		/* Resulting "modified" maximum value */
-		cnv_stat(player->state.stat_top[i], buf, sizeof(buf));
+		cnv_stat(player->mon.state.stat_top[i], buf, sizeof(buf));
 		c_put_str(COLOUR_L_GREEN, buf, row+i, col+15);
 
 		/* L: maxima */
         maxmax = stat_max_max(player, i);
-		maxmax = modify_stat_value(maxmax, player->state.stat_add[i]);
+		maxmax = modify_stat_value(maxmax, player->mon.state.stat_add[i]);
 		cnv_stat(maxmax, buf, sizeof(buf));
 		c_put_str(COLOUR_L_GREEN, buf, row+i, col+21);
 
 		/* Only display stat_use if there has been draining */
 		if (player->stat_cur[i] < player->stat_max[i]) {
-			cnv_stat(player->state.stat_use[i], buf, sizeof(buf));
+			cnv_stat(player->mon.state.stat_use[i], buf, sizeof(buf));
 			c_put_str(COLOUR_YELLOW, buf, row+i, col+27);
 		}
 	}
@@ -672,7 +672,7 @@ static const char *show_depth(void)
 static const char *show_speed(void)
 {
 	static char buffer[10];
-	int tmp = player->state.speed;
+	int tmp = player->mon.state.speed;
 	if (player->mon.m_timed[TMD_FAST]) tmp -= 10;
 	if (player->mon.m_timed[TMD_SLOW]) tmp += 10;
 	if (tmp == 110) return "Normal";
@@ -785,9 +785,9 @@ static struct panel *get_panel_combat(void) {
 	/* Melee */
 	panel_space(p);
 	++hgt;
-	for (i = 0; i < player->state.num_attacks; ++i) {
-		aroll = &player->state.attacks[i];
-		bth = player->state.skills[aroll->attack_skill] / BTH_PLUS_ADJ + aroll->to_hit;
+	for (i = 0; i < player->mon.state.num_attacks; ++i) {
+		aroll = &player->mon.state.attacks[i];
+		bth = player->mon.state.skills[aroll->attack_skill] / BTH_PLUS_ADJ + aroll->to_hit;
 		bth = MAX(0, bth);
 		blws += aroll->blows;
 		uint16_t info_i;
@@ -900,19 +900,19 @@ static struct panel *get_panel_combat(void) {
 
 	if (i > 0) {
 		panel_space(p);
-		blws /= MAX(1, player->state.num_attacks);
+		blws /= MAX(1, player->mon.state.num_attacks);
 		panel_line(p, COLOUR_L_BLUE, "Blows", "%d.%d/turn",
 			blws / 100, (blws / 10) % 10);
 		hgt += 2;
 	}
 
 	/* Ranged */
-	aroll = &player->state.ranged_attack;
+	aroll = &player->mon.state.ranged_attack;
 	if (aroll->obj) {
 		int mode = ODESC_BASE | ODESC_CAPITAL | ODESC_NOEGO | ODESC_SINGULAR | ODESC_TERSE;
 		object_desc(title, sizeof(title), aroll->obj, mode, player);
 		
-		bth = player->state.skills[aroll->attack_skill] + aroll->to_hit * BTH_PLUS_ADJ;
+		bth = player->mon.state.skills[aroll->attack_skill] + aroll->to_hit * BTH_PLUS_ADJ;
 		dam = aroll->to_dam;
 
 		panel_space(p);
@@ -940,51 +940,51 @@ static struct panel *get_panel_skills(void) {
 #define BOUND(x, min, max)		MIN(max, MAX(min, x))
 
 	/* L: Magic */
-	skill = player->state.skills[SKILL_MAGIC];
+	skill = player->mon.state.skills[SKILL_MAGIC];
 	if (skill > 0) {
 		panel_line(p, colour_table[BOUND(skill, 0, 100) / 10], "Magic", "%d", skill);
 		++hgt;
 	}
 
 	/* Saving throw */
-	skill = MAX(player->state.skills[SKILL_SAVE], 0);
+	skill = MAX(player->mon.state.skills[SKILL_SAVE], 0);
 	panel_line(p, colour_table[MIN(100, skill) / 10], "Saving Throw", "%d%%", skill);
 	++hgt;
 
 	/* Stealth */
-	desc = likert(player->state.skills[SKILL_STEALTH], 5, &attr);
+	desc = likert(player->mon.state.skills[SKILL_STEALTH], 5, &attr);
 	panel_line(p, attr, "Stealth", "%s", desc);
 	++hgt;
 
 	/* Physical disarming: assume we're disarming a dungeon trap */
-	skill = BOUND(player->state.skills[SKILL_DISARM_PHYS] - depth / 5, 2, 100);
+	skill = BOUND(player->mon.state.skills[SKILL_DISARM_PHYS] - depth / 5, 2, 100);
 	panel_line(p, colour_table[skill / 10], "Disarm - phys.", "%d%%", skill);
 	++hgt;
 
 	/* Magical disarming */
-	skill = BOUND(player->state.skills[SKILL_DISARM_MAGIC] - depth / 5, 2, 100);
+	skill = BOUND(player->mon.state.skills[SKILL_DISARM_MAGIC] - depth / 5, 2, 100);
 	panel_line(p, colour_table[skill / 10], "Disarm - magic", "%d%%", skill);
 	++hgt;
 
 	/* Magic devices */
-	skill = BOUND(player->state.skills[SKILL_DEVICE], 0, 130);
+	skill = BOUND(player->mon.state.skills[SKILL_DEVICE], 0, 130);
 	panel_line(p, colour_table[skill / 13], "Magic Devices", "%d", skill);
 	++hgt;
 
 	/* Searching ability */
-	skill = BOUND(player->state.skills[SKILL_SEARCH], 0, 100);
+	skill = BOUND(player->mon.state.skills[SKILL_SEARCH], 0, 100);
 	panel_line(p, colour_table[skill / 10], "Searching", "%d%%", skill);
 	++hgt;
 
 	/* Infravision */
-	if (player->state.see_infra > 0) {
+	if (player->mon.state.see_infra > 0) {
 		panel_line(p, COLOUR_L_GREEN, "Infravision", "%d ft",
-				player->state.see_infra * 10);
+				player->mon.state.see_infra * 10);
 		++hgt;
 	}
 
 	/* Speed */
-	skill = player->state.speed;
+	skill = player->mon.state.speed;
 	if (player->mon.m_timed[TMD_FAST]) skill -= 10;
 	if (player->mon.m_timed[TMD_SLOW]) skill += 10;
 	attr = skill < 110 ? COLOUR_L_UMBER : COLOUR_L_GREEN;

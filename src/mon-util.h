@@ -60,12 +60,12 @@ void steal_monster_item(struct monster *mon, int midx);
 bool monster_change_shape(struct monster *mon);
 bool monster_revert_shape(struct monster *mon);
 
+int mon_ac(struct monster *mon);
+
 void reaction_roll(struct monster *mon, struct player *p);
 void reaction_change(struct monster *mon, int amt);
 void monster_attacked_get_angry(struct monster *mon, struct player *p, int dam);
 void monster_become_aware(struct monster *mon);
-int mon_ac(struct monster *mon);
-int mon_power(struct monster_race *mon, int power);
 void rearrange_monster(struct monster_race *mr, bool is_player);
 void rearrange_monsters(struct monster_race *mraces, uint32_t seed);
 bool give_monster_powers(struct monster *mon);
