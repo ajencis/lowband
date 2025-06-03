@@ -1972,7 +1972,7 @@ static bool select_nonequipped_wearable(const struct object *obj,
 {
 	const struct player *p = closure;
 
-	return tval_is_wearable(obj) && !object_is_equipped(p->body, obj);
+	return tval_is_wearable(obj) && !object_is_equipped(p->mon.body, obj);
 }
 
 
@@ -2118,7 +2118,7 @@ static void apply_visitor_to_equipped(struct player *p,
 {
 	int i;
 
-	for (i = 0; i < p->body.count; ++i) {
+	for (i = 0; i < p->mon.body.count; ++i) {
 		const struct object *obj = slot_object(p, i);
 
 		if (obj && (*visitor->selfunc)(obj,
@@ -2300,7 +2300,7 @@ static void compute_player_and_equipment_values(struct player *p,
 	release_cached_player_data(pcache);
 
 	/* Combine with the values from the equipment. */
-	for (i = 0; i < p->body.count; ++i) {
+	for (i = 0; i < p->mon.body.count; ++i) {
 		const struct object *obj = slot_object(p, i);
 		struct cached_object_data *cache = NULL;
 		int j;

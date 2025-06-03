@@ -757,7 +757,7 @@ static bool player_of_has_not_timed(struct player *p, int flag)
 
     player_flags(p, collect_f);
 
-    for (i = 0; i < p->body.count; i++) {
+    for (i = 0; i < p->mon.body.count; i++) {
         struct object *obj = slot_object(p, i);
 
         if (!obj) continue;

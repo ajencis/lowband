@@ -557,7 +557,7 @@ static bool store_sell(struct store_context *ctx)
 		return false;
 
 	/* Cannot remove stickied objects */
-	if (object_is_equipped(player->body, obj) && !obj_can_takeoff(obj)) {
+	if (object_is_equipped(player->mon.body, obj) && !obj_can_takeoff(obj)) {
 		/* Oops */
 		msg("Hmmm, it seems to be stuck.");
 

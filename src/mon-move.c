@@ -491,10 +491,10 @@ static bool monster_turn_equip_item(struct monster *mon)
 	if (!mflag_has(mon->mflag, MFLAG_CHECK_EQ)) {
 		return false;
 	}
-	const struct player_body *body = mon->race->body;
-	struct object *equipped, *to_equip = NULL, *to_unequip = NULL;
-	int i, best_best_benefit = 0;
-	struct equip_slot *slot;
+	const struct player_body *body = &mon->body;
+	struct object *to_equip = NULL, *to_unequip = NULL;
+	int best_best_benefit = 0;
+	uint16_t i;
 	char mdesc[80], odesc[80];
 	bool did_something = false;
 
@@ -502,28 +502,13 @@ static bool monster_turn_equip_item(struct monster *mon)
 		return false;
 	}
 
-	// list of all equipped items in their slots
-	struct object **obj_slot = mem_zalloc(sizeof(struct object *) * body->count);
-	for (equipped = mon->equipped_obj; equipped; equipped = equipped->next) {
-		int type = wield_slot_type(equipped);
-		if (type == -1) {
-			continue;
-		}
-		for (slot = body->slots, i = 0; slot && i < body->count; slot = slot->next, ++i) {
-			if (slot->type == type) {
-				obj_slot[i] = equipped;
-				break;
-			}
-		}
-	}
-
 	// check every slot
-	for (slot = body->slots, i = 0; slot && i < body->count; slot = slot->next, ++i) {
-		struct object *curr, *best = obj_slot[i];
+	for (i = 0; i < body->count; ++i) {
+		struct object *curr, *best = body->slots[i].obj;
 		int curr_score, best_score = best ? item_score(best) : 0;
 		// check every item that could be in that slot
 		for (curr = mon->held_obj; curr; curr = curr->next) {
-			if (wield_slot_type(curr) != slot->type) {
+			if (wield_slot_type(curr) != body->slots[i].type) {
 				continue;
 			}
 			curr_score = item_score(curr);
@@ -534,13 +519,13 @@ static bool monster_turn_equip_item(struct monster *mon)
 		}
 
 		// save the object to equip / unequip that has the best difference in score
-		if (best && best != obj_slot[i]) {
-			int best_benefit = best_score - (obj_slot[i] ? item_score(obj_slot[i]) : 0);
+		if (best && best != body->slots[i].obj) {
+			int best_benefit = best_score - (body->slots[i].obj ? item_score(body->slots[i].obj) : 0);
 			if (best_benefit > best_best_benefit) {
 				best_best_benefit = best_benefit;
-				if (obj_slot[i]) {
-					assert(obj_slot[i]);
-					to_unequip = obj_slot[i];
+				if (body->slots[i].obj) {
+					assert(body->slots[i].obj);
+					to_unequip = body->slots[i].obj;
 					to_equip = NULL;
 				}
 				else {
@@ -552,13 +537,10 @@ static bool monster_turn_equip_item(struct monster *mon)
 		}
 	}
 
-	mem_free(obj_slot);
-
 	monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG | MDESC_CAPITAL);
 
 	if (to_unequip) {
-		pile_excise(&mon->equipped_obj, to_unequip);
-		monster_carry(cave, mon, to_unequip);
+		monster_unequip(cave, mon, to_unequip);
 		if (monster_is_visible(mon)) {
 			object_desc(odesc, sizeof(odesc), to_unequip, ODESC_TERSE | ODESC_PREFIX, player);
 			msg("%s unequips %s.", mdesc, odesc);
@@ -566,8 +548,6 @@ static bool monster_turn_equip_item(struct monster *mon)
 		assert(player->cave->objects[to_unequip->oidx] == to_unequip->known);
 		assert(cave->objects[to_unequip->oidx] == to_unequip);
 		did_something = true;
-
-		mflag_on(mon->mflag, MFLAG_UPDATE);
 	}
 	else if (to_equip) {
 		if (to_equip->number > 1) {
@@ -587,7 +567,10 @@ static bool monster_turn_equip_item(struct monster *mon)
 	}
 
 	// looked through everything and no changes to make, so we can stop rechecking
-	if (!did_something) {
+	if (did_something) {
+		mflag_on(mon->mflag, MFLAG_UPDATE);
+	}
+	else {
 		mflag_off(mon->mflag, MFLAG_CHECK_EQ);
 	}
 

@@ -657,7 +657,7 @@ void ignore_drop(struct player *p)
 		/* Check for !d (no drop) inscription */
 		if (!check_for_inscrip(obj, "!d") && !check_for_inscrip(obj, "!*")) {
 			/* Confirm the drop if the item is equipped. */
-			if (object_is_equipped(p->body, obj)) {
+			if (object_is_equipped(p->mon.body, obj)) {
 				if (!verify_object("Really take off and drop", obj, p)) {
 					/* Hack - inscribe the item with !d to prevent repeated
 					 * confirmations. */

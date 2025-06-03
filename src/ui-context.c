@@ -703,7 +703,7 @@ int context_menu_object(struct object *obj)
 		} else if (tval_is_edible(obj)) {
 			ADD_LABEL("Eat", CMD_EAT, MN_ROW_VALID);
 		} else if (obj_is_activatable(obj)) {
-			menu_row_validity_t valid = (object_is_equipped(player->body, obj)
+			menu_row_validity_t valid = (object_is_equipped(player->mon.body, obj)
 										 && obj_can_activate(obj)) ?
 				MN_ROW_VALID : MN_ROW_INVALID;
 			ADD_LABEL("Activate", CMD_ACTIVATE, valid);
@@ -717,9 +717,9 @@ int context_menu_object(struct object *obj)
 	if (obj_can_refill(obj))
 		ADD_LABEL("Refill", CMD_REFILL, MN_ROW_VALID);
 
-	if (object_is_equipped(player->body, obj) && obj_can_takeoff(obj)) {
+	if (object_is_equipped(player->mon.body, obj) && obj_can_takeoff(obj)) {
 		ADD_LABEL("Take off", CMD_TAKEOFF, MN_ROW_VALID);
-	} else if (!object_is_equipped(player->body, obj) && obj_can_wear(obj)) {
+	} else if (!object_is_equipped(player->mon.body, obj) && obj_can_wear(obj)) {
 		ADD_LABEL("Equip", CMD_WIELD, MN_ROW_VALID);
 	}
 

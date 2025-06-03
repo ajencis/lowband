@@ -1958,7 +1958,7 @@ bool key_confirm_command(unsigned char c)
 	int i;
 
 	/* Hack -- Scan equipment */
-	for (i = 0; i < player->body.count; i++) {
+	for (i = 0; i < player->mon.body.count; i++) {
 		char verify_inscrip[] = "^*";
 		unsigned n;
 

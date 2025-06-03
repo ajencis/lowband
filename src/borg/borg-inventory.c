@@ -173,11 +173,11 @@ void borg_cheat_equip(void)
     char buf[256];
 
     /* Extract the equipment */
-    int count = player->body.count + z_info->pack_size;
+    int count = player->mon.body.count + z_info->pack_size;
     for (int j = 0, i = z_info->pack_size; i < count; i++, j++) {
         memset(&borg_items[i], 0, sizeof(borg_item));
 
-        struct object *obj = player->body.slots[j].obj;
+        struct object *obj = player->mon.body.slots[j].obj;
         if (obj) {
             /* Default to "nothing" */
             buf[0] = '\0';

@@ -499,7 +499,7 @@ void calc_inventory(struct player *p)
 	int n_stack_split = 0;
 	int n_pack_remaining = z_info->pack_size - pack_slots_used(p);
 	int n_max = 1 + z_info->pack_size + z_info->quiver_size
-		+ p->body.count;
+		+ p->mon.body.count;
 	struct object **old_quiver = mem_zalloc(z_info->quiver_size
 		* sizeof(*old_quiver));
 	struct object **old_pack = mem_zalloc(z_info->pack_size
@@ -514,7 +514,7 @@ void calc_inventory(struct player *p)
 	 */
 	for (current = p->gear, j = 0; current; current = current->next, ++j) {
 		assert(j < n_max);
-		assigned[j] = object_is_equipped(p->body, current);
+		assigned[j] = object_is_equipped(p->mon.body, current);
 	}
 	for (; j < n_max; ++j) {
 		assigned[j] = false;
@@ -698,7 +698,7 @@ void calc_inventory(struct player *p)
 	if (character_dungeon && p->upkeep->inven_cnt == old_inven_cnt) {
 		for (i = 0; i < z_info->pack_size; i++) {
 			if (old_pack[i] && p->upkeep->inven[i] != old_pack[i]
-					 && !object_is_equipped(p->body, old_pack[i])) {
+					 && !object_is_equipped(p->mon.body, old_pack[i])) {
 				msg("You re-arrange your pack.");
 				break;
 			}
@@ -932,7 +932,7 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 
 	/* Weigh the armor */
 	cur_wgt = 0;
-	for (i = 0; i < p->body.count; i++) {
+	for (i = 0; i < p->mon.body.count; i++) {
 		struct object *obj_local = slot_object(p, i);
 
 		/* Ignore non-armor */
@@ -1046,7 +1046,7 @@ static void calc_light(struct player *p, struct player_state *state,
 	}
 
 	/* Examine all wielded objects, use the brightest */
-	for (i = 0; i < p->body.count; i++) {
+	for (i = 0; i < p->mon.body.count; i++) {
 		int amt = 0;
 		struct object *obj = slot_object(p, i);
 
@@ -1639,7 +1639,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	}
 
 	/* Analyze equipment */
-	for (i = 0; i < p->body.count; i++) {
+	for (i = 0; i < p->mon.body.count; i++) {
 		int index = 0;
 		struct object *obj = slot_object(p, i);
 		struct curse_data *curse = obj ? obj->curses : NULL;

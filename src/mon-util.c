@@ -68,9 +68,11 @@ void mark_mon_as_playable(struct monster_race *mr)
 struct object *monster_best_weapon(struct monster *m)
 {
 	struct object *weap, *best = NULL;
-	int bestval;
+	int bestval, i;
 
-	for (weap = m->equipped_obj; weap; weap = weap->next) {
+	for (i = 0; i < m->body.count; ++i) {
+		weap = m->body.slots[i].obj;
+		if (!weap) continue;
 		if (!tval_is_melee_weapon(weap)) continue;
 		int curr = weap->dd * (weap->ds + 1) + weap->to_d * 2 + weap->to_h;
 		if (!best || curr > bestval) {
@@ -1117,6 +1119,20 @@ struct monster *choose_nearby_injured_kin(struct chunk *c,
  * ------------------------------------------------------------------------
  * Monster damage and death utilities
  * ------------------------------------------------------------------------ */
+
+static int first_slot_with_object_equipped(struct player_body *body)
+{
+	uint16_t i;
+
+	for (i = 0; i < body->count; ++i) {
+		struct object *obj = body->slots[i].obj;
+
+		if (obj) return i;
+	}
+
+	return 0;
+}
+
 /**
  * Handles the "death" of a monster.
  *
@@ -1146,13 +1162,14 @@ void monster_death(struct monster *mon, struct player *p, bool stats)
 	/* Drop objects being carried */
 	while (true) {
 		struct object *obj;
+		int slot = first_slot_with_object_equipped(&mon->body);
 		if (mon->held_obj) {
 			obj = mon->held_obj;
 			pile_excise(&mon->held_obj, obj);
 		}
-		else if (mon->equipped_obj) {
-			obj = mon->equipped_obj;
-			pile_excise(&mon->equipped_obj, obj);
+		else if (slot > 0) {
+			obj = mon->body.slots[slot].obj;
+			mon->body.slots[slot].obj = NULL;
 		}
 		else {
 			break;
@@ -1671,8 +1688,21 @@ bool monster_carry(struct chunk *c, struct monster *mon, struct object *obj)
 
 bool monster_equip(struct chunk *c, struct monster *mon, struct object *obj)
 {
+	uint16_t i;
+	int slot = -1;
+
 	// L: flag the monster as wanting to recheck its equipment
 	mflag_on(mon->mflag, MFLAG_CHECK_EQ);
+
+	for (i = 0; i < mon->body.count; ++i) {
+		if (mon->body.slots[i].obj) continue;
+		if (wield_slot_type(obj) != mon->body.slots[i].type) continue;
+
+		slot = i;
+		break;
+	}
+
+	if (slot == -1) return false;
 
 	/* Forget location */
 	obj->grid = loc(0, 0);
@@ -1686,12 +1716,33 @@ bool monster_equip(struct chunk *c, struct monster *mon, struct object *obj)
 		obj->known->oidx = obj->oidx;
 		player->cave->objects[obj->oidx] = obj->known;
 	}
-	pile_insert(&mon->equipped_obj, obj);
+
+	mon->body.slots[slot].obj = obj;
+
+	//pile_insert(&mon->equipped_obj, obj);
 
 	mflag_on(mon->mflag, MFLAG_UPDATE);
 
 	/* Result */
 	return true;
+}
+
+bool monster_unequip(struct chunk *c, struct monster *mon, struct object *obj)
+{
+	uint16_t i;
+
+	// L: flag the monster as wanting to recheck its equipment
+	mflag_on(mon->mflag, MFLAG_CHECK_EQ);
+
+	for (i = 0; i < mon->body.count; ++i) {
+		if (mon->body.slots[i].obj == obj) {
+			mon->body.slots[i].obj = NULL;
+			monster_carry(c, mon, obj);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 /**
@@ -2092,7 +2143,7 @@ void monster_become_aware(struct monster *mon)
 int mon_ac(struct monster *mon)
 {
 	return mon->state.ac + mon->state.to_a;
-	int base = mon->race->ac, ac = 0, to_a = 0;
+	/*int base = mon->race->ac, ac = 0, to_a = 0;
 	struct object *obj;
 
 	for (obj = mon->equipped_obj; obj; obj = obj->next) {
@@ -2100,7 +2151,7 @@ int mon_ac(struct monster *mon)
 		to_a = object_to_ac(obj);
 	}
 
-	return MAX(base, ac) + MIN(base, ac) / 2 + to_a;
+	return MAX(base, ac) + MIN(base, ac) / 2 + to_a;*/
 }
 
 

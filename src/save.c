@@ -186,19 +186,43 @@ static void wr_item(const struct object *obj)
 	wr_s16b(obj->mimicking_m_idx);
 
 	/* Activation and effects*/
-	if (obj->activation)
+	if (obj->activation) {
 		wr_u16b(obj->activation->index);
-	else
+	} else {
 		wr_u16b(0);
+	}
 	wr_u16b(obj->time.base);
 	wr_u16b(obj->time.dice);
 	wr_u16b(obj->time.sides);
 
 	/* Save the inscription (if any) */
-	if (obj->note)
+	if (obj->note) {
 		wr_string(quark_str(obj->note));
-	else
+	} else {
 		wr_string("");
+	}
+}
+
+static void wr_body(const struct player_body *body)
+{
+	int count = body->count, i;
+
+	wr_string(body->name);
+	wr_u16b(count);
+
+	for (i = 0; i < count; ++i) {
+		struct object *obj = body->slots[i].obj;
+		
+		wr_u16b(body->slots->type);
+		wr_string(body->slots->name);
+		if (obj) {
+			wr_byte(true);
+			wr_item(obj);
+		}
+		else {
+			wr_byte(false);
+		}
+	}
 }
 
 
@@ -259,12 +283,13 @@ static void wr_monster(const struct monster *mon)
 	wr_item(dummy);
 
 	// L: write equipped objects
-	obj = mon->equipped_obj;
+	wr_body(&mon->body);
+	/*obj = mon->equipped_obj;
 	while (obj) {
 		wr_item(obj);
 		obj = obj->next;
 	}
-	wr_item(dummy);
+	wr_item(dummy);*/
 	object_delete(NULL, NULL, &dummy);
 
 	/* Write group info */
@@ -506,11 +531,11 @@ void wr_player(void)
 	wr_u32b(player->au_birth);
 
 	/* Player body */
-	wr_string(player->body.name);
-	wr_u16b(player->body.count);
-	for (i = 0; i < player->body.count; i++) {
-		wr_u16b(player->body.slots[i].type);
-		wr_string(player->body.slots[i].name);
+	wr_string(player->mon.body.name);
+	wr_u16b(player->mon.body.count);
+	for (i = 0; i < player->mon.body.count; i++) {
+		wr_u16b(player->mon.body.slots[i].type);
+		wr_string(player->mon.body.slots[i].name);
 	}
 
 	wr_u16b(z_info->learn_max);
@@ -837,7 +862,7 @@ static void wr_gear_aux(struct object *gear)
 		assert(obj->kind);
 
 		/* Write code for equipment or other gear */
-		wr_byte(object_slot(player->body, obj));
+		wr_byte(object_slot(player->mon.body, obj));
 
 		/* Dump object */
 		wr_item(obj);

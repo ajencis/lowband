@@ -13,8 +13,8 @@ static struct curse_data *obj_curse_data = NULL;
 
 int setup_tests(void **state) {
 	player = &test_player;
-	player->body = test_player_body;
-	player->body.slots = &test_slot_light;
+	player->mon.body = test_player_body;
+	player->mon.body.slots = &test_slot_light;
 	z_info = mem_zalloc(sizeof(struct angband_constants));
 	z_info->fuel_torch = 5000;
 	z_info->fuel_lamp = 15000;
@@ -62,13 +62,13 @@ static int test_obj_can_refill(void *state) {
     /* Torches cannot be refilled */
     object_prep(&obj_torch, &test_torch, 1, AVERAGE);
 	player->gear = &obj_torch;
-    player->body.slots->obj = &obj_torch; 
+    player->mon.body.slots->obj = &obj_torch; 
     eq(obj_can_refill(&obj_torch), false);
 
     /* Lanterns can be refilled */    
     object_prep(&obj_lantern, &test_lantern, 1, AVERAGE);
 	player->gear = &obj_lantern;
-    player->body.slots->obj = &obj_lantern; 
+    player->mon.body.slots->obj = &obj_lantern; 
 
     /* Not by torches */
     eq(obj_can_refill(&obj_torch), false);

@@ -201,6 +201,18 @@ struct attack_roll {
 
 
 /**
+ * A player 'body'
+ */
+struct player_body {
+	struct player_body *next;
+
+	char *name;
+	uint16_t count;
+	struct equip_slot *slots;
+};
+
+
+/**
  * All the variable state that changes when you put on/take off equipment.
  * Player flags are not currently variable, but useful here so monsters can
  * learn them.

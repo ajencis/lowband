@@ -2060,7 +2060,7 @@ bool effect_handler_DISENCHANT(effect_handler_context_t *context)
 	char o_name[80];
 
 	/* Count slots */
-	for (i = 0; i < player->body.count; i++) {
+	for (i = 0; i < player->mon.body.count; i++) {
 		/* Ignore rings, amulets and lights */
 		if (slot_type_is(player, i, EQUIP_RING)) continue;
 		if (slot_type_is(player, i, EQUIP_AMULET)) continue;
@@ -2071,7 +2071,7 @@ bool effect_handler_DISENCHANT(effect_handler_context_t *context)
 	}
 
 	/* Pick one at random */
-	for (i = player->body.count - 1; i >= 0; i--) {
+	for (i = player->mon.body.count - 1; i >= 0; i--) {
 		/* Ignore rings, amulets and lights */
 		if (slot_type_is(player, i, EQUIP_RING)) continue;
 		if (slot_type_is(player, i, EQUIP_AMULET)) continue;
@@ -3615,7 +3615,7 @@ bool effect_handler_TRANSFORM(effect_handler_context_t *context)
 bool effect_handler_LICH_TRANSFORM(effect_handler_context_t *context)
 {
 	struct monster_race *monr;
-	const char *body_name = player->body.name;
+	const char *body_name = player->mon.body.name;
 
 	if (streq(body_name, "Dragon")) {
 		monr = lookup_monster("dracolich");

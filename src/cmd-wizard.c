@@ -504,7 +504,7 @@ void do_cmd_wiz_change_item_quantity(struct command *cmd)
 			return;
 		}
 		cmd_set_arg_item(cmd, "item", obj);
-	} else if (object_is_equipped(player->body, obj)) {
+	} else if (object_is_equipped(player->mon.body, obj)) {
 		msg("Can not change the quantity of an equipped item.");
 		return;
 	}
@@ -939,11 +939,11 @@ void do_cmd_wiz_cure_all(struct command *cmd)
 	int i;
 
 	/* Remove curses */
-	for (i = 0; i < player->body.count; i++) {
-		if (player->body.slots[i].obj &&
-				player->body.slots[i].obj->curses) {
-			mem_free(player->body.slots[i].obj->curses);
-			player->body.slots[i].obj->curses = NULL;
+	for (i = 0; i < player->mon.body.count; i++) {
+		if (player->mon.body.slots[i].obj &&
+				player->mon.body.slots[i].obj->curses) {
+			mem_free(player->mon.body.slots[i].obj->curses);
+			player->mon.body.slots[i].obj->curses = NULL;
 		}
 	}
 

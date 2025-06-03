@@ -195,18 +195,18 @@ static void generate_player_for_stats(void)
 	player->class = classes; /* Warrior */
 
 	/* Needs a body; duplicates logic from the private player_embody(). */
-	memcpy(&player->body, &bodies[player->race->body],
-		sizeof(player->body));
-	my_strcpy(buf, bodies[player->race->body].name, sizeof(buf));
-	player->body.name = string_make(buf);
-	player->body.slots = mem_zalloc(player->body.count *
-		sizeof(*(player->body.slots)));
-	for (i = 0; i < player->body.count; ++i) {
-		player->body.slots[i].type =
-			bodies[player->race->body].slots[i].type;
-		my_strcpy(buf, bodies[player->race->body].slots[i].name,
+	memcpy(&player->mon.body, &bodies[player->race->mon.body],
+		sizeof(player->mon.body));
+	my_strcpy(buf, bodies[player->race->mon.body].name, sizeof(buf));
+	player->mon.body.name = string_make(buf);
+	player->mon.body.slots = mem_zalloc(player->mon.body.count *
+		sizeof(*(player->mon.body.slots)));
+	for (i = 0; i < player->mon.body.count; ++i) {
+		player->mon.body.slots[i].type =
+			bodies[player->race->mon.body].slots[i].type;
+		my_strcpy(buf, bodies[player->race->mon.body].slots[i].name,
 			sizeof(buf));
-		player->body.slots[i].name = string_make(buf);
+		player->mon.body.slots[i].name = string_make(buf);
 	}
 
 	/* Level 1 */

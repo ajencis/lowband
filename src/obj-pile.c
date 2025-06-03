@@ -421,10 +421,10 @@ bool object_similar(const struct object *obj1, const struct object *obj2,
 	int i;
 
 	/* Equipment items don't stack */
-	if (object_is_equipped(player->body, obj1)) {
+	if (object_is_equipped(player->mon.body, obj1)) {
 		return false;
 	}
-	if (object_is_equipped(player->body, obj2)) {
+	if (object_is_equipped(player->mon.body, obj2)) {
 		return false;
 	}
 
@@ -1411,7 +1411,7 @@ int scan_distant_floor(struct object **items, int max_size, struct player *p,
  * Returns the number of items placed into the list.
  *
  * Maximum space that can be used is
- * z_info->pack_size + z_info->quiver_size + player->body.count +
+ * z_info->pack_size + z_info->quiver_size + player->mon.body.count +
  * z_info->floor_size,
  * though practically speaking much smaller numbers are likely.
  */
@@ -1437,7 +1437,7 @@ int scan_items(struct object **item_list, size_t item_max, struct player *p,
 		}
 
 	if (use_equip)
-		for (i = 0; i < p->body.count && item_num < item_max; i++) {
+		for (i = 0; i < p->mon.body.count && item_num < item_max; i++) {
 			if (object_test(tester, slot_object(p, i)))
 				item_list[item_num++] = slot_object(p, i);
 		}

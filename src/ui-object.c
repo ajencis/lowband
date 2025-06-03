@@ -553,7 +553,7 @@ void show_equip(int mode, item_tester tester)
 	wipe_obj_list();
 
 	/* Build the object list */
-	build_obj_list(player->body.count - 1, NULL, tester, mode);
+	build_obj_list(player->mon.body.count - 1, NULL, tester, mode);
 
 	/* Show the quiver in subwindows */
 	if (in_term) {
@@ -1319,7 +1319,7 @@ bool textui_get_item(struct object **choice, const char *pmt, const char *str,
 
 	/* Full equipment */
 	e1 = 0;
-	e2 = player->body.count - 1;
+	e2 = player->mon.body.count - 1;
 
 	/* Forbid equipment */
 	if (!use_equip) e2 = -1;

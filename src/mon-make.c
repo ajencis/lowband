@@ -60,6 +60,41 @@ static bool mon_can_enter_town(struct monster_race *mr)
 	return false;
 }
 
+
+/**
+ * L: some body utils
+ */
+static void duplicate_body(const struct player_body *source, struct player_body *new)
+{
+	new->name = string_make(source->name);
+	new->slots = mem_zalloc(sizeof *new->slots * source->count);
+	new->count = source->count;
+	new->next = NULL;
+
+	memcpy(new->slots, source->slots, sizeof *new->slots * new->count);
+}
+
+static void free_body(const struct player_body *to_free)
+{
+	string_free(to_free->name);
+	mem_free(to_free->slots);
+}
+
+static void mon_embody(struct monster *mon)
+{
+	const struct player_body *base = mon->race->body;
+
+	free_body(&mon->body);
+	duplicate_body(base, &mon->body);
+}
+
+static void mon_disembody(struct monster *mon)
+{
+	free_body(&mon->body);
+}
+
+
+
 /**
  * ------------------------------------------------------------------------
  * Monster race allocation
@@ -429,6 +464,9 @@ void delete_monster_idx(struct chunk *c, int m_idx)
 	if (mon->mimicked_obj) {
 		square_delete_object(c, mon->grid, mon->mimicked_obj, true, false);
 	}
+
+	// L: remove body
+	mon_disembody(mon);
 
 	/* Wipe the Monster */
 	memset(mon, 0, sizeof(struct monster));
@@ -963,17 +1001,19 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 			}
 			int choice = tvals[randint0(3)];
 			if (choice != -1) {
-				obj = make_object(c, level, one_in_(100),false, false, NULL, choice);
+				obj = make_object(c, level, one_in_(100), false, false, NULL, choice);
 				if (obj) {
 					obj->origin = origin;
 					obj->origin_depth = convert_depth_to_origin(c->depth);
 					obj->origin_race = effective_race;
 					obj->number = 1;
-
-					obj->grid = loc(0, 0);
-					obj->held_m_idx = mon->midx;
 					list_object(c, obj);
-					pile_insert(&mon->equipped_obj, obj);
+
+					monster_equip(c, mon, obj);
+
+					//obj->grid = loc(0, 0);
+					//obj->held_m_idx = mon->midx;
+					//pile_insert(&mon->equipped_obj, obj);
 				}
 			}
 		}
@@ -1237,9 +1277,11 @@ static bool place_new_monster_one(struct chunk *c, struct loc grid,
 	/* Clean out the monster */
 	memset(mon, 0, sizeof(struct monster));
 
-
 	/* Save the race */
 	mon->race = race;
+
+	// L: give it a body
+	mon_embody(mon);
 
 	/* Enforce sleeping if needed */
 	if (sleep && race->sleep) {

@@ -45,11 +45,15 @@ static void get_mon_ac(struct monster *mon, struct player_state *state)
 {
 	int base_ac = mon->race->ac / 3, base_to = mon->race->ac - base_ac;
 	int ac = 0, to_a = 0;
+	uint16_t i;
 	struct object *obj;
 
-	for (obj = mon->equipped_obj; obj; obj = obj->next) {
-		ac += obj->ac;
-		to_a += object_to_ac(obj);
+	for (i = 0; i < mon->body.count; ++i) {
+		obj = mon->body.slots[i].obj;
+		if (obj) {
+			ac += obj->ac;
+			to_a += object_to_ac(obj);
+		}
 	}
 
 	ac = MAX(base_ac, ac) + MIN(base_ac, ac) / 2;

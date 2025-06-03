@@ -627,7 +627,7 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 			oldn = best_digger->number;
 			best_digger->number = 1;
 		}
-		player->body.slots[weapon_slot].obj = best_digger;
+		player->mon.body.slots[weapon_slot].obj = best_digger;
 		memcpy(&local_state, &player->mon.state, sizeof(local_state));
 		calc_bonuses(player, &player->mon, &local_state, false, true);
 		used_state = &local_state;
@@ -651,7 +651,7 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 		if (best_digger) {
 			best_digger->number = oldn;
 		}
-		player->body.slots[weapon_slot].obj = current_weapon;
+		player->mon.body.slots[weapon_slot].obj = current_weapon;
 		calc_bonuses(player, &player->mon, &local_state, false, true);
 	}
 

@@ -307,8 +307,8 @@ void do_cmd_wield(struct command *cmd)
 	}
 
 	numslots = 0;
-	for (i = 0; i < player->body.count; i++) {
-		if (player->body.slots[i].type == wield_slot_type(obj)) {
+	for (i = 0; i < player->mon.body.count; i++) {
+		if (player->mon.body.slots[i].type == wield_slot_type(obj)) {
 			++numslots;
 		}
 	}
@@ -331,7 +331,7 @@ void do_cmd_wield(struct command *cmd)
 		}
 
 		/* Change slot if necessary */
-		slot = equipped_item_slot(player->body, equip_obj);
+		slot = equipped_item_slot(player->mon.body, equip_obj);
 	}
 
 	/* Prevent wielding into a stickied slot */
@@ -399,7 +399,7 @@ void do_cmd_drop(struct command *cmd)
 		return;
 
 	/* Cannot remove stickied items */
-	if (object_is_equipped(player->body, obj) && !obj_can_takeoff(obj)) {
+	if (object_is_equipped(player->mon.body, obj) && !obj_can_takeoff(obj)) {
 		msg("Hmmm, it seems to be stuck.");
 		return;
 	}
@@ -946,7 +946,7 @@ void do_cmd_use(struct command *cmd)
 	else if (tval_is_scroll(obj))		do_cmd_read_scroll(cmd);
 	else if (obj_can_refill(obj))		do_cmd_refill(cmd);
 	else if (obj_is_activatable(obj)) {
-		if (object_is_equipped(player->body, obj)) {
+		if (object_is_equipped(player->mon.body, obj)) {
 			do_cmd_activate(cmd);
 		} else {
 			msg("Equip the item to use it.");

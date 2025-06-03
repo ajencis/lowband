@@ -1610,7 +1610,7 @@ int find_inven(const struct object *obj)
 	/* Similar slot? */
 	for (gear_obj = player->gear; gear_obj; gear_obj = gear_obj->next) {
 		/* Check only the inventory and the quiver */
-		if (object_is_equipped(player->body, gear_obj))
+		if (object_is_equipped(player->mon.body, gear_obj))
 			continue;
 
 		/* Require identical object types */
@@ -1966,7 +1966,7 @@ void do_cmd_sell(struct command *cmd)
 		return;
 
 	/* Cannot remove stickied objects */
-	if (object_is_equipped(player->body, obj) && !obj_can_takeoff(obj)) {
+	if (object_is_equipped(player->mon.body, obj) && !obj_can_takeoff(obj)) {
 		msg("Hmmm, it seems to be stuck.");
 		return;
 	}
@@ -2110,7 +2110,7 @@ void do_cmd_stash(struct command *cmd)
 	}
 
 	/* Cannot remove stickied objects */
-	if (object_is_equipped(player->body, obj) && !obj_can_takeoff(obj)) {
+	if (object_is_equipped(player->mon.body, obj) && !obj_can_takeoff(obj)) {
 		msg("Hmmm, it seems to be stuck.");
 		return;
 	}	

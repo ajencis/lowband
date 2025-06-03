@@ -239,7 +239,7 @@ static void recharge_objects(void)
 		assert(obj->kind);
 
 		/* Recharge equipment */
-		if (object_is_equipped(player->body, obj)) {
+		if (object_is_equipped(player->mon.body, obj)) {
 			/* Recharge activatable objects */
 			if (recharge_timeout(obj)) {
 				/* Message if an item recharged */
@@ -389,12 +389,12 @@ static void decrease_timeouts(void)
 	}
 
 	/* Curse effects always decrement by 1 */
-	for (i = 0; i < player->body.count; i++) {
+	for (i = 0; i < player->mon.body.count; i++) {
 		struct curse_data *curse = NULL;
-		if (player->body.slots[i].obj == NULL) {
+		if (player->mon.body.slots[i].obj == NULL) {
 			continue;
 		}
-		curse = player->body.slots[i].obj->curses;
+		curse = player->mon.body.slots[i].obj->curses;
 		if (curse) {
 			int j;
 			for (j = 0; j < z_info->curse_max; j++) {
@@ -402,7 +402,7 @@ static void decrease_timeouts(void)
 					curse[j].timeout--;
 					if (!curse[j].timeout) {
 						struct curse *c = &curses[j];
-						if (do_curse_effect(j, player->body.slots[i].obj)) {
+						if (do_curse_effect(j, player->mon.body.slots[i].obj)) {
 							player_learn_curse(player, c);
 						}
 						curse[j].timeout = randcalc(c->obj->time, 0, RANDOMISE);

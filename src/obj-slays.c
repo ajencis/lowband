@@ -461,7 +461,7 @@ static void learn_brand_slay_helper(struct player *p, struct object *obj1,
 		bool allow_temp)
 {
 	struct monster_lore *lore = get_lore(mon->race);
-	struct object **objs = mem_alloc((2 + p->body.count) * sizeof(*objs));
+	struct object **objs = mem_alloc((2 + p->mon.body.count) * sizeof(*objs));
 	int i;
 
 	/* Handle brands. */
@@ -479,7 +479,7 @@ static void learn_brand_slay_helper(struct player *p, struct object *obj1,
 
 		/* Check for an off-weapon brand. */
 		if (allow_off) {
-			for (j = 0; j < p->body.count; ++j) {
+			for (j = 0; j < p->mon.body.count; ++j) {
 				struct object *obj = slot_object(p, j);
 
 				if (obj && obj->brands && obj->brands[i]
@@ -536,7 +536,7 @@ static void learn_brand_slay_helper(struct player *p, struct object *obj1,
 
 		/* Check for an off-weapon slay. */
 		if (allow_off) {
-			for (j = 0; j < p->body.count; ++j) {
+			for (j = 0; j < p->mon.body.count; ++j) {
 				struct object *obj = slot_object(p, j);
 
 				if (obj && obj->slays && obj->slays[i]

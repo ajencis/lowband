@@ -79,7 +79,7 @@ static bool flush_gear(void) {
 		struct object *next = curr->next;
 		bool none_left = false;
 
-		if (object_is_equipped(player->body, curr)) {
+		if (object_is_equipped(player->mon.body, curr)) {
 			inven_takeoff(curr);
 		}
 		curr = gear_object_for_use(player, curr, curr->number, false,
@@ -121,7 +121,7 @@ static bool populate_gear(const struct in_slot_desc *slots) {
 		}
 		if (slots->equipped) {
 			inven_wield(obj, wield_slot(obj));
-			if (!object_is_equipped(player->body, obj)) {
+			if (!object_is_equipped(player->mon.body, obj)) {
 				return false;
 			}
 		}
@@ -161,7 +161,7 @@ static bool verify_pack(struct player *p, const struct out_slot_desc *slots,
 		if (!object_is_carried(p, p->upkeep->inven[curr_slot])) {
 			return false;
 		}
-		if (object_is_equipped(p->body, p->upkeep->inven[curr_slot])) {
+		if (object_is_equipped(p->mon.body, p->upkeep->inven[curr_slot])) {
 			return false;
 		}
 		++curr_slot;
@@ -206,7 +206,7 @@ static bool verify_quiver(struct player *p, const struct out_slot_desc *slots) {
 					p->upkeep->quiver[curr_slot])) {
 				return false;
 			}
-			if (object_is_equipped(p->body,
+			if (object_is_equipped(p->mon.body,
 					p->upkeep->quiver[curr_slot])) {
 				return false;
 			}

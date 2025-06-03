@@ -856,7 +856,7 @@ bool obj_can_takeoff(const struct object *obj)
  */
 bool obj_can_throw(const struct object *obj)
 {
-	return !object_is_equipped(player->body, obj)
+	return !object_is_equipped(player->mon.body, obj)
 		|| (tval_is_melee_weapon(obj) && obj_can_takeoff(obj));
 }
 

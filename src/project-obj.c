@@ -56,7 +56,7 @@ int inven_damage(struct player *p, int type, int cperc)
 	/* Scan through the gear */
 	while (obj) {
 		struct object *next = obj->next;
-		if (object_is_equipped(p->body, obj)) {
+		if (object_is_equipped(p->mon.body, obj)) {
 			obj = next;
 			continue;
 		}

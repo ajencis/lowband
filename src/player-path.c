@@ -234,7 +234,7 @@ static int compute_rubble_penalty(struct player *p)
 			num_digger = best_digger->number;
 			best_digger->number = 1;
 		}
-		p->body.slots[weapon_slot].obj = best_digger;
+		p->mon.body.slots[weapon_slot].obj = best_digger;
 		memcpy(&local_state, &p->mon.state, sizeof(local_state));
 		calc_bonuses(p, &p->mon, &local_state, false, true);
 		used_state = &local_state;
@@ -247,7 +247,7 @@ static int compute_rubble_penalty(struct player *p)
 		if (best_digger) {
 			best_digger->number = num_digger;
 		}
-		p->body.slots[weapon_slot].obj = current_weapon;
+		p->mon.body.slots[weapon_slot].obj = current_weapon;
 		calc_bonuses(p, &p->mon, &local_state, false, true);
 	}
 	if (digging_chances[DIGGING_RUBBLE] <= 0) {

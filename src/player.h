@@ -63,17 +63,6 @@ struct equip_slot {
 };
 
 /**
- * A player 'body'
- */
-struct player_body {
-	struct player_body *next;
-
-	char *name;
-	uint16_t count;
-	struct equip_slot *slots;
-};
-
-/**
  * Player race info
  */
 struct player_race {
@@ -502,7 +491,7 @@ struct player {
 	struct player_options opts;			/* Player options */
 	struct player_history hist;			/* Player history (see player-history.c) */
 
-	struct player_body body;			/* Equipment slots available */
+	//struct player_body body;			/* Equipment slots available */
 	struct player_shape *shape;			/* Current player shape */
 
 	struct object *gear;				/* Real gear */

@@ -577,14 +577,14 @@ void player_cleanup_members(struct player *p)
 		object_pile_free(NULL, NULL, p->gear);
 		object_pile_free(NULL, NULL, p->gear_k);
 	}
-	if (p->body.slots) {
-		for (int i = 0; i < p->body.count; i++) {
-			string_free(p->body.slots[i].name);
+	if (p->mon.body.slots) {
+		for (int i = 0; i < p->mon.body.count; i++) {
+			string_free(p->mon.body.slots[i].name);
 		}
-		mem_free(p->body.slots);
-		p->body.slots = NULL;
+		mem_free(p->mon.body.slots);
+		p->mon.body.slots = NULL;
 	}
-	string_free(p->body.name);
+	string_free(p->mon.body.name);
 	string_free(p->history);
 	if (p->cave) {
 		cave_free(p->cave);

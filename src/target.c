@@ -134,6 +134,28 @@ void look_mon_desc(char *buf, size_t max, int m_idx)
 	}
 
 	// L: equipment
+	if (mon->body.count > 0) {
+		char odesc[80] = "";
+		bool has_eq = false;
+		uint32_t mode = ODESC_PREFIX | ODESC_LOWERCASE;
+
+		for (i = 0; i < mon->body.count; ++i) {
+			struct object *obj = mon->body.slots[i].obj;
+
+			if (obj) {
+				if (!has_eq) {
+					my_strcat(buf, "; wearing ", max);
+				} else {
+					my_strcat(buf, ", ", max);
+				}
+				object_desc(odesc, sizeof odesc, obj, mode, player);
+				my_strcat(buf, odesc, max);
+			}
+		}
+	}
+
+	/*
+	// L: equipment
 	if (mon->equipped_obj) {
 		struct object *eq = mon->equipped_obj;
 		char odesc[80];
@@ -145,7 +167,7 @@ void look_mon_desc(char *buf, size_t max, int m_idx)
 			object_desc(odesc, sizeof(odesc), eq, ODESC_PREFIX | ODESC_LOWERCASE, player);
 			my_strcat(buf, odesc, max);
 		}
-	}
+	}*/
 }
 
 

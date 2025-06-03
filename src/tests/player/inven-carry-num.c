@@ -147,7 +147,7 @@ static bool fill_pack_quiver(struct carry_num_state *cns, int n_pack,
 
 	/* Empty out the pack and quiver. */
 	while (curr != NULL) {
-		if (! object_is_equipped(cns->p->body, curr)) {
+		if (! object_is_equipped(cns->p->mon.body, curr)) {
 			struct object *next = curr->next;
 			bool none_left = false;
 
@@ -182,7 +182,7 @@ static bool fill_pack_quiver(struct carry_num_state *cns, int n_pack,
 		inven_carry(cns->p, curr, false, false);
 		calc_inventory(cns->p);
 		if (! object_is_carried(cns->p, curr) ||
-				object_is_equipped(cns->p->body, curr)) {
+				object_is_equipped(cns->p->mon.body, curr)) {
 			return false;
 		}
 	}
@@ -209,7 +209,7 @@ static bool fill_pack_quiver(struct carry_num_state *cns, int n_pack,
 		inven_carry(cns->p, curr, false, false);
 		calc_inventory(cns->p);
 		if (! object_is_carried(cns->p, curr) ||
-				object_is_equipped(cns->p->body, curr)) {
+				object_is_equipped(cns->p->mon.body, curr)) {
 			return false;
 		}
 		i += n;
@@ -238,7 +238,7 @@ static bool fill_pack_quiver(struct carry_num_state *cns, int n_pack,
 		inven_carry(cns->p, curr, false, false);
 		calc_inventory(cns->p);
 		if (! object_is_carried(cns->p, curr) ||
-				object_is_equipped(cns->p->body, curr)) {
+				object_is_equipped(cns->p->mon.body, curr)) {
 			return false;
 		}
 		i += n;
@@ -279,7 +279,7 @@ static bool fill_pack_quiver(struct carry_num_state *cns, int n_pack,
 		inven_carry(cns->p, curr, false, false);
 		calc_inventory(cns->p);
 		if (! object_is_carried(cns->p, curr) ||
-				object_is_equipped(cns->p->body, curr)) {
+				object_is_equipped(cns->p->mon.body, curr)) {
 			return false;
 		}
 		i += n;

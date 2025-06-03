@@ -53,13 +53,13 @@ int slot_by_name(struct player *p, const char *name)
 	int i;
 
 	/* Look for the correctly named slot */
-	for (i = 0; i < p->body.count; i++) {
-		if (streq(name, p->body.slots[i].name)) {
+	for (i = 0; i < p->mon.body.count; i++) {
+		if (streq(name, p->mon.body.slots[i].name)) {
 			break;
 		}
 	}
 
-	if (i == p->body.count) return -1;
+	if (i == p->mon.body.count) return -1;
 
 	/* Index for that slot */
 	return i;
@@ -73,14 +73,14 @@ int slot_by_type(struct player *p, int type, bool full)
 	int i, fallback = -1;
 
 	/* Look for a correct slot type */
-	for (i = 0; i < p->body.count; i++) {
-		if (type == p->body.slots[i].type) {
+	for (i = 0; i < p->mon.body.count; i++) {
+		if (type == p->mon.body.slots[i].type) {
 			if (full) {
 				/* Found a full slot */
-				if (p->body.slots[i].obj != NULL) break;
+				if (p->mon.body.slots[i].obj != NULL) break;
 			} else {
 				/* Found an empty slot */
-				if (p->body.slots[i].obj == NULL) break;
+				if (p->mon.body.slots[i].obj == NULL) break;
 			}
 			/* Not right for full/empty, but still the right type */
 			if (fallback == -1) {
@@ -89,8 +89,8 @@ int slot_by_type(struct player *p, int type, bool full)
 		}
 	}
 
-	/* Index for the best slot we found, or p->body.count if none found  */
-	return (i != p->body.count) ? i : fallback;
+	/* Index for the best slot we found, or p->mon.body.count if none found  */
+	return (i != p->mon.body.count) ? i : fallback;
 }
 
 /**
@@ -104,7 +104,7 @@ int slot_by_type(struct player *p, int type, bool full)
 bool slot_type_is(struct player *p, int slot, int type)
 {
 	/* Assume default body if no player */
-	struct player_body body = p ? p->body : *bodies;
+	struct player_body body = p ? p->mon.body : *bodies;
 
 	return body.slots[slot].type == type ? true : false;
 }
@@ -116,11 +116,11 @@ struct object *slot_object(struct player *p, int slot)
 {
 	/* Check bounds */
 	if (slot == -1) return NULL;
-	assert(slot >= 0 && slot < p->body.count);
+	assert(slot >= 0 && slot < p->mon.body.count);
 
 	/* Ensure a valid body */
-	if (p->body.slots && p->body.slots[slot].obj) {
-		return p->body.slots[slot].obj;
+	if (p->mon.body.slots && p->mon.body.slots[slot].obj) {
+		return p->mon.body.slots[slot].obj;
 	}
 
 	return NULL;
@@ -129,7 +129,7 @@ struct object *slot_object(struct player *p, int slot)
 struct object *equipped_item_by_slot_name(struct player *p, const char *name)
 {
 	/* Ensure a valid body */
-	if (p->body.slots) {
+	if (p->mon.body.slots) {
 		return slot_object(p, slot_by_name(p, name));
 	}
 
@@ -206,7 +206,7 @@ uint16_t object_pack_total(struct player *p, const struct object *obj,
 			 * object_similar() excludes cursor == obj so if
 			 * obj is not equipped, account for it here.
 			 */
-			like = !object_is_equipped(p->body, obj);
+			like = !object_is_equipped(p->mon.body, obj);
 		} else if (ignore_inscrip) {
 			like = object_similar(obj, cursor, OSTACK_PACK);
 		} else {
@@ -265,7 +265,7 @@ int pack_slots_used(const struct player *p)
 	for (obj = p->gear; obj; obj = obj->next) {
 		bool found = false;
 		/* Equipment doesn't count */
-		if (!object_is_equipped(p->body, obj)) {
+		if (!object_is_equipped(p->mon.body, obj)) {
 			/* Check if it is in the quiver */
 			if (tval_is_ammo(obj) ||
 					of_has(obj->flags, OF_THROWING)) {
@@ -302,14 +302,14 @@ int pack_slots_used(const struct player *p)
  */
 const char *equip_mention(struct player *p, int slot)
 {
-	int type = p->body.slots[slot].type;
+	int type = p->mon.body.slots[slot].type;
 
 	/* Heavy */
 	if ((type == EQUIP_WEAPON && p->mon.state.heavy_wield) ||
 			(type == EQUIP_WEAPON && p->mon.state.heavy_shoot))
 		return slot_table[type].heavy_describe;
 	else if (slot_table[type].name_in_desc)
-		return format(slot_table[type].mention, p->body.slots[slot].name);
+		return format(slot_table[type].mention, p->mon.body.slots[slot].name);
 	else
 		return slot_table[type].mention;
 }
@@ -321,14 +321,14 @@ const char *equip_mention(struct player *p, int slot)
  */
 const char *equip_describe(struct player *p, int slot)
 {
-	int type = p->body.slots[slot].type;
+	int type = p->mon.body.slots[slot].type;
 
 	/* Heavy */
 	if ((type == EQUIP_WEAPON && p->mon.state.heavy_wield) ||
 			(type == EQUIP_WEAPON && p->mon.state.heavy_shoot))
 		return slot_table[type].heavy_describe;
 	else if (slot_table[type].name_in_desc)
-		return format(slot_table[type].describe, p->body.slots[slot].name);
+		return format(slot_table[type].describe, p->mon.body.slots[slot].name);
 	else
 		return slot_table[type].describe;
 }
@@ -401,7 +401,7 @@ bool minus_ac(struct player *p)
 	if (!p->gear) return false;
 
 	/* Count the armor slots */
-	for (i = 0; i < p->body.count; i++) {
+	for (i = 0; i < p->mon.body.count; i++) {
 		/* Ignore non-armor */
 		if (slot_type_is(p, i, EQUIP_WEAPON)) continue;
 		if (slot_type_is(p, i, EQUIP_BOW)) continue;
@@ -414,7 +414,7 @@ bool minus_ac(struct player *p)
 	}
 
 	/* Pick one at random */
-	for (i = p->body.count - 1; i >= 0; i--) {
+	for (i = p->mon.body.count - 1; i >= 0; i--) {
 		/* Ignore non-armor */
 		if (slot_type_is(p, i, EQUIP_WEAPON)) continue;
 		if (slot_type_is(p, i, EQUIP_BOW)) continue;
@@ -467,8 +467,8 @@ char gear_to_label(struct player *p, struct object *obj)
 	int i;
 
 	/* Equipment is easy */
-	if (object_is_equipped(p->body, obj)) {
-		return labels[equipped_item_slot(p->body, obj)];
+	if (object_is_equipped(p->mon.body, obj)) {
+		return labels[equipped_item_slot(p->mon.body, obj)];
 	}
 
 	/* Check the quiver */
@@ -504,9 +504,9 @@ static bool gear_excise_object(struct player *p, struct object *obj)
 	p->upkeep->total_weight -= obj->number * object_weight_one(obj);
 
 	/* Make sure it isn't still equipped */
-	for (i = 0; i < p->body.count; i++) {
+	for (i = 0; i < p->mon.body.count; i++) {
 		if (slot_object(p, i) == obj) {
-			p->body.slots[i].obj = NULL;
+			p->mon.body.slots[i].obj = NULL;
 			p->upkeep->equip_cnt--;
 		}
 	}
@@ -568,7 +568,7 @@ struct object *gear_object_for_use(struct player *p, struct object *obj,
 			 * aggregating those quantities so there would be
 			 * confusion if aggregating the count).
 			 */
-			if (object_is_equipped(p->body, obj)
+			if (object_is_equipped(p->mon.body, obj)
 					|| tval_can_have_charges(obj)
 					|| tval_is_rod(obj)
 					|| obj->timeout > 0) {
@@ -597,7 +597,7 @@ struct object *gear_object_for_use(struct player *p, struct object *obj,
 				 * Use same logic as above for showing an
 				 * aggregate total.
 				 */
-				if (object_is_equipped(p->body, obj)
+				if (object_is_equipped(p->mon.body, obj)
 						|| tval_can_have_charges(obj)
 						|| tval_is_rod(obj)
 						|| obj->timeout > 0) {
@@ -851,7 +851,7 @@ void inven_carry(struct player *p, struct object *obj, bool absorb,
 				object_is_in_quiver(p, gear_obj) ?
 				OSTACK_QUIVER : OSTACK_PACK;
 
-			if (!object_is_equipped(p->body, gear_obj) &&
+			if (!object_is_equipped(p->mon.body, gear_obj) &&
 					object_mergeable(gear_obj, obj, stack_mode)) {
 				combine_item = gear_obj;
 			}
@@ -948,7 +948,7 @@ void inven_carry(struct player *p, struct object *obj, bool absorb,
  */
 void inven_wield(struct object *obj, int slot, bool verbose)
 {
-	struct object *wielded, *old = player->body.slots[slot].obj;
+	struct object *wielded, *old = player->mon.body.slots[slot].obj;
 
 	const char *fmt;
 	char o_name[80];
@@ -996,7 +996,7 @@ void inven_wield(struct object *obj, int slot, bool verbose)
 	}
 
 	/* Wear the new stuff */
-	player->body.slots[slot].obj = wielded;
+	player->mon.body.slots[slot].obj = wielded;
 
 	/* Do any ID-on-wield */
 	object_learn_on_wield(player, wielded);
@@ -1054,12 +1054,12 @@ void inven_wield(struct object *obj, int slot, bool verbose)
  */
 void inven_takeoff(struct object *obj)
 {
-	int slot = equipped_item_slot(player->body, obj);
+	int slot = equipped_item_slot(player->mon.body, obj);
 	const char *act;
 	char o_name[80];
 
 	/* Paranoia */
-	if (slot == player->body.count) return;
+	if (slot == player->mon.body.count) return;
 
 	/* Describe the object */
 	object_desc(o_name, sizeof(o_name), obj, ODESC_PREFIX | ODESC_FULL,
@@ -1076,7 +1076,7 @@ void inven_takeoff(struct object *obj)
 		act = "You were wearing";
 
 	/* De-equip the object */
-	player->body.slots[slot].obj = NULL;
+	player->mon.body.slots[slot].obj = NULL;
 	player->upkeep->equip_cnt--;
 
 	player->upkeep->update |= (PU_BONUS | PU_INVEN | PU_UPDATE_VIEW);
@@ -1127,7 +1127,7 @@ void inven_drop(struct object *obj, int amt)
 	if (amt > obj->number) amt = obj->number;
 
 	/* Take off equipment, don't combine */
-	if (object_is_equipped(player->body, obj)) {
+	if (object_is_equipped(player->mon.body, obj)) {
 		equipped = true;
 		inven_takeoff(obj);
 	}

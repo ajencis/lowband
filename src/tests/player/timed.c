@@ -1618,7 +1618,7 @@ static int test_set_timed5(void *state) {
 
 	require(timed_effects[TMD_SINVIS].oflag_syn
 		&& timed_effects[TMD_SINVIS].oflag_dup != OF_NONE);
-	require(weapon_slot >= 0 && weapon_slot < player->body.count);
+	require(weapon_slot >= 0 && weapon_slot < player->mon.body.count);
 	for (i = 0; i < (int) N_ELEMENTS(test_cases); ++i) {
 		bool result;
 
@@ -1628,13 +1628,13 @@ static int test_set_timed5(void *state) {
 			of_wipe(st->weapon->flags);
 			of_on(st->weapon->flags,
 				timed_effects[TMD_SINVIS].oflag_dup);
-			player->body.slots[weapon_slot].obj = st->weapon;
+			player->mon.body.slots[weapon_slot].obj = st->weapon;
 		} else {
 			switch (randint0(3)) {
 			case 0:
 				of_off(player->obj_k->flags,
 					timed_effects[TMD_SINVIS].oflag_dup);
-				player->body.slots[weapon_slot].obj = NULL;
+				player->mon.body.slots[weapon_slot].obj = NULL;
 				break;
 
 			case 1:
@@ -1643,14 +1643,14 @@ static int test_set_timed5(void *state) {
 				of_wipe(st->weapon->flags);
 				of_on(st->weapon->flags,
 					timed_effects[TMD_SINVIS].oflag_dup);
-				player->body.slots[weapon_slot].obj =
+				player->mon.body.slots[weapon_slot].obj =
 					st->weapon;
 				break;
 
 			case 2:
 				of_on(player->obj_k->flags,
 					timed_effects[TMD_SINVIS].oflag_dup);
-				player->body.slots[weapon_slot].obj = NULL;
+				player->mon.body.slots[weapon_slot].obj = NULL;
 				break;
 			}
 		}
@@ -1857,7 +1857,7 @@ static int test_inc_check0(void *state) {
 	int flag_idx;
 	bool result;
 
-	require(weapon_slot >= 0 && weapon_slot < player->body.count);
+	require(weapon_slot >= 0 && weapon_slot < player->mon.body.count);
 
 	/* Test for effect that has no protection. */
 	null(timed_effects[TMD_FOOD].fail);
@@ -1890,7 +1890,7 @@ static int test_inc_check0(void *state) {
 	of_off(player->state.flags, flag_idx);
 	of_off(player->known_state.flags, flag_idx);
 	of_off(player->obj_k->flags, flag_idx);
-	player->body.slots[weapon_slot].obj = NULL;
+	player->mon.body.slots[weapon_slot].obj = NULL;
 	result = player_inc_check(player, TMD_SLOW, false);
 	eq(result, true);
 	require(!of_has(player->obj_k->flags, flag_idx));
@@ -1900,7 +1900,7 @@ static int test_inc_check0(void *state) {
 	of_on(player->state.flags, flag_idx);
 	of_wipe(st->weapon->flags);
 	of_on(st->weapon->flags, flag_idx);
-	player->body.slots[weapon_slot].obj = st->weapon;
+	player->mon.body.slots[weapon_slot].obj = st->weapon;
 	result = player_inc_check(player, TMD_SLOW, false);
 	eq(result, false);
 	require(of_has(player->obj_k->flags, flag_idx));
@@ -1941,7 +1941,7 @@ static int test_inc_check0(void *state) {
 	player->state.el_info[flag_idx].res_level = 0;
 	player->known_state.el_info[flag_idx].res_level = 0;
 	player->obj_k->el_info[flag_idx].res_level = 0;
-	player->body.slots[weapon_slot].obj = NULL;
+	player->mon.body.slots[weapon_slot].obj = NULL;
 	result = player_inc_check(player, TMD_POISONED, false);
 	eq(result, true);
 	require(player->obj_k->el_info[flag_idx].res_level == 0);
@@ -1950,7 +1950,7 @@ static int test_inc_check0(void *state) {
 	require(player->obj_k->el_info[flag_idx].res_level == 0);
 	player->state.el_info[flag_idx].res_level = 1;
 	st->weapon->el_info[flag_idx].res_level = 1;
-	player->body.slots[weapon_slot].obj = st->weapon;
+	player->mon.body.slots[weapon_slot].obj = st->weapon;
 	result = player_inc_check(player, TMD_POISONED, false);
 	eq(result, false);
 	require(player->obj_k->el_info[flag_idx].res_level != 0);
@@ -1995,7 +1995,7 @@ static int test_inc_check0(void *state) {
 	player->state.el_info[flag_idx].res_level = 0;
 	player->known_state.el_info[flag_idx].res_level = 0;
 	player->obj_k->el_info[flag_idx].res_level = 0;
-	player->body.slots[weapon_slot].obj = NULL;
+	player->mon.body.slots[weapon_slot].obj = NULL;
 	result = player_inc_check(player, TMD_OPP_ACID, false);
 	eq(result, true);
 	require(player->obj_k->el_info[flag_idx].res_level == 0);
@@ -2004,7 +2004,7 @@ static int test_inc_check0(void *state) {
 	require(player->obj_k->el_info[flag_idx].res_level == 0);
 	player->state.el_info[flag_idx].res_level = -1;
 	st->weapon->el_info[flag_idx].res_level = -1;
-	player->body.slots[weapon_slot].obj = st->weapon;
+	player->mon.body.slots[weapon_slot].obj = st->weapon;
 	result = player_inc_check(player, TMD_OPP_ACID, false);
 	eq(result, false);
 	require(player->obj_k->el_info[flag_idx].res_level != 0);
@@ -2042,7 +2042,7 @@ static int test_inc_check0(void *state) {
 	}
 	pf_off(player->state.pflags, flag_idx);
 	pf_off(player->known_state.pflags, flag_idx);
-	player->body.slots[weapon_slot].obj = NULL;
+	player->mon.body.slots[weapon_slot].obj = NULL;
 	result = player_inc_check(player, TMD_CUT, false);
 	eq(result, true);
 	result = player_inc_check(player, TMD_CUT, true);

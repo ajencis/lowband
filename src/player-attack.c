@@ -1324,8 +1324,8 @@ int get_monster_attacks(struct player *p, struct player_state *ps,
 	int availslots[EQUIP_MAX] = { 0 };
 
 	// count slots of each type full and empty
-	for (i = 0; i < p->body.count; i++) {
-		struct equip_slot *slot = &p->body.slots[i];
+	for (i = 0; i < p->mon.body.count; i++) {
+		struct equip_slot *slot = &p->mon.body.slots[i];
 		if (slot->obj) slotsfull[slot->type]++;
 		else slotsempty[slot->type]++;
 	}
@@ -1464,11 +1464,11 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 	int maxspin = rad * 2 + get_power_scale(p, PP_WHIRLWIND, rad * 3) + 1;
 
 	/*if (weap) {
-		int slotnum = object_slot(p->body, weap);
-		if (slotnum < p->body.count && my_stristr(p->body.slots[slotnum].name, "left")) {
+		int slotnum = object_slot(p->mon.body, weap);
+		if (slotnum < p->mon.body.count && my_stristr(p->mon.body.slots[slotnum].name, "left")) {
 			clockwise = true;
 		}
-		else if (slotnum < p->body.count && my_stristr(p->body.slots[slotnum].name, "right")) {
+		else if (slotnum < p->mon.body.count && my_stristr(p->mon.body.slots[slotnum].name, "right")) {
 			clockwise = false;
 		}
 	}*/
@@ -1600,7 +1600,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	/* Best attack from all slays or brands on all non-launcher equipment */
 	b = 0;
 	s = 0;
-	for (j = 0; j < p->body.count; j++) {
+	for (j = 0; j < p->mon.body.count; j++) {
 		if (slot_type_is(p, j, EQUIP_BOW) || slot_type_is(p, j, EQUIP_WEAPON)) {
 			continue;
 		}
@@ -1729,10 +1729,10 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 	int nblows = p->mon.state.num_blows / 100;
 	int bash_quality, bash_dam, energy_lost;
 
-	for (i = 0; i < p->body.count; i++) {
-		if (p->body.slots[i].obj == weapon) continue;
-		if (p->body.slots[i].obj && p->body.slots[i].obj->kind->tval == TV_SHIELD)
-			shield = p->body.slots[i].obj;
+	for (i = 0; i < p->mon.body.count; i++) {
+		if (p->mon.body.slots[i].obj == weapon) continue;
+		if (p->mon.body.slots[i].obj && p->mon.body.slots[i].obj->kind->tval == TV_SHIELD)
+			shield = p->mon.body.slots[i].obj;
 	}
 
 	/* Bashing chance depends on melee skill, DEX, and a level bonus. */
@@ -2432,7 +2432,7 @@ void do_cmd_throw(struct command *cmd) {
 		return;
 	}
 
-	if (object_is_equipped(player->body, obj)) {
+	if (object_is_equipped(player->mon.body, obj)) {
 		assert(obj_can_takeoff(obj) && tval_is_melee_weapon(obj));
 		inven_takeoff(obj);
 	}

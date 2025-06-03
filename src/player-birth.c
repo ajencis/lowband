@@ -484,14 +484,14 @@ static void player_embody(struct player *p)
 
 	assert(p->race);
 
-	memcpy(&p->body, body, sizeof(p->body));
+	memcpy(&p->mon.body, body, sizeof(p->mon.body));
 	my_strcpy(buf, body->name, sizeof(buf));
-	p->body.name = string_make(buf);
-	p->body.slots = mem_zalloc(p->body.count * sizeof(struct equip_slot));
-	for (i = 0; i < p->body.count; i++) {
-		p->body.slots[i].type = body->slots[i].type;
+	p->mon.body.name = string_make(buf);
+	p->mon.body.slots = mem_zalloc(p->mon.body.count * sizeof(struct equip_slot));
+	for (i = 0; i < p->mon.body.count; i++) {
+		p->mon.body.slots[i].type = body->slots[i].type;
 		my_strcpy(buf, body->slots[i].name, sizeof(buf));
-		p->body.slots[i].name = string_make(buf);
+		p->mon.body.slots[i].name = string_make(buf);
 	}
 }
 
@@ -620,7 +620,7 @@ void wield_all(struct player *p)
 
 		/* Make sure we can wield it */
 		slot = wield_slot(obj);
-		if (slot < 0 || slot >= p->body.count) {
+		if (slot < 0 || slot >= p->mon.body.count) {
 			continue;
 		}
 
@@ -640,7 +640,7 @@ void wield_all(struct player *p)
 		}
 
 		/* Wear the new stuff */
-		p->body.slots[slot].obj = obj;
+		p->mon.body.slots[slot].obj = obj;
 		object_learn_on_wield(p, obj);
 
 		/* Increment the equip counter by hand */

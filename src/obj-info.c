@@ -892,7 +892,7 @@ static int obj_known_blows(const struct object *obj, int max_num,
 	if (!tval_is_melee_weapon(obj)) return 0;
 
 	/* Pretend we're wielding the object */
-	player->body.slots[weapon_slot].obj = (struct object *) obj;
+	player->mon.body.slots[weapon_slot].obj = (struct object *) obj;
 
 	/* Calculate the player's hypothetical state */
 	memcpy(&state, &player->mon.state, sizeof(state));
@@ -932,7 +932,7 @@ static int obj_known_blows(const struct object *obj, int max_num,
 
 			/* Unlikely */
 			if (num == max_num) {
-				player->body.slots[weapon_slot].obj = current_weapon;
+				player->mon.body.slots[weapon_slot].obj = current_weapon;
 				return num;
 			}
 
@@ -973,7 +973,7 @@ static int obj_known_blows(const struct object *obj, int max_num,
 	}
 
 	/* Stop pretending */
-	player->body.slots[weapon_slot].obj = current_weapon;
+	player->mon.body.slots[weapon_slot].obj = current_weapon;
 
 	return num;
 }
@@ -1079,7 +1079,7 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 
 	/* Pretend we're wielding the object if it's a weapon */
 	if (weapon)
-		player->body.slots[weapon_slot].obj = (struct object *) obj;
+		player->mon.body.slots[weapon_slot].obj = (struct object *) obj;
 
 	/* Calculate the player's hypothetical state */
 	memcpy(&state, &player->mon.state, sizeof(state));
@@ -1088,7 +1088,7 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 	calc_bonuses(player, &player->mon, &state, true, false);
 
 	/* Stop pretending */
-	player->body.slots[weapon_slot].obj = current_weapon;
+	player->mon.body.slots[weapon_slot].obj = current_weapon;
 
 	/* Finish if dice not known */
 	dice = obj->known->dd;
@@ -1144,7 +1144,7 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 	 */
 	*nonweap_slay = false;
 	if (weapon)	{
-		for (i = 2; i < player->body.count; i++) {
+		for (i = 2; i < player->mon.body.count; i++) {
 			struct object *slot_obj = slot_object(player, i);
 			if (!slot_obj)
 				continue;
@@ -1323,7 +1323,7 @@ bool o_obj_known_damage(const struct object *obj, int *normal_damage,
 
 	/* Pretend we're wielding the object if it's a weapon */
 	if (weapon)
-		player->body.slots[weapon_slot].obj = (struct object *) obj;
+		player->mon.body.slots[weapon_slot].obj = (struct object *) obj;
 
 	/* Calculate the player's hypothetical state */
 	memcpy(&state, &player->state, sizeof(state));
@@ -1332,7 +1332,7 @@ bool o_obj_known_damage(const struct object *obj, int *normal_damage,
 	calc_bonuses(player, &state, true, false);
 
 	/* Stop pretending */
-	player->body.slots[weapon_slot].obj = current_weapon;
+	player->mon.body.slots[weapon_slot].obj = current_weapon;
 
 	/* Finish if dice not known */
 	dice = obj->known->dd * 100;
@@ -1394,7 +1394,7 @@ bool o_obj_known_damage(const struct object *obj, int *normal_damage,
 	 */
 	*nonweap_slay = false;
 	if (weapon)	{
-		for (i = 2; i < player->body.count; i++) {
+		for (i = 2; i < player->mon.body.count; i++) {
 			struct object *slot_obj = slot_object(player, i);
 			if (!slot_obj)
 				continue;
@@ -1769,7 +1769,7 @@ static void obj_known_misc_combat(const struct object *obj, bool *thrown_effect,
 		if (weapon_slot == -1) return;
 
 		/* Pretend we're wielding the object */
-		player->body.slots[weapon_slot].obj = (struct object *) obj;
+		player->mon.body.slots[weapon_slot].obj = (struct object *) obj;
 
 		/* Calculate the player's hypothetical state */
 		memcpy(&state, &player->mon.state, sizeof(state));
@@ -1778,7 +1778,7 @@ static void obj_known_misc_combat(const struct object *obj, bool *thrown_effect,
 		calc_bonuses(player, &player->mon, &state, true, false);
 
 		/* Stop pretending */
-		player->body.slots[weapon_slot].obj = current;
+		player->mon.body.slots[weapon_slot].obj = current;
 
 		/* Warn about heavy weapons */
 		*heavy = state.heavy_wield;
@@ -1872,7 +1872,7 @@ static bool obj_known_digging(struct object *obj, int deciturns[])
 	slot = wield_slot(obj);
 	current = slot_object(player, slot);
 	if (slot == -1) return false; // no weapon slot to put it in
-	player->body.slots[slot].obj = obj;
+	player->mon.body.slots[slot].obj = obj;
 
 	/* Calculate the player's hypothetical state */
 	memcpy(&state, &player->mon.state, sizeof(state));
@@ -1881,7 +1881,7 @@ static bool obj_known_digging(struct object *obj, int deciturns[])
 	calc_bonuses(player, &player->mon, &state, true, false);
 
 	/* Stop pretending */
-	player->body.slots[slot].obj = current;
+	player->mon.body.slots[slot].obj = current;
 
 	calc_digging_chances(&state, chances);
 

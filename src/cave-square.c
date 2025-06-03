@@ -1202,6 +1202,7 @@ void square_know_equipped_object(struct chunk *c, struct loc grid, bool (*pred)(
 {
 	struct object *obj;
 	struct monster *mon;
+	uint16_t i;
 
 	if (c != cave) return;
 
@@ -1212,8 +1213,9 @@ void square_know_equipped_object(struct chunk *c, struct loc grid, bool (*pred)(
 		return;
 	}
 
-	for (obj = mon->equipped_obj; obj; obj = obj->next) {
-		if (!pred || (*pred)(obj)) {
+	for (i = 0; i < mon->body.count; ++i) {
+		obj = mon->body.slots[i].obj;
+		if (obj && (!pred || (*pred)(obj))) {
 			object_see(player, obj);
 		}
 	}

@@ -75,7 +75,7 @@ static bool flush_gear(void) {
 		struct object *next = curr->next;
 		bool none_left = false;
 
-		if (object_is_equipped(player->body, curr)) {
+		if (object_is_equipped(player->mon.body, curr)) {
 			inven_takeoff(curr);
 		}
 		curr = gear_object_for_use(player, curr, curr->number, false,
@@ -122,7 +122,7 @@ static bool populate_gear(const struct in_slot_desc *slots) {
 		}
 		if (slots->equipped) {
 			inven_wield(obj, wield_slot(obj));
-			if (!object_is_equipped(player->body, obj)) {
+			if (!object_is_equipped(player->mon.body, obj)) {
 				return false;
 			}
 		}
@@ -158,7 +158,7 @@ static bool verify_gear(struct player *p, const struct out_slot_desc *slots) {
 				|| (obj->origin != ORIGIN_MIXED
 				&& obj->origin_depth != slots->origin_depth)
 				|| slots->equipped !=
-				object_is_equipped(p->body, obj)) {
+				object_is_equipped(p->mon.body, obj)) {
 			result = false;
 			break;
 		}

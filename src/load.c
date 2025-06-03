@@ -253,6 +253,42 @@ static struct object *rd_item(void)
 	return obj;
 }
 
+static void rd_body(struct monster *mon, struct chunk *c)
+{
+	char body_name[80], slot_name[80];
+	uint16_t tmp16u, i;
+	uint8_t tmp8u;
+
+	rd_string(body_name, sizeof body_name);
+	mon->body.name = string_make(body_name);
+
+	rd_u16b(&tmp16u);
+	mon->body.count = tmp16u;
+
+	mon->body.slots = mem_zalloc(sizeof *mon->body.slots * mon->body.count);
+
+	for (i = 0; i < mon->body.count; ++i) {
+		rd_u16b(&tmp16u);
+		mon->body.slots[i].type = tmp16u;
+
+		rd_string(slot_name, sizeof slot_name);
+		mon->body.slots[i].name = string_make(slot_name);
+
+		rd_byte(&tmp8u);
+		if (tmp8u) {
+			struct object *eq = rd_item();
+			mon->body.slots[i].obj = eq;
+
+			assert(eq->oidx);
+			assert(c->objects[eq->oidx] == NULL);
+			c->objects[eq->oidx] = eq;
+		}
+		else {
+			mon->body.slots[i].obj = NULL;
+		}
+	}
+}
+
 
 /**
  * Read a monster
@@ -341,8 +377,10 @@ static bool rd_monster(struct chunk *c, struct monster *mon)
 		assert(c->objects[obj->oidx] == NULL);
 		c->objects[obj->oidx] = obj;
 	}
+
+	rd_body(mon, c);
 	// L: likewise with equipped objects
-	while (true) {
+	/*while (true) {
 		struct object *obj = rd_item();
 		if (!obj) {
 			break;
@@ -352,7 +390,7 @@ static bool rd_monster(struct chunk *c, struct monster *mon)
 		assert(obj->oidx);
 		assert(c->objects[obj->oidx] == NULL);
 		c->objects[obj->oidx] = obj;
-	}
+	}*/
 
 	/* Read group info */
 	rd_u16b(&tmp16u);
@@ -810,19 +848,19 @@ int rd_player(void)
 
 	/* Player body */
 	rd_string(buf, sizeof(buf));
-	player->body.name = string_make(buf);
-	rd_u16b(&player->body.count);
-	if (player->body.count > z_info->equip_slots_max) {
-		note(format("Too many (%u) body parts!", player->body.count));
+	player->mon.body.name = string_make(buf);
+	rd_u16b(&player->mon.body.count);
+	if (player->mon.body.count > z_info->equip_slots_max) {
+		note(format("Too many (%u) body parts!", player->mon.body.count));
 		return (-1);
 	}
 
-	player->body.slots = mem_zalloc(player->body.count *
+	player->mon.body.slots = mem_zalloc(player->mon.body.count *
 									sizeof(struct equip_slot));
-	for (i = 0; i < player->body.count; i++) {
-		rd_u16b(&player->body.slots[i].type);
+	for (i = 0; i < player->mon.body.count; i++) {
+		rd_u16b(&player->mon.body.slots[i].type);
 		rd_string(buf, sizeof(buf));
-		player->body.slots[i].name = string_make(buf);
+		player->mon.body.slots[i].name = string_make(buf);
 	}
 
 	rd_u16b(&tmp16u);
@@ -1302,8 +1340,8 @@ static int rd_gear_aux(rd_item_t rd_item_version, struct object **gear)
 		last_gear_obj = obj;
 
 		/* If it's equipment, wield it */
-		if (code < player->body.count) {
-			player->body.slots[code].obj = obj;
+		if (code < player->mon.body.count) {
+			player->mon.body.slots[code].obj = obj;
 			player->upkeep->equip_cnt++;
 		}
 

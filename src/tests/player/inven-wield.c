@@ -62,7 +62,7 @@ static bool empty_gear(struct player *p) {
 		}
 
 		next = curr->next;
-		if (object_is_equipped(p->body, curr)) {
+		if (object_is_equipped(p->mon.body, curr)) {
 			if (pass == 0) {
 				curr = next;
 				continue;
@@ -230,7 +230,7 @@ static int test_inven_wield_pack_single_empty(void *state) {
 	old_slots = pack_slots_used(player);
 	slot = wield_slot(obj);
 	inven_wield(obj, slot);
-	require(object_is_equipped(player->body, obj));
+	require(object_is_equipped(player->mon.body, obj));
 	require(object_is_carried(player, obj));
 	require(obj->number == 1);
 	require(obj == slot_object(player, slot));
@@ -258,11 +258,11 @@ static int test_inven_wield_pack_stack_empty(void *state) {
 	slot = wield_slot(obj);
 	inven_wield(obj, slot);
 	/* The wielded one was split off. */
-	require(!object_is_equipped(player->body, obj));
+	require(!object_is_equipped(player->mon.body, obj));
 	require(object_is_carried(player, obj));
 	require(obj->number == 2);
 	split = slot_object(player, slot);
-	require(object_is_equipped(player->body, split));
+	require(object_is_equipped(player->mon.body, split));
 	require(object_is_carried(player, split));
 	require(check_similar(obj, split));
 	require(split->number == 1);
@@ -295,11 +295,11 @@ static int test_inven_wield_pack_single_filled(void *state) {
 	old_weight = player->upkeep->total_weight;
 	old_slots = pack_slots_used(player);
 	inven_wield(obj2, slot);
-	require(object_is_equipped(player->body, obj2));
+	require(object_is_equipped(player->mon.body, obj2));
 	require(object_is_carried(player, obj2));
 	require(obj2->number == 1);
 	require(obj2 == slot_object(player, slot));
-	require(!object_is_equipped(player->body, obj1));
+	require(!object_is_equipped(player->mon.body, obj1));
 	require(object_is_carried(player, obj1));
 	require(player->upkeep->equip_cnt == 1);
 	require(old_weight == player->upkeep->total_weight);
@@ -332,11 +332,11 @@ static int test_inven_wield_pack_stack_filled(void *state) {
 	old_slots = pack_slots_used(player);
 	inven_wield(obj2, slot);
 	/* The wielded one was split off. */
-	require(!object_is_equipped(player->body, obj2));
+	require(!object_is_equipped(player->mon.body, obj2));
 	require(object_is_carried(player, obj2));
 	require(obj2->number == 1);
 	split = slot_object(player, slot);
-	require(object_is_equipped(player->body, split));
+	require(object_is_equipped(player->mon.body, split));
 	require(object_is_carried(player, split));
 	require(check_similar(obj2, split));
 	require(split->number == 1);
@@ -363,7 +363,7 @@ static int test_inven_wield_floor_single_empty(void *state) {
 	old_slots = pack_slots_used(player);
 	slot = wield_slot(obj);
 	inven_wield(obj, slot);
-	require(object_is_equipped(player->body, obj));
+	require(object_is_equipped(player->mon.body, obj));
 	require(object_is_carried(player, obj));
 	require(obj == slot_object(player, slot));
 	require(obj->number == 1);
@@ -393,11 +393,11 @@ static int test_inven_wield_floor_stack_empty(void *state) {
 	old_slots = pack_slots_used(player);
 	slot = wield_slot(obj);
 	inven_wield(obj, slot);
-	require(!object_is_equipped(player->body, obj));
+	require(!object_is_equipped(player->mon.body, obj));
 	require(!object_is_carried(player, obj));
 	require(obj->number == 3);
 	split = slot_object(player, slot);
-	require(object_is_equipped(player->body, split));
+	require(object_is_equipped(player->mon.body, split));
 	require(object_is_carried(player, split));
 	require(check_similar(obj, split));
 	require(split->number == 1);
@@ -433,11 +433,11 @@ static int test_inven_wield_floor_single_filled(void *state) {
 	note = false;
 	require(floor_carry(cave, player->mon.grid, obj2, &note));
 	inven_wield(obj2, slot);
-	require(object_is_equipped(player->body, obj2));
+	require(object_is_equipped(player->mon.body, obj2));
 	require(object_is_carried(player, obj2));
 	require(obj2->number == 1);
 	require(obj2 == slot_object(player, slot));
-	require(!object_is_equipped(player->body, obj1));
+	require(!object_is_equipped(player->mon.body, obj1));
 	require(object_is_carried(player, obj1));
 	require(player->upkeep->equip_cnt == 1);
 	require(old_weight + object_weight_one(obj2)
@@ -474,15 +474,15 @@ static int test_inven_wield_floor_stack_filled(void *state) {
 	require(wield_slot(obj2) == slot);
 	inven_wield(obj2, slot);
 	/* The wielded one is split off. */
-	require(!object_is_equipped(player->body, obj2));
+	require(!object_is_equipped(player->mon.body, obj2));
 	require(!object_is_carried(player, obj2));
 	require(obj2->number == 2);
 	split = slot_object(player, slot);
-	require(object_is_equipped(player->body, split));
+	require(object_is_equipped(player->mon.body, split));
 	require(object_is_carried(player, split));
 	require(check_similar(obj2, split));
 	require(split->number == 1);
-	require(!object_is_equipped(player->body, obj1));
+	require(!object_is_equipped(player->mon.body, obj1));
 	require(object_is_carried(player, obj1));
 	require(player->upkeep->equip_cnt == 1);
 	require(old_weight + object_weight_one(obj2)
@@ -518,11 +518,11 @@ static int test_inven_wield_pack_full_no_overflow(void *state) {
 	old_slots = pack_slots_used(player);
 	require(wield_slot(obj2) == slot);
 	inven_wield(obj2, slot);
-	require(object_is_equipped(player->body, obj2));
+	require(object_is_equipped(player->mon.body, obj2));
 	require(object_is_carried(player, obj2));
 	require(obj2->number == 1);
 	require(obj2 == slot_object(player, slot));
-	require(!object_is_equipped(player->body, obj1));
+	require(!object_is_equipped(player->mon.body, obj1));
 	require(object_is_carried(player, obj1));
 	require(player->upkeep->equip_cnt == 1);
 	require(old_weight == player->upkeep->total_weight);
@@ -559,15 +559,15 @@ static int test_inven_wield_pack_full_overflow(void *state) {
 	require(wield_slot(obj2) == slot);
 	inven_wield(obj2, slot);
 	/* Wielded one is split off. */
-	require(!object_is_equipped(player->body, obj2));
+	require(!object_is_equipped(player->mon.body, obj2));
 	require(object_is_carried(player, obj2));
 	require(obj2->number == 2);
 	split = slot_object(player, slot);
-	require(object_is_equipped(player->body, split));
+	require(object_is_equipped(player->mon.body, split));
 	require(object_is_carried(player, split));
 	require(check_similar(obj2, split));
 	require(split->number == 1);
-	require(!object_is_equipped(player->body, obj1));
+	require(!object_is_equipped(player->mon.body, obj1));
 	require(!object_is_carried(player, obj1));
 	require(player->upkeep->equip_cnt == 1);
 	require(old_weight - object_weight_one(obj1)
@@ -603,11 +603,11 @@ static int test_inven_wield_floor_full_overflow(void *state) {
 	require(floor_carry(cave, player->mon.grid, obj2, &note));
 	require(wield_slot(obj2) == slot);
 	inven_wield(obj2, slot);
-	require(object_is_equipped(player->body, obj2));
+	require(object_is_equipped(player->mon.body, obj2));
 	require(object_is_carried(player, obj2));
 	require(obj2->number == 1);
 	require(slot_object(player, slot) == obj2);
-	require(!object_is_equipped(player->body, obj1));
+	require(!object_is_equipped(player->mon.body, obj1));
 	require(!object_is_carried(player, obj1));
 	require(player->upkeep->equip_cnt == 1);
 	require(old_weight - object_weight_one(obj1) + object_weight_one(obj2)
@@ -633,7 +633,7 @@ static int test_inven_wield_ring_none(void *state) {
 	old_slots = pack_slots_used(player);
 	slot = wield_slot(obj);
 	inven_wield(obj, slot);
-	require(object_is_equipped(player->body, obj));
+	require(object_is_equipped(player->mon.body, obj));
 	require(object_is_carried(player, obj));
 	require(obj->number == 1);
 	require(slot_object(player, slot) == obj);
@@ -670,11 +670,11 @@ static int test_inven_wield_ring_one(void *state) {
 	slot2 = wield_slot(obj2);
 	require(slot2 != slot1);
 	inven_wield(obj2, slot2);
-	require(object_is_equipped(player->body, obj2));
+	require(object_is_equipped(player->mon.body, obj2));
 	require(object_is_carried(player, obj2));
 	require(obj2->number == 1);
 	require(slot_object(player, slot2) == obj2);
-	require(object_is_equipped(player->body, obj1));
+	require(object_is_equipped(player->mon.body, obj1));
 	require(object_is_carried(player, obj1));
 	require(obj1->number == 1);
 	require(slot_object(player, slot1) == obj1);
@@ -719,30 +719,30 @@ static int test_inven_wield_ring_two(void *state) {
 	old_slots = pack_slots_used(player);
 	/* Verify that wearing the third ring in place of the first works. */
 	inven_wield(obj3, slot1);
-	require(object_is_equipped(player->body, obj3));
+	require(object_is_equipped(player->mon.body, obj3));
 	require(object_is_carried(player, obj3));
 	require(obj3->number == 1);
 	require(slot_object(player, slot1) == obj3);
-	require(object_is_equipped(player->body, obj2));
+	require(object_is_equipped(player->mon.body, obj2));
 	require(object_is_carried(player, obj2));
 	require(obj2->number == 1);
 	require(slot_object(player, slot2) == obj2);
-	require(!object_is_equipped(player->body, obj1));
+	require(!object_is_equipped(player->mon.body, obj1));
 	require(object_is_carried(player, obj1));
 	require(player->upkeep->equip_cnt == 2);
 	require(old_weight == player->upkeep->total_weight);
 	require(pack_slots_used(player) == old_slots);
 	/* Verify that wearing the first ring in place of the second works. */
 	inven_wield(obj1, slot2);
-	require(object_is_equipped(player->body, obj1));
+	require(object_is_equipped(player->mon.body, obj1));
 	require(object_is_carried(player, obj1));
 	require(obj1->number == 1);
 	require(slot_object(player, slot2) == obj1);
-	require(object_is_equipped(player->body, obj3));
+	require(object_is_equipped(player->mon.body, obj3));
 	require(object_is_carried(player, obj3));
 	require(obj3->number == 1);
 	require(slot_object(player, slot1) == obj3);
-	require(!object_is_equipped(player->body, obj2));
+	require(!object_is_equipped(player->mon.body, obj2));
 	require(object_is_carried(player, obj2));
 	require(player->upkeep->equip_cnt == 2);
 	require(old_weight == player->upkeep->total_weight);

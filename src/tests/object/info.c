@@ -493,8 +493,8 @@ static void collect_damage_results(double *avg, double *avg_var, int *work,
 
 	if (launcher) {
 		launcher_slot = wield_slot(launcher);
-		old_launcher = p->body.slots[launcher_slot].obj;
-		p->body.slots[launcher_slot].obj = launcher;
+		old_launcher = p->mon.body.slots[launcher_slot].obj;
+		p->mon.body.slots[launcher_slot].obj = launcher;
 		if (!old_launcher) {
 			++p->upkeep->equip_cnt;
 		}
@@ -503,8 +503,8 @@ static void collect_damage_results(double *avg, double *avg_var, int *work,
 		p->upkeep->update |= (PU_BONUS);
 	} else if (!throw) {
 		weapon_slot = wield_slot(weapon);
-		old_weapon = p->body.slots[weapon_slot].obj;
-		p->body.slots[weapon_slot].obj = weapon;
+		old_weapon = p->mon.body.slots[weapon_slot].obj;
+		p->mon.body.slots[weapon_slot].obj = weapon;
 		if (!old_weapon && weapon) {
 			++p->upkeep->equip_cnt;
 		} else if (old_weapon && !weapon) {
@@ -581,8 +581,8 @@ static void collect_damage_results(double *avg, double *avg_var, int *work,
 
 	/* Restore the player's equipment. */
 	if (launcher_slot != -1) {
-		assert(launcher && p->body.slots[launcher_slot].obj == launcher);
-		p->body.slots[launcher_slot].obj = old_launcher;
+		assert(launcher && p->mon.body.slots[launcher_slot].obj == launcher);
+		p->mon.body.slots[launcher_slot].obj = old_launcher;
 		if (!old_launcher) {
 			assert(p->upkeep->equip_cnt > 0);
 			--p->upkeep->equip_cnt;
@@ -593,8 +593,8 @@ static void collect_damage_results(double *avg, double *avg_var, int *work,
 		p->upkeep->update |= (PU_BONUS);
 	}
 	if (weapon_slot != -1) {
-		assert(p->body.slots[weapon_slot].obj == weapon);
-		p->body.slots[weapon_slot].obj = old_weapon;
+		assert(p->mon.body.slots[weapon_slot].obj == weapon);
+		p->mon.body.slots[weapon_slot].obj = old_weapon;
 		if (old_weapon && !weapon) {
 			++p->upkeep->equip_cnt;
 		} else if (!old_weapon && weapon) {
@@ -660,8 +660,8 @@ static int test_melee_weapon_damage_info(void *state)
 	object_learn_on_wield(player, gloves);
 	/* Wield them. */
 	gloves_slot = wield_slot(gloves);
-	old_gloves = player->body.slots[gloves_slot].obj;
-	player->body.slots[gloves_slot].obj = gloves;
+	old_gloves = player->mon.body.slots[gloves_slot].obj;
+	player->mon.body.slots[gloves_slot].obj = gloves;
 	if (!old_gloves) {
 		++player->upkeep->equip_cnt;
 	}
@@ -1345,7 +1345,7 @@ static int test_melee_weapon_damage_info(void *state)
 		mc_avg, mc_var);
 
 	/* Take off the gloves. */
-	player->body.slots[gloves_slot].obj = old_gloves;
+	player->mon.body.slots[gloves_slot].obj = old_gloves;
 	if (!old_gloves) {
 		assert(player->upkeep->equip_cnt > 0);
 		--player->upkeep->equip_cnt;
@@ -1405,8 +1405,8 @@ static int test_launched_weapon_damage_info(void *state)
 	object_learn_on_wield(player, launcher);
 	/* Wield it. */
 	launcher_slot = wield_slot(launcher);
-	old_launcher = player->body.slots[launcher_slot].obj;
-	player->body.slots[launcher_slot].obj = launcher;
+	old_launcher = player->mon.body.slots[launcher_slot].obj;
+	player->mon.body.slots[launcher_slot].obj = launcher;
 	if (!old_launcher) {
 		++player->upkeep->equip_cnt;
 	}
@@ -1467,8 +1467,8 @@ static int test_launched_weapon_damage_info(void *state)
 	object_learn_on_wield(player, gloves);
 	/* Wield them. */
 	gloves_slot = wield_slot(gloves);
-	old_gloves = player->body.slots[gloves_slot].obj;
-	player->body.slots[gloves_slot].obj = gloves;
+	old_gloves = player->mon.body.slots[gloves_slot].obj;
+	player->mon.body.slots[gloves_slot].obj = gloves;
 	if (!old_gloves) {
 		++player->upkeep->equip_cnt;
 	}
@@ -2456,7 +2456,7 @@ static int test_launched_weapon_damage_info(void *state)
 		mc_var);
 
 	/* Take off the gloves. */
-	player->body.slots[gloves_slot].obj = old_gloves;
+	player->mon.body.slots[gloves_slot].obj = old_gloves;
 	if (!old_gloves) {
 		assert(player->upkeep->equip_cnt > 0);
 		--player->upkeep->equip_cnt;
@@ -2468,7 +2468,7 @@ static int test_launched_weapon_damage_info(void *state)
 	update_stuff(player);
 
 	/* Take off the launcher. */
-	player->body.slots[launcher_slot].obj = old_launcher;
+	player->mon.body.slots[launcher_slot].obj = old_launcher;
 	if (!old_launcher) {
 		assert(player->upkeep->equip_cnt > 0);
 		--player->upkeep->equip_cnt;
@@ -2538,8 +2538,8 @@ static int test_thrown_weapon_damage_info(void *state)
 	object_learn_on_wield(player, gloves);
 	/* Wield them. */
 	gloves_slot = wield_slot(gloves);
-	old_gloves = player->body.slots[gloves_slot].obj;
-	player->body.slots[gloves_slot].obj = gloves;
+	old_gloves = player->mon.body.slots[gloves_slot].obj;
+	player->mon.body.slots[gloves_slot].obj = gloves;
 	if (!old_gloves) {
 		++player->upkeep->equip_cnt;
 	}
@@ -3097,7 +3097,7 @@ static int test_thrown_weapon_damage_info(void *state)
 		mc_var);
 
 	/* Take off the gloves. */
-	player->body.slots[gloves_slot].obj = old_gloves;
+	player->mon.body.slots[gloves_slot].obj = old_gloves;
 	if (!old_gloves) {
 		assert(player->upkeep->equip_cnt > 0);
 		--player->upkeep->equip_cnt;

@@ -162,7 +162,7 @@ static bool have_valid_char_sheet_config(void)
 		return false;
 	}
 	if (cached_config->res_cols !=
-		cached_config->res_nlabel + 1 + player->body.count) {
+		cached_config->res_nlabel + 1 + player->mon.body.count) {
 		return false;
 	}
 	return true;
@@ -234,7 +234,7 @@ static void configure_char_sheet(void)
 
 	cached_config->res_nlabel = 6;
 	cached_config->res_cols =
-		cached_config->res_nlabel + 1 + player->body.count;
+		cached_config->res_nlabel + 1 + player->mon.body.count;
 	cached_config->res_rows = 0;
 	for (i = 0; i < 4; ++i) {
 		int j;
@@ -368,7 +368,7 @@ static void display_player_equippy(int y, int x)
 	struct object *obj;
 
 	/* Dump equippy chars */
-	for (i = 0; i < player->body.count; ++i) {
+	for (i = 0; i < player->mon.body.count; ++i) {
 		/* Object */
 		obj = slot_object(player, i);
 
@@ -389,12 +389,12 @@ static void display_player_equippy(int y, int x)
 
 static void display_resistance_panel(int ipart, struct char_sheet_config *config)
 {
-	int *vals = mem_alloc((player->body.count + 1) * sizeof(*vals));
-	int *auxs = mem_alloc((player->body.count + 1) * sizeof(*auxs));
+	int *vals = mem_alloc((player->mon.body.count + 1) * sizeof(*vals));
+	int *auxs = mem_alloc((player->mon.body.count + 1) * sizeof(*auxs));
 	struct object **equipment =
-		mem_alloc(player->body.count * sizeof(*equipment));
+		mem_alloc(player->mon.body.count * sizeof(*equipment));
 	struct cached_object_data **ocaches =
-		mem_zalloc(player->body.count * sizeof(*ocaches));
+		mem_zalloc(player->mon.body.count * sizeof(*ocaches));
 	struct cached_player_data *pcache = NULL;
 	struct ui_entry_details render_details;
 	int i;
@@ -402,7 +402,7 @@ static void display_resistance_panel(int ipart, struct char_sheet_config *config
 	int col = config->res_regions[ipart].col;
 	int row = config->res_regions[ipart].row;
 
-	for (i = 0; i < player->body.count; i++) {
+	for (i = 0; i < player->mon.body.count; i++) {
 		equipment[i] = slot_object(player, i);
 	}
 
@@ -420,21 +420,21 @@ static void display_resistance_panel(int ipart, struct char_sheet_config *config
 	for (i = 0; i < config->n_resist_by_region[ipart]; i++, row++) {
 		const struct ui_entry *entry = config->resists_by_region[ipart][i].entry;
 
-		for (j = 0; j < player->body.count; j++) {
+		for (j = 0; j < player->mon.body.count; j++) {
 			compute_ui_entry_values_for_object(entry, equipment[j], player, ocaches + j, vals + j, auxs + j);
 		}
-		compute_ui_entry_values_for_player(entry, player, &pcache, vals + player->body.count, auxs + player->body.count);
+		compute_ui_entry_values_for_player(entry, player, &pcache, vals + player->mon.body.count, auxs + player->mon.body.count);
 
 		render_details.label_position.y = row;
 		render_details.value_position.y = row;
 		render_details.known_rune = is_ui_entry_for_known_rune(entry, player);
-		ui_entry_renderer_apply(get_ui_entry_renderer_index(entry), config->resists_by_region[ipart][i].label, config->res_nlabel, vals, auxs, player->body.count + 1, &render_details);
+		ui_entry_renderer_apply(get_ui_entry_renderer_index(entry), config->resists_by_region[ipart][i].label, config->res_nlabel, vals, auxs, player->mon.body.count + 1, &render_details);
 	}
 
 	if (pcache) {
 		release_cached_player_data(pcache);
 	}
-	for (i = 0; i < player->body.count; ++i) {
+	for (i = 0; i < player->mon.body.count; ++i) {
 		if (ocaches[i]) {
 			release_cached_object_data(ocaches[i]);
 		}
@@ -532,17 +532,17 @@ void display_player_stat_info(void)
  */
 static void display_player_sust_info(struct char_sheet_config *config)
 {
-	int *vals = mem_alloc((player->body.count + 1) * sizeof(*vals));
-	int *auxs = mem_alloc((player->body.count + 1) * sizeof(*auxs));
+	int *vals = mem_alloc((player->mon.body.count + 1) * sizeof(*vals));
+	int *auxs = mem_alloc((player->mon.body.count + 1) * sizeof(*auxs));
 	struct object **equipment =
-		mem_alloc(player->body.count * sizeof(*equipment));
+		mem_alloc(player->mon.body.count * sizeof(*equipment));
 	struct cached_object_data **ocaches =
-		mem_zalloc(player->body.count * sizeof(*ocaches));
+		mem_zalloc(player->mon.body.count * sizeof(*ocaches));
 	struct cached_player_data *pcache = NULL;
 	struct ui_entry_details render_details;
 	int i, row, col;
 
-	for (i = 0; i < player->body.count; i++) {
+	for (i = 0; i < player->mon.body.count; i++) {
 		equipment[i] = slot_object(player, i);
 	}
 
@@ -555,7 +555,7 @@ static void display_player_sust_info(struct char_sheet_config *config)
 	/* Header */
 	c_put_str(COLOUR_WHITE, "abcdefgimnop@", row - 1, col);
 
-	render_details.label_position.x = col + player->body.count + 5;
+	render_details.label_position.x = col + player->mon.body.count + 5;
 	render_details.value_position.x = col;
 	render_details.position_step = loc(1, 0);
 	render_details.combined_position = loc(0, 0);
@@ -567,22 +567,22 @@ static void display_player_sust_info(struct char_sheet_config *config)
 		const struct ui_entry *entry = config->stat_mod_entries[i];
 		int j;
 
-		for (j = 0; j < player->body.count; j++) {
+		for (j = 0; j < player->mon.body.count; j++) {
 			compute_ui_entry_values_for_object(entry, equipment[j], player, ocaches + j, vals + j, auxs + j);
 		}
-		compute_ui_entry_values_for_player(entry, player, &pcache, vals + player->body.count, auxs + player->body.count);
+		compute_ui_entry_values_for_player(entry, player, &pcache, vals + player->mon.body.count, auxs + player->mon.body.count);
 		/* Just use the sustain information for the player column. */
-		vals[player->body.count] = 0;
+		vals[player->mon.body.count] = 0;
 
 		render_details.label_position.y = row + i;
 		render_details.value_position.y = row + i;
-		ui_entry_renderer_apply(get_ui_entry_renderer_index(entry), NULL, 0, vals, auxs, player->body.count + 1, &render_details);
+		ui_entry_renderer_apply(get_ui_entry_renderer_index(entry), NULL, 0, vals, auxs, player->mon.body.count + 1, &render_details);
 	}
 
 	if (pcache) {
 		release_cached_player_data(pcache);
 	}
-	for (i = 0; i < player->body.count; ++i) {
+	for (i = 0; i < player->mon.body.count; ++i) {
 		if (ocaches[i]) {
 			release_cached_object_data(ocaches[i]);
 		}
@@ -1259,7 +1259,7 @@ void write_character_dump(ang_file *fff)
 
 	/* Dump the equipment */
 	file_putf(fff, "  [Character Equipment]\n\n");
-	for (i = 0; i < player->body.count; i++) {
+	for (i = 0; i < player->mon.body.count; i++) {
 		struct object *obj = slot_object(player, i);
 		if (!obj) continue;
 

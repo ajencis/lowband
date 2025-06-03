@@ -287,7 +287,7 @@ static void prt_equippy(int row, int col)
 	struct object *obj;
 
 	/* Dump equippy chars */
-	for (i = 0; i < player->body.count; i++) {
+	for (i = 0; i < player->mon.body.count; i++) {
 		/* Object */
 		obj = slot_object(player, i);
 

@@ -242,13 +242,13 @@ static void change_player_body(struct player *p, struct player_body *new)
 	struct object *equipped;
 
 	// unequip all items, store them in equipped_pile
-	if (p->body.slots) {
-		for (i = 0; i < p->body.count; i++) {
-			struct object *obj = p->body.slots[i].obj;
+	if (p->mon.body.slots) {
+		for (i = 0; i < p->mon.body.count; i++) {
+			struct object *obj = p->mon.body.slots[i].obj;
 			if (!obj) continue;
 
 			bool anyleft;
-			p->body.slots[i].obj = NULL;
+			p->mon.body.slots[i].obj = NULL;
 			p->upkeep->equip_cnt--;
 
 			p->upkeep->update |= (PU_BONUS | PU_INVEN | PU_UPDATE_VIEW);
@@ -263,23 +263,23 @@ static void change_player_body(struct player *p, struct player_body *new)
 	assert(!p->upkeep->equip_cnt);
 
 	// delete the player's body
-	if (p->body.slots) {
-		for (i = 0; i < p->body.count; i++) {
-			string_free(p->body.slots[i].name);
+	if (p->mon.body.slots) {
+		for (i = 0; i < p->mon.body.count; i++) {
+			string_free(p->mon.body.slots[i].name);
 		}
-		mem_free(p->body.slots);
-		p->body.slots = NULL;
+		mem_free(p->mon.body.slots);
+		p->mon.body.slots = NULL;
 	}
 	
 	// remake the player's new body
-	memcpy(&p->body, new, sizeof(p->body));
+	memcpy(&p->mon.body, new, sizeof(p->mon.body));
 	my_strcpy(buf, new->name, sizeof(buf));
-	p->body.name = string_make(buf);
-	p->body.slots = mem_zalloc(p->body.count * sizeof(struct equip_slot));
-	for (i = 0; i < p->body.count; i++) {
-		p->body.slots[i].type = new->slots[i].type;
+	p->mon.body.name = string_make(buf);
+	p->mon.body.slots = mem_zalloc(p->mon.body.count * sizeof(struct equip_slot));
+	for (i = 0; i < p->mon.body.count; i++) {
+		p->mon.body.slots[i].type = new->slots[i].type;
 		my_strcpy(buf, new->slots[i].name, sizeof(buf));
-		p->body.slots[i].name = string_make(buf);
+		p->mon.body.slots[i].name = string_make(buf);
 	}
 
 	// reequip the items or if we can't just put them in the inventory
@@ -371,7 +371,7 @@ void change_player_monster(struct player *p, const struct monster_race *mon, boo
 		msg("You transform into a%s %s.", is_a_vowel(mon->name[0]) ? "n" : "", mon->name);
 	}
 
-	if (!init && mon->body && !streq(mon->body->name, p->body.name)) {
+	if (!init && mon->body && !streq(mon->body->name, p->mon.body.name)) {
 		change_player_body(p, mon->body);
 	}
 
@@ -1056,7 +1056,7 @@ bool check_learn_powers(struct player *p, int xpgain)
 		if (currcost >= nextcost && check_learn_power(p, i, xpgain)) return true;
 	}
 
-	int maxtomes = p->body.count + z_info->pack_size;
+	int maxtomes = p->mon.body.count + z_info->pack_size;
 	struct object **tomes = mem_zalloc((maxtomes) * sizeof(*tomes));
 	int tind = 0;
 
@@ -1069,8 +1069,8 @@ bool check_learn_powers(struct player *p, int xpgain)
 	}
 
 	// collect tomes from equipment
-	for (i = 0; (i < p->body.count) && (tind < maxtomes); i++) {
-		obj = p->body.slots[i].obj;
+	for (i = 0; (i < p->mon.body.count) && (tind < maxtomes); i++) {
+		obj = p->mon.body.slots[i].obj;
 		if (obj && obj_can_learn_extra_from(obj)) {
 			tomes[tind] = obj;
 			++tind;
@@ -2651,7 +2651,7 @@ struct object *player_best_digger(struct player *p, bool forbid_stack)
 		old_number = obj->number;
 		if (obj != current_weapon) {
 			obj->number = 1;
-			p->body.slots[weapon_slot].obj = obj;
+			p->mon.body.slots[weapon_slot].obj = obj;
 		}
 
 		/*
@@ -2666,7 +2666,7 @@ struct object *player_best_digger(struct player *p, bool forbid_stack)
 		/* Swap back. */
 		if (obj != current_weapon) {
 			obj->number = old_number;
-			p->body.slots[weapon_slot].obj = current_weapon;
+			p->mon.body.slots[weapon_slot].obj = current_weapon;
 		}
 
 		if (score > best_score) {

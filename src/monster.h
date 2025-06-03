@@ -243,6 +243,7 @@ enum monster_altmsg_type {
 	MON_ALTMSG_UNSEEN,
 	MON_ALTMSG_MISS
 };
+
 struct monster_altmsg {
 	struct monster_altmsg *next;
 
@@ -457,6 +458,7 @@ struct monster {
 
 	struct player *player;				// L: its player if it is one
 	struct player_state state;			// L: state
+	struct player_body body;			// L: body
 
 	struct loc grid;					/* Location on map */
 
@@ -474,7 +476,7 @@ struct monster {
 
 	struct object *mimicked_obj;		/* Object this monster is mimicking */
 	struct object *held_obj;			/* Object being held (if any) */
-	struct object *equipped_obj;		/* L: objects being worn */
+	//struct object *equipped_obj;		/* L: objects being worn */
 
 	uint8_t attr;  						/* attr last used for drawing monster */
 

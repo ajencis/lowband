@@ -301,8 +301,8 @@ void borg_write_map(bool ask)
 
     /*** Player Equipment ***/
     file_putf(borg_map_file, "\n\n  [Character Equipment]\n\n");
-    for (i = 0; i < player->body.count; i++) {
-        struct object *obj = player->body.slots[i].obj;
+    for (i = 0; i < player->mon.body.count; i++) {
+        struct object *obj = player->mon.body.slots[i].obj;
         object_desc(o_name, sizeof(o_name), obj, ODESC_FULL, player);
         file_putf(borg_map_file, "%c) %s\n", borg_index_to_label(i), o_name);
     }
