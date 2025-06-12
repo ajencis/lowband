@@ -79,5 +79,6 @@ int effect_avg_damage(const struct effect *effect, const dice_t *shared_dice);
 const char *effect_projection(const struct effect *effect);
 struct effect_object_property *effect_summarize_properties(
 	const struct effect *ef, int *unsummarized_count);
+int ef_attr(const struct effect *e);
 
 #endif /* !EFFECTS_INFO_H */

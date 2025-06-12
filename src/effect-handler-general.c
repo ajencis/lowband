@@ -104,6 +104,9 @@ struct monster *monster_target_monster(effect_handler_context_t *context)
 			assert(t_mon);
 			return t_mon;
 		}
+		if (mon->target.who == TARGET_WHO_PLAYER) {
+			return &player->mon;
+		}
 	}
 	return NULL;
 }
@@ -663,6 +666,57 @@ bool effect_handler_TIMED_INC_NO_RES(effect_handler_context_t *context)
 }
 
 /**
+ * L: extend a (usually positive) status condition to the user
+ */
+bool effect_handler_SELF_TIMED_INC(effect_handler_context_t *context)
+{
+	int amount = effect_calculate_value(context, true);
+
+	if (context->origin.what == SRC_PLAYER) {
+		player_inc_timed(player, context->subtype, amount, true, true, false);
+	}
+
+	else if (context->origin.what == SRC_MONSTER) {
+		struct monster *mon = cave_monster(cave, context->origin.which.monster);
+		assert(mon);
+		mon_inc_timed(mon, context->subtype, amount, 0);
+	}
+
+	else {
+		return false;
+	}
+
+	return true;
+}
+
+/**
+ * L: extend a status condition to a target
+ */
+bool effect_handler_OTHER_TIMED_INC(effect_handler_context_t *context)
+{
+	int amount = effect_calculate_value(context, true);
+	struct monster *t_mon = NULL;
+
+	if (context->origin.what == SRC_PLAYER) {
+		t_mon = target_get_monster();
+	}
+	else if (context->origin.what == SRC_MONSTER) {
+		t_mon = monster_target_monster(context);
+	}
+
+	if (!t_mon) return false;
+
+	if (t_mon->player) {
+		player_inc_timed(t_mon->player, context->subtype, amount, true, true, true);
+	}
+	else {
+		mon_inc_timed(t_mon, context->subtype, amount, 0);
+	}
+
+	return true;
+}
+
+/**
  * Extend a (positive or negative) monster status condition.
  */
 bool effect_handler_MON_TIMED_INC(effect_handler_context_t *context)
@@ -684,8 +738,9 @@ bool effect_handler_MON_TIMED_INC(effect_handler_context_t *context)
 			msg("No monster selected!");
 			return false;
 		}
-		if (amount > 0)
+		if (amount > 0) {
 			mon_inc_timed(mon, context->subtype, amount, 0);
+		}
 	}
 	else if (context->origin.what == SRC_MONSTER) {
 		mon = cave_monster(cave, context->origin.which.monster);

@@ -490,7 +490,6 @@ struct diplomacy_menu_data {
 static void diplomacy_menu_display(struct menu *m, int oid, bool cursor,
 		int row, int col, int wid)
 {
-	//plog("entering dmd");
 	struct diplomacy_menu_data *d = menu_priv(m);
 
 	int command = d->commands[oid];
@@ -513,12 +512,10 @@ static void diplomacy_menu_display(struct menu *m, int oid, bool cursor,
 
 
 	c_prt(attr, name, row, col);
-	//plog("done dmd");
 }
 
 static bool diplomacy_menu_handler(struct menu *m, const ui_event *e, int oid)
 {
-	//plog("entering gsmh");
 	struct diplomacy_menu_data *d = menu_priv(m);
 
 	if (e->type == EVT_SELECT) {
@@ -695,7 +692,6 @@ static struct menu *diplomacy_menu_new(struct player *p, struct monster *mon,
 	loc.page_rows = d->num_commands + 1;
 	menu_layout(m, &loc);
 
-	//plog("done gsmn");
 	return m;
 }
 
@@ -709,7 +705,6 @@ static void diplomacy_menu_destroy(struct menu *m)
 
 static int diplomacy_menu_select(struct menu *m)
 {
-	//plog("entering gsms");
 	struct diplomacy_menu_data *d = menu_priv(m);
 	char buf[80];
 
@@ -724,7 +719,6 @@ static int diplomacy_menu_select(struct menu *m)
 	menu_select(m, 0, true);
 	screen_load();
 
-	//plog("done gsms");
 	return d->selected_command;
 }
 

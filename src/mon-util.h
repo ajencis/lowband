@@ -22,6 +22,7 @@
 #include "monster.h"
 #include "mon-msg.h"
 
+bool mon_is_player(const struct monster *mon);
 void mark_mon_as_playable(struct monster_race *mr);
 struct object *monster_best_weapon(struct monster *m);
 int monster_light(struct monster *mon);

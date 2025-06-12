@@ -285,7 +285,7 @@ void grid_data_as_text(struct grid_data *g, int *ap, wchar_t *cp, int *tap,
 		struct monster_race *race = &r_info[0];
 		struct monster_race *pmon = lookup_player_monster(player);
 
-		if (pmon) {
+		if (pmon && pmon->level > 0) {
 			race = pmon;
 		}
 

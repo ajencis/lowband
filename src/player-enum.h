@@ -160,7 +160,7 @@ enum {
 	PY_SEE_TOO_BRIGHT
 };
 
-enum attack_roll_special_effects {
+enum py_attack_roll_special_effects {
 	#define TMD(a, b, c, d, e, f, g, h, i, j) ATK_SPCL_TMD_##a,
 	#include "list-player-timed.h"
 	#undef TMD
@@ -181,7 +181,7 @@ enum {
 
 
 /* L: defines an attack ready to be rolled */
-struct attack_roll {
+struct py_attack_roll {
 	int ddice;
 	int dsides;
 	int to_hit;
@@ -260,8 +260,8 @@ struct player_state {
 
 	int num_attacks;							/**< L: number of attacks they currently have available */
 	bool has_ranged_attack;						/**< L: whether they have a ranged attack */
-	struct attack_roll attacks[PY_MAX_ATTACKS];	/**< L: attacks they currently have available */
-	struct attack_roll ranged_attack;			/**< L: attack with shooter */
+	struct py_attack_roll attacks[PY_MAX_ATTACKS];	/**< L: attacks they currently have available */
+	struct py_attack_roll ranged_attack;			/**< L: attack with shooter */
 
 	int extra_points_used;	/**< L: number of points the player has spent on extra */
 	int extra_points_max;	/**< L: number of points the character could spend on extra */

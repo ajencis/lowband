@@ -568,7 +568,8 @@ static bool monster_turn_equip_item(struct monster *mon)
 
 	// looked through everything and no changes to make, so we can stop rechecking
 	if (did_something) {
-		mflag_on(mon->mflag, MFLAG_UPDATE);
+		mflag_on(mon->mflag, MFLAG_UPDATE_STATE);
+		mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
 	}
 	else {
 		mflag_off(mon->mflag, MFLAG_CHECK_EQ);

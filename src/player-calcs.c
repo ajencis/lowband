@@ -25,6 +25,7 @@
 #include "game-input.h"
 #include "game-world.h"
 #include "init.h"
+#include "mon-attack.h"
 #include "mon-calcs.h"
 #include "mon-msg.h"
 #include "mon-spell.h"
@@ -140,9 +141,9 @@ struct skill_stat_info skill_stats[] = {
  * generally scaleto is the high value for that table
  */
 static int stat_scale(int index, int scaleto, bool minzero) {
-    int hsi = 14;
-	int asi = 7;
-	int lsi = 0;
+    int hsi = HI_STAT_IND;
+	int asi = AVG_STAT_IND;
+	int lsi = LOW_STAT_IND;
 	assert(hsi >= asi);
 	index = MAX(index, lsi);
 
@@ -211,8 +212,11 @@ int adj_str_blow(int index) {
 	return stat_scale(index, 10, true);
 }*/
 
-static int adj_stat_blow(int index) {
-	return (index + 1) * 600 / 14;
+int adj_stat_blow(int index) {
+	if (index < AVG_STAT_IND) {
+		index = (index + AVG_STAT_IND) / 2;
+	}
+	return index * 600 / 14;
 }
 
 int adj_dex_safe(int index) {
@@ -999,7 +1003,7 @@ static void calc_hitpoints(struct player *p)
 	int mhp;
 
 	/* Calculate hitpoints */
-	// L: basically allhandled elsewhere now
+	// L: basically all handled elsewhere now
 	mhp = p->mon.state.skills[SKILL_HEALTH];
 
 	/* New maximum hitpoints */
@@ -1123,7 +1127,7 @@ int calc_unlocking_chance(const struct player *p, int lock_power,
  * relies on object weight, melee skill, and both str and dex, with
  * the higher of str and dex weighted more heavily
  */
-void calc_blows(struct player *p, int wgt, struct attack_roll *aroll,
+void calc_blows(struct player *p, int wgt, struct py_attack_roll *aroll,
                struct player_state *state, int extra_blows)
 {
 	int div = wgt * 2 + 100;
@@ -1499,7 +1503,9 @@ static void calc_unlight(struct player_state *ps, struct player *p)
 
 	int power = unlight_power_state(ps, p);
 
-	if (power > 5) ps->el_info[ELEM_DARK].res_level++;
+	if (power > 5) {
+		ps->el_info[ELEM_DARK].res_level++;
+	}
 
 	adjust_skill_scale(&ps->skills[SKILL_STEALTH], power, 25, 25);
 	adjust_skill_scale(&ps->skills[SKILL_SAVE], power, 25, 25);
@@ -1732,10 +1738,10 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 			}
 
 			/* Apply combat bonuses */
-			state->ac += obj->ac;
+			/*state->ac += obj->ac;
 			if (!known_only || obj->known->to_a) {
 				state->to_a += obj->to_a;
-			}
+			}*/
 			if (!slot_type_is(p, i, EQUIP_WEAPON)
 					&& !slot_type_is(p, i, EQUIP_BOW)) {
 				if (!known_only || obj->known->to_h) {
@@ -1842,7 +1848,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	// L: calculate skills
 	//player_race_r_skill(p->race, mrace ? true : false, race_skills);
 	//player_race_x_skill(p->race, mrace ? true : false, race_x_skills);
-	for (i = 0; i < SKILL_MAX; i++) {
+	/*for (i = 0; i < SKILL_MAX; i++) {
 		int stat_ind = player_skill_stat_ind(p, state, i);
 		int base = player_class_c_skill(p, i);
 		int xtra = player_class_x_skill(p, i) * p->lev / PY_MAX_LEVEL;
@@ -1855,7 +1861,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 		}
 
 		state->skills[i] = MAX(state->skills[i], 0);
-	}
+	}*/
 
 	calc_unlight(state, p);
 	calc_glow(state, p);
@@ -1922,7 +1928,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 			p->mon.m_timed[TMD_FASTCAST] = 0;
 		}
 	}
-	if (p->mon.m_timed[TMD_INVULN]) {
+	/*if (p->mon.m_timed[TMD_INVULN]) {
 		state->to_a += 100;
 	}
 	if (p->mon.m_timed[TMD_BLESSED]) {
@@ -1991,7 +1997,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	}
 	if (p->mon.m_timed[TMD_STEALTH]) {
 		state->skills[SKILL_STEALTH] += 10;
-	}
+	}*/
 
 	/* Analyze flags - check for fear */
 	if (of_has(state->flags, OF_AFRAID)) {
@@ -2021,9 +2027,9 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	state->expfact = MAX(50, state->expfact);
 
 	/* Modify skills */
-	if (state->skills[SKILL_DIGGING] < 1) state->skills[SKILL_DIGGING] = 1;
+	/*if (state->skills[SKILL_DIGGING] < 1) state->skills[SKILL_DIGGING] = 1;
 	if (state->skills[SKILL_STEALTH] > 150) state->skills[SKILL_STEALTH] = 150;
-	if (state->skills[SKILL_HEALTH] < 3) state->skills[SKILL_HEALTH] = 3;
+	if (state->skills[SKILL_HEALTH] < 3) state->skills[SKILL_HEALTH] = 3;*/
 	hold = adj_str_hold(state->stat_ind[STAT_STR]);
 
 	/* Analyze launcher */
@@ -2194,6 +2200,8 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	/* Movement speed */
 	state->num_moves = extra_moves;
 
+	update_mon_attacks(&p->mon);
+
 	return;
 }
 
@@ -2206,7 +2214,6 @@ static void update_bonuses(struct player *p)
 
 	struct player_state state = p->mon.state;
 	struct player_state known_state = p->known_state;
-
 
 	/* ------------------------------------
 	 * Calculate bonuses

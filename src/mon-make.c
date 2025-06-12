@@ -66,31 +66,55 @@ static bool mon_can_enter_town(struct monster_race *mr)
  */
 static void duplicate_body(const struct player_body *source, struct player_body *new)
 {
+	int i;
+	assert(source);
+	assert(new);
+
 	new->name = string_make(source->name);
 	new->slots = mem_zalloc(sizeof *new->slots * source->count);
 	new->count = source->count;
 	new->next = NULL;
 
+	for (i = 0; i < new->count; ++i) {
+		new->slots[i].name = string_make(source->slots[i].name);
+		new->slots[i].type = source->slots[i].type;
+	}
+
 	memcpy(new->slots, source->slots, sizeof *new->slots * new->count);
 }
 
-static void free_body(const struct player_body *to_free)
+static void free_body(struct player_body to_free)
 {
-	string_free(to_free->name);
-	mem_free(to_free->slots);
+	int i;
+	if (to_free.name) {
+		string_free(to_free.name);
+		to_free.name = NULL;
+	}
+
+	if (to_free.slots) {
+		for (i = 0; i < to_free.count; ++i) {
+			string_free(to_free.slots[i].name);
+		}
+
+		mem_free(to_free.slots);
+		to_free.slots = NULL;
+	}
 }
 
 static void mon_embody(struct monster *mon)
 {
 	const struct player_body *base = mon->race->body;
+	if (!base) base = mon->race->base->body;
+	//assert(base);
+	if (!base) base = bodies;
 
-	free_body(&mon->body);
+	free_body(mon->body);
 	duplicate_body(base, &mon->body);
 }
 
 static void mon_disembody(struct monster *mon)
 {
-	free_body(&mon->body);
+	free_body(mon->body);
 }
 
 
@@ -467,6 +491,9 @@ void delete_monster_idx(struct chunk *c, int m_idx)
 
 	// L: remove body
 	mon_disembody(mon);
+
+	// L: free attacks
+	free_mon_attacks(mon);
 
 	/* Wipe the Monster */
 	memset(mon, 0, sizeof(struct monster));
@@ -1188,7 +1215,8 @@ int16_t place_monster(struct chunk *c, struct loc grid, struct monster *mon,
 		mon_create_mimicked_object(c, new_mon, m_idx);
 	}
 
-	mflag_on(mon->mflag, MFLAG_UPDATE);
+	mflag_on(mon->mflag, MFLAG_UPDATE_STATE);
+	mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
 	update_mon_state(mon);
 
 	/* Result */

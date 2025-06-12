@@ -494,6 +494,8 @@ struct monster {
 	int16_t reaction;					/* L: how much it likes the player */
 
 	bool powers[PP_MAX];					// L: any powers it knows
+
+	struct attack *atk;					// L: its attacks
 };
 
 /** Variables **/

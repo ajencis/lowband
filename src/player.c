@@ -18,6 +18,7 @@
 
 #include "effects.h"
 #include "init.h"
+#include "mon-calcs.h"
 #include "obj-pile.h"
 #include "obj-util.h"
 #include "player-birth.h"
@@ -614,7 +615,11 @@ void player_cleanup_members(struct player *p)
 		mem_free(p->evol_choices);
 		p->evol_choices = NULL;
 	}
+	if (p->mon.atk) {
+		free_mon_attacks(&p->mon);
+	}
 	mem_free(p->mon.race);
+
 }
 
 

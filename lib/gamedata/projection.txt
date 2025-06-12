@@ -498,7 +498,10 @@ color:White
 code:PIERCING
 name:piercing
 type:element
-desc:impales
+desc:stab
+player-desc:stab
+lash-desc:impalement
+player-brand:stab
 blind-desc:something
 obvious:1
 color:Light Blue
@@ -506,7 +509,10 @@ color:Light Blue
 code:SLASHING
 name:slashing
 type:element
-desc:cuts
+desc:slash
+player-desc:slash
+lash-desc:slashing
+player-brand:slash
 blind-desc:something
 obvious:1
 color:Light Blue
@@ -514,7 +520,10 @@ color:Light Blue
 code:BLUDGEONING
 name:bludgeoning
 type:element
-desc:bashes
+desc:bash
+player-desc:bash
+lash-desc:bludgeoning
+player-brand:bludgeon
 blind-desc:something
 obvious:1
 color:Light Blue

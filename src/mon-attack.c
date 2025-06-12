@@ -59,7 +59,7 @@
 
 
 
-int monster_melee_attack_range(int level, struct monster_blow *mblow)
+int monster_melee_attack_range(int level, const struct monster_blow *mblow)
 {
 	assert(mblow->method);
 	int brng = mblow->method->range;

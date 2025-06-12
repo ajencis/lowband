@@ -38,7 +38,7 @@ static bool pred_HAS_BITE(const struct player_ability *abil, const struct player
 	int i;
 
 	for (i = 0; i < p->mon.state.num_attacks; ++i) {
-		const struct attack_roll *aroll = &p->mon.state.attacks[i];
+		const struct py_attack_roll *aroll = &p->mon.state.attacks[i];
 
 		if (streq(aroll->name, "bite")) {
 			return true;

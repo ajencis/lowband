@@ -968,7 +968,9 @@ void process_world(struct chunk *c)
 	struct follower *curr, *prev = NULL;
 	for (curr = player->upkeep->follow; curr; curr = curr->next) {
 		bool placed = false;
-		curr->delay--;
+		if (curr->delay > 0) {
+			--curr->delay;
+		}
 
 		if (curr->delay <= 0) {
 			struct loc egrid = player->upkeep->entered;

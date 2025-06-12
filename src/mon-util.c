@@ -96,7 +96,7 @@ bool give_monster_powers(struct monster *mon)
 	struct player_ability *abil;
 
 	/*if (mon->group_info[PRIMARY_GROUP].role != MON_GROUP_LEADER) {
-		plog("getting leader");
+		plg("getting leader");
 		leader = monster_group_leader(cave, mon);
 		if (leader != mon) {
 			isleader = false;
@@ -123,13 +123,13 @@ bool give_monster_powers(struct monster *mon)
 		}
 		/*for (i = PP_NONE + 1; i < PP_MAX; ++i) {
 			if (one_in_(10)) {
-				plog_fmt("turning on flag %i", i);
+				plg_fmt("turning on flag %i", i);
 				pp_flag_on(mon->powers, i);
 				given = true;
 			}
 		}*/
 		/*else if (leader) {
-			plog("has leader");
+			plg("has leader");
 			for (i = 0; i < PP_MAX; ++i) {
 				if (pp_flag_has(leader->powers, i) && one_in_(3)) {
 					pp_flag_on(mon->powers, i);
@@ -143,6 +143,11 @@ bool give_monster_powers(struct monster *mon)
 	#endif
 
 	return false;
+}
+
+bool mon_is_player(const struct monster *mon)
+{
+	return mon->player ? true : false;
 }
 
 bool player_can_learn_from_monster(struct player *p, struct monster *mon)
@@ -1721,7 +1726,8 @@ bool monster_equip(struct chunk *c, struct monster *mon, struct object *obj)
 
 	//pile_insert(&mon->equipped_obj, obj);
 
-	mflag_on(mon->mflag, MFLAG_UPDATE);
+	mflag_on(mon->mflag, MFLAG_UPDATE_STATE);
+	mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
 
 	/* Result */
 	return true;
@@ -2023,7 +2029,8 @@ bool monster_change_shape(struct monster *mon)
 					  mon->grid.y, mon->grid.x, NULL);
 	}
 
-	mflag_on(mon->mflag, MFLAG_UPDATE);
+	mflag_on(mon->mflag, MFLAG_UPDATE_STATE);
+	mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
 
 	return mon->original_race != NULL;
 }

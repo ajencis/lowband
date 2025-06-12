@@ -70,6 +70,14 @@ int mon_timed_name_to_idx(const char *name)
     return -1;
 }
 
+static int effect_level_by_amount(int amount, int effect_type)
+{
+	struct mon_timed_effect *effect = &effects[effect_type];
+	int divisor = MAX(effect->max_timer / 5, 1);
+	if (amount <= 0) return 0;
+	return MIN((amount + divisor - 1) / divisor, 5);
+}
+
 /**
  * Roll the saving throw for monsters resisting a timed effect.
  */
@@ -227,7 +235,9 @@ static bool mon_set_timed(struct monster *mon,
 		player->upkeep->redraw |= (PR_MONLIST);
 	}
 
-	mflag_on(mon->mflag, MFLAG_UPDATE);
+	if (effect_level_by_amount(timer, effect_type) != effect_level_by_amount(old_timer, effect_type)) {
+		mflag_on(mon->mflag, MFLAG_UPDATE_STATE);
+	}
 
 	return !resisted;
 }
@@ -343,7 +353,5 @@ bool mon_clear_timed(struct monster *mon, int effect_type, int flag)
  */
 int monster_effect_level(const struct monster *mon, int effect_type)
 {
-	struct mon_timed_effect *effect = &effects[effect_type];
-	int divisor = MAX(effect->max_timer / 5, 1);
-	return MIN((mon->m_timed[effect_type] + divisor - 1) / divisor, 5);
+	return effect_level_by_amount(mon->m_timed[effect_type], effect_type);
 }

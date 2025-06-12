@@ -25,6 +25,7 @@
 #include "generate.h"
 #include "init.h"
 #include "mon-attack.h"
+#include "mon-calcs.h" // remove later
 #include "mon-desc.h"
 #include "mon-lore.h"
 #include "mon-make.h"
@@ -89,7 +90,7 @@ int breakage_chance(const struct object *obj, bool hit_target) {
  * \param p The player
  * \param weapon The player's weapon
  */
-int chance_of_melee_hit_base(const struct player *p, struct attack_roll *aroll)
+int chance_of_melee_hit_base(const struct player *p, struct py_attack_roll *aroll)
 {
 	int bonus = aroll->to_hit;
 	int total = p->mon.state.skills[aroll->attack_skill] + bonus * BTH_PLUS_ADJ;
@@ -105,7 +106,7 @@ int chance_of_melee_hit_base(const struct player *p, struct attack_roll *aroll)
  * \param mon The monster
  */
 static int chance_of_melee_hit(const struct player *p,
-		struct attack_roll *aroll, const struct monster *mon)
+		struct py_attack_roll *aroll, const struct monster *mon)
 {
 	int chance = chance_of_melee_hit_base(p, aroll);
 	/* Non-visible targets have a to-hit penalty of 50% */
@@ -422,7 +423,7 @@ static int o_critical_shot(const struct player *p,
  * Factor in weapon weight, total plusses, player level.
  */
 static int critical_melee(const struct player *p, const struct monster *monster,
-		const struct attack_roll *aroll, int dam, uint32_t *msg_type, int *crit_power)
+		const struct py_attack_roll *aroll, int dam, uint32_t *msg_type, int *crit_power)
 {
 	int chance = aroll->crit_chance, new_dam;
 	int powerbonus = chance + get_power_scale(p, PP_CRITICAL_HITS, 20);
@@ -763,7 +764,7 @@ static void do_breath_bite(struct player *p, struct loc grid)
  * Apply blow after effects
  */
 static bool blow_after_effects(struct loc grid, int dmg, int splash,
-							   bool *fear, bool quake, struct attack_roll *aroll, int crit_power)
+							   bool *fear, bool quake, struct py_attack_roll *aroll, int crit_power)
 {
     struct monster *mon = square_monster(cave, grid);
 	bool gone = false;
@@ -827,7 +828,7 @@ static bool blow_after_effects(struct loc grid, int dmg, int splash,
  * L: don't say that an attack failed to harm the target if it doesn't normally
  * harm them
  */
-static bool aroll_is_harmless_base(const struct attack_roll *aroll)
+static bool aroll_is_harmless_base(const struct py_attack_roll *aroll)
 {
 	int max_dam = aroll->ddice * aroll->dsides + aroll->to_dam;
 
@@ -841,7 +842,7 @@ static bool aroll_is_harmless_base(const struct attack_roll *aroll)
  * L: functions to create the attack itself
  */
 
-bool death_touch_extra_dam(const struct attack_roll *aroll, int crit_power, int *dice, int *sides)
+bool death_touch_extra_dam(const struct py_attack_roll *aroll, int crit_power, int *dice, int *sides)
 {
 	if (aroll->special[ATK_SPCL_DEATH_TOUCH] <= 0) return false;
 
@@ -851,7 +852,7 @@ bool death_touch_extra_dam(const struct attack_roll *aroll, int crit_power, int 
 	return true;
 }
 
-static int melee_crit_chance(struct attack_roll *aroll, const struct player *p, const struct player_state *ps)
+static int melee_crit_chance(struct py_attack_roll *aroll, const struct player *p, const struct player_state *ps)
 {
 	int chance = 5;
 	const struct object *obj = aroll->obj;
@@ -869,7 +870,7 @@ static int melee_crit_chance(struct attack_roll *aroll, const struct player *p, 
 	return chance;
 }
 
-static void unarmed_mod_attack(struct attack_roll *aroll, const struct player *p, const struct player_state *ps)
+static void unarmed_mod_attack(struct py_attack_roll *aroll, const struct player *p, const struct player_state *ps)
 {
 	//aroll->to_hit += get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev);
 	int ddicemod = get_power_scale_state(ps, PP_UNARMED_STRIKE, 1, p->lev);
@@ -887,7 +888,7 @@ static void unarmed_mod_attack(struct attack_roll *aroll, const struct player *p
 	if (aroll->accuracy_stat == STAT_NONE && ps->powers[PP_UNARMED_STRIKE] > 15) aroll->accuracy_stat = STAT_DEX;
 }
 
-static void unarmed_get_punch(struct attack_roll *aroll, const struct player *p, const struct player_state *ps)
+static void unarmed_get_punch(struct py_attack_roll *aroll, const struct player *p, const struct player_state *ps)
 {
 	aroll->ddice = 1;
 	aroll->dsides = get_power_scale_state(ps, PP_UNARMED_STRIKE, 5, p->lev);
@@ -906,7 +907,7 @@ static void unarmed_get_punch(struct attack_roll *aroll, const struct player *p,
 	aroll->range = 1;
 }
 
-static void unarmed_get_kick(struct attack_roll *aroll, const struct player *p, const struct player_state *ps)
+static void unarmed_get_kick(struct py_attack_roll *aroll, const struct player *p, const struct player_state *ps)
 {
 	aroll->ddice = 1;
 	aroll->dsides = get_power_scale_state(ps, PP_UNARMED_STRIKE, 15, p->lev);
@@ -925,7 +926,7 @@ static void unarmed_get_kick(struct attack_roll *aroll, const struct player *p, 
 	aroll->range = 1;
 }
 
-static void specialization_mod_attack(struct attack_roll *aroll, struct object *obj)
+static void specialization_mod_attack(struct py_attack_roll *aroll, struct object *obj)
 {
 	if (!obj) return;
 	int spec;
@@ -942,7 +943,7 @@ static void specialization_mod_attack(struct attack_roll *aroll, struct object *
 	aroll->dsides += get_power_scale(player, spec, 10);
 }
 
-static bool backstab_mod_attack(struct attack_roll *aroll, int power)
+static bool backstab_mod_attack(struct py_attack_roll *aroll, int power)
 {
 	int scale;
 
@@ -959,7 +960,7 @@ static bool backstab_mod_attack(struct attack_roll *aroll, int power)
 	return true;
 }
 
-static void get_melee_attack(struct attack_roll *aroll, struct player_state *ps,
+static void get_melee_attack(struct py_attack_roll *aroll, struct player_state *ps,
 		struct player *p, struct object *obj, int attack_div)
 {
 	int mult, div;
@@ -999,7 +1000,7 @@ static void get_melee_attack(struct attack_roll *aroll, struct player_state *ps,
 }
 
 bool get_unarmed_punch(struct player *p, struct player_state *ps,
-		struct attack_roll *aroll, int attack_div)
+		struct py_attack_roll *aroll, int attack_div)
 {
 	if (ps->powers[PP_DEATH_TOUCH] > 0 && ps->powers[PP_UNARMED_STRIKE] < 10) {
 		return get_unarmed_touch(p, ps, aroll, attack_div);
@@ -1020,7 +1021,7 @@ bool get_unarmed_punch(struct player *p, struct player_state *ps,
 }
 
 bool get_unarmed_kick(struct player *p, struct player_state *ps,
-		struct attack_roll *aroll, int attack_div)
+		struct py_attack_roll *aroll, int attack_div)
 {
 	memset(aroll, 0, sizeof(*aroll));
 
@@ -1033,7 +1034,7 @@ bool get_unarmed_kick(struct player *p, struct player_state *ps,
 }
 
 bool get_unarmed_touch(struct player *p, struct player_state *ps,
-		struct attack_roll *aroll, int attack_div)
+		struct py_attack_roll *aroll, int attack_div)
 {
 	memset(aroll, 0, sizeof(*aroll));
 
@@ -1064,7 +1065,7 @@ bool get_unarmed_touch(struct player *p, struct player_state *ps,
  * L: get a weapon attack
  */
 bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct object *obj,
-		struct attack_roll *aroll, int attack_div)
+		struct py_attack_roll *aroll, int attack_div)
 {
 	memset(aroll, 0, sizeof(*aroll));
 	if (!obj || obj->kind->tval == TV_SHIELD) {
@@ -1103,10 +1104,10 @@ bool get_melee_weapon_attack(struct player *p, struct player_state *ps, struct o
 	return aroll;
 }
 
-struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_state *ps,
+struct py_attack_roll get_shooter_weapon_attack(struct player *p, struct player_state *ps,
 												struct object *shooter)
 {
-	struct attack_roll aroll = { 0 };
+	struct py_attack_roll aroll = { 0 };
 	assert(shooter);
 
 	aroll.ddice = shooter->pval;
@@ -1136,9 +1137,9 @@ struct attack_roll get_shooter_weapon_attack(struct player *p, struct player_sta
 }
 
 static bool get_shooter_ranged_attack(struct player *p, struct object *ammo, 
-								struct attack_roll *aroll)
+								struct py_attack_roll *aroll)
 {
-	struct attack_roll *shooter_roll = &p->mon.state.ranged_attack;
+	struct py_attack_roll *shooter_roll = &p->mon.state.ranged_attack;
 	if (!shooter_roll->obj) return false;
 	
 	memcpy(aroll, shooter_roll, sizeof(*shooter_roll));
@@ -1154,7 +1155,7 @@ static bool get_shooter_ranged_attack(struct player *p, struct object *ammo,
 	return true;
 }
 
-static void get_thrown_ranged_attack(struct player *p, struct object *thrown, struct attack_roll *aroll)
+static void get_thrown_ranged_attack(struct player *p, struct object *thrown, struct py_attack_roll *aroll)
 {
 	assert(thrown);
 
@@ -1204,7 +1205,7 @@ static bool monster_attack_is_usable(struct player *p, struct monster_blow *blow
  * L: can a monster be targeted by an attack under present circumstances
  * will put a message in  buf  describing why it cannot if it cannot
  */
-bool monster_can_be_attacked(struct player *p, const struct attack_roll *aroll,
+bool monster_can_be_attacked(struct player *p, const struct py_attack_roll *aroll,
 		struct monster *mon, char *buf, size_t bufsize)
 {
 	if (!monster_is_visible(mon) && aroll->attack_skill == SKILL_SEARCH) {
@@ -1247,7 +1248,7 @@ static int mon_blow_dam_stat(struct monster_blow *mb, struct player_state *ps)
 }
 
 static bool get_monster_attack(struct player *p, struct player_state *ps,
-							   struct monster_race *mr, struct attack_roll *aroll,
+							   struct monster_race *mr, struct py_attack_roll *aroll,
 							   int aind, bool ranged)
 {
 	int j, range;
@@ -1312,7 +1313,7 @@ static bool get_monster_attack(struct player *p, struct player_state *ps,
 }
 
 int get_monster_attacks(struct player *p, struct player_state *ps,
-						struct monster_race *mr, struct attack_roll *aroll,
+						struct monster_race *mr, struct py_attack_roll *aroll,
 						int maxnum, int *attacknum, bool ranged)
 {
 	if (!mr) return 0;
@@ -1361,7 +1362,7 @@ int get_monster_attacks(struct player *p, struct player_state *ps,
 	return hands_used;
 }
 
-static int get_attack_dam(struct attack_roll *aroll, struct monster *mon, int b, int s)
+static int get_attack_dam(struct py_attack_roll *aroll, struct monster *mon, int b, int s)
 {
     int dmg = damroll(aroll->ddice, aroll->dsides) + aroll->to_dam;
 	if (s) {
@@ -1454,7 +1455,7 @@ static struct monster *monster_in_direction(struct loc center, struct loc end, i
 }
 
 
-static struct monster *do_cleave(struct player *p, struct loc grid, const struct attack_roll *aroll)
+static struct monster *do_cleave(struct player *p, struct loc grid, const struct py_attack_roll *aroll)
 {
 	int i;
 	//bool clockwise = one_in_(2);
@@ -1523,7 +1524,7 @@ static const struct hit_types melee_hit_types[] = {
 /**
  * Attack the monster at the given location with a single blow.
  */
-bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack_roll *aroll)
+bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct py_attack_roll *aroll)
 {
 	size_t i;
 
@@ -1687,7 +1688,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct attack
 	drain = MIN(mon->hp, dmg);
 
 	/* Damage, check for hp drain, fear and death */
-	stop = proj_melee_attack_mon(mon, p, dmg, aroll->proj_type, fear, NULL);
+	stop = proj_melee_attack_mon(mon, &p->mon, dmg, aroll->proj_type, fear, NULL);
 	
 	// L: berserkers go berserk
 	check_berserk(p, mon);
@@ -1811,6 +1812,100 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 	return false;
 }
 
+
+static bool mon_valid(const struct monster *mon, struct loc grid)
+{
+	return mon && mon->race && loc_eq(mon->grid, grid);
+}
+
+static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct attack *atk)
+{
+	struct player *ap = mon_is_player(mon) ? mon->player : NULL;
+	struct player *tp = mon_is_player(t_mon) ? t_mon->player : NULL;
+
+	char attacker[80] = "You";
+	char target[80] = "you";
+	char message[80] = "hit";
+
+	struct loc grid = t_mon->grid;
+
+	bool success;
+
+	/* Disturb the monster */
+	if (!tp) {
+		monster_wake(t_mon, false, 100);
+		mon_clear_timed(t_mon, TMD_PARALYZED, MON_TMD_FLG_NOMESSAGE);
+	}
+
+	/* See if the player hit */
+	success = test_hit(atk->to_hit, mon_ac(t_mon));
+
+	if (success) {
+		strnfmt(message, sizeof message, atk->message);
+	}
+	else if (ap) {
+		strnfmt(message, sizeof message, "miss");
+	}
+	else {
+		strnfmt(message, sizeof message, "misses");
+	}
+
+	if (mon == t_mon) {
+		monster_desc(attacker, sizeof attacker, mon, MDESC_TARG | MDESC_POSS);
+	}
+	else if (!ap) {
+		monster_desc(attacker, sizeof attacker, mon, MDESC_TARG | MDESC_CAPITAL);
+	}
+	else if (!tp) {
+		monster_desc(target, sizeof target, t_mon, MDESC_TARG);
+	}
+
+	/* Auto-Recall and track if possible and visible */
+	if (monster_is_visible(mon) && ap) {
+		monster_race_track(ap->upkeep, mon->race);
+		health_track(ap->upkeep, mon);
+	}
+
+	/* Handle player fear (only for invisible monsters) */
+	if (ap && player_of_has(ap, OF_AFRAID)) {
+		equip_learn_flag(ap, OF_AFRAID);
+		msgt(MSG_AFRAID, "You are too afraid to attack %s!", target);
+		return;
+	}
+
+	if (tp || ap || monster_is_obvious(mon) || monster_is_obvious(t_mon)) {
+		msg("%s %s %s.", attacker, message, target);
+	}
+
+	if (success) {
+		struct effect *ef;
+		bool id = false;
+		for (ef = atk->ef; ef && mon_valid(t_mon, grid); ef = ef->next) {
+			effect_do(ef, source_monster(mon->midx), NULL, &id, true, 0, 0, 0, NULL);
+		}
+	}
+}
+
+static void mon_test_attack(struct monster *mon, struct monster *t_mon)
+{
+	struct loc grid = t_mon->grid;
+	struct attack *atk;
+
+	if (mon_is_player(mon)) {
+		target_set_monster(t_mon);
+	}
+
+	for (atk = mon->atk; atk && mon_valid(t_mon, grid); atk = atk->next) {
+		int i;
+		int max = atk->blows / 100;
+		max += (atk->blows - max) > randint0(100) ? 1 : 0;
+
+		for (i = 0; i < max && mon_valid(t_mon, grid); ++i) {
+			mon_test_blow(mon, t_mon, atk);
+		}
+	}
+}
+
 /**
  * Attack the monster at the given location
  *
@@ -1821,11 +1916,15 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
  */
 void py_attack(struct player *p, struct loc grid)
 {
+	struct monster *t_mon = square_monster(cave, grid);
+	mon_test_attack(&p->mon, t_mon);
+	return;
+
 	int avail_energy = MIN(p->energy, z_info->move_energy);
 	int blow_energy;
 	bool slain = false, fear = false;
 	struct monster *mon = square_monster(cave, grid);
-	struct attack_roll aroll;
+	struct py_attack_roll aroll;
 	int i;
 	int pretimed[TMD_MAX];
 	int backstab;
@@ -1989,7 +2088,7 @@ static const struct hit_types ranged_hit_types[] = {
  * kind of attack.
  */
 static void ranged_helper(struct player *p,	struct object *obj, int dir,
-						  int range, int shots, struct attack_roll *aroll,
+						  int range, int shots, struct py_attack_roll *aroll,
 						  const struct hit_types *hit_types, int num_types)
 {
 	int i, j;
@@ -2283,18 +2382,22 @@ struct attack_result make_ranged_throw(struct player *p,
 
 void do_cmd_melee(struct command *cmd)
 {
-	int dir, range = 1, i;
+	int dir, range = 1;//, i;
 	struct monster *foe = NULL;
 	struct loc target;
+	struct attack *atk;
 
 	if (cmd_get_target(cmd, "target", &dir) == CMD_OK) {
-		player_confuse_dir(player, &dir, false);
+		int dummy;
+		if (cmd_get_arg_number(cmd, "checked_conf", &dummy) != CMD_OK) {
+			player_confuse_dir(player, &dir, false);
+		}
 	} else {
 		return;
 	}
 
-	for (i = 0; i < player->mon.state.num_attacks; i++) {
-		range = MAX(range, player->mon.state.attacks[i].range);
+	for (atk = player->mon.atk; atk; atk = atk->next) {
+		range = MAX(range, atk->range);
 	}
 
 	if (dir == DIR_TARGET) {
@@ -2305,7 +2408,8 @@ void do_cmd_melee(struct command *cmd)
 	}
 	else if (dir != DIR_UNKNOWN) {
 		struct loc direction = loc_sum(player->mon.grid, loc(range * ddx[dir], range * ddy[dir]));
-		int path_n;
+		foe = monster_in_direction(player->mon.grid, direction, range);
+		/*int path_n;
 		struct loc path_g[256];
 		path_n = project_path(cave, path_g, range, player->mon.grid, direction, 0);
 		for (i = 0; i < path_n; i++) {
@@ -2314,7 +2418,7 @@ void do_cmd_melee(struct command *cmd)
 			if (foe) {
 				break;
 			}
-		}
+		}*/
 	}
 
 	if (!foe) {
@@ -2322,13 +2426,13 @@ void do_cmd_melee(struct command *cmd)
 		player->upkeep->energy_use = z_info->move_energy / 2;
 		return;
 	}
-	if (distance(player->mon.grid, target) > range) {
+	if (distance(player->mon.grid, foe->grid) > range) {
 		player->upkeep->energy_use = z_info->move_energy / 2;
 		msg("You can't attack that far.");
 		return;
 	}
 
-	py_attack(player, target);
+	mon_test_attack(&player->mon, foe);
 }
 
 /**
@@ -2339,7 +2443,7 @@ void do_cmd_fire(struct command *cmd) {
 	int range = MIN(6 + 2 * player->mon.state.ammo_mult, z_info->max_range);
 	int shots = player->mon.state.num_shots;
 
-	struct attack_roll aroll = player->mon.state.ranged_attack;
+	struct py_attack_roll aroll = player->mon.state.ranged_attack;
 
 	struct object *bow = aroll.obj;// slot_object(player, slot_by_type(player, EQUIP_BOW, true));
 	struct object *obj = NULL;
@@ -2401,7 +2505,7 @@ void do_cmd_throw(struct command *cmd) {
 	int shots = 10;
 	int str = adj_str_blow(player->mon.state.stat_ind[STAT_STR]);
 	//ranged_attack attack = make_ranged_throw;
-	struct attack_roll aroll = { 0 };
+	struct py_attack_roll aroll = { 0 };
 
 	int weight;
 	int range;

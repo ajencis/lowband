@@ -118,7 +118,7 @@ void project_m(struct source, int r, struct loc grid, int dam, int typ, int flg,
                bool *did_hit, bool *was_obvious);
 bool project_p(struct source, int r, struct loc grid, int dam, int typ,
 			   int power, bool self);
-bool proj_melee_attack_mon(struct monster *mon, struct player *p, int dmg, int proj_type, bool *fear, const char *note);
+bool proj_melee_attack_mon(struct monster *target, struct monster *attacker, int dmg, int proj_type, bool *fear, const char *note);
 
 int project_path(struct chunk *c, struct loc *gp, int range, struct loc grid1,
 	struct loc grid2, int flg);

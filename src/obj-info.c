@@ -575,7 +575,7 @@ static void o_calculate_melee_crits(struct player_state *state,
 		 */
 		struct player_state old_state = player->state;
 		int power, chance_num, chance_den;
-		struct attack_roll aroll = get_attack(player, obj);
+		struct py_attack_roll aroll = get_attack(player, obj);
 
 		if (z_info->o_m_max_added.n == 0) {
 			z_info->o_m_max_added =

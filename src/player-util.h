@@ -102,10 +102,10 @@ void player_race_r_skill(const struct monster_race *r, bool evolved, int skills[
 void player_race_x_skill(const struct monster_race *r, bool evolved, int skills[SKILL_MAX]);
 void player_race_elem_info(const struct player_race *r, bool evolved, struct element_info el_info[ELEM_MAX]);
 
-int player_skill_stat_ind(struct player *p, struct player_state *ps, int skill);
+int player_skill_stat_ind(const struct player *p, const struct player_state *ps, int skill);
 void player_skill_stats(struct player *p, struct player_state *ps, int skill, int *stat1, int *stat2);
-void skill_stat(const struct magic_realm *realm, int indices[STAT_MAX], int skill, int *stat1, int *stat2);
-int skill_stat_ind(const struct magic_realm *realm, int indices[STAT_MAX], int skill);
+void skill_stat(const struct magic_realm *realm, const int indices[STAT_MAX], int skill, int *stat1, int *stat2);
+int skill_stat_ind(const struct magic_realm *realm, const int indices[STAT_MAX], int skill);
 bool player_learn_spell_xp(struct player *p, bool initial, int xp);
 int player_bonus_to_cost(int bonus, const struct player_ability *abil, struct player *p);
 bool tome_max_learnable_extra_array(bool metaprog, int *learn_array, int *extra_array,

@@ -74,9 +74,9 @@ bool verify_rand(uint32_t num, const wchar_t *msg, const wchar_t *file, unsigned
  *
  * The integer X falls along a uniform distribution.
  */
-//#define randint0(M) ((int32_t)Rand_div(M))
-#define randint0(M) (verify_rand((M), (_CRT_WIDE(#M)), (_CRT_WIDE(__FILE__)), (unsigned)(__LINE__))\
-					? ((int32_t) Rand_div(M)) : 0)
+#define randint0(M) ((int32_t)Rand_div(M))
+/*#define randint0(M) (verify_rand((M), (_CRT_WIDE(#M)), (_CRT_WIDE(__FILE__)), (unsigned)(__LINE__))\
+					? ((int32_t) Rand_div(M)) : 0)*/
 
 /**
  * Generates a random signed long integer X where "1 <= X <= M" holds.

@@ -17,8 +17,10 @@
  */
 #include "angband.h"
 #include "buildid.h"
+#include "effects-info.h"
 #include "game-world.h"
 #include "init.h"
+#include "mon-attack.h"
 #include "obj-curse.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
@@ -740,42 +742,21 @@ static struct panel *get_panel_midleft(void) {
 	return p;
 }
 
-typedef bool (*combat_info_t)(const struct attack_roll *aroll, int *dice, int *sides, int *to_dam, int *proj);
-
-static bool combat_base_info(const struct attack_roll *aroll, int *dice, int *sides, int *to_dam, int *proj)
-{
-	*dice = aroll->ddice;
-	*sides = aroll->dsides;
-	*to_dam = aroll->to_dam;
-	*proj = aroll->proj_type;
-
-	return true;
-}
-
-static bool death_touch_base_info(const struct attack_roll *aroll, int *dice, int *sides, int *to_dam, int *proj)
-{
-	if (!death_touch_extra_dam(aroll, 0, dice, sides)) return false;
-
-	*to_dam = 0;
-	*proj = PROJ_NETHER;
-
-	return true;
-}
-
 static struct panel *get_panel_combat(void) {
 	struct panel *p = panel_allocate(15);
-	int bth, dam, blws = 0;
-	struct attack_roll *aroll;
-	uint16_t i, j, k;
-	int hgt = 0, cinfo_len;
-	char name[32], title[32];
+	int bth, dam;//, blws = 0;
+	struct py_attack_roll *aroll;
+	struct attack *atk;
+	//uint16_t i, j, k;
+	int hgt = 0;// cinfo_len;
+	//char name[32], title[32];
 
-	combat_info_t cinfo[] = {
+	/*combat_info_t cinfo[] = {
 		combat_base_info,
 		death_touch_base_info
 	};
 
-	cinfo_len = N_ELEMENTS(cinfo);
+	cinfo_len = N_ELEMENTS(cinfo);*/
 
 	/* AC */
 	panel_line(p, COLOUR_L_BLUE, "Armor", "[%d,%+d]",
@@ -785,7 +766,50 @@ static struct panel *get_panel_combat(void) {
 	/* Melee */
 	panel_space(p);
 	++hgt;
-	for (i = 0; i < player->mon.state.num_attacks; ++i) {
+
+	for (atk = player->mon.atk; atk; atk = atk->next) {
+		bth = atk->to_hit;
+		struct effect *ef;
+		char atk_title[80];
+		int blows = atk->blows / 100, blow_frac = (atk->blows / 10) % 10, attr;
+
+		if (atk->obj) {
+			object_desc(atk_title, sizeof atk_title, atk->obj, ODESC_CAPITAL | ODESC_TERSE, player);
+		} else {
+			my_strcpy(atk_title, atk->message, sizeof atk_title);
+			my_strcap_full(atk_title);
+		}
+
+		my_strcat(atk_title, format(": %+i (%i.%i)", bth, blows, blow_frac), sizeof atk_title);
+
+		panel_line(p, COLOUR_WHITE, atk_title, "");
+		++hgt;
+
+		for (ef = atk->ef; ef; ef = ef->next) {
+			char ef_name[80] = "", numbers[80] = "";
+			random_value rv;
+
+			dice_random_value(ef->dice, &rv);
+			effect_get_menu_name(ef_name, sizeof ef_name, ef);
+
+			if (rv.dice <= 0 || rv.sides <= 0) {
+				strnfmt(numbers, sizeof numbers, "%i", MAX(rv.base, 0));
+			}
+			else if (rv.base <= 0) {
+				strnfmt(numbers, sizeof numbers, "%id%i", rv.dice, rv.sides);
+			}
+			else {
+				strnfmt(numbers, sizeof numbers, "%id%i%+i", rv.dice, rv.sides, rv.base);
+			}
+
+			attr = ef_attr(ef);
+
+			panel_line(p, attr, " ", "%s: %s", ef_name, numbers);
+			++hgt;
+		}
+	}
+
+	/*for (i = 0; i < player->mon.state.num_attacks; ++i) {
 		aroll = &player->mon.state.attacks[i];
 		bth = player->mon.state.skills[aroll->attack_skill] / BTH_PLUS_ADJ + aroll->to_hit;
 		bth = MAX(0, bth);
@@ -904,11 +928,12 @@ static struct panel *get_panel_combat(void) {
 		panel_line(p, COLOUR_L_BLUE, "Blows", "%d.%d/turn",
 			blws / 100, (blws / 10) % 10);
 		hgt += 2;
-	}
+	}*/
 
 	/* Ranged */
 	aroll = &player->mon.state.ranged_attack;
 	if (aroll->obj) {
+		char title[80];
 		int mode = ODESC_BASE | ODESC_CAPITAL | ODESC_NOEGO | ODESC_SINGULAR | ODESC_TERSE;
 		object_desc(title, sizeof(title), aroll->obj, mode, player);
 		

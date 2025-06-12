@@ -542,8 +542,38 @@ bool effect_handler_TOUCH_AWARE(effect_handler_context_t *context)
 {
 	int dam = effect_calculate_value(context, true);
 	int rad = context->radius ? context->radius : 1;
-	if (project_touch(dam, rad, context->subtype, context->aware, context->obj))
+	if (project_touch(dam, rad, context->subtype, context->aware, context->obj)) {
 		context->ident = true;
+	}
+	return true;
+}
+
+/**
+ * L: Hit the target in melee
+ */
+bool effect_handler_HIT(effect_handler_context_t *context)
+{
+	int dam = effect_calculate_value(context, false);
+	struct monster *target = NULL;
+	struct monster *source = NULL;
+	bool dummy;
+
+	if (context->origin.what == SRC_PLAYER) {
+		source = &player->mon;
+		target = target_get_monster();
+	} else if (context->origin.what == SRC_MONSTER) {
+		source = cave_monster(cave, context->origin.which.monster);
+		target = monster_target_monster(context);
+		if (!target) target = &player->mon;
+	}
+
+	if (!source || !target) return false;
+
+	assert(source);
+	assert(target);
+
+	proj_melee_attack_mon(target, source, dam, context->subtype, &dummy, NULL);
+
 	return true;
 }
 
@@ -1817,7 +1847,7 @@ bool effect_handler_MOVE_ATTACK(effect_handler_context_t *context)
 	struct loc next_grid, grid_diff;
 	bool fear;
 	struct monster *mon;
-	struct attack_roll aroll = player->mon.state.attacks[0];
+	struct py_attack_roll aroll = player->mon.state.attacks[0];
 
 	/* Ask for a target */
 	if (context->dir == DIR_TARGET) {
@@ -1940,7 +1970,7 @@ bool effect_handler_MELEE_BLOWS(effect_handler_context_t *context)
 	struct loc target = loc(-1, -1);
 	struct loc grid = player->mon.grid;
 	struct monster *mon = NULL;
-	struct attack_roll aroll = player->mon.state.attacks[0];
+	struct py_attack_roll aroll = player->mon.state.attacks[0];
 
 	/* players only for now */
 	if (context->origin.what != SRC_PLAYER)
@@ -1986,7 +2016,7 @@ bool effect_handler_SWEEP(effect_handler_context_t *context)
 	bool fear;
 	int i;
 	struct loc target;
-	struct attack_roll aroll = player->mon.state.attacks[0];
+	struct py_attack_roll aroll = player->mon.state.attacks[0];
 
 	/* Players only for now */
 	if (context->origin.what != SRC_PLAYER)	return false;

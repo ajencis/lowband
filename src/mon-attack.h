@@ -22,6 +22,21 @@
 #include "monster.h"
 #include "mon-blows.h"
 
+struct attack {
+	struct attack *next;
+
+	struct effect *ef;
+	int to_hit;
+	int blows;			// number of blows per round the user gets with it
+	int num;			// number of the same attacks the user has
+
+	const char *message;	// L: what the attack is called
+
+	const struct object *obj;	/* what weapon is it using */
+	int range;			/* how far it can go (eg for a gaze) */
+	int crit_chance;	/* % chance of a critical hit */
+};
+
 int choose_attack_spell(bitflag *f, bool innate, bool non_innate);
 int chance_of_monster_hit_base(const struct monster_race *race,
 	const struct blow_effect *effect);
@@ -30,6 +45,6 @@ bool check_hit(struct player *p, int to_hit);
 int adjust_dam_armor(int damage, int ac);
 bool make_attack_normal(struct monster *mon, struct player *p);
 bool monster_attack_monster(struct monster *mon, struct monster *t_mon);
-int monster_melee_attack_range(int level, struct monster_blow *mblow);
+int monster_melee_attack_range(int level, const struct monster_blow *mblow);
 
 #endif /* !MONSTER_ATTACK_H */

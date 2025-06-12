@@ -714,6 +714,24 @@ size_t effect_get_menu_name(char *buf, size_t max, const struct effect *e)
 	return len;
 }
 
+int ef_attr(const struct effect *e)
+{
+	switch (base_descs[e->index].efinfo_flag) {
+	case EFINFO_SEEN:
+	case EFINFO_BOLT:
+	case EFINFO_BOLTD:
+	case EFINFO_TOUCH:
+	case EFINFO_BALL:
+	case EFINFO_SPOT:
+	case EFINFO_BREATH:
+	case EFINFO_SHORT:
+	case EFINFO_LASH:
+		return projections[e->subtype].color;
+	}
+
+	return COLOUR_WHITE;
+}
+
 /**
  * Returns a pointer to the next effect in the effect stack, skipping over
  * all the sub-effects from random or select effects

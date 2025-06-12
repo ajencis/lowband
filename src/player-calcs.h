@@ -107,6 +107,10 @@ extern struct skill_stat_info skill_stats[];
 #define PR_FEELING		0x01000000L /* Display level feeling */
 #define PR_LIGHT		0x02000000L /* Display light level */
 
+#define LOW_STAT_IND 0
+#define AVG_STAT_IND 7
+#define HI_STAT_IND 14
+
 /**
  * Display Basic Info
  */
@@ -140,6 +144,7 @@ int adj_mag_stat(int index);
 int adj_str_web(int index);
 int adj_stat_skill_flat(int index, int skill);
 int adj_stat_skill_percent(int index, int skill);
+int adj_stat_blow(int index);
 
 bool earlier_object(struct object *orig, struct object *new, bool store);
 int equipped_item_slot(struct player_body body, struct object *obj);
@@ -151,7 +156,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 void calc_digging_chances(struct player_state *state, int chances[DIGGING_MAX]);
 int calc_unlocking_chance(const struct player *p, int lock_power,
 		bool lock_unseen);
-void calc_blows(struct player *p, int wgt, struct attack_roll *aroll,
+void calc_blows(struct player *p, int wgt, struct py_attack_roll *aroll,
 			   struct player_state *state, int extra_blows);
 
 void health_track(struct player_upkeep *upkeep, struct monster *mon);

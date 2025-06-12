@@ -1564,21 +1564,23 @@ void project_m(struct source origin, int r, struct loc grid, int dam, int typ,
 	*was_obvious = !!obvious;
 }
 
-bool proj_melee_attack_mon(struct monster *mon, struct player *p, int dmg, int proj_type, bool *fear, const char *note)
+bool proj_melee_attack_mon(struct monster *target, struct monster *attacker, int dmg, int proj_type, bool *fear, const char *note)
 {
 	bool died;
 
+	assert(proj_type >= 0 && proj_type < PROJ_MAX);
+
 	project_monster_handler_f monster_handler = monster_handlers[proj_type];
 	project_monster_handler_context_t context = {
-		source_player(),
+		source_monster(attacker->midx),
 		0,
-		mon->grid,
+		target->grid,
 		dmg,
 		proj_type,
 		true,
 		false,
-		mon, /* mon */
-		get_lore(mon->race), /* lore */
+		target, /* mon */
+		get_lore(target->race), /* lore */
 		false,
 		true,
 		false, /* skipped */
@@ -1592,9 +1594,19 @@ bool proj_melee_attack_mon(struct monster *mon, struct player *p, int dmg, int p
 
 	monster_handler(&context);
 
-	died = mon_take_hit(mon, player, context.dam, fear, note);
+	if (attacker->player) {
+		died = mon_take_hit(target, player, context.dam, fear, note);
+	}
+	else if (target->player) {
+		char kill[80] = "";
+		strnfmt(kill, sizeof kill, "a%s %s", is_a_vowel(attacker->race->name[0]) ? "n" : "", attacker->race->name);
+		take_hit(target->player, context.dam, kill);
+	}
+	else {
+		died = mon_take_nonplayer_hit(context.dam, target, MON_MSG_NONE, MON_MSG_DIE, false);
+	}
 
-	if (!died && context.hurt_msg) add_monster_message(mon, context.hurt_msg, false);
+	if (!died && context.hurt_msg) add_monster_message(target, context.hurt_msg, false);
 
 	return died;
 }

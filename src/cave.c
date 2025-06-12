@@ -552,8 +552,9 @@ void object_lists_check_integrity(struct chunk *c, struct chunk *c_k)
 			struct object *obj = c->objects[i];
 			if (obj) {
 				assert(obj->oidx == i);
-				if (!loc_is_zero(obj->grid))
+				if (!loc_is_zero(obj->grid)) {
 					assert(pile_contains(square_object(c, obj->grid), obj));
+				}
 			}
 		}
 	}
