@@ -1936,16 +1936,37 @@ static enum parser_error parse_monster_blow(struct parser *p) {
 	struct monster_race *r = parser_priv(p);
 	struct monster_blow *b = r->blow;
 
-	if (!r)
+	const struct blow_method *meth = findmeth(parser_getsym(p, "method"));
+	const struct blow_effect *eff;
+
+	if (parser_hasval(p, "effect")) {
+		eff = findeff(parser_getsym(p, "effect"));
+		if (!eff) {
+			return PARSE_ERROR_INVALID_EFFECT;
+		}
+	} else {
+		eff = findeff("NONE");
+	}
+
+	if (!r) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
 
 	/* Go to the last valid blow, then allocate a new one */
 	if (!b) {
 		r->blow = mem_zalloc(sizeof(struct monster_blow));
 		b = r->blow;
 	} else {
-		while (b->next)
+		for (b = r->blow; b; b = b->next) {
+			if (b->method == meth && b->effect == eff) {
+				++b->num;
+				return PARSE_ERROR_NONE;
+			}
+		}
+		b = r->blow;
+		while (b->next) {
 			b = b->next;
+		}
 		b->next = mem_zalloc(sizeof(struct monster_blow));
 		b = b->next;
 	}
@@ -1965,6 +1986,8 @@ static enum parser_error parse_monster_blow(struct parser *p) {
 	if (parser_hasval(p, "damage")) {
 		b->dice = parser_getrand(p, "damage");
 	}
+
+	b->num = 1;
 
 	return PARSE_ERROR_NONE;
 }

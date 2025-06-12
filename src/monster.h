@@ -188,6 +188,7 @@ struct monster_blow {
 	struct blow_effect *effect;	/* Effect */
 	random_value dice;			/* Damage dice */
 	int times_seen;				/* Sightings of the blow (lore only) */
+	int num;					// L: number of the same attack this monster has
 };
 
 /**

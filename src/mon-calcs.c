@@ -629,7 +629,7 @@ static void num_natural_attacks(const struct monster *mon, int array[EQUIP_MAX])
 		int eq_slot = mb->method->equip_slot;
 
 		if (eq_slot != EQUIP_NONE) {
-			++array[eq_slot];
+			array[eq_slot] += mb->num;
 		}
 	}
 }
@@ -722,13 +722,17 @@ static struct embryo_attack *init_mon_attacks(const struct monster *mon)
 	for (i = 0; i < z_info->mon_blows_max && blows[i].method; ++i) {
 		const struct monster_blow *blow = &blows[i];
 		int slot = blow->method->equip_slot;
+		int num = blow->num;
 
 		if (slot != EQUIP_NONE) {
 			if (remaining_slots[slot] <= 0) continue;
-			--remaining_slots[slot];
+			num = MIN(num, remaining_slots[slot]);
+			remaining_slots[slot] -= num;
 		}
 
 		new = get_natural_attack(mon, blow);
+
+		new->num = num;
 
 		add_attack_to_end(&result, new);
 	}
