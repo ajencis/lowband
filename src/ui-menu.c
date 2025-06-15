@@ -837,13 +837,14 @@ bool menu_handle_mouse(struct menu *menu, const ui_event *in,
  */
 static bool menu_handle_action(struct menu *m, const ui_event *in)
 {
+	bool result = false;
 	if (m->row_funcs->row_handler) {
 		int oid = menu_cursor_to_oid(m, m->cursor);
 
-		return m->row_funcs->row_handler(m, in, oid);
+		result = m->row_funcs->row_handler(m, in, oid);
 	}
 
-	return false;
+	return result;
 }
 
 
@@ -966,8 +967,9 @@ ui_event menu_select(struct menu *menu, int notify, bool popup)
 			/* Command key */
 			if (!no_act && menu->cmd_keys &&
 					strchr(menu->cmd_keys, (char)in.key.code) &&
-					menu_handle_action(menu, &in))
+					menu_handle_action(menu, &in)) {
 				continue;
+			}
 
 			/* Switch key */
 			if (!no_act && menu->switch_keys &&

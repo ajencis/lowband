@@ -17,10 +17,12 @@
  */
 #include "angband.h"
 #include "buildid.h"
+#include "effects.h"
 #include "effects-info.h"
 #include "game-world.h"
 #include "init.h"
 #include "mon-attack.h"
+#include "mon-calcs.h"
 #include "obj-curse.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
@@ -56,8 +58,8 @@
  */
 struct panel_line {
 	uint8_t attr;
-	char label[20];
-	char value[20];
+	char label[32];
+	char value[32];
 };
 
 /**
@@ -112,7 +114,6 @@ static void panel_line(struct panel *p, uint8_t attr, const char *label,
 	} else {
 		pl->label[0] = '\0';
 	}
-	//pl->label = label;
 
 	/* Set the value */
 	if (fmt) {
@@ -622,18 +623,18 @@ static void display_panel(const struct panel *p, bool left_adj,
 		int len;
 		struct panel_line *pl = &p->lines[i];
 
-		if (!pl->label[0])
-			continue;
+		if (!pl->label[0] && !pl->value[0]) continue;
 
 		Term_putstr(col, row, strlen(pl->label), COLOUR_WHITE, pl->label);
 
 		len = strlen(pl->value);
 		len = len < w - offset ? len : w - offset - 1;
 
-		if (left_adj)
+		if (left_adj) {
 			Term_putstr(col+offset, row, len, pl->attr, pl->value);
-		else
+		} else {
 			Term_putstr(col+w-len, row, len, pl->attr, pl->value);
+		}
 	}
 }
 
@@ -758,6 +759,8 @@ static struct panel *get_panel_combat(void) {
 
 	cinfo_len = N_ELEMENTS(cinfo);*/
 
+	update_mon_attacks(&player->mon);
+
 	/* AC */
 	panel_line(p, COLOUR_L_BLUE, "Armor", "[%d,%+d]",
 			player->known_state.ac, player->known_state.to_a);
@@ -772,6 +775,7 @@ static struct panel *get_panel_combat(void) {
 		struct effect *ef;
 		char atk_title[80];
 		int blows = atk->blows / 100, blow_frac = (atk->blows / 10) % 10, attr;
+		int num_choice = 0;
 
 		if (atk->obj) {
 			object_desc(atk_title, sizeof atk_title, atk->obj, ODESC_CAPITAL | ODESC_TERSE, player);
@@ -786,25 +790,37 @@ static struct panel *get_panel_combat(void) {
 		++hgt;
 
 		for (ef = atk->ef; ef; ef = ef->next) {
-			char ef_name[80] = "", numbers[80] = "";
+			char ef_name[80] = "", title[80] = " ";
 			random_value rv;
 
 			dice_random_value(ef->dice, &rv);
 			effect_get_menu_name(ef_name, sizeof ef_name, ef);
 
-			if (rv.dice <= 0 || rv.sides <= 0) {
-				strnfmt(numbers, sizeof numbers, "%i", MAX(rv.base, 0));
+			if (num_choice > 0) {
+				strnfmt(title, sizeof title, "-");
+				--num_choice;
+			}
+
+			if (ef->index == EF_RANDOM) {
+				num_choice = dice_roll(ef->dice, &rv);
+			}
+			else if (rv.dice <= 0 || rv.sides <= 0) {
+				my_strcat(ef_name, format(": %i", MAX(rv.base, 0)), sizeof ef_name);
+			}
+			else if (rv.sides == 1) {
+				my_strcat(ef_name, format(": %i", MAX(rv.base + rv.dice, 0)), sizeof ef_name);
 			}
 			else if (rv.base <= 0) {
-				strnfmt(numbers, sizeof numbers, "%id%i", rv.dice, rv.sides);
+				my_strcat(ef_name, format(": %id%i", rv.dice, rv.sides), sizeof ef_name);
 			}
 			else {
-				strnfmt(numbers, sizeof numbers, "%id%i%+i", rv.dice, rv.sides, rv.base);
+				my_strcat(ef_name, format(": %id%i%+i", rv.dice, rv.sides, rv.base), sizeof ef_name);
 			}
 
 			attr = ef_attr(ef);
 
-			panel_line(p, attr, " ", "%s: %s", ef_name, numbers);
+			panel_line(p, attr, title, "%s", ef_name);
+
 			++hgt;
 		}
 	}
@@ -1048,9 +1064,9 @@ static const struct {
 	/*   x  y wid rows */
 	{ {  1, 1, 40, 7 }, true,  get_panel_topleft },	/* Name, Class, ... */
 	{ { 24, 1, 18, 3 }, false, get_panel_misc },	/* Age, ht, wt, ... */
-	{ {  1, 9, 22, 9 }, false, get_panel_midleft },	/* Cur Exp, Max Exp, ... */
-	{ { 27, 9, 21, 9 }, false, get_panel_combat },
-	{ { 52, 9, 20, 8 }, false, get_panel_skills },
+	{ {  1, 9, 21, 9 }, false, get_panel_midleft },	/* Cur Exp, Max Exp, ... */
+	{ { 25, 9, 25, 9 }, false, get_panel_combat },
+	{ { 53, 9, 19, 8 }, false, get_panel_skills },
 };
 
 int display_player_xtra_info(void)

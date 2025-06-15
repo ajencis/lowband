@@ -39,4 +39,6 @@ bool dice_test_values(const dice_t *dice, int base, int dice_count, int sides,
 bool dice_test_variables(const dice_t *dice, const char *base,
 		const char *dice_name, const char *sides, const char *bonus);
 
+dice_t *dice_copy(const dice_t *source);
+
 #endif /* INCLUDED_Z_DICE_H */

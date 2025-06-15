@@ -2196,6 +2196,7 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 		bool on = false;
 		int chance = level_mod;
 		const struct monster_spell *ms = monster_spell_by_index(i);
+
 		if (!mon_spell_is_innate(i)) {
 			if (magic <= 0) continue;
 			else chance = magic_mod;
@@ -2210,8 +2211,12 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 			if (min <= 0) continue;
 
 			mod = race_power - min;
-			if (race_power <= 0) mod *= 2; // mages without any specialty at all in the subject are unlikely to know
-			if (mod > 0) mod += magic_mod; // good mages in their specialty are likely to know a spell
+
+			// mages without any specialty at all in the subject are unlikely to know stronger spells
+			if (race_power <= 0) mod *= (ABS(mod) / 3 + 10);
+			
+			// good mages in their specialty are likely to know a spell
+			if (mod > 0) mod += magic_mod;
 
 			chance += mod;
 		}
@@ -2299,6 +2304,7 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 			blows++;
 		}
 	}
+	
 	if (!blows) dam /= 2;
 
 	if (spellcaster) mspells = true;

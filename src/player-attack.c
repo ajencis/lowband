@@ -1827,9 +1827,9 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct att
 	char target[80] = "you";
 	char message[80] = "hit";
 
-	struct loc grid = t_mon->grid;
-
 	bool success;
+
+	int dir = loc_to_dir(loc_diff(t_mon->grid, mon->grid));
 
 	/* Disturb the monster */
 	if (!tp) {
@@ -1878,11 +1878,8 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct att
 	}
 
 	if (success) {
-		struct effect *ef;
 		bool id = false;
-		for (ef = atk->ef; ef && mon_valid(t_mon, grid); ef = ef->next) {
-			effect_do(ef, source_monster(mon->midx), NULL, &id, true, 0, 0, 0, NULL);
-		}
+		effect_do(atk->ef, source_monster(mon->midx), NULL, &id, true, dir, 0, 0, NULL);
 	}
 }
 
@@ -1890,6 +1887,8 @@ static void mon_test_attack(struct monster *mon, struct monster *t_mon)
 {
 	struct loc grid = t_mon->grid;
 	struct attack *atk;
+
+	update_mon_attacks(mon);
 
 	if (mon_is_player(mon)) {
 		target_set_monster(t_mon);

@@ -345,11 +345,11 @@ static int32_t effect_value_base_caster_hp(void)
 
 	// Use the current monster if there is one
 	if (cave->mon_current > 0) {
-		return cave_monster(cave, cave->mon_current)->hp;
+		power = cave_monster(cave, cave->mon_current)->hp;
 	}
 	// Else assume the player is casting
 	else {
-		return player->mon.hp;
+		power = player->mon.hp;
 	}
 
 	return power;
@@ -575,8 +575,9 @@ void effect_simple(int index,
 	effect.x = x;
 
 	/* Direction if needed */
-	if (effect_aim(&effect))
+	if (effect_aim(&effect)) {
 		get_aim_dir(&dir);
+	}
 
 	/* Do the effect */
 	if (!ident) {

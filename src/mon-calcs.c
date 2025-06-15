@@ -12,9 +12,11 @@
 #include "obj-util.h"
 #include "monster.h"
 #include "mon-attack.h"
-#include "player-calcs.h"
-#include "player-util.h"
+#include "mon-spell.h"
 #include "player-attack.h"
+#include "player-calcs.h"
+#include "player-spell.h"
+#include "player-util.h"
 #include "project.h"
 
 
@@ -79,7 +81,7 @@ struct embryo_attack {
 
 	const char *msg;
 
-	const struct monster_blow *blow;
+	const struct monster_blow *mon_blow;
 	const struct object *obj;
 	int special_type;
 
@@ -377,6 +379,8 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	if (state->skills[SKILL_DIGGING] < 1) state->skills[SKILL_DIGGING] = 1;
 	if (state->skills[SKILL_STEALTH] > 150) state->skills[SKILL_STEALTH] = 150;
 	if (state->skills[SKILL_HEALTH] < 3) state->skills[SKILL_HEALTH] = 3;
+
+	mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
 }
 
 
@@ -388,7 +392,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 
 static void effect_add_value(struct effect *ef, random_value rv)
 {
-	char dice_str[80];
+	char dice_str[80] = "";
 	dice_t *dice;
 
 	if (ef->dice) {
@@ -398,14 +402,22 @@ static void effect_add_value(struct effect *ef, random_value rv)
 		dice = dice_new();
 	}
 
-	strnfmt(dice_str, sizeof dice_str, "%id%i", rv.dice, rv.sides);
-
 	if (rv.base) {
-		my_strcat(dice_str, format("%+i", rv.base), sizeof dice_str);
+		my_strcat(dice_str, format("%i", rv.base), sizeof dice_str);
+	}
+
+	if (rv.dice && rv.sides) {
+		int sign = SGN(rv.dice) * SGN(rv.sides);
+		const char *prepend = dice_str[0] ? (sign > 0 ? "+" : "-") : "";
+		my_strcat(dice_str, format("%s%id%i", prepend, rv.dice, rv.sides), sizeof dice_str);
 	}
 
 	if (rv.m_bonus) {
 		my_strcat(dice_str, format("M%i", rv.m_bonus), sizeof dice_str);
+	}
+
+	if (!dice_str[0]) {
+		strnfmt(dice_str, sizeof dice_str, "0d0");
 	}
 
 	dice_parse_string(dice, dice_str);
@@ -425,7 +437,7 @@ static void emb_atk_mod_death_touch(const struct monster *mon, struct embryo_att
 	if (!mon_has_power(mon, PP_DEATH_TOUCH)) return;
 	if (emb->obj) return;
 
-	div = emb->blow ? 2 : 1;
+	div = emb->mon_blow ? 2 : 1;
 	rv.sides = get_mon_power_scale(mon, PP_DEATH_TOUCH, 50 / div);
 	rv.dice = 1;
 
@@ -439,8 +451,97 @@ static void emb_atk_mod_death_touch(const struct monster *mon, struct embryo_att
 	emb->extra = ef;
 }
 
+static struct effect *breath_bite_ef(int innate, const struct monster *mon)
+{
+	const struct monster_spell *spell = monster_spell_by_index(innate);
+	struct effect *ef_new;
+	const struct effect *ef_src;
+	random_value rv;
+	int power_mod = 10 + get_mon_power_scale(mon, PP_BREATH_BITE, 40);
+	int prev_cmc;
+
+	ef_src = spell->effect;
+	while (ef_src && ef_src->index != EF_BREATH) {
+		ef_src = ef_src->next;
+	}
+
+	if (!ef_src) return NULL;
+	assert(effect_valid(ef_src));
+
+	ef_new = mem_zalloc(sizeof *ef_new);
+	memcpy(ef_new, ef_src, sizeof *ef_new);
+	ef_new->msg = ef_src->msg ? string_make(ef_src->msg) : NULL;
+	ef_new->monster = NULL;
+	ef_new->next = NULL;
+	ef_new->dice = NULL;
+
+	prev_cmc = cave->mon_current;
+	cave->mon_current = mon->midx;
+
+	dice_random_value(ef_src->dice, &rv);
+
+	rv.base *= power_mod;
+	rv.base += 100 - 1;
+	rv.base /= 100;
+
+	effect_add_value(ef_new, rv);
+
+	cave->mon_current = prev_cmc;
+
+	return ef_new;
+}
+
+static void emb_atk_mod_breath_bite(const struct monster *mon, struct embryo_attack *emb)
+{
+	struct effect *result = NULL, *ef_temp;
+	int num_breaths = 0, innate;
+	struct monster_race *mr = mon->race;
+
+	if (!mon_has_power(mon, PP_BREATH_BITE)) return;
+	if (!emb->mon_blow) return;
+	if (!streq(emb->mon_blow->method->name, "BITE")) return;
+
+	for (innate = 0; innate < RSF_MAX; ++innate) {
+		if (!spell_is_castable_innately(mr, innate)) continue;
+		if (!rsf_has(mr->spell_flags, innate)) continue;
+
+		ef_temp = breath_bite_ef(innate, mon);
+
+		if (ef_temp) {
+			++num_breaths;
+			ef_temp->next = result;
+			result = ef_temp;
+		}
+	}
+
+	if (num_breaths > 1) {
+		ef_temp = mem_zalloc(sizeof *ef_temp);
+		ef_temp->index = EF_RANDOM;
+		random_value rv = { 0, 0, 0, 0 };
+
+		rv.dice = num_breaths;
+		rv.sides = 1;
+
+		effect_add_value(ef_temp, rv);
+
+		ef_temp->next = result;
+		result = ef_temp;
+	}
+
+	if (emb->extra) {
+		ef_temp = emb->extra;
+		while (ef_temp->next) ef_temp = ef_temp->next;
+
+		ef_temp->next = result;
+	}
+	else {
+		emb->extra = result;
+	}
+}
+
 emb_atk_mod_fn mod_fns[] = {
-	emb_atk_mod_death_touch
+	emb_atk_mod_death_touch,
+	emb_atk_mod_breath_bite
 };
 
 
@@ -547,7 +648,7 @@ static struct embryo_attack *get_natural_attack(const struct monster *mon, const
 	bool p = mon->player ? true : false;
 	struct embryo_attack *emb = mem_zalloc(sizeof *emb);
 
-	emb->blow = blow;
+	emb->mon_blow = blow;
 
 	emb->skill = SKILL_TO_HIT_MELEE;
 
@@ -861,10 +962,19 @@ void free_mon_attacks(struct monster *mon)
 }
 
 
-void update_mon_attacks(struct monster *mon)
+static void refresh_mon_attacks(struct monster *mon)
 {
 	free_mon_attacks(mon);
 	get_mon_attacks(mon);
+}
+
+
+void update_mon_attacks(struct monster *mon)
+{
+	if (mflag_has(mon->mflag, MFLAG_UPDATE_ATTACKS) && mon_is_player(mon)) {
+		refresh_mon_attacks(mon);
+		mflag_off(mon->mflag, MFLAG_UPDATE_ATTACKS);
+	}
 }
 
 
@@ -873,11 +983,6 @@ void update_mon_state(struct monster *mon)
 	if (mflag_has(mon->mflag, MFLAG_UPDATE_STATE)) {
 		calc_mon_bonuses(mon, &mon->state);
 		mflag_off(mon->mflag, MFLAG_UPDATE_STATE);
-	}
-
-	if (mflag_has(mon->mflag, MFLAG_UPDATE_ATTACKS) && mon_is_player(mon)) {
-		update_mon_attacks(mon);
-		mflag_off(mon->mflag, MFLAG_UPDATE_ATTACKS);
 	}
 }
 

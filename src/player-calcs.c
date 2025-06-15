@@ -2200,8 +2200,6 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	/* Movement speed */
 	state->num_moves = extra_moves;
 
-	update_mon_attacks(&p->mon);
-
 	return;
 }
 

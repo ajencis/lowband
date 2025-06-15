@@ -815,8 +815,9 @@ bool effect_handler_BREATH(effect_handler_context_t *context)
 		diameter_of_source = diameter_of_source * 60 / degrees_of_arc;
 
 		/* Max */
-		if (diameter_of_source > 25)
+		if (diameter_of_source > 25) {
 			diameter_of_source = 25;
+		}
 	}
 
 	/* Breathe at the target */

@@ -292,6 +292,27 @@ int dice_bind_expression(dice_t *dice, const char *name,
 }
 
 /**
+ * L: deep-copies a dice object
+ */
+dice_t *dice_copy(const dice_t *source)
+{
+	dice_t *new = mem_zalloc(sizeof *new);
+	int i;
+
+	memcpy(new, source, sizeof *new);
+
+	new->expressions = NULL;
+
+	for (i = 0; i < DICE_MAX_EXPRESSIONS; ++i) {
+		const char *name = source->expressions[i].name;
+		const expression_t *expr = source->expressions[i].expression;
+		dice_bind_expression(new, name, expr);
+	}
+
+	return new;
+}
+
+/**
  * Parse a formatted string for values and variables to represent a dice roll.
  *
  * This function can parse a number of formats in the general style of "1+2d3M4"
@@ -322,8 +343,9 @@ bool dice_parse_string(dice_t *dice, const char *string)
 		DICE_SEEN_BONUS,
 	} last_seen = DICE_SEEN_NONE;
 
-	if (dice == NULL || string == NULL)
+	if (dice == NULL || string == NULL) {
 		return false;
+	}
 
 	/* Reset all internal state, since this object might be reused. */
 	dice_reset(dice);
@@ -334,8 +356,9 @@ bool dice_parse_string(dice_t *dice, const char *string)
 		dice_input_t input_type = DICE_INPUT_MAX;
 
 		/* Skip spaces; this will concatenate digits and variable names. */
-		if (isspace(string[current]))
+		if (isspace(string[current])) {
 			continue;
+		}
 
 		input_type = dice_input_for_char(string[current]);
 

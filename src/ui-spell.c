@@ -444,9 +444,11 @@ static void innate_menu_display(struct menu *m, int oid, bool cursor,
 
 	char out[80];
 	char name[80];
+	char desc[80];
 	get_mon_spell_name(name, sizeof(name), innate_index, mrace);
 	int mana = innate_spell_mana(mrace);
 	int power = innate_spell_power(player, innate_index);
+	effect_get_menu_name(desc, sizeof desc, innate->effect);
 
 	int attr = COLOUR_WHITE;
 	size_t u8len;
@@ -468,7 +470,9 @@ static void innate_menu_display(struct menu *m, int oid, bool cursor,
 		string_free(name_copy);
 	}
 	my_strcat(out, format("%4i  ", mana), sizeof(out));
-	my_strcat(out, format("%3i", power), sizeof(out));
+	my_strcat(out, format("%3i  ", power), sizeof(out));
+	my_strcat(out, desc, sizeof out);
+
 	c_prt(attr, out, row, col);
 }
 
@@ -496,6 +500,7 @@ static void innate_menu_browser(int oid, void *data, const region *loc)
 	const struct monster_spell *innate = monster_spell_by_index(innate_index);
 
 	if (d->show_description) {
+
 		int w, h, i;
 		struct effect *e;
 		textblock *tb;
@@ -689,7 +694,7 @@ int textui_get_innate(struct player *p,
 
 	handle_stuff(p);
 
-	m = innate_menu_new(monr, innate_filter, false);
+	m = innate_menu_new(monr, innate_filter, true);//false);
 	if (m) {
 		int innate_index = innate_menu_select(m);
 		innate_menu_destroy(m);

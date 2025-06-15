@@ -12,7 +12,7 @@
  * plan to use it from a menu
  */
 /* name 							aim		info		args	info flags		description		menu_name */
-EFFECT(RANDOM,						false,	NULL,		0,		EFINFO_NONE,	"randomly ",	"")
+EFFECT(RANDOM,						false,	NULL,		0,		EFINFO_NONE,	"randomly ",	"randomly")
 EFFECT(HIT,							false,	NULL,		0,		EFINFO_BOLTD,	"does %s %s damage", "%s")
 EFFECT(DAMAGE,						false,	"hurt",		1,		EFINFO_DICE,	"does %s damage to the player",	"damage")
 EFFECT(HEAL_HP,						false,	"heal",		2,		EFINFO_HEAL,	"heals %s hitpoints%s",	"heal self")
@@ -87,7 +87,7 @@ EFFECT(SPOT,						false,	"dam",		4,		EFINFO_SPOT,	"creates a ball of %s with rad
 EFFECT(SPHERE,						false,	"dam",		4,		EFINFO_SPOT,	"creates a ball of %s with radius %d, centred on the player, with full intensity to radius %d, dealing %s damage at the centre",	"project %s")
 EFFECT(BALL,						true,	"dam",		3,		EFINFO_BALL,	"fires a ball of %s with radius %d, dealing %s damage at the centre",	"fire a ball of %s")
 EFFECT(BALL_NO_DAM_RED,				true,	"dam",		3,		EFINFO_BALL,	"fires a ball of %s with radius %d, dealing %s damage",	"fire a ball of %s")
-EFFECT(BREATH,						true,	"dam",		3,		EFINFO_BREATH,	"breathes a cone of %s with width %d degrees, dealing %s damage at the source",	"breathe a cone of %s")
+EFFECT(BREATH,						true,	"dam",		3,		EFINFO_BREATH,	"breathes a cone of %s with width %d degrees, dealing %s damage at the source",	"breathe %s")
 EFFECT(ARC,							true,	"dam",		3,		EFINFO_BREATH,	"produces a cone of %s with width %d degrees, dealing %s damage at the source",	"produce a cone of %s")
 EFFECT(SHORT_BEAM,					true,	"dam",		3,		EFINFO_SHORT,	"produces a beam of %s with length %d, dealing %s damage",	"produce a beam of %s")
 EFFECT(LASH,						true,	NULL,		2,		EFINFO_LASH,	"fires a beam of %s length %d, dealing damage determined by blows",	"lash with %s")
