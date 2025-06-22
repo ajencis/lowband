@@ -51,6 +51,11 @@ bool race_has_ability(const struct player_race *race,
 					  struct player_ability *ability);
 void do_cmd_abilities(void);
 
+bool mon_power_minimum(const struct monster *mon, int power, int min);
+int get_mon_power_scale(const struct monster *mon, int power, int scaleto);
+bool mon_has_power(const struct monster *mon, int power);
+int attack_specialization_power(const struct monster *mon, const struct object *obj, const struct monster_blow *blow);
+
 const char *ability_subchoice_title(const struct player_ability *parent);
 int ability_subchoice_choices(struct player_ability *parent);
 const char *ability_subchoice_name(int id, const struct player_ability *parent);

@@ -403,8 +403,9 @@ bool square_reveal_trap(struct chunk *c, struct loc grid, bool always,
 	struct trap *trap = square_trap(c, grid);
     
     /* Check there is a player trap */
-    if (!square_isplayertrap(c, grid))
+    if (!square_isplayertrap(c, grid)) {
 		return false;
+	}
 
 	/* Scan the grid */
 	while (trap) {
@@ -566,7 +567,7 @@ extern void hit_trap(struct loc grid, int delayed)
 			}
 			effect = trap->kind->effect;
 
-			effect_do(effect, source_trap(trap), NULL, &ident, false, 0, 0, -defadj, NULL);
+			effect_do(effect, source_trap(trap), source_none(), NULL, &ident, false, 0, 0, -defadj, NULL);
 
 			/* Trap may have gone or the player may be dead */
 			if (!square_trap(cave, grid) || player->is_dead) break;
@@ -576,7 +577,7 @@ extern void hit_trap(struct loc grid, int delayed)
 				if (trap->kind->msg_xtra)
 					msg("%s", trap->kind->msg_xtra);
 				effect = trap->kind->effect_xtra;
-				effect_do(effect, source_trap(trap), NULL, &ident, false,
+				effect_do(effect, source_trap(trap), source_none(), NULL, &ident, false,
 						  0, 0, 0, NULL);
 
 				/* Trap may have gone or the player may be dead */

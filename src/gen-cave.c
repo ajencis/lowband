@@ -383,7 +383,7 @@ static bool make_rooms_secret(struct chunk *c)
 				} while (!square_isfloor(c, treas_grid) && attempts > 0);
 
 				if (attempts <= 0) {
-					plog_fmt("can't find a floor space, roomlocnum is %i", roomlocnum);
+					//plog_fmt("can't find a floor space, roomlocnum is %i", roomlocnum);
 					treas_grid = loc(0, 0);
 				}
 			}

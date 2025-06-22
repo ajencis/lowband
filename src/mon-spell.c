@@ -385,7 +385,7 @@ void do_mon_spell(int index, struct monster *mon, bool seen)
 			msg("%s", level->save_message);
 			spell_check_for_fail_rune(spell);
 		} else {
-			effect_do(spell->effect, source_monster(mon->midx), NULL, &ident, true, 0, 0, 0, NULL);
+			effect_do(spell->effect, source_monster(mon->midx), source_none(), NULL, &ident, true, 0, 0, 0, NULL);
 		}
 	}
 }

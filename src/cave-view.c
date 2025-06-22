@@ -921,6 +921,9 @@ static void update_view_one(struct chunk *c, struct loc grid, struct player *p)
  */
 static void update_one(struct chunk *c, struct loc grid, struct player *p)
 {
+	assert(c);
+	assert(p);
+
 	/* Remove view if blind, check visible squares for traps */
 	if (p->mon.m_timed[TMD_BLIND] ||
 			(of_has(p->mon.state.flags, OF_BAD_VISION) && distance(p->mon.grid, grid) > 5)) {
@@ -960,6 +963,9 @@ static void update_one(struct chunk *c, struct loc grid, struct player *p)
  */
 void update_view(struct chunk *c, struct player *p)
 {
+	assert(c);
+	assert(p);
+
 	int x, y;
 
 	bool p_sq_lit = lit_for_player(c, p->mon.grid, p);

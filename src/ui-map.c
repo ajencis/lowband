@@ -733,7 +733,7 @@ void prt_map(void)
 	clipy = ROW_MAP + SCREEN_ROWS;
 
 	/* Dump the map */
-	for (y = Term->offset_y, vy = ROW_MAP; y < ty; vy += tile_height, y++)
+	for (y = Term->offset_y, vy = ROW_MAP; y < ty; vy += tile_height, y++) {
 		for (x = Term->offset_x, vx = COL_MAP; x < tx; vx += tile_width, x++) {
 			/* Check bounds */
 			if (!square_in_bounds(cave, loc(x, y))) continue;
@@ -749,6 +749,7 @@ void prt_map(void)
 				Term_big_queue_char(Term, vx, vy, clipy, a, c,
 					COLOUR_WHITE, L' ');
 		}
+	}
 }
 
 /**

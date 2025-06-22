@@ -486,8 +486,9 @@ int equipped_item_slot(struct player_body body, struct object *item)
 	if (item == NULL) return body.count;
 
 	/* Look for an equipment slot with this item */
-	for (i = 0; i < body.count; i++)
+	for (i = 0; i < body.count; i++) {
 		if (item == body.slots[i].obj) break;
+	}
 
 	/* Correct slot, or body.count if not equipped */
 	return i;

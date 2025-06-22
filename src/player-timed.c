@@ -881,6 +881,7 @@ bool player_set_timed(struct player *p, int idx, int v, bool notify,
 
 			(void) effect_do(effect->on_begin_effect,
 				can_disturb ? source_none() : source_player(),
+				source_none(),
 				NULL, &ident, true, 0, 0, 0, NULL);
 		}
 	} else if (v == 0) {
@@ -890,6 +891,7 @@ bool player_set_timed(struct player *p, int idx, int v, bool notify,
 
 			(void) effect_do(effect->on_end_effect,
 				can_disturb ? source_none() : source_player(),
+				source_none(),
 				NULL, &ident, true, 0, 0, 0, NULL);
 		}
 	}

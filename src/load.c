@@ -246,8 +246,9 @@ static struct object *rd_item(void)
 	}
 
 	/* Set effect */
-	if (effect)
+	if (effect) {
 		obj->effect = obj->kind->effect;
+	}
 
 	/* Success */
 	return obj;
@@ -258,6 +259,10 @@ static void rd_body(struct monster *mon, struct chunk *c)
 	char body_name[80], slot_name[80];
 	uint16_t tmp16u, i;
 	uint8_t tmp8u;
+
+	//const char *cave_name = c == cave ? "cave" : (c == player->cave ? "player->cave" : "?");
+
+	//plog_fmt("entering rd_body for cave %s", cave_name);
 
 	rd_string(body_name, sizeof body_name);
 	mon->body.name = string_make(body_name);
@@ -277,8 +282,11 @@ static void rd_body(struct monster *mon, struct chunk *c)
 		rd_byte(&tmp8u);
 		if (tmp8u) {
 			struct object *eq = rd_item();
+			describe_object_saveload(eq, "rd_body", false);
 			mon->body.slots[i].obj = eq;
 
+			assert(eq);
+			assert(eq->held_m_idx == mon->midx);
 			assert(eq->oidx);
 			assert(c->objects[eq->oidx] == NULL);
 			c->objects[eq->oidx] = eq;
@@ -368,6 +376,7 @@ static bool rd_monster(struct chunk *c, struct monster *mon)
 	/* Read all the held objects (order is unimportant) */
 	while (true) {
 		struct object *obj = rd_item();
+		describe_object_saveload(obj, "rd_monster", false);
 		if (!obj) {
 			break;
 		}
@@ -1251,8 +1260,9 @@ int rd_player_hp(void)
 	}
 
 	/* Read the player_hp array */
-	for (i = 0; i < tmp16u; i++)
+	for (i = 0; i < tmp16u; i++) {
 		rd_s16b(&player->player_hp[i]);
+	}
 
 	return 0;
 }
@@ -1324,6 +1334,7 @@ static int rd_gear_aux(rd_item_t rd_item_version, struct object **gear)
 	/* Read until done */
 	while (code != FINISHED_CODE) {
 		struct object *obj = (*rd_item_version)();
+		describe_object_saveload(obj, "rd_gear_aux", false);
 
 		/* Read the item */
 		if (!obj) {
@@ -1333,10 +1344,11 @@ static int rd_gear_aux(rd_item_t rd_item_version, struct object **gear)
 
 		/* Append the object */
 		obj->prev = last_gear_obj;
-		if (last_gear_obj)
+		if (last_gear_obj) {
 			last_gear_obj->next = obj;
-		else
+		} else {
 			*gear = obj;
+		}
 		last_gear_obj = obj;
 
 		/* If it's equipment, wield it */
@@ -1589,23 +1601,32 @@ static int rd_dungeon_aux(struct chunk **c)
 static int rd_objects_aux(rd_item_t rd_item_version, struct chunk *c)
 {
 	int i;
+	char num_list[256] = "";
+
+	const char *c_name = c == cave ? "cave" : (c == player->cave ? "player->cave" : "?");
+	strnfmt(num_list, sizeof num_list, "items (%s) are: ", c_name);
 
 	/* Only if the player's alive */
-	if (player->is_dead)
+	if (player->is_dead) {
 		return 0;
+	}
 
 	/* Make the object list */
 	rd_u16b(&c->obj_max);
 	c->objects = mem_realloc(c->objects,
 							 (c->obj_max + 1) * sizeof(struct object*));
-	for (i = 0; i <= c->obj_max; i++)
+	for (i = 0; i <= c->obj_max; i++) {
 		c->objects[i] = NULL;
+	}
 
 	/* Read the dungeon items until one isn't returned */
 	while (true) {
 		struct object *obj = (*rd_item_version)();
-		if (!obj)
+		if (!obj) {
 			break;
+		}
+		my_strcat(num_list, format("%i, ", obj->oidx), sizeof num_list);
+		describe_object_saveload(obj, format("rd_objects_aux (%s)", c_name), false);
 #if OBJ_RECOVER
 		if (square_in_bounds_fully(c, obj->grid) && c == cave) {
 #else
@@ -1617,6 +1638,8 @@ static int rd_objects_aux(rd_item_t rd_item_version, struct chunk *c)
 		assert(c->objects[obj->oidx] == NULL);
 		c->objects[obj->oidx] = obj;
 	}
+
+	//plog(num_list);
 
 	return 0;
 }
@@ -1757,10 +1780,23 @@ int rd_dungeon(void)
  */
 int rd_objects(void)
 {
-	if (rd_objects_aux(rd_item, cave))
+	//int i;
+
+	if (rd_objects_aux(rd_item, cave)) {
 		return -1;
-	if (rd_objects_aux(rd_item, player->cave))
+	}
+	if (rd_objects_aux(rd_item, player->cave)) {
 		return -1;
+	}
+
+	/*for (i = 0; i < cave->obj_max && i < player->cave->obj_max; ++i) {
+		if (player->cave->objects[i]) {
+			if (!cave->objects[i]) {
+				plog_fmt("no object %i!", i);
+			}
+			assert(cave->objects[i]);
+		}
+	}*/
 
 	return 0;
 }
@@ -1773,13 +1809,16 @@ int rd_monsters(void)
 	int i;
 
 	/* Only if the player's alive */
-	if (player->is_dead)
+	if (player->is_dead) {
 		return 0;
+	}
 
-	if (rd_monsters_aux(cave))
+	if (rd_monsters_aux(cave)) {
 		return -1;
-	if (rd_monsters_aux(player->cave))
+	}
+	if (rd_monsters_aux(player->cave)) {
 		return -1;
+	}
 
 #if OBJ_RECOVER
 	player->cave->objects = mem_zalloc((cave->obj_max + 1) * sizeof(struct object*));
@@ -1794,9 +1833,11 @@ int rd_monsters(void)
 	}
 #else
 	/* Associate known objects */
-	for (i = 0; i < player->cave->obj_max; i++)
-		if (cave->objects[i] && player->cave->objects[i])
+	for (i = 0; i < player->cave->obj_max; i++) {
+		if (cave->objects[i] && player->cave->objects[i]) {
 			cave->objects[i]->known = player->cave->objects[i];
+		}
+	}
 #endif
 	return 0;
 }
@@ -1806,10 +1847,12 @@ int rd_monsters(void)
  */
 int rd_traps(void)
 {
-	if (rd_traps_aux(cave))
+	if (rd_traps_aux(cave)) {
 		return -1;
-	if (rd_traps_aux(player->cave))
+	}
+	if (rd_traps_aux(player->cave)) {
 		return -1;
+	}
 	return 0;
 }
 

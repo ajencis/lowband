@@ -218,6 +218,7 @@ static void wr_body(const struct player_body *body)
 		if (obj) {
 			wr_byte(true);
 			wr_item(obj);
+			describe_object_saveload(obj, "wr_body", true);
 		}
 		else {
 			wr_byte(false);
@@ -278,6 +279,7 @@ static void wr_monster(const struct monster *mon)
 	/* Write all held objects, followed by a dummy as a marker */
 	while (obj) {
 		wr_item(obj);
+		describe_object_saveload(obj, "wr_monster", true);
 		obj = obj->next;
 	}
 	wr_item(dummy);
@@ -866,7 +868,7 @@ static void wr_gear_aux(struct object *gear)
 
 		/* Dump object */
 		wr_item(obj);
-
+		describe_object_saveload(obj, "wr_gear_aux", true);
 	}
 
 	/* Write finished code */
@@ -1022,8 +1024,11 @@ static void wr_objects_aux(struct chunk *c)
 	int y, x, i;
 	struct object *dummy;
 
-	if (player->is_dead)
+	const char *c_name = c == cave ? "cave" : (c == player->cave ? "player->cave" : "?");
+
+	if (player->is_dead) {
 		return;
+	}
 	
 	/* Write the objects */
 	wr_u16b(c->obj_max);
@@ -1032,6 +1037,7 @@ static void wr_objects_aux(struct chunk *c)
 			struct object *obj = square(c, loc(x, y))->obj;
 			while (obj) {
 				wr_item(obj);
+				describe_object_saveload(obj, format("wr_objects_aux (%s)", c_name), true);
 				obj = obj->next;
 			}
 		}
@@ -1048,6 +1054,8 @@ static void wr_objects_aux(struct chunk *c)
 		if (obj->known && !(obj->known->notice & OBJ_NOTICE_IMAGINED)) continue;
 		assert(obj->oidx == i);
 		wr_item(obj);
+
+		describe_object_saveload(obj, format("wr_objects_aux [imagined] (%s)", c_name), true);
 	}
 
 	/* Write a dummy record as a marker */

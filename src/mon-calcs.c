@@ -15,6 +15,7 @@
 #include "mon-spell.h"
 #include "player-attack.h"
 #include "player-calcs.h"
+#include "player-properties.h"
 #include "player-spell.h"
 #include "player-util.h"
 #include "project.h"
@@ -89,7 +90,7 @@ struct embryo_attack {
 };
 
 
-static int mon_lev(const struct monster *mon)
+int mon_lev(const struct monster *mon)
 {
 	if (mon->player) return mon->player->lev;
 	return mon->race->level;
@@ -148,26 +149,6 @@ static int mon_skill(const struct monster *mon, const struct player_state *state
 	}
 
 	return result;
-}
-
-
-bool mon_power_minimum(const struct monster *mon, int power, int min)
-{
-	return mon->state.powers[power] >= min;
-}
-
-int get_mon_power_scale(const struct monster *mon, int power, int scaleto)
-{
-	int lev = mon_lev(mon), result;
-
-	result =  get_power_scale_state(&mon->state, power, scaleto, lev);
-
-	return result;
-}
-
-bool mon_has_power(const struct monster *mon, int power)
-{
-	return mon_power_minimum(mon, power, 1);
 }
 
 
@@ -253,6 +234,8 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	struct element_info race_elem_info[ELEM_MAX] = { 0 };
 	struct monster_race *mrace = mon->race;
 
+	verify_mon_ownership(mon);
+
 	memset(state, 0, sizeof *state);
 
 	get_mon_ac(mon, state);
@@ -304,7 +287,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 		}
 	}
 
-		
+
 	if (mon->m_timed[TMD_INVULN]) {
 		state->to_a += 100;
 	}
@@ -381,6 +364,8 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	if (state->skills[SKILL_HEALTH] < 3) state->skills[SKILL_HEALTH] = 3;
 
 	mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
+
+	verify_mon_ownership(mon);
 }
 
 
@@ -608,6 +593,8 @@ static void modify_unarmed_attack(struct embryo_attack *emb, const struct monste
 static struct embryo_attack *get_weapon_attack(const struct monster *mon, const struct object *weap)
 {
 	assert(weap);
+	assert(weap->kind);
+	assert(weap->kind->base);
 
 	if (weap->tval == TV_SHIELD) return NULL;
 
@@ -643,6 +630,27 @@ static struct embryo_attack *get_weapon_attack(const struct monster *mon, const 
 	return emb;
 }
 
+static struct effect *get_timed_effect(int lev, int timed)
+{
+	struct effect *new = NULL;
+	random_value rv = { 0, 0, 0, 0 };
+
+	if (timed >= TMD_MAX || timed < 0) return new;
+
+	new = mem_zalloc(sizeof *new);
+
+	new->index = EF_OTHER_TIMED_INC;
+	new->subtype = timed;
+
+	rv.base = 10;
+	rv.dice = 1;
+	rv.sides = lev;
+
+	effect_add_value(new, rv);
+
+	return new;
+}
+
 static struct embryo_attack *get_natural_attack(const struct monster *mon, const struct monster_blow *blow)
 {
 	bool p = mon->player ? true : false;
@@ -650,14 +658,20 @@ static struct embryo_attack *get_natural_attack(const struct monster *mon, const
 
 	emb->mon_blow = blow;
 
-	emb->skill = SKILL_TO_HIT_MELEE;
+	emb->skill = blow->method->skill;
 
 	emb->acc_stat = STAT_NONE;
-	emb->dam_stat = STAT_STR;
+	emb->dam_stat = emb->skill == SKILL_SEARCH ? STAT_WIS : STAT_STR;
 
 	emb->dice = blow->dice.dice;
 	emb->sides = blow->dice.sides;
 	emb->to_d = blow->dice.base;
+
+	// make sure there's at least one die so that players can do damage via stat bonus to sides
+	if (emb->dice * emb->sides == 0) {
+		emb->dice = MAX(emb->dice, 1);
+		emb->sides = 0;
+	}
 
 	emb->msg = p ? blow->method->fmessage : blow->method->messages->act_msg;
 
@@ -673,6 +687,11 @@ static struct embryo_attack *get_natural_attack(const struct monster *mon, const
 	}
 
 	emb->range = monster_melee_attack_range(mon->race->level, blow);
+
+	if (blow->effect->mtimed >= 0) {
+		struct effect *ef = get_timed_effect(mon->race->level, blow->effect->mtimed);
+		emb->extra = ef;
+	}
 
 	return emb;
 }
@@ -706,17 +725,29 @@ static struct embryo_attack *get_special_attack(const struct monster *mon, int s
 
 
 
+static void calc_emb_expertise(const struct monster *mon, struct embryo_attack *emb)
+{
+	int spec = attack_specialization_power(mon, emb->obj, emb->mon_blow);
+
+	if (spec <= 0) return;
+
+	emb->blows += spec;
+	emb->to_d += spec / 15;
+}
+
+
+
 static void num_slots(const struct monster *mon, int empty[EQUIP_MAX], int total[EQUIP_MAX])
 {
 	int i;
 
 	for (i = 0; i < mon->body.count; ++i) {
-		int slot = mon->body.slots[i].type;
+		struct equip_slot *slot = &mon->body.slots[i];
 
 		if (slot != EQUIP_NONE) {
-			++total[i];
-			if (!mon->body.slots[i].obj) {
-				++empty[i];
+			++total[slot->type];
+			if (!slot->obj) {
+				++empty[slot->type];
 			}
 		}
 	}
@@ -810,6 +841,7 @@ static struct embryo_attack *init_mon_attacks(const struct monster *mon)
 	}
 
 	for (i = 0; i < mon->body.count; ++i) {
+		assert(mon->body.slots);
 		const struct object *obj = mon->body.slots[i].obj;
 		int slot = mon->body.slots[i].type;
 
@@ -820,13 +852,17 @@ static struct embryo_attack *init_mon_attacks(const struct monster *mon)
 		}
 	}
 
+	assert(blows);
+
 	for (i = 0; i < z_info->mon_blows_max && blows[i].method; ++i) {
 		const struct monster_blow *blow = &blows[i];
 		int slot = blow->method->equip_slot;
 		int num = blow->num;
 
 		if (slot != EQUIP_NONE) {
-			if (remaining_slots[slot] <= 0) continue;
+			if (remaining_slots[slot] <= 0) {
+				continue;
+			}
 			num = MIN(num, remaining_slots[slot]);
 			remaining_slots[slot] -= num;
 		}
@@ -930,6 +966,8 @@ static void get_mon_attacks(struct monster *mon)
 			mod_fns[i](mon, curr);
 		}
 
+		calc_emb_expertise(mon, curr);
+
 		hatch_attack_embryo(curr, mon);
 
 		free_atk_embryo(curr);
@@ -951,6 +989,7 @@ void free_mon_attacks(struct monster *mon)
 {
 	struct attack *atk, *nxt;
 
+	assert(mon);
 	atk = mon->atk;
 	while (atk) {
 		nxt = atk->next;
@@ -971,17 +1010,23 @@ static void refresh_mon_attacks(struct monster *mon)
 
 void update_mon_attacks(struct monster *mon)
 {
+	verify_mon_ownership(mon);
 	if (mflag_has(mon->mflag, MFLAG_UPDATE_ATTACKS) && mon_is_player(mon)) {
 		refresh_mon_attacks(mon);
 		mflag_off(mon->mflag, MFLAG_UPDATE_ATTACKS);
 	}
+	verify_mon_ownership(mon);
 }
 
 
 void update_mon_state(struct monster *mon)
 {
+	assert(mon);
 	if (mflag_has(mon->mflag, MFLAG_UPDATE_STATE)) {
+		assert(mon->race);
+		//plog_fmt("updating state for %s", mon->race->name);
 		calc_mon_bonuses(mon, &mon->state);
+		//plog("done");
 		mflag_off(mon->mflag, MFLAG_UPDATE_STATE);
 	}
 }

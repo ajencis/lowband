@@ -428,6 +428,9 @@ struct loc origin_get_loc(struct source origin)
 		case SRC_CHEST_TRAP:
 			return player->mon.grid;
 
+		case SRC_GRID:
+			return origin.which.grid;
+
 		case SRC_NONE:
 			return loc(-1, -1);
 	}

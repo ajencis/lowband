@@ -67,37 +67,43 @@ static bool mon_can_enter_town(struct monster_race *mr)
 static void duplicate_body(const struct player_body *source, struct player_body *new)
 {
 	int i;
+	size_t size;
 	assert(source);
 	assert(new);
 
 	new->name = string_make(source->name);
-	new->slots = mem_zalloc(sizeof *new->slots * source->count);
 	new->count = source->count;
 	new->next = NULL;
+	new->slots = NULL;
+
+	size = sizeof *new->slots * new->count;
+	if (size > 0U) {
+		new->slots = mem_zalloc(size);
+		memcpy(new->slots, source->slots, size);
+	}
 
 	for (i = 0; i < new->count; ++i) {
 		new->slots[i].name = string_make(source->slots[i].name);
-		new->slots[i].type = source->slots[i].type;
 	}
-
-	memcpy(new->slots, source->slots, sizeof *new->slots * new->count);
 }
 
-static void free_body(struct player_body to_free)
+static void free_body(struct player_body *to_free)
 {
 	int i;
-	if (to_free.name) {
-		string_free(to_free.name);
-		to_free.name = NULL;
+
+	assert(to_free);
+	if (to_free->name) {
+		string_free(to_free->name);
+		to_free->name = NULL;
 	}
 
-	if (to_free.slots) {
-		for (i = 0; i < to_free.count; ++i) {
-			string_free(to_free.slots[i].name);
+	if (to_free->slots) {
+		for (i = 0; i < to_free->count; ++i) {
+			string_free(to_free->slots[i].name);
 		}
 
-		mem_free(to_free.slots);
-		to_free.slots = NULL;
+		mem_free(to_free->slots);
+		to_free->slots = NULL;
 	}
 }
 
@@ -108,13 +114,16 @@ static void mon_embody(struct monster *mon)
 	//assert(base);
 	if (!base) base = bodies;
 
-	free_body(mon->body);
+	assert(base);
+
+	free_body(&mon->body);
 	duplicate_body(base, &mon->body);
 }
 
 static void mon_disembody(struct monster *mon)
 {
-	free_body(mon->body);
+	assert(mon);
+	free_body(&mon->body);
 }
 
 
@@ -414,6 +423,7 @@ void delete_monster_idx(struct chunk *c, int m_idx)
 	struct monster *mon = cave_monster(c, m_idx);
 	struct loc grid;
 
+	assert(mon);
 	assert(m_idx != PLAYER_MON_MIDX);
 	assert(m_idx > 0);
 	assert(square_in_bounds(c, mon->grid));
@@ -550,20 +560,24 @@ void monster_index_move(struct chunk *c, int i1, int i2)
 	}
 
 	/* Repair objects being carried by monster */
-	for (obj = mon->held_obj; obj; obj = obj->next)
+	for (obj = mon->held_obj; obj; obj = obj->next) {
 		obj->held_m_idx = i2;
+	}
 
 	/* Move mimicked objects (heh) */
-	if (mon->mimicked_obj)
+	if (mon->mimicked_obj) {
 		mon->mimicked_obj->mimicking_m_idx = i2;
+	}
 
 	/* Update the target */
-	if (target_get_monster() == mon)
+	if (target_get_monster() == mon) {
 		target_set_monster(cave_monster(c, i2));
+	}
 
 	/* Update the health bar */
-	if (player->upkeep->health_who == mon)
+	if (player->upkeep->health_who == mon) {
 		player->upkeep->health_who = cave_monster(c, i2);
+	}
 
 	/* Move monster */
 	memcpy(cave_monster(c, i2),
@@ -572,6 +586,8 @@ void monster_index_move(struct chunk *c, int i1, int i2)
 
 	/* Wipe hole */
 	memset(cave_monster(c, i1), 0, sizeof(struct monster));
+
+	verify_mon_ownership(cave_monster(c, i2));
 }
 
 
@@ -1030,13 +1046,23 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 			if (choice != -1) {
 				obj = make_object(c, level, one_in_(100), false, false, NULL, choice);
 				if (obj) {
+					bool success;
+
 					obj->origin = origin;
 					obj->origin_depth = convert_depth_to_origin(c->depth);
 					obj->origin_race = effective_race;
 					obj->number = 1;
 					list_object(c, obj);
 
-					monster_equip(c, mon, obj);
+					success = monster_equip(c, mon, obj);
+
+					assert(success);
+
+					if (!success) {
+						monster_carry(cave, mon, obj);
+					}
+
+					verify_mon_ownership(mon);
 
 					//obj->grid = loc(0, 0);
 					//obj->held_m_idx = mon->midx;
@@ -1215,9 +1241,17 @@ int16_t place_monster(struct chunk *c, struct loc grid, struct monster *mon,
 		mon_create_mimicked_object(c, new_mon, m_idx);
 	}
 
-	mflag_on(mon->mflag, MFLAG_UPDATE_STATE);
-	mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
-	update_mon_state(mon);
+	mflag_on(new_mon->mflag, MFLAG_UPDATE_STATE);
+	mflag_on(new_mon->mflag, MFLAG_UPDATE_ATTACKS);
+
+	verify_mon_ownership(new_mon);
+
+	update_mon_state(new_mon);
+	update_mon_attacks(new_mon);
+
+	verify_mon_ownership(new_mon);
+
+	assert(!new_mon->atk);
 
 	/* Result */
 	return m_idx;

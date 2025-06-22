@@ -23,6 +23,8 @@
 #include "save-charoutput.h"
 #include "z-file.h"
 
+#include "player-util.h"//temp
+
 /**
  * The savefile code.
  *
@@ -388,6 +390,9 @@ bool savefile_save(const char *path)
 	char new_savefile[1024];
 	char old_savefile[1024];
 
+	//temp
+	init_obj_log_file(true);
+
 	/* Generate a CharOutput.txt, mainly for angband.live, when saving. */
 	(void) save_charoutput();
 
@@ -396,7 +401,7 @@ bool savefile_save(const char *path)
 	file_get_savefile(old_savefile, sizeof(old_savefile), path, "old");
 
 	/* Open the savefile */
-        file_get_savefile(new_savefile, sizeof(new_savefile), path, "new");
+    file_get_savefile(new_savefile, sizeof(new_savefile), path, "new");
 
 	file = file_open(new_savefile, MODE_WRITE, FTYPE_SAVE);
 	safe_setuid_drop();
@@ -446,6 +451,7 @@ bool savefile_save(const char *path)
 		file_delete(new_savefile);
 		safe_setuid_drop();
 	}
+
 	return false;
 }
 
@@ -583,6 +589,11 @@ static bool try_load(ang_file *f, const struct blockinfo *local_loaders)
 		return false;
 	}
 
+	int i;
+	for (i = 0; i < cave->obj_max && i < player->cave->obj_max; ++i) {
+		assert(cave->objects[i] || !player->cave->objects[i]);
+	}
+
 	return true;
 }
 
@@ -634,6 +645,8 @@ bool savefile_load(const char *path, bool cheat_death)
 {
 	bool ok;
 	ang_file *f;
+
+	init_obj_log_file(false);
 
 	safe_setuid_grab();
 	f = file_open(path, MODE_READ, FTYPE_TEXT);

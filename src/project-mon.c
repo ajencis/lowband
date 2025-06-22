@@ -1566,7 +1566,7 @@ void project_m(struct source origin, int r, struct loc grid, int dam, int typ,
 
 bool proj_melee_attack_mon(struct monster *target, struct monster *attacker, int dmg, int proj_type, bool *fear, const char *note)
 {
-	bool died;
+	bool died = false;
 
 	assert(proj_type >= 0 && proj_type < PROJ_MAX);
 
@@ -1601,12 +1601,13 @@ bool proj_melee_attack_mon(struct monster *target, struct monster *attacker, int
 		char kill[80] = "";
 		strnfmt(kill, sizeof kill, "a%s %s", is_a_vowel(attacker->race->name[0]) ? "n" : "", attacker->race->name);
 		take_hit(target->player, context.dam, kill);
+		died = target->player->is_dead;
 	}
 	else {
 		died = mon_take_nonplayer_hit(context.dam, target, MON_MSG_NONE, MON_MSG_DIE, false);
 	}
 
-	if (!died && context.hurt_msg) add_monster_message(target, context.hurt_msg, false);
+	if (!died && context.hurt_msg && !mon_is_player(target)) add_monster_message(target, context.hurt_msg, false);
 
 	return died;
 }

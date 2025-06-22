@@ -21,6 +21,7 @@
 #include "game-world.h"
 #include "init.h"
 #include "monster.h"
+#include "mon-util.h"
 #include "obj-knowledge.h"
 #include "obj-pile.h"
 #include "obj-util.h"
@@ -1204,6 +1205,9 @@ void square_know_equipped_object(struct chunk *c, struct loc grid, bool (*pred)(
 	struct monster *mon;
 	uint16_t i;
 
+	assert(c);
+	assert(player->cave);
+
 	if (c != cave) return;
 
 	object_lists_check_integrity(c, player->cave);
@@ -1213,11 +1217,17 @@ void square_know_equipped_object(struct chunk *c, struct loc grid, bool (*pred)(
 		return;
 	}
 
+	verify_mon_ownership(mon);
+
+	assert(mon->body.slots);
+
 	for (i = 0; i < mon->body.count; ++i) {
 		obj = mon->body.slots[i].obj;
 		if (obj && (!pred || (*pred)(obj))) {
 			object_see(player, obj);
 		}
+
+		//assert(obj->held_m_idx == mon->midx);
 	}
 }
 

@@ -73,4 +73,12 @@ void rearrange_monsters(struct monster_race *mraces, uint32_t seed);
 bool give_monster_powers(struct monster *mon);
 bool player_can_learn_from_monster(struct player *p, struct monster *mon);
 
+void verify_mon_items_ownership(const struct monster *mon, const char *file, int line);
+
+#ifdef DBG_MON_OWNER
+#define verify_mon_ownership(MON) verify_mon_items_ownership(MON, __FILE__, __LINE__)
+#else
+#define verify_mon_ownership(MON) NULL
+#endif
+
 #endif /* MONSTER_UTILITIES_H */

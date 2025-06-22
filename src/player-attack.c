@@ -756,7 +756,7 @@ static void do_breath_bite(struct player *p, struct loc grid)
 
 		ef_new.radius = rad;
 
-		effect_do(&ef_new, source_player(), NULL, &dummy_id, true, dir, 0, 0, NULL);
+		effect_do(&ef_new, source_player(), source_none(), NULL, &dummy_id, true, dir, 0, 0, NULL);
 	}
 }
 
@@ -1732,8 +1732,9 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 
 	for (i = 0; i < p->mon.body.count; i++) {
 		if (p->mon.body.slots[i].obj == weapon) continue;
-		if (p->mon.body.slots[i].obj && p->mon.body.slots[i].obj->kind->tval == TV_SHIELD)
+		if (p->mon.body.slots[i].obj && p->mon.body.slots[i].obj->kind->tval == TV_SHIELD) {
 			shield = p->mon.body.slots[i].obj;
+		}
 	}
 
 	/* Bashing chance depends on melee skill, DEX, and a level bonus. */
@@ -1813,8 +1814,9 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 }
 
 
-static bool mon_valid(const struct monster *mon, struct loc grid)
+static bool mon_valid(int midx, struct loc grid)
 {
+	struct monster *mon = cave_monster(cave, midx);
 	return mon && mon->race && loc_eq(mon->grid, grid);
 }
 
@@ -1879,7 +1881,7 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct att
 
 	if (success) {
 		bool id = false;
-		effect_do(atk->ef, source_monster(mon->midx), NULL, &id, true, dir, 0, 0, NULL);
+		effect_do(atk->ef, source_monster(mon->midx), source_none(), NULL, &id, true, dir, 0, 0, NULL);
 	}
 }
 
@@ -1887,6 +1889,15 @@ static void mon_test_attack(struct monster *mon, struct monster *t_mon)
 {
 	struct loc grid = t_mon->grid;
 	struct attack *atk;
+	int t_midx = t_mon->midx;
+
+	assert(mon);
+	assert(t_mon);
+	assert(t_mon->race);
+	assert(t_mon->midx > 0);
+
+	verify_mon_ownership(mon);
+	verify_mon_ownership(t_mon);
 
 	update_mon_attacks(mon);
 
@@ -1894,12 +1905,12 @@ static void mon_test_attack(struct monster *mon, struct monster *t_mon)
 		target_set_monster(t_mon);
 	}
 
-	for (atk = mon->atk; atk && mon_valid(t_mon, grid); atk = atk->next) {
+	for (atk = mon->atk; atk && mon_valid(t_midx, grid); atk = atk->next) {
 		int i;
 		int max = atk->blows / 100;
 		max += (atk->blows - max) > randint0(100) ? 1 : 0;
 
-		for (i = 0; i < max && mon_valid(t_mon, grid); ++i) {
+		for (i = 0; i < max && mon_valid(t_midx, grid); ++i) {
 			mon_test_blow(mon, t_mon, atk);
 		}
 	}

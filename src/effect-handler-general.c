@@ -586,7 +586,7 @@ bool effect_handler_TIMED_INC(effect_handler_context_t *context)
 	context->ident = true;
 
 	/* Destroy decoy if it's a monster attack */
-	if (cave->mon_current > 0 && decoy.y && decoy.x) {
+	if (cave->mon_current > 0 && t_mon && mon_is_player(t_mon) && decoy.y && decoy.x) {
 		square_destroy_decoy(cave, decoy);
 		return true;
 	}
@@ -3607,7 +3607,7 @@ bool effect_handler_SHAPECHANGE(effect_handler_context_t *context)
 
 	/* Do effect */
 	if (shape->effect) {
-		(void) effect_do(shape->effect, source_player(), NULL, &ident, true,
+		(void) effect_do(shape->effect, source_player(), source_none(), NULL, &ident, true,
 						 0, 0, 0, NULL);
 	}
 

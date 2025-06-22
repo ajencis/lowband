@@ -955,6 +955,7 @@ bool project_p(struct source origin, int r, struct loc grid, int dam, int typ,
 			break;
 		}
 
+		case SRC_GRID:
 		case SRC_NONE: {
 			/* Use the same message as the DAMAGE handler. */
 			my_strcpy(killer, "a bug", sizeof(killer));

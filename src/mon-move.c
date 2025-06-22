@@ -488,6 +488,8 @@ static int item_score(struct object *obj)
 
 static bool monster_turn_equip_item(struct monster *mon)
 {
+	verify_mon_ownership(mon);
+
 	if (!mflag_has(mon->mflag, MFLAG_CHECK_EQ)) {
 		return false;
 	}
@@ -535,6 +537,8 @@ static bool monster_turn_equip_item(struct monster *mon)
 				}
 			}
 		}
+
+		if (body->slots[i].obj) assert(body->slots[i].obj->held_m_idx == mon->midx);
 	}
 
 	monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG | MDESC_CAPITAL);
@@ -574,6 +578,8 @@ static bool monster_turn_equip_item(struct monster *mon)
 	else {
 		mflag_off(mon->mflag, MFLAG_CHECK_EQ);
 	}
+
+	verify_mon_ownership(mon); 
 
 	return did_something;
 }

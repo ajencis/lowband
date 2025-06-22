@@ -546,7 +546,7 @@ bool spell_cast(int spell_index, int dir, struct command *cmd)
 		msg("You failed to concentrate hard enough!");
 	} else {
 		/* Cast the spell */
-		if (!effect_do(spell->effect, source_player(), NULL, &ident, true, dir,
+		if (!effect_do(spell->effect, source_player(), source_none(), NULL, &ident, true, dir,
 					   beam, caster_level_bonus(player, spell), cmd)) {
 			return false;
 		}
@@ -624,7 +624,7 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 		msg("You failed to concentrate hard enough!");
 	} else {
 		/* Cast the spell */
-		if (!effect_do(spell->effect, source_player(), NULL, &ident, true, dir,
+		if (!effect_do(spell->effect, source_player(), source_none(), NULL, &ident, true, dir,
 					beam, gener_spell_power(player, spell), cmd)) {
 			ref_spell = NULL;
 			return false;

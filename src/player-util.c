@@ -3853,3 +3853,60 @@ bool player_is_invisible(struct player *p)
 
 	return false;
 }
+
+
+
+#ifdef OBJ_SAVELOAD_DEBUG
+static char obj_save_log_file_path[1024] = "";
+static char obj_load_log_file_path[1024] = "";
+#endif
+
+
+void init_obj_log_file(bool save)
+{
+#ifdef OBJ_SAVELOAD_DEBUG
+	ang_file *file = NULL;
+	if (save) {
+		path_build(obj_save_log_file_path, sizeof obj_save_log_file_path, ANGBAND_DIR_USER, "objectsave.log");
+		file = file_open(obj_save_log_file_path, MODE_WRITE, FTYPE_TEXT);
+		assert(file);
+		file_close(file);
+	}
+	if (!save) {
+		path_build(obj_load_log_file_path, sizeof obj_load_log_file_path, ANGBAND_DIR_USER, "objectload.log");
+		file = file_open(obj_load_log_file_path, MODE_WRITE, FTYPE_TEXT);
+		assert(file);
+		file_close(file);
+	}
+#endif
+}
+
+
+void describe_saveload(const char *msg, bool save)
+{
+#ifdef OBJ_SAVELOAD_DEBUG
+	const char *path = save ? obj_save_log_file_path : obj_load_log_file_path;
+	ang_file *file = file_open(path, MODE_APPEND, FTYPE_TEXT);
+	//plog_fmt("path = %s", path);
+	assert(file);
+	assert(msg);
+	assert(file_putf(file, "%s\n", msg));
+	assert(file_close(file));
+#endif
+}
+
+void describe_object_saveload(const struct object *obj, const char *source, bool save)
+{
+#ifdef OBJ_SAVELOAD_DEBUG
+	char desc[80] = "";
+	const char *act = save ? "saving" : "loading";
+
+	if (!obj) return;
+	strnfmt(desc, sizeof desc, "%s object %i (%s) in %s", act, obj->oidx, obj->kind->name, source);
+
+	//if (my_stristr(source, "objects_aux")) plog(desc);
+
+	describe_saveload(desc, save);
+#endif
+}
+

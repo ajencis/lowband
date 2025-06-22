@@ -150,9 +150,13 @@ void look_mon_desc(char *buf, size_t max, int m_idx)
 				}
 				object_desc(odesc, sizeof odesc, obj, mode, player);
 				my_strcat(buf, odesc, max);
+
+				assert(obj->held_m_idx == mon->midx);
 			}
 		}
 	}
+
+	verify_mon_ownership(mon);
 
 	/*
 	// L: equipment

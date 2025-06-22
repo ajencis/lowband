@@ -79,6 +79,8 @@ struct object *monster_best_weapon(struct monster *m)
 			best = weap;
 			bestval = curr;
 		}
+
+		assert(weap->held_m_idx == m->midx);
 	}
 
 	return best;
@@ -1130,7 +1132,7 @@ static int first_slot_with_object_equipped(struct player_body *body)
 	uint16_t i;
 
 	for (i = 0; i < body->count; ++i) {
-		struct object *obj = body->slots[i].obj;
+		const struct object *obj = body->slots[i].obj;
 
 		if (obj) return i;
 	}
@@ -1407,6 +1409,8 @@ bool mon_take_nonplayer_hit(int dam, struct monster *t_mon,
 {
 	assert(t_mon);
 
+	//plog("entering mtnh");
+
 	/* "Unique" or arena monsters can only be "killed" by the player */
 	/*if (monster_is_unique(t_mon) || player->upkeep->arena_level) {
 		// Reduce monster hp to zero, but don't kill it.
@@ -1414,8 +1418,9 @@ bool mon_take_nonplayer_hit(int dam, struct monster *t_mon,
 	}*/
 
 	/* Redraw (later) if needed */
-	if (player->upkeep->health_who == t_mon)
+	if (player->upkeep->health_who == t_mon) {
 		player->upkeep->redraw |= (PR_HEALTH);
+	}
 
 	/* Wake the monster up, doesn't become aware of the player */
 	monster_wake(t_mon, false, 0);
@@ -1453,6 +1458,8 @@ bool mon_take_nonplayer_hit(int dam, struct monster *t_mon,
 	if (!t_mon->m_timed[TMD_AFRAID] && dam > 0) {
 		(void) monster_scared_by_damage(t_mon, dam);
 	}
+
+	//plog("entering mtnh");
 
 	return false;
 }
@@ -1644,6 +1651,7 @@ struct object *monster_best_takeable_item(struct chunk *c, struct monster *mon, 
 bool monster_carry(struct chunk *c, struct monster *mon, struct object *obj)
 {
 	struct object *held_obj;
+	int i;
 
 	if (player->cave && player->cave->objects) {
 		assert(!player->cave->objects[obj->oidx] || player->cave->objects[obj->oidx] == obj->known);
@@ -1668,6 +1676,11 @@ bool monster_carry(struct chunk *c, struct monster *mon, struct object *obj)
 		}
 	}
 
+	for (i = 0; i < mon->body.count; ++i) {
+		struct object *eq = mon->body.slots[i].obj;
+		assert(!eq || eq->oidx != obj->oidx);
+	}
+
 	/* Forget location */
 	obj->grid = loc(0, 0);
 
@@ -1686,6 +1699,8 @@ bool monster_carry(struct chunk *c, struct monster *mon, struct object *obj)
 	}
 
 	pile_insert(&mon->held_obj, obj);
+
+	verify_mon_ownership(mon);
 
 	/* Result */
 	return true;
@@ -1729,6 +1744,8 @@ bool monster_equip(struct chunk *c, struct monster *mon, struct object *obj)
 	mflag_on(mon->mflag, MFLAG_UPDATE_STATE);
 	mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
 
+	verify_mon_ownership(mon);
+
 	/* Result */
 	return true;
 }
@@ -1747,6 +1764,8 @@ bool monster_unequip(struct chunk *c, struct monster *mon, struct object *obj)
 			return true;
 		}
 	}
+
+	verify_mon_ownership(mon);
 
 	return false;
 }
@@ -2424,4 +2443,58 @@ void rearrange_monsters(struct monster_race *mraces, uint32_t seed)
 	}
 	Rand_quick = false;
 }
+
+#ifdef DBG_MON_OWNER
+static bool obj_name_normal_filter(int chr)
+{
+	return ((chr == '#') || (chr == '&') || (chr == '~'));
+}
+
+static void verify_mon_item_ownership(const struct monster *mon, const struct object *obj, const char *slot, const char *file, int line)
+{
+	char obj_name[80], mon_name[80], hold_desc[80] = "held";
+
+	if (!mon || !mon->race) return;
+	if (!obj) return;
+	if (obj->held_m_idx == mon->midx) return;
+
+	monster_desc(mon_name, sizeof mon_name, mon, MDESC_DIED_FROM);
+
+	strnfmt(obj_name, sizeof obj_name, obj->kind->name);
+	strfilter(obj_name, sizeof obj_name, obj_name_normal_filter);
+
+	if (slot) {
+		strnfmt(hold_desc, sizeof hold_desc, "in slot %s", slot);
+	}
+
+	plog_fmt("Monster %s (midx %i) has object %s %s (held_mon_midx %i).\n(%s line %i)",
+		mon_name, mon->midx, obj_name, hold_desc, obj->held_m_idx, file, line);
+}
+
+void verify_mon_items_ownership(const struct monster *mon, const char *file, int line)
+{
+	int i;
+	const struct object *obj;
+
+	if (!mon) return;
+	if (mon_is_player(mon)) return;
+
+	if (mon->midx <= 0) {
+		char m_name[80];
+
+		monster_desc(m_name, sizeof m_name, mon, MDESC_DIED_FROM);
+
+		plog_fmt("Monster %s midx = %i.\n(%s line %i)", m_name, mon->midx, file, line);
+	}
+
+	for (i = 0; i < mon->body.count; ++i) {
+		struct equip_slot *slot = &mon->body.slots[i];
+		verify_mon_item_ownership(mon, slot->obj, slot->name, file, line);
+	}
+
+	for (obj = mon->held_obj; obj; obj = obj->next) {
+		verify_mon_item_ownership(mon, obj, NULL, file, line);
+	}
+}
+#endif
 

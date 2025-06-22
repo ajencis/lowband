@@ -47,6 +47,7 @@ int effect_subtype(int index, const char *type);
 extern expression_base_value_f effect_value_base_by_name(const char *name);
 bool effect_do(struct effect *effect,
 	struct source origin,
+	struct source target,
 	struct object *obj,
 	bool *ident,
 	bool aware,

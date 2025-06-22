@@ -646,6 +646,7 @@ bool effect_handler_DAMAGE(effect_handler_context_t *context)
 			break;
 		}
 
+		case SRC_GRID:
 		case SRC_NONE: {
 			my_strcpy(killer, "a bug", sizeof(killer));
 			break;

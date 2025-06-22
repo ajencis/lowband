@@ -586,6 +586,7 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 		target_fix();
 		used = effect_do(effect,
 							source_player(),
+							source_none(),
 							obj,
 							&ident,
 							was_aware,
@@ -1298,7 +1299,7 @@ void do_cmd_innate(struct command *cmd)
 		}
 	}
 
-	effect_do(ms->effect, source_player(), NULL, &ident, true, dir, 0, power, cmd);
+	effect_do(ms->effect, source_player(), source_none(), NULL, &ident, true, dir, 0, power, cmd);
 
 	take_hit(player, mana, "using an innate power");
 	player->upkeep->energy_use = z_info->move_energy;

@@ -177,6 +177,7 @@ void map_info(struct loc grid, struct grid_data *g)
 	if (g->m_idx > 0) {
 		/* If the monster isn't "visible", make sure we don't list it.*/
 		struct monster *mon = cave_monster(cave, g->m_idx);
+		assert(mon);
 		if (!monster_is_visible(mon)) g->m_idx = 0;
 	}
 

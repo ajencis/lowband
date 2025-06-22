@@ -194,4 +194,8 @@ void disturb(struct player *p);
 void search(struct player *p);
 void player_start_turn(struct player *p);
 
+void init_obj_log_file(bool save);
+void describe_saveload(const char *msg, bool save);
+void describe_object_saveload(const struct object *obj, const char *source, bool save);
+
 #endif /* !PLAYER_UTIL_H */

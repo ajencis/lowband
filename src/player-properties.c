@@ -20,7 +20,9 @@
 #include "angband.h"
 #include "game-world.h"
 #include "init.h"
+#include "mon-calcs.h"
 #include "mon-spell.h"
+#include "player-calcs.h"
 #include "player-properties.h"
 #include "player-spell.h"
 #include "player-util.h"
@@ -226,6 +228,28 @@ void do_cmd_abilities(void)
 
 
 
+
+
+bool mon_power_minimum(const struct monster *mon, int power, int min)
+{
+	return mon->state.powers[power] >= min;
+}
+
+int get_mon_power_scale(const struct monster *mon, int power, int scaleto)
+{
+	int lev = mon_lev(mon), result;
+
+	result =  get_power_scale_state(&mon->state, power, scaleto, lev);
+
+	return result;
+}
+
+bool mon_has_power(const struct monster *mon, int power)
+{
+	return mon_power_minimum(mon, power, 1);
+}
+
+
 const char *ability_subchoice_title(const struct player_ability *parent)
 {
 	if (parent->type == PY_ABIL_SKILL && parent->index == SKILL_MAGIC) {
@@ -281,6 +305,42 @@ bool make_ability_subchoice(struct player *p)
 	}
 
 	return choice_made;
+}
+
+
+
+int attack_specialization_power(const struct monster *mon, const struct object *obj, const struct monster_blow *blow)
+{
+	if (obj) {
+		if (obj->tval == TV_HAFTED) {
+			return get_mon_power_scale(mon, PP_HAFTED_SPECIALIZATION, 100);
+		}
+		if (obj->tval == TV_POLEARM) {
+			return get_mon_power_scale(mon, PP_POLEARM_SPECIALIZATION, 100);
+		}
+		if (obj->tval == TV_SWORD) {
+			return get_mon_power_scale(mon, PP_SWORD_SPECIALIZATION, 100);
+		}
+		if (obj->tval == TV_BOW) {
+			if (my_stristr(obj->kind->name, "sling")) {
+				return get_mon_power_scale(mon, PP_SLING_SPECIALIZATION, 100);
+			}
+			if (my_stristr(obj->kind->name, "crossbow")) {
+				return get_mon_power_scale(mon, PP_CROSSBOW_SPECIALIZATION, 100);
+			}
+			if (my_stristr(obj->kind->name, "bow")) {
+				return get_mon_power_scale(mon, PP_BOW_SPECIALIZATION, 100);
+			}
+		}
+
+		return 0;
+	}
+
+	if (blow) {
+		return get_mon_power_scale(mon, PP_UNARMED_STRIKE, 50);
+	}
+
+	return get_mon_power_scale(mon, PP_UNARMED_STRIKE, 100);
 }
 
 

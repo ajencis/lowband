@@ -408,6 +408,7 @@ expression_base_value_f effect_value_base_by_name(const char *name)
  */
 bool effect_do(struct effect *effect,
 		struct source origin,
+		struct source target,
 		struct object *obj,
 		bool *ident,
 		bool aware,
@@ -416,9 +417,16 @@ bool effect_do(struct effect *effect,
 		int boost,
 		struct command *cmd)
 {
+	struct loc targ_grid = { 0, 0 };
 	bool completed = false;
 	effect_handler_f handler;
 	random_value value = { 0, 0, 0, 0 };
+
+	if (target.what == SRC_MONSTER) {
+		struct monster *mon = cave_monster(cave, target.which.monster);
+		assert(mon && mon->race);
+		targ_grid = mon->grid;
+	}
 
 	do {
 		int choice_count = 0, leftover = 1;
@@ -536,9 +544,18 @@ bool effect_do(struct effect *effect,
 			*ident = context.ident;
 		}
 
+		if (target.what == SRC_MONSTER) {
+			struct monster *tgt = cave_monster(cave, target.which.monster);
+
+			if (!tgt || !tgt->race || !loc_eq(tgt->grid, targ_grid)) {
+				break;
+			}
+		}
+
 		/* Get the next effect, if there is one */
-		while (leftover-- && effect)
+		while (leftover-- && effect) {
 			effect = effect->next;
+		}
 	} while (effect);
 
 	return completed;
@@ -584,7 +601,7 @@ void effect_simple(int index,
 		ident = &dummy_ident;
 	}
 
-	effect_do(&effect, origin, NULL, ident, true, dir, 0, 0, NULL);
+	effect_do(&effect, origin, source_none(), NULL, ident, true, dir, 0, 0, NULL);
 	dice_free(effect.dice);
 }
 
