@@ -17,6 +17,7 @@
  */
 
 #include "z-dice.h"
+#include "z-form.h"
 #include "z-virt.h"
 #include "z-util.h"
 #include "z-rand.h"
@@ -518,6 +519,36 @@ bool dice_parse_string(dice_t *dice, const char *string)
 	}
 
 	return true;
+}
+
+/**
+ * L: turn a random_value into dice via dice_parse_string
+ */
+bool dice_parse_random_value(dice_t *dice, random_value rv)
+{
+	char buf[80] = "", tmp[80] = "";
+
+	if (rv.base) {
+		strnfmt(tmp, sizeof tmp, "%i", rv.base);
+		strcat(buf, tmp);
+	}
+
+	if (rv.dice && rv.sides) {
+		if (buf[0]) {
+			strnfmt(tmp, sizeof tmp, "%+id%i", rv.dice, rv.sides);
+		}
+		else {
+			strnfmt(tmp, sizeof tmp, "%id%i", rv.dice, rv.sides);
+		}
+		strcat(buf, tmp);
+	}
+
+	if (rv.m_bonus) {
+		strnfmt(tmp, sizeof tmp, "M%i", rv.m_bonus);
+		strcat(buf, tmp);
+	}
+
+	return buf[0] ? dice_parse_string(dice, buf) : false;
 }
 
 /**

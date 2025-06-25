@@ -40,5 +40,6 @@ bool dice_test_variables(const dice_t *dice, const char *base,
 		const char *dice_name, const char *sides, const char *bonus);
 
 dice_t *dice_copy(const dice_t *source);
+bool dice_parse_random_value(dice_t *dice, random_value rv);
 
 #endif /* INCLUDED_Z_DICE_H */

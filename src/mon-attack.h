@@ -30,6 +30,11 @@ struct attack {
 	int blows;			// number of blows per round the user gets with it
 	int num;			// number of the same attacks the user has
 
+	int hit_stat;		// which stat affects accuracy
+	int dam_stat;		// which stat affects dam
+	int skill;			// which skill
+	int expert;			// expertise from powers
+
 	const char *message;	// L: what the attack is called
 
 	const struct object *obj;	/* what weapon is it using */

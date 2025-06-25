@@ -51,6 +51,14 @@
 #include "target.h"
 
 
+
+struct temp_attack_data {
+	struct temp_attack_data *next;
+	int penalty;
+	const struct attack *atk;
+};
+
+
 /**
  * ------------------------------------------------------------------------
  * Hit and breakage calculations
@@ -1820,7 +1828,28 @@ static bool mon_valid(int midx, struct loc grid)
 	return mon && mon->race && loc_eq(mon->grid, grid);
 }
 
-static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct attack *atk)
+/**
+ * L: returns the reason why an attack won't work, or NULL if the attack will work
+ */
+static const char *attack_error(const struct monster *attacker, const struct monster *defender,
+		const struct attack *atk, const struct chunk *c)
+{
+	if (distance(attacker->grid, defender->grid) > atk->range) {
+		return "It's too far away!";
+	}
+	if (attacker->m_timed[TMD_BLIND] && my_stristr(atk->message, "gaze")) {
+		return "You can't gaze while blind!";
+	}
+	return NULL;
+}
+
+static bool attack_valid(const struct monster *attacker, const struct monster *defender,
+		const struct attack *atk, const struct chunk *c)
+{
+	return !attack_error(attacker, defender, atk, c);
+}
+
+static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct temp_attack_data *which)
 {
 	struct player *ap = mon_is_player(mon) ? mon->player : NULL;
 	struct player *tp = mon_is_player(t_mon) ? t_mon->player : NULL;
@@ -1840,10 +1869,10 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct att
 	}
 
 	/* See if the player hit */
-	success = test_hit(atk->to_hit, mon_ac(t_mon));
+	success = test_hit(which->atk->to_hit, mon_ac(t_mon));
 
 	if (success) {
-		strnfmt(message, sizeof message, atk->message);
+		strnfmt(message, sizeof message, which->atk->message);
 	}
 	else if (ap) {
 		strnfmt(message, sizeof message, "miss");
@@ -1880,16 +1909,110 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct att
 	}
 
 	if (success) {
+		assert(which->atk);
+		assert(which->atk->ef);
 		bool id = false;
-		effect_do(atk->ef, source_monster(mon->midx), source_none(), NULL, &id, true, dir, 0, 0, NULL);
+		struct effect tmp_ef = *which->atk->ef;
+		random_value rv = { 0, 0, 0, 0 };
+		dice_t *tmp_dice = dice_new();
+
+		dice_random_value(tmp_ef.dice, &rv);
+
+		rv.sides = MAX(rv.sides - which->penalty * 2, 1);
+
+		msg_add_fmt("using rv { %i, %i, %i, %i } for attack", rv.base, rv.dice, rv.sides, rv.m_bonus);
+
+		dice_parse_random_value(tmp_dice, rv);
+
+		tmp_ef.dice = tmp_dice;
+
+		effect_do(&tmp_ef, source_monster(mon->midx), source_none(), NULL, &id, true, dir, 0, 0, NULL);
+
+		dice_free(tmp_dice);
+	}
+}
+
+
+static int attack_select_chance(const struct temp_attack_data *data)
+{
+	assert(data->penalty >= 0);
+	return data->atk->blows / (data->penalty + 1);
+}
+
+static struct temp_attack_data *random_attack(struct temp_attack_data *data)
+{
+	int t_blows, choice;
+	struct temp_attack_data *curr;
+
+	if (!data) return NULL;
+
+	t_blows = 0;
+	for (curr = data; curr; curr = curr->next) {
+		t_blows += attack_select_chance(curr);
+		msg_add_fmt("choice for blow %s is %i", curr->atk->message, attack_select_chance(curr));
+	}
+
+	if (t_blows <= 0) return NULL;
+
+	choice = randint0(t_blows);
+
+	for (curr = data; curr; curr = curr->next) {
+		if (choice < attack_select_chance(curr)) return curr;
+		choice -= attack_select_chance(curr);
+	}
+
+	return NULL;
+}
+
+static struct temp_attack_data *get_temp_attack_data(const struct monster *mon, const struct monster *t_mon, const struct chunk *c)
+{
+	struct temp_attack_data *result = NULL;
+	const struct attack *atk;
+	int i;
+
+	for (atk = mon->atk; atk; atk = atk->next) {
+		if (attack_valid(mon, t_mon, atk, c)) {
+			for (i = 0; i < atk->num; ++i) {
+				struct temp_attack_data *new = mem_zalloc(sizeof *new);
+
+				assert(new);
+
+				new->atk = atk;
+				new->penalty = 0;
+				new->next = NULL;
+
+				if (result) {
+					struct temp_attack_data *last = result;
+					while (last->next) last = last->next;
+					last->next = new;
+				}
+				else {
+					result = new;
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
+static void free_temp_attack_data(struct temp_attack_data *data)
+{
+	struct temp_attack_data *next;
+	while (data) {
+		next = data->next;
+		mem_free(data);
+		data = next;
 	}
 }
 
 static void mon_test_attack(struct monster *mon, struct monster *t_mon)
 {
-	struct loc grid = t_mon->grid;
-	struct attack *atk;
+	struct loc t_grid = t_mon->grid;
 	int t_midx = t_mon->midx;
+	//const struct attack *atk;
+	struct temp_attack_data *tmp_data, *curr;
+	int energy;
 
 	assert(mon);
 	assert(t_mon);
@@ -1901,19 +2024,40 @@ static void mon_test_attack(struct monster *mon, struct monster *t_mon)
 
 	update_mon_attacks(mon);
 
+	tmp_data = get_temp_attack_data(mon, t_mon, cave);
+
 	if (mon_is_player(mon)) {
 		target_set_monster(t_mon);
 	}
 
-	for (atk = mon->atk; atk && mon_valid(t_midx, grid); atk = atk->next) {
-		int i;
-		int max = atk->blows / 100;
-		max += (atk->blows - max) > randint0(100) ? 1 : 0;
-
-		for (i = 0; i < max && mon_valid(t_midx, grid); ++i) {
-			mon_test_blow(mon, t_mon, atk);
+	if (mon_is_player(mon)) {
+		const char *err_msg;
+		for (curr = tmp_data; curr; curr = curr->next) {
+			err_msg = attack_error(mon, t_mon, curr->atk, cave);
+			if (err_msg) msg(err_msg);
 		}
 	}
+
+	energy = 0;
+
+	while (energy * 4 <= z_info->move_energy * 3 && mon_valid(t_midx, t_grid)) {
+		curr = random_attack(tmp_data);
+		if (!curr) break;
+		assert(curr->atk);
+
+		energy += z_info->move_energy * 100 / curr->atk->blows;
+
+		mon_test_blow(mon, t_mon, curr);
+
+		curr->penalty += 1;
+	}
+
+	if (mon->player) {
+		mon->player->upkeep->energy_use = energy;
+	}
+	msg_add_fmt("energy_use = %i", player->upkeep->energy_use);
+
+	free_temp_attack_data(tmp_data);
 }
 
 /**

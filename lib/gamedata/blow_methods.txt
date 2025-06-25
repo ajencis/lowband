@@ -232,7 +232,7 @@ ranged:2
 msg:MON_SPORE
 act:releases spores at {target}
 fact:release spores at
-desc:release spores
+desc:spores
 slot:BODY_ARMOR
 lash-type:POIS
 

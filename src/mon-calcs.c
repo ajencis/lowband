@@ -97,6 +97,20 @@ int mon_lev(const struct monster *mon)
 }
 
 
+static int skill_stepdown(const struct monster *mon, int skill)
+{
+	int lev = mon->player ? mon->player->lev : mon->race->level;
+	int diff;
+
+	if (skill <= lev) return skill;
+
+	diff = skill - lev;
+	diff = diff / 2;
+
+	return lev + diff;
+}
+
+
 static int mon_skill_stat_ind(const struct monster *mon, const struct player_state *state, int skill)
 {
 	if (mon->player) {
@@ -148,7 +162,7 @@ static int mon_skill(const struct monster *mon, const struct player_state *state
 		result += adj_stat_skill_flat(stat_ind, skill);
 	}
 
-	return result;
+	return skill_stepdown(mon, result);
 }
 
 
@@ -377,15 +391,11 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 
 static void effect_add_value(struct effect *ef, random_value rv)
 {
-	char dice_str[80] = "";
-	dice_t *dice;
+	if (!ef->dice) ef->dice = dice_new();
 
-	if (ef->dice) {
-		dice = ef->dice;
-	}
-	else {
-		dice = dice_new();
-	}
+	dice_parse_random_value(ef->dice, rv);
+
+	/*ef->dice = dice;
 
 	if (rv.base) {
 		my_strcat(dice_str, format("%i", rv.base), sizeof dice_str);
@@ -407,7 +417,7 @@ static void effect_add_value(struct effect *ef, random_value rv)
 
 	dice_parse_string(dice, dice_str);
 
-	ef->dice = dice;
+	ef->dice = dice;*/
 }
 
 
@@ -557,9 +567,11 @@ static void calc_emb_blows(const struct monster *mon, struct embryo_attack *emb,
 
 	skill = mon->state.skills[emb->skill];
 
-	blows = skill * base * emb->num / div / numblows;
+	blows = skill * base * emb->num / div;
 
-	emb->blows = MAX(blows + 50 * emb->num, blows / 2 + 100 * emb->num);
+	emb->blows = MAX(blows / 2 + 100, blows);
+
+	//emb->blows = MAX(blows + 50 * emb->num, blows / 2 + 100 * emb->num);
 }
 
 static int num_embryos(const struct embryo_attack *emb)
@@ -653,7 +665,6 @@ static struct effect *get_timed_effect(int lev, int timed)
 
 static struct embryo_attack *get_natural_attack(const struct monster *mon, const struct monster_blow *blow)
 {
-	bool p = mon->player ? true : false;
 	struct embryo_attack *emb = mem_zalloc(sizeof *emb);
 
 	emb->mon_blow = blow;
@@ -673,7 +684,7 @@ static struct embryo_attack *get_natural_attack(const struct monster *mon, const
 		emb->sides = 0;
 	}
 
-	emb->msg = p ? blow->method->fmessage : blow->method->messages->act_msg;
+	emb->msg = blow->method->desc;// p ? blow->method->fmessage : blow->method->messages->act_msg;
 
 	emb->extra = NULL;
 
@@ -927,6 +938,7 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 	result->obj = emb->obj;
 	result->range = emb->range;
 	result->to_hit = emb->to_h;
+	result->num = emb->num;
 	if (emb->skill >= 0 && emb->skill < SKILL_MAX) {
 		result->to_hit += mon->state.skills[emb->skill];
 	}
