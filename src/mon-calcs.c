@@ -266,12 +266,9 @@ static int mon_power(const struct monster *mon, int power)
 	else {
 		double base = ((double)lev) / ((double)50);
 		lev_fact = exponentiate_dbl(base, abil->scale, 2);
-		if (dbg) msg_add_fmt("lev=%i, PML=%i, base=%f, lev_fact=%f", lev, 50.0, base, lev_fact);
 	}
 
 	int result = (int)(efflev * scale * lev_fact / 100) + xtra;
-
-	if (dbg) msg_add_fmt("power %s: efflev=%i, scale=%i, lev_fact=%f, xtra=%i; result = %i", abil->name, efflev, scale, lev_fact, xtra, result);
 
 	return result;
 
@@ -347,7 +344,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 		state->skills[i] = mon_lev(mon) + 10;*/
 	}
 
-
+	
 	memcpy(race_elem_info, mrace->el_info, sizeof *race_elem_info * ELEM_MAX);
 	for (i = 0; i < ELEM_MAX; i++) {
 		state->el_info[i].res_level = race_elem_info[i].res_level;

@@ -485,22 +485,18 @@ static void ability_learn_valid_refresh(struct menu *menu)
 		}
 
 		if (!ability_satisfies_all_prereqs(abil, data->p)) {
-			if (dbg) msg_add_fmt("%s doesn't statisfy prereqs, skip", abil->name);
 			data->valid[oid] = MN_ROW_SKIP;
 		}
 		else if (data->birth) {
-			if (dbg) msg_add_fmt("%s at birth, valid", abil->name);
 			data->valid[oid] = MN_ROW_VALID;
 		}
 		else if (data->max_learnable[oid] > 0) {
-			if (dbg) msg_add_fmt("%s learnable is greater than 0, valid", abil->name);
 			data->valid[oid] = MN_ROW_VALID;
 		}
 
 		if (data->valid[oid] == MN_ROW_SKIP &&
 				(data->p->extra_powers[oid] > 0 || data->p->mon.state.powers[oid] > 0)) {
 			data->valid[oid] = MN_ROW_INVALID;
-			if (dbg) msg_add_fmt("%s has current amount, skip->invalid", abil->name);
 		}
 	}
 
@@ -697,7 +693,9 @@ static void refresh_hypothetical_player(struct menu *m)
 	struct player *hypo = data->p;
 	struct player_ability *abil;
 
-	if (data->p == player) return;
+	if (data->p == player) {
+		return;
+	}
 
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->learn_index < 0) continue;
@@ -1022,6 +1020,7 @@ static struct player *hypothetical_player(const struct player *p)
 
 	hypo->max_lev = PY_MAX_LEVEL;
 	hypo->lev = PY_MAX_LEVEL;
+	hypo->mon.player = hypo;
 
 	return hypo;
 }
