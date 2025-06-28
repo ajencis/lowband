@@ -2225,7 +2225,7 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 
 		for (j = 0; j < PP_MAX; ++j) {
 			int min = ms->powers[j];
-			int race_power = mon_power(mr, j);// mr->powers[j] * mr->level / 100;
+			int race_power = calc_mon_race_power(mr, j);// mr->powers[j] * mr->level / 100;
 			int mod;
 			if (min <= 0) continue;
 

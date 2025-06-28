@@ -969,9 +969,11 @@ static int tome_max_learnable_parents_array(const struct player_ability *abil, i
 	}
 
 	if (div > 0) {
-		// need parents to be at ~50/3 before you can learn
+		// need parents to be at ~50/4 before you can learn
+		// learnable at max by ~50*3/4
 		int abil_max_cost = bonus_to_cost(LEARN_MAX, abil);
-		int max_cost = abil_max_cost * sum * 2 / div - abil_max_cost / 3;
+		int max_cost = abil_max_cost * sum * 2 / div - abil_max_cost / 4;
+		max_cost = MAX(0, MIN(abil_max_cost, max_cost));
 
 		return cost_to_bonus(max_cost, abil);
 	}
@@ -1173,6 +1175,12 @@ bool tome_max_learnable_extra_array(bool metaprog, int *learn_array, int *extra_
 				learn_array[abil->learn_index] = tome_parent_max;
 			}
 		}*/
+	}
+
+	{
+		abil = lookup_player_ability(PP_DIVINATION_MAGIC, PY_ABIL_POWER);
+		assert(abil);
+		msg_add_fmt("in tmlea: learn_array[%s] = %i", abil->name, learn_array[abil->learn_index]);
 	}
 
 	return extra;

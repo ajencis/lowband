@@ -99,7 +99,7 @@ int mon_lev(const struct monster *mon)
 
 static int skill_stepdown(const struct monster *mon, int skill)
 {
-	int lev = mon->player ? mon->player->lev : mon->race->level;
+	int lev = mon_lev(mon);
 	int diff;
 
 	if (skill <= lev) return skill;
@@ -125,8 +125,8 @@ static int mon_skill_stat_ind(const struct monster *mon, const struct player_sta
 static void race_skill(const struct monster *mon, int which, int *base, int *xtra)
 {
 	const struct monster_race *mr = mon->race;
-	*base += mr->skills[which] * mr->level / 50;
-	*xtra += mr->skills[which] / 66;
+	*base += mr->skills[which] / 10;
+	*xtra += mr->skills[which];
 }
 
 static void class_skill(const struct monster *mon, int which, int *base, int *xtra)
@@ -205,9 +205,78 @@ static void mon_stat_calc(const struct monster *mon, struct player_state *state)
 }
 
 
-int mon_power(const struct monster_race *mon, int power)
+static int mon_class_power(const struct monster *mon, int power)
 {
-	int scale = mon->powers[power];
+	if (mon->player) return player_class_power(mon->player, power);
+	return 0;
+}
+
+int calc_mon_race_power(const struct monster_race *mr, int power)
+{
+	int scale = mr->powers[power];
+
+	if (scale <= 0) return scale;
+
+	int normal = scale * mr->level / 100;
+	int special = scale * mr->level / 50 + scale * scale / 50 - 100 * 100 / 50;
+
+	// a low-level monster with slow scaling doesn't get the power at all;
+	return MAX(0, MIN(normal, special));
+}
+
+static int mon_race_power(const struct monster *mon, int power)
+{
+	return calc_mon_race_power(mon->race, power);
+}
+
+static int mon_tome_power(const struct monster *mon, int power)
+{
+	if (mon->player) {
+		return (mon->player->extra_powers[power] + 1) / 2;
+	}
+	return 0;
+}
+
+static int mon_power(const struct monster *mon, int power)
+{
+	if (power <= PP_NONE || power >= PP_MAX) return 0;
+
+	bool dbg = mon_is_player(mon);
+
+	struct player_ability *abil = lookup_player_ability(power, PY_ABIL_POWER);
+	assert(abil);
+
+	int scale = mon_class_power(mon, power) + mon_race_power(mon, power);
+	int lev = mon_lev(mon);
+
+	int minlev = 5 - (scale + 5) / 7;
+	int efflev = minlev < 0 ? MAX((lev + 1) / 2 - minlev    , lev) :
+							  MIN((lev + 1) * 2 - minlev * 2, lev);
+
+	int xtra = mon_tome_power(mon, power);
+
+	double lev_fact = 1.0;
+
+	if (scale <= 0) return scale;
+	if (efflev <= 0) return 0;
+
+	if (abil->scale == 0 || lev >= 50) {
+		lev_fact = 1.0;
+	}
+	else {
+		double base = ((double)lev) / ((double)50);
+		lev_fact = exponentiate_dbl(base, abil->scale, 2);
+		if (dbg) msg_add_fmt("lev=%i, PML=%i, base=%f, lev_fact=%f", lev, 50.0, base, lev_fact);
+	}
+
+	int result = (int)(efflev * scale * lev_fact / 100) + xtra;
+
+	if (dbg) msg_add_fmt("power %s: efflev=%i, scale=%i, lev_fact=%f, xtra=%i; result = %i", abil->name, efflev, scale, lev_fact, xtra, result);
+
+	return result;
+
+	//return mon->race->powers[power];
+	/*int scale = mon->powers[power];
 
 	if (scale <= 0) return scale;
 
@@ -215,7 +284,7 @@ int mon_power(const struct monster_race *mon, int power)
 	int special = scale * mon->level / 50 + scale * scale / 50 - 100 * 100 / 50;
 
 	// a low-level monster with slow scaling doesn't get the power at all;
-	return MAX(0, MIN(normal, special));
+	return MAX(0, MIN(normal, special));*/
 }
 
 static void get_mon_ac(struct monster *mon, struct player_state *state)
@@ -265,8 +334,8 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	mon_stat_calc(mon, state);
 
 
-	for (i = 0; i < PP_MAX; ++i) {
-		state->powers[i] = mon_power(mrace, i);
+	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
+		state->powers[i] = mon_power(mon, i);
 	}
 
 	for (i = 0; i < SKILL_MAX; i++) {
@@ -394,30 +463,6 @@ static void effect_add_value(struct effect *ef, random_value rv)
 	if (!ef->dice) ef->dice = dice_new();
 
 	dice_parse_random_value(ef->dice, rv);
-
-	/*ef->dice = dice;
-
-	if (rv.base) {
-		my_strcat(dice_str, format("%i", rv.base), sizeof dice_str);
-	}
-
-	if (rv.dice && rv.sides) {
-		int sign = SGN(rv.dice) * SGN(rv.sides);
-		const char *prepend = dice_str[0] ? (sign > 0 ? "+" : "-") : "";
-		my_strcat(dice_str, format("%s%id%i", prepend, rv.dice, rv.sides), sizeof dice_str);
-	}
-
-	if (rv.m_bonus) {
-		my_strcat(dice_str, format("M%i", rv.m_bonus), sizeof dice_str);
-	}
-
-	if (!dice_str[0]) {
-		strnfmt(dice_str, sizeof dice_str, "0d0");
-	}
-
-	dice_parse_string(dice, dice_str);
-
-	ef->dice = dice;*/
 }
 
 

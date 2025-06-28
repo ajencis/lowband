@@ -936,7 +936,7 @@ static int realm_school_modifier(const struct player *p, const struct magic_real
 	mon = lookup_player_monster(p);
 
 	if (mon) {
-		int power = mon_power(mon, school);
+		int power = mon->powers[school];
 
 		base += power;
 	}

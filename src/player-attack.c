@@ -1920,8 +1920,6 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 
 		rv.sides = MAX(rv.sides - which->penalty * 2, 1);
 
-		msg_add_fmt("using rv { %i, %i, %i, %i } for attack", rv.base, rv.dice, rv.sides, rv.m_bonus);
-
 		dice_parse_random_value(tmp_dice, rv);
 
 		tmp_ef.dice = tmp_dice;
@@ -1949,7 +1947,6 @@ static struct temp_attack_data *random_attack(struct temp_attack_data *data)
 	t_blows = 0;
 	for (curr = data; curr; curr = curr->next) {
 		t_blows += attack_select_chance(curr);
-		msg_add_fmt("choice for blow %s is %i", curr->atk->message, attack_select_chance(curr));
 	}
 
 	if (t_blows <= 0) return NULL;
@@ -2055,7 +2052,6 @@ static void mon_test_attack(struct monster *mon, struct monster *t_mon)
 	if (mon->player) {
 		mon->player->upkeep->energy_use = energy;
 	}
-	msg_add_fmt("energy_use = %i", player->upkeep->energy_use);
 
 	free_temp_attack_data(tmp_data);
 }

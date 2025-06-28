@@ -1595,7 +1595,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	player_flags(p, collect_f);
 
 	/* L: get powers */
-	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
+	/*for (i = PP_NONE + 1; i < PP_MAX; ++i) {
 		state->powers[i] /= 2;
 
 		struct player_ability *abil = lookup_player_ability(i, PY_ABIL_POWER);
@@ -1643,7 +1643,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 		}
 
 		state->powers[i] += MIN((p->extra_powers[i] + 1) / 2, p->lev * 3);
-	}
+	}*/
 
 	/* Analyze equipment */
 	for (i = 0; i < p->mon.body.count; i++) {

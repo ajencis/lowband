@@ -84,10 +84,10 @@ static bool pred_HAS_MATCHING_SPELL(const struct player_ability *abil, const str
 
 
 abil_predicate ability_predicates[] = {
-    #define PRED(x) pred_##x,
-    #include "list-ability-predicates.h"
-    #undef PRED
-    NULL
+	#define PRED(x) pred_##x,
+	#include "list-ability-predicates.h"
+	#undef PRED
+	NULL
 };
 
 
@@ -118,7 +118,7 @@ struct player_ability *lookup_player_ability(int idx, int type)
 	struct player_ability *abil;
 
 	for (abil = player_abilities; abil; abil = abil->next) {
-		if (abil->index == idx && type == abil->type) {
+		if (abil->index == idx && abil->type == type) {
 			return abil;
 		}
 	}

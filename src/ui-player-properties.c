@@ -394,6 +394,14 @@ static void get_max_learnable(struct menu *m, struct player *p)
 	struct ability_learn_menu_data *data = menu_priv(m);
 
 	tome_max_learnable_extra(data->p, data->max_learnable, data->extra_max_learnable);
+
+	{
+		struct player_ability *abil = lookup_player_ability(PP_DIVINATION_MAGIC, PY_ABIL_POWER);
+
+		assert(abil);
+
+		msg_add_fmt("%s' max_learnable = %i", abil->name, data->max_learnable[abil->learn_index]);
+	}
 }
 
 
@@ -464,6 +472,9 @@ static void ability_learn_valid_refresh(struct menu *menu)
 		data->valid[oid] = MN_ROW_SKIP;
 		abil = ability_by_tome_id(oid);
 
+		assert(abil);
+		bool dbg = abil->index == PP_DIVINATION_MAGIC;
+
 		if (abil->type == PY_ABIL_SKILL) {
 			data->valid[oid] = MN_ROW_VALID;
 			continue;
@@ -474,18 +485,22 @@ static void ability_learn_valid_refresh(struct menu *menu)
 		}
 
 		if (!ability_satisfies_all_prereqs(abil, data->p)) {
+			if (dbg) msg_add_fmt("%s doesn't statisfy prereqs, skip", abil->name);
 			data->valid[oid] = MN_ROW_SKIP;
 		}
 		else if (data->birth) {
+			if (dbg) msg_add_fmt("%s at birth, valid", abil->name);
 			data->valid[oid] = MN_ROW_VALID;
 		}
 		else if (data->max_learnable[oid] > 0) {
+			if (dbg) msg_add_fmt("%s learnable is greater than 0, valid", abil->name);
 			data->valid[oid] = MN_ROW_VALID;
 		}
 
 		if (data->valid[oid] == MN_ROW_SKIP &&
 				(data->p->extra_powers[oid] > 0 || data->p->mon.state.powers[oid] > 0)) {
 			data->valid[oid] = MN_ROW_INVALID;
+			if (dbg) msg_add_fmt("%s has current amount, skip->invalid", abil->name);
 		}
 	}
 

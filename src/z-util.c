@@ -17,6 +17,7 @@
  */
 
 #include <stdlib.h>
+#include <float.h>
 
 #include "z-util.h"
 
@@ -2137,6 +2138,96 @@ static double inverse_binary_search(double num, double (*f)(double),
 
 	return (low + high) / 2;
 }
+
+
+static double exponentiate_base(double num, int exponent)
+{
+	int i;
+	double result;
+
+	if (num == 1.0 || num == 0.0) return num;
+	assert(exponent >= 0);
+	if (exponent < 0) return exponentiate_base(1 / num, -exponent);
+
+	result = 1;
+	for (i = 0; i < exponent; ++i) {
+		assert(result < (DBL_MAX / num));
+		result *= num;
+	}
+
+	return result;
+}
+
+static double inverse_binary_exponent_search(double num, int exponent, bool intify)
+{
+	assert(num > 0.0);
+	assert(exponent > 0);
+	double low = MIN(num, 1.0), high = MAX(num, 1.0), mid, result;
+	int tries;
+
+	for (tries = 0; tries < 1024; ++tries) {
+		mid = (low + high) / 2;
+		result = exponentiate_base(mid, exponent);
+
+		if (intify && ((int)result) == ((int)num)) return mid;
+		else if (result > num) high = mid;
+		else if (result < num) low = mid;
+		else return mid;
+	}
+
+	// best guess
+	return mid;
+}
+
+static bool divisible(int num, int denom)
+{
+	return !(num % denom);
+}
+
+#define MAX_PRIME_EXPONENT 97
+
+static double exponentiate_dbl_base(double base, int exp_num, int exp_denom, bool intify)
+{
+	int i;
+	assert(exp_denom != 0);
+	double result;
+
+	if (exp_num * exp_denom < 0) {
+		assert(base != 0);
+		base = 1.0 / base;
+	}
+
+	if (exp_num == 0) {
+		return 1;
+	}
+
+	exp_num = ABS(exp_num);
+	exp_denom = ABS(exp_denom);
+
+	for (i = 2; i <= exp_num && i <= exp_denom; ++i) {
+		while (divisible(exp_num, i) && divisible(exp_denom, i)) {
+			exp_num /= i;
+			exp_denom /= i;
+		}
+	}
+
+	result = exponentiate_base(base, exp_num);
+	result = inverse_binary_exponent_search(result, exp_denom, intify);
+
+	return result;
+}
+
+
+double exponentiate_dbl(double base, int exp_num, int exp_denom)
+{
+	return exponentiate_dbl_base(base, exp_num, exp_denom, false);
+}
+
+int exponentiate(int base, int exp_num, int exp_denom)
+{
+	return (int)exponentiate_dbl_base((double)base, exp_num, exp_denom, true);
+}
+
 
 
 static double square(double num)
