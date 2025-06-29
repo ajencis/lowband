@@ -8,6 +8,7 @@
 #include "mon-calcs.h"
 #include "mon-util.h"
 #include "object.h"
+#include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-util.h"
 #include "monster.h"
@@ -81,6 +82,7 @@ struct embryo_attack {
 	int blows;
 
 	const char *msg;
+	char title[32];
 
 	const struct monster_blow *mon_blow;
 	const struct object *obj;
@@ -241,8 +243,6 @@ static int mon_power(const struct monster *mon, int power)
 {
 	if (power <= PP_NONE || power >= PP_MAX) return 0;
 
-	bool dbg = mon_is_player(mon);
-
 	struct player_ability *abil = lookup_player_ability(power, PY_ABIL_POWER);
 	assert(abil);
 
@@ -344,7 +344,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 		state->skills[i] = mon_lev(mon) + 10;*/
 	}
 
-	
+
 	memcpy(race_elem_info, mrace->el_info, sizeof *race_elem_info * ELEM_MAX);
 	for (i = 0; i < ELEM_MAX; i++) {
 		state->el_info[i].res_level = race_elem_info[i].res_level;
@@ -656,6 +656,8 @@ static struct embryo_attack *get_weapon_attack(const struct monster *mon, const 
 
 	struct embryo_attack *emb = mem_zalloc(sizeof *emb);
 
+	uint16_t od_mode;
+
 	emb->obj = weap;
 
 	emb->skill = SKILL_TO_HIT_MELEE;
@@ -672,6 +674,8 @@ static struct embryo_attack *get_weapon_attack(const struct monster *mon, const 
 	emb->to_d = 0;
 
 	emb->msg = p ? "hit" : "hits";
+	od_mode = ODESC_SINGULAR | ODESC_TERSE | ODESC_LOWERCASE;
+	object_desc(emb->title, sizeof emb->title, weap, od_mode, player);
 
 	emb->extra = NULL;
 
@@ -708,6 +712,7 @@ static struct effect *get_timed_effect(int lev, int timed)
 static struct embryo_attack *get_natural_attack(const struct monster *mon, const struct monster_blow *blow)
 {
 	struct embryo_attack *emb = mem_zalloc(sizeof *emb);
+	bool p = mon_is_player(mon);
 
 	emb->mon_blow = blow;
 
@@ -726,7 +731,8 @@ static struct embryo_attack *get_natural_attack(const struct monster *mon, const
 		emb->sides = 0;
 	}
 
-	emb->msg = blow->method->desc;// p ? blow->method->fmessage : blow->method->messages->act_msg;
+	emb->msg = p ? blow->method->fmessage : blow->method->messages->act_msg;
+	strnfmt(emb->title, sizeof emb->title, blow->method->name);
 
 	emb->extra = NULL;
 
@@ -766,6 +772,7 @@ static struct embryo_attack *get_special_attack(const struct monster *mon, int s
 	emb->sides = 1;
 	
 	emb->msg = p ? data->fmsg : data->msg;
+	strnfmt(emb->title, sizeof emb->title, data->msg);
 
 	emb->extra = NULL;
 
@@ -948,6 +955,7 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 	struct effect *main;
 	struct attack *result;
 	random_value rv = { 0, 0, 0, 0 };
+	size_t siz;
 
 	if (emb->acc_stat >= 0 && emb->acc_stat < STAT_MAX) {
 		int ind = mon->state.stat_ind[emb->acc_stat];
@@ -976,7 +984,6 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 
 	result->ef = main;
 	result->blows = emb->blows;
-	result->message = emb->msg;
 	result->obj = emb->obj;
 	result->range = emb->range;
 	result->to_hit = emb->to_h;
@@ -984,6 +991,16 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 	if (emb->skill >= 0 && emb->skill < SKILL_MAX) {
 		result->to_hit += mon->state.skills[emb->skill];
 	}
+
+	siz = strlen(emb->msg) + 1U;
+	result->message = mem_zalloc(siz);
+	strnfmt(result->message, siz, emb->msg);
+	my_struncap_full(result->message);
+
+	siz = strlen(emb->title) + 1U;
+	result->title = mem_zalloc(siz);
+	strnfmt(result->title, siz, emb->title);
+	my_struncap_full(result->title);
 
 	for (struct effect *ef = result->ef; ef; ef = ef->next) {
 		assert(effect_valid(ef));
@@ -1036,6 +1053,8 @@ static void get_mon_attacks(struct monster *mon)
 static void free_attack(struct attack *atk)
 {
 	free_effect(atk->ef);
+	string_free(atk->message);
+	string_free(atk->title);
 	mem_free(atk);
 }
 

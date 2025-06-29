@@ -394,14 +394,6 @@ static void get_max_learnable(struct menu *m, struct player *p)
 	struct ability_learn_menu_data *data = menu_priv(m);
 
 	tome_max_learnable_extra(data->p, data->max_learnable, data->extra_max_learnable);
-
-	{
-		struct player_ability *abil = lookup_player_ability(PP_DIVINATION_MAGIC, PY_ABIL_POWER);
-
-		assert(abil);
-
-		msg_add_fmt("%s' max_learnable = %i", abil->name, data->max_learnable[abil->learn_index]);
-	}
 }
 
 
@@ -473,7 +465,6 @@ static void ability_learn_valid_refresh(struct menu *menu)
 		abil = ability_by_tome_id(oid);
 
 		assert(abil);
-		bool dbg = abil->index == PP_DIVINATION_MAGIC;
 
 		if (abil->type == PY_ABIL_SKILL) {
 			data->valid[oid] = MN_ROW_VALID;

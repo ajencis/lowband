@@ -1409,8 +1409,6 @@ bool mon_take_nonplayer_hit(int dam, struct monster *t_mon,
 {
 	assert(t_mon);
 
-	//plog("entering mtnh");
-
 	/* "Unique" or arena monsters can only be "killed" by the player */
 	/*if (monster_is_unique(t_mon) || player->upkeep->arena_level) {
 		// Reduce monster hp to zero, but don't kill it.
@@ -1458,8 +1456,6 @@ bool mon_take_nonplayer_hit(int dam, struct monster *t_mon,
 	if (!t_mon->m_timed[TMD_AFRAID] && dam > 0) {
 		(void) monster_scared_by_damage(t_mon, dam);
 	}
-
-	//plog("entering mtnh");
 
 	return false;
 }

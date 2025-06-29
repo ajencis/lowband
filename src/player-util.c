@@ -1180,7 +1180,6 @@ bool tome_max_learnable_extra_array(bool metaprog, int *learn_array, int *extra_
 	{
 		abil = lookup_player_ability(PP_DIVINATION_MAGIC, PY_ABIL_POWER);
 		assert(abil);
-		msg_add_fmt("in tmlea: learn_array[%s] = %i", abil->name, learn_array[abil->learn_index]);
 	}
 
 	return extra;

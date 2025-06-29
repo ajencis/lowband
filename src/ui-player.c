@@ -780,7 +780,7 @@ static struct panel *get_panel_combat(void) {
 		if (atk->obj) {
 			object_desc(atk_title, sizeof atk_title, atk->obj, ODESC_CAPITAL | ODESC_TERSE, player);
 		} else {
-			my_strcpy(atk_title, atk->message, sizeof atk_title);
+			my_strcpy(atk_title, atk->title, sizeof atk_title);
 			my_strcap_full(atk_title);
 		}
 
