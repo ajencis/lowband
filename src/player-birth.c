@@ -182,7 +182,7 @@ static int stat_order(struct player *p, int stat)
 {
 	int i;
 	int order = 0;
-	int race_stats[STAT_MAX];
+	int race_stats[STAT_MAX] = { 0 };
 
 	total_evolution_stats(p, race_stats);
 

@@ -359,6 +359,7 @@ attr:AC:1
 attr:HP:-3
 stats:-2:2:1:1:-1
 power:NECROMANCY_MAGIC:20
+power:DEATH_TOUCH:100
 skill-magic:5
 player-flags:NO_FOOD
 

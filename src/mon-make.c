@@ -1247,11 +1247,9 @@ int16_t place_monster(struct chunk *c, struct loc grid, struct monster *mon,
 	verify_mon_ownership(new_mon);
 
 	update_mon_state(new_mon);
-	update_mon_attacks(new_mon);
+	//update_mon_attacks(new_mon);
 
 	verify_mon_ownership(new_mon);
-
-	assert(!new_mon->atk);
 
 	/* Result */
 	return m_idx;

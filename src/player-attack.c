@@ -1824,7 +1824,7 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 
 static bool mon_valid(int midx, struct loc grid)
 {
-	struct monster *mon = cave_monster(cave, midx);
+	struct monster *mon = midx >= 0 ? cave_monster(cave, midx) : &player->mon;
 	return mon && mon->race && loc_eq(mon->grid, grid);
 }
 
@@ -1969,6 +1969,7 @@ static struct temp_attack_data *get_temp_attack_data(const struct monster *mon, 
 
 	for (atk = mon->atk; atk; atk = atk->next) {
 		if (attack_valid(mon, t_mon, atk, c)) {
+			assert(atk->num > 0);
 			for (i = 0; i < atk->num; ++i) {
 				struct temp_attack_data *new = mem_zalloc(sizeof *new);
 
@@ -2003,18 +2004,18 @@ static void free_temp_attack_data(struct temp_attack_data *data)
 	}
 }
 
-static void mon_test_attack(struct monster *mon, struct monster *t_mon)
+bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 {
 	struct loc t_grid = t_mon->grid;
 	int t_midx = t_mon->midx;
 	//const struct attack *atk;
 	struct temp_attack_data *tmp_data, *curr;
 	int energy;
+	bool did_attack = false;
 
 	assert(mon);
 	assert(t_mon);
 	assert(t_mon->race);
-	assert(t_mon->midx > 0);
 
 	verify_mon_ownership(mon);
 	verify_mon_ownership(t_mon);
@@ -2022,6 +2023,10 @@ static void mon_test_attack(struct monster *mon, struct monster *t_mon)
 	update_mon_attacks(mon);
 
 	tmp_data = get_temp_attack_data(mon, t_mon, cave);
+
+	assert(tmp_data || distance(mon->grid, t_mon->grid) > 1);
+
+	if (!tmp_data) return false;
 
 	if (mon_is_player(mon)) {
 		target_set_monster(t_mon);
@@ -2042,6 +2047,8 @@ static void mon_test_attack(struct monster *mon, struct monster *t_mon)
 		if (!curr) break;
 		assert(curr->atk);
 
+		did_attack = true;
+
 		energy += z_info->move_energy * 100 / curr->atk->blows;
 
 		mon_test_blow(mon, t_mon, curr);
@@ -2054,6 +2061,8 @@ static void mon_test_attack(struct monster *mon, struct monster *t_mon)
 	}
 
 	free_temp_attack_data(tmp_data);
+
+	return did_attack;
 }
 
 /**

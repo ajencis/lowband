@@ -671,6 +671,8 @@ int adjust_dam_armor(int damage, int ac)
  */
 bool make_attack_normal(struct monster *mon, struct player *p)
 {
+	return mon_test_attack(mon, &p->mon);
+
 	struct monster_lore *lore = get_lore(mon->race);
 	int rlev = ((mon->race->level >= 1) ? mon->race->level : 1);
 	int ap_cnt;
@@ -922,6 +924,8 @@ bool make_attack_normal(struct monster *mon, struct player *p)
  */
 bool monster_attack_monster(struct monster *mon, struct monster *t_mon)
 {
+	return mon_test_attack(mon, t_mon);
+
 	struct monster_lore *lore = get_lore(mon->race);
 	int rlev = ((mon->race->level >= 1) ? mon->race->level : 1);
 	int ap_cnt;

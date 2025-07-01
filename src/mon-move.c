@@ -2061,8 +2061,9 @@ static void monster_turn(struct monster *mon)
 
 		/* Check if we can move */
 		if (!monster_turn_can_move(mon, m_name, new,
-								   stagger == CONFUSED_STAGGER, &did_something))
+								   stagger == CONFUSED_STAGGER, &did_something)) {
 			continue;
+		}
 
 		/* Try to break the glyph if there is one.  This can happen multiple
 		 * times per turn because failure does not break the loop */
@@ -2298,20 +2299,25 @@ bool process_monster_timed(struct monster *mon)
 		return true;
 	}
 
-	if (mon->m_timed[TMD_FAST])
+	if (mon->m_timed[TMD_FAST]) {
 		mon_dec_timed(mon, TMD_FAST, 1, 0);
+	}
 
-	if (mon->m_timed[TMD_SLOW])
+	if (mon->m_timed[TMD_SLOW]) {
 		mon_dec_timed(mon, TMD_SLOW, 1, 0);
+	}
 
-	if (mon->m_timed[TMD_PARALYZED])
+	if (mon->m_timed[TMD_PARALYZED]) {
 		mon_dec_timed(mon, TMD_PARALYZED, 1, 0);
+	}
 
-	if (mon->m_timed[TMD_DISEN])
+	if (mon->m_timed[TMD_DISEN]) {
 		mon_dec_timed(mon, TMD_DISEN, 1, 0);
+	}
 
-	if (mon->m_timed[TMD_STUN])
+	if (mon->m_timed[TMD_STUN]) {
 		mon_dec_timed(mon, TMD_STUN, 1, MON_TMD_FLG_NOTIFY);
+	}
 
 	if (mon->m_timed[TMD_CONFUSED]) {
 		mon_dec_timed(mon, TMD_CONFUSED, 1, MON_TMD_FLG_NOTIFY);

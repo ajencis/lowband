@@ -4,6 +4,7 @@
 
 #include "angband.h"
 #include "effects.h"
+#include "game-world.h"
 #include "init.h"
 #include "mon-calcs.h"
 #include "mon-util.h"
@@ -1084,7 +1085,7 @@ static void refresh_mon_attacks(struct monster *mon)
 void update_mon_attacks(struct monster *mon)
 {
 	verify_mon_ownership(mon);
-	if (mflag_has(mon->mflag, MFLAG_UPDATE_ATTACKS) && mon_is_player(mon)) {
+	if (mflag_has(mon->mflag, MFLAG_UPDATE_ATTACKS)) {
 		refresh_mon_attacks(mon);
 		mflag_off(mon->mflag, MFLAG_UPDATE_ATTACKS);
 	}
