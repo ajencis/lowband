@@ -71,7 +71,7 @@ static blow_tag_t blow_tag_lookup(const char *tag)
  * We fill in the monster name and/or pronoun where necessary in
  * the message to replace instances of {name} or {pronoun}.
  */
-char *monster_blow_method_action(const struct blow_method *method, int midx)
+char *monster_blow_method_desc(const char *msg, int midx)
 {
 	const char punct[] = ".!?;:,'";
 	char buf[1024] = "\0";
@@ -82,19 +82,12 @@ char *monster_blow_method_action(const struct blow_method *method, int midx)
 	size_t end = 0;
 	struct monster *t_mon = NULL;
 
-	int choice = randint0(method->num_messages);
-	const struct blow_message *msg = method->messages;
-
 	/* Get the target monster, if any */
 	if (midx > 0) {
 		t_mon = cave_monster(cave, midx);
 	}
 
-	/* Pick a message */
-	while (choice--) {
-		msg = msg->next;
-	}
-	in_cursor = msg->act_msg;
+	in_cursor = msg;
 
 	/* Add info to the message */
 	next = strchr(in_cursor, '{');
@@ -165,6 +158,24 @@ char *monster_blow_method_action(const struct blow_method *method, int midx)
 	}
 	strnfcat(buf, 1024, &end, "%s", in_cursor);
 	return string_make(buf);
+}
+
+char *monster_blow_method_action(const struct blow_method *method, int midx)
+{
+	int choice = randint0(method->num_messages);
+	const struct blow_message *msg = method->messages;
+
+	/* Pick a message */
+	while (choice--) {
+		msg = msg->next;
+	}
+
+	return monster_blow_method_desc(msg->act_msg, midx);
+}
+
+char *monster_blow_method_first_action(const struct blow_method *method, int midx)
+{
+	return monster_blow_method_desc(method->fmessage, midx);
 }
 
 /**

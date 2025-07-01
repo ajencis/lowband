@@ -20,6 +20,7 @@
 #include "game-input.h"
 #include "mon-desc.h"
 #include "mon-predicate.h"
+#include "mon-util.h"
 
 /**
  * Perform simple English pluralization on a monster name.
@@ -117,8 +118,10 @@ void monster_desc(char *desc, size_t max, const struct monster *mon, int mode)
 	bool use_pronoun = (seen && (mode & MDESC_PRO_VIS)) ||
 			(!seen && (mode & MDESC_PRO_HID));
 
+	bool is_p = mon_is_player(mon);
+
 	/* First, try using pronouns, or describing hidden monsters */
-	if (!seen || use_pronoun) {
+	if (!seen || use_pronoun || is_p) {
 		const char *choice = "it";
 
 		/* an encoding of the monster "sex" */
@@ -126,7 +129,9 @@ void monster_desc(char *desc, size_t max, const struct monster *mon, int mode)
 
 		/* Extract the gender (if applicable) */
 		if (use_pronoun) {
-			if (rf_has(mon->race->flags, RF_FEMALE)) {
+			if (is_p) {
+				msex = 0x30;
+			} else if (rf_has(mon->race->flags, RF_FEMALE)) {
 				msex = 0x20;
 			} else if (rf_has(mon->race->flags, RF_MALE)) {
 				msex = 0x10;
@@ -164,17 +169,28 @@ void monster_desc(char *desc, size_t max, const struct monster *mon, int mode)
 			case 0x25: choice = "someone"; break;
 			case 0x26: choice = "someone's"; break;
 			case 0x27: choice = "herself"; break;
+
+			/* Player */
+			case 0x30: choice = "you"; break;
+			case 0x31: choice = "you"; break;
+			case 0x32: choice = "your"; break;
+			case 0x33: choice = "yourself"; break;
+			case 0x34: choice = "you"; break;
+			case 0x35: choice = "you"; break;
+			case 0x36: choice = "your"; break;
+			case 0x37: choice = "yourself"; break;
 		}
 
 		my_strcpy(desc, choice, max);
 	} else if ((mode & MDESC_POSS) && (mode & MDESC_OBJE)) {
 		/* The monster is visible, so use its gender */
-		if (rf_has(mon->race->flags, RF_FEMALE))
+		if (rf_has(mon->race->flags, RF_FEMALE)) {
 			my_strcpy(desc, "herself", max);
-		else if (rf_has(mon->race->flags, RF_MALE))
+		} else if (rf_has(mon->race->flags, RF_MALE)) {
 			my_strcpy(desc, "himself", max);
-		else
+		} else {
 			my_strcpy(desc, "itself", max);
+		}
 	} else {
 		const char *comma_pos;
 

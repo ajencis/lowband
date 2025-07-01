@@ -20,7 +20,7 @@ phys:1
 player-usable:0
 msg:MON_HIT
 act:hits {target}
-fact:hit
+fact:hit {target}
 desc:hit
 slot:WEAPON
 lash-type:BLUDGEONING
@@ -34,7 +34,7 @@ player-usable:1
 unarmed:1
 msg:MON_TOUCH
 act:touches {target}
-fact:touch
+fact:touch {target}
 desc:touch
 slot:WEAPON
 lash-type:BLUDGEONING
@@ -49,7 +49,7 @@ player-usable:0
 unarmed:1
 msg:MON_PUNCH
 act:punches {target}
-fact:punch
+fact:punch {target}
 desc:punch
 slot:WEAPON
 lash-type:BLUDGEONING
@@ -64,7 +64,7 @@ player-usable:0
 unarmed:1
 msg:MON_KICK
 act:kicks {target}
-fact:kick
+fact:kick {target}
 desc:kick
 slot:BOOTS
 lash-type:BLUDGEONING
@@ -77,7 +77,7 @@ phys:1
 player-usable:1
 msg:MON_CLAW
 act:claws {target}
-fact:claw
+fact:claw {target}
 desc:claw
 slot:WEAPON
 lash-type:SLASHING
@@ -90,7 +90,7 @@ phys:1
 player-usable:1
 msg:MON_BITE
 act:bites {target}
-fact:bite
+fact:bite {target}
 desc:bite
 slot:HAT
 lash-type:PIERCING
@@ -104,7 +104,7 @@ phys:1
 player-usable:1
 msg:MON_STING
 act:stings {target}
-fact:sting
+fact:sting {target}
 desc:sting
 slot:CLOAK
 lash-type:PIERCING
@@ -118,7 +118,7 @@ phys:1
 player-usable:1
 msg:MON_BUTT
 act:butts {target}
-fact:butt
+fact:butt {target}
 desc:butt
 slot:HAT
 lash-type:BLUDGEONING
@@ -131,7 +131,7 @@ phys:1
 player-usable:1
 msg:MON_CRUSH
 act:crushes {target}
-fact:crush
+fact:crush {target}
 desc:crush
 slot:CLOAK
 lash-type:BLUDGEONING
@@ -145,7 +145,7 @@ phys:0
 player-usable:1
 msg:MON_ENGULF
 act:engulfs {target}
-fact:engulf
+fact:engulf {target}
 desc:engulf
 slot:GLOVES
 lash-type:BLUDGEONING
@@ -158,7 +158,7 @@ phys:0
 player-usable:1
 msg:MON_CRAWL
 act:crawls on {target}
-fact:crawl on
+fact:crawl on {target}
 desc:crawl on you
 slot:BOOTS
 lash-type:PIERCING
@@ -172,7 +172,7 @@ phys:0
 player-usable:1
 msg:MON_DROOL
 act:drools on {target}
-fact:drool on
+fact:drool on {target}
 desc:drool on you
 slot:HAT
 lash-type:POIS
@@ -187,7 +187,7 @@ player-usable:1
 ranged:3
 msg:MON_SPIT
 act:spits on {target}
-fact:spit on
+fact:spit on {target}
 desc:spit
 slot:HAT
 lash-type:ACID
@@ -202,7 +202,7 @@ player-usable:1
 ranged:5
 msg:MON_GAZE
 act:gazes at {target}
-fact:gaze at
+fact:gaze at {target}
 desc:gaze
 slot:HAT
 skill:SEARCH
@@ -217,7 +217,7 @@ player-usable:1
 ranged:3
 msg:MON_WAIL
 act:wails at {target}
-fact:wail at
+fact:wail at {target}
 desc:wail
 slot:HAT
 lash-type:SOUND
@@ -231,7 +231,7 @@ player-usable:1
 ranged:2
 msg:MON_SPORE
 act:releases spores at {target}
-fact:release spores at
+fact:release spores at {target}
 desc:spores
 slot:BODY_ARMOR
 lash-type:POIS
@@ -244,7 +244,7 @@ phys:0
 player-usable:1
 msg:MON_BEG
 act:begs {target} for money
-fact:beg
+fact:beg {target} for money
 desc:beg
 slot:GLOVES
 lash-type:AWAY_ALL
@@ -266,7 +266,7 @@ act:defiles {target}!
 act:dances around {target}!
 act:makes obscene gestures!
 act:moons {target}!!!
-fact:insult
+fact:insult {target}!
 desc:insult
 slot:HAT
 lash-type:AWAY_ALL
@@ -288,7 +288,7 @@ act:asks 'Do you want to buy any mushrooms?'
 act:seems sad about something
 act:asks if {target} {has} seen his dogs
 act:mumbles something about mushrooms
-fact:moan at
+fact:moan at {target}
 desc:moan
 slot:HAT
 lash-type:AWAY_ALL
@@ -301,8 +301,8 @@ miss:0
 phys:0
 player-usable:1
 msg:MON_BEG
-act:sings
-fact:sing
+act:sings at {target}
+fact:sing at {target}
 desc:sing
 slot:HAT
 lash-type:SOUND

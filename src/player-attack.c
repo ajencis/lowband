@@ -25,7 +25,8 @@
 #include "generate.h"
 #include "init.h"
 #include "mon-attack.h"
-#include "mon-calcs.h" // remove later
+#include "mon-blows.h"
+#include "mon-calcs.h"
 #include "mon-desc.h"
 #include "mon-lore.h"
 #include "mon-make.h"
@@ -1856,7 +1857,7 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 
 	char attacker[80] = "You";
 	char target[80] = "you";
-	char message[80] = "hit";
+	//char message[80] = "hit";
 
 	bool success;
 
@@ -1871,23 +1872,23 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 	/* See if the player hit */
 	success = test_hit(which->atk->to_hit, mon_ac(t_mon));
 
+	char *message;
+
 	if (success) {
-		strnfmt(message, sizeof message, which->atk->message);
+		message = monster_blow_method_desc(which->atk->message, t_mon->midx);
 	}
 	else if (ap) {
-		strnfmt(message, sizeof message, "miss");
+		message = monster_blow_method_desc("miss {target}", t_mon->midx);
 	}
 	else {
-		strnfmt(message, sizeof message, "misses");
+		message = monster_blow_method_desc("misses {target}", t_mon->midx);
 	}
 
-	if (mon == t_mon) {
-		monster_desc(attacker, sizeof attacker, mon, MDESC_TARG | MDESC_POSS);
-	}
-	else if (!ap) {
+	if (!ap) {
 		monster_desc(attacker, sizeof attacker, mon, MDESC_TARG | MDESC_CAPITAL);
 	}
-	else if (!tp) {
+
+	if (!tp) {
 		monster_desc(target, sizeof target, t_mon, MDESC_TARG);
 	}
 
@@ -1905,7 +1906,7 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 	}
 
 	if (tp || ap || monster_is_obvious(mon) || monster_is_obvious(t_mon)) {
-		msg("%s %s %s.", attacker, message, target);
+		msg("%s %s", attacker, message);
 	}
 
 	if (success) {
@@ -1928,6 +1929,8 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 
 		dice_free(tmp_dice);
 	}
+
+	string_free(message);
 }
 
 

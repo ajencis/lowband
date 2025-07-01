@@ -56,9 +56,9 @@ struct attack_special_type {
 	int eq_slot;
 } atk_spcl_types[] = {
 	{ ATK_SPCL_TYP_NONE, STAT_NONE, NULL, NULL, 0, EQUIP_NONE },
-	{ ATK_SPCL_TYP_PUNCH, STAT_STR, "hits", "hit", 2, EQUIP_WEAPON },
-	{ ATK_SPCL_TYP_KICK, STAT_STR, "kicks", "kick", 2, EQUIP_BOOTS },
-	{ ATK_SPCL_TYP_TOUCH, STAT_STR, "touches", "touch", 1, EQUIP_WEAPON }
+	{ ATK_SPCL_TYP_PUNCH, STAT_STR, "punches {target}", "punch {target}", 2, EQUIP_WEAPON },
+	{ ATK_SPCL_TYP_KICK, STAT_STR, "kicks {target}", "kick {target}", 2, EQUIP_BOOTS },
+	{ ATK_SPCL_TYP_TOUCH, STAT_STR, "touches {target}", "touch {target}", 1, EQUIP_WEAPON }
 };
 
 
@@ -674,7 +674,7 @@ static struct embryo_attack *get_weapon_attack(const struct monster *mon, const 
 
 	emb->to_d = 0;
 
-	emb->msg = p ? "hit" : "hits";
+	emb->msg = p ? "hit {target}" : "hits {target}";
 	od_mode = ODESC_SINGULAR | ODESC_TERSE | ODESC_LOWERCASE;
 	object_desc(emb->title, sizeof emb->title, weap, od_mode, player);
 
