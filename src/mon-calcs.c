@@ -105,6 +105,8 @@ static int skill_stepdown(const struct monster *mon, int skill)
 	int lev = mon_lev(mon);
 	int diff;
 
+	lev = MAX(lev / 2 + 25, lev);
+
 	if (skill <= lev) return skill;
 
 	diff = skill - lev;
@@ -113,26 +115,14 @@ static int skill_stepdown(const struct monster *mon, int skill)
 	return lev + diff;
 }
 
-
-static int mon_skill_stat_ind(const struct monster *mon, const struct player_state *state, int skill)
-{
-	if (mon->player) {
-		return player_skill_stat_ind(mon->player, state, skill);
-	}
-	else {
-		const struct magic_realm *r = realms;
-		return skill_stat_ind(r, state->stat_ind, skill);
-	}
-}
-
-static void race_skill(const struct monster *mon, int which, int *base, int *xtra)
+void race_skill(const struct monster *mon, int which, int *base, int *xtra)
 {
 	const struct monster_race *mr = mon->race;
 	*base += mr->skills[which] / 10;
 	*xtra += mr->skills[which];
 }
 
-static void class_skill(const struct monster *mon, int which, int *base, int *xtra)
+void class_skill(const struct monster *mon, int which, int *base, int *xtra)
 {
 	struct player *p = mon->player;
 	if (p) {
@@ -141,7 +131,7 @@ static void class_skill(const struct monster *mon, int which, int *base, int *xt
 	}
 }
 
-static void tome_skill(const struct monster *mon, int which, int *base, int *xtra)
+void tome_skill(const struct monster *mon, int which, int *base, int *xtra)
 {
 	struct player *p = mon->player;
 	if (p) {
@@ -149,21 +139,59 @@ static void tome_skill(const struct monster *mon, int which, int *base, int *xtr
 	}
 }
 
+int stat_skill_bonus(const struct monster *mon, const struct player_state *state, int which, int curr, char *buf, size_t bufsize)
+{
+	const struct magic_realm *r = mon->player && mon->player->realm ? mon->player->realm : realms;
+	int stat1, stat2;
+	int sum = 0, div = 0;
+	int result = 0;
+
+	if (buf) buf[0] = '\0';
+
+	skill_stat(r, state->stat_ind, which, &stat1, &stat2);
+
+	if (stat1 != STAT_NONE) {
+		sum += state->stat_ind[stat1];
+		++div;
+		if (buf) {
+			my_strcat(buf, stat_idx_to_name(stat1), bufsize);
+		}
+	}
+	if (buf && stat1 != STAT_NONE && stat2 != STAT_NONE) {
+		my_strcat(buf, " and ", bufsize);
+	}
+	if (stat2 != STAT_NONE) {
+		sum += state->stat_ind[stat2];
+		++div;
+		if (buf) {
+			my_strcat(buf, stat_idx_to_name(stat2), bufsize);
+		}
+	}
+
+	if (div <= 0) return 0;
+
+	result += MAX(curr, 0) * adj_stat_skill_percent(sum / div, which) / 100;
+	result += adj_stat_skill_flat(sum / div, which);
+
+	return result;
+}
+
 static int mon_skill(const struct monster *mon, const struct player_state *state, int skill)
 {
-	int stat_ind = mon_skill_stat_ind(mon, state, skill);
 	int base = 0, xtra = 0, result;
 
 	race_skill(mon, skill, &base, &xtra);
 	class_skill(mon, skill, &base, &xtra);
 	tome_skill(mon, skill, &base, &xtra);
 
-	result = base + xtra * mon_lev(mon) / PY_MAX_LEVEL;
+	result = base + xtra * mon_lev(mon) / 50;
 
-	if (stat_ind >= 0) {
+	result += stat_skill_bonus(mon, state, skill, result, NULL, 0);
+
+	/*if (stat_ind >= 0) {
 		result += MAX(result, 0) * adj_stat_skill_percent(stat_ind, skill) / 100;
 		result += adj_stat_skill_flat(stat_ind, skill);
-	}
+	}*/
 
 	return skill_stepdown(mon, result);
 }
@@ -208,8 +236,22 @@ static void mon_stat_calc(const struct monster *mon, struct player_state *state)
 }
 
 
-static int mon_class_power(const struct monster *mon, int power)
+int mon_class_power(const struct monster *mon, int power)
 {
+	if (!mon->player) return 0;
+
+	int base = player_class_power(mon->player, power);
+	int lev = mon_lev(mon);
+	int missing_base = 100 - base;
+	int stepdown;
+
+	if (base < 0) return base;
+
+	missing_base *= 25 - lev;
+
+	stepdown = 100 - missing_base;
+	return MAX(0, MIN(base, stepdown));
+
 	if (mon->player) return player_class_power(mon->player, power);
 	return 0;
 }
@@ -227,18 +269,43 @@ int calc_mon_race_power(const struct monster_race *mr, int power)
 	return MAX(0, MIN(normal, special));
 }
 
-static int mon_race_power(const struct monster *mon, int power)
+int mon_race_power(const struct monster *mon, int power)
 {
 	return calc_mon_race_power(mon->race, power);
 }
 
-static int mon_tome_power(const struct monster *mon, int power)
+int mon_tome_power(const struct monster *mon, int power)
 {
 	if (mon->player) {
 		return (mon->player->extra_powers[power] + 1) / 2;
 	}
 	return 0;
 }
+
+/**
+ * L: gives the percentage of the max level the monster is considered to
+ * be at for that particular power
+ */
+/*int mon_tome_lev_fact(const struct monster *mon, int power)
+{
+	double lev_fact;
+	int lev = mon_lev(mon);
+	int result;
+	struct player_ability *abil = lookup_player_ability(power, PY_ABIL_POWER);
+
+	assert(abil);
+
+	if (lev >= 50) return 100 * lev / 50;
+
+	double base = ((double)lev) / 50.0;
+	lev_fact = exponentiate_dbl(base, abil->scale, 2);
+
+	result = (int)(lev_fact * 100 * 2);
+
+	if (power == PP_SWORD_SPECIALIZATION) msg_add_fmt("mtlf: base=%f,lev_fact=%f,result=%i", base, lev_fact, result);
+
+	return result;
+}*/
 
 static int mon_power(const struct monster *mon, int power)
 {
@@ -250,39 +317,12 @@ static int mon_power(const struct monster *mon, int power)
 	int scale = mon_class_power(mon, power) + mon_race_power(mon, power);
 	int lev = mon_lev(mon);
 
-	int minlev = 5 - (scale + 5) / 7;
-	int efflev = minlev < 0 ? MAX((lev + 1) / 2 - minlev    , lev) :
-							  MIN((lev + 1) * 2 - minlev * 2, lev);
-
 	int xtra = mon_tome_power(mon, power);
 
-	double lev_fact = 1.0;
-
-	if (scale <= 0) return scale;
-	if (efflev <= 0) return 0;
-
-	if (abil->scale == 0 || lev >= 50) {
-		lev_fact = 1.0;
-	}
-	else {
-		double base = ((double)lev) / ((double)50);
-		lev_fact = exponentiate_dbl(base, abil->scale, 2);
-	}
-
-	int result = (int)(efflev * scale * lev_fact / 100) + xtra;
+	if (scale <= 0) return scale + xtra;
+	int result = scale * lev / 50 + xtra;
 
 	return result;
-
-	//return mon->race->powers[power];
-	/*int scale = mon->powers[power];
-
-	if (scale <= 0) return scale;
-
-	int normal = scale * mon->level / 100;
-	int special = scale * mon->level / 50 + scale * scale / 50 - 100 * 100 / 50;
-
-	// a low-level monster with slow scaling doesn't get the power at all;
-	return MAX(0, MIN(normal, special));*/
 }
 
 static void get_mon_ac(struct monster *mon, struct player_state *state)

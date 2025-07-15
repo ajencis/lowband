@@ -20,6 +20,7 @@
 #include "angband.h"
 #include "game-input.h"
 #include "init.h"
+#include "mon-calcs.h"
 #include "mon-desc.h"
 #include "mon-util.h"
 #include "player-calcs.h"
@@ -34,7 +35,7 @@
 
 
 
-static void add_scaling_desc(char *buf, const char *name, int base, int scale, int numleft, size_t bufsize)
+static void add_scaling_desc(char *buf, const char *name, int base, int scale, int lev, int numleft, size_t bufsize)
 {
 	if (!base && !scale) return;
 	if (base) {
@@ -44,7 +45,7 @@ static void add_scaling_desc(char *buf, const char *name, int base, int scale, i
 		my_strcat(buf, " + ", bufsize);
 	}
 	if (scale) {
-		my_strcat(buf, format("%i%% of your level", scale), bufsize);
+		my_strcat(buf, format("%i%% of your level (%i)", scale * 2, lev * scale / 50), bufsize);
 	}
 	my_strcat(buf, " from your ", bufsize);
 	my_strcat(buf, name, bufsize);
@@ -55,7 +56,7 @@ static void add_scaling_desc(char *buf, const char *name, int base, int scale, i
 		my_strcat(buf, ", and ", bufsize);
 	}
 	else {
-		my_strcat(buf, ".", bufsize);
+		my_strcat(buf, ". ", bufsize);
 	}
 }
 
@@ -93,62 +94,44 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 		calc_monster_skills(mrace, monster_skills);
 	}
 	if (group == PLAYER_FLAG_POWER || group == PLAYER_FLAG_SKILL) {
-		int cbase, cxtra, rbase, rxtra, tome, stat;
+		int cbase = 0, cxtra = 0, rbase = 0, rxtra = 0, tbase = 0, txtra = 0, stat = 0;
 		char stat_name[80];
 		if (group == PLAYER_FLAG_POWER) {
-			cbase = 0;
-			cxtra = player_class_power(p, ability->index);
-			rbase = monster_powers[ability->index];
-			rxtra = 0;// player_race_power(p, ability->index);
-			tome = player->extra_powers[ability->index] / 2;
-			stat = 0;
+			cxtra = mon_class_power(&p->mon, ability->index);
+			rxtra = mon_race_power(&p->mon, ability->index);
+			tbase = mon_tome_power(&p->mon, ability->index);
 		}
 		else {
-			int stat1, stat2;
-			player_skill_stats(p, &p->mon.state, ability->index, &stat1, &stat2);
-			cbase = player_class_c_skill(p, ability->index);
-			cxtra = player_class_x_skill(p, ability->index) * 100 / PY_MAX_LEVEL;
-			rbase = monster_skills[ability->index];
-			//rxtra = race_x_skills[ability->index] * 100 / 10;
-			rxtra = 0;
-			tome = p->extra_skills[ability->index];
-			if (stat1 != STAT_NONE) {
-				int ind = player_skill_stat_ind(p, &p->mon.state, ability->index);
-				int curr;
-				stat = adj_stat_skill_flat(ind, ability->index);
-				curr = cbase + rbase + (cxtra + rxtra) * p->lev / 100 + tome;
-				curr = MAX(curr, 0);
-				stat += curr * adj_stat_skill_percent(ind, ability->index) / 100;
-				if (stat2 == STAT_NONE) {
-					strnfmt(stat_name, sizeof(stat_name), stat_idx_to_name(stat1));
-				} else {
-					strnfmt(stat_name, sizeof(stat_name), "%s and %s",
-						stat_idx_to_name(stat1), stat_idx_to_name(stat2));
-				}
-			} else {
-				stat = 0;
-			}
+			int result;
+			race_skill(&p->mon, ability->index, &rbase, &rxtra);
+			class_skill(&p->mon, ability->index, &cbase, &cxtra);
+			tome_skill(&p->mon, ability->index, &tbase, &txtra);
+
+			result = (rxtra + cxtra + txtra) * mon_lev(&p->mon) / 50 + rbase + cbase + tbase;
+			stat = stat_skill_bonus(&p->mon, &p->mon.state, ability->index, result, stat_name, sizeof stat_name);
 		}
+
 		int numleft = ((rxtra || rbase) ? 1 : 0) +
 				((cxtra || cbase) ? 1 : 0) +
-				(tome ? 1 : 0) +
+				((txtra || tbase) ? 1 : 0) +
 				(stat ? 1 : 0);
+
 		if (numleft > 0) {
 			my_strcat(buf, format("You %s ", verb), bufsize);
 			if (cbase || cxtra) {
- 				add_scaling_desc(buf, "class", cbase, cxtra, numleft, bufsize);
+ 				add_scaling_desc(buf, "class", cbase, cxtra, p->lev, numleft, bufsize);
 				--numleft;
 			}
 			if (rbase || rxtra) {
-				add_scaling_desc(buf, "race", rbase, rxtra, numleft, bufsize);
+				add_scaling_desc(buf, "race", rbase, rxtra, p->lev, numleft, bufsize);
 				--numleft;
 			}
-			if (tome) {
-				add_scaling_desc(buf, "learning", tome, 0, numleft, bufsize);
+			if (tbase || txtra) {
+				add_scaling_desc(buf, "learning", tbase, txtra, p->lev, numleft, bufsize);
 				--numleft;
 			}
 			if (stat) {
-				add_scaling_desc(buf, stat_name, stat, 0, numleft, bufsize);
+				add_scaling_desc(buf, stat_name, stat, 0, p->lev, numleft, bufsize);
 				--numleft;
 			}
 			my_strcat(buf, "\n", bufsize);
