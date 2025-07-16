@@ -469,7 +469,7 @@ static void ability_learn_valid_refresh(struct menu *menu)
 		}
 
 		if (data->valid[oid] == MN_ROW_SKIP &&
-				(data->p->extra_powers[oid] > 0 || data->p->mon.state.powers[oid] > 0)) {
+				(data->p->extra_powers[abil->index] > 0 || data->p->mon.state.powers[abil->index] > 0)) {
 			data->valid[oid] = MN_ROW_INVALID;
 		}
 	}
