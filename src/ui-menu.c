@@ -164,6 +164,21 @@ int menu_cursor_to_oid(struct menu *m, int cursor)
 	return m->filter_list ? m->filter_list[cursor] : cursor;
 }
 
+int menu_oid_to_cursor(struct menu *m, int oid)
+{
+	if (m->filter_list) {
+		int i;
+
+		for (i = 0; i < m->count; ++i) {
+			if (m->filter_list[i] == oid) return i;
+		}
+
+		return -1;
+	}
+
+	return oid;
+}
+
 void menu_move_cursor_to(struct menu *m, int target)
 {
 	m->cursor = target;

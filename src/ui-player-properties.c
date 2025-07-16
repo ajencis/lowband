@@ -495,6 +495,28 @@ static void ability_learn_valid_refresh(struct menu *menu)
 }
 
 
+
+static char ability_learn_get_tag(struct menu *menu, int oid)
+{
+	int num_tags = 0, i;
+	int cursor = menu_oid_to_cursor(menu, oid);
+
+	for (i = 0; all_letters_nohjkl[i]; ++i) {
+		++num_tags;
+	}
+
+	if (cursor < menu->top) {
+		return '\0';
+	}
+	if (cursor > menu->top + num_tags) {
+		return '\0';
+	}
+
+	i = cursor % num_tags;
+
+	return all_letters_nohjkl[i];
+}
+
 static int ability_learn_valid_mode(struct menu *menu, int oid, int mode)
 {
 	struct ability_learn_menu_data *data = menu_priv(menu);
@@ -772,7 +794,7 @@ static int ability_learn_comp(int oid1, int oid2)
 
 
 static const menu_iter ability_learn_menu_iter = { 
-	NULL,
+	ability_learn_get_tag,
 	ability_learn_valid,
 	ability_learn_display,
 	ability_learn_handler,
@@ -904,6 +926,7 @@ static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode 
 	m->selections = all_letters_nohjkl;
 	m->cmd_keys = "/+-";
 	m->browse_hook = ability_learn_browse;
+	m->flags = MN_PVT_TAGS | MN_DBL_TAP;
 
 	ability_learn_set_mode(m, mode);
 	refresh_hypothetical_player(m);

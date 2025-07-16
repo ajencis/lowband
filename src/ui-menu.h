@@ -330,6 +330,7 @@ bool get_menu_filter(struct menu *m);
  */
 int menu_count(struct menu *m);
 int menu_cursor_to_oid(struct menu *m, int cursor);
+int menu_oid_to_cursor(struct menu *m, int oid);
 
 /**
  * L: set data of the menu
