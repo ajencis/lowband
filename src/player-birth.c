@@ -50,6 +50,7 @@
 #include "savefile.h"
 #include "store.h"
 #include "ui-player-properties.h"
+#include "ui-birth.h"
 
 /**
  * Overview
@@ -1280,6 +1281,8 @@ void do_cmd_choose_race(struct command *cmd)
 	reset_stats(stats, points_spent, points_inc, &points_left, false);
 	generate_stats(stats, points_spent, points_inc, &points_left);
 	rolled_stats = false;
+
+	reset_birthmenu_filters();
 }
 
 void do_cmd_choose_class(struct command *cmd)
@@ -1291,6 +1294,8 @@ void do_cmd_choose_class(struct command *cmd)
 	reset_stats(stats, points_spent, points_inc, &points_left, false);
 	generate_stats(stats, points_spent, points_inc, &points_left);
 	rolled_stats = false;
+
+	reset_birthmenu_filters();
 }
 
 void do_cmd_buy_stat(struct command *cmd)

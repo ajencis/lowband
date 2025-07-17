@@ -20,6 +20,7 @@
 #include "angband.h"
 #include "game-world.h"
 #include "init.h"
+#include "mon-attack.h"
 #include "mon-calcs.h"
 #include "mon-spell.h"
 #include "player-calcs.h"
@@ -35,19 +36,61 @@
  * L: Ability predicates
  */
 
-static bool pred_HAS_BITE(const struct player_ability *abil, const struct player *p)
+typedef bool (*mon_abil_predicate)(const struct player_ability *abil, const struct monster_race *mon);
+
+static bool pred_race_has_named_natural_attack(const struct monster_race *mr, const char *name)
 {
 	int i;
 
-	for (i = 0; i < p->mon.state.num_attacks; ++i) {
-		const struct py_attack_roll *aroll = &p->mon.state.attacks[i];
-
-		if (streq(aroll->name, "bite")) {
-			return true;
-		}
+	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; ++i) {
+		if (!name) return true;
+		else if (my_stristr(name, name)) return true;
 	}
 
 	return false;
+}
+
+static bool pred_race_has_natural_weapon(const struct player_ability *abil, const struct monster_race *mr)
+{
+	return pred_race_has_named_natural_attack(mr, NULL);
+}
+
+/**
+ * tests the predicate foa all ultimate evolutions (ie evolutions that don't have resulting evolutions)
+ * will return  true  if any meet the requirement if  any   is set, otherwise return true only if all meet
+ * the prereq
+ */
+static bool pred_true_for_ultimate_evols(const struct player_ability *abil, const struct monster_race *mr, 
+		mon_abil_predicate pred, bool any)
+{
+	if (mr->evol) {
+		struct evolution *evol;
+
+		for (evol = mr->evol; evol; evol = evol->next) {
+			bool result = pred_true_for_ultimate_evols(abil, evol->race, pred, any);
+
+			if (any == result) return result;
+		}
+
+		return !any;
+	}
+
+	return pred(abil, mr);
+}
+
+static bool pred_HAS_BITE(const struct player_ability *abil, const struct player *p)
+{
+	return pred_race_has_named_natural_attack(p->mon.race, "bite");
+}
+
+static bool pred_HAS_NATURAL_ATTACK(const struct player_ability *abil, const struct player *p)
+{
+	return pred_race_has_named_natural_attack(p->mon.race, NULL);
+}
+
+static bool pred_EVOL_HAS_NATURAL_ATTACK(const struct player_ability *abil, const struct player *p)
+{
+	return pred_true_for_ultimate_evols(abil, p->mon.race, pred_race_has_natural_weapon, true);
 }
 
 static bool pred_HAS_BREATH(const struct player_ability *abil, const struct player *p)
@@ -337,7 +380,7 @@ int attack_specialization_power(const struct monster *mon, const struct object *
 	}
 
 	if (blow) {
-		return get_mon_power_scale(mon, PP_UNARMED_STRIKE, 50);
+		return get_mon_power_scale(mon, PP_NATURAL_COMBAT, 100);
 	}
 
 	return get_mon_power_scale(mon, PP_UNARMED_STRIKE, 100);

@@ -261,6 +261,8 @@ struct player_class {
 	struct magic_realm *realm;	/**< L: realm it casts with */
 
 	bool unlockable;			// L: does it need unlocking
+
+	bool prereqs[ABIL_PRED_MAX];	// L: what is needed to take the class
 };
 
 /**

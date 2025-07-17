@@ -219,6 +219,21 @@ static void birthmenu_display(struct menu *menu, int oid, bool cursor,
 	c_put_str(attr, data->items[oid], row, col);
 }
 
+static bool class_meets_all_prereqs(const struct player *p, const struct player_class *c)
+{
+	int i;
+
+	for (i = 0; i < ABIL_PRED_MAX; ++i) {
+		if (c->prereqs[i]) {
+			if (!ability_predicates[i](NULL, p)) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
 /**
  * L: should we skip displaying this birthmenu option?
  */
@@ -238,6 +253,9 @@ static bool birthmenu_option_skip(int question, int oid)
 		return true;
 
 	case BQ_CLASS:
+		if (!class_meets_all_prereqs(player, player_id2class(oid))) {
+			return true;
+		}
 		if (OPT(player, birth_no_metaprogression)) {
 			return false;
 		}
@@ -266,7 +284,7 @@ static int birthmenu_valid(struct menu *menu, int oid)
 	return birthmenu_option_skip(data->question, oid) ? MN_ROW_SKIP : MN_ROW_VALID;
 }
 
-static void reset_birthmenu_filters(void)
+void reset_birthmenu_filters(void)
 {
 	get_menu_filter(&race_menu);
 	unsigned int curr_idx = race_menu.oid_selected;

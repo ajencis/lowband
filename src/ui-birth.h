@@ -27,6 +27,7 @@ struct power_name {
 };
 
 void ui_init_birthstate_handlers(void);
+void reset_birthmenu_filters(void);
 int textui_do_birth(void);
 
 //phantom

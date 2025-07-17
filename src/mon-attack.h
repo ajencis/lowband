@@ -35,10 +35,11 @@ struct attack {
 	int skill;			// which skill
 	int expert;			// expertise from powers
 
-	char *title;			// L: what the attack is called (eg dagger, gaze)
-	char *message;	// L: what to say when the attack happens (eg hit, gaze at)
+	char *title;		// L: what the attack is called (eg dagger, gaze)
+	char *message;		// L: what to say when the attack happens (eg hit, gaze at)
 
 	const struct object *obj;	/* what weapon is it using */
+	const struct monster_blow *mb;	// what blow it mimics
 	int range;			/* how far it can go (eg for a gaze) */
 	int crit_chance;	/* % chance of a critical hit */
 };

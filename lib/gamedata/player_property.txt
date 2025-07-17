@@ -590,11 +590,22 @@ parent:skill:TO_HIT_MELEE
 type:power
 code:UNARMED_STRIKE
 name:Unarmed Strike
-desc: can attacked unarmed effectively.
+desc: can attack unarmed effectively.
 cost:15
 rarity:5
 scale:1
 parent:skill:TO_HIT_MELEE
+
+type:power
+code:NATURAL_COMBAT
+name:Natural Combat
+desc: can attack with natural weapons effectively.
+cost:10
+rarity:5
+scale:1
+parent:power:UNARMED_STRIKE
+parent:skill:TO_HIT_MELEE
+prereq:HAS_NATURAL_ATTACK
 
 type:power
 code:AGILITY

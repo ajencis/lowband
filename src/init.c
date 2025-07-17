@@ -5001,6 +5001,19 @@ static enum parser_error parse_class_unlockable(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_class_prereq(struct parser *p) {
+	struct player_class *c = parser_priv(p);
+	const char *prereq_name = parser_getsym(p, "id");
+	int prereq_id = code_index_in_array(ability_predicate_names, prereq_name);
+
+	if (!c) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	c->prereqs[prereq_id] = true;
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_class(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -5050,6 +5063,7 @@ static struct parser *init_parse_class(void) {
 	parser_reg(p, "school sym school", parse_class_school);
 	parser_reg(p, "realm sym realm", parse_class_realm);
 	parser_reg(p, "unlockable int unlockable", parse_class_unlockable);
+	parser_reg(p, "prereq sym id", parse_class_prereq);
 	return p;
 }
 
