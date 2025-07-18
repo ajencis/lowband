@@ -197,7 +197,7 @@ owner:25000:The Gym
 owner:30000:The Pit
 slots:1:3
 turnover:5
-normal:tome:Basic Tome
-normal:tome:Tome
-normal:tome:Advanced Tome
+#normal:tome:Basic Tome
+#normal:tome:Tome
+#normal:tome:Advanced Tome
 buy:tome
