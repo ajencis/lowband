@@ -197,7 +197,7 @@ static int stat_order(struct player *p, int stat)
 
 static int birth_stat(struct player *p, int stat)
 {
-	int radj, use;
+	int radj, use, smm;
 
 	use = stat_max_max(p, stat);
 	assert(p->mon.race);
@@ -216,7 +216,9 @@ static int birth_stat(struct player *p, int stat)
 
 	if (use > 18) use = (use - 18) / 10 + 18;
 
-	return MIN(stat_max_max(p, stat), use);
+	smm = stat_max_max(p, stat);
+
+	return MIN(smm, use);
 }
 
 /**
@@ -508,6 +510,19 @@ static void get_money(struct player *p)
 	p->au = p->au_birth;
 }
 
+static void give_player_race(struct player *p)
+{
+	const struct player_race *r = p->race;
+	struct monster_race *mr;
+
+	assert(r);
+
+	mr = race_to_monster(r);
+	assert(mr);
+
+	change_player_monster(p, mr, true);
+}
+
 void player_init(struct player *p)
 {
 	int i;
@@ -597,6 +612,7 @@ void player_init(struct player *p)
 	/* Default to the first race/class in the edit file */
 	p->race = races;
 	p->class = classes;
+	give_player_race(p);
 
 	/* Player starts unshapechanged */
 	p->shape = lookup_player_shape("normal");
@@ -1157,6 +1173,7 @@ void player_generate(struct player *p, const struct player_race *r,
 
 	mr = lookup_monster(mon_name);
 	if (!mr) mr = lookup_monster("human");
+	assert(mr);
 	change_player_monster(p, mr, true);
 
 	/* Level 1 */

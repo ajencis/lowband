@@ -436,7 +436,7 @@ bool savefile_save(const char *path)
 			} else {
 				file_delete(old_savefile);
 			}
-		} 
+		}
 
 		safe_setuid_drop();
 
@@ -589,9 +589,11 @@ static bool try_load(ang_file *f, const struct blockinfo *local_loaders)
 		return false;
 	}
 
-	int i;
-	for (i = 0; i < cave->obj_max && i < player->cave->obj_max; ++i) {
-		assert(cave->objects[i] || !player->cave->objects[i]);
+	if (cave && player->cave) {
+		int i;
+		for (i = 0; i < cave->obj_max && i < player->cave->obj_max; ++i) {
+			assert(cave->objects[i] || !player->cave->objects[i]);
+		}
 	}
 
 	return true;

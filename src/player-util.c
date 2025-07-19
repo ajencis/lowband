@@ -60,7 +60,7 @@ int stat_max_max(struct player *p, int stat)
 	assert(stat > STAT_NONE && stat < STAT_MAX);
 
 	int base = player->stat_max_max[stat];
-	int bonus = player->mon.race->stat_mod[stat];
+	int bonus = lookup_player_monster(p)->stat_mod[stat];
 
 	return base + bonus;
 }
