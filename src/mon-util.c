@@ -1928,6 +1928,87 @@ void steal_monster_item(struct monster *mon, int midx)
 }
 
 
+
+/**
+ * L: power functions
+ */
+
+static void frightening_presence_one(struct monster *viewer, struct monster *scary)
+{
+	int power;
+	bool success;
+	char viewer_msg[80], scary_msg[80];
+	const char *result_msg;
+
+	if (!scary || !scary->race) return;
+	if (!viewer || !viewer->race) return;
+
+	if (viewer->midx == scary->midx) return;
+	if (scary->state.powers[PP_FRIGHTENING_PRESENCE] <= 0) return;
+	if (mflag_has(viewer->mflag, MFLAG_SAW_SCARY)) return;
+	if (!monster_can_see(cave, viewer, scary->grid)) return;
+	if (viewer->m_timed[TMD_ASLEEP] > 0) return;
+
+	mflag_on(viewer->mflag, MFLAG_SAW_SCARY);
+
+	power = scary->state.powers[PP_FRIGHTENING_PRESENCE];
+	power -= my_int_cbrt(viewer->race->level * viewer->race->level);
+
+	if (power <= 0) return;
+
+	power = randint1(power);
+
+	success = mon_inc_timed(viewer, TMD_AFRAID, power, 0);
+
+	if (!monster_is_visible(viewer)) return;
+
+	if (mon_is_player(viewer)) {
+		strnfmt(viewer_msg, sizeof viewer_msg, "You see");
+	}
+	else {
+		monster_desc(viewer_msg, sizeof viewer_msg, viewer, MDESC_STANDARD);
+
+		strcat(viewer_msg, " sees");
+	}
+
+	if (mon_is_player(scary)) {
+		strnfmt(scary_msg, sizeof scary_msg, " your terrifying presence");
+	} else if (!monster_is_visible(scary)) {
+		strnfmt(scary_msg, sizeof scary_msg, " something terrifying");
+	} else {
+		char sdesc[80];
+
+		monster_desc(sdesc, sizeof sdesc, scary, MDESC_TARG);
+
+		strnfmt(scary_msg, sizeof scary_msg, " the terrifying presence of %s", sdesc);
+	}
+
+	if (success) {
+		result_msg = "!";
+	}
+	else {
+		result_msg = ", but is unaffected.";
+	}
+
+	msg("%s%s%s", viewer_msg, scary_msg, result_msg);
+}
+
+
+void frightening_presence(struct monster *mon)
+{
+	int i;
+
+	if (mon->state.powers[PP_FRIGHTENING_PRESENCE] <= 0) return;
+
+	for (i = 1; i < cave_monster_max(cave); ++i) {
+		frightening_presence_one(cave_monster(cave, i), mon);
+	}
+
+	frightening_presence_one(&player->mon, mon);
+}
+
+
+
 /**
  * ------------------------------------------------------------------------
  * Monster shapechange utilities

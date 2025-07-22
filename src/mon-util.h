@@ -62,6 +62,8 @@ void steal_monster_item(struct monster *mon, int midx);
 bool monster_change_shape(struct monster *mon);
 bool monster_revert_shape(struct monster *mon);
 
+void frightening_presence(struct monster *mon);
+
 int mon_ac(struct monster *mon);
 
 void reaction_roll(struct monster *mon, struct player *p);

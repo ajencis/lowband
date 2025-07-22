@@ -49,6 +49,7 @@ stats:1:1:-1:-1:1
 skill-melee:5
 obj-flags:SEE_INVIS
 power:BREATH
+power:FRIGHTENING_PRESENCE:50
 
 # Ainur were the founding spirits of Arda, and could take any form they wished.
 # Ainur in Angband typically have shapechanges and many possible other spells,

@@ -125,6 +125,16 @@ static bool pred_HAS_MATCHING_SPELL(const struct player_ability *abil, const str
 	return false;
 }
 
+static bool pred_RACE_OR_CLASS_HAS_POWER(const struct player_ability *abil, const struct player *p)
+{
+	assert(abil->type == PY_ABIL_POWER);
+
+	if (lookup_player_monster(p)->powers[abil->index] > 0) return true;
+	if (p->class->c_powers[abil->index] > 0) return true;
+
+	return false;
+}
+
 
 abil_predicate ability_predicates[] = {
 	#define PRED(x) pred_##x,

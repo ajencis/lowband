@@ -635,6 +635,18 @@ void process_world(struct chunk *c)
 			z_info->max_sight + 5, true, player->depth);
 	}
 
+	// L: handle monster frightening presence
+	for (i = 0; i < cave_monster_max(cave); ++i) {
+		struct monster *mon = cave_monster(cave, i);
+		if (!mon || !mon->race) continue;
+
+		frightening_presence(mon);
+
+		if (one_in_(10)) mflag_off(mon->mflag, MFLAG_SAW_SCARY);
+	}
+
+	frightening_presence(&player->mon);
+
 	// L: move mana around
 	for (i = 0; i < 25; ++i) {
 		x = randint1(c->width - 2);
