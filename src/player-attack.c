@@ -1906,7 +1906,7 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 	}
 
 	if (tp || ap || monster_is_obvious(mon) || monster_is_obvious(t_mon)) {
-		msg("%s %s", attacker, message);
+		msg("%s %s.", attacker, message);
 	}
 
 	if (success) {

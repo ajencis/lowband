@@ -43,7 +43,8 @@ enum attack_special_type_ind {
 	ATK_SPCL_TYP_NONE = 0,
 	ATK_SPCL_TYP_PUNCH,
 	ATK_SPCL_TYP_KICK,
-	ATK_SPCL_TYP_TOUCH
+	ATK_SPCL_TYP_TOUCH,
+	ATK_SPCL_TYP_CHAIN
 };
 
 
@@ -58,7 +59,8 @@ struct attack_special_type {
 	{ ATK_SPCL_TYP_NONE, STAT_NONE, NULL, NULL, 0, EQUIP_NONE },
 	{ ATK_SPCL_TYP_PUNCH, STAT_STR, "punches {target}", "punch {target}", 2, EQUIP_WEAPON },
 	{ ATK_SPCL_TYP_KICK, STAT_STR, "kicks {target}", "kick {target}", 2, EQUIP_BOOTS },
-	{ ATK_SPCL_TYP_TOUCH, STAT_STR, "touches {target}", "touch {target}", 1, EQUIP_WEAPON }
+	{ ATK_SPCL_TYP_TOUCH, STAT_STR, "touches {target}", "touch {target}", 1, EQUIP_WEAPON },
+	{ ATK_SPCL_TYP_CHAIN, STAT_DEX, "enchains {target}", "enchain {target}", 1, EQUIP_BODY_ARMOR }
 };
 
 
@@ -81,6 +83,8 @@ struct embryo_attack {
 	int dam_stat;
 
 	int blows;
+
+	int auto_freq;
 
 	const char *msg;
 	char title[32];
@@ -650,7 +654,7 @@ static void calc_emb_blows(const struct monster *mon, struct embryo_attack *emb,
 
 	skill = mon->state.skills[emb->skill];
 
-	blows = skill * base * emb->num / div;
+	blows = skill * base /* * emb->num */ / div;
 
 	emb->blows = MAX(blows / 2 + 100, blows);
 
@@ -796,6 +800,29 @@ static struct embryo_attack *get_natural_attack(const struct monster *mon, const
 	return emb;
 }
 
+static void get_chain_attack(const struct monster *mon, struct embryo_attack *emb)
+{
+	emb->obj = NULL;
+
+	emb->skill = SKILL_TO_HIT_MELEE;
+
+	emb->acc_stat = STAT_NONE;
+	emb->dam_stat = STAT_DEX;
+
+	emb->dice = 1;
+	emb->sides = get_mon_power_scale(mon, PP_ANIMATE_CHAINS, 5) + 5;
+
+	emb->msg = mon_is_player(mon) ? "enchain {target}" : "enchains {target}";
+	strnfmt(emb->title, sizeof emb->title, "enchain");
+
+	emb->num = get_mon_power_scale(mon, PP_ANIMATE_CHAINS, 5);
+	emb->dam_type = PROJ_PIERCING;
+
+	emb->range = get_mon_power_scale(mon, PP_ANIMATE_CHAINS, 3) + 1;
+
+	emb->auto_freq = get_mon_power_scale(mon, PP_ANIMATE_CHAINS, 30) + 20;
+}
+
 static struct embryo_attack *get_special_attack(const struct monster *mon, int special)
 {
 	struct embryo_attack *emb = mem_zalloc(sizeof *emb);
@@ -820,6 +847,8 @@ static struct embryo_attack *get_special_attack(const struct monster *mon, int s
 	emb->num = 1;
 
 	emb->dam_type = PROJ_BLUDGEONING;
+
+	if (special == ATK_SPCL_TYP_CHAIN) get_chain_attack(mon, emb);
 
 	return emb;
 }
@@ -882,13 +911,13 @@ static struct embryo_attack *add_unarmed(const struct monster *mon, int source, 
 {
 	struct embryo_attack *new = NULL;
 
-	num = MIN(num, remaining_slots[EQUIP_MAX]);
+	num = MIN(num, remaining_slots[slot]);
 
-	remaining_slots[EQUIP_MAX] -= num;
+	remaining_slots[slot] -= num;
 
 	if (num > 0) {
 		new = get_special_attack(mon, source);
-		new->num = num;
+		if (new->num == 0) new->num = num;
 	}
 
 	return new;
@@ -899,6 +928,7 @@ static struct embryo_attack *get_unarmed(const struct monster *mon, int remainin
 	int num_punches = get_mon_power_scale(mon, PP_UNARMED_STRIKE, 3);
 	int num_kicks = get_mon_power_scale(mon, PP_UNARMED_STRIKE, 1);
 	int num_touches = mon_has_power(mon, PP_DEATH_TOUCH) && num_punches <= 0 ? 1 : 0;
+	int num_chains = get_mon_power_scale(mon, PP_ANIMATE_CHAINS, 5) > 0 ? 1 : 0;
 	bool has_new_attacks = num_punches > 0 || num_kicks > 0 || num_touches > 0;
 	struct embryo_attack *new, *result = NULL;
 
@@ -911,6 +941,8 @@ static struct embryo_attack *get_unarmed(const struct monster *mon, int remainin
 	new = add_unarmed(mon, ATK_SPCL_TYP_KICK, EQUIP_BOOTS, num_kicks, remaining_slots);
 	if (new) add_attack_to_end(&result, new);
 	new = add_unarmed(mon, ATK_SPCL_TYP_TOUCH, EQUIP_WEAPON, num_touches, remaining_slots);
+	if (new) add_attack_to_end(&result, new);
+	new = add_unarmed(mon, ATK_SPCL_TYP_CHAIN, EQUIP_BODY_ARMOR, num_chains, remaining_slots);
 	if (new) add_attack_to_end(&result, new);
 
 	return result;
@@ -989,8 +1021,6 @@ static void free_atk_embryo(struct embryo_attack *emb)
 	mem_free(emb);
 }
 
-
-
 static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 {
 	struct effect *main;
@@ -1029,6 +1059,7 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 	result->range = emb->range;
 	result->to_hit = emb->to_h;
 	result->num = emb->num;
+	result->auto_freq = emb->auto_freq;
 	if (emb->skill >= 0 && emb->skill < SKILL_MAX) {
 		result->to_hit += mon->state.skills[emb->skill];
 	}

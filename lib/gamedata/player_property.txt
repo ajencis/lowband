@@ -715,6 +715,15 @@ rarity:4
 parent:skill:HEALTH
 prereq:RACE_OR_CLASS_HAS_POWER
 
+type:power
+code:ANIMATE_CHAINS
+name:Animate Chains
+desc: can control chains to attack.
+cost:10
+rarity:4
+parent:skill:TO_HIT_MELEE
+prereq:RACE_OR_CLASS_HAS_POWER
+
 
 # L: skills
 type:skill

@@ -42,6 +42,8 @@ struct attack {
 	const struct monster_blow *mb;	// what blow it mimics
 	int range;			/* how far it can go (eg for a gaze) */
 	int crit_chance;	/* % chance of a critical hit */
+
+	int auto_freq;		// L: if it automatically attacks
 };
 
 int choose_attack_spell(bitflag *f, bool innate, bool non_innate);

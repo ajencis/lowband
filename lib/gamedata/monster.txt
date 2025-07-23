@@ -10435,6 +10435,7 @@ desc:It is a demon with a long neck and raking claws.
 name:death quasit
 base:minor demon
 evolution:glabrezu
+evolution:kyton
 evolution:marilith
 evolution:hezrou
 evolution:barbazu
@@ -11138,6 +11139,25 @@ friends:100:2d5:Same
 desc:It is a form that screams its presence against the eye.  Death incarnate,
 desc: its hideous black body seems to struggle against reality as the universe
 desc: itself struggles to banish it.
+
+name:kyton
+base:major demon
+color:U
+speed:110
+hit-points:616
+hearing:20
+armor-class:60
+sleepiness:70
+depth:43
+rarity:2
+experience:3000
+blow:HIT:HURT:3d4
+flags:DROP_60
+power:ANIMATE_CHAINS
+spell-freq:9
+spells:BO_FIRE
+spells:S_DEMON
+desc:It is demon wrapped in chains.
 
 ### Dungeon level 45 ###
 
