@@ -1893,9 +1893,9 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 	}
 
 	/* Auto-Recall and track if possible and visible */
-	if (monster_is_visible(mon) && ap) {
-		monster_race_track(ap->upkeep, mon->race);
-		health_track(ap->upkeep, mon);
+	if (monster_is_visible(t_mon) && ap) {
+		monster_race_track(ap->upkeep, t_mon->race);
+		health_track(ap->upkeep, t_mon);
 	}
 
 	/* Handle player fear (only for invisible monsters) */
