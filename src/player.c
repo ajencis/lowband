@@ -48,6 +48,58 @@ struct player_spell *spells;
 /**
  * Base experience levels, may be adjusted up for race and/or class
  */
+/*static uint64_t new_player_exp(int level, int xp_fact)
+{
+	int base = 150 - xp_fact / 2; // ten times
+	int exp_scale, linear_scale, cost, i = 1;
+
+	while (i - base < level * 10) {
+		i += base;
+		++exp_scale;
+		base += 10;
+	}
+
+	linear_scale = (level * 10 - exp_scale) * base / 10;
+
+	cost = exponentiate(10, exp_scale, 1);
+	cost *= linear_scale;
+
+	return cost;*/
+
+	/*double base = 21.0 - my_sqrt((float)xp_fact);
+	int quotient, remainder;
+	uint64_t cost;
+
+	base = MAX(base, 5.0);
+	quotient = (int)(level / base);
+	remainder = (int)(level - quotient * base);
+
+	cost = (uint64_t)exponentiate(10, quotient, 1);
+	cost *= (uint64_t)(remainder * (base - 1));
+
+	return cost;*/
+
+	/*int base = 20 - my_int_sqrt(xp_fact), i, mult;
+	uint64_t cost;
+	base = MAX(base, 5);
+	cost = 1U;
+	mult = level % base;
+
+    for (i = 0; i < level / base; i++) cost *= 10U;
+
+	cost *= MAX(mult * base, mult * base / 2 + base);
+
+	return cost;*/
+
+	/*int exp_num = level;
+	int exp_denom = 2;
+	double base = (double)xp_fact / 200.0 + 1.0;
+
+	plog_fmt("exponentiating (%f)^(%i)", base, exp_num);
+
+	return (int)exponentiate_dbl(base, exp_num, exp_denom);
+}*/
+
 const uint32_t player_exp[PY_MAX_LEVEL] =
 {
 	2,
@@ -363,6 +415,23 @@ void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract)
 	}
 
 	adjust_level(p, true, false);
+
+	/*if (false) {
+		int i, percent;
+		uint64_t old, new;
+		static bool done = false;
+
+		msg_add_fmt("xpfact = %i", p->mon.state.expfact);
+
+		for (i = 1; i < 50 && !done; ++i) {
+			old = player_exp[i] * p->mon.state.expfact / 100;
+			new = new_player_exp(i, p->mon.state.expfact);
+			percent = old > UINT16_MAX ? new / (old / 100) : new * 100 / old;
+			msg_add_fmt("level %i: old xp = %llu, new xp = %llu; new = %i%% of old", i, old, new, percent);
+		}
+
+		done = true;
+	}*/
 }
 
 int player_min_xp_depth(struct player *p)

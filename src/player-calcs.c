@@ -176,7 +176,7 @@ static int adj_int_dis(int index) {
 	return stat_scale(index, 20, false);
 }*/
 
-static int adj_dex_ta(int index) {
+int adj_dex_ta(int index) {
 	return stat_scale(index, 15, false);
 }
 
@@ -2021,7 +2021,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	}
 
 	/* Apply modifier bonuses (Un-inflate stat bonuses) */
-	state->to_a += adj_dex_ta(state->stat_ind[STAT_DEX]);
+	//state->to_a += adj_dex_ta(state->stat_ind[STAT_DEX]);
 
 	/* L: change expfact based on int */
 	state->expfact = p->race->r_exp + p->class->c_exp + adj_int_xp(state->stat_ind[STAT_INT]);

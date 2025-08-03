@@ -2147,9 +2147,9 @@ static double exponentiate_base(double num, int exponent)
 
 	if (num == 1.0 || num == 0.0) return num;
 	assert(exponent >= 0);
-	if (exponent < 0) return exponentiate_base(1 / num, -exponent);
+	if (exponent < 0) return exponentiate_base(1.0 / num, -exponent);
 
-	result = 1;
+	result = 1.0;
 	for (i = 0; i < exponent; ++i) {
 		assert(result < (DBL_MAX / num));
 		result *= num;
@@ -2183,8 +2183,6 @@ static bool divisible(int num, int denom)
 {
 	return !(num % denom);
 }
-
-#define MAX_PRIME_EXPONENT 97
 
 static double exponentiate_dbl_base(double base, int exp_num, int exp_denom, bool intify)
 {

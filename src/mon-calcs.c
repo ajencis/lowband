@@ -143,6 +143,30 @@ void tome_skill(const struct monster *mon, int which, int *base, int *xtra)
 	}
 }
 
+static int stat_bonus_index(const struct player_state *state, int stat1, int stat2, char *buf, size_t bufsize)
+{
+	int sum = 0, div = 0;
+
+	assert(stat1 != STAT_NONE);
+
+	if (buf) buf[0] = '\0';
+
+	sum += state->stat_ind[stat1];
+	++div;
+	if (buf) my_strcat(buf, stat_idx_to_name(stat1), bufsize);
+
+	if (stat2 != STAT_NONE && (state->stat_ind[stat1] < state->stat_ind[stat2])) {
+		sum += state->stat_ind[stat2];
+		++div;
+		if (buf) {
+			my_strcat(buf, " and ", bufsize);
+			my_strcat(buf, stat_idx_to_name(stat2), bufsize);
+		}
+	}
+
+	return sum / div;
+}
+
 int stat_skill_bonus(const struct monster *mon, const struct player_state *state, int which, int curr, char *buf, size_t bufsize)
 {
 	const struct magic_realm *r = mon->player && mon->player->realm ? mon->player->realm : realms;
@@ -150,9 +174,13 @@ int stat_skill_bonus(const struct monster *mon, const struct player_state *state
 	int sum = 0, div = 0;
 	int result = 0;
 
+	bool use_stat2;
+
 	if (buf) buf[0] = '\0';
 
 	skill_stat(r, state->stat_ind, which, &stat1, &stat2);
+
+	use_stat2 = (stat2 != STAT_NONE) && ((stat1 == STAT_NONE) || (state->stat_ind[stat1] < state->stat_ind[stat2]));
 
 	if (stat1 != STAT_NONE) {
 		sum += state->stat_ind[stat1];
@@ -161,10 +189,10 @@ int stat_skill_bonus(const struct monster *mon, const struct player_state *state
 			my_strcat(buf, stat_idx_to_name(stat1), bufsize);
 		}
 	}
-	if (buf && stat1 != STAT_NONE && stat2 != STAT_NONE) {
+	if (buf && stat1 != STAT_NONE && use_stat2) {
 		my_strcat(buf, " and ", bufsize);
 	}
-	if (stat2 != STAT_NONE) {
+	if (use_stat2) {
 		sum += state->stat_ind[stat2];
 		++div;
 		if (buf) {
@@ -364,6 +392,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	memset(state, 0, sizeof *state);
 
 	get_mon_ac(mon, state);
+	state->to_a += adj_dex_ta(stat_bonus_index(state, STAT_DEX, STAT_INT, NULL, 0));
 	state->speed = mon->race->speed;
 
 	pf_wipe(state->pflags);

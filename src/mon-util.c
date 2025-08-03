@@ -536,8 +536,9 @@ void update_mon(struct monster *mon, struct chunk *c, bool full)
 	/* If a mimic looks like an ignored item, it's not seen */
 	if (monster_is_mimicking(mon)) {
 		struct object *obj = mon->mimicked_obj;
-		if (ignore_item_ok(player, obj))
+		if (ignore_item_ok(player, obj)) {
 			easy = flag = false;
+		}
 	}
 
 	/* Is the monster is now visible? */

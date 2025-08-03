@@ -696,12 +696,12 @@ void calc_extra_points(struct player *p, struct player_state *ps)
 	int intbonus = adj_int_tome(ps->stat_ind[STAT_INT]);
 	int mx = 0;
 	int i;
+	int start = pf_has(ps->pflags, PF_EXTRA_LEARNING) ? 0 : 5;
+	int maxlearn = LEARN_MAX + intbonus;
 
-	for (i = 5; i <= p->lev && mx < LEARN_MAX; i += 5) {
-		mx = MIN(mx + 10, LEARN_MAX);
+	for (i = start; i <= p->lev && mx < LEARN_MAX; i += 5) {
+		mx = MIN(mx + 10, maxlearn);
 	}
-
-	mx += intbonus * mx / LEARN_MAX;
 
 	ps->extra_points_max = MAX(mx, sum);
 	ps->extra_points_used = sum;
