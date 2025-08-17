@@ -213,6 +213,14 @@ static const char *ability_predicate_names[] =
 	NULL
 };
 
+static const char *terrain_element_names[] =
+{
+	#define T_ELEM(x) #x,
+	#include "list-terrain-elements.h"
+	#undef T_ELEM
+	NULL
+};
+
 static int school_idx_by_name(const char *name)
 {
 	int i;
@@ -2631,6 +2639,152 @@ struct file_parser feat_parser = {
 	cleanup_feat
 };
 
+
+/**
+ * ------------------------------------------------------------------------
+ * Intialize terrain elements
+ * ------------------------------------------------------------------------ */
+
+static enum parser_error parse_t_elem_idx(struct parser *p) {
+	struct terrain_element_kind *old = parser_priv(p);
+	struct terrain_element_kind *new = mem_zalloc(sizeof *new);
+	const char *id_name = parser_getsym(p, "idx");
+	int id = code_index_in_array(terrain_element_names, id_name);
+
+	if (id <  0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	new->idx = id;
+	new->next = old;
+
+	parser_setpriv(p, new);
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_t_elem_name(struct parser *p) {
+	struct terrain_element_kind *te = parser_priv(p);
+	char *name = string_make(parser_getstr(p, "name"));
+
+	if (!te) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	te->name = name;
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_t_elem_graphics(struct parser *p) {
+	wchar_t glyph = parser_getchar(p, "glyph");
+	const char *color = parser_getsym(p, "color");
+	int attr = 0;
+	struct terrain_element_kind *te = parser_priv(p);
+
+	if (!te) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	te->d_char = glyph;
+	if (strlen(color) > 1) {
+		attr = color_text_to_attr(color);
+	} else {
+		attr = color_char_to_attr(color[0]);
+	}
+	if (attr < 0) {
+		return PARSE_ERROR_INVALID_COLOR;
+	}
+	te->d_attr = attr;
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_t_elem_proj(struct parser *p) {
+	struct terrain_element_kind *te = parser_priv(p);
+	const char *proj_name = parser_getsym(p, "proj");
+	int proj = proj_name_to_idx(proj_name);
+
+	if (!te) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	if (proj < 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	te->proj = proj;
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_t_elem_flags(struct parser *p) {
+	struct terrain_element_kind *te = parser_priv(p);
+	char *flags, *s;
+
+	if (!te) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	if (!parser_hasval(p, "flags")) {
+		return PARSE_ERROR_NONE;
+	}
+	flags = string_make(parser_getstr(p, "flags"));
+	s = strtok(flags, " |");
+	while (s) {
+		if (grab_flag(te->flags, TF_SIZE, terrain_flags, s)) {
+			break;
+		}
+		s = strtok(NULL, " |");
+	}
+	string_free(flags);
+	return s ? PARSE_ERROR_INVALID_FLAG : PARSE_ERROR_NONE;
+}
+
+static struct parser *init_parse_t_elem(void) {
+	struct parser *p = parser_new();
+
+	te_info = NULL;
+
+	parser_setpriv(p, NULL);
+
+	parser_reg(p, "idx sym idx", parse_t_elem_idx);
+	parser_reg(p, "name str name", parse_t_elem_name);
+	parser_reg(p, "graphics char glyph sym color", parse_t_elem_graphics);
+	parser_reg(p, "project sym proj", parse_t_elem_proj);
+	parser_reg(p, "flags ?str flags", parse_t_elem_flags);
+
+	return p;
+}
+
+static errr run_parse_t_elem(struct parser *p) {
+	return parse_file_quit_not_found(p, "terrain-elem");
+}
+
+static errr finish_parse_t_elem(struct parser *p) {
+	te_info = parser_priv(p);
+	parser_destroy(p);
+
+	return 0;
+}
+
+static void cleanup_t_elem(void) {
+	struct terrain_element_kind *te = te_info, *next;
+
+	while (te) {
+		next = te->next;
+
+		string_free(te->name);
+		mem_free(te);
+
+		te = next;
+	}
+}
+
+struct file_parser t_elem_parser = {
+	"terrain elements",
+	init_parse_t_elem,
+	run_parse_t_elem,
+	finish_parse_t_elem,
+	cleanup_t_elem
+};
+
 /**
  * ------------------------------------------------------------------------
  * Intialize player bodies
@@ -4399,8 +4553,9 @@ static enum parser_error parse_class_equip(struct parser *p) {
 	int *einds;
 	int nind, nalloc;
 
-	if (!c)
+	if (!c) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
 
 	tval = tval_find_idx(parser_getsym(p, "tval"));
 	if (tval < 0) {
@@ -5355,6 +5510,7 @@ static struct {
 	{ "ui entries", &ui_entry_parser },
 	{ "player properties", &player_property_parser },
 	{ "features", &feat_parser },
+	{ "terrain elements", &t_elem_parser },
 	{ "object bases", &object_base_parser },
 	{ "slays", &slay_parser },
 	{ "brands", &brand_parser },

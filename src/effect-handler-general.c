@@ -1330,8 +1330,9 @@ bool effect_handler_MAP_AREA(effect_handler_context_t *context)
 				if (!square_in_bounds_fully(cave, grid)) continue;
 
 				/* Memorize normal features */
-				if (!square_isfloor(cave, grid))
+				if (!square_isfloor(cave, grid)) {
 					square_memorize(cave, grid);
+				}
 
 				/* Memorize known walls */
 				for (i = 0; i < 8; i++) {
@@ -1339,8 +1340,9 @@ bool effect_handler_MAP_AREA(effect_handler_context_t *context)
 					int xx = x + ddx_ddd[i];
 
 					/* Memorize walls (etc) */
-					if (square_seemslikewall(cave, loc(xx, yy)))
+					if (square_seemslikewall(cave, loc(xx, yy))) {
 						square_memorize(cave, loc(xx, yy));
+					}
 				}
 			}
 
@@ -3687,7 +3689,6 @@ bool effect_handler_LICH_TRANSFORM(effect_handler_context_t *context)
 
 	return true;
 }
-
 
 /**
  * One Ring activation

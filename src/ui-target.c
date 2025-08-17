@@ -456,6 +456,25 @@ static bool aux_hallucinate(struct chunk *c, struct player *p,
 	return auxst->press.key.code != KC_ENTER;
 }
 
+static bool aux_terrain_element(struct chunk *c, struct player *p,
+		struct target_aux_state *auxst)
+{
+	const struct square *sq = square(p->cave, auxst->grid);
+	char out_val[80];
+
+	if (!sq->t_elem) return false;
+
+	strnfmt(out_val, sizeof out_val, "%s%s%s, %s", auxst->phrase1, auxst->phrase2, sq->t_elem->kind->name, auxst->coord_desc);
+
+	prt(out_val, 0, 0);
+
+	move_cursor_relative(auxst->grid.y, auxst->grid.x);
+
+	auxst->press.key = inkey();
+
+	return true;
+}
+
 /**
  * Help target_set_interactive_aux():  handle monsters.
  *
@@ -846,8 +865,9 @@ static bool aux_terrain(struct chunk *c, struct player *p,
 	const char *name, *lphrase2, *lphrase3;
 	char out_val[TARGET_OUT_VAL_SIZE];
 
-	if (!auxst->boring && !square_isinteresting(p->cave, auxst->grid))
+	if (!auxst->boring && !square_isinteresting(p->cave, auxst->grid)) {
 		return false;
+	}
 
 	/* Terrain feature if needed */
 	name = square_apparent_name(p->cave, auxst->grid);
@@ -941,6 +961,7 @@ static ui_event target_set_interactive_aux(int y, int x, int mode)
 		aux_reinit,
 		aux_hallucinate,
 		aux_monster,
+		aux_terrain_element,
 		aux_trap,
 		aux_object,
 		aux_terrain,
@@ -973,10 +994,11 @@ static ui_event target_set_interactive_aux(int y, int x, int mode)
  */
 void textui_target(void)
 {
-	if (target_set_interactive(TARGET_KILL, -1, -1))
+	if (target_set_interactive(TARGET_KILL, -1, -1)) {
 		msg("Target Selected.");
-	else
+	} else {
 		msg("Target Aborted.");
+	}
 }
 
 /**
@@ -1510,8 +1532,9 @@ bool target_set_interactive(int mode, int x, int y)
 			player->upkeep->redraw |= (PR_BASIC | PR_EXTRA | PR_MAP | PR_EQUIP);
 			Term_clear();
 			handle_stuff(player);
-			if (!help)
+			if (!help) {
 				prt("Press '?' for help.", help_prompt_loc, 0);
+			}
 
 		} else {
 			/* Try to extract a direction from the key press */

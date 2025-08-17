@@ -136,6 +136,39 @@ struct feature {
 
 extern struct feature *f_info;
 
+
+enum {
+	#define T_ELEM(x) TE_##x,
+	#include "list-terrain-elements.h"
+	#undef T_ELEM
+	TE_MAX
+};
+
+/**
+ * L: information about additional temporary terrain 
+ */
+struct terrain_element_kind {
+	struct terrain_element_kind *next;
+	uint16_t idx;
+
+	char *name;
+
+	uint8_t d_attr;
+	uint8_t d_char;
+
+	int proj;					// the projection it projects on its square
+	bitflag flags[TF_SIZE];
+};
+
+struct terrain_element {
+	const struct terrain_element_kind *kind;
+	struct terrain_element *next;
+
+	uint16_t timer;
+};
+
+extern struct terrain_element_kind *te_info;
+
 enum grid_light_level
 {
 	LIGHTING_LOS = 0,   /* line of sight */
@@ -148,8 +181,11 @@ enum grid_light_level
 struct grid_data {
 	uint32_t m_idx;			/* Monster index */
 	uint32_t f_idx;			/* Feature index */
+
 	struct object_kind *first_kind;	/* The kind of the first item on the grid */
 	struct trap *trap;		/* Trap */
+	struct terrain_element *t_elem;
+
 	bool multiple_objects;	/* Is there more than one item there? */
 	bool unseen_object;		/* Is there an unaware object there? */
 	bool unseen_money;		/* Is there some unaware money there? */
@@ -168,6 +204,7 @@ struct square {
 	int8_t mana;
 	struct object *obj;
 	struct trap *trap;
+	struct terrain_element *t_elem;
 };
 
 struct heatmap {
@@ -242,6 +279,19 @@ int distance(struct loc grid1, struct loc grid2);
 bool los(struct chunk *c, struct loc grid1, struct loc grid2);
 void update_view(struct chunk *c, struct player *p);
 bool no_light(const struct player *p);
+
+/* cave-terrain-elem.c */
+struct terrain_element_kind *t_elem_kind_by_idx(uint16_t idx);
+
+bool t_elem_is_los(const struct terrain_element_kind *kind);
+bool sq_any_t_elem_has_flag(const struct square *sq, int flag);
+bool sq_all_t_elem_has_flag(const struct square *sq, int flag);
+void square_memorize_t_elem(struct chunk *c, struct loc grid);
+
+struct terrain_element *terrain_element_new(int timer, uint16_t idx);
+void terrain_elem_free(struct terrain_element *to_free);
+bool terrain_elem_remove(struct terrain_element **list, int to_remove);
+bool terrain_elem_remove_all(struct terrain_element **list);
 
 /* cave-map.c */
 void map_info(struct loc grid, struct grid_data *g);
@@ -378,6 +428,7 @@ int square_light(struct chunk *c, struct loc grid);
 struct monster *square_monster(struct chunk *c, struct loc grid);
 struct object *square_object(struct chunk *c, struct loc grid);
 struct trap *square_trap(struct chunk *c, struct loc grid);
+struct terrain_element *square_t_elem(struct chunk *c, struct loc grid);
 bool square_holds_object(struct chunk *c, struct loc grid, struct object *obj);
 void square_excise_object(struct chunk *c, struct loc grid, struct object *obj);
 void square_excise_pile(struct chunk *c, struct loc grid);
@@ -404,6 +455,7 @@ void square_add_glyph(struct chunk *c, struct loc grid, int type);
 void square_add_web(struct chunk *c, struct loc grid);
 void square_add_stairs(struct chunk *c, struct loc grid, int depth);
 void square_add_door(struct chunk *c, struct loc grid, bool closed);
+void square_t_elem_add(struct chunk *c, struct loc grid, uint16_t idx, int timer);
 
 /* Feature modifiers */
 void square_open_door(struct chunk *c, struct loc grid);
@@ -422,6 +474,8 @@ void square_earthquake(struct chunk *c, struct loc grid);
 void square_upgrade_mineral(struct chunk *c, struct loc grid);
 void square_destroy_rubble(struct chunk *c, struct loc grid);
 void square_force_floor(struct chunk *c, struct loc grid);
+void square_t_elem_remove(struct chunk *c, struct loc grid, int idx);
+void square_t_elem_remove_all(struct chunk *c, struct loc grid);
 
 
 int square_shopnum(struct chunk *c, struct loc grid);

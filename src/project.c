@@ -61,8 +61,9 @@ int proj_name_to_idx(const char *name)
 {
     int i;
     for (i = 0; proj_name_list[i]; i++) {
-        if (!my_stricmp(name, proj_name_list[i]))
+        if (!my_stricmp(name, proj_name_list[i])) {
             return i;
+		}
     }
 
     return -1;

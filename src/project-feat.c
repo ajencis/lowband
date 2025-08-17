@@ -738,8 +738,9 @@ static void project_feature_handler_HELLFIRE(project_feature_handler_context_t *
 		/* Forget the floor, make lava. */
 		square_unmark(cave, context->grid);
 		square_set_feat(cave, context->grid, FEAT_LAVA);
-		if (cave->depth == 0)
+		if (cave->depth == 0) {
 			expose_to_sun(cave, context->grid, is_daytime());
+		}
 
 		/* Objects that have survived should move */
 		push_object(context->grid);
@@ -747,6 +748,19 @@ static void project_feature_handler_HELLFIRE(project_feature_handler_context_t *
 }
 
 static void project_feature_handler_BANSHEE(project_feature_handler_context_t *context)
+{
+}
+
+static void project_feature_handler_POISON_CLOUD(project_feature_handler_context_t *context)
+{
+	square_t_elem_add(cave, context->grid, TE_POISON_CLOUD, context->dam);
+
+	if (square_isview(cave, context->grid)) {
+		player->upkeep->update |= PU_UPDATE_VIEW;
+	}
+}
+
+static void project_feature_handler_POISON_TMD(project_feature_handler_context_t *context)
 {
 }
 

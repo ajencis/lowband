@@ -180,6 +180,14 @@ expr:S:SPELL_POWER:+ 1 * 2 / 3
 desc:Toxic-poisons a monster, causing it to get more poisoned over time.
 school:POISON
 
+spell:Poison Cloud:10
+effect:BALL:POISON_CLOUD
+dice:$Dd$S
+expr:D:SPELL_POWER:+ 1 * 3 / 4
+expr:S:SPELL_POWER:+ 1 * 2 / 3
+desc:Produces a poison cloud.
+school:POISON
+
 
 spell:Fireball:20
 effect:BALL_NO_DAM_RED:FIRE:6

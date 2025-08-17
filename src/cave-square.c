@@ -604,6 +604,35 @@ bool square_isno_stairs(struct chunk *c, struct loc grid) {
  */
 
 /**
+ * L: returns whether there are elements or terrain in the grid that have
+ * the flag in question
+ */
+static bool square_hasflag(struct chunk *c, struct loc grid, int flag)
+{
+	const struct square *sq = square(c, grid); 
+
+	assert(flag >= 0);
+	assert(flag < TF_MAX);
+
+	return tf_has(f_info[sq->feat].flags, flag) || sq_any_t_elem_has_flag(sq, flag);
+}
+
+/**
+ * L: returns whether all elements and terrain features in the grid have
+ * the flag in question
+ */
+static bool square_onlyflag(struct chunk *c, struct loc grid, int flag)
+{
+	const struct square *sq = square(c, grid); 
+
+	assert(square_in_bounds(c, grid));
+	assert(flag >= 0);
+	assert(flag < TF_MAX);
+
+	return tf_has(f_info[sq->feat].flags, flag) && sq_all_t_elem_has_flag(sq, flag);
+}
+
+/**
  * True if the square is open (a floor square not occupied by a monster).
  */
 bool square_isopen(struct chunk *c, struct loc grid) {
@@ -698,8 +727,7 @@ bool square_allowsfeel(struct chunk *c, struct loc grid) {
  * True if the square allows line-of-sight.
  */
 bool square_allowslos(struct chunk *c, struct loc grid) {
-	assert(square_in_bounds(c, grid));
-	return feat_is_los(square(c, grid)->feat);
+	return square_onlyflag(c, grid, TF_LOS);
 }
 
 /**
@@ -786,8 +814,7 @@ bool square_seemslikewall(struct chunk *c, struct loc grid)
 
 bool square_isinteresting(struct chunk *c, struct loc grid)
 {
-	int f = square(c, grid)->feat;
-	return tf_has(f_info[f].flags, TF_INTERESTING);
+	return square_hasflag(c, grid, TF_INTERESTING);
 }
 
 /**
@@ -1020,6 +1047,12 @@ struct trap *square_trap(struct chunk *c, struct loc grid)
 {
 	if (!square_in_bounds(c, grid)) return NULL;
     return square(c, grid)->trap;
+}
+
+struct terrain_element *square_t_elem(struct chunk *c, struct loc grid)
+{
+	if (!square_in_bounds(c, grid)) return NULL;
+	return square(c, grid)->t_elem;
 }
 
 /**
@@ -1510,16 +1543,52 @@ void square_smash_wall(struct chunk *c, struct loc grid)
 	}
 }
 
+void square_t_elem_remove(struct chunk *c, struct loc grid, int idx)
+{
+	struct square *sq = &c->squares[grid.y][grid.x];
+
+	terrain_elem_remove(&sq->t_elem, idx);
+}
+
+void square_t_elem_remove_all(struct chunk *c, struct loc grid)
+{
+	struct square *sq = &c->squares[grid.y][grid.x];
+
+	terrain_elem_remove_all(&sq->t_elem);
+	assert(!sq->t_elem);
+}
+
+void square_t_elem_add(struct chunk *c, struct loc grid, uint16_t idx, int timer)
+{
+	struct square *sq = &c->squares[grid.y][grid.x];
+	struct terrain_element *new, *old;
+
+	if (!square_ispassable(c, grid)) return;
+
+	for (old = sq->t_elem; old; old = old->next) {
+		if (old->kind->idx == idx) {
+			old->timer = MAX(timer, old->timer) + MIN(timer, old->timer) / 2;
+			return;
+		}
+	}
+
+	new = terrain_element_new(timer, idx);
+
+	new->next = sq->t_elem;
+	sq->t_elem = new;
+}
+
 void square_destroy(struct chunk *c, struct loc grid) {
 	int feat = FEAT_FLOOR;
 	int r = randint0(200);
 
-	if (r < 20)
+	if (r < 20) {
 		feat = FEAT_GRANITE;
-	else if (r < 70)
+	} else if (r < 70) {
 		feat = FEAT_QUARTZ;
-	else if (r < 100)
+	} else if (r < 100) {
 		feat = FEAT_MAGMA;
+	}
 
 	square_set_feat(c, grid, feat);
 }

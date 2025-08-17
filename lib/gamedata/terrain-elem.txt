@@ -1,0 +1,16 @@
+# Terrain elements
+#
+# Temporary elements of the dungeon level - clouds of gas and such.
+# 
+# name : name of the elements
+# graphics : symbol : colour
+# dam : element name : percent per level of the effect
+# timed : timed name : percent per level of the effect
+# flags : terrain flags
+
+idx:POISON_CLOUD
+name:poison gas
+graphics:~:g
+project:POISON_TMD
+flags:PROJECT | PASSABLE | INTERESTING | LOS
+

@@ -842,6 +842,18 @@ static int project_player_handler_BANSHEE(project_player_handler_context_t *cont
 	return 0;
 }
 
+static int project_player_handler_POISON_CLOUD(project_player_handler_context_t *context)
+{
+	return 0;
+}
+
+static int project_player_handler_POISON_TMD(project_player_handler_context_t *context)
+{
+	mon_inc_timed(&player->mon, TMD_POISONED, context->dam, MON_TMD_FLG_GETS_SAVE);
+	context->dam = 0;
+	return 0;
+}
+
 
 static const project_player_handler_f player_handlers[] = {
 	#define ELEM(a) project_player_handler_##a,

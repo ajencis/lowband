@@ -154,6 +154,7 @@ ADD_LIBRARY(OurCoreLib OBJECT
         src/cave-map.c
         src/cave-square.c
         src/cave-view.c
+        src/cave-terrain-elem.c
         src/cave.c
         src/cmd-cave.c
         src/cmd-core.c

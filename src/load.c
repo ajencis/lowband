@@ -1555,10 +1555,25 @@ static int rd_dungeon_aux(struct chunk **c)
 		}
 	}
 
+	if (c1 == cave) plog("getting telems for cave");
+
 	for (y = 0; y < height; ++y) {
 		for (x = 0; x < width; ++x) {
+			uint16_t kind, timer;
+			struct terrain_element *t_elem, **prev;
+
 			rd_byte(&tmp8u);
 			c1->squares[y][x].mana = (int8_t)tmp8u;
+
+			prev = &c1->squares[y][x].t_elem;
+
+			for (rd_u16b(&kind); kind != UINT16_MAX; rd_u16b(&kind)) {
+				rd_u16b(&timer);
+				t_elem = terrain_element_new(timer, kind);
+
+				*prev = t_elem;
+				prev = &t_elem->next;
+			}
 		}
 	}
 

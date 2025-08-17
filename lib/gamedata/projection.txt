@@ -815,3 +815,18 @@ obvious:1
 wake:1
 color:Red
 
+code:POISON_CLOUD
+name:cloud of poison gas
+type:environs
+desc:poison gas
+player-desc:poison gas
+blind-desc:something foul-smelling
+lash-desc:poison gas
+player-brand:engas
+numerator:6
+msgt:BR_GAS
+obvious:1
+wake:0
+color:Green
+
+

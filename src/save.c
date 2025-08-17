@@ -987,7 +987,15 @@ static void wr_dungeon_aux(struct chunk *c)
 
 	for (y = 0; y < c->height; ++y) {
 		for (x = 0; x < c->width; ++x) {
+			const struct terrain_element *t_elem;
 			wr_byte((uint8_t)square(c, loc(x, y))->mana);
+
+			for (t_elem = square(c, loc(x, y))->t_elem; t_elem; t_elem = t_elem->next) {
+				wr_u16b(t_elem->kind->idx);
+				wr_u16b(t_elem->timer);
+			}
+
+			wr_u16b(UINT16_MAX);
 		}
 	}
 

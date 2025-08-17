@@ -574,6 +574,42 @@ static void update_scent(void)
 	}
 }
 
+static void t_elem_effects(struct chunk *c)
+{
+	struct loc grid;
+	uint16_t flg = PROJECT_HIDE | PROJECT_JUMP | PROJECT_KILL | PROJECT_ITEM | PROJECT_GRID | PROJECT_PLAY;
+	struct terrain_element_kind *kind;
+	bool vanish_messages[TE_MAX] = { 0 };
+
+	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
+		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
+			struct terrain_element *t_elem, **prev;
+			struct square *sq = &c->squares[grid.y][grid.x];
+
+			for (prev = &sq->t_elem, t_elem = sq->t_elem; t_elem; prev = &t_elem->next, t_elem = t_elem->next) {
+				if (t_elem->timer <= 0) {
+					*prev = t_elem->next;
+					if (square_isview(c, grid)) {
+						vanish_messages[t_elem->kind->idx] = true;
+					}
+					terrain_elem_free(t_elem);
+				}
+				else {
+					project(source_grid(grid), 0, grid, t_elem->timer / 5 + 5, t_elem->kind->proj, flg, 0, 0, NULL);
+					--t_elem->timer;
+				}
+			}
+		}
+	}
+
+	for (kind = te_info; kind; kind = kind->next) {
+		if (vanish_messages[kind->idx]) {
+			msg("The %s fades away.", kind->name);
+			player->upkeep->update |= PU_UPDATE_VIEW;
+		}
+	}
+}
+
 /**
  * Handle things that need updating once every 10 game turns
  */
@@ -651,11 +687,11 @@ void process_world(struct chunk *c)
 	for (i = 0; i < 25; ++i) {
 		x = randint1(c->width - 2);
 		y = randint1(c->height - 2);
-		square_average_mana(cave, loc(x, y));
+		square_average_mana(c, loc(x, y));
 
 		if (i < c->depth / 3 || i == 0) {
-			int avg = mana_quantity(cave, loc(x, y));
-			struct square *sq = &cave->squares[y][x];
+			int avg = mana_quantity(c, loc(x, y));
+			struct square *sq = &c->squares[y][x];
 			if (sq->mana < avg) {
 				++sq->mana;
 			} else if (sq->mana > avg) {
@@ -663,7 +699,7 @@ void process_world(struct chunk *c)
 			}
 		}
 
-		assert(square(cave, loc(x, y))->mana >= 0);
+		assert(square(c, loc(x, y))->mana >= 0);
 	}
 
 	if (player->mon.state.powers[PP_ANTIMAGIC] > 0) {
@@ -700,6 +736,8 @@ void process_world(struct chunk *c)
 	}
 
 	process_monster_timed(&player->mon);
+
+	t_elem_effects(c);
 
 	/*** Damage (or healing) over Time ***/
 
