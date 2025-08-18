@@ -203,8 +203,9 @@ static bool ball_spell(effect_handler_context_t *context, uint8_t diameter_of_so
 
 	/* Aim at the target, explode */
 	if (project(context->origin, rad, target, dam, context->subtype, flg, 0,
-				diameter_of_source, context->obj))
+				diameter_of_source, context->obj)) {
 		context->ident = true;
+	}
 
 	return true;
 }

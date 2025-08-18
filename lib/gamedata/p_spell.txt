@@ -183,8 +183,8 @@ school:POISON
 spell:Poison Cloud:10
 effect:BALL:POISON_CLOUD
 dice:$Dd$S
-expr:D:SPELL_POWER:+ 1 * 3 / 4
-expr:S:SPELL_POWER:+ 1 * 2 / 3
+expr:D:SPELL_POWER:+ 1 * 2 / 3
+expr:S:SPELL_POWER:+ 1 * 1 / 2
 desc:Produces a poison cloud.
 school:POISON
 

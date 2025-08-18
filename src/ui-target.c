@@ -460,11 +460,16 @@ static bool aux_terrain_element(struct chunk *c, struct player *p,
 		struct target_aux_state *auxst)
 {
 	const struct square *sq = square(p->cave, auxst->grid);
-	char out_val[80];
+	char out_val[128];
 
 	if (!sq->t_elem) return false;
-
 	strnfmt(out_val, sizeof out_val, "%s%s%s, %s", auxst->phrase1, auxst->phrase2, sq->t_elem->kind->name, auxst->coord_desc);
+
+	if (p->wizard) {
+		my_strcat(out_val,
+				format(" (%d:%d, dur=%d)", auxst->grid.y, auxst->grid.x, sq->t_elem->timer),
+				sizeof out_val);
+	}
 
 	prt(out_val, 0, 0);
 

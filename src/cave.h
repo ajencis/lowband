@@ -290,8 +290,12 @@ void square_memorize_t_elem(struct chunk *c, struct loc grid);
 
 struct terrain_element *terrain_element_new(int timer, uint16_t idx);
 void terrain_elem_free(struct terrain_element *to_free);
-bool terrain_elem_remove(struct terrain_element **list, int to_remove);
+bool terrain_element_add(struct terrain_element **list, uint16_t idx, uint16_t timer);
+bool terrain_elem_remove(struct terrain_element **list, uint16_t idx);
+bool terrain_element_increase_dur(struct square *sq, uint16_t idx, uint16_t change);
+bool terrain_element_reduce_dur(struct square *sq, uint16_t idx, uint16_t change);
 bool terrain_elem_remove_all(struct terrain_element **list);
+bool terrain_element_change_dur(struct square *sq, uint16_t idx, int change);
 
 /* cave-map.c */
 void map_info(struct loc grid, struct grid_data *g);
@@ -385,6 +389,7 @@ bool square_isopen(struct chunk *c, struct loc grid);
 bool square_isempty(struct chunk *c, struct loc grid);
 bool square_isarrivable(struct chunk *c, struct loc grid);
 bool square_canputitem(struct chunk *c, struct loc grid);
+bool square_canputterrainelem(struct chunk *c, struct loc grid);
 bool square_isdiggable(struct chunk *c, struct loc grid);
 bool square_iswebbable(struct chunk *c, struct loc grid);
 bool square_is_monster_walkable(struct chunk *c, struct loc grid);

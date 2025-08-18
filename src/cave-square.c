@@ -670,6 +670,12 @@ bool square_canputitem(struct chunk *c, struct loc grid) {
 	return !square_object(c, grid);
 }
 
+bool square_canputterrainelem(struct chunk *c, struct loc grid) {
+	int feat = square(c, grid)->feat;
+
+	return tf_has(f_info[feat].flags, TF_PROJECT);
+}
+
 /**
  * True if the square can be dug: this includes rubble and non-permanent walls.
  */
@@ -957,8 +963,9 @@ bool square_isbelievedwall(struct chunk *c, struct loc grid)
  */
 bool square_isknownpassable(struct chunk *c, struct loc grid)
 {
-	if (!square_isknown(c, grid))
+	if (!square_isknown(c, grid)) {
 		return false;
+	}
 
 	return square_ispassable(player->cave, grid);
 }

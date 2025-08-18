@@ -12,5 +12,5 @@ idx:POISON_CLOUD
 name:poison gas
 graphics:~:g
 project:POISON_TMD
-flags:PROJECT | PASSABLE | INTERESTING | LOS
+flags:PROJECT | PASSABLE | INTERESTING | LOS | CLOUD
 

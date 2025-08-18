@@ -578,36 +578,111 @@ static void t_elem_effects(struct chunk *c)
 {
 	struct loc grid;
 	uint16_t flg = PROJECT_HIDE | PROJECT_JUMP | PROJECT_KILL | PROJECT_ITEM | PROJECT_GRID | PROJECT_PLAY;
-	struct terrain_element_kind *kind;
-	bool vanish_messages[TE_MAX] = { 0 };
+	//struct terrain_element_kind *kind;
+	//bool vanish_messages[TE_MAX] = { 0 };
 
 	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
 		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
-			struct terrain_element *t_elem, **prev;
+			struct terrain_element *t_elem;
 			struct square *sq = &c->squares[grid.y][grid.x];
 
-			for (prev = &sq->t_elem, t_elem = sq->t_elem; t_elem; prev = &t_elem->next, t_elem = t_elem->next) {
-				if (t_elem->timer <= 0) {
-					*prev = t_elem->next;
-					if (square_isview(c, grid)) {
+			for (t_elem = sq->t_elem; t_elem; t_elem = t_elem->next) {
+				if (terrain_element_reduce_dur(sq, t_elem->kind->idx, 1)) {
+					/*if (square_isview(c, grid)) {
 						vanish_messages[t_elem->kind->idx] = true;
-					}
-					terrain_elem_free(t_elem);
+					}*/
 				}
 				else {
+					if (loc_eq(grid, player->mon.grid)) msg("You are surrounded by %s.", t_elem->kind->name); 
 					project(source_grid(grid), 0, grid, t_elem->timer / 5 + 5, t_elem->kind->proj, flg, 0, 0, NULL);
-					--t_elem->timer;
 				}
 			}
 		}
 	}
 
-	for (kind = te_info; kind; kind = kind->next) {
+	/*for (kind = te_info; kind; kind = kind->next) {
 		if (vanish_messages[kind->idx]) {
 			msg("The %s fades away.", kind->name);
 			player->upkeep->update |= PU_UPDATE_VIEW;
 		}
+	}*/
+}
+
+static bool t_elem_spread_one(struct chunk *c, struct loc grid, int kind, int8_t **changes)
+{
+	uint16_t dir, delta;
+	struct square *sq = &c->squares[grid.y][grid.x];
+	struct terrain_element *t_elem = sq->t_elem;
+	struct loc newgrid;
+	bool did_something = false;
+
+	while (t_elem && t_elem->kind->idx != kind) {
+		t_elem = t_elem->next;
 	}
+
+	if (!t_elem) return did_something;
+	assert(square_in_bounds_fully(c, grid));
+
+	for (dir = 1; dir <= 9; ++dir) {
+		delta = randint0(t_elem->timer / 5);
+		newgrid = loc_sum(grid, ddgrid[dir]);
+
+		if (delta <= 0) continue;
+		if (loc_eq(newgrid, grid)) continue;
+		if (!square_in_bounds_fully(c, newgrid)) continue;
+		if (!square_canputterrainelem(c, newgrid)) continue;
+
+		delta = MIN(delta, MAX(0, changes[grid.y][grid.x] - INT8_MIN));
+		delta = MIN(delta, MAX(0, INT8_MAX - changes[newgrid.y][newgrid.x]));
+
+		changes[newgrid.y][newgrid.x] += delta;
+		changes[grid.y][grid.x] -= delta;
+
+		if (delta > 0) did_something = true;
+	}
+
+	return did_something;
+}
+
+static void t_elem_spread(struct chunk *c)
+{
+	const struct terrain_element_kind *kind;
+	struct square *sq;
+	int i;
+
+	int8_t **change = mem_zalloc(sizeof *change * c->height);
+
+	for (i = 0; i < c->height; ++i) {
+		change[i] = mem_zalloc(sizeof **change * c->width);
+	}
+
+	for (kind = te_info; kind; kind = kind->next) {
+		struct loc grid;
+
+		if (!tf_has(kind->flags, TF_CLOUD)) continue;
+
+		for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
+			for (grid.y = 1; grid.y < c->height - 1; ++ grid.y) {
+				t_elem_spread_one(c, grid, kind->idx, change);
+			}
+		}
+
+		for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
+			for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
+				sq = &c->squares[grid.y][grid.x];
+
+				terrain_element_change_dur(sq, kind->idx, change[grid.y][grid.x]);
+
+				change[grid.y][grid.x] = 0;
+			}
+		}
+	}
+
+	for (i = 0; i < c->height; ++i) {
+		mem_free(change[i]);
+	}
+
+	mem_free(change);
 }
 
 /**
@@ -738,6 +813,7 @@ void process_world(struct chunk *c)
 	process_monster_timed(&player->mon);
 
 	t_elem_effects(c);
+	t_elem_spread(c);
 
 	/*** Damage (or healing) over Time ***/
 
