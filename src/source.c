@@ -70,6 +70,14 @@ struct source source_chest_trap(struct chest_trap *chest_trap)
 	return src;
 }
 
+struct source source_t_elem(struct terrain_element *t_elem)
+{
+	struct source src;
+	src.what = SRC_TERRAIN_ELEM;
+	src.which.t_elem = t_elem;
+	return src;
+}
+
 struct source source_grid(struct loc grid)
 {
 	struct source src;

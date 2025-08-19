@@ -427,6 +427,7 @@ struct loc origin_get_loc(struct source origin)
 		case SRC_PLAYER:
 		case SRC_OBJECT:	/* Currently only worn cursed objects use this */
 		case SRC_CHEST_TRAP:
+		case SRC_TERRAIN_ELEM:
 			return player->mon.grid;
 
 		case SRC_GRID:
@@ -943,10 +944,18 @@ bool project(struct source origin, int rad, struct loc finish,
 		bool did_hit = false;
 		int num_hit = 0;
 		struct loc last_hit_grid = loc(0, 0);
+		int pwr;
 
 		/* Scan for monsters */
 		for (i = 0; i < num_grids; i++) {
 			struct monster *mon = NULL;
+
+			if (origin.what == SRC_TERRAIN_ELEM) {
+				pwr = origin.which.t_elem->timer;
+			}
+			else {
+				pwr = dam_at_dist[distance_to_grid[i]];
+			}
 
 			/* Check this monster hasn't been processed already */
 			if (!square_isproject(cave, blast_grid[i]))
@@ -959,7 +968,7 @@ bool project(struct source origin, int rad, struct loc finish,
 
 			/* Affect the monster in the grid */
 			project_m(origin, distance_to_grid[i], blast_grid[i],
-			          dam_at_dist[distance_to_grid[i]], typ, flg,
+			          pwr, typ, flg,
 			          &did_hit, &was_obvious);
 			if (was_obvious) {
 				notice = true;
@@ -1002,8 +1011,12 @@ bool project(struct source origin, int rad, struct loc finish,
 			power = mon->race->spell_power;
 
 			/* Breaths from powerful monsters get power effects as well */
-			if (monster_is_powerful(mon))
+			if (monster_is_powerful(mon)) {
 				power = MAX(power, 80);
+			}
+		}
+		else if (origin.what == SRC_TERRAIN_ELEM) {
+			power = origin.which.t_elem->timer / 5 + 5;
 		}
 		for (i = 0; i < num_grids; i++) {
 			if (project_p(origin, distance_to_grid[i], blast_grid[i],

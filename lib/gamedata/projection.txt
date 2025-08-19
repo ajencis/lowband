@@ -823,10 +823,58 @@ player-desc:poison gas
 blind-desc:something foul-smelling
 lash-desc:poison gas
 player-brand:engas
-numerator:6
+numerator:0
 msgt:BR_GAS
 obvious:1
 wake:0
 color:Green
+
+code:MEPHITIC_CLOUD
+name:cloud of noxious gas
+type:environs
+desc:noxious gas
+player-desc:noxious gas
+blind-desc:something foul-smelling
+lash-desc:noxious gas
+player-brand:engas
+numerator:0
+msgt:BR_GAS
+obvious:1
+wake:0
+color:Yellow
+
+code:POISON_TMD
+name:poison
+type:environs
+desc:poison
+player-desc:poison gas
+blind-desc:poison
+lash-desc:venom
+player-brand:envenom
+numerator:1
+denominator:3
+divisor:3
+damage-cap:800
+msgt:BR_GAS
+obvious:1
+wake:1
+color:Green
+
+code:MEPHITIC
+name:noxious gas
+type:environs
+desc:noxious gas
+player-desc:noxious gas
+blind-desc:poison
+lash-desc:venom
+player-brand:envenom
+numerator:1
+denominator:3
+divisor:3
+damage-cap:800
+msgt:BR_GAS
+obvious:1
+wake:1
+color:Yellow
 
 

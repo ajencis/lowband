@@ -646,6 +646,11 @@ bool effect_handler_DAMAGE(effect_handler_context_t *context)
 			}
 			break;
 		}
+	
+		case SRC_TERRAIN_ELEM: {
+			my_strcpy(killer, context->origin.which.t_elem->kind->name, sizeof killer);
+			break;
+		}
 
 		case SRC_GRID:
 		case SRC_NONE: {

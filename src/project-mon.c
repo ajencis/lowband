@@ -1115,12 +1115,40 @@ static void project_monster_handler_BANSHEE(project_monster_handler_context_t *c
 
 static void project_monster_handler_POISON_CLOUD(project_monster_handler_context_t *context)
 {
+	context->dam = 0;
+}
+
+static void project_monster_handler_MEPHITIC_CLOUD(project_monster_handler_context_t *context)
+{
+	context->dam = 0;
 }
 
 static void project_monster_handler_POISON_TMD(project_monster_handler_context_t *context)
 {
-	int flg = MON_TMD_FLG_GETS_SAVE;
-	mon_inc_timed(context->mon, TMD_POISONED, context->dam, flg);
+	int flg = MON_TMD_FLG_GETS_SAVE, pwr;
+
+	pwr = context->dam;
+	if (pwr > 0) mon_inc_timed(context->mon, TMD_POISONED, pwr, flg);
+
+	context->dam = 0;
+}
+
+static void project_monster_handler_MEPHITIC(project_monster_handler_context_t *context)
+{
+	int flg = MON_TMD_FLG_GETS_SAVE, pwr;
+
+	if (rf_has(context->mon->race->flags, RF_IM_POIS)) return;
+
+	pwr = context->dam;
+	if (pwr > 0) mon_inc_timed(context->mon, TMD_POISONED, pwr, flg);
+
+	pwr = (context->dam - 10) / 5;
+	if (pwr > 0) mon_inc_timed(context->mon, TMD_CONFUSED, pwr, flg);
+
+	pwr = (context->dam - 20) / 10;
+	if (pwr > 0) mon_inc_timed(context->mon, TMD_STUN, pwr, flg);
+
+	context->dam = 0;
 }
 
 static const project_monster_handler_f monster_handlers[] = {

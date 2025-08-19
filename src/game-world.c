@@ -594,7 +594,7 @@ static void t_elem_effects(struct chunk *c)
 				}
 				else {
 					if (loc_eq(grid, player->mon.grid)) msg("You are surrounded by %s.", t_elem->kind->name); 
-					project(source_grid(grid), 0, grid, t_elem->timer / 5 + 5, t_elem->kind->proj, flg, 0, 0, NULL);
+					project(source_t_elem(t_elem), 0, grid, 0, t_elem->kind->proj, flg, 0, 0, NULL);
 				}
 			}
 		}
@@ -610,11 +610,13 @@ static void t_elem_effects(struct chunk *c)
 
 static bool t_elem_spread_one(struct chunk *c, struct loc grid, int kind, int8_t **changes)
 {
-	uint16_t dir, delta;
+	uint16_t dir, basedelta, delta;
 	struct square *sq = &c->squares[grid.y][grid.x];
 	struct terrain_element *t_elem = sq->t_elem;
 	struct loc newgrid;
 	bool did_something = false;
+	uint16_t lin_div = 10U, sqrt_div = 3U;
+	uint16_t intersect = lin_div * lin_div / sqrt_div;
 
 	while (t_elem && t_elem->kind->idx != kind) {
 		t_elem = t_elem->next;
@@ -622,9 +624,13 @@ static bool t_elem_spread_one(struct chunk *c, struct loc grid, int kind, int8_t
 
 	if (!t_elem) return did_something;
 	assert(square_in_bounds_fully(c, grid));
+	
+	basedelta = (t_elem->timer > intersect) ? my_int_sqrt((int)(t_elem->timer / sqrt_div)) : t_elem->timer / 10;
+
+	assert(lin_div >= 8);
 
 	for (dir = 1; dir <= 9; ++dir) {
-		delta = randint0(t_elem->timer / 5);
+		delta = (uint16_t)randint0(basedelta);
 		newgrid = loc_sum(grid, ddgrid[dir]);
 
 		if (delta <= 0) continue;

@@ -517,7 +517,15 @@ static void project_object_handler_POISON_CLOUD(project_object_handler_context_t
 {
 }
 
+static void project_object_handler_MEPHITIC_CLOUD(project_object_handler_context_t *context)
+{
+}
+
 static void project_object_handler_POISON_TMD(project_object_handler_context_t *context)
+{
+}
+
+static void project_object_handler_MEPHITIC(project_object_handler_context_t *context)
 {
 }
 

@@ -844,13 +844,32 @@ static int project_player_handler_BANSHEE(project_player_handler_context_t *cont
 
 static int project_player_handler_POISON_CLOUD(project_player_handler_context_t *context)
 {
+	context->dam = 0;
+	return 0;
+}
+
+static int project_player_handler_MEPHITIC_CLOUD(project_player_handler_context_t *context)
+{
+	context->dam = 0;
 	return 0;
 }
 
 static int project_player_handler_POISON_TMD(project_player_handler_context_t *context)
 {
-	mon_inc_timed(&player->mon, TMD_POISONED, context->dam, MON_TMD_FLG_GETS_SAVE);
-	context->dam = 0;
+	mon_inc_timed(&player->mon, TMD_POISONED, context->power, MON_TMD_FLG_GETS_SAVE);
+	return 0;
+}
+
+static int project_player_handler_MEPHITIC(project_player_handler_context_t *context)
+{
+	int flg = MON_TMD_FLG_GETS_SAVE;
+
+	if (!player_resists(player, ELEM_POIS)) {
+		mon_inc_timed(&player->mon, TMD_POISONED, context->power, flg);
+		mon_inc_timed(&player->mon, TMD_CONFUSED, (context->power - 10) / 5, flg);
+		mon_inc_timed(&player->mon, TMD_STUN, (context->power - 20) / 10, flg);
+	}
+
 	return 0;
 }
 
@@ -964,6 +983,11 @@ bool project_p(struct source origin, int r, struct loc grid, int dam, int typ,
 			/* Get the trap name */
 			strnfmt(killer, sizeof(killer), "%s", trap->msg_death);
 
+			break;
+		}
+
+		case SRC_TERRAIN_ELEM: {
+			my_strcpy(killer, origin.which.t_elem->kind->name, sizeof killer);
 			break;
 		}
 
