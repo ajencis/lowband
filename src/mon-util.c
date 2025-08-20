@@ -1929,12 +1929,10 @@ void steal_monster_item(struct monster *mon, int midx)
 }
 
 
-
 /**
  * L: power functions
  */
-
-static void frightening_presence_one(struct monster *viewer, struct monster *scary)
+static void frightening_presence_one(struct chunk *c, struct monster *viewer, struct monster *scary)
 {
 	int power;
 	bool success;
@@ -1947,7 +1945,7 @@ static void frightening_presence_one(struct monster *viewer, struct monster *sca
 	if (viewer->midx == scary->midx) return;
 	if (scary->state.powers[PP_FRIGHTENING_PRESENCE] <= 0) return;
 	if (mflag_has(viewer->mflag, MFLAG_SAW_SCARY)) return;
-	if (!monster_can_see(cave, viewer, scary->grid)) return;
+	if (!monster_can_see(c, viewer, scary->grid)) return;
 	if (viewer->m_timed[TMD_ASLEEP] > 0) return;
 
 	mflag_on(viewer->mflag, MFLAG_SAW_SCARY);
@@ -1995,17 +1993,71 @@ static void frightening_presence_one(struct monster *viewer, struct monster *sca
 }
 
 
-void frightening_presence(struct monster *mon)
+static void frightening_presence(struct chunk *c, struct monster *mon)
 {
 	int i;
+
+	if (mflag_has(mon->mflag, MFLAG_SAW_SCARY) && one_in_(10)) {
+		mflag_off(mon->mflag, MFLAG_SAW_SCARY);
+	}
 
 	if (mon->state.powers[PP_FRIGHTENING_PRESENCE] <= 0) return;
 
 	for (i = 1; i < cave_monster_max(cave); ++i) {
-		frightening_presence_one(cave_monster(cave, i), mon);
+		frightening_presence_one(c, cave_monster(c, i), mon);
 	}
 
-	frightening_presence_one(&player->mon, mon);
+	frightening_presence_one(c, &player->mon, mon);
+}
+
+
+
+static void stench(struct chunk *c, struct monster *mon)
+{
+	int pwr = mon->state.powers[PP_STENCH], curr = 0, amt, max;
+	struct square *sq = &c->squares[mon->grid.y][mon->grid.x];
+	struct terrain_element *t_elem;
+
+	if (pwr <= 0) return;
+
+	for (t_elem = sq->t_elem; t_elem; t_elem = t_elem->next) {
+		if (t_elem->kind->idx == TE_MEPHITIC_CLOUD) {
+			curr = t_elem->timer;
+			break;
+		}
+	}
+
+	max = (int)((double)pwr * my_cbrt((double)pwr));
+	amt = (max - curr) / 5 + 1;
+
+	if (amt > 0) {
+		terrain_element_increase_dur(sq, TE_MEPHITIC_CLOUD, amt);
+	}
+}
+
+
+power_effect power_effects[] = {
+	frightening_presence,
+	stench
+};
+
+
+
+void timed_power_effects(struct chunk *c)
+{
+	int i, j;
+
+	for (i = N_ELEMENTS(power_effects) - 1; i >= 0; --i) {
+		for (j = 1; j < cave_monster_max(c); ++j) {
+			struct monster *mon = cave_monster(c, j);
+
+			if (!mon || !mon->race) continue;
+
+			power_effects[i](c, mon);
+		}
+
+		power_effects[i](c, &player->mon);
+	}
 }
 
 

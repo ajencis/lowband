@@ -22,6 +22,8 @@
 #include "monster.h"
 #include "mon-msg.h"
 
+typedef void (*power_effect)(struct chunk *c, struct monster *mon);
+
 bool mon_is_player(const struct monster *mon);
 void mark_mon_as_playable(struct monster_race *mr);
 struct object *monster_best_weapon(struct monster *m);
@@ -62,7 +64,7 @@ void steal_monster_item(struct monster *mon, int midx);
 bool monster_change_shape(struct monster *mon);
 bool monster_revert_shape(struct monster *mon);
 
-void frightening_presence(struct monster *mon);
+void timed_power_effects(struct chunk *c);
 
 int mon_ac(struct monster *mon);
 

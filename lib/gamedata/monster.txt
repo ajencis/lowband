@@ -7921,6 +7921,7 @@ blow:CLAW:PARALYZE:2d4
 blow:BITE:LOSE_CON:2d4
 flags:DROP_40
 flags:HURT_LIGHT
+power:STENCH
 spell-freq:7
 spells:HOLD | SCARE
 friends:20:1d3:Zombified kobold

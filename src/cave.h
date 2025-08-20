@@ -297,6 +297,10 @@ bool terrain_element_reduce_dur(struct square *sq, uint16_t idx, uint16_t change
 bool terrain_elem_remove_all(struct terrain_element **list);
 bool terrain_element_change_dur(struct square *sq, uint16_t idx, int change);
 
+void t_elem_spread(struct chunk *c);
+
+void t_elem_effects(struct chunk *c);
+
 /* cave-map.c */
 void map_info(struct loc grid, struct grid_data *g);
 void square_note_spot(struct chunk *c, struct loc grid);

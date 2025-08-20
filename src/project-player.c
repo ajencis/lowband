@@ -863,11 +863,15 @@ static int project_player_handler_POISON_TMD(project_player_handler_context_t *c
 static int project_player_handler_MEPHITIC(project_player_handler_context_t *context)
 {
 	int flg = MON_TMD_FLG_GETS_SAVE;
+	int pwr;
 
-	if (!player_resists(player, ELEM_POIS)) {
-		mon_inc_timed(&player->mon, TMD_POISONED, context->power, flg);
-		mon_inc_timed(&player->mon, TMD_CONFUSED, (context->power - 10) / 5, flg);
-		mon_inc_timed(&player->mon, TMD_STUN, (context->power - 20) / 10, flg);
+	if (!player_resists(player, ELEM_POIS) && player->mon.state.powers[PP_STENCH] <= 0) {
+		pwr = context->power;
+		if (pwr > 0) mon_inc_timed(&player->mon, TMD_POISONED, pwr, flg);
+		pwr = context->power - 10;
+		if (pwr > 0) mon_inc_timed(&player->mon, TMD_CONFUSED, pwr, flg);
+		pwr = context->power - 25;
+		if (pwr > 0) mon_inc_timed(&player->mon, TMD_STUN, pwr, flg);
 	}
 
 	return 0;

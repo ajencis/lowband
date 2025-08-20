@@ -724,6 +724,15 @@ rarity:4
 parent:skill:TO_HIT_MELEE
 prereq:RACE_OR_CLASS_HAS_POWER
 
+type:power
+code:STENCH
+name:Stench
+desc: can harm enemies by smell alone.
+cost:10
+rarity:4
+parent:skill:HEALTH
+prereq:RACE_OR_CLASS_HAS_POWER
+
 
 # L: skills
 type:skill
