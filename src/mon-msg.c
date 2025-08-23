@@ -37,7 +37,8 @@
  */
 #define MON_MSG_FLAG_OFFSCREEN	0x01
 #define MON_MSG_FLAG_INVISIBLE	0x02
-#define MON_MSG_FLAG_DAMAGE	0x04
+#define MON_MSG_FLAG_DAMAGE		0x04
+#define MON_MSG_FLAG_PLAYER		0x08
 
 /**
  * A stacked monster message entry
@@ -45,7 +46,7 @@
 struct monster_race_message {
 	struct monster_race *race;	/* The race of the monster */
 	int flags;			/* Flags */
-	int msg_code;			/* The coded message */
+	int msg_code;		/* The coded message */
 	int count;			/* How many monsters triggered this message */
 	int delay;			/* messages will be processed in this order: delay = 0, 1, 2 */
 	int damage;			/* total damage; only relevant if flags
@@ -174,6 +175,10 @@ static int message_flags(const struct monster *mon)
 
 	if (!monster_is_obvious(mon)) {
 		flags |= MON_MSG_FLAG_INVISIBLE;
+	}
+
+	if (mon_is_player(mon)) {
+		flags |= MON_MSG_FLAG_PLAYER;
 	}
 
 	return flags;
@@ -321,9 +326,12 @@ static void get_subject(char *buf, size_t buflen,
 		struct monster_race *race,
 		int count,
 		bool invisible,
-		bool offscreen)
+		bool offscreen,
+		bool is_player)
 {
-	if (invisible) {
+	if (is_player) {
+		my_strcpy(buf, "You", buflen);
+	} else if (invisible) {
 		if (count == 1) {
 			my_strcpy(buf, "It", buflen);
 		} else {
@@ -349,8 +357,9 @@ static void get_subject(char *buf, size_t buflen,
 		}
 	}
 
-	if (offscreen)
+	if (offscreen) {
 		my_strcat(buf, " (offscreen)", buflen);
+	}
 
 	/* Add a separator */
 	my_strcat(buf, " ", buflen);
@@ -474,14 +483,15 @@ static void show_message(struct monster_race_message *msg)
 				msg->race,
 				msg->count,
 				msg->flags & MON_MSG_FLAG_INVISIBLE,
-				msg->flags & MON_MSG_FLAG_OFFSCREEN);
+				msg->flags & MON_MSG_FLAG_OFFSCREEN,
+				msg->flags & MON_MSG_FLAG_PLAYER);
 	}
 
 	/* Get the message proper, corrected for singular/plural etc. */
 	get_message_text(body, sizeof(body),
 			msg->msg_code,
 			msg->race,
-			msg->count > 1);
+			msg->count > 1 || (msg->flags & MON_MSG_FLAG_PLAYER));
 
 	/* Show the message */
 	if (msg->flags & MON_MSG_FLAG_DAMAGE) {

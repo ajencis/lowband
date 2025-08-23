@@ -8,6 +8,14 @@
 
 #include "source.h"
 
+enum resist_types {
+	RES_TYPE_NONE = 0,
+	#define RES_TYPE(x) RES_TYPE_##x,
+	#include "list-resist-types.h"
+	#undef RES_TYPE
+	RES_TYPE_MAX
+};
+
 /**
  * Spell types used by project(), and related functions.
  */
@@ -42,6 +50,9 @@ struct projection {
 	bool obvious;
 	bool wake;
 	int color;
+
+	uint8_t resist_types[ELEM_MAX];
+
 	struct projection *next;
 };
 
@@ -110,6 +121,9 @@ void thrust_away(struct loc centre, struct loc target, int grids_away);
 int inven_damage(struct player *p, int type, int cperc);
 int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 			   int resist, bool actual);
+
+int mon_resist_proj_percent(struct monster *mon, int proj_type);
+bool mon_proj_is_immune(const struct monster *mon, int proj_type);
 
 bool project_f(struct source, int r, struct loc grid, int dam, int typ);
 bool project_o(struct source, int r, struct loc grid, int dam, int typ,

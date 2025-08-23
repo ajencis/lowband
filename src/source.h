@@ -41,4 +41,6 @@ struct source source_chest_trap(struct chest_trap *chest_trap);
 struct source source_t_elem(struct terrain_element *t_elem);
 struct source source_grid(struct loc grid);
 
+void death_message_by_source(struct source origin, char *buf, size_t bufsize);
+
 #endif /* EFFECT_SOURCE_H */

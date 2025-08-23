@@ -3894,7 +3894,6 @@ void describe_saveload(const char *msg, bool save)
 #ifdef OBJ_SAVELOAD_DEBUG
 	const char *path = save ? obj_save_log_file_path : obj_load_log_file_path;
 	ang_file *file = file_open(path, MODE_APPEND, FTYPE_TEXT);
-	//plog_fmt("path = %s", path);
 	assert(file);
 	assert(msg);
 	assert(file_putf(file, "%s\n", msg));

@@ -1738,6 +1738,7 @@ static errr run_parse_mon_base(struct parser *p) {
 static errr finish_parse_mon_base(struct parser *p) {
 	rb_info = parser_priv(p);
 	parser_destroy(p);
+
 	return 0;
 }
 
@@ -2612,10 +2613,11 @@ static errr finish_parse_monster(struct parser *p) {
 		memcpy(&r_info[ridx], r, sizeof(*r));
 		r_info[ridx].ridx = ridx;
 		n = r->next;
-		if (ridx < z_info->r_max - 1)
+		if (ridx < z_info->r_max - 1) {
 			r_info[ridx].next = &r_info[ridx + 1];
-		else
+		} else {
 			r_info[ridx].next = NULL;
+		}
 
 		/* Blows */
 		b_new = mem_zalloc(z_info->mon_blows_max * sizeof(*b_new));
@@ -2630,9 +2632,11 @@ static errr finish_parse_monster(struct parser *p) {
 			}
 
 			/* Make next point correctly */
-			for (i = 0; i < z_info->mon_blows_max; i++)
-				if (b_new[i].next)
+			for (i = 0; i < z_info->mon_blows_max; i++) {
+				if (b_new[i].next) {
 					b_new[i].next = &b_new[i + 1];
+				}
+			}
 
 			/* Tidy up */
 			b_old = r->blow;

@@ -314,31 +314,6 @@ int mon_tome_power(const struct monster *mon, int power)
 	return 0;
 }
 
-/**
- * L: gives the percentage of the max level the monster is considered to
- * be at for that particular power
- */
-/*int mon_tome_lev_fact(const struct monster *mon, int power)
-{
-	double lev_fact;
-	int lev = mon_lev(mon);
-	int result;
-	struct player_ability *abil = lookup_player_ability(power, PY_ABIL_POWER);
-
-	assert(abil);
-
-	if (lev >= 50) return 100 * lev / 50;
-
-	double base = ((double)lev) / 50.0;
-	lev_fact = exponentiate_dbl(base, abil->scale, 2);
-
-	result = (int)(lev_fact * 100 * 2);
-
-	if (power == PP_SWORD_SPECIALIZATION) msg_add_fmt("mtlf: base=%f,lev_fact=%f,result=%i", base, lev_fact, result);
-
-	return result;
-}*/
-
 static int mon_power(const struct monster *mon, int power)
 {
 	if (power <= PP_NONE || power >= PP_MAX) return 0;
@@ -384,7 +359,7 @@ static void get_mon_ac(struct monster *mon, struct player_state *state)
 void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 {
 	int i, extra_blows = 0;
-	struct element_info race_elem_info[ELEM_MAX] = { 0 };
+	//struct element_info race_elem_info[ELEM_MAX] = { 0 };
 	struct monster_race *mrace = mon->race;
 
 	verify_mon_ownership(mon);
@@ -418,11 +393,14 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 		state->skills[i] = mon_lev(mon) + 10;*/
 	}
 
-
-	memcpy(race_elem_info, mrace->el_info, sizeof *race_elem_info * ELEM_MAX);
-	for (i = 0; i < ELEM_MAX; i++) {
-		state->el_info[i].res_level = race_elem_info[i].res_level;
+	for (i = 0; i < ELEM_MAX; ++i) {
+		state->el_info[i].res_level = mrace->el_info[i].res_level;
 	}
+	//memcpy(state->el_info, mrace->el_info, sizeof *race_elem_info * ELEM_MAX);
+
+	/*for (i = 0; i < ELEM_MAX; i++) {
+		state->el_info[i].res_level = race_elem_info[i].res_level;
+	}*/
 	
 
 	state->el_info[ELEM_HOLY_FIRE].res_level = state->el_info[ELEM_HOLY_ORB].res_level * 2 + state->el_info[ELEM_FIRE].res_level;
@@ -1198,9 +1176,7 @@ void update_mon_state(struct monster *mon)
 	assert(mon);
 	if (mflag_has(mon->mflag, MFLAG_UPDATE_STATE)) {
 		assert(mon->race);
-		//plog_fmt("updating state for %s", mon->race->name);
 		calc_mon_bonuses(mon, &mon->state);
-		//plog("done");
 		mflag_off(mon->mflag, MFLAG_UPDATE_STATE);
 	}
 }

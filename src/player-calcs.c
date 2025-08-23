@@ -1468,11 +1468,11 @@ static void calc_monster(struct player *p, struct player_state *state,
 		return;
 	}
 
-	for (i = 0; i < ELEM_MAX; ++i) {
+	/*for (i = 0; i < ELEM_MAX; ++i) {
 		int mon_res = mrace->el_info[i].res_level;
 		int new_res = state->el_info[i].res_level + mon_res;
 		state->el_info[i].res_level = MAX(MIN(new_res, 3), -1);
-	}
+	}*/
 
 	state->speed += mrace->speed / 2 - 55;
 	state->to_a = MAX(state->to_a, mrace->ac) + MIN(state->to_a, mrace->ac) / 2;
@@ -1582,6 +1582,8 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	memset(state, 0, sizeof *state);
 
 	// L: base monster calcs
+	assert(mon == &p->mon);
+
 	calc_mon_bonuses(mon, state);
 
 	/* Extract race/class info */

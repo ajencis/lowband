@@ -30,6 +30,7 @@
 #include "z-util.h"
 #include "message.h"
 #include "game-event.h"
+#include "game-world.h"
 #include "option.h"
 #include "init.h"
 #include "player.h"
@@ -166,6 +167,8 @@ void msg_add_fmt(const char *fmt, ...)
 {
 	char *res;
 	va_list vp;
+
+	assert(character_generated);
 
 	/* Begin the Varargs Stuff */
 	va_start(vp, fmt);

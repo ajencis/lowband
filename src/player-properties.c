@@ -299,6 +299,9 @@ int get_mon_power_scale(const struct monster *mon, int power, int scaleto)
 
 bool mon_has_power(const struct monster *mon, int power)
 {
+	assert(mon);
+	assert(power >= 0 && power < PP_MAX);
+
 	return mon_power_minimum(mon, power, 1);
 }
 

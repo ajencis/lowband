@@ -393,6 +393,8 @@ static void mon_find_target(struct chunk *c, struct monster *mon)
 bool mon_check_target(struct chunk *c, struct monster *mon)
 {
 	bool recheck = false;
+	if (mon_is_player(mon)) return false;
+
 	if (mon->target.who == TARGET_WHO_MONSTER) {
 		struct monster *other = cave_monster(c, mon->target.midx);
 		if (!other || !other->race) {

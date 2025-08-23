@@ -30,6 +30,7 @@
 #include "mon-timed.h"
 #include "mon-util.h"
 #include "player-calcs.h"
+#include "player-properties.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
@@ -1135,20 +1136,21 @@ static void project_monster_handler_POISON_TMD(project_monster_handler_context_t
 
 static void project_monster_handler_MEPHITIC(project_monster_handler_context_t *context)
 {
-	int flg = MON_TMD_FLG_GETS_SAVE, pwr;
-
-	if (rf_has(context->mon->race->flags, RF_IM_POIS)) return;
-
-	pwr = context->dam;
-	if (pwr > 0) mon_inc_timed(context->mon, TMD_POISONED, pwr, flg);
-
-	pwr = (context->dam - 10) / 5;
-	if (pwr > 0) mon_inc_timed(context->mon, TMD_CONFUSED, pwr, flg);
-
-	pwr = (context->dam - 20) / 10;
-	if (pwr > 0) mon_inc_timed(context->mon, TMD_STUN, pwr, flg);
+	int flg = MON_TMD_FLG_GETS_SAVE, pwr = context->dam;
 
 	context->dam = 0;
+
+	if (mon_has_power(context->mon, PP_STENCH)) {
+		return;
+	}
+
+	if (pwr > 0) mon_inc_timed(context->mon, TMD_POISONED, pwr, flg);
+
+	pwr -= 10;
+	if (pwr > 0) mon_inc_timed(context->mon, TMD_CONFUSED, pwr, flg);
+
+	pwr -= 10;
+	if (pwr > 0) mon_inc_timed(context->mon, TMD_STUN, pwr, flg);
 }
 
 static const project_monster_handler_f monster_handlers[] = {
@@ -1189,17 +1191,29 @@ static bool project_m_monster_attack(project_monster_handler_context_t *context,
 	}
 
 	/* Redraw (later) if needed */
-	if (player->upkeep->health_who == mon)
+	if (player->upkeep->health_who == mon) {
 		player->upkeep->redraw |= (PR_HEALTH);
+	}
 
 	/* Wake the monster up, don't notice the player */
 	monster_wake(mon, false, 0);
+
+	if (mon_is_player(mon)) {
+		char death_msg[80];
+
+		death_message_by_source(context->origin, death_msg, sizeof death_msg);
+
+		take_hit(player, dam, death_msg);
+
+		return player->is_dead;
+	}
 
 	/* Hurt the monster */
 	mon->hp -= dam;
 
 	/* Dead or damaged monster */
 	if (mon->hp < 0) {
+
 		/* Give detailed messages if destroyed */
 		if (!seen) die_msg = MON_MSG_MORIA_DEATH;
 
@@ -1215,12 +1229,14 @@ static bool project_m_monster_attack(project_monster_handler_context_t *context,
 		mon_died = true;
 	} else if (!monster_is_camouflaged(mon)) {
 		/* Give detailed messages if visible or destroyed */
-		if ((hurt_msg != MON_MSG_NONE) && seen)
+		if ((hurt_msg != MON_MSG_NONE) && seen) {
 			add_monster_message(mon, hurt_msg, false);
+		}
 
 		/* Hack -- Pain message */
-		else if (dam > 0)
+		else if (dam > 0) {
 			message_pain(mon, dam);
+		}
 	}
 
 	return mon_died;
@@ -1247,6 +1263,16 @@ static bool project_m_player_attack(project_monster_handler_context_t *context)
 	struct monster *mon = context->mon;
 	bool display_dam = context->origin.what == SRC_PLAYER
 		&& OPT(player, show_damage);
+
+	if (mon_is_player(mon)) {
+		char death_msg[80];
+
+		death_message_by_source(context->origin, death_msg, sizeof death_msg);
+
+		take_hit(player, dam, death_msg);
+
+		return player->is_dead;
+	}
 
 	/* The monster is going to be killed, so display a specific death message.
 	 * If the monster is not visible to the player, use a generic message.
@@ -1290,8 +1316,9 @@ static bool project_m_player_attack(project_monster_handler_context_t *context)
 			}
 		}
 
-		if (seen && fear)
+		if (seen && fear) {
 			add_monster_message(mon, MON_MSG_FLEE_IN_TERROR, true);
+		}
 	}
 
 	return mon_died;
@@ -1455,7 +1482,6 @@ static void project_m_apply_side_effects(project_monster_handler_context_t *cont
 void project_m(struct source origin, int r, struct loc grid, int dam, int typ,
 			   int flg, bool *did_hit, bool *was_obvious)
 {
-	struct monster *mon;
 	struct monster_lore *lore;
 
 	/* Is the monster "seen"? */
@@ -1473,6 +1499,17 @@ void project_m(struct source origin, int r, struct loc grid, int dam, int typ,
 		player_has(player, PF_CHARM) : false;
 
 	int m_idx = square(cave, grid)->mon;
+	struct monster *mon = cave_monster(cave, m_idx);
+
+	if (square_isplayer(cave, grid)) {
+		mon = &player->mon;
+	}
+
+	if (!mon || !mon->race) return;
+
+	// L: check resists
+	dam *= mon_resist_proj_percent(mon, typ);
+	dam /= 100;
 
 	project_monster_handler_f monster_handler = monster_handlers[typ];
 	project_monster_handler_context_t context = {
@@ -1500,16 +1537,15 @@ void project_m(struct source origin, int r, struct loc grid, int dam, int typ,
 	*was_obvious = false;
 
 	/* Walls protect monsters */
-	if (!square_ispassable(cave, grid)) return;
-
-	/* No monster here */
-	if (!(m_idx > 0)) return;
+	if (!square_ispassable(cave, grid)) {
+		return;
+	}
 
 	/* Never affect projector */
 	if (origin.what == SRC_MONSTER && origin.which.monster == m_idx) return;
 
 	/* Obtain monster info */
-	mon = cave_monster(cave, m_idx);
+	//mon = cave_monster(cave, m_idx);
 	lore = get_lore(mon->race);
 	context.mon = mon;
 	context.lore = lore;
@@ -1532,13 +1568,15 @@ void project_m(struct source origin, int r, struct loc grid, int dam, int typ,
 		if (!caster) return;
 
 		/* Skip monsters with the same race */
-		if (caster->race == mon->race)
+		if (caster->race == mon->race) {
 			return;
+		}
 	}
 
 	/* Some monsters get "destroyed" */
-	if (monster_is_destroyed(mon))
+	if (monster_is_destroyed(mon)) {
 		context.die_msg = MON_MSG_DESTROYED;
+	}
 
 	/* Reveal a camouflaged monster if in view and it stopped an effect. */
 	if ((flg & PROJECT_STOP) && monster_is_camouflaged(mon)
@@ -1552,18 +1590,23 @@ void project_m(struct source origin, int r, struct loc grid, int dam, int typ,
 	}
 
 	/* Force obviousness for certain types if seen. */
-	if (projections[typ].obvious && context.seen)
+	if (projections[typ].obvious && context.seen) {
 		context.obvious = true;
+	}
 
-	if (monster_handler != NULL)
+	if (monster_handler != NULL) {
 		monster_handler(&context);
+	}
 
 	/* Wake monster if required */
-	if (projections[typ].wake)
+	if (projections[typ].wake) {
 		monster_wake(mon, false, 100);
+	}
 
 	/* Absolutely no effect */
-	if (context.skipped) return;
+	if (context.skipped) {
+		return;
+	}
 
 	/* Apply damage to the monster, based on who did the damage. */
 	if (origin.what == SRC_MONSTER) {
@@ -1572,8 +1615,13 @@ void project_m(struct source origin, int r, struct loc grid, int dam, int typ,
 		mon_died = project_m_player_attack(&context);
 	}
 
-	if (!mon_died)
+	if (player->is_dead) {
+		return;
+	}
+
+	if (!mon_died) {
 		project_m_apply_side_effects(&context, m_idx);
+	}
 
 	/* Update locals, since the project_m_* functions can change some values. */
 	mon = context.mon;
@@ -1582,8 +1630,9 @@ void project_m(struct source origin, int r, struct loc grid, int dam, int typ,
 	/* Check for NULL, since polymorph can occasionally return NULL. */
 	if (mon != NULL) {
 		/* Update the monster */
-		if (!mon_died)
+		if (!mon_died) {
 			update_mon(mon, cave, false);
+		}
 
 		/* Redraw the (possibly new) monster grid */
 		square_light_spot(cave, mon->grid);

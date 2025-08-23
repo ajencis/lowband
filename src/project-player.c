@@ -911,12 +911,16 @@ static const project_player_handler_f player_handlers[] = {
 bool project_p(struct source origin, int r, struct loc grid, int dam, int typ,
 			   int power, bool self)
 {
+	return true;
+
 	bool blind = (player->mon.m_timed[TMD_BLIND] ? true : false);
 	bool seen = !blind;
 	bool obvious = true;
 
 	/* Monster or trap name (for damage) */
 	char killer[80];
+
+	int res_level = typ < ELEM_MAX ? player->mon.state.el_info[typ].res_level : 0;
 
 	project_player_handler_f player_handler = player_handlers[typ];
 	project_player_handler_context_t context = {
@@ -928,7 +932,6 @@ bool project_p(struct source origin, int r, struct loc grid, int dam, int typ,
 		power,
 		obvious
 	};
-	int res_level = typ < ELEM_MAX ? player->mon.state.el_info[typ].res_level : 0;
 
 	/* Decoy has been hit */
 	if (square_isdecoyed(cave, grid) && context.dam) {

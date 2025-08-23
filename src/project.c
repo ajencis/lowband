@@ -20,6 +20,7 @@
 #include "cave.h"
 #include "game-event.h"
 #include "game-input.h"
+#include "game-world.h"
 #include "generate.h"
 #include "init.h"
 #include "mon-predicate.h"
@@ -75,6 +76,58 @@ const char *proj_idx_to_name(int type)
     assert(type < PROJ_MAX);
 
     return proj_name_list[type];
+}
+
+
+/**
+ * L: Projection predicates
+ */
+
+bool mon_proj_is_immune(const struct monster *mon, int proj_type)
+{
+	int i;
+	struct projection *proj = &projections[proj_type];
+
+	assert(proj_type >= 0 && proj_type < PROJ_MAX);
+
+	for (i = 0; i < ELEM_MAX; ++i) {
+		int lev = mon->state.el_info[i].res_level;
+
+		if (proj->resist_types[i] == RES_TYPE_NORMAL && lev >= 3) return true;
+		if (proj->resist_types[i] == RES_TYPE_EASY_IMMUNE && lev >= 1) return true;
+	}
+
+	return false;
+}
+
+/**
+ * Percentage a monster takes from a projection - 100 normally, 0 if immune, >100 if weak
+ */
+int mon_resist_proj_percent(struct monster *mon, int proj_type)
+{
+	int result = 100, i;
+	struct projection *proj = &projections[proj_type];
+
+	assert(proj_type >= 0 && proj_type < PROJ_MAX);
+
+	for (i = 0; i < ELEM_MAX; ++i) {
+		int lev = mon->state.el_info[i].res_level;
+
+		if (proj->resist_types[i] == RES_TYPE_NORMAL) {
+			result *= (3 - lev);
+			result /= 3;
+		}
+		else if (proj->resist_types[i] == RES_TYPE_EASY_IMMUNE) {
+			if (lev > 0) {
+				result *= 0;
+			} else {
+				result *= (3 - lev);
+				result /= 3;
+			}
+		}
+	}
+
+	return result;
 }
 
 /**
@@ -958,18 +1011,28 @@ bool project(struct source origin, int rad, struct loc finish,
 			}
 
 			/* Check this monster hasn't been processed already */
-			if (!square_isproject(cave, blast_grid[i]))
+			if (!square_isproject(cave, blast_grid[i])) {
 				continue;
+			}
 
 			/* Check there is actually a monster here */
 			mon = square_monster(cave, blast_grid[i]);
-			if (mon == NULL)
+			if (square_isplayer(cave, blast_grid[i])) mon = &player->mon;
+
+			if (mon == NULL) {
 				continue;
+			}
 
 			/* Affect the monster in the grid */
 			project_m(origin, distance_to_grid[i], blast_grid[i],
 			          pwr, typ, flg,
 			          &did_hit, &was_obvious);
+
+			if (player->is_dead) {
+				free(dam_at_dist);
+				return notice;
+			}
+
 			if (was_obvious) {
 				notice = true;
 			}

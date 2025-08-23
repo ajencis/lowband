@@ -1,5 +1,7 @@
 #include "angband.h"
 #include "cave.h"
+#include "mon-desc.h"
+#include "player-util.h"
 #include "project.h"
 
 
@@ -281,6 +283,28 @@ void t_elem_spread(struct chunk *c)
 
 
 
+static void t_elem_effect_message(struct chunk *c, struct loc grid, struct terrain_element *t_elem)
+{
+    const struct projection *proj = &projections[t_elem->kind->proj];
+    const struct monster *mon = square_monster(c, grid);
+
+    assert(c);
+    if (!t_elem) return;
+
+    if (square_isplayer(c, grid) && !mon_proj_is_immune(&player->mon, proj->index)) {
+        msg("You are surrounded by %s.", t_elem->kind->name);
+        disturb(player);
+    }
+
+    else if (mon && mon->race && monster_is_in_view(mon) && !mon_proj_is_immune(mon, proj->index)) {
+        char mon_name[80];
+
+        monster_desc(mon_name, sizeof mon_name, mon, MDESC_CAPITAL);
+
+        msg("%s is surrounded by %s.", mon_name, t_elem->kind->name);
+    }
+}
+
 void t_elem_effects(struct chunk *c)
 {
 	struct loc grid;
@@ -294,15 +318,11 @@ void t_elem_effects(struct chunk *c)
 			struct square *sq = &c->squares[grid.y][grid.x];
 
 			for (t_elem = sq->t_elem; t_elem; t_elem = t_elem->next) {
-				if (terrain_element_reduce_dur(sq, t_elem->kind->idx, 1)) {
-					/*if (square_isview(c, grid)) {
-						vanish_messages[t_elem->kind->idx] = true;
-					}*/
-				}
-				else {
-					//if (loc_eq(grid, player->mon.grid)) msg("You are surrounded by %s.", t_elem->kind->name); 
-					project(source_t_elem(t_elem), 0, grid, 0, t_elem->kind->proj, flg, 0, 0, NULL);
-				}
+				if (terrain_element_reduce_dur(sq, t_elem->kind->idx, 1)) continue;
+
+                t_elem_effect_message(c, grid, t_elem);
+
+				project(source_t_elem(t_elem), 0, grid, 0, t_elem->kind->proj, flg, 0, 0, NULL);
 			}
 		}
 	}

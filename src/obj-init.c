@@ -95,6 +95,13 @@ static const char *projection_names[] = {
 	NULL
 };
 
+static const char *res_type_names[] = {
+	#define RES_TYPE(x) #x,
+	#include "list-resist-types.h"
+	#undef RES_TYPE
+	NULL
+};
+
 static bool grab_element_flag(struct element_info *info, const char *flag_name)
 {
 	char *under = strchr(flag_name, '_');
@@ -223,16 +230,23 @@ static struct activation *findact(const char *act_name) {
 
 static enum parser_error parse_projection_code(struct parser *p) {
 	const char *code = parser_getstr(p, "code");
+	int index = code_index_in_array(projection_names, code);
 	struct projection *h = parser_priv(p);
-	int index = h ? h->index + 1 : 0;
 	struct projection *projection = mem_zalloc(sizeof *projection);
 
 	parser_setpriv(p, projection);
 	projection->next = h;
 	projection->index = index;
-	if ((index < ELEM_MAX) && !streq(code, element_names[index])) {
+	/*if ((index < ELEM_MAX) && !streq(code, element_names[index])) {
 		return PARSE_ERROR_ELEMENT_NAME_MISMATCH;
+	}*/
+
+	if (index < ELEM_MAX) {
+		projection->resist_types[index] = RES_TYPE_NORMAL;
 	}
+
+	if (h) assert(h->type);
+
 	return PARSE_ERROR_NONE;
 }
 
@@ -416,6 +430,35 @@ static enum parser_error parse_projection_player_message(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_projection_resist(struct parser *p) {
+	struct projection *projection = parser_priv(p);
+	int elem, resist_amount;
+	char elem_name[80], level_name[80] = "NORMAL";
+
+	if (!projection) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	strnfmt(elem_name, sizeof elem_name, parser_getsym(p, "element"));
+	elem = code_index_in_array(list_element_names, elem_name);
+
+	if (elem < 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	if (parser_hasval(p, "level")) {
+		strnfmt(level_name, sizeof level_name, parser_getsym(p, "level"));
+		resist_amount = code_index_in_array(res_type_names, level_name);
+	}
+	else {
+		resist_amount = RES_TYPE_NORMAL;
+	}
+
+	projection->resist_types[elem] = resist_amount;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_projection(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -435,6 +478,7 @@ static struct parser *init_parse_projection(void) {
 	parser_reg(p, "obvious uint answer", parse_projection_obvious);
 	parser_reg(p, "wake uint answer", parse_projection_wake);
 	parser_reg(p, "color sym color", parse_projection_color);
+	parser_reg(p, "resist sym element ?sym level", parse_projection_resist);
 	return p;
 }
 
@@ -444,10 +488,11 @@ static errr run_parse_projection(struct parser *p) {
 
 static errr finish_parse_projection(struct parser *p) {
 	struct projection *projection, *next = NULL;
-	int element_count = 0, count = 0;
+	//int element_count = 0, count = 0, i = 0;
+	int i = 0;
 
 	/* Count the entries */
-	z_info->projection_max = 0;
+	/*z_info->projection_max = 0;
 	projection = parser_priv(p);
 	while (projection) {
 		z_info->projection_max++;
@@ -455,22 +500,48 @@ static errr finish_parse_projection(struct parser *p) {
 			element_count++;
 		}
 		projection = projection->next;
-	}
+	}*/
 
-	if (element_count + 1 < (int) N_ELEMENTS(element_names)) {
+	z_info->projection_max = PROJ_MAX;
+
+	/*if (element_count + 1 < (int) N_ELEMENTS(element_names)) {
 		quit_fmt("Too few elements in projection.txt!");
 	} else if (element_count + 1 > (int) N_ELEMENTS(element_names)) {
 		quit_fmt("Too many elements in projection.txt!");
-	}
+	}*/
 
 	/* Allocate the direct access list and copy the data to it */
 	projections = mem_zalloc((z_info->projection_max) * sizeof(*projection));
-	count = z_info->projection_max - 1;
-	for (projection = parser_priv(p); projection; projection = next, count--) {
-		memcpy(&projections[count], projection, sizeof(*projection));
+	//count = z_info->projection_max - 1;
+
+	for (projection = parser_priv(p); projection; projection = next) {
+		i = projection->index;
+
+		if (projections[i].type) {
+			quit_fmt("Projection %s has multiple entries in projection.txt!", projection_names[i]);
+		}
+		if (!projection->type) {
+			quit_fmt("Entry for %s in projection.txt has no type!", projection_names[i]);
+		}
+
+		memcpy(&projections[i], projection, sizeof *projection);
+
 		next = projection->next;
 		mem_free(projection);
 	}
+
+	for (i = 0; i < z_info->projection_max; ++i) {
+		if (!projections[i].type) {
+			quit_fmt("Projection %s has no entry in projection.txt!",
+					projection_names[i]);
+		}
+	}
+
+	/*for (projection = parser_priv(p); projection; projection = next, count--) {
+		memcpy(&projections[count], projection, sizeof(*projection));
+		next = projection->next;
+		mem_free(projection);
+	}*/
 
 	parser_destroy(p);
 	return 0;

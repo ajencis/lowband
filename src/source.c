@@ -17,7 +17,13 @@
  */
 
 #include "source.h"
+#include "cave.h"
+#include "monster.h"
+#include "mon-desc.h"
+#include "obj-desc.h"
+#include "player.h"
 #include "player-enum.h"
+#include "z-util.h"
 
 struct source source_none(void)
 {
@@ -84,5 +90,51 @@ struct source source_grid(struct loc grid)
 	src.what = SRC_GRID;
 	src.which.grid = grid;
 	return src;
+}
+
+
+
+void death_message_by_source(struct source origin, char *buf, size_t bufsize)
+{
+	switch (origin.what) {
+		case SRC_TRAP:
+		case SRC_CHEST_TRAP:
+		{
+			strnfmt(buf, bufsize, "a trap");
+			break;
+		}
+
+		case SRC_MONSTER:
+		{
+			const struct monster *mon = cave_monster(cave, origin.which.monster);
+			monster_desc(buf, bufsize, mon, MDESC_DIED_FROM);
+			break;
+		}
+
+		case SRC_OBJECT:
+		{
+			const struct object *obj = origin.which.object;
+			object_desc(buf, bufsize, obj, ODESC_SINGULAR | ODESC_TERSE, player);
+			break;
+		}
+
+		case SRC_PLAYER:
+		{
+			strnfmt(buf, bufsize, "yourself");
+			break;
+		}
+
+		case SRC_TERRAIN_ELEM:
+		{
+			strnfmt(buf, bufsize, origin.which.t_elem->kind->name);
+			break;
+		}
+
+		default:
+		{
+			strnfmt(buf, bufsize, "a bug");
+			break;
+		}
+	}
 }
 

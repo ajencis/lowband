@@ -14,6 +14,9 @@
 # have to appear after those of type element and in the same order as they
 # are listed in list-projections.h.
 
+# L: no longer need to be in the same order but all must be present exactly
+# once and all must have a type
+
 # === Understanding projection.txt ===
 
 # Format:
@@ -153,7 +156,7 @@ player-desc:frost
 blind-desc:cold
 lash-desc:frost
 player-brand:freeze
-numerator:1  
+numerator:1
 denominator:3
 divisor:3
 damage-cap:1600
@@ -815,6 +818,23 @@ obvious:1
 wake:1
 color:Red
 
+code:BANSHEE
+name:woe
+type:monster
+desc:woe
+player-desc:woe
+blind-desc:something mournful
+lash-desc:woe
+player-brand:enwoe
+numerator:6
+denominator:8+1d4
+divisor:6
+damage-cap:600
+msgt:BR_NETHER
+obvious:1
+wake:1
+color:White
+
 code:POISON_CLOUD
 name:cloud of poison gas
 type:environs
@@ -846,6 +866,7 @@ color:Yellow
 code:POISON_TMD
 name:poison
 type:environs
+resist:POIS:EASY_IMMUNE
 desc:poison
 player-desc:poison gas
 blind-desc:poison
@@ -863,6 +884,7 @@ color:Green
 code:MEPHITIC
 name:noxious gas
 type:environs
+resist:POIS:EASY_IMMUNE
 desc:noxious gas
 player-desc:noxious gas
 blind-desc:poison
