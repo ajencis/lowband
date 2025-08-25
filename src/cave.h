@@ -287,15 +287,21 @@ bool t_elem_is_los(const struct terrain_element_kind *kind);
 bool sq_any_t_elem_has_flag(const struct square *sq, int flag);
 bool sq_all_t_elem_has_flag(const struct square *sq, int flag);
 void square_memorize_t_elem(struct chunk *c, struct loc grid);
+int t_elem_timer(struct chunk *c, struct loc grid, uint16_t which);
+
+bool grid_is_danger(const struct monster *mon, struct chunk *c, struct loc grid);
+bool mon_in_t_elem_danger(const struct monster *mon, struct chunk *c);
+
+int burn_square(struct chunk *c, struct loc grid, int power);
 
 struct terrain_element *terrain_element_new(int timer, uint16_t idx);
 void terrain_elem_free(struct terrain_element *to_free);
-bool terrain_element_add(struct terrain_element **list, uint16_t idx, uint16_t timer);
-bool terrain_elem_remove(struct terrain_element **list, uint16_t idx);
-bool terrain_element_increase_dur(struct square *sq, uint16_t idx, uint16_t change);
-bool terrain_element_reduce_dur(struct square *sq, uint16_t idx, uint16_t change);
-bool terrain_elem_remove_all(struct terrain_element **list);
-bool terrain_element_change_dur(struct square *sq, uint16_t idx, int change);
+bool terrain_element_add(struct chunk *c, struct loc grid, uint16_t idx, uint16_t timer);
+bool terrain_elem_remove(struct chunk *c, struct loc grid, uint16_t idx);
+bool terrain_element_increase_dur(struct chunk *c, struct loc grid, uint16_t idx, uint16_t change);
+bool terrain_element_reduce_dur(struct chunk *c, struct loc grid, uint16_t idx, uint16_t change);
+bool terrain_elem_remove_all(struct chunk *c, struct loc grid);
+bool terrain_element_change_dur(struct chunk *c, struct loc grid, uint16_t idx, int change);
 
 void t_elem_spread(struct chunk *c);
 

@@ -1003,12 +1003,7 @@ bool project(struct source origin, int rad, struct loc finish,
 		for (i = 0; i < num_grids; i++) {
 			struct monster *mon = NULL;
 
-			if (origin.what == SRC_TERRAIN_ELEM) {
-				pwr = origin.which.t_elem->timer;
-			}
-			else {
-				pwr = dam_at_dist[distance_to_grid[i]];
-			}
+			pwr = dam_at_dist[distance_to_grid[i]];
 
 			/* Check this monster hasn't been processed already */
 			if (!square_isproject(cave, blast_grid[i])) {

@@ -232,6 +232,9 @@ static bool monster_hates_grid(struct monster *mon, struct loc grid)
 			!rf_has(mon->race->flags, square_feat(cave, grid)->resist_flag)) {
 		return true;
 	}
+
+	if (grid_is_danger(mon, cave, grid)) return true;
+
 	return false;
 }
 

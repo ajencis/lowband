@@ -332,12 +332,16 @@ static void project_feature_handler_FIRE(project_feature_handler_context_t *cont
 		/* Forget the floor, make lava. */
 		square_unmark(cave, context->grid);
 		square_set_feat(cave, context->grid, FEAT_LAVA);
-		if (cave->depth == 0)
+		if (cave->depth == 0) {
 			expose_to_sun(cave, context->grid, is_daytime());
+		}
 
 		/* Objects that have survived should move */
 		push_object(context->grid);
 	}
+
+	// L: sets things on fire
+	burn_square(cave, context->grid, (context->dam + 2) / 3);
 }
 
 static void project_feature_handler_COLD(project_feature_handler_context_t *context)

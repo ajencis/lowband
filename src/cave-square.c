@@ -1552,16 +1552,14 @@ void square_smash_wall(struct chunk *c, struct loc grid)
 
 void square_t_elem_remove(struct chunk *c, struct loc grid, int idx)
 {
-	struct square *sq = &c->squares[grid.y][grid.x];
-
-	terrain_elem_remove(&sq->t_elem, idx);
+	terrain_elem_remove(c, grid, idx);
 }
 
 void square_t_elem_remove_all(struct chunk *c, struct loc grid)
 {
 	struct square *sq = &c->squares[grid.y][grid.x];
 
-	terrain_elem_remove_all(&sq->t_elem);
+	terrain_elem_remove_all(c, grid);
 	assert(!sq->t_elem);
 }
 

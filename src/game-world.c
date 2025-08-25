@@ -635,6 +635,21 @@ void process_world(struct chunk *c)
 			z_info->max_sight + 5, true, player->depth);
 	}
 
+	for (i = 0; i < cave_monster_max(c); ++i) {
+		struct monster *mon = i == 0 ? &player->mon : cave_monster(c, i);
+		uint16_t j;
+
+		if (!mon || !mon->race) continue;
+
+		for (j = 0; j < mon->body.count; ++j) {
+			const struct object *obj = mon->body.slots[j].obj;
+
+			if (obj /*&& one_in_(10)*/ && my_stristr(obj->kind->name, "torch")) {
+				burn_square(c, mon->grid, 3);
+			}
+		}
+	}
+
 	// L: handle monster power effects
 	timed_power_effects(c);
 

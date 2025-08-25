@@ -1603,6 +1603,8 @@ bool monster_taking_terrain_damage(struct chunk *c, struct monster *mon)
 		return true;
 	}
 
+	if (mon_in_t_elem_danger(mon, c)) return true;
+
 	return false;
 }
 
@@ -1971,15 +1973,15 @@ static void frightening_presence_one(struct chunk *c, struct monster *viewer, st
 	}
 
 	if (mon_is_player(scary)) {
-		strnfmt(scary_msg, sizeof scary_msg, " your terrifying presence");
+		strnfmt(scary_msg, sizeof scary_msg, "your terrifying presence");
 	} else if (!monster_is_visible(scary)) {
-		strnfmt(scary_msg, sizeof scary_msg, " something terrifying");
+		strnfmt(scary_msg, sizeof scary_msg, "something terrifying");
 	} else {
 		char sdesc[80];
 
 		monster_desc(sdesc, sizeof sdesc, scary, MDESC_TARG);
 
-		strnfmt(scary_msg, sizeof scary_msg, " the terrifying presence of %s", sdesc);
+		strnfmt(scary_msg, sizeof scary_msg, "the terrifying presence of %s", sdesc);
 	}
 
 	if (success) {
@@ -1989,7 +1991,7 @@ static void frightening_presence_one(struct chunk *c, struct monster *viewer, st
 		result_msg = ", but is unaffected.";
 	}
 
-	msg("%s%s%s", viewer_msg, scary_msg, result_msg);
+	msg("%s %s%s", viewer_msg, scary_msg, result_msg);
 }
 
 
@@ -2015,23 +2017,22 @@ static void frightening_presence(struct chunk *c, struct monster *mon)
 static void stench(struct chunk *c, struct monster *mon)
 {
 	int pwr = mon->state.powers[PP_STENCH], curr = 0, amt, max;
-	struct square *sq = &c->squares[mon->grid.y][mon->grid.x];
 	struct terrain_element *t_elem;
 
 	if (pwr <= 0) return;
 
-	for (t_elem = sq->t_elem; t_elem; t_elem = t_elem->next) {
+	for (t_elem = square_t_elem(c, mon->grid); t_elem; t_elem = t_elem->next) {
 		if (t_elem->kind->idx == TE_MEPHITIC_CLOUD) {
 			curr = t_elem->timer;
 			break;
 		}
 	}
 
-	max = (int)((double)pwr * my_cbrt((double)pwr));
-	amt = (max - curr) / 5 + 1;
+	max = pwr;
+	amt = (max - curr) / 4 + 1;
 
 	if (amt > 0) {
-		terrain_element_increase_dur(sq, TE_MEPHITIC_CLOUD, amt);
+		terrain_element_increase_dur(c, mon->grid, TE_MEPHITIC_CLOUD, amt);
 	}
 }
 

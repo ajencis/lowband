@@ -459,23 +459,29 @@ static bool aux_hallucinate(struct chunk *c, struct player *p,
 static bool aux_terrain_element(struct chunk *c, struct player *p,
 		struct target_aux_state *auxst)
 {
-	const struct square *sq = square(p->cave, auxst->grid);
 	char out_val[128];
+	const struct terrain_element *t_elem = NULL;
 
-	if (!sq->t_elem) return false;
-	strnfmt(out_val, sizeof out_val, "%s%s%s, %s", auxst->phrase1, auxst->phrase2, sq->t_elem->kind->name, auxst->coord_desc);
+	if (!square_t_elem(p->cave, auxst->grid)) return false;
 
-	if (p->wizard) {
-		my_strcat(out_val,
-				format(" (%d:%d, dur=%d)", auxst->grid.y, auxst->grid.x, sq->t_elem->timer),
-				sizeof out_val);
-	}
+	do {
+		t_elem = t_elem ? t_elem->next : square_t_elem(p->cave, auxst->grid);
 
-	prt(out_val, 0, 0);
+		if (!t_elem) break;
 
-	move_cursor_relative(auxst->grid.y, auxst->grid.x);
+		strnfmt(out_val, sizeof out_val, "%s%s%s, %s", auxst->phrase1, auxst->phrase2, t_elem->kind->name, auxst->coord_desc);
 
-	auxst->press.key = inkey();
+		if (p->wizard) {
+			my_strcat(out_val,
+					format(" (%d:%d, timer=%d)", auxst->grid.y, auxst->grid.x, t_elem->timer),
+					sizeof out_val);
+		}
+
+		prt(out_val, 0, 0);
+		move_cursor_relative(auxst->grid.y, auxst->grid.x);
+
+		auxst->press.key = inkey();
+	} while (auxst->press.key.code == ' ');
 
 	return true;
 }
