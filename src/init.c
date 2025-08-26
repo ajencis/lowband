@@ -2548,6 +2548,21 @@ static enum parser_error parse_feat_resist_flag(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_feat_t_elem_produce(struct parser *p) {
+	struct feature *f = parser_priv(p);
+	int t_elem = code_index_in_array(terrain_element_names, parser_getsym(p, "t_elem"));
+	int amt = parser_getint(p, "amt");
+
+	if (!f) return PARSE_ERROR_MISSING_RECORD_HEADER;
+	if (t_elem < 0 || t_elem > TE_MAX) return PARSE_ERROR_GENERIC;
+	if (amt < 0) amt = 0;
+	if (amt > UINT8_MAX) amt = UINT8_MAX;
+
+	f->t_elem[t_elem] = (uint8_t)amt;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_feat(void) {
 	struct parser *p = parser_new();
 
@@ -2568,6 +2583,7 @@ static struct parser *init_parse_feat(void) {
 	parser_reg(p, "look-prefix str text", parse_feat_look_prefix);
 	parser_reg(p, "look-in-preposition str text", parse_feat_look_in_preposition);
 	parser_reg(p, "resist-flag sym flag", parse_feat_resist_flag);
+	parser_reg(p, "t-elem sym t_elem int amt", parse_feat_t_elem_produce);
 
 	/*
 	 * Since the layout of the terrain array is fixed by list-terrain.h,

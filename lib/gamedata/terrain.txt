@@ -380,3 +380,10 @@ mimic:GRANITE
 flags:PASSABLE | PROJECT | HIDDEN | NO_FLOW
 desc:A seam of hard rock - at least at first glance. Blocks sight and sound but not
 desc: smell or movement.
+
+code:FUME_PIT
+name:fume pit
+graphics:_:g
+priority:10
+t-elem:POISON_CLOUD:50
+flags:PROJECT | INTERESTING | LOS

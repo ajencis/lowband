@@ -1630,8 +1630,9 @@ bool place_new_monster(struct chunk *c, struct loc grid,
 		struct monster_race *friends_race;
 
 		/* Check if we pass chance for the monster appearing */
-		if ((unsigned int)randint0(100) >= friends_base->percent_chance)
+		if ((unsigned int)randint0(100) >= friends_base->percent_chance) {
 			continue;
+		}
 
 		total = damroll(friends_base->number_dice, friends_base->number_side);
 

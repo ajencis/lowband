@@ -1,5 +1,6 @@
 #include "angband.h"
 #include "cave.h"
+#include "game-world.h"
 #include "mon-desc.h"
 #include "player-util.h"
 #include "project.h"
@@ -441,4 +442,48 @@ void t_elem_effects(struct chunk *c)
 			}
 		}
 	}
+}
+
+
+
+static bool feat_produce_t_elem(struct chunk *c, struct loc grid)
+{
+    const struct feature *feat = square_feat(c, grid);
+    uint16_t i, amt, curr, increase;
+    bool did_something;
+
+    for (i = 0; i < TE_MAX; ++i) {
+        amt = feat->t_elem[i];
+
+        if (amt) {
+            curr = t_elem_timer(c, grid, i);
+            increase = amt - curr;
+
+            terrain_element_increase_dur(c, grid, i, increase);
+
+            did_something = did_something || increase > 0;
+        }
+    }
+
+    return did_something;
+}
+
+bool cave_produce_t_elem(struct chunk *c)
+{
+    struct loc grid;
+    bool did_something = false;
+
+    int turn_fact = (turn / 10);
+    int y_fact = (turn_fact & 0x3) + 1;
+    int x_fact = ((turn_fact >> 0x2) & 0x3) + 1;
+
+    for (grid.x = x_fact; grid.x < c->width - 1; ++grid.x) {
+        for (grid.y = y_fact; grid.y < c->height - 1; ++grid.y) {
+            if (feat_produce_t_elem(c, grid)) {
+                did_something = true;
+            }
+        }
+    }
+
+    return did_something;
 }

@@ -449,6 +449,12 @@ static void place_rubble(struct chunk *c, struct loc grid)
 }
 
 
+static void place_fume_pit(struct chunk *c, struct loc grid)
+{
+	square_set_feat(c, grid, FEAT_FUME_PIT);
+}
+
+
 /**
  * Place stairs (of the requested type 'feat' if allowed) at a given location.
  *
@@ -874,6 +880,9 @@ bool alloc_object(struct chunk *c, int set, int typ, int depth, uint8_t origin)
 		if (square_isempty(c, grid) && matched) {
 			/* Place something */
 			switch (typ) {
+			case TYP_FUME_PIT:
+				place_fume_pit(c, grid);
+				break;
 			case TYP_RUBBLE:
 				place_rubble(c, grid);
 				break;

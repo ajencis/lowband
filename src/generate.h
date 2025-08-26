@@ -37,7 +37,8 @@ enum
 	TYP_OBJECT,	/*!< Object */
 	TYP_GOOD,	/*!< Good object */
 	TYP_GREAT,	/*!< Great object */
-    TYP_CONTAINER // L: containers
+    TYP_CONTAINER,  // L: containers
+    TYP_FUME_PIT    // L: fume pit
 };
 
 /**

@@ -710,6 +710,8 @@ void process_world(struct chunk *c)
 	t_elem_effects(c);
 	t_elem_spread(c);
 
+	cave_produce_t_elem(c);
+
 	/*** Damage (or healing) over Time ***/
 
 	/* Take damage from poison */

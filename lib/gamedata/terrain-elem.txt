@@ -8,6 +8,12 @@
 # timed : timed name : percent per level of the effect
 # flags : terrain flags
 
+idx:FIRE
+name:fire
+graphics:~:r
+project:FIRE
+flags:PROJECT | PASSABLE | INTERESTING | LOS | CLOUD | BRIGHT
+
 idx:POISON_CLOUD
 name:poison gas
 graphics:~:g
@@ -19,9 +25,3 @@ name:noxious gas
 graphics:~:y
 project:MEPHITIC
 flags:PROJECT | PASSABLE | INTERESTING | LOS | CLOUD
-
-idx:FIRE
-name:fire
-graphics:~:r
-project:FIRE
-flags:PROJECT | PASSABLE | INTERESTING | LOS | CLOUD | BRIGHT

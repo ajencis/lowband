@@ -98,6 +98,13 @@ enum
 	TF_MAX
 };
 
+enum {
+	#define T_ELEM(x) TE_##x,
+	#include "list-terrain-elements.h"
+	#undef T_ELEM
+	TE_MAX
+};
+
 #define TF_SIZE                FLAG_SIZE(TF_MAX)
 
 #define tf_has(f, flag)        flag_has_dbg(f, TF_SIZE, flag, #f, #flag)
@@ -113,36 +120,30 @@ struct feature {
 	char *desc;
 	int fidx;
 
-	struct feature *mimic;	/**< Feature to mimic or NULL for no mimicry */
-	uint8_t priority;	/**< Display priority */
+	struct feature *mimic;		/**< Feature to mimic or NULL for no mimicry */
+	uint8_t priority;			/**< Display priority */
 
-	uint8_t shopnum;	/**< Which shop does it take you to? */
-	uint8_t dig;		/**< How hard is it to dig through? */
+	uint8_t shopnum;			/**< Which shop does it take you to? */
+	uint8_t dig;				/**< How hard is it to dig through? */
 
-	bitflag flags[TF_SIZE];	/**< Terrain flags */
+	bitflag flags[TF_SIZE];		/**< Terrain flags */
 
-	uint8_t d_attr;	/**< Default feature attribute */
-	wchar_t d_char;	/**< Default feature character */
+	uint8_t d_attr;				/**< Default feature attribute */
+	wchar_t d_char;				/**< Default feature character */
 
-	char *walk_msg;	/**< Message on walking into feature */
-	char *run_msg;	/**< Message on running into feature */
-	char *hurt_msg;	/**< Message on being hurt by feature */
-	char *die_msg;	/**< Message on dying to feature */
-	char *confused_msg; /**< Message on confused monster move into feature */
-	char *look_prefix; /**< Prefix for name in look result */
-	char *look_in_preposition; /**< Preposition in look result when on the terrain */
-	int resist_flag;/**< Monster resist flag for entering feature */
+	char *walk_msg;				/**< Message on walking into feature */
+	char *run_msg;				/**< Message on running into feature */
+	char *hurt_msg;				/**< Message on being hurt by feature */
+	char *die_msg;				/**< Message on dying to feature */
+	char *confused_msg;			/**< Message on confused monster move into feature */
+	char *look_prefix;			/**< Prefix for name in look result */
+	char *look_in_preposition;	/**< Preposition in look result when on the terrain */
+	int resist_flag;			/**< Monster resist flag for entering feature */
+
+	uint8_t t_elem[TE_MAX];		// L: which terrain elements it produces in what quantity
 };
 
 extern struct feature *f_info;
-
-
-enum {
-	#define T_ELEM(x) TE_##x,
-	#include "list-terrain-elements.h"
-	#undef T_ELEM
-	TE_MAX
-};
 
 /**
  * L: information about additional temporary terrain 
@@ -306,6 +307,8 @@ bool terrain_element_change_dur(struct chunk *c, struct loc grid, uint16_t idx, 
 void t_elem_spread(struct chunk *c);
 
 void t_elem_effects(struct chunk *c);
+
+bool cave_produce_t_elem(struct chunk *c);
 
 /* cave-map.c */
 void map_info(struct loc grid, struct grid_data *g);

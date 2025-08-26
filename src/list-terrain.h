@@ -38,3 +38,4 @@ FEAT(PERM) /* permanent wall */
 FEAT(LAVA)
 FEAT(PASS_RUBBLE)
 FEAT(ILLUSORY_WALL) // L: looks like a wall, feels like air
+FEAT(FUME_PIT)
