@@ -206,6 +206,8 @@ struct square {
 	struct object *obj;
 	struct trap *trap;
 	struct terrain_element *t_elem;
+	
+	int required_rf;		// required race flag to be generated here
 };
 
 struct heatmap {

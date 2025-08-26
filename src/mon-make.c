@@ -1609,8 +1609,9 @@ bool place_new_monster(struct chunk *c, struct loc grid,
 
 	/* Go through friends flags */
 	for (friends = race->friends; friends; friends = friends->next) {
-		if ((unsigned int)randint0(100) >= friends->percent_chance)
+		if ((unsigned int)randint0(100) >= friends->percent_chance) {
 			continue;
+		}
 
 		/* Calculate the base number of monsters to place */
 		total = damroll(friends->number_dice, friends->number_side);
@@ -1664,6 +1665,19 @@ bool place_new_monster(struct chunk *c, struct loc grid,
 }
 
 
+int required_rf = RF_NONE;
+
+static bool get_mon_num_hook_acceptable_square(struct monster_race *race)
+{
+	assert(required_rf >= RF_NONE && required_rf < RF_MAX);
+
+	if (required_rf == RF_NONE) return true;
+	if (rf_has(race->flags, required_rf)) return true;
+
+	return false;
+}
+
+
 /**
  * Picks a monster race, makes a new monster of that race, then attempts to
  * place it in the dungeon. The monster race chosen will be appropriate for
@@ -1683,9 +1697,17 @@ bool place_new_monster(struct chunk *c, struct loc grid,
 bool pick_and_place_monster(struct chunk *c, struct loc grid, int depth,
 		bool sleep, bool group_okay, uint8_t origin)
 {
-	/* Pick a monster race, no specified group */
-	struct monster_race *race = get_mon_num(depth, c->depth);
+	struct monster_race *race;
 	struct monster_group_info info = { 0, 0 };
+
+	required_rf = square(c, grid)->required_rf;
+	get_mon_num_prep(get_mon_num_hook_acceptable_square);
+
+	/* Pick a monster race, no specified group */
+	race = get_mon_num(depth, c->depth);
+
+	required_rf = RF_NONE;
+	get_mon_num_prep(NULL);
 
 	if (race) {
 		return place_new_monster(c, grid, race, sleep, group_okay, info,

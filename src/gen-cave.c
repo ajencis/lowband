@@ -1634,7 +1634,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	/* Put some rubble in corridors */
 	alloc_objects(c, SET_CORR, TYP_RUBBLE, randint1(k), c->depth, 0);
 
-	if (one_in_(3)) {
+	if (one_in_(10)) {
 		alloc_objects(c, SET_BESIDE_WALL | SET_ROOM, TYP_FUME_PIT, randint1(k), c->depth, 0);
 	}
 

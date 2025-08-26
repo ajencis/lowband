@@ -451,7 +451,17 @@ static void place_rubble(struct chunk *c, struct loc grid)
 
 static void place_fume_pit(struct chunk *c, struct loc grid)
 {
+	struct loc roomlocs[256] = { 0 }, curr;
+	int i, rl_amt;
+
 	square_set_feat(c, grid, FEAT_FUME_PIT);
+
+	rl_amt = all_contiguous_locs(c, grid, roomlocs, sizeof roomlocs, square_isroom, NULL);
+
+	for (i = 0; i < rl_amt; ++i) {
+		curr = roomlocs[i];
+		c->squares[curr.y][curr.x].required_rf = RF_IM_POIS;
+	}
 }
 
 
@@ -851,6 +861,7 @@ bool alloc_object(struct chunk *c, int set, int typ, int depth, uint8_t origin)
 		bool matched = ((set & SET_CORR) && !square_isroom(c, grid))
 			|| ((set & SET_ROOM) && square_isroom(c, grid));
 		
+		// L: additional requirements, now requires all rather than one
 		if (sqinfo_has(square(c, grid)->info, SQUARE_SECRET)) {
 			if (set & SET_NO_SECRET) matched = false;
 		}

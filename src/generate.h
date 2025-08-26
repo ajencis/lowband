@@ -71,6 +71,16 @@ enum {
 #define roomf_inter(f1, f2) flag_iter(f1, f2, ROOMF_SIZE)
 #define roomf_diff(f1, f2) flag_diff(f1, f2, ROOMF_SIZE)
 
+
+/**
+ * L: Struct to hold data about what sorts of monsers can
+ * be generated in particular places
+ */
+struct room_monster_requirements {
+    bitflag race_flags[RF_SIZE];
+};
+
+
 /**
  * Monster base for a pit
  */
@@ -142,6 +152,9 @@ struct dun_data {
 
     /*!< Lookup for room number of a room entrance by (y,x) for the entrance */
     int **ent2room;
+
+    // L: requirements for monsters to be generated in rooms
+    struct room_monster_requirements *rmreqs;
 
     /*!< Array of possible door locations */
     int door_n;
