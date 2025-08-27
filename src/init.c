@@ -2563,6 +2563,18 @@ static enum parser_error parse_feat_t_elem_produce(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_feat_t_elem_msg(struct parser *p) {
+	struct feature *f = parser_priv(p);
+	char *te_msg = string_make(parser_getstr(p, "msg"));
+
+	if (!f) return PARSE_ERROR_MISSING_RECORD_HEADER;
+
+	string_free(f->t_elem_msg);
+	f->t_elem_msg = te_msg;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_feat(void) {
 	struct parser *p = parser_new();
 
@@ -2584,6 +2596,7 @@ static struct parser *init_parse_feat(void) {
 	parser_reg(p, "look-in-preposition str text", parse_feat_look_in_preposition);
 	parser_reg(p, "resist-flag sym flag", parse_feat_resist_flag);
 	parser_reg(p, "t-elem sym t_elem int amt", parse_feat_t_elem_produce);
+	parser_reg(p, "t-elem-msg str msg", parse_feat_t_elem_msg);
 
 	/*
 	 * Since the layout of the terrain array is fixed by list-terrain.h,
@@ -2643,6 +2656,7 @@ static void cleanup_feat(void) {
 		string_free(f_info[idx].walk_msg);
 		string_free(f_info[idx].desc);
 		string_free(f_info[idx].name);
+		string_free(f_info[idx].t_elem_msg);
 	}
 	mem_free(f_info);
 }
@@ -2673,6 +2687,7 @@ static enum parser_error parse_t_elem_idx(struct parser *p) {
 
 	new->idx = id;
 	new->next = old;
+	new->proj = -1;
 
 	parser_setpriv(p, new);
 

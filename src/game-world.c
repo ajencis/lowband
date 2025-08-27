@@ -51,6 +51,8 @@ bool character_generated;	/* The character exists */
 bool character_dungeon;		/* The character has a dungeon */
 struct level *world;
 
+int turns_per_process_world = 10;	// L: the number of turns between calls of process_world()
+
 /**
  * This table allows quick conversion from "speed" to "energy"
  * The basic function WAS ((S>=110) ? (S-110) : (100 / (120-S)))
@@ -728,7 +730,7 @@ void process_world(struct chunk *c)
 		effect_simple(EF_PROJECT_LOS, source_player(), "2d9", PROJ_MON_POIS, 0, 0, g.y, g.x, NULL);
 	}
 
-	if (player->mon.m_timed[TMD_CALL_STORM] && !(turn % 50)) {
+	if (player->mon.m_timed[TMD_CALL_STORM] && !(turn % (5 * turns_per_process_world))) {
 		struct loc l = player->mon.grid;
 		char *dam = format("2d%i", my_int_sqrt(player->mon.m_timed[TMD_CALL_STORM]) + 49);
 		int rad = one_in_(3) ? 1 : 0;
@@ -799,7 +801,7 @@ void process_world(struct chunk *c)
 	}
 	else {
 		/* Digest normally */
-		if (!(turn % 100)) {
+		if (!(turn % (10 * turns_per_process_world))) {
 			/* Basic digestion rate based on speed */
 			i = turn_energy(player->mon.state.speed);
 
@@ -910,7 +912,7 @@ void process_world(struct chunk *c)
 	recharge_objects();
 
 	/* Notice things after time */
-	if (!(turn % 100)) {
+	if (!(turn % (10 * turns_per_process_world))) {
 		equip_learn_after_time(player);
 	}
 
@@ -1441,7 +1443,7 @@ void run_game_loop(void)
 			}
 
 			/* Process the world every ten turns */
-			if (!(turn % 10) && !player->upkeep->generate_level) {
+			if (!(turn % turns_per_process_world) && !player->upkeep->generate_level) {
 				process_world(cave);
 
 				/* Refresh */

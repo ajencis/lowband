@@ -141,6 +141,7 @@ struct feature {
 	int resist_flag;			/**< Monster resist flag for entering feature */
 
 	uint8_t t_elem[TE_MAX];		// L: which terrain elements it produces in what quantity
+	char *t_elem_msg;			// L: message used when it produces terrai elements
 };
 
 extern struct feature *f_info;

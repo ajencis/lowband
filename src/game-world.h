@@ -38,6 +38,7 @@ extern bool character_generated;
 extern bool character_dungeon;
 extern const uint8_t extract_energy[200];
 extern struct level *world;
+extern int turns_per_process_world;
 
 struct level *level_by_name(const char *name);
 struct level *level_by_depth(int depth);

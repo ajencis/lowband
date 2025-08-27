@@ -359,7 +359,7 @@ int burn_square(struct chunk *c, struct loc grid, int power)
 	for (t_elem = square_t_elem(c, grid); t_elem; t_elem = t_elem->next) {
 		t_elem_k = t_elem->kind;
 		if (tf_has(t_elem_k->flags, TF_BURN_FAST)) {
-			temp_power = MAX(3, power * power / 3);
+			temp_power = MAX(5, power * power / 3);
 		}
 		else if (tf_has(t_elem_k->flags, TF_BURN)) {
 			temp_power = MIN(power * 2, 5);
@@ -421,6 +421,7 @@ void t_elem_effects(struct chunk *c)
 {
 	struct loc grid;
 	uint16_t flg = PROJECT_HIDE | PROJECT_JUMP | PROJECT_KILL | PROJECT_ITEM | PROJECT_GRID | PROJECT_PLAY;
+	bool reduce_dur = !(turn % (turns_per_process_world * 10));
 	//struct terrain_element_kind *kind;
 	//bool vanish_messages[TE_MAX] = { 0 };
 
@@ -432,13 +433,17 @@ void t_elem_effects(struct chunk *c)
 			for (t_elem = sq->t_elem; t_elem; t_elem = t_elem->next) {
 				int dam;
 
+				if (t_elem->kind->proj < 0) continue;
+
 				dam = my_int_sqrt(t_elem->timer * 10);
 
 				t_elem_effect_message(c, grid, t_elem);
 
 				project(source_t_elem(t_elem), 0, grid, dam, t_elem->kind->proj, flg, 0, 0, NULL);
 
-				if (terrain_element_reduce_dur(c, grid, t_elem->kind->idx, 1)) continue;
+				if (reduce_dur && terrain_element_reduce_dur(c, grid, t_elem->kind->idx, 1)) {
+					continue;
+				}
 			}
 		}
 	}
@@ -448,24 +453,28 @@ void t_elem_effects(struct chunk *c)
 
 static bool feat_produce_t_elem(struct chunk *c, struct loc grid)
 {
-    const struct feature *feat = square_feat(c, grid);
-    uint16_t i, amt, curr, increase;
-    bool did_something;
+	const struct feature *feat = square_feat(c, grid);
+	uint16_t i, amt, curr, increase;
+	bool did_something;
 
-    for (i = 0; i < TE_MAX; ++i) {
-        amt = feat->t_elem[i];
+	for (i = 0; i < TE_MAX; ++i) {
+		amt = feat->t_elem[i];
 
-        if (amt) {
-            curr = t_elem_timer(c, grid, i);
-            increase = amt - curr;
+		if (amt) {
+			curr = t_elem_timer(c, grid, i);
+			increase = amt - curr;
 
-            terrain_element_increase_dur(c, grid, i, increase);
+			terrain_element_increase_dur(c, grid, i, increase);
 
-            did_something = did_something || increase > 0;
-        }
-    }
+			did_something = did_something || increase > 0;
 
-    return did_something;
+			if (square_isview(c, grid) && feat->t_elem_msg) {
+				msg("The %s %s %s.", feat->name, feat->t_elem_msg, t_elem_kind_by_idx(i)->name);
+			}
+		}
+	}
+
+	return did_something;
 }
 
 bool cave_produce_t_elem(struct chunk *c)
@@ -473,17 +482,62 @@ bool cave_produce_t_elem(struct chunk *c)
     struct loc grid;
     bool did_something = false;
 
-    int turn_fact = (turn / 10);
-    int y_fact = (turn_fact & 0x3) + 1;
-    int x_fact = ((turn_fact >> 0x2) & 0x3) + 1;
+	int freq = 5;
 
-    for (grid.x = x_fact; grid.x < c->width - 1; ++grid.x) {
-        for (grid.y = y_fact; grid.y < c->height - 1; ++grid.y) {
+	float x, x_freq;
+	int y, y_freq;
+	int trn = turn / turns_per_process_world;
+
+	y_freq = my_int_sqrt(freq);
+	x_freq = (float)freq / (float)y_freq;
+
+	y = trn % y_freq;
+	trn /= y_freq;
+	x = trn - ((int)((float)trn / x_freq)) * x_freq;
+
+	while (true) {
+		while (x >= (float)c->width) {
+			x -= (float)c->width;
+			y += y_freq;
+		}
+
+		if (y >= c->height) break;
+
+		grid = loc((int)x, y);
+		if (feat_produce_t_elem(c, grid)) {
+			did_something = true;
+		}
+
+		x += x_freq;
+	}
+
+	return did_something;
+
+	/*int frequency = 5; // one in  frequency  grids produce every turn
+	int start = (turn / turns_per_process_world) % frequency;
+
+	for (grid.x = start, grid.y = 0; grid.y < c->height; grid.x += frequency, grid.y += (grid.x / c->width), grid.x = (grid.x % c->width)) {
+		if (feat_produce_t_elem(c, grid)) {
+			did_something = true;
+		}
+	}
+
+	return did_something;
+
+	int inc_fact = 4;
+    int turn_fact = (turn / turns_per_process_world) % inc_fact;
+    int y_start = (turn_fact % inc_fact) + 1;
+    int x_start = ((turn_fact / inc_fact) % inc_fact) + 1;
+
+	for (grid.x = turn_fact)
+
+    for (grid.x = x_start; grid.x < c->width - 1; grid.x += inc_fact) {
+        for (grid.y = y_start; grid.y < c->height - 1; grid.y += inc_fact) {
             if (feat_produce_t_elem(c, grid)) {
                 did_something = true;
             }
         }
     }
 
-    return did_something;
+    return did_something;*/
 }
