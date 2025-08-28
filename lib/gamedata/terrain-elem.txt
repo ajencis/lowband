@@ -6,22 +6,28 @@
 # graphics : symbol : colour
 # dam : element name : percent per level of the effect
 # timed : timed name : percent per level of the effect
+# timeout : number of turns per 1-point reduction in amount
 # flags : terrain flags
 
 idx:FIRE
 name:fire
 graphics:~:r
 project:FIRE
+proj-range:1
+#fire has special timeout code
+timeout:0
 flags:PROJECT | PASSABLE | INTERESTING | LOS | CLOUD | BRIGHT
 
 idx:POISON_CLOUD
 name:poison gas
 graphics:~:g
 project:POISON_TMD
+timeout:3
 flags:PROJECT | PASSABLE | INTERESTING | LOS | CLOUD | BURN_FAST
 
 idx:MEPHITIC_CLOUD
 name:noxious gas
 graphics:~:y
 project:MEPHITIC
+timeout:1
 flags:PROJECT | PASSABLE | INTERESTING | LOS | CLOUD

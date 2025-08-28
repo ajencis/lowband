@@ -1,6 +1,7 @@
 #include "angband.h"
 #include "cave.h"
 #include "game-world.h"
+#include "init.h"
 #include "mon-desc.h"
 #include "player-util.h"
 #include "project.h"
@@ -51,7 +52,37 @@ bool sq_all_t_elem_has_flag(const struct square *sq, int flag)
 
 void square_memorize_t_elem(struct chunk *c, struct loc grid)
 {
-	const struct terrain_element *t_elem;
+	struct terrain_element *actual, *known, *temp;
+
+	if (!player->cave) return;
+
+	assert(c);
+	assert(player->cave);
+	assert(square_in_bounds(c, grid));
+	assert(square_in_bounds(player->cave, grid));
+
+	actual = square_t_elem(c, grid);
+	known = square_t_elem(player->cave, grid);
+
+	while (actual || known) {
+		if (known && (!actual || actual->kind->idx > known->kind->idx)) {
+			temp = known;
+			known = known->next;
+			terrain_elem_remove(player->cave, grid, temp->kind->idx);
+		}
+		else if (actual && (!known || known->kind->idx > actual->kind->idx)) {
+			temp = actual;
+			actual = actual->next;
+			terrain_element_add(player->cave, grid, temp->kind->idx, temp->timer);
+		}
+		else {
+			actual = actual->next;
+			known = known->next;
+		}
+	}
+
+
+	/*const struct terrain_element *t_elem;
 	struct terrain_element *new;
 
 	if (!player->cave) return;
@@ -75,7 +106,7 @@ void square_memorize_t_elem(struct chunk *c, struct loc grid)
 		new = terrain_element_new(t_elem->timer, t_elem->kind->idx);
 		new->next = player->cave->squares[grid.y][grid.x].t_elem;
 		player->cave->squares[grid.y][grid.x].t_elem = new;
-	}
+	}*/
 }
 
 
@@ -107,7 +138,7 @@ bool terrain_element_add(struct chunk *c, struct loc grid, uint16_t idx, uint16_
 {
 	struct terrain_element *prev = NULL, *new = terrain_element_new(timer, idx);
 
-	if ((!square_t_elem(c, grid)) || (square_t_elem(c, grid)->kind->idx < idx)) {
+	if ((!square_t_elem(c, grid)) || (square_t_elem(c, grid)->kind->idx > idx)) {
 		new->next = square_t_elem(c, grid);
 		c->squares[grid.y][grid.x].t_elem = new;
 	}
@@ -115,6 +146,12 @@ bool terrain_element_add(struct chunk *c, struct loc grid, uint16_t idx, uint16_
 		prev = square_t_elem(c, grid);
 		while (prev->next && prev->next->kind->idx < idx) {
 			prev = prev->next;
+		}
+
+		assert(prev->kind->idx < idx);
+		if (prev->kind->idx == idx) {
+			terrain_elem_free(new);
+			return false;
 		}
 
 		new->next = prev->next;
@@ -158,7 +195,7 @@ bool terrain_elem_remove(struct chunk *c, struct loc grid, uint16_t idx)
  * not previously exist in the square
  * Returns  true  if a terrain element was added
  */
-bool terrain_element_increase_dur(struct chunk *c, struct loc grid, uint16_t idx, uint16_t change)
+int terrain_element_increase_dur(struct chunk *c, struct loc grid, uint16_t idx, uint16_t change)
 {
 	struct terrain_element *t_elem;
 
@@ -166,42 +203,49 @@ bool terrain_element_increase_dur(struct chunk *c, struct loc grid, uint16_t idx
 		if (t_elem->kind->idx == idx) {
 			change = MAX(0, MIN(change, UINT16_MAX - t_elem->timer));
 			t_elem->timer += change;
-			return false;
+			return t_elem->timer;
 		}
 	}
 
-	return terrain_element_add(c, grid, idx, change);
+	return terrain_element_add(c, grid, idx, change) ? change : 0;
 }
 
 /**
  * Reduces the duration of the terrain element by  change , and removes it if it would
  * reduce to 0 or lower.
- * Returns  true  if the terrain element was removed
+ * Returns the new duration of the terrain_element
  */
-bool terrain_element_reduce_dur(struct chunk *c, struct loc grid, uint16_t idx, uint16_t change)
+int terrain_element_reduce_dur(struct chunk *c, struct loc grid, uint16_t idx, uint16_t change)
 {
 	struct terrain_element *t_elem;
 
 	for (t_elem = square_t_elem(c, grid); t_elem; t_elem = t_elem->next) {
 		if (t_elem->kind->idx == idx) {
 			if (change >= t_elem->timer) {
-				return terrain_elem_remove(c, grid, idx);
+				terrain_elem_remove(c, grid, idx);
+				return 0;
 			}
 
 			t_elem->timer -= change;
-			return false;
+			return t_elem->timer;
 		}
 	}
 
-	return false;
+	return 0;
 }
 
-bool terrain_element_change_dur(struct chunk *c, struct loc grid, uint16_t idx, int change)
+
+/**
+ * reduces or increases the duration as appropriate of the terrain element  idx  on
+ * square  grid .
+ * returns whether a terrain_element was added or removed
+ */
+int terrain_element_change_dur(struct chunk *c, struct loc grid, uint16_t idx, int change)
 {
 	if (change < 0) return terrain_element_reduce_dur(c, grid, idx, (unsigned)(-change));
 	if (change > 0) return terrain_element_increase_dur(c, grid, idx, (unsigned)change);
 
-	return false;
+	return t_elem_timer(c, grid, idx);
 }
 
 bool terrain_elem_remove_all(struct chunk *c, struct loc grid)
@@ -230,6 +274,16 @@ int t_elem_timer(struct chunk *c, struct loc grid, uint16_t which)
 	}
 
 	return 0;
+}
+
+struct terrain_element *square_t_elem_by_type(struct chunk *c, struct loc grid, uint16_t which)
+{
+	struct terrain_element *t_elem;
+
+	for (t_elem = square_t_elem(c, grid); t_elem && t_elem->kind->idx != which; t_elem = t_elem->next) {
+	}
+
+	return t_elem;
 }
 
 
@@ -343,6 +397,7 @@ int burn_square(struct chunk *c, struct loc grid, int power)
 	int n_t_elem = 0, burn_amt, temp_power, curr_fire = 0;
 	struct terrain_element *t_elem;
 	const struct terrain_element_kind *t_elem_k;
+	uint16_t i, reductions[TE_MAX] = { 0 };
 
 	for (t_elem = square_t_elem(c, grid); t_elem; t_elem = t_elem->next) {
 		if (t_elem->kind->idx == TE_FIRE) {
@@ -352,7 +407,7 @@ int burn_square(struct chunk *c, struct loc grid, int power)
 		}
 	}
 
-	power = (2 * power + 2 * n_t_elem - 1) / (n_t_elem + 1);
+	power = (2 * power + n_t_elem) / (n_t_elem + 1);
 
 	burn_amt = 0;
 
@@ -371,14 +426,20 @@ int burn_square(struct chunk *c, struct loc grid, int power)
 		temp_power = MIN(temp_power, t_elem->timer);
 
 		burn_amt += temp_power;
-		t_elem->timer -= temp_power;
+		reductions[t_elem->kind->idx] = temp_power;
+	}
+
+	for (i = 0; i < TE_MAX; ++i) {
+		if (reductions[i] > 0) {
+			terrain_element_reduce_dur(c, grid, i, reductions[i]);
+		}
 	}
 
 	if (burn_amt > 0) {
 		terrain_element_increase_dur(c, grid, TE_FIRE, (uint16_t)burn_amt);
 	}
 	else if (curr_fire > 0) {
-		terrain_element_reduce_dur(c, grid, TE_FIRE, (curr_fire + 1) / 2);
+		terrain_element_reduce_dur(c, grid, TE_FIRE, (curr_fire * 2 + 1) / 3);
 	}
 
 	return t_elem_timer(c, grid, TE_FIRE);
@@ -394,17 +455,38 @@ int burn_square(struct chunk *c, struct loc grid, int power)
 }*/
 
 
+#if 0
+static char t_elem_log_path[256] = "";
 
-static void t_elem_effect_message(struct chunk *c, struct loc grid, struct terrain_element *t_elem)
+static void t_elem_log(const char *message)
 {
-	const struct projection *proj = &projections[t_elem->kind->proj];
+	int mode = MODE_APPEND;
+	struct ang_file *file;
+
+	if (!t_elem_log_path[0]) {
+		path_build(t_elem_log_path, sizeof t_elem_log_path, ANGBAND_DIR_USER, "t_elem.log");
+		mode = MODE_WRITE;
+	}
+
+	file = file_open(t_elem_log_path, mode, FTYPE_TEXT);
+
+	file_put(file, message);
+
+	file_put(file, "\n");
+
+	file_close(file);
+}
+#endif
+
+
+static void t_elem_effect_message(struct chunk *c, struct loc grid, uint16_t which)
+{
+	const struct terrain_element_kind *kind = t_elem_kind_by_idx(which);
+	const struct projection *proj = &projections[kind->proj];
 	const struct monster *mon = square_monster(c, grid);
 
-	assert(c);
-	if (!t_elem) return;
-
 	if (square_isplayer(c, grid) && !mon_proj_is_immune(&player->mon, proj->index)) {
-		msg("You are surrounded by %s.", t_elem->kind->name);
+		msg("You are surrounded by %s.", kind->name);
 		disturb(player);
 	}
 
@@ -413,36 +495,96 @@ static void t_elem_effect_message(struct chunk *c, struct loc grid, struct terra
 
 		monster_desc(mon_name, sizeof mon_name, mon, MDESC_CAPITAL);
 
-		msg("%s is surrounded by %s.", mon_name, t_elem->kind->name);
+		msg("%s is surrounded by %s.", mon_name, kind->name);
 	}
+}
+
+static int t_elem_proj_power(struct chunk *c, struct loc grid, uint16_t t_elem_idx, struct terrain_element **source)
+{
+	//t_elem_log(format("entering tpp for square (%i,%i)", grid.x, grid.y));
+
+	const struct terrain_element_kind *kind = t_elem_kind_by_idx(t_elem_idx);
+	int range, power, min_dist, dist, max_pwr;
+	struct loc src_grid;
+	struct terrain_element *t_elem;
+
+	assert(kind);
+	assert(square_in_bounds_fully(c, grid));
+
+	range = kind->proj_range;
+	min_dist = range + 1;
+	power = 0;
+	*source = NULL;
+
+	//t_elem_log("checking src grids");
+
+	for (src_grid.x = grid.x - range; src_grid.x <= grid.x + range; ++src_grid.x) {
+		for (src_grid.y = grid.y - range; src_grid.y <= grid.y + range; ++src_grid.y) {
+			//t_elem_log(format("checking grid (%i,%i)", src_grid.x, src_grid.y));
+
+			if (!square_in_bounds_fully(c, src_grid)) continue;
+
+			if (!square_isprojectable(c, grid) || !square_isprojectable(c, src_grid)) continue;
+
+			t_elem = square_t_elem_by_type(c, src_grid, t_elem_idx);
+			if (!t_elem) continue;
+
+			dist = distance(grid, src_grid);
+			if (dist > range) continue;
+
+			if (!loc_eq(src_grid, grid) && !projectable(c, grid, src_grid, 0)) continue;
+
+			//t_elem_log(format("is valid source, timer = %i", t_elem->timer));
+
+			power += (int)t_elem->timer;
+
+			//t_elem_log(format("new power = %i", power));
+
+			if (!(*source) || min_dist > dist || (min_dist == dist && max_pwr < (int)t_elem->timer)) {
+				//t_elem_log("is the closest or strongest source");
+
+				min_dist = dist;
+				max_pwr = (int)t_elem->timer;
+				*source = t_elem;
+			}
+
+			//t_elem_log("continuing");
+		}
+	}
+
+	//t_elem_log(format("done, returning %i", power));
+
+	return power;
 }
 
 void t_elem_effects(struct chunk *c)
 {
 	struct loc grid;
 	uint16_t flg = PROJECT_HIDE | PROJECT_JUMP | PROJECT_KILL | PROJECT_ITEM | PROJECT_GRID | PROJECT_PLAY;
-	bool reduce_dur = !(turn % (turns_per_process_world * 10));
+	int reduce_dur = turn / turns_per_process_world, dam;
+	struct terrain_element *src = NULL;
+	struct terrain_element_kind *kind;
+	bool reduce;
 	//struct terrain_element_kind *kind;
 	//bool vanish_messages[TE_MAX] = { 0 };
 
-	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
-		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
-			struct terrain_element *t_elem;
-			struct square *sq = &c->squares[grid.y][grid.x];
+	for (kind = te_info; kind; kind = kind->next) {
+		reduce = kind->timeout && !(kind->timeout % reduce_dur);
 
-			for (t_elem = sq->t_elem; t_elem; t_elem = t_elem->next) {
-				int dam;
+		for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
+			for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
+				dam = t_elem_proj_power(c, grid, kind->idx, &src);
 
-				if (t_elem->kind->proj < 0) continue;
+				if (dam <= 0) continue;
 
-				dam = my_int_sqrt(t_elem->timer * 10);
+				assert(src);
 
-				t_elem_effect_message(c, grid, t_elem);
+				t_elem_effect_message(c, grid, kind->idx);
 
-				project(source_t_elem(t_elem), 0, grid, dam, t_elem->kind->proj, flg, 0, 0, NULL);
+				project(source_t_elem(src), 0, grid, dam, kind->proj, flg, 0, 0, NULL);
 
-				if (reduce_dur && terrain_element_reduce_dur(c, grid, t_elem->kind->idx, 1)) {
-					continue;
+				if (reduce) {
+					terrain_element_reduce_dur(c, grid, kind->idx, 1);
 				}
 			}
 		}
@@ -460,17 +602,20 @@ static bool feat_produce_t_elem(struct chunk *c, struct loc grid)
 	for (i = 0; i < TE_MAX; ++i) {
 		amt = feat->t_elem[i];
 
-		if (amt) {
-			curr = t_elem_timer(c, grid, i);
-			increase = amt - curr;
+		if (amt <= 0) continue;
 
-			terrain_element_increase_dur(c, grid, i, increase);
+		curr = t_elem_timer(c, grid, i);
 
-			did_something = did_something || increase > 0;
+		if (curr >= amt) continue;
 
-			if (square_isview(c, grid) && feat->t_elem_msg) {
-				msg("The %s %s %s.", feat->name, feat->t_elem_msg, t_elem_kind_by_idx(i)->name);
-			}
+		increase = amt - curr;
+
+		terrain_element_increase_dur(c, grid, i, increase);
+
+		did_something = did_something || increase > 0;
+
+		if (feat->t_elem_msg && square_isview(c, grid)) {
+			msg("The %s %s %s.", feat->name, feat->t_elem_msg, t_elem_kind_by_idx(i)->name);
 		}
 	}
 

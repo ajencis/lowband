@@ -1635,12 +1635,14 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	alloc_objects(c, SET_CORR, TYP_RUBBLE, randint1(k), c->depth, 0);
 
 	if (one_in_(10)) {
+		ROOM_LOG("fume pit floor");
 		alloc_objects(c, SET_BESIDE_WALL | SET_ROOM, TYP_FUME_PIT, randint1(k), c->depth, 0);
 	}
 
 	/* Place some traps in the dungeon, reduce frequency by factor of 5 */
 	// L: no longer reduce trap frequency but only 1/3 of levels have traps
 	if (one_in_(3)) {
+		ROOM_LOG("trap floor");
 		alloc_objects(c, SET_CORR | SET_NOT_AVOIDABLE, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
 	}
 

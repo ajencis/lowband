@@ -158,7 +158,10 @@ struct terrain_element_kind {
 	uint8_t d_attr;
 	uint8_t d_char;
 
+	int timeout;				// if not 0 it loses one point every  timeout  turns
+
 	int proj;					// the projection it projects on its square
+	int proj_range;				// how far from its square it projects, default 0 (only the square in question);
 	bitflag flags[TF_SIZE];
 };
 
@@ -292,6 +295,7 @@ bool sq_any_t_elem_has_flag(const struct square *sq, int flag);
 bool sq_all_t_elem_has_flag(const struct square *sq, int flag);
 void square_memorize_t_elem(struct chunk *c, struct loc grid);
 int t_elem_timer(struct chunk *c, struct loc grid, uint16_t which);
+struct terrain_element *square_t_elem_by_type(struct chunk *c, struct loc grid, uint16_t which);
 
 bool grid_is_danger(const struct monster *mon, struct chunk *c, struct loc grid);
 bool mon_in_t_elem_danger(const struct monster *mon, struct chunk *c);
@@ -302,10 +306,10 @@ struct terrain_element *terrain_element_new(int timer, uint16_t idx);
 void terrain_elem_free(struct terrain_element *to_free);
 bool terrain_element_add(struct chunk *c, struct loc grid, uint16_t idx, uint16_t timer);
 bool terrain_elem_remove(struct chunk *c, struct loc grid, uint16_t idx);
-bool terrain_element_increase_dur(struct chunk *c, struct loc grid, uint16_t idx, uint16_t change);
-bool terrain_element_reduce_dur(struct chunk *c, struct loc grid, uint16_t idx, uint16_t change);
+int terrain_element_increase_dur(struct chunk *c, struct loc grid, uint16_t idx, uint16_t change);
+int terrain_element_reduce_dur(struct chunk *c, struct loc grid, uint16_t idx, uint16_t change);
 bool terrain_elem_remove_all(struct chunk *c, struct loc grid);
-bool terrain_element_change_dur(struct chunk *c, struct loc grid, uint16_t idx, int change);
+int terrain_element_change_dur(struct chunk *c, struct loc grid, uint16_t idx, int change);
 
 void t_elem_spread(struct chunk *c);
 

@@ -231,19 +231,6 @@ void grid_data_as_text(struct grid_data *g, int *ap, wchar_t *cp, int *tap,
 	if (g->t_elem) {
 		a = g->t_elem->kind->d_attr;
 		c = g->t_elem->kind->d_char;
-
-		/*int i;
-		struct terrain_element *t_elem;
-
-		i = 0;
-		for (t_elem = g->t_elem; t_elem; t_elem = t_elem->next) {
-			++i;
-
-			if (one_in_(i)) {
-				a = t_elem->kind->d_attr;
-				c = t_elem->kind->d_char;
-			}
-		}*/
 	}
 	
 	/* Handle monsters, the player and trap borders */

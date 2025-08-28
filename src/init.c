@@ -2768,6 +2768,28 @@ static enum parser_error parse_t_elem_flags(struct parser *p) {
 	return s ? PARSE_ERROR_INVALID_FLAG : PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_t_elem_timeout(struct parser *p) {
+	struct terrain_element_kind *te = parser_priv(p);
+	int timeout = parser_getint(p, "timeout");
+
+	if (!te) return PARSE_ERROR_MISSING_RECORD_HEADER;
+
+	te->timeout = timeout;
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_t_elem_proj_range(struct parser *p) {
+	struct terrain_element_kind *te = parser_priv(p);
+	int range = parser_getint(p, "range");
+
+	if (!te) return PARSE_ERROR_MISSING_RECORD_HEADER;
+
+	te->proj_range = range;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_t_elem(void) {
 	struct parser *p = parser_new();
 
@@ -2780,6 +2802,8 @@ static struct parser *init_parse_t_elem(void) {
 	parser_reg(p, "graphics char glyph sym color", parse_t_elem_graphics);
 	parser_reg(p, "project sym proj", parse_t_elem_proj);
 	parser_reg(p, "flags ?str flags", parse_t_elem_flags);
+	parser_reg(p, "timeout int timeout", parse_t_elem_timeout);
+	parser_reg(p, "proj-range int range", parse_t_elem_proj_range);
 
 	return p;
 }

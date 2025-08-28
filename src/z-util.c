@@ -20,6 +20,7 @@
 #include <float.h>
 
 #include "z-util.h"
+#include "z-file.h"
 
 /**
  * Convenient storage of the program name
