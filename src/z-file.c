@@ -1525,8 +1525,9 @@ bool my_dread(ang_dir *dir, char *fname, size_t len)
 void my_dclose(ang_dir *dir)
 {
 	/* Close directory */
-	if (dir->d)
+	if (dir->d) {
 		closedir(dir->d);
+	}
 
 	/* Free memory */
 	mem_free(dir->dirname);
@@ -1535,4 +1536,36 @@ void my_dclose(ang_dir *dir)
 
 #endif /* HAVE_DIRENT_H */
 #endif /* WINDOWS */
+
+
+void dbg_file_log(const char *filename, const char *dir, char *msg)
+{
+	static char file_names[5][80] = { { '\0' } };
+	char path[256] = { '\0' };
+	int mode = MODE_APPEND, i;
+	ang_file *file;
+
+	for (i = (int)N_ELEMENTS(file_names) - 1; i >= 0; --i) {
+		if (!file_names[i][0]) {
+			strnfmt(file_names[i], sizeof file_names[i], filename);
+			mode = MODE_WRITE;
+			break;
+		}
+		else if (!strcmp(file_names[i], filename)) {
+			break;
+		}
+	}
+
+	assert(i < 5);
+
+	path_build(path, sizeof path, dir, filename);
+
+	file = file_open(path, mode, FTYPE_TEXT);
+
+	assert(file);
+
+	file_putf(file, "%s\n", msg);
+
+	file_close(file);
+}
 
