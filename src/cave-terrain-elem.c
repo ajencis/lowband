@@ -501,8 +501,6 @@ static void t_elem_effect_message(struct chunk *c, struct loc grid, uint16_t whi
 
 static int t_elem_proj_power(struct chunk *c, struct loc grid, uint16_t t_elem_idx, struct terrain_element **source)
 {
-	//t_elem_log(format("entering tpp for square (%i,%i)", grid.x, grid.y));
-
 	const struct terrain_element_kind *kind = t_elem_kind_by_idx(t_elem_idx);
 	int range, power, min_dist, dist, max_pwr;
 	struct loc src_grid;
@@ -516,12 +514,8 @@ static int t_elem_proj_power(struct chunk *c, struct loc grid, uint16_t t_elem_i
 	power = 0;
 	*source = NULL;
 
-	//t_elem_log("checking src grids");
-
 	for (src_grid.x = grid.x - range; src_grid.x <= grid.x + range; ++src_grid.x) {
 		for (src_grid.y = grid.y - range; src_grid.y <= grid.y + range; ++src_grid.y) {
-			//t_elem_log(format("checking grid (%i,%i)", src_grid.x, src_grid.y));
-
 			if (!square_in_bounds_fully(c, src_grid)) continue;
 
 			if (!square_isprojectable(c, grid) || !square_isprojectable(c, src_grid)) continue;
@@ -534,25 +528,15 @@ static int t_elem_proj_power(struct chunk *c, struct loc grid, uint16_t t_elem_i
 
 			if (!loc_eq(src_grid, grid) && !projectable(c, grid, src_grid, 0)) continue;
 
-			//t_elem_log(format("is valid source, timer = %i", t_elem->timer));
-
 			power += (int)t_elem->timer;
 
-			//t_elem_log(format("new power = %i", power));
-
 			if (!(*source) || min_dist > dist || (min_dist == dist && max_pwr < (int)t_elem->timer)) {
-				//t_elem_log("is the closest or strongest source");
-
 				min_dist = dist;
 				max_pwr = (int)t_elem->timer;
 				*source = t_elem;
 			}
-
-			//t_elem_log("continuing");
 		}
 	}
-
-	//t_elem_log(format("done, returning %i", power));
 
 	return power;
 }
@@ -561,15 +545,14 @@ void t_elem_effects(struct chunk *c)
 {
 	struct loc grid;
 	uint16_t flg = PROJECT_HIDE | PROJECT_JUMP | PROJECT_KILL | PROJECT_ITEM | PROJECT_GRID | PROJECT_PLAY;
-	int reduce_dur = turn / turns_per_process_world, dam;
+	int reduce_dur, dam;
 	struct terrain_element *src = NULL;
 	struct terrain_element_kind *kind;
-	bool reduce;
-	//struct terrain_element_kind *kind;
-	//bool vanish_messages[TE_MAX] = { 0 };
 
 	for (kind = te_info; kind; kind = kind->next) {
-		reduce = kind->timeout && !(kind->timeout % reduce_dur);
+		if (kind->timeout > 0) {
+			reduce_dur = (turn / turns_per_process_world) % kind->timeout;
+		}
 
 		for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
 			for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
@@ -583,8 +566,12 @@ void t_elem_effects(struct chunk *c)
 
 				project(source_t_elem(src), 0, grid, dam, kind->proj, flg, 0, 0, NULL);
 
-				if (reduce) {
-					terrain_element_reduce_dur(c, grid, kind->idx, 1);
+				if (kind->timeout > 0) {
+					++reduce_dur;
+					if (reduce_dur >= kind->timeout) {
+						reduce_dur = 0;
+						terrain_element_reduce_dur(c, grid, kind->idx, 1);
+					}
 				}
 			}
 		}
