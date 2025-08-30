@@ -1774,21 +1774,24 @@ static bool phoenix_resurrect(struct player *p)
  * damage.
  * \param kb_str is the null-terminated string describing the cause of the
  * damage.
+ * 
+ * L: now returns whether the calling function should stop (either the) player
+ * is dead or is cheating death and thus changing levels
  *
  * Hack -- this function allows the user to save (or quit) the game
  * when he dies, since the "You die." message is shown before setting
  * the player to "dead".
  */
-void take_hit(struct player *p, int dam, const char *kb_str)
+bool take_hit(struct player *p, int dam, const char *kb_str)
 {
 	int old_chp = p->mon.hp;
 
 	int warning = (p->mon.maxhp * p->opts.hitpoint_warn / 10);
 
 	/* Paranoia */
-	if (p->is_dead || dam <= 0) return;
+	if (p->is_dead || dam <= 0) return p->is_dead;
 
-	if (p->mon.m_timed[TMD_PHOENIX]) return;
+	if (p->mon.m_timed[TMD_PHOENIX]) return false;
 
 	/* Disturb */
 	disturb(p);
@@ -1828,7 +1831,7 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 		} else if (phoenix_resurrect(p)) {
 			msgt(MSG_DEATH, "You die.");
 			event_signal(EVENT_MESSAGE_FLUSH);
-			return;
+			return p->is_dead;
 		} else {
 			/*
 			 * Note cause of death.  Do it here so EVENT_CHEAT_DEATH
@@ -1840,6 +1843,7 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 			if ((p->wizard || OPT(p, cheat_live))
 					&& !get_check("Die? ")) {
 				event_signal(EVENT_CHEAT_DEATH);
+				return true;
 			} else {
 				/* Hack -- Note death */
 				msgt(MSG_DEATH, "You die.");
@@ -1852,7 +1856,7 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 				p->is_dead = true;
 
 				/* Dead */
-				return;
+				return p->is_dead;
 			}
 		}
 	}
@@ -1868,6 +1872,8 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 		msgt(MSG_HITPOINT_WARN, "*** LOW HITPOINT WARNING! ***");
 		event_signal(EVENT_MESSAGE_FLUSH);
 	}
+
+	return p->is_dead;
 }
 
 bool check_berserk(struct player *p, struct monster *mon)

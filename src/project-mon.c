@@ -1203,9 +1203,9 @@ static bool project_m_monster_attack(project_monster_handler_context_t *context,
 
 		death_message_by_source(context->origin, death_msg, sizeof death_msg);
 
-		take_hit(player, dam, death_msg);
+		mon_died = take_hit(player, dam, death_msg);
 
-		return player->is_dead;
+		return mon_died;
 	}
 
 	/* Hurt the monster */
@@ -1269,9 +1269,9 @@ static bool project_m_player_attack(project_monster_handler_context_t *context)
 
 		death_message_by_source(context->origin, death_msg, sizeof death_msg);
 
-		take_hit(player, dam, death_msg);
+		mon_died = take_hit(player, dam, death_msg);
 
-		return player->is_dead;
+		return mon_died;
 	}
 
 	/* The monster is going to be killed, so display a specific death message.
@@ -1615,7 +1615,7 @@ void project_m(struct source origin, int r, struct loc grid, int dam, int typ,
 		mon_died = project_m_player_attack(&context);
 	}
 
-	if (player->is_dead) {
+	if (player->is_dead || mon_died) {
 		return;
 	}
 

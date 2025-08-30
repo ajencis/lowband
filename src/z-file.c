@@ -1538,27 +1538,32 @@ void my_dclose(ang_dir *dir)
 #endif /* WINDOWS */
 
 
-void dbg_file_log(const char *filename, const char *dir, char *msg)
+void dbg_file_log(const char *filename, const char *dir, const char *msg)
 {
 	static char file_names[5][80] = { { '\0' } };
-	char path[256] = { '\0' };
+	char path[256] = { '\0' }, real_name[80];
 	int mode = MODE_APPEND, i;
 	ang_file *file;
 
+	strnfmt(real_name, sizeof real_name, filename);
+	if (!strstr(real_name, ".")) {
+		my_strcat(real_name, ".log", sizeof real_name);
+	}
+
 	for (i = (int)N_ELEMENTS(file_names) - 1; i >= 0; --i) {
 		if (!file_names[i][0]) {
-			strnfmt(file_names[i], sizeof file_names[i], filename);
+			strnfmt(file_names[i], sizeof file_names[i], real_name);
 			mode = MODE_WRITE;
 			break;
 		}
-		else if (!strcmp(file_names[i], filename)) {
+		else if (!strcmp(file_names[i], real_name)) {
 			break;
 		}
 	}
 
 	assert(i < 5);
 
-	path_build(path, sizeof path, dir, filename);
+	path_build(path, sizeof path, dir, real_name);
 
 	file = file_open(path, mode, FTYPE_TEXT);
 

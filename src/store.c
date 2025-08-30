@@ -372,7 +372,14 @@ static errr run_parse_stores(struct parser *p) {
 }
 
 static errr finish_parse_stores(struct parser *p) {
+	int i;
+
 	parser_destroy(p);
+
+	for (i = 0; i < z_info->store_max; ++i) {
+		struct store *store = &stores[i];
+		store->normal_stock_max = MIN(store->normal_stock_max, store->normal_max);
+	}
 
 	return 0;
 }
@@ -1068,6 +1075,7 @@ static void store_delete(struct store *s, struct object *obj, int amt)
 	struct object *known_obj = obj->known;
 
 	if (obj->number > amt) {
+		assert(known_obj);
 		obj->number -= amt;
 		known_obj->number -= amt;
 	} else {
@@ -1132,6 +1140,8 @@ static void store_delete_random(struct store *store)
 		obj = obj->next;
 	}
 
+	assert(obj);
+
 	/* Determine how many objects are in the slot */
 	num = obj->number;
 
@@ -1157,8 +1167,9 @@ static void store_delete_random(struct store *store)
 			else num = obj->number;
 
 			/* Hack -- decrement the total charges of staves and wands. */
-			if (tval_can_have_charges(obj))
+			if (tval_can_have_charges(obj)) {
 				obj->pval -= num * obj->pval / obj->number;
+			}
 		}
 	}
 
@@ -1263,9 +1274,13 @@ static bool store_create_random(struct store *store, bool reset)
 		/*** Pre-generation filters ***/
 
 		/* No chests in stores XXX */
-		if (kind->tval == TV_CHEST || kind->tval == TV_CONTAINER) continue;
+		if (kind->tval == TV_CHEST || kind->tval == TV_CONTAINER) {
+			continue;
+		}
 
-		if (reset && !object_kind_stockable_on_reset(kind)) continue;
+		if (reset && !object_kind_stockable_on_reset(kind)) {
+			continue;
+		}
 
 		/*** Generate the item ***/
 
@@ -1281,7 +1296,7 @@ static bool store_create_random(struct store *store, bool reset)
 
 		/* Reject if item is 'damaged' (negative combat mods, curses) */
 		if ((tval_is_weapon(obj) && ((obj->to_h < 0) || (obj->to_d < 0)))
-			|| (tval_is_armor(obj) && (obj->to_a < 0)) || (obj->curses)) {
+				|| (tval_is_armor(obj) && (obj->to_a < 0)) || (obj->curses)) {
 			object_delete(NULL, NULL, &obj);
 			continue;
 		}
@@ -1373,7 +1388,7 @@ static struct object *store_create_item(struct store *store,
 static void store_maint(struct store *s, bool reset)
 {
 	/* Ignore home */
-	if (s->feat == FEAT_HOME) {
+	if (s->feat == FEAT_HOME || s->feat == FEAT_DOJO) {
 		return;
 	}
 
@@ -1432,10 +1447,11 @@ static void store_maint(struct store *s, bool reset)
 			store_delete_random(s);
 		}
 
-		if (!restock_attempts)
+		if (!restock_attempts) {
 			quit_fmt("Unable to (de-)stock %s. Please report this bug",
 				(f_info[s->feat].name) ? f_info[s->feat].name :
 				format("store %d", f_info[s->feat].shopnum));
+		}
 	} else {
 		/* For the Bookseller, occasionally sell a book */
 		if (s->always_num && s->stock_num) {
