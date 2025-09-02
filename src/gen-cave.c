@@ -112,6 +112,34 @@ static struct loc counterclockwise_card_dir(struct loc dir)
 }
 
 
+static void forestify_level(struct chunk *c)
+{
+	struct loc grid;
+	int tree_power;
+
+	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
+		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
+			tree_power = 0;
+
+			if (square_ismineral(c, grid)) {
+				square_set_feat(c, grid, FEAT_FLOOR);
+				tree_power = randint0(1000) - 150;
+			} else if (square_isroom(c, grid)) {
+				tree_power = randint0(1000) - 850;
+			}
+
+			if (square_isfloor(c, grid)) {
+				square_set_feat(c, grid, FEAT_DIRT_FLOOR);
+			}
+
+			if (tree_power > 0 && !square_isstairs(c, grid)) {
+				terrain_element_increase_dur(c, grid, TE_TREE, (uint16_t)tree_power);
+			}
+		}
+	}
+}
+
+
 /**
  * L: moves around the room randomly for a while and ends up somewhere
  */
@@ -1653,6 +1681,11 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 		cave_free(c);
 		*p_error = "could not place player";
 		return NULL;
+	}
+
+	if (one_in_(10)) {
+		ROOM_LOG("forest floor");
+		forestify_level(c);
 	}
 
 	/* Pick a base number of monsters */

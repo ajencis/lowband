@@ -469,7 +469,7 @@ static bool aux_terrain_element(struct chunk *c, struct player *p,
 
 		if (!t_elem) break;
 
-		strnfmt(out_val, sizeof out_val, "%s%s%s, %s", auxst->phrase1, auxst->phrase2, t_elem->kind->name, auxst->coord_desc);
+		strnfmt(out_val, sizeof out_val, "%s%s%s, %s", auxst->phrase1, auxst->phrase2, t_elem_name(t_elem), auxst->coord_desc);
 
 		if (p->wizard) {
 			my_strcat(out_val,

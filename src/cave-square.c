@@ -670,10 +670,22 @@ bool square_canputitem(struct chunk *c, struct loc grid) {
 	return !square_object(c, grid);
 }
 
-bool square_canputterrainelem(struct chunk *c, struct loc grid) {
+/**
+ * True if the terrain element in question can be put in the square
+ */
+bool square_canputterrainelem(struct chunk *c, struct loc grid, uint16_t idx) {
 	int feat = square(c, grid)->feat;
+	struct terrain_element *t_elem;
 
-	return tf_has(f_info[feat].flags, TF_PROJECT);
+	for (t_elem = square_t_elem(c, grid); t_elem; t_elem = t_elem->next) {
+		if (t_elem->kind->idx == idx) continue;
+		if (!t_elem_has_flag(t_elem, TF_PROJECT) &&
+				!t_elem_has_flag(t_elem, TF_CLOUD_PROJ)) {
+			return false;
+		}
+	}
+
+	return tf_has(f_info[feat].flags, TF_PROJECT) || tf_has(f_info[feat].flags, TF_CLOUD_PROJ);
 }
 
 /**
@@ -711,7 +723,8 @@ bool square_is_monster_walkable(struct chunk *c, struct loc grid)
  */
 bool square_ispassable(struct chunk *c, struct loc grid) {
 	assert(square_in_bounds(c, grid));
-	return feat_is_passable(square(c, grid)->feat);
+	return sq_all_t_elem_has_flag(square(c, grid), TF_PASSABLE);
+	//return feat_is_passable(square(c, grid)->feat);
 }
 
 /**

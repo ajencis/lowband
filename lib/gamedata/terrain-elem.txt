@@ -10,6 +10,13 @@
 # flags : terrain flags
 
 idx:FIRE
+name:ember
+graphics:#:R
+project:FIRE
+proj-range:0
+timeout:0
+flags:PROJECT | PASSABLE | INTERESTING | LOS | CLOUD
+timer-cutoff:10
 name:fire
 graphics:~:r
 project:FIRE
@@ -17,6 +24,26 @@ proj-range:1
 #fire has special timeout code
 timeout:0
 flags:PROJECT | PASSABLE | INTERESTING | LOS | CLOUD | BRIGHT
+
+idx:TREE
+name:sapling
+graphics:#:G
+timeout:0
+flags:CLOUD_PROJ | BURN | PASSABLE
+timer-cutoff:100
+name:young tree
+graphics:#:g
+timeout:0
+flags:CLOUD_PROJ | BURN
+timer-cutoff:300
+name:tree
+graphics:#:U
+timeout:0
+flags:CLOUD_PROJ | BURN
+timer-cutoff:600
+name:old tree
+graphics:#:u
+timeout:0
 
 idx:POISON_CLOUD
 name:poison gas

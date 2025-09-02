@@ -83,6 +83,7 @@
 void map_info(struct loc grid, struct grid_data *g)
 {
 	struct object *obj;
+	struct terrain_element *t_elem;
 
 	assert(grid.x < cave->width);
 	assert(grid.y < cave->height);
@@ -134,11 +135,11 @@ void map_info(struct loc grid, struct grid_data *g)
 
 	/* Use known feature */
 	g->f_idx = square(player->cave, grid)->feat;
-	//if (f_info[g->f_idx].mimic)
-	//	g->f_idx = (uint32_t) (f_info[g->f_idx].mimic - f_info);
 
-	if (square_t_elem(player->cave, grid) && square_isview(cave, grid)) {
-		g->t_elem = square_t_elem(player->cave, grid);
+	// L: copy terrain element over
+	t_elem = square_t_elem(player->cave, grid);
+	if (t_elem) {
+		g->t_elem = t_elem;
 	}
 
 	/* There is a known trap in this square */

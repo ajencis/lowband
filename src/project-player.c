@@ -994,7 +994,7 @@ bool project_p(struct source origin, int r, struct loc grid, int dam, int typ,
 		}
 
 		case SRC_TERRAIN_ELEM: {
-			my_strcpy(killer, origin.which.t_elem->kind->name, sizeof killer);
+			my_strcpy(killer, t_elem_name(origin.which.t_elem), sizeof killer);
 			break;
 		}
 

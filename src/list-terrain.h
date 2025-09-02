@@ -12,6 +12,7 @@
 /* symbol */
 FEAT(NONE) /* nothing/unknown */
 FEAT(FLOOR) /* open floor */
+FEAT(DIRT_FLOOR)
 FEAT(CLOSED) /* closed door */
 FEAT(OPEN) /* open door */
 FEAT(BROKEN) /* broken door */

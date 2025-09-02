@@ -121,6 +121,14 @@ flags:LOS | PROJECT | PASSABLE | FLOOR | OBJECT | EASY | TRAP | TORCH
 desc:An open floor or bare ground.  Can be walked across by anything, and can
 desc: hold traps or items.  Does not break line of sight.
 
+code:DIRT_FLOOR
+name:dirt
+graphics:.:u
+priority:5
+flags:LOS | PROJECT | PASSABLE | FLOOR | OBJECT | EASY | TRAP | TORCH
+desc:An open dirt floor.  Can be walked across by anything, and can
+desc: hold traps or items.  Does not break line of sight.
+
 code:CLOSED
 name:closed door
 graphics:+:U

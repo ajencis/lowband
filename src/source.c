@@ -126,7 +126,7 @@ void death_message_by_source(struct source origin, char *buf, size_t bufsize)
 
 		case SRC_TERRAIN_ELEM:
 		{
-			strnfmt(buf, bufsize, origin.which.t_elem->kind->name);
+			strnfmt(buf, bufsize, t_elem_name(origin.which.t_elem));
 			break;
 		}
 

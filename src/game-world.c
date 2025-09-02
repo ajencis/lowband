@@ -711,6 +711,7 @@ void process_world(struct chunk *c)
 
 	t_elem_effects(c);
 	t_elem_spread(c);
+	t_elem_reduce_durations(c);
 
 	cave_produce_t_elem(c);
 

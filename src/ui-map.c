@@ -229,8 +229,8 @@ void grid_data_as_text(struct grid_data *g, int *ap, wchar_t *cp, int *tap,
 
 	// L: handle terrain elements
 	if (g->t_elem) {
-		a = g->t_elem->kind->d_attr;
-		c = g->t_elem->kind->d_char;
+		a = t_elem_d_attr(g->t_elem);
+		c = t_elem_d_char(g->t_elem);
 	}
 	
 	/* Handle monsters, the player and trap borders */
