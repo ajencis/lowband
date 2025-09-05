@@ -2290,292 +2290,6 @@ void player_regen_hp(struct player *p)
 	}
 }
 
-void regen_hp(struct monster *mon)
-{
-	int32_t hp_gain;
-	int percent = 0; // max 32k -> 50% of mhp; more accurately "pertwobytes"
-	int fed_pct, old_chp = mon->hp;
-	struct player *p = mon->player;
-	int food;
-	
-	if (!p || pf_has(mon->state.pflags, PF_NO_FOOD)) {
-		food = 50 * z_info->food_value;
-	} else {
-		food = mon->m_timed[TMD_FOOD];
-	}
-
-	if (mon->hp >= mon->maxhp) return;
-
-	/* Default regeneration */
-	if (food >= PY_FOOD_FULL) {
-		percent = PY_REGEN_FULL;
-	} else if (food >= PY_FOOD_WEAK) {
-		percent = PY_REGEN_NORMAL;
-	} else if (food >= PY_FOOD_FAINT) {
-		percent = PY_REGEN_WEAK;
-	} else if (food >= PY_FOOD_STARVE) {
-		percent = PY_REGEN_FAINT;
-	}
-
-	fed_pct = food / z_info->food_value - 100;
-		
-	if (fed_pct > 0) fed_pct *= 2;
-	percent = MAX(percent + fed_pct, 0);
-
-	/* Various things speed up regeneration */
-	if (of_has(mon->state.flags, OF_HI_REGEN)) {
-		percent *= 25;
-	}
-	else if (of_has(mon->state.flags, OF_REGEN) || mon->m_timed[TMD_REGEN]) {
-		percent *= 3;
-	}
-	/*if (player_resting_can_regenerate(p)) {
-		percent *= 2;
-	}*/
-
-	/* Some things slow it down */
-	if (of_has(mon->state.flags, OF_IMPAIR_HP)) {
-		percent /= 2;
-	}
-
-	/* Various things interfere with physical healing */
-	if (mon->m_timed[TMD_PARALYZED]) percent = 0;
-	if (mon->m_timed[TMD_POISONED]) percent = 0;
-	if (mon->m_timed[TMD_STUN]) percent = 0;
-	if (mon->m_timed[TMD_CUT]) percent = 0;
-
-	/* Extract the new hitpoints */
-	hp_gain = mon->maxhp * percent + PY_REGEN_HPBASE;
-	if (p) {
-		player_adjust_hp_precise(p, hp_gain);
-		/* Notice changes */
-		if (old_chp != p->mon.hp) {
-			equip_learn_flag(p, OF_REGEN);
-			equip_learn_flag(p, OF_IMPAIR_HP);
-		}
-	} else {
-		int amt = hp_gain >> 16;
-		int amt_frac = hp_gain - amt;
-		if (amt_frac < randint0(1 << 15)) {
-			++amt;
-		}
-		mon->hp += amt;
-	}
-
-	mon->hp = MIN(mon->hp, mon->maxhp);
-}
-
-
-/**
- * Regenerate one turn's worth of mana
- */
-void player_regen_mana(struct player *p)
-{
-	int32_t sp_gain;
-	int percent, old_csp = p->csp;
-	int oldfeel;
-
-	/* Save the old spell points */
-	old_csp = p->csp;
-
-	/* Default regeneration */
-	percent = PY_REGEN_NORMAL;
-
-	/* L: Limited abount of mana per floor */
-	percent *= square(cave, player->mon.grid)->mana;
-	percent += 24;
-	percent /= 25;
-
-	/* Various things speed up regeneration, but shouldn't punish healthy BGs */
-	if (!(player_has(p, PF_COMBAT_REGEN) && p->mon.hp > p->mon.maxhp / 2)) {
-		if (player_of_has(p, OF_REGEN)) {
-			percent *= 2;
-		}
-		if (player_resting_can_regenerate(p)) {
-			percent *= 2;
-		}
-	}
-
-	/* Some things slow it down */
-	if (player_has(p, PF_COMBAT_REGEN)) {
-		percent /= -2;
-	} else if (player_of_has(p, OF_IMPAIR_MANA)) {
-		percent /= 2;
-	}
-
-	/* Regenerate mana */
-	sp_gain = (int32_t)(p->msp * percent);
-	if (percent > 0) {
-		sp_gain += PY_REGEN_MNBASE;
-	}
-	sp_gain = player_adjust_mana_precise(p, sp_gain);
-
-	/* SP degen heals BGs at double efficiency vs casting */
-	if (sp_gain < 0  && player_has(p, PF_COMBAT_REGEN)) {
-		convert_mana_to_hp(p, -sp_gain * 2);
-	}
-
-	/* Notice changes */
-	if (old_csp != p->csp) {
-		if (player->depth) {
-            oldfeel = (p->floor_mana + 14) / 15;
-			p->floor_mana = MAX(0, p->floor_mana + old_csp - p->csp);
-			if ((p->floor_mana + 14) / 15 != oldfeel) {
-			    //display_mana_feeling();
-			}
-		}
-		p->upkeep->redraw |= (PR_MANA);
-		equip_learn_flag(p, OF_REGEN);
-		equip_learn_flag(p, OF_IMPAIR_MANA);
-	}
-}
-
-void player_adjust_hp_precise(struct player *p, int32_t hp_gain)
-{
-	int16_t old_16 = p->mon.hp;
-	/* Load it all into 4 byte format */
-	int32_t old_32 = ((int32_t) old_16) * 65536 + p->chp_frac, new_32;
-
-	/* Check for overflow */
-	if (hp_gain >= 0) {
-		new_32 = (old_32 < INT32_MAX - hp_gain) ?
-			old_32 + hp_gain : INT32_MAX;
-	} else {
-		new_32 = (old_32 > INT32_MIN - hp_gain) ?
-			old_32 + hp_gain : INT32_MIN;
-	}
-
-	/* Break it back down */
-	if (new_32 < 0) {
-		/*
-		 * Don't use right bitwise shift on negative values:  whether
-		 * the left bits are zero or one depends on the system.
-		 */
-		int32_t remainder = new_32 % 65536;
-
-		p->mon.hp = (int16_t) (new_32 / 65536);
-		if (remainder) {
-			assert(remainder < 0);
-			p->chp_frac = (uint16_t) (65536 + remainder);
-			assert(p->mon.hp > INT16_MIN);
-			p->mon.hp -= 1;
-		} else {
-			p->chp_frac = 0;
-		}
-	} else {
-		p->mon.hp = (int16_t)(new_32 >> 16);   /* div 65536 */
-		p->chp_frac = (uint16_t)(new_32 & 0xFFFF); /* mod 65536 */
-	}
-
-	/* Fully healed */
-	if (p->mon.hp >= p->mon.maxhp) {
-		p->mon.hp = p->mon.maxhp;
-		p->chp_frac = 0;
-	}
-
-	if (p->mon.hp != old_16) {
-		p->upkeep->redraw |= (PR_HP);
-	}
-}
-
-
-/**
- * Accept a 4 byte signed int, divide it by 65k, and add
- * to current spell points. p->csp and csp_frac are 2 bytes each.
- */
-int32_t player_adjust_mana_precise(struct player *p, int32_t sp_gain)
-{
-	int16_t old_16 = p->csp;
-	/* Load it all into 4 byte format*/
-	int32_t old_32 = ((int32_t) p->csp) * 65536 + p->csp_frac, new_32;
-
-	if (sp_gain == 0) return 0;
-
-	/* Check for overflow */
-	if (sp_gain > 0) {
-		if (old_32 < INT32_MAX - sp_gain) {
-			new_32 = old_32 + sp_gain;
-		} else {
-			new_32 = INT32_MAX;
-			sp_gain = 0;
-		}
-	} else if (old_32 > INT32_MIN - sp_gain) {
-		new_32 = old_32 + sp_gain;
-	} else {
-		new_32 = INT32_MIN;
-		sp_gain = 0;
-	}
-
-	/* Break it back down*/
-	if (new_32 < 0) {
-		/*
-		 * Don't use right bitwise shift on negative values:  whether
-		 * the left bits are zero or one depends on the system.
-		 */
-		int32_t remainder = new_32 % 65536;
-
-		p->csp = (int16_t) (new_32 / 65536);
-		if (remainder) {
-			assert(remainder < 0);
-			p->csp_frac = (uint16_t) (65536 + remainder);
-			assert(p->csp > INT16_MIN);
-			p->csp -= 1;
-		} else {
-			p->csp_frac = 0;
-		}
-	} else {
-		p->csp = (int16_t)(new_32 >> 16);   /* div 65536 */
-		p->csp_frac = (uint16_t)(new_32 & 0xFFFF);    /* mod 65536 */
-	}
-
-	/* Max/min SP */
-	if (p->csp >= p->msp) {
-		p->csp = p->msp;
-		p->csp_frac = 0;
-		sp_gain = 0;
-	} else if (p->csp < 0) {
-		p->csp = 0;
-		p->csp_frac = 0;
-		sp_gain = 0;
-	}
-
-	/* Notice changes */
-	if (old_16 != p->csp) {
-		p->upkeep->redraw |= (PR_MANA);
-	}
-
-	if (sp_gain == 0) {
-		/* Recalculate */
-		new_32 = ((int32_t) p->csp) * 65536 + p->csp_frac;
-		sp_gain = new_32 - old_32;
-	}
-
-	return sp_gain;
-}
-
-void convert_mana_to_hp(struct player *p, int32_t sp_long) {
-	int32_t hp_gain, sp_ratio;
-
-	if (sp_long <= 0 || p->msp == 0 || p->mon.maxhp == p->mon.hp) return;
-
-	/* Total HP from max */
-	hp_gain = ((int32_t)(p->mon.maxhp - p->mon.hp)) * 65536;
-	hp_gain -= (int32_t)p->chp_frac;
-
-	/* Spend X% of SP get X/2% of lost HP. E.g., at 50% HP get X/4% */
-	/* Gain stays low at msp<10 because MP gains are generous at msp<10 */
-	/* sp_ratio is max sp to spent sp, doubled to suit target rate. */
-	sp_ratio = (((int32_t)MAX(10, (int32_t)p->msp)) * 131072) / sp_long;
-
-	/* Limit max healing to 25% of damage; ergo spending > 50% msp
-	 * is inefficient */
-	if (sp_ratio < 4) {sp_ratio = 4;}
-	hp_gain /= sp_ratio;
-
-	/* DAVIDTODO Flavorful comments on large gains would be fun and informative */
-
-	player_adjust_hp_precise(p, hp_gain);
-}
 
 /**
  * Update the player's light fuel
@@ -3581,6 +3295,323 @@ void player_set_resting_repeat_count(struct player *p, int16_t count)
 {
 	player_resting_repeat_count = count;
 }
+
+/**
+ * L: percentage penalty that the monster gets with natural healing while
+ * not resting
+ */
+static int mon_non_rest_penalty(struct monster *mon)
+{
+	int base = 90;
+	int regen = get_mon_power_scale(mon, PP_REGENERATION, 90);
+
+	return MAX(0, base - regen);
+}
+
+
+void regen_hp(struct monster *mon)
+{
+	int32_t hp_gain, hp_gain_resting;
+	int percent = 0, percent_resting; // max 32k -> 50% of mhp; more accurately "pertwobytes"
+	int old_chp = mon->hp;
+	struct player *p = mon->player;
+	int food;
+	
+	if (!p || pf_has(mon->state.pflags, PF_NO_FOOD)) {
+		food = 50 * z_info->food_value;
+	} else {
+		food = mon->m_timed[TMD_FOOD];
+	}
+
+	if (mon->hp >= mon->maxhp) return;
+
+	/* Default regeneration */
+	if (food >= PY_FOOD_FULL) {
+		percent = PY_REGEN_FULL;
+	} else if (food >= PY_FOOD_WEAK) {
+		percent = PY_REGEN_NORMAL;
+	} else if (food >= PY_FOOD_FAINT) {
+		percent = PY_REGEN_WEAK;
+	} else if (food >= PY_FOOD_STARVE) {
+		percent = PY_REGEN_FAINT;
+	}
+
+	/* Various things speed up regeneration */
+	percent *= (100 + get_mon_power_scale(mon, PP_REGENERATION, 200));
+	percent /= 100;
+
+	/*if (p && !player_resting_can_regenerate(p)) {
+		percent *= 100 - mon_non_rest_penalty(mon);
+		percent /= 100;
+	}*/
+	/*if (of_has(mon->state.flags, OF_HI_REGEN)) {
+		percent *= 25;
+	}
+	else if (of_has(mon->state.flags, OF_REGEN) || mon->m_timed[TMD_REGEN]) {
+		percent *= 3;
+	}*/
+	/*if (player_resting_can_regenerate(p)) {
+		percent *= 2;
+	}*/
+
+	/* Some things slow it down */
+	if (of_has(mon->state.flags, OF_IMPAIR_HP)) {
+		percent /= 2;
+	}
+
+	/* Various things interfere with physical healing */
+	if (mon->m_timed[TMD_PARALYZED]) percent = 0;
+	if (mon->m_timed[TMD_POISONED]) percent = 0;
+	if (mon->m_timed[TMD_STUN]) percent = 0;
+	if (mon->m_timed[TMD_CUT]) percent = 0;
+
+	percent_resting = percent;
+
+	percent *= 100 - mon_non_rest_penalty(mon);
+	percent /= 100;
+
+	/* Extract the new hitpoints */
+	hp_gain = mon->maxhp * percent + PY_REGEN_HPBASE;
+	hp_gain_resting = mon->maxhp * percent_resting + PY_REGEN_HPBASE;
+
+	if (mon_is_player(mon) && player_turns_rested > 0) {
+		int temp = hp_gain;
+		hp_gain += player_turns_rested * PY_REGEN_HPBASE * (player_turns_rested / 10 + 5);
+		hp_gain = MIN(hp_gain, hp_gain_resting);
+		msg_add_fmt("hp_gain on turn %i: %i -> %i%s", player_turns_rested, temp, hp_gain, hp_gain >= hp_gain_resting ? " (max)" : "");
+	}
+
+	if (p) {
+		player_adjust_hp_precise(p, hp_gain);
+		/* Notice changes */
+		if (old_chp != p->mon.hp) {
+			equip_learn_flag(p, OF_REGEN);
+			equip_learn_flag(p, OF_IMPAIR_HP);
+		}
+	} else {
+		int amt = hp_gain >> 16;
+		int amt_frac = hp_gain - amt;
+		if (amt_frac < randint0(1 << 15)) {
+			++amt;
+		}
+		mon->hp += amt;
+	}
+
+	mon->hp = MIN(mon->hp, mon->maxhp);
+}
+
+
+/**
+ * Regenerate one turn's worth of mana
+ */
+void player_regen_mana(struct player *p)
+{
+	int32_t sp_gain;
+	int percent, old_csp = p->csp;
+	int oldfeel;
+
+	/* Save the old spell points */
+	old_csp = p->csp;
+
+	/* Default regeneration */
+	percent = PY_REGEN_NORMAL;
+
+	/* L: Limited abount of mana per floor */
+	percent *= square(cave, player->mon.grid)->mana;
+	percent += 24;
+	percent /= 25;
+
+	/* Various things speed up regeneration, but shouldn't punish healthy BGs */
+	if (!(player_has(p, PF_COMBAT_REGEN) && p->mon.hp > p->mon.maxhp / 2)) {
+		if (player_of_has(p, OF_REGEN)) {
+			percent *= 2;
+		}
+		if (player_resting_can_regenerate(p)) {
+			percent *= 2;
+		}
+	}
+
+	/* Some things slow it down */
+	if (player_has(p, PF_COMBAT_REGEN)) {
+		percent /= -2;
+	} else if (player_of_has(p, OF_IMPAIR_MANA)) {
+		percent /= 2;
+	}
+
+	/* Regenerate mana */
+	sp_gain = (int32_t)(p->msp * percent);
+	if (percent > 0) {
+		sp_gain += PY_REGEN_MNBASE;
+	}
+	sp_gain = player_adjust_mana_precise(p, sp_gain);
+
+	/* SP degen heals BGs at double efficiency vs casting */
+	if (sp_gain < 0  && player_has(p, PF_COMBAT_REGEN)) {
+		convert_mana_to_hp(p, -sp_gain * 2);
+	}
+
+	/* Notice changes */
+	if (old_csp != p->csp) {
+		if (player->depth) {
+            oldfeel = (p->floor_mana + 14) / 15;
+			p->floor_mana = MAX(0, p->floor_mana + old_csp - p->csp);
+			if ((p->floor_mana + 14) / 15 != oldfeel) {
+			    //display_mana_feeling();
+			}
+		}
+		p->upkeep->redraw |= (PR_MANA);
+		equip_learn_flag(p, OF_REGEN);
+		equip_learn_flag(p, OF_IMPAIR_MANA);
+	}
+}
+
+void player_adjust_hp_precise(struct player *p, int32_t hp_gain)
+{
+	int16_t old_16 = p->mon.hp;
+	/* Load it all into 4 byte format */
+	int32_t old_32 = ((int32_t) old_16) * 65536 + p->chp_frac, new_32;
+
+	/* Check for overflow */
+	if (hp_gain >= 0) {
+		new_32 = (old_32 < INT32_MAX - hp_gain) ?
+			old_32 + hp_gain : INT32_MAX;
+	} else {
+		new_32 = (old_32 > INT32_MIN - hp_gain) ?
+			old_32 + hp_gain : INT32_MIN;
+	}
+
+	/* Break it back down */
+	if (new_32 < 0) {
+		/*
+		 * Don't use right bitwise shift on negative values:  whether
+		 * the left bits are zero or one depends on the system.
+		 */
+		int32_t remainder = new_32 % 65536;
+
+		p->mon.hp = (int16_t) (new_32 / 65536);
+		if (remainder) {
+			assert(remainder < 0);
+			p->chp_frac = (uint16_t) (65536 + remainder);
+			assert(p->mon.hp > INT16_MIN);
+			p->mon.hp -= 1;
+		} else {
+			p->chp_frac = 0;
+		}
+	} else {
+		p->mon.hp = (int16_t)(new_32 >> 16);   /* div 65536 */
+		p->chp_frac = (uint16_t)(new_32 & 0xFFFF); /* mod 65536 */
+	}
+
+	/* Fully healed */
+	if (p->mon.hp >= p->mon.maxhp) {
+		p->mon.hp = p->mon.maxhp;
+		p->chp_frac = 0;
+	}
+
+	if (p->mon.hp != old_16) {
+		p->upkeep->redraw |= (PR_HP);
+	}
+}
+
+
+/**
+ * Accept a 4 byte signed int, divide it by 65k, and add
+ * to current spell points. p->csp and csp_frac are 2 bytes each.
+ */
+int32_t player_adjust_mana_precise(struct player *p, int32_t sp_gain)
+{
+	int16_t old_16 = p->csp;
+	/* Load it all into 4 byte format*/
+	int32_t old_32 = ((int32_t) p->csp) * 65536 + p->csp_frac, new_32;
+
+	if (sp_gain == 0) return 0;
+
+	/* Check for overflow */
+	if (sp_gain > 0) {
+		if (old_32 < INT32_MAX - sp_gain) {
+			new_32 = old_32 + sp_gain;
+		} else {
+			new_32 = INT32_MAX;
+			sp_gain = 0;
+		}
+	} else if (old_32 > INT32_MIN - sp_gain) {
+		new_32 = old_32 + sp_gain;
+	} else {
+		new_32 = INT32_MIN;
+		sp_gain = 0;
+	}
+
+	/* Break it back down*/
+	if (new_32 < 0) {
+		/*
+		 * Don't use right bitwise shift on negative values:  whether
+		 * the left bits are zero or one depends on the system.
+		 */
+		int32_t remainder = new_32 % 65536;
+
+		p->csp = (int16_t) (new_32 / 65536);
+		if (remainder) {
+			assert(remainder < 0);
+			p->csp_frac = (uint16_t) (65536 + remainder);
+			assert(p->csp > INT16_MIN);
+			p->csp -= 1;
+		} else {
+			p->csp_frac = 0;
+		}
+	} else {
+		p->csp = (int16_t)(new_32 >> 16);   /* div 65536 */
+		p->csp_frac = (uint16_t)(new_32 & 0xFFFF);    /* mod 65536 */
+	}
+
+	/* Max/min SP */
+	if (p->csp >= p->msp) {
+		p->csp = p->msp;
+		p->csp_frac = 0;
+		sp_gain = 0;
+	} else if (p->csp < 0) {
+		p->csp = 0;
+		p->csp_frac = 0;
+		sp_gain = 0;
+	}
+
+	/* Notice changes */
+	if (old_16 != p->csp) {
+		p->upkeep->redraw |= (PR_MANA);
+	}
+
+	if (sp_gain == 0) {
+		/* Recalculate */
+		new_32 = ((int32_t) p->csp) * 65536 + p->csp_frac;
+		sp_gain = new_32 - old_32;
+	}
+
+	return sp_gain;
+}
+
+void convert_mana_to_hp(struct player *p, int32_t sp_long) {
+	int32_t hp_gain, sp_ratio;
+
+	if (sp_long <= 0 || p->msp == 0 || p->mon.maxhp == p->mon.hp) return;
+
+	/* Total HP from max */
+	hp_gain = ((int32_t)(p->mon.maxhp - p->mon.hp)) * 65536;
+	hp_gain -= (int32_t)p->chp_frac;
+
+	/* Spend X% of SP get X/2% of lost HP. E.g., at 50% HP get X/4% */
+	/* Gain stays low at msp<10 because MP gains are generous at msp<10 */
+	/* sp_ratio is max sp to spent sp, doubled to suit target rate. */
+	sp_ratio = (((int32_t)MAX(10, (int32_t)p->msp)) * 131072) / sp_long;
+
+	/* Limit max healing to 25% of damage; ergo spending > 50% msp
+	 * is inefficient */
+	if (sp_ratio < 4) {sp_ratio = 4;}
+	hp_gain /= sp_ratio;
+
+	/* DAVIDTODO Flavorful comments on large gains would be fun and informative */
+
+	player_adjust_hp_precise(p, hp_gain);
+}
+
 
 /**
  * Check if the player state has the given OF_ flag.

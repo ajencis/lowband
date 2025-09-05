@@ -29,7 +29,7 @@ struct terrain_element_level *t_elem_level(const struct terrain_element_kind *ki
 	assert(timer > 0);
 
 	for (lev = kind->levels; lev && lev->next; lev = lev->next) {
-		if (lev->next->min_dur < timer) {
+		if (lev->next->min_dur <= timer) {
 			return lev;
 		}
 	}
@@ -609,13 +609,12 @@ void t_elem_effects(struct chunk *c)
 		}
 	}
 
-	assert(dummy);
-
 	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
 		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
 			for (i = 0; i < PROJ_MAX; ++i) {
 				dam = (int)sq_projs[grid.y][grid.x][i];
 				if (dam > 0) {
+					assert(dummy);
 					project(source_t_elem(dummy), 0, grid, dam, i, flg, 0, 0, NULL);
 					t_elem_effect_message(c, grid, i);
 				}

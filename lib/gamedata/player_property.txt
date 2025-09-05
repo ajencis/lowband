@@ -733,6 +733,15 @@ rarity:4
 parent:skill:HEALTH
 prereq:RACE_OR_CLASS_HAS_POWER
 
+type:power
+code:REGENERATION
+name:Regeneration
+desc: can regenerate at accelerated speed.
+cost:15
+rarity:5
+parent:skill:HEALTH
+prereq:RACE_OR_CLASS_HAS_POWER
+
 
 # L: skills
 type:skill

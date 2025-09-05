@@ -24,8 +24,8 @@
 #include "player.h"
 
 /* Player regeneration constants */
-#define PY_REGEN_FULL		395		/* L: regen factor *2^16 when overfull */
-#define PY_REGEN_NORMAL		197		/* Regen factor*2^16 when full */
+#define PY_REGEN_FULL		878		/* L: regen factor *2^16 when overfull */
+#define PY_REGEN_NORMAL		293		/* Regen factor*2^16 when full */
 #define PY_REGEN_WEAK		98		/* Regen factor*2^16 when weak */
 #define PY_REGEN_FAINT		33		/* Regen factor*2^16 when fainting */
 #define PY_REGEN_HPBASE		14		/* Min amount hp regen*2^16 */

@@ -293,6 +293,7 @@ attr:HP:-1
 attr:AC:-1
 stats:1:-1:-1:1:1
 skill-melee:5
+power:REGENERATION:50
 
 # Non-descript early monsters that demonstrate some stuff but are mostly filler
 name:icky thing
@@ -398,6 +399,7 @@ power:SUMMONING_MAGIC:50
 power:SPELL_POWER:50
 power:SPELL_EASE:-20
 power:HOLY_MAGIC:-50
+power:REGENERATION:25
 
 # Monsters which pretend to be objects.  They don't move but do cast spells,
 # and attack if the player steps next to them.
@@ -626,6 +628,7 @@ attr:HP:1
 attr:DAMAGE:1
 attr:AC:-1
 stats:2:-1:-2:-1:2
+power:REGENERATION
 
 # Powerful undead which drain experience
 name:vampire
