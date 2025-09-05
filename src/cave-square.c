@@ -723,8 +723,7 @@ bool square_is_monster_walkable(struct chunk *c, struct loc grid)
  */
 bool square_ispassable(struct chunk *c, struct loc grid) {
 	assert(square_in_bounds(c, grid));
-	return sq_all_t_elem_has_flag(square(c, grid), TF_PASSABLE);
-	//return feat_is_passable(square(c, grid)->feat);
+	return square_onlyflag(c, grid, TF_PASSABLE);
 }
 
 /**
