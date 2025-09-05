@@ -1968,28 +1968,34 @@ static struct temp_attack_data *get_temp_attack_data(const struct monster *mon, 
 {
 	struct temp_attack_data *result = NULL;
 	const struct attack *atk;
+	const char *err;
 	int i;
 
 	for (atk = mon->atk; atk; atk = atk->next) {
-		if (attack_valid(mon, t_mon, atk, c)) {
-			assert(atk->num > 0);
-			for (i = 0; i < atk->num; ++i) {
-				struct temp_attack_data *new = mem_zalloc(sizeof *new);
+		err = attack_error(mon, t_mon, atk, c);
 
-				assert(new);
+		if (err) {
+			if (mon_is_player(mon)) msg(err);
+			continue;
+		}
 
-				new->atk = atk;
-				new->penalty = 0;
-				new->next = NULL;
+		assert(atk->num > 0);
+		for (i = 0; i < atk->num; ++i) {
+			struct temp_attack_data *new = mem_zalloc(sizeof *new);
 
-				if (result) {
-					struct temp_attack_data *last = result;
-					while (last->next) last = last->next;
-					last->next = new;
-				}
-				else {
-					result = new;
-				}
+			assert(new);
+
+			new->atk = atk;
+			new->penalty = 0;
+			new->next = NULL;
+
+			if (result) {
+				struct temp_attack_data *last = result;
+				while (last->next) last = last->next;
+				last->next = new;
+			}
+			else {
+				result = new;
 			}
 		}
 	}
@@ -2013,8 +2019,10 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 	int t_midx = t_mon->midx;
 	//const struct attack *atk;
 	struct temp_attack_data *tmp_data, *curr;
+	struct attack *atk;
 	int energy;
 	bool did_attack = false;
+	const char *err_msg;
 
 	assert(mon);
 	assert(t_mon);
@@ -2025,6 +2033,13 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 
 	update_mon_attacks(mon);
 
+	if (mon_is_player(mon)) {
+		for (atk = mon->atk; atk; atk = atk->next) {
+			err_msg = attack_error(mon, t_mon, atk, cave);
+			if (err_msg) msg(err_msg);
+		}
+	}
+
 	tmp_data = get_temp_attack_data(mon, t_mon, cave);
 
 	assert(tmp_data || distance(mon->grid, t_mon->grid) > 1);
@@ -2033,14 +2048,6 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 
 	if (mon_is_player(mon)) {
 		target_set_monster(t_mon);
-	}
-
-	if (mon_is_player(mon)) {
-		const char *err_msg;
-		for (curr = tmp_data; curr; curr = curr->next) {
-			err_msg = attack_error(mon, t_mon, curr->atk, cave);
-			if (err_msg) msg(err_msg);
-		}
 	}
 
 	energy = 0;

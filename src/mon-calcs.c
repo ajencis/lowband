@@ -853,6 +853,8 @@ static struct embryo_attack *get_special_attack(const struct monster *mon, int s
 
 	emb->num = 1;
 
+	emb->range = 1;
+
 	emb->dam_type = PROJ_BLUDGEONING;
 
 	if (special == ATK_SPCL_TYP_CHAIN) get_chain_attack(mon, emb);
