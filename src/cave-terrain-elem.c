@@ -29,10 +29,12 @@ struct terrain_element_level *t_elem_level(const struct terrain_element_kind *ki
 	assert(timer > 0);
 
 	for (lev = kind->levels; lev && lev->next; lev = lev->next) {
-		if (lev->next->min_dur <= timer) {
-			return lev;
+		if (lev->next->min_dur > timer) {
+			break;
 		}
 	}
+	
+	assert(lev);
 
 	return lev;
 }

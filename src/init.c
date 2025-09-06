@@ -2698,7 +2698,7 @@ static enum parser_error parse_t_elem_idx(struct parser *p) {
 	new->idx = id;
 	new->next = old;
 	new->levels = new_lev;
-	
+
 	//new->proj = -1;
 
 	parser_setpriv(p, new);
@@ -2708,7 +2708,7 @@ static enum parser_error parse_t_elem_idx(struct parser *p) {
 
 static enum parser_error parse_t_elem_dur_cutoff(struct parser *p) {
 	struct terrain_element_kind *curr = parser_priv(p);
-	struct terrain_element_level *new_lev = t_elem_lev_new();
+	struct terrain_element_level *new_lev = t_elem_lev_new(), *curr_lev;
 	int cutoff = parser_getint(p, "cutoff");
 
 	if (!curr) {
@@ -2716,9 +2716,15 @@ static enum parser_error parse_t_elem_dur_cutoff(struct parser *p) {
 	}
 
 	new_lev->min_dur = cutoff;
-	new_lev->next = curr->levels;
 
-	curr->levels = new_lev;
+	if (curr->levels) {
+		curr_lev = curr->levels;
+		while (curr_lev && curr_lev->next) curr_lev = curr_lev->next;
+		curr_lev->next = new_lev;
+	}
+	else {
+		curr->levels = new_lev;
+	}
 
 	return PARSE_ERROR_NONE;
 }
@@ -2726,12 +2732,20 @@ static enum parser_error parse_t_elem_dur_cutoff(struct parser *p) {
 static enum parser_error parse_t_elem_name(struct parser *p) {
 	struct terrain_element_kind *te = parser_priv(p);
 	char *name = string_make(parser_getstr(p, "name"));
+	struct terrain_element_level *lev;
 
 	if (!te) {
-		return PARSE_ERROR_GENERIC;
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	lev = te->levels;
+	if (!lev) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
 
-	te->levels->name = name;
+	while (lev->next) lev = lev->next;
+
+	string_free(lev->name);
+	lev->name = name;
 
 	return PARSE_ERROR_NONE;
 }
@@ -2741,11 +2755,19 @@ static enum parser_error parse_t_elem_graphics(struct parser *p) {
 	const char *color = parser_getsym(p, "color");
 	int attr = 0;
 	struct terrain_element_kind *te = parser_priv(p);
+	struct terrain_element_level *lev;
 
 	if (!te) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
-	te->levels->d_char = glyph;
+	lev = te->levels;
+	if (!lev) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	while (lev->next) lev = lev->next;
+
+	lev->d_char = glyph;
 	if (strlen(color) > 1) {
 		attr = color_text_to_attr(color);
 	} else {
@@ -2754,7 +2776,7 @@ static enum parser_error parse_t_elem_graphics(struct parser *p) {
 	if (attr < 0) {
 		return PARSE_ERROR_INVALID_COLOR;
 	}
-	te->levels->d_attr = attr;
+	lev->d_attr = attr;
 	return PARSE_ERROR_NONE;
 }
 
@@ -2762,15 +2784,19 @@ static enum parser_error parse_t_elem_proj(struct parser *p) {
 	struct terrain_element_kind *te = parser_priv(p);
 	const char *proj_name = parser_getsym(p, "proj");
 	int proj = proj_name_to_idx(proj_name);
+	struct terrain_element_level *lev;
 
 	if (!te) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
-	if (proj < 0) {
-		return PARSE_ERROR_GENERIC;
+	lev = te->levels;
+	if (!lev) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
 
-	te->levels->proj = proj;
+	while (lev->next) lev = lev->next;
+
+	lev->proj = proj;
 
 	return PARSE_ERROR_NONE;
 }
@@ -2778,17 +2804,25 @@ static enum parser_error parse_t_elem_proj(struct parser *p) {
 static enum parser_error parse_t_elem_flags(struct parser *p) {
 	struct terrain_element_kind *te = parser_priv(p);
 	char *flags, *s;
+	struct terrain_element_level *lev;
 
 	if (!te) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
+	lev = te->levels;
+	if (!lev) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	while (lev->next) lev = lev->next;
+
 	if (!parser_hasval(p, "flags")) {
 		return PARSE_ERROR_NONE;
 	}
 	flags = string_make(parser_getstr(p, "flags"));
 	s = strtok(flags, " |");
 	while (s) {
-		if (grab_flag(te->levels->flags, TF_SIZE, terrain_flags, s)) {
+		if (grab_flag(lev->flags, TF_SIZE, terrain_flags, s)) {
 			break;
 		}
 		s = strtok(NULL, " |");
@@ -2800,10 +2834,19 @@ static enum parser_error parse_t_elem_flags(struct parser *p) {
 static enum parser_error parse_t_elem_timeout(struct parser *p) {
 	struct terrain_element_kind *te = parser_priv(p);
 	int timeout = parser_getint(p, "timeout");
+	struct terrain_element_level *lev;
 
-	if (!te) return PARSE_ERROR_MISSING_RECORD_HEADER;
+	if (!te) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	lev = te->levels;
+	if (!lev) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
 
-	te->levels->timeout = timeout;
+	while (lev->next) lev = lev->next;
+
+	lev->timeout = timeout;
 
 	return PARSE_ERROR_NONE;
 }
@@ -2811,10 +2854,19 @@ static enum parser_error parse_t_elem_timeout(struct parser *p) {
 static enum parser_error parse_t_elem_proj_range(struct parser *p) {
 	struct terrain_element_kind *te = parser_priv(p);
 	int range = parser_getint(p, "range");
+	struct terrain_element_level *lev;
 
-	if (!te) return PARSE_ERROR_MISSING_RECORD_HEADER;
+	if (!te) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	lev = te->levels;
+	if (!lev) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
 
-	te->levels->proj_range = range;
+	while (lev->next) lev = lev->next;
+
+	lev->proj_range = range;
 
 	return PARSE_ERROR_NONE;
 }
@@ -2851,9 +2903,11 @@ static errr finish_parse_t_elem(struct parser *p) {
 
 	for (t_elem = te_info; t_elem; t_elem = t_elem->next) {
 		for (lev = t_elem->levels; lev && lev->next; lev = lev->next) {
-			if (lev->next->min_dur > lev->min_dur) {
+			if (lev->next->min_dur <= lev->min_dur) {
 				quit_fmt("Terrain element %s's cutoffs not strictly increasing", t_elem->levels->name);
 			}
+
+			assert(lev->name);
 		}
 	}
 

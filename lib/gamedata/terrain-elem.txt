@@ -11,7 +11,7 @@
 
 idx:FIRE
 name:ember
-graphics:#:R
+graphics:.:R
 project:FIRE
 proj-range:0
 timeout:0
@@ -44,6 +44,7 @@ timer-cutoff:600
 name:old tree
 graphics:#:u
 timeout:0
+flags:CLOUD_PROJ | BURN
 
 idx:POISON_CLOUD
 name:poison gas
