@@ -719,11 +719,40 @@ bool square_is_monster_walkable(struct chunk *c, struct loc grid)
 }
 
 /**
+ * L: gives the name of what prevents the square from being passable, or
+ * NULL  if the square is passable
+ */
+const char *square_impassable_name(struct chunk *c, struct loc grid)
+{
+	struct terrain_element *t_elem;
+	struct feature *feat;
+
+	assert(square_in_bounds(c, grid));
+
+	for (t_elem = square_t_elem(c, grid); t_elem; t_elem = t_elem->next) {
+		if (!t_elem_has_flag(t_elem, TF_PASSABLE)) {
+			return t_elem_name(t_elem);
+		}
+	}
+
+	feat = square_feat(c, grid);
+
+	if (!tf_has(feat->flags, TF_PASSABLE)) {
+		return feat->name;
+	}
+
+	return NULL;
+}
+
+/**
  * True if the square is passable by the player.
  */
 bool square_ispassable(struct chunk *c, struct loc grid) {
 	assert(square_in_bounds(c, grid));
-	return square_onlyflag(c, grid, TF_PASSABLE);
+
+	return !square_impassable_name(c, grid);
+
+	//return square_onlyflag(c, grid, TF_PASSABLE);
 }
 
 /**

@@ -475,6 +475,7 @@ bool square_suits_stairs_well(struct chunk *c, struct loc grid);
 bool square_suits_stairs_ok(struct chunk *c, struct loc grid);
 bool square_allows_summon(struct chunk *c, struct loc grid);
 
+const char *square_impassable_name(struct chunk *c, struct loc grid);
 
 const struct square *square(struct chunk *c, struct loc grid);
 struct feature *square_feat(struct chunk *c, struct loc grid);
