@@ -1156,10 +1156,35 @@ void move_player(int dir, bool disarm)
 		player->upkeep->energy_use = 0;
 	} else if (!square_ispassable(cave, grid) &&
 			(!pf_has(player->mon.state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
+
+		int prev_feat_k = square(player->cave, grid)->feat;
+		const char *issue, *prefix, *article;
+
 		disturb(player);
 
+		square_memorize(cave, grid);
+		
+		issue = square_impassable_name(player->cave, grid);
+		if (issue) {
+			article = is_a_vowel(issue[0]) ? "an " : "a ";
+		} else {
+			issue = "something";
+			article = "";
+		}
+
+		if (square(player->cave, grid)->feat == prev_feat_k) prefix = "There is";
+		else prefix = "You feel";
+
+		msgt(MSG_HITWALL, "%s %s%s blocking your way.", prefix, article, issue);
+
 		/* Notice unknown obstacles, mention known obstacles */
-		if (!square_isknown(cave, grid)) {
+		/*if (!square_isknown(cave, grid)) {
+			square_memorize(cave, grid);
+			issue = square_impassable_name(player->cave, grid);
+
+			if (issue) msgt(MSG_HITWALL, "You feel a %s blocking your way.", issue);
+			else msgt(MSG_HITWALL, "You feel something blocking your way.");
+
 			if (square_isrubble(cave, grid)) {
 				msgt(MSG_HITWALL,
 					 "You feel a pile of rubble blocking your way.");
@@ -1175,6 +1200,8 @@ void move_player(int dir, bool disarm)
 				square_light_spot(cave, grid);
 			}
 		} else {
+			issue = square_impassable_name(player->cave, grid);
+
 			if (square_isrubble(cave, grid)) {
 				msgt(MSG_HITWALL,
 					 "There is a pile of rubble blocking your way.");
@@ -1197,7 +1224,7 @@ void move_player(int dir, bool disarm)
 					square_light_spot(cave, grid);
 				}
 			}
-		}
+		}*/
 		/*
 		 * No move but do not refund energy:  primarily so that
 		 * confused moves while blind or without light take energy.
@@ -1313,18 +1340,39 @@ static bool do_cmd_walk_test(struct player *p, struct loc grid)
 	 * player's memory
 	 */
 	if (!square_ispassable(cave, grid) && (!pf_has(p->mon.state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
-		if (square_isrubble(cave, grid)) {
-			/* Rubble */
+		const char *imp_name, *article;
+		int prev_feat_k = square(p->cave, grid)->feat;
+
+		if (square_iscloseddoor(p->cave, grid)) {
+			return true;
+		}
+
+		square_memorize(cave, grid);
+		if (prev_feat_k != square(p->cave, grid)->feat) {
+			square_light_spot(cave, grid);
+		}
+
+
+		imp_name = square_impassable_name(p->cave, grid);
+		if (imp_name) {
+			article = is_a_vowel(imp_name[0]) ? "an" : "a";
+			msgt(MSG_HITWALL, "There is %s %s in the way!", article, imp_name);
+		} else {
+			msgt(MSG_HITWALL, "There is something in the way!");
+		}
+
+		/*if (square_isrubble(cave, grid)) {
+			// Rubble
 			msgt(MSG_HITWALL, "There is a pile of rubble in the way!");
 			if (!square_isrubble(p->cave, grid)) {
 				square_memorize(cave, grid);
 				square_light_spot(cave, grid);
 			}
 		} else if (square_iscloseddoor(cave, grid)) {
-			/* Door */
+			// Door
 			return true;
 		} else {
-			/* Wall */
+			// Wall
 			msgt(MSG_HITWALL, "There is a wall in the way!");
 			if (square_ispassable(p->cave, grid)
 					|| square_isrubble(p->cave, grid)
@@ -1332,7 +1380,7 @@ static bool do_cmd_walk_test(struct player *p, struct loc grid)
 				square_forget(cave, grid);
 				square_light_spot(cave, grid);
 			}
-		}
+		}*/
 
 		/* Cancel repeat */
 		disturb(p);
