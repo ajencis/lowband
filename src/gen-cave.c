@@ -112,29 +112,60 @@ static struct loc counterclockwise_card_dir(struct loc dir)
 }
 
 
+static bool floor_within_n_dist(struct chunk *c, struct loc grid, int dist)
+{
+	struct loc newgrid;
+
+	assert(square_in_bounds(c, grid));
+
+	for (newgrid.x = grid.x - dist; newgrid.x <= grid.x + dist; ++newgrid.x) {
+		for (newgrid.y = grid.y - dist; newgrid.y <= grid.y + dist; ++newgrid.y) {
+			if (!square_in_bounds(c, newgrid)) continue;
+			if (distance(newgrid, grid) > dist) continue;
+
+			if (square_isfloor(c, newgrid)) return true;
+		}
+	}
+
+	return false;
+}
+
 static void forestify_level(struct chunk *c)
 {
 	struct loc grid;
-	int tree_power;
+	int tree_power, temp_tp, sapling_max;
+
+	sapling_max = t_elem_kind_by_idx(TE_TREE)->levels->next->min_dur - 1;
 
 	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
 		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
 			tree_power = 0;
 
-			if (square_ismineral(c, grid)) {
-				square_set_feat(c, grid, FEAT_FLOOR);
-				tree_power = randint0(1000) - 150;
-			} else if (square_isroom(c, grid)) {
-				tree_power = randint0(1000) - 850;
-			}
-
-			if (square_isfloor(c, grid)) {
+			if (square_iscloseddoor(c, grid)) {
 				square_set_feat(c, grid, FEAT_DIRT_FLOOR);
+				tree_power = randint1(sapling_max);
+			} else if (square_isfloor(c, grid) && square_isroom(c, grid)) {
+				temp_tp = randint0(1000) - 350;
+				tree_power = randint0(1000) - 350;
+				tree_power = MIN(temp_tp, tree_power);
+			} else if (square_isfloor(c, grid)) {
+				tree_power = randint1(1000) - 1000 + sapling_max;
+			} else if (square_ismineral(c, grid)) {
+				square_set_feat(c, grid, FEAT_DIRT_FLOOR);
+				if (floor_within_n_dist(c, grid, 1)) tree_power = randint1(1000) - 100;
+				else if (floor_within_n_dist(c, grid, 2)) tree_power = randint1(1000);
+				else tree_power = randint1(1000) + sapling_max;
 			}
 
 			if (tree_power > 0 && !square_isstairs(c, grid)) {
 				terrain_element_increase_dur(c, grid, TE_TREE, (uint16_t)tree_power);
 			}
+		}
+	}
+
+	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
+		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
+			square_set_feat(c, grid, FEAT_DIRT_FLOOR);
 		}
 	}
 }
