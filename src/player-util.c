@@ -3378,7 +3378,6 @@ void regen_hp(struct monster *mon)
 		int temp = hp_gain;
 		hp_gain += player_turns_rested * PY_REGEN_HPBASE * (player_turns_rested / 10 + 5);
 		hp_gain = MIN(hp_gain, hp_gain_resting);
-		msg_add_fmt("hp_gain on turn %i: %i -> %i%s", player_turns_rested, temp, hp_gain, hp_gain >= hp_gain_resting ? " (max)" : "");
 	}
 
 	if (p) {

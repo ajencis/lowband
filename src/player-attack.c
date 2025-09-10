@@ -1844,11 +1844,11 @@ static const char *attack_error(const struct monster *attacker, const struct mon
 	return NULL;
 }
 
-static bool attack_valid(const struct monster *attacker, const struct monster *defender,
+/*static bool attack_valid(const struct monster *attacker, const struct monster *defender,
 		const struct attack *atk, const struct chunk *c)
 {
 	return !attack_error(attacker, defender, atk, c);
-}
+}*/
 
 static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct temp_attack_data *which)
 {
