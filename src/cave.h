@@ -190,7 +190,7 @@ struct terrain_element {
 	const struct terrain_element_kind *kind;
 	struct terrain_element *next;
 
-	uint16_t timer;
+	int timer;
 };
 
 extern struct terrain_element_kind *te_info;
@@ -317,6 +317,8 @@ uint8_t t_elem_d_char(const struct terrain_element *t_elem);
 int t_elem_timeout(const struct terrain_element *t_elem);
 int t_elem_proj(const struct terrain_element *t_elem);
 int t_elem_proj_range(const struct terrain_element *t_elem);
+
+bool t_elem_reduces(const struct terrain_element *t_elem);
 
 bool t_elem_is_los(const struct terrain_element_kind *kind);
 bool sq_any_t_elem_has_flag(const struct square *sq, int flag);
