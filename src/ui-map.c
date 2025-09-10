@@ -229,10 +229,26 @@ void grid_data_as_text(struct grid_data *g, int *ap, wchar_t *cp, int *tap,
 
 	// L: handle terrain elements
 	if (g->t_elem) {
-		a = t_elem_d_attr(g->t_elem);
-		c = t_elem_d_char(g->t_elem);
+		struct terrain_element *t_elem, *choice = NULL;
+		int total = 0, weight;
+
+		for (t_elem = g->t_elem; t_elem; t_elem = t_elem->next) {
+			if (!g->in_view && t_elem_reduces(t_elem)) continue;
+
+			weight = t_elem->timer;
+			total += weight;
+
+			if (randint0(total) < weight) {
+				choice = t_elem;
+			}
+		}
+
+		if (choice) {
+			a = t_elem_d_attr(choice);
+			c = t_elem_d_char(choice);
+		}
 	}
-	
+
 	/* Handle monsters, the player and trap borders */
 	if (g->m_idx > 0) {
 		if (g->hallucinate) {
