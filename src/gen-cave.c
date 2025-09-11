@@ -4024,7 +4024,6 @@ struct chunk *hard_centre_gen(struct player *p, int min_height, int min_width,
 	}
 
 	alloc_mana(c);
-
 	return c;
 }
 

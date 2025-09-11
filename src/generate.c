@@ -1330,7 +1330,7 @@ void prepare_next_level(struct player *p)
 
 	/* Deal with any existing current level */
 	if (character_dungeon) {
-		assert (p->cave);
+		assert(p->cave);
 
 		if (persist) {
 			/* Arenas don't get stored */

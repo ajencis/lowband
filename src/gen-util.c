@@ -451,17 +451,17 @@ static void place_rubble(struct chunk *c, struct loc grid)
 
 static void place_fume_pit(struct chunk *c, struct loc grid)
 {
-	struct loc roomlocs[256] = { 0 }, curr;
+	/*struct loc roomlocs[256] = { 0 }, curr;
 	int i, rl_amt;
-
-	square_set_feat(c, grid, FEAT_FUME_PIT);
 
 	rl_amt = all_contiguous_locs(c, grid, roomlocs, sizeof roomlocs, square_isroom, NULL);
 
 	for (i = 0; i < rl_amt; ++i) {
 		curr = roomlocs[i];
 		c->squares[curr.y][curr.x].required_rf = RF_IM_POIS;
-	}
+	}*/
+
+	square_set_feat(c, grid, FEAT_FUME_PIT);
 }
 
 
