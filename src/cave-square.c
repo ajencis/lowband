@@ -641,10 +641,12 @@ bool square_isopen(struct chunk *c, struct loc grid) {
 
 /**
  * True if the square is empty (an open square without any items).
+ * L: and no terrain elements!
  */
 bool square_isempty(struct chunk *c, struct loc grid) {
 	if (square_isplayertrap(c, grid)) return false;
 	if (square_iswebbed(c, grid)) return false;
+	if (square_t_elem(c, grid)) return false;
 	return square_isopen(c, grid) && !square_object(c, grid);
 }
 

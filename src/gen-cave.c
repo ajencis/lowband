@@ -112,7 +112,40 @@ static struct loc counterclockwise_card_dir(struct loc dir)
 }
 
 
-static bool floor_within_n_dist(struct chunk *c, struct loc grid, int dist)
+static int distance_from_feat(struct chunk *c, struct loc grid, uint8_t feat)
+{
+	struct loc othergrid;
+	int dist_check, max_dist_check;
+	int found_dist = -1;
+
+	assert(c);
+	assert(feat > FEAT_NONE && feat < FEAT_MAX);
+	assert(square_in_bounds(c, grid));
+
+	max_dist_check = distance(loc(0, 0), loc(c->width, c->height));
+
+	for (dist_check = 3; dist_check < max_dist_check + 3; dist_check += 3) {
+		int minx = MAX(0, grid.x - dist_check), miny = MAX(0, grid.y - dist_check);
+		int maxx = MIN(c->width - 1, grid.x + dist_check), maxy = MIN(c->height - 1, grid.y + dist_check);
+
+		for (othergrid.x = minx; othergrid.x <= maxx; ++othergrid.x) {
+			for (othergrid.y = miny; othergrid.y <= maxy; ++othergrid.y) {
+				assert(square_in_bounds(c, grid));
+
+				if (square(c, othergrid)->feat == feat) {
+					int dist = distance(grid, othergrid);
+					if (found_dist < 0 || found_dist > dist) found_dist = dist;
+				}
+			}
+		}
+
+		if (found_dist >= 0) return found_dist;
+	}
+
+	return -1;
+}
+
+/*static bool floor_within_n_dist(struct chunk *c, struct loc grid, int dist)
 {
 	struct loc newgrid;
 
@@ -128,7 +161,7 @@ static bool floor_within_n_dist(struct chunk *c, struct loc grid, int dist)
 	}
 
 	return false;
-}
+}*/
 
 static void forestify_level(struct chunk *c)
 {
@@ -141,7 +174,11 @@ static void forestify_level(struct chunk *c)
 		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
 			tree_power = 0;
 
-			if (square_iscloseddoor(c, grid)) {
+			if (square_isperm(c, grid)) {
+				tree_power = 0;
+			} else if (square_isstairs(c, grid)) {
+				tree_power = 0;
+			} else if (square_iscloseddoor(c, grid)) {
 				square_set_feat(c, grid, FEAT_DIRT_FLOOR);
 				tree_power = randint1(sapling_max);
 			} else if (square_isfloor(c, grid) && square_isroom(c, grid)) {
@@ -152,9 +189,7 @@ static void forestify_level(struct chunk *c)
 				tree_power = randint1(1000) - 1000 + sapling_max;
 			} else if (square_ismineral(c, grid)) {
 				square_set_feat(c, grid, FEAT_DIRT_FLOOR);
-				if (floor_within_n_dist(c, grid, 1)) tree_power = randint1(1000) - 100;
-				else if (floor_within_n_dist(c, grid, 2)) tree_power = randint1(1000);
-				else tree_power = randint1(1000) + sapling_max;
+				tree_power = randint1(1000) - 100 + 100 * distance_from_feat(c, grid, FEAT_FLOOR);
 			}
 
 			if (tree_power > 0 && !square_isstairs(c, grid)) {
@@ -165,7 +200,9 @@ static void forestify_level(struct chunk *c)
 
 	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
 		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
-			square_set_feat(c, grid, FEAT_DIRT_FLOOR);
+			if (!square_isperm(c, grid) && !square_isstairs(c, grid)) {
+				square_set_feat(c, grid, FEAT_DIRT_FLOOR);
+			}
 		}
 	}
 }

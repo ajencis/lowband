@@ -3375,7 +3375,7 @@ void regen_hp(struct monster *mon)
 	hp_gain_resting = mon->maxhp * percent_resting + PY_REGEN_HPBASE;
 
 	if (mon_is_player(mon) && player_turns_rested > 0) {
-		int temp = hp_gain;
+		//int temp = hp_gain;
 		hp_gain += player_turns_rested * PY_REGEN_HPBASE * (player_turns_rested / 10 + 5);
 		hp_gain = MIN(hp_gain, hp_gain_resting);
 	}
