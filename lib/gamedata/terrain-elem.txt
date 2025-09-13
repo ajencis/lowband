@@ -12,16 +12,19 @@
 idx:FIRE
 name:ember
 graphics:.:R
-project:FIRE
-proj-range:0
 timeout:0
 flags:PROJECT | PASSABLE | INTERESTING | LOS | CLOUD
 timer-cutoff:10
 name:fire
 graphics:~:r
 project:FIRE
+proj-range:0
+timeout:0
+flags:PROJECT | PASSABLE | INTERESTING | LOS | CLOUD | BRIGHT
+name:large fire
+graphics:~:o
+project:FIRE
 proj-range:1
-#fire has special timeout code
 timeout:0
 flags:PROJECT | PASSABLE | INTERESTING | LOS | CLOUD | BRIGHT
 
