@@ -696,26 +696,26 @@ static bool feat_produce_t_elem(struct chunk *c, struct loc grid)
 		did_something = did_something || increase > 0;
 
 		if (feat->t_elem_msg && square_isview(c, grid)) {
-			msg("The %s %s %s.", feat->name, feat->t_elem_msg, t_elem_level(kind, increase));
+			msg("The %s %s %s.", feat->name, feat->t_elem_msg, t_elem_level(kind, (int)increase)->name);
 		}
 	}
 
 	return did_something;
 }
 
-bool cave_produce_t_elem(struct chunk *c)
+#define T_ELEM_PRODUCE_FREQ 5
+
+bool cave_produce_t_elem(struct chunk *c, int turn_use)
 {
     struct loc grid;
     bool did_something = false;
 
-	int freq = 5;
-
 	float x, x_freq;
 	int y, y_freq;
-	int trn = turn / turns_per_process_world;
+	int trn = turn_use / turns_per_process_world;
 
-	y_freq = my_int_sqrt(freq);
-	x_freq = (float)freq / (float)y_freq;
+	y_freq = my_int_sqrt(T_ELEM_PRODUCE_FREQ);
+	x_freq = (float)T_ELEM_PRODUCE_FREQ / (float)y_freq;
 
 	y = trn % y_freq;
 	trn /= y_freq;
@@ -738,32 +738,40 @@ bool cave_produce_t_elem(struct chunk *c)
 	}
 
 	return did_something;
+}
 
-	/*int frequency = 5; // one in  frequency  grids produce every turn
-	int start = (turn / turns_per_process_world) % frequency;
+static bool cave_all_produce_t_elem(struct chunk *c)
+{
+	struct loc grid;
+	bool did_something = false;
 
-	for (grid.x = start, grid.y = 0; grid.y < c->height; grid.x += frequency, grid.y += (grid.x / c->width), grid.x = (grid.x % c->width)) {
-		if (feat_produce_t_elem(c, grid)) {
-			did_something = true;
+	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
+		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
+			did_something = feat_produce_t_elem(c, grid) || did_something;
 		}
 	}
 
 	return did_something;
+}
 
-	int inc_fact = 4;
-    int turn_fact = (turn / turns_per_process_world) % inc_fact;
-    int y_start = (turn_fact % inc_fact) + 1;
-    int x_start = ((turn_fact / inc_fact) % inc_fact) + 1;
+void cave_handle_t_elem(struct chunk *c)
+{
+	t_elem_effects(c);
+	cave_produce_t_elem(c, turn);
+	t_elem_spread(c);
+	t_elem_reduce_durations(c);
+}
 
-	for (grid.x = turn_fact)
+void cave_init_t_elem(struct chunk *c, int times)
+{
+	int i;
 
-    for (grid.x = x_start; grid.x < c->width - 1; grid.x += inc_fact) {
-        for (grid.y = y_start; grid.y < c->height - 1; grid.y += inc_fact) {
-            if (feat_produce_t_elem(c, grid)) {
-                did_something = true;
-            }
-        }
-    }
+	for (i = 0; i < times; ++i) {
+		if (!(i % T_ELEM_PRODUCE_FREQ)) {
+			cave_all_produce_t_elem(c);
+		}
 
-    return did_something;*/
+		t_elem_spread(c);
+		t_elem_reduce_durations(c);
+	}
 }

@@ -348,6 +348,9 @@ void t_elem_effects(struct chunk *c);
 
 bool cave_produce_t_elem(struct chunk *c);
 
+void cave_handle_t_elem(struct chunk *c);
+void cave_init_t_elem(struct chunk *c, int times);
+
 /* cave-map.c */
 void map_info(struct loc grid, struct grid_data *g);
 void square_note_spot(struct chunk *c, struct loc grid);
