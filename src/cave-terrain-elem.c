@@ -705,14 +705,14 @@ static bool feat_produce_t_elem(struct chunk *c, struct loc grid)
 
 #define T_ELEM_PRODUCE_FREQ 5
 
-bool cave_produce_t_elem(struct chunk *c, int turn_use)
+bool cave_produce_t_elem(struct chunk *c)
 {
     struct loc grid;
     bool did_something = false;
 
 	float x, x_freq;
 	int y, y_freq;
-	int trn = turn_use / turns_per_process_world;
+	int trn = turn / turns_per_process_world;
 
 	y_freq = my_int_sqrt(T_ELEM_PRODUCE_FREQ);
 	x_freq = (float)T_ELEM_PRODUCE_FREQ / (float)y_freq;
@@ -757,7 +757,7 @@ static bool cave_all_produce_t_elem(struct chunk *c)
 void cave_handle_t_elem(struct chunk *c)
 {
 	t_elem_effects(c);
-	cave_produce_t_elem(c, turn);
+	cave_produce_t_elem(c);
 	t_elem_spread(c);
 	t_elem_reduce_durations(c);
 }
