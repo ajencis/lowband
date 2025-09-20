@@ -1208,7 +1208,7 @@ void drop_near(struct chunk *c, struct object **dropped, int chance,
 void push_object(struct loc grid)
 {
 	/* Save the original terrain feature */
-	struct feature *feat_old = square_feat(cave, grid);
+	struct feature_kind *feat_old = square_feat_old(cave, grid);
 	struct object *obj = square_object(cave, grid);
 	struct queue *queue = q_new(z_info->floor_size);
 	struct trap *trap = square_trap(cave, grid);
@@ -1303,7 +1303,7 @@ void push_object(struct loc grid)
 	}
 
 	/* Reset cave feature, remove trap if needed */
-	square_set_feat(cave, grid, feat_old->fidx);
+	square_set_feat_old(cave, grid, feat_old->fidx);
 	if (trap && !square_istrappable(cave, grid)) {
 		square_destroy_trap(cave, grid);
 	}

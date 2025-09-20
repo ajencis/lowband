@@ -945,8 +945,9 @@ static void wr_dungeon_aux(struct chunk *c)
 					wr_byte(prev_char);
 					prev_char = tmp8u;
 					count = 1;
-				} else /* Continue the run */
+				} else { /* Continue the run */
 					count++;
+				}
 			}
 		}
 
@@ -965,7 +966,7 @@ static void wr_dungeon_aux(struct chunk *c)
 	for (y = 0; y < c->height; y++) {
 		for (x = 0; x < c->width; x++) {
 			/* Extract a byte */
-			tmp8u = square(c, loc(x, y))->feat;
+			tmp8u = square(c, loc(x, y))->feat_old;
 
 			/* If the run is broken, or too full, flush it */
 			if ((tmp8u != prev_char) || (count == UCHAR_MAX)) {
@@ -983,6 +984,18 @@ static void wr_dungeon_aux(struct chunk *c)
 	if (count) {
 		wr_byte(count);
 		wr_byte(prev_char);
+	}
+
+	for (y = 0; y < c->height; ++y) {
+		for (x = 0; x < c->height; ++x) {
+			const struct feature *feat;
+
+			for (feat = square(c, loc(x, y))->feat; feat; feat = feat->next) {
+				wr_u16b((uint16_t)feat->kind->fidx);
+				wr_u16b((uint16_t)feat->size);
+			}
+			wr_u16b((uint16_t)FEAT_NONE);
+		}
 	}
 
 	for (y = 0; y < c->height; ++y) {

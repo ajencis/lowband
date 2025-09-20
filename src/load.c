@@ -1542,7 +1542,7 @@ static int rd_dungeon_aux(struct chunk **c)
 		/* Apply the RLE info */
 		for (i = count; i > 0; i--) {
 			/* Extract "feat" */
-			square_set_feat(c1, loc(x, y), tmp8u);
+			square_set_feat_old(c1, loc(x, y), tmp8u);
 
 			/* Advance/Wrap */
 			if (++x >= c1->width) {
@@ -1555,7 +1555,25 @@ static int rd_dungeon_aux(struct chunk **c)
 		}
 	}
 
-	if (c1 == cave) plog("getting telems for cave");
+	for (y = 0; y < height; ++y) {
+		for (x = 0; x < height; ++x) {
+			int feat, size;
+
+			rd_u16b(&tmp16u);
+
+			feat = (int)tmp16u;
+
+			if (feat <= FEAT_NONE || feat >= FEAT_MAX) {
+				break;
+			}
+
+			rd_u16b(&tmp16u);
+
+			size = (int)tmp16u;
+
+			square_add_feat(c1, loc(x, y), feat, size);
+		}
+	}
 
 	for (y = 0; y < height; ++y) {
 		for (x = 0; x < width; ++x) {

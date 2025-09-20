@@ -415,23 +415,6 @@ void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract)
 	}
 
 	adjust_level(p, true, false);
-
-	/*if (false) {
-		int i, percent;
-		uint64_t old, new;
-		static bool done = false;
-
-		msg_add_fmt("xpfact = %i", p->mon.state.expfact);
-
-		for (i = 1; i < 50 && !done; ++i) {
-			old = player_exp[i] * p->mon.state.expfact / 100;
-			new = new_player_exp(i, p->mon.state.expfact);
-			percent = old > UINT16_MAX ? new / (old / 100) : new * 100 / old;
-			msg_add_fmt("level %i: old xp = %llu, new xp = %llu; new = %i%% of old", i, old, new, percent);
-		}
-
-		done = true;
-	}*/
 }
 
 int player_min_xp_depth(struct player *p)

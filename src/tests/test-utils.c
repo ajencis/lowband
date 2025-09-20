@@ -93,16 +93,16 @@ struct chunk *t_build_arena(int height, int width) {
 
 	for (int y = 0; y < height; y++)
 		for (int x = 0; x < width; x++)
-			square_set_feat(c, loc(x, y), FEAT_FLOOR);
+			square_set_feat_old(c, loc(x, y), FEAT_FLOOR);
 
 	for (int y = 0; y < height; y++) {
-		square_set_feat(c, loc(0, y), FEAT_PERM);
-		square_set_feat(c, loc(width - 1, y), FEAT_PERM);
+		square_set_feat_old(c, loc(0, y), FEAT_PERM);
+		square_set_feat_old(c, loc(width - 1, y), FEAT_PERM);
 	}
 
 	for (int x = 0; x < width; x++) {
-		square_set_feat(c, loc(x, 0), FEAT_PERM);
-		square_set_feat(c, loc(x, height - 1), FEAT_PERM);
+		square_set_feat_old(c, loc(x, 0), FEAT_PERM);
+		square_set_feat_old(c, loc(x, height - 1), FEAT_PERM);
 	}
 
 	return c;

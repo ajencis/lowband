@@ -11,20 +11,20 @@ static struct chunk *create_empty_cave(int height, int width) {
 
 	grid.y = 0;
 	for (grid.x = 0; grid.x < width; ++grid.x) {
-		square_set_feat(c, grid, FEAT_PERM);
+		square_set_feat_old(c, grid, FEAT_PERM);
 	}
 	for (grid.y = 1; grid.y < height - 1; ++grid.y) {
 		grid.x = 0;
-		square_set_feat(c, grid, FEAT_PERM);
+		square_set_feat_old(c, grid, FEAT_PERM);
 		for (grid.x = 1; grid.x < width - 1; ++grid.x) {
-			square_set_feat(c, grid, FEAT_FLOOR);
+			square_set_feat_old(c, grid, FEAT_FLOOR);
 		}
 		grid.x = width - 1;
-		square_set_feat(c, grid, FEAT_PERM);
+		square_set_feat_old(c, grid, FEAT_PERM);
 	}
 	grid.y = height - 1;
 	for (grid.x = 0; grid.x < width; ++grid.x) {
-		square_set_feat(c, grid, FEAT_PERM);
+		square_set_feat_old(c, grid, FEAT_PERM);
 	}
 	return c;
 }
@@ -606,7 +606,7 @@ static int test_scatter_los(void *state) {
 	int n, i, j;
 
 	for (i = 1; i < c->height - 1; ++i) {
-		square_set_feat(c, loc(ctr.x - 1, i), FEAT_GRANITE);
+		square_set_feat_old(c, loc(ctr.x - 1, i), FEAT_GRANITE);
 	}
 
 	/*
@@ -650,7 +650,7 @@ static int test_scatter_pred(void *state) {
 
 	for (g.y = ctr.y - 2; g.y <= ctr.y + 2; ++g.y) {
 		for (g.x = ctr.x - 2; g.x <= ctr.x + 2; ++g.x) {
-			square_set_feat(c, g, FEAT_FLOOR);
+			square_set_feat_old(c, g, FEAT_FLOOR);
 		}
 	}
 	g.x = rand_range(ctr.x - 2, ctr.x + 2);
@@ -659,7 +659,7 @@ static int test_scatter_pred(void *state) {
 		case 1: g.y = rand_range(ctr.y - 1, ctr.y + 1); break;
 		default: g.y = ctr.y; break;
 	}
-	square_set_feat(c, g, FEAT_LESS);
+	square_set_feat_old(c, g, FEAT_LESS);
 
 	for (i = 0; i < (int) N_ELEMENTS(grids); ++i) {
 		grids[i] = loc(-1, -1);

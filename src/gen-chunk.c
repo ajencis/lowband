@@ -53,7 +53,7 @@ struct chunk *chunk_write(struct chunk *c)
 	for (y = 0; y < new->height; y++) {
 		for (x = 0; x < new->width; x++) {
 			/* Terrain */
-			new->squares[y][x].feat = square(c, loc(x, y))->feat;
+			new->squares[y][x].feat_old = square(c, loc(x, y))->feat_old;
 			sqinfo_copy(square(new, loc(x, y))->info, square(c, loc(x, y))->info);
 		}
 	}
@@ -367,8 +367,8 @@ bool chunk_copy(struct chunk *dest, struct player *p, struct chunk *source,
 			symmetry_transform(&dest_grid, y0, x0, h, w, rotate, reflect);
 
 			/* Terrain */
-			dest->squares[dest_grid.y][dest_grid.x].feat =
-				square(source, grid)->feat;
+			dest->squares[dest_grid.y][dest_grid.x].feat_old =
+				square(source, grid)->feat_old;
 			sqinfo_copy(square(dest, dest_grid)->info,
 						square(source, grid)->info);
 

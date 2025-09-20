@@ -950,7 +950,10 @@ static void update_one(struct chunk *c, struct loc grid, struct player *p)
 		square_light_spot(c, grid);
 	}
 
-	square_memorize_t_elem(c, grid);
+	if (c == cave) {
+		square_memorize_t_elem(c, grid);
+		//square_memorize_feats(p, c, grid);
+	}
 
 	/* Square went from seen -> unseen */
 	if (!square_isseen(c, grid) && square_wasseen(c, grid)) {

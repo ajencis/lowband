@@ -362,7 +362,7 @@ void place_trap(struct chunk *c, struct loc grid, int t_idx, int trap_level)
 		/* Require the correct terrain */
 		if (!square_player_trap_allowed(c, grid)) return;
 
-		t_idx = pick_trap(c, square(c, grid)->feat, trap_level);
+		t_idx = pick_trap(c, square(c, grid)->feat_old, trap_level);
 	}
 
 	/* Failure */

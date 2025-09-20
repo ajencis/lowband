@@ -33,7 +33,7 @@
 #include "player-timed.h"
 #include "trap.h"
 
-struct feature *f_info;
+struct feature_kind *f_info;
 struct terrain_element_kind *te_info;
 struct chunk *cave = NULL;
 
@@ -303,7 +303,7 @@ int lookup_feat(const char *name)
 
 	/* Look for it */
 	for (i = 0; i < FEAT_MAX; i++) {
-		struct feature *feat = &f_info[i];
+		struct feature_kind *feat = &f_info[i];
 		if (!feat->name)
 			continue;
 
@@ -428,6 +428,9 @@ void cave_free(struct chunk *c) {
 			}
 			if (c->squares[y][x].obj) {
 				object_pile_free(c, p_c, c->squares[y][x].obj);
+			}
+			if (c->squares[y][x].feat) {
+				square_clear_feats(c, loc(x, y));
 			}
 
 			square_t_elem_remove_all(c, loc(x, y));
@@ -756,13 +759,13 @@ void square_average_mana(struct chunk *c, struct loc grid)
 	struct square *sq = &c->squares[grid.y][grid.x], *sq2;
 
 	if (!square_in_bounds_fully(c, grid)) return;
-	if (square_feat(c, grid)->fidx == FEAT_PERM) return;
+	if (square_feat_old(c, grid)->fidx == FEAT_PERM) return;
 
 	for (i = randint1(9), j = 0; j < 9; ++j, i = (i % 9) + 1) {
 		x = ddx[i] + grid.x;
 		y = ddy[i] + grid.y;
 		if (!square_in_bounds_fully(c, loc(x, y))) continue;
-		if (square_feat(c, loc(x, y))->fidx == FEAT_PERM) continue;
+		if (square_feat_old(c, loc(x, y))->fidx == FEAT_PERM) continue;
 
 		sq2 = &c->squares[y][x];
 

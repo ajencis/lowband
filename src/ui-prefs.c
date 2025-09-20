@@ -241,7 +241,7 @@ void dump_features(ang_file *fff)
 	int i;
 
 	for (i = 0; i < FEAT_MAX; i++) {
-		struct feature *feat = &f_info[i];
+		struct feature_kind *feat = &f_info[i];
 		size_t j;
 
 		/* Skip non-entries */
@@ -1353,7 +1353,7 @@ void reset_visuals(bool load_prefs)
 
 	/* Extract default attr/char code for features */
 	for (i = 0; i < FEAT_MAX; i++) {
-		struct feature *feat = &f_info[i];
+		struct feature_kind *feat = &f_info[i];
 
 		/* Assume we will use the underlying values */
 		for (j = 0; j < LIGHTING_MAX; j++) {

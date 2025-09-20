@@ -44,20 +44,20 @@ static struct chunk *create_empty_cave(int height, int width) {
 
 	grid.y = 0;
 	for (grid.x = 0; grid.x < width; ++grid.x) {
-		square_set_feat(c, grid, FEAT_PERM);
+		square_set_feat_old(c, grid, FEAT_PERM);
 	}
 	for (grid.y = 1; grid.y < height - 1; ++grid.y) {
 		grid.x = 0;
-		square_set_feat(c, grid, FEAT_PERM);
+		square_set_feat_old(c, grid, FEAT_PERM);
 		for (grid.x = 1; grid.x < width - 1; ++grid.x) {
-			square_set_feat(c, grid, FEAT_FLOOR);
+			square_set_feat_old(c, grid, FEAT_FLOOR);
 		}
 		grid.x = width - 1;
-		square_set_feat(c, grid, FEAT_PERM);
+		square_set_feat_old(c, grid, FEAT_PERM);
 	}
 	grid.y = height - 1;
 	for (grid.x = 0; grid.x < width; ++grid.x) {
-		square_set_feat(c, grid, FEAT_PERM);
+		square_set_feat_old(c, grid, FEAT_PERM);
 	}
 	return c;
 }

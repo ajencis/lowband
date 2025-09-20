@@ -96,12 +96,13 @@ void map_info(struct loc grid, struct grid_data *g)
 	g->lighting = LIGHTING_LIT;
 	g->unseen_object = false;
 	g->unseen_money = false;
+	g->feat = NULL;
 
 	/* Use real feature (remove later) */
-	g->f_idx = square(cave, grid)->feat;
+	/*g->f_idx = square(cave, grid)->feat_old;
 	if (f_info[g->f_idx].mimic) {
 		g->f_idx = (uint32_t) (f_info[g->f_idx].mimic - f_info);
-	}
+	}*/
 
 	g->in_view = (square_isseen(cave, grid)) ? true : false;
 	g->is_player = (square(cave, grid)->mon < 0) ? true : false;
@@ -127,6 +128,7 @@ void map_info(struct loc grid, struct grid_data *g)
 		/* Remember seen feature */
 		square_memorize(cave, grid);
 		square_memorize_t_elem(cave, grid);
+		square_memorize_feats(player, cave, grid);
 	} else if (!square_isknown(cave, grid)) {
 		g->f_idx = FEAT_NONE;
 	} else if (square_isglow(cave, grid)) {
@@ -134,13 +136,16 @@ void map_info(struct loc grid, struct grid_data *g)
 	}
 
 	/* Use known feature */
-	g->f_idx = square(player->cave, grid)->feat;
+	//g->f_idx = square(player->cave, grid)->feat_old;
 
 	// L: copy terrain element over
 	t_elem = square_t_elem(player->cave, grid);
 	if (t_elem) {
 		g->t_elem = t_elem;
 	}
+
+	g->feat = square_feat(player->cave, grid);
+	g->f_idx = g->feat ? g->feat->kind->fidx : FEAT_NONE;
 
 	/* There is a known trap in this square */
 	if (square_trap(player->cave, grid) && square_isknown(cave, grid)) {
@@ -192,7 +197,7 @@ void map_info(struct loc grid, struct grid_data *g)
 	if (g->hallucinate && g->m_idx == 0 && g->first_kind == 0) {
 		if (one_in_(128) && (int) g->f_idx != FEAT_PERM) {
 			g->m_idx = 1;
-		} else if (one_in_(128) && (int) g->f_idx != FEAT_PERM) {
+		} else if (one_in_(127) && (int) g->f_idx != FEAT_PERM) {
 			/* if hallucinating, we just need first_kind to not be NULL */
 			g->first_kind = k_info;
 		} else {
@@ -262,6 +267,7 @@ void square_note_spot(struct chunk *c, struct loc grid)
 	/* Memorize this grid */
 	square_memorize(c, grid);
 	square_memorize_t_elem(c, grid);
+	square_memorize_feats(player, c, grid);
 }
 
 
@@ -350,36 +356,36 @@ static bool loc_in_array_of_locs(struct loc searchfor, struct loc *locs, int loc
 int all_contiguous_locs(struct chunk *c, struct loc center, struct loc *locs, int locs_size,
 	square_predicate pred, bool (*move_pred)(struct chunk *c, struct loc gridfrom, struct loc gridto))
 {
-struct loc uncontinued_locs[1000] = { 0 };
-int ulei = 0; // uncont'd locs end index
-int ulsi = 0; // uncont'd locs start index
-int li = 0; // locs index
-int di; // dirs index
-int dirs[] = { 2, 4, 6, 8, 1, 3, 5, 7 };
+	struct loc uncontinued_locs[1000] = { 0 };
+	int ulei = 0; // uncont'd locs end index
+	int ulsi = 0; // uncont'd locs start index
+	int li = 0; // locs index
+	int di; // dirs index
+	int dirs[] = { 2, 4, 6, 8, 1, 3, 5, 7 };
 
-uncontinued_locs[ulei++] = center;
+	uncontinued_locs[ulei++] = center;
 
-while (li < locs_size && ulei > ulsi) {
-	struct loc to_cont = uncontinued_locs[ulsi++];
-	assert(!loc_in_array_of_locs(to_cont, locs, li));
-	locs[li++] = to_cont;
+	while (li < locs_size && ulei > ulsi) {
+		struct loc to_cont = uncontinued_locs[ulsi++];
+		assert(!loc_in_array_of_locs(to_cont, locs, li));
+		locs[li++] = to_cont;
 
-	for (di = N_ELEMENTS(dirs) - 1; di >= 0; --di) {
-		struct loc newloc = loc_sum(ddgrid[dirs[di]], to_cont);
+		for (di = N_ELEMENTS(dirs) - 1; di >= 0; --di) {
+			struct loc newloc = loc_sum(ddgrid[dirs[di]], to_cont);
 
-		if (loc_in_array_of_locs(newloc, uncontinued_locs, ulei)) {
-			continue;
+			if (loc_in_array_of_locs(newloc, uncontinued_locs, ulei)) {
+				continue;
+			}
+			if (!square_in_bounds_fully(c, newloc)) continue;
+			if (move_pred && !move_pred(c, to_cont, newloc)) continue;
+			if (pred && !pred(c, newloc)) continue;
+			if (ulei >= 1000) continue;
+
+			uncontinued_locs[ulei++] = newloc;
 		}
-		if (!square_in_bounds_fully(c, newloc)) continue;
-		if (move_pred && !move_pred(c, to_cont, newloc)) continue;
-		if (pred && !pred(c, newloc)) continue;
-		if (ulei >= 1000) continue;
-
-		uncontinued_locs[ulei++] = newloc;
 	}
-}
 
-return li;
+	return li;
 }
 
 
@@ -408,11 +414,13 @@ static void cave_unlight(struct point_set *ps)
 		if (unlight_power(player) > 0) {
 			square_memorize(cave, grid);
 			square_memorize_t_elem(cave, grid);
+			square_memorize_feats(player, cave, grid);
 		}
 
 		/* Hack -- Forget "boring" grids */
 		if (square_isfloor(cave, grid)) {
 			square_forget(cave, grid);
+			square_forget_feats(player, grid);
 		}
 	}
 
@@ -514,6 +522,7 @@ void wiz_light(struct chunk *c, struct player *p, bool full)
 							square_isvisibletrap(c, a_grid)) {
 						square_memorize(c, a_grid);
 						square_memorize_t_elem(c, a_grid);
+						square_memorize_feats(player, c, a_grid);
 						square_mark(c, a_grid);
 					}
 				}
@@ -586,6 +595,7 @@ void wiz_dark(struct chunk *c, struct player *p, bool full)
 							square_isvisibletrap(c, a_grid)) {
 						square_memorize(c, a_grid);
 						square_memorize_t_elem(c, a_grid);
+						square_memorize_feats(player, c, a_grid);
 						square_mark(c, a_grid);
 					}
 				}
@@ -660,12 +670,14 @@ void cave_illuminate(struct chunk *c, bool daytime)
 				if (light) {
 					square_memorize(c, grid);
 					square_memorize_t_elem(c, grid);
+					square_memorize_feats(player, c, grid);
 				}
 			} else if (!square_isbright(c, grid)) {
 				sqinfo_off(square(c, grid)->info, SQUARE_GLOW);
 				/* Hack -- like cave_unlight(), forget "boring" grids */
-				if (square_isfloor(c, grid))
+				if (square_isfloor(c, grid)) {
 					square_forget(c, grid);
+				}
 			}
 		}
 	}
@@ -682,6 +694,7 @@ void cave_illuminate(struct chunk *c, bool daytime)
 				struct loc a_grid = loc_sum(grid, ddgrid_ddd[i]);
 				sqinfo_on(square(c, a_grid)->info, SQUARE_GLOW);
 				square_memorize(c, a_grid);
+				square_memorize_feats(player, c, a_grid);
 				square_memorize_t_elem(c, a_grid);
 			}
 		}
@@ -729,13 +742,15 @@ void cave_known(struct player *p)
 
 				/* Don't count projectable or lava squares */
 				if (!square_isprojectable(cave, adj_grid) ||
-					square_isbright(cave, adj_grid))
+						square_isbright(cave, adj_grid)) {
 					++count;
+				}
 			}
 
 			/* Internal walls not known */
 			if (count < 8) {
-				p->cave->squares[y][x].feat = square(cave, grid)->feat;
+				//p->cave->squares[y][x].feat_old = square(cave, grid)->feat_old;
+				square_memorize_feats(p, cave, loc(x, y));
 			}
 		}
 	}

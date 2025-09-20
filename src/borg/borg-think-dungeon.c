@@ -90,7 +90,7 @@ static bool borg_think_dungeon_lunal(void)
 
     borg_grid *ag = &borg_grids[borg.c.y][borg.c.x];
 
-    uint8_t feat  = square(cave, borg.c)->feat;
+    uint8_t feat  = square(cave, borg.c)->feat_old;
 
     enum borg_need need;
 
@@ -445,7 +445,7 @@ static bool borg_think_dungeon_munchkin(void)
 
     borg_grid *ag  = &borg_grids[borg.c.y][borg.c.x];
 
-    uint8_t feat   = square(cave, borg.c)->feat;
+    uint8_t feat   = square(cave, borg.c)->feat_old;
 
     enum borg_need need;
 

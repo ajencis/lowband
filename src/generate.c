@@ -1180,7 +1180,7 @@ static struct chunk *cave_generate(struct player *p, int height, int width)
 					size_t n;
 					struct connector *new = mem_zalloc(sizeof *new);
 					new->grid = grid;
-					new->feat = square_feat(chunk, grid)->fidx;
+					new->feat = square_feat_old(chunk, grid)->fidx;
 					new->info = mem_zalloc(SQUARE_SIZE * sizeof(bitflag));
 					for (n = 0; n < SQUARE_SIZE; n++) {
 						new->info[n] = square(chunk, grid)->info[n];

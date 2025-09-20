@@ -207,12 +207,39 @@ bool feat_is_smooth(int feat)
  * Use functions like square_isdiggable, square_allowslos, etc. in these cases.
  */
 
+/*static bool all_feats_are(struct chunk *c, struct loc grid, bool (*pred)(int))
+{
+	struct feature *feat;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (!pred(feat->kind->fidx)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+static bool any_feat_is(struct chunk *c, struct loc grid, bool (*pred)(int))
+{
+	struct feature *feat;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (pred(feat->kind->fidx)) {
+			return true;
+		}
+	}
+
+	return false;
+}*/
+
 /**
  * True if the square is normal open floor.
  */
 bool square_isfloor(struct chunk *c, struct loc grid)
 {
-	return feat_is_floor(square(c, grid)->feat);
+	return square_has_feat(c, grid, FEAT_FLOOR);
+	//return feat_is_floor(square(c, grid)->feat_old);
 }
 
 /**
@@ -220,7 +247,7 @@ bool square_isfloor(struct chunk *c, struct loc grid)
  */
 bool square_istrappable(struct chunk *c, struct loc grid)
 {
-	return feat_is_trap_holding(square(c, grid)->feat);
+	return feat_is_trap_holding(square(c, grid)->feat_old);
 }
 
 /**
@@ -228,7 +255,7 @@ bool square_istrappable(struct chunk *c, struct loc grid)
  */
 bool square_isobjectholding(struct chunk *c, struct loc grid)
 {
-	return feat_is_object_holding(square(c, grid)->feat);
+	return feat_is_object_holding(square(c, grid)->feat_old);
 }
 
 /**
@@ -236,8 +263,8 @@ bool square_isobjectholding(struct chunk *c, struct loc grid)
  */
 bool square_isrock(struct chunk *c, struct loc grid)
 {
-	return (tf_has(f_info[square(c, grid)->feat].flags, TF_GRANITE) &&
-			!tf_has(f_info[square(c, grid)->feat].flags, TF_DOOR_ANY));
+	return (tf_has(f_info[square(c, grid)->feat_old].flags, TF_GRANITE) &&
+			!tf_has(f_info[square(c, grid)->feat_old].flags, TF_DOOR_ANY));
 }
 
 /**
@@ -245,7 +272,7 @@ bool square_isrock(struct chunk *c, struct loc grid)
  */
 bool square_isgranite(struct chunk *c, struct loc grid)
 {
-	return feat_is_granite(square(c, grid)->feat);
+	return feat_is_granite(square(c, grid)->feat_old);
 }
 
 /**
@@ -253,8 +280,8 @@ bool square_isgranite(struct chunk *c, struct loc grid)
  */
 bool square_isperm(struct chunk *c, struct loc grid)
 {
-	return (tf_has(f_info[square(c, grid)->feat].flags, TF_PERMANENT) &&
-			tf_has(f_info[square(c, grid)->feat].flags, TF_ROCK));
+	return (tf_has(f_info[square(c, grid)->feat_old].flags, TF_PERMANENT) &&
+			tf_has(f_info[square(c, grid)->feat_old].flags, TF_ROCK));
 }
 
 /**
@@ -262,7 +289,7 @@ bool square_isperm(struct chunk *c, struct loc grid)
  */
 bool square_ismagma(struct chunk *c, struct loc grid)
 {
-	return feat_is_magma(square(c, grid)->feat);
+	return feat_is_magma(square(c, grid)->feat_old);
 }
 
 /**
@@ -270,7 +297,7 @@ bool square_ismagma(struct chunk *c, struct loc grid)
  */
 bool square_isquartz(struct chunk *c, struct loc grid)
 {
-	return feat_is_quartz(square(c, grid)->feat);
+	return feat_is_quartz(square(c, grid)->feat_old);
 }
 
 /**
@@ -284,7 +311,7 @@ bool square_ismineral(struct chunk *c, struct loc grid)
 
 bool square_hasgoldvein(struct chunk *c, struct loc grid)
 {
-	return tf_has(f_info[square(c, grid)->feat].flags, TF_GOLD);
+	return tf_has(f_info[square(c, grid)->feat_old].flags, TF_GOLD);
 }
 
 /**
@@ -292,8 +319,8 @@ bool square_hasgoldvein(struct chunk *c, struct loc grid)
  */
 bool square_isrubble(struct chunk *c, struct loc grid)
 {
-    return (!tf_has(f_info[square(c, grid)->feat].flags, TF_WALL) &&
-			tf_has(f_info[square(c, grid)->feat].flags, TF_ROCK));
+    return (!tf_has(f_info[square(c, grid)->feat_old].flags, TF_WALL) &&
+			tf_has(f_info[square(c, grid)->feat_old].flags, TF_ROCK));
 }
 
 /**
@@ -304,8 +331,8 @@ bool square_isrubble(struct chunk *c, struct loc grid)
  */
 bool square_issecretdoor(struct chunk *c, struct loc grid)
 {
-    return (tf_has(f_info[square(c, grid)->feat].flags, TF_DOOR_ANY) &&
-			f_info[square(c, grid)->feat].mimic);
+    return (tf_has(f_info[square(c, grid)->feat_old].flags, TF_DOOR_ANY) &&
+			f_info[square(c, grid)->feat_old].mimic);
 			//tf_has(f_info[square(c, grid)->feat].flags, TF_ROCK));
 }
 
@@ -314,7 +341,7 @@ bool square_issecretdoor(struct chunk *c, struct loc grid)
  */
 bool square_isopendoor(struct chunk *c, struct loc grid)
 {
-    return (tf_has(f_info[square(c, grid)->feat].flags, TF_CLOSABLE));
+    return (tf_has(f_info[square(c, grid)->feat_old].flags, TF_CLOSABLE));
 }
 
 /**
@@ -322,13 +349,13 @@ bool square_isopendoor(struct chunk *c, struct loc grid)
  */
 bool square_iscloseddoor(struct chunk *c, struct loc grid)
 {
-	int feat = square(c, grid)->feat;
+	int feat = square(c, grid)->feat_old;
 	return tf_has(f_info[feat].flags, TF_DOOR_CLOSED);
 }
 
 bool square_isbrokendoor(struct chunk *c, struct loc grid)
 {
-	int feat = square(c, grid)->feat;
+	int feat = square(c, grid)->feat_old;
     return (tf_has(f_info[feat].flags, TF_DOOR_ANY) &&
 			tf_has(f_info[feat].flags, TF_PASSABLE) &&
 			!tf_has(f_info[feat].flags, TF_CLOSABLE));
@@ -341,7 +368,7 @@ bool square_isbrokendoor(struct chunk *c, struct loc grid)
  */
 bool square_isdoor(struct chunk *c, struct loc grid)
 {
-	int feat = square(c, grid)->feat;
+	int feat = square(c, grid)->feat_old;
 	return tf_has(f_info[feat].flags, TF_DOOR_ANY);
 }
 
@@ -350,7 +377,7 @@ bool square_isdoor(struct chunk *c, struct loc grid)
  */
 bool square_isstairs(struct chunk *c, struct loc grid)
 {
-	int feat = square(c, grid)->feat;
+	int feat = square(c, grid)->feat_old;
 	return tf_has(f_info[feat].flags, TF_STAIR);
 }
 
@@ -359,7 +386,7 @@ bool square_isstairs(struct chunk *c, struct loc grid)
  */
 bool square_isupstairs(struct chunk*c, struct loc grid)
 {
-	int feat = square(c, grid)->feat;
+	int feat = square(c, grid)->feat_old;
 	return tf_has(f_info[feat].flags, TF_UPSTAIR);
 }
 
@@ -368,7 +395,7 @@ bool square_isupstairs(struct chunk*c, struct loc grid)
  */
 bool square_isdownstairs(struct chunk *c, struct loc grid)
 {
-	int feat = square(c, grid)->feat;
+	int feat = square(c, grid)->feat_old;
 	return tf_has(f_info[feat].flags, TF_DOWNSTAIR);
 }
 
@@ -377,7 +404,7 @@ bool square_isdownstairs(struct chunk *c, struct loc grid)
  */
 bool square_isshop(struct chunk *c, struct loc grid)
 {
-	return feat_is_shop(square(c, grid)->feat);
+	return feat_is_shop(square(c, grid)->feat_old);
 }
 
 /**
@@ -400,7 +427,7 @@ bool square_isoccupied(struct chunk *c, struct loc grid) {
 bool square_isknown(struct chunk *c, struct loc grid) {
 	if (c != cave && (!player || c != player->cave)) return false;
 	if (!player->cave) return false;
-	return square(player->cave, grid)->feat == FEAT_NONE ? false : true;
+	return square(player->cave, grid)->feat_old == FEAT_NONE ? false : true;
 }
 
 /**
@@ -409,7 +436,7 @@ bool square_isknown(struct chunk *c, struct loc grid) {
  */
 bool square_ismemorybad(struct chunk *c, struct loc grid) {
 	return !square_isknown(c, grid)
-			|| square(player->cave, grid)->feat != square(c, grid)->feat;
+			|| square(player->cave, grid)->feat_old != square(c, grid)->feat_old;
 }
 
 bool square_hasunknownitem(struct chunk *c, struct loc grid)
@@ -614,7 +641,7 @@ static bool square_hasflag(struct chunk *c, struct loc grid, int flag)
 	assert(flag >= 0);
 	assert(flag < TF_MAX);
 
-	return tf_has(f_info[sq->feat].flags, flag) || sq_any_t_elem_has_flag(sq, flag);
+	return tf_has(f_info[sq->feat_old].flags, flag) || sq_any_t_elem_has_flag(sq, flag);
 }
 
 /**
@@ -629,7 +656,7 @@ static bool square_onlyflag(struct chunk *c, struct loc grid, int flag)
 	assert(flag >= 0);
 	assert(flag < TF_MAX);
 
-	return tf_has(f_info[sq->feat].flags, flag) && sq_all_t_elem_has_flag(sq, flag);
+	return tf_has(f_info[sq->feat_old].flags, flag) && sq_all_t_elem_has_flag(sq, flag);
 }
 
 /**
@@ -676,7 +703,7 @@ bool square_canputitem(struct chunk *c, struct loc grid) {
  * True if the terrain element in question can be put in the square
  */
 bool square_canputterrainelem(struct chunk *c, struct loc grid, uint16_t idx) {
-	int feat = square(c, grid)->feat;
+	int feat = square(c, grid)->feat_old;
 	struct terrain_element *t_elem;
 
 	for (t_elem = square_t_elem(c, grid); t_elem; t_elem = t_elem->next) {
@@ -717,7 +744,7 @@ bool square_iswebbable(struct chunk *c, struct loc grid) {
 bool square_is_monster_walkable(struct chunk *c, struct loc grid)
 {
 	assert(square_in_bounds(c, grid));
-	return feat_is_monster_walkable(square(c, grid)->feat);
+	return feat_is_monster_walkable(square(c, grid)->feat_old);
 }
 
 /**
@@ -727,7 +754,7 @@ bool square_is_monster_walkable(struct chunk *c, struct loc grid)
 const char *square_impassable_name(struct chunk *c, struct loc grid)
 {
 	struct terrain_element *t_elem;
-	struct feature *feat;
+	struct feature_kind *feat;
 
 	assert(square_in_bounds(c, grid));
 
@@ -737,7 +764,7 @@ const char *square_impassable_name(struct chunk *c, struct loc grid)
 		}
 	}
 
-	feat = square_feat(c, grid);
+	feat = square_feat_old(c, grid);
 
 	if (!tf_has(feat->flags, TF_PASSABLE)) {
 		return feat->name;
@@ -762,7 +789,7 @@ bool square_ispassable(struct chunk *c, struct loc grid) {
  */
 bool square_isprojectable(struct chunk *c, struct loc grid) {
 	if (!square_in_bounds(c, grid)) return false;
-	return feat_is_projectable(square(c, grid)->feat);
+	return feat_is_projectable(square(c, grid)->feat_old);
 }
 
 /**
@@ -795,7 +822,7 @@ bool square_isstrongwall(struct chunk *c, struct loc grid) {
  */
 bool square_isbright(struct chunk *c, struct loc grid) {
 	assert(square_in_bounds(c, grid));
-	return feat_is_bright(square(c, grid)->feat);
+	return feat_is_bright(square(c, grid)->feat_old);
 }
 
 /**
@@ -803,7 +830,7 @@ bool square_isbright(struct chunk *c, struct loc grid) {
  */
 bool square_isfiery(struct chunk *c, struct loc grid) {
 	assert(square_in_bounds(c, grid));
-	return feat_is_fiery(square(c, grid)->feat);
+	return feat_is_fiery(square(c, grid)->feat_old);
 }
 
 /**
@@ -819,7 +846,7 @@ bool square_islit(struct chunk *c, struct loc grid) {
  */
 bool square_isdamaging(struct chunk *c, struct loc grid) {
 	assert(square_in_bounds(c, grid));
-	return feat_is_fiery(square(c, grid)->feat);
+	return feat_is_fiery(square(c, grid)->feat_old);
 }
 
 /**
@@ -827,7 +854,7 @@ bool square_isdamaging(struct chunk *c, struct loc grid) {
  */
 bool square_isnoflow(struct chunk *c, struct loc grid) {
 	assert(square_in_bounds(c, grid));
-	return feat_is_no_flow(square(c, grid)->feat);
+	return feat_is_no_flow(square(c, grid)->feat_old);
 }
 
 /**
@@ -835,7 +862,7 @@ bool square_isnoflow(struct chunk *c, struct loc grid) {
  */
 bool square_isnoscent(struct chunk *c, struct loc grid) {
 	assert(square_in_bounds(c, grid));
-	return feat_is_no_scent(square(c, grid)->feat);
+	return feat_is_no_scent(square(c, grid)->feat_old);
 }
 
 bool square_iswarded(struct chunk *c, struct loc grid)
@@ -858,7 +885,7 @@ bool square_iswebbed(struct chunk *c, struct loc grid)
 
 bool square_seemslikewall(struct chunk *c, struct loc grid)
 {
-	return tf_has(f_info[square(c, grid)->feat].flags, TF_ROCK);
+	return tf_has(f_info[square(c, grid)->feat_old].flags, TF_ROCK);
 }
 
 bool square_isinteresting(struct chunk *c, struct loc grid)
@@ -1056,10 +1083,10 @@ const struct square *square(struct chunk *c, struct loc grid)
 	return &c->squares[grid.y][grid.x];
 }
 
-struct feature *square_feat(struct chunk *c, struct loc grid)
+struct feature_kind *square_feat_old(struct chunk *c, struct loc grid)
 {
 	assert(square_in_bounds(c, grid));
-	return &f_info[square(c, grid)->feat];
+	return &f_info[square(c, grid)->feat_old];
 }
 
 int square_light(struct chunk *c, struct loc grid)
@@ -1327,10 +1354,10 @@ int square_num_walls_adjacent(struct chunk *c, struct loc grid)
     int k = 0;
     assert(square_in_bounds(c, grid));
 
-    if (feat_is_wall(square(c, next_grid(grid, DIR_S))->feat)) k++;
-	if (feat_is_wall(square(c, next_grid(grid, DIR_N))->feat)) k++;
-    if (feat_is_wall(square(c, next_grid(grid, DIR_E))->feat)) k++;
-    if (feat_is_wall(square(c, next_grid(grid, DIR_W))->feat)) k++;
+    if (feat_is_wall(square(c, next_grid(grid, DIR_S))->feat_old)) k++;
+	if (feat_is_wall(square(c, next_grid(grid, DIR_N))->feat_old)) k++;
+    if (feat_is_wall(square(c, next_grid(grid, DIR_E))->feat_old)) k++;
+    if (feat_is_wall(square(c, next_grid(grid, DIR_W))->feat_old)) k++;
 
     return k;
 }
@@ -1347,14 +1374,115 @@ int square_num_walls_diagonal(struct chunk *c, struct loc grid)
     int k = 0;
     assert(square_in_bounds(c, grid));
 
-    if (feat_is_wall(square(c, next_grid(grid, DIR_SE))->feat)) k++;
-    if (feat_is_wall(square(c, next_grid(grid, DIR_NW))->feat)) k++;
-    if (feat_is_wall(square(c, next_grid(grid, DIR_NE))->feat)) k++;
-    if (feat_is_wall(square(c, next_grid(grid, DIR_SW))->feat)) k++;
+    if (feat_is_wall(square(c, next_grid(grid, DIR_SE))->feat_old)) k++;
+    if (feat_is_wall(square(c, next_grid(grid, DIR_NW))->feat_old)) k++;
+    if (feat_is_wall(square(c, next_grid(grid, DIR_NE))->feat_old)) k++;
+    if (feat_is_wall(square(c, next_grid(grid, DIR_SW))->feat_old)) k++;
 
     return k;
 }
 
+
+void square_clear_feats(struct chunk *c, struct loc grid)
+{
+	//dbg_log("feat", "entering square_clear_feats");
+	assert(c);
+
+	struct feature *feat;
+
+	for (feat = square_feat(c, grid); feat; feat = square_feat(c, grid)) {
+		feat_remove(c, grid, feat->kind->fidx);
+	}
+
+	/*while (square_feat(c, grid)) {
+		int idx = square_feat(c, grid)->kind->fidx;
+
+		feat_remove(c, grid, idx);
+	}*/
+
+	/*struct feature *feat, *next;
+	struct square *sq = &c->squares[grid.y][grid.x];
+
+	for (feat = square_feat(c, grid); feat; feat = next) {
+		next = feat->next;
+		mem_free(feat);
+	}
+
+	sq->feat = NULL;*/
+
+	//dbg_log("feat", "done square_clear_feats");
+}
+
+void square_set_feat(struct chunk *c, struct loc grid, struct feature *feat)
+{
+	//dbg_log("feat", "entering square_set_feat");
+
+	struct square *sq;
+
+	assert(c);
+	assert(square_in_bounds(c, grid));
+
+	sq = &c->squares[grid.y][grid.x];
+
+	assert(sq);
+
+	//dbg_log("feat", "clearing feats");
+	square_clear_feats(c, grid);
+
+	assert(!sq->feat);
+
+	//dbg_log("feat", "refeating");
+	sq->feat = feat;
+
+	//dbg_log("feat", "done square_set_feat");
+}
+
+/**
+ * L: add a feat to the square, retaining previous feats
+ */
+bool square_add_feat(struct chunk *c, struct loc grid, int feat, int size)
+{
+	return feat_add(&c->squares[grid.y][grid.x].feat, feat, size);
+
+	struct feature *feat_new, *prev;
+	struct feature_kind *kind;
+	struct square *sq = &c->squares[grid.y][grid.x];
+
+	assert(feat > FEAT_NONE && feat < FEAT_MAX);
+	assert(size > 0);
+
+	kind = &f_info[feat];
+
+	if (!sq->feat || (sq->feat->kind->fidx > kind->fidx)) {
+		// putting the new feat at the start
+		prev = NULL;
+	} else if (sq->feat->kind->fidx == kind->fidx) {
+		return false;
+	} else {
+		for (prev = sq->feat; prev && prev->next; prev = prev->next) {
+			if (prev->next->kind->fidx == kind->fidx) return false;
+			else if (prev->next->kind->fidx > kind->fidx) {
+				break;
+			}
+		}
+	}
+
+	feat_new = mem_zalloc(sizeof *feat_new);
+
+	feat_new->kind = kind;
+	feat_new->size = size;
+
+	if (prev) {
+		feat_new->next = prev->next;
+		prev->next = feat_new;
+	}
+	else {
+		feat_new->next = sq->feat;
+		sq->feat = feat_new;
+	}
+
+	return true;
+}
 
 /**
  * Set the terrain type for a square.
@@ -1362,19 +1490,23 @@ int square_num_walls_diagonal(struct chunk *c, struct loc grid)
  * This should be the only function that sets terrain, apart from the savefile
  * loading code.
  */
-void square_set_feat(struct chunk *c, struct loc grid, int feat)
+void square_set_feat_old(struct chunk *c, struct loc grid, int feat)
 {
+	assert(c);
+	square_clear_feats(c, grid);
+	square_add_feat(c, grid, feat, 100);
+
 	int current_feat;
 
 	assert(square_in_bounds(c, grid));
-	current_feat = square(c, grid)->feat;
+	current_feat = square(c, grid)->feat_old;
 
 	/* Track changes */
 	if (current_feat) c->feat_count[current_feat]--;
 	if (feat) c->feat_count[feat]++;
 
 	/* Make the change */
-	c->squares[grid.y][grid.x].feat = feat;
+	c->squares[grid.y][grid.x].feat_old = feat;
 
 	/* Light bright terrain */
 	if (feat_is_bright(feat)) {
@@ -1403,7 +1535,7 @@ void square_set_feat(struct chunk *c, struct loc grid, int feat)
 static void square_set_known_feat(struct chunk *c, struct loc grid, int feat)
 {
 	if (c != cave) return;
-	player->cave->squares[grid.y][grid.x].feat = feat;
+	player->cave->squares[grid.y][grid.x].feat_old = feat;
 }
 
 /**
@@ -1470,11 +1602,11 @@ void square_add_stairs(struct chunk *c, struct loc grid, int depth) {
 	else if (is_quest(player, depth) || depth >= z_info->max_depth - 1)
 		down = 0;
 
-	square_set_feat(c, grid, down ? FEAT_MORE : FEAT_LESS);
+	square_set_feat_old(c, grid, down ? FEAT_MORE : FEAT_LESS);
 }
 
 void square_add_door(struct chunk *c, struct loc grid, bool closed) {
-	square_set_feat(c, grid, closed ? FEAT_CLOSED : FEAT_OPEN);
+	square_set_feat_old(c, grid, closed ? FEAT_CLOSED : FEAT_OPEN);
 }
 
 void square_open_door(struct chunk *c, struct loc grid)
@@ -1485,19 +1617,19 @@ void square_open_door(struct chunk *c, struct loc grid)
 	assert(lock);
 	square_remove_all_traps_of_type(c, grid, lock->tidx);
 	if (square_issecretdoor(c, grid)) {
-		square_set_feat(c, grid, FEAT_OPEN_SECRET);
+		square_set_feat_old(c, grid, FEAT_OPEN_SECRET);
 	} else {
-		square_set_feat(c, grid, FEAT_OPEN);
+		square_set_feat_old(c, grid, FEAT_OPEN);
 	}
 }
 
 void square_close_door(struct chunk *c, struct loc grid)
 {
 	assert(square_isopendoor(c, grid));
-	if (square(c, grid)->feat == FEAT_OPEN_SECRET) {
-		square_set_feat(c, grid, FEAT_SECRET);
+	if (square(c, grid)->feat_old == FEAT_OPEN_SECRET) {
+		square_set_feat_old(c, grid, FEAT_SECRET);
 	} else {
-		square_set_feat(c, grid, FEAT_CLOSED);
+		square_set_feat_old(c, grid, FEAT_CLOSED);
 	}
 }
 
@@ -1508,7 +1640,7 @@ void square_smash_door(struct chunk *c, struct loc grid)
 	assert(square_isdoor(c, grid));
 	assert(lock);
 	square_remove_all_traps_of_type(c, grid, lock->tidx);
-	square_set_feat(c, grid, FEAT_BROKEN);
+	square_set_feat_old(c, grid, FEAT_BROKEN);
 }
 
 void square_unlock_door(struct chunk *c, struct loc grid) {
@@ -1522,7 +1654,7 @@ void square_destroy_door(struct chunk *c, struct loc grid) {
 	assert(square_isdoor(c, grid));
 	assert(lock);
 	square_remove_all_traps_of_type(c, grid, lock->tidx);
-	square_set_feat(c, grid, FEAT_FLOOR);
+	square_set_feat_old(c, grid, FEAT_FLOOR);
 }
 
 void square_destroy_trap(struct chunk *c, struct loc grid)
@@ -1550,18 +1682,18 @@ void square_destroy_decoy(struct chunk *c, struct loc grid)
 
 void square_tunnel_wall(struct chunk *c, struct loc grid)
 {
-	square_set_feat(c, grid, FEAT_FLOOR);
+	square_set_feat_old(c, grid, FEAT_FLOOR);
 }
 
 void square_destroy_wall(struct chunk *c, struct loc grid)
 {
-	square_set_feat(c, grid, FEAT_FLOOR);
+	square_set_feat_old(c, grid, FEAT_FLOOR);
 }
 
 void square_smash_wall(struct chunk *c, struct loc grid)
 {
 	int i;
-	square_set_feat(c, grid, FEAT_FLOOR);
+	square_set_feat_old(c, grid, FEAT_FLOOR);
 
 	for (i = 0; i < 8; i++) {
 		/* Extract adjacent location */
@@ -1589,7 +1721,7 @@ void square_smash_wall(struct chunk *c, struct loc grid)
 		}
 
 		/* Remove it */
-		square_set_feat(c, adj_grid, FEAT_FLOOR);
+		square_set_feat_old(c, adj_grid, FEAT_FLOOR);
 	}
 }
 
@@ -1638,7 +1770,7 @@ void square_destroy(struct chunk *c, struct loc grid) {
 		feat = FEAT_MAGMA;
 	}
 
-	square_set_feat(c, grid, feat);
+	square_set_feat_old(c, grid, feat);
 }
 
 void square_earthquake(struct chunk *c, struct loc grid) {
@@ -1646,7 +1778,7 @@ void square_earthquake(struct chunk *c, struct loc grid) {
 	int f;
 
 	if (!square_ispassable(c, grid)) {
-		square_set_feat(c, grid, FEAT_FLOOR);
+		square_set_feat_old(c, grid, FEAT_FLOOR);
 		return;
 	}
 
@@ -1656,7 +1788,7 @@ void square_earthquake(struct chunk *c, struct loc grid) {
 		f = FEAT_QUARTZ;
 	else
 		f = FEAT_MAGMA;
-	square_set_feat(c, grid, f);
+	square_set_feat_old(c, grid, f);
 }
 
 /**
@@ -1664,37 +1796,46 @@ void square_earthquake(struct chunk *c, struct loc grid) {
  */
 void square_upgrade_mineral(struct chunk *c, struct loc grid)
 {
-	if (square(c, grid)->feat == FEAT_MAGMA)
-		square_set_feat(c, grid, FEAT_MAGMA_K);
-	if (square(c, grid)->feat == FEAT_QUARTZ)
-		square_set_feat(c, grid, FEAT_QUARTZ_K);
+	struct feature *feat = square_feat_by_type(c, grid, FEAT_MAGMA);
+
+	if (feat) {
+		square_add_feat(c, grid, FEAT_MAGMA_K, feat->size);
+		feat_remove(c, grid, feat->kind->fidx);
+	}
+
+	feat = square_feat_by_type(c, grid, FEAT_QUARTZ);
+
+	if (feat) {
+		square_add_feat(c, grid, FEAT_QUARTZ_K, feat->size);
+		feat_remove(c, grid, feat->kind->fidx);
+	}
 }
 
 void square_destroy_rubble(struct chunk *c, struct loc grid) {
 	assert(square_isrubble(c, grid));
-	square_set_feat(c, grid, FEAT_FLOOR);
+	square_set_feat_old(c, grid, FEAT_FLOOR);
 }
 
 void square_force_floor(struct chunk *c, struct loc grid) {
-	square_set_feat(c, grid, FEAT_FLOOR);
+	square_set_feat_old(c, grid, FEAT_FLOOR);
 }
 
 /* Note that this returns the STORE_ index, which is one less than shopnum */
 int square_shopnum(struct chunk *c, struct loc grid) {
 	if (square_isshop(c, grid))
-		return f_info[square(c, grid)->feat].shopnum - 1;
+		return f_info[square(c, grid)->feat_old].shopnum - 1;
 	return -1;
 }
 
 int square_digging(struct chunk *c, struct loc grid) {
 	if (square_isdiggable(c, grid) || square_iscloseddoor(c, grid))
-		return f_info[square(c, grid)->feat].dig;
+		return f_info[square(c, grid)->feat_old].dig;
 	return 0;
 }
 
-static const struct feature *feat_apparent(struct chunk *c, struct loc grid)
+static const struct feature_kind *feat_apparent(struct chunk *c, struct loc grid)
 {
-	return &f_info[square(c, grid)->feat];
+	return &f_info[square(c, grid)->feat_old];
 }
 
 /*
@@ -1727,7 +1868,7 @@ const char *square_apparent_name(struct chunk *c, struct loc grid) {
  */
 const char *square_apparent_look_prefix(struct chunk *c, struct loc grid) {
 	const char *name = square_apparent_name(c, grid);
-	const struct feature *fp = feat_apparent(c, grid);
+	const struct feature_kind *fp = feat_apparent(c, grid);
 	return fp->look_prefix ? fp->look_prefix : (is_a_vowel(name[0]) ? "an " : "a ");
 	/*int actual = square(c, grid)->feat;
 	const struct feature *fp = f_info[actual].mimic ?
@@ -1746,7 +1887,7 @@ const char *square_apparent_look_prefix(struct chunk *c, struct loc grid) {
  * \param grid Is the grid to use.
  */
 const char *square_apparent_look_in_preposition(struct chunk *c, struct loc grid) {
-	const struct feature *fp = feat_apparent(c, grid);
+	const struct feature_kind *fp = feat_apparent(c, grid);
 	return fp->look_in_preposition ? fp->look_in_preposition : "on ";
 	/*int actual = square(c, grid)->feat;
 	const struct feature *fp = f_info[actual].mimic ?
@@ -1756,10 +1897,10 @@ const char *square_apparent_look_in_preposition(struct chunk *c, struct loc grid
 
 /* Memorize the terrain */
 void square_memorize(struct chunk *c, struct loc grid) {
-	uint8_t feat = square(c, grid)->feat;
+	uint8_t feat = square(c, grid)->feat_old;
 	if (c != cave) return;
 	// L: if we know the true feat don't override that
-	if (feat == square(player->cave, grid)->feat) return;
+	if (feat == square(player->cave, grid)->feat_old) return;
 	square_set_known_feat(c, grid, f_info[feat].mimic ? f_info[feat].mimic->fidx : f_info[feat].fidx);
 
 	//square_set_known_feat(c, grid, square(c, grid)->feat);
@@ -1767,7 +1908,7 @@ void square_memorize(struct chunk *c, struct loc grid) {
 
 void square_true_memorize(struct chunk *c, struct loc grid) {
 	if (c != cave) return;
-	square_set_known_feat(c, grid, square(c, grid)->feat);
+	square_set_known_feat(c, grid, square(c, grid)->feat_old);
 }
 
 /* Forget the terrain */

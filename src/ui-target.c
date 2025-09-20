@@ -885,6 +885,7 @@ static bool aux_terrain(struct chunk *c, struct player *p,
 
 	/* Hack -- handle unknown grids */
 
+
 	/* Pick a preposition if needed */
 	lphrase2 = (*auxst->phrase2) ?
 		square_apparent_look_in_preposition(p->cave, auxst->grid) : "";

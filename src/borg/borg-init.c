@@ -451,7 +451,7 @@ void borg_init(void)
         int i, j;
         /* Reset the # and % -- Scan the features */
         for (i = 1; i < FEAT_MAX; i++) {
-            struct feature *f_ptr = &f_info[i];
+            struct feature_kind *f_ptr = &f_info[i];
 #if false
             /* Skip non-features */
             if (!f_ptr->name) continue;

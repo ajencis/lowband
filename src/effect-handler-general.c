@@ -3114,9 +3114,9 @@ bool effect_handler_RUBBLE(effect_handler_context_t *context)
 
 			if (one_in_(3)) {
 				if (one_in_(2))
-					square_set_feat(cave, grid, FEAT_PASS_RUBBLE);
+					square_set_feat_old(cave, grid, FEAT_PASS_RUBBLE);
 				else
-					square_set_feat(cave, grid, FEAT_RUBBLE);
+					square_set_feat_old(cave, grid, FEAT_RUBBLE);
 				if (cave->depth == 0)
 					expose_to_sun(cave, grid, is_daytime());
 				rubble_grids--;
@@ -3140,7 +3140,7 @@ bool effect_handler_RUBBLE(effect_handler_context_t *context)
 bool effect_handler_GRANITE(effect_handler_context_t *context)
 {
 	struct trap *trap = context->origin.which.trap;
-	square_set_feat(cave, trap->grid, FEAT_GRANITE);
+	square_set_feat_old(cave, trap->grid, FEAT_GRANITE);
 	if (cave->depth == 0) expose_to_sun(cave, trap->grid, is_daytime());
 
 	player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
@@ -3857,7 +3857,7 @@ bool effect_handler_CREATE_WALL(effect_handler_context_t *context)
 	}
 
 	feat = FEAT_GRANITE;
-	square_set_feat(cave, target, feat);
+	square_set_feat_old(cave, target, feat);
 
 	player->upkeep->update |= PU_UPDATE_VIEW;
 
@@ -3893,7 +3893,7 @@ bool effect_handler_CREATE_ILLUSORY_WALL(effect_handler_context_t *context)
 	}
 
 	feat = FEAT_ILLUSORY_WALL;
-	square_set_feat(cave, target, feat);
+	square_set_feat_old(cave, target, feat);
 	square_true_memorize(cave, target);
 
 	player->upkeep->update |= PU_UPDATE_VIEW;

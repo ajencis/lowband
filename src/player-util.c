@@ -2692,10 +2692,10 @@ void player_take_terrain_damage(struct player *p, struct loc grid)
 			strnfmt(dam_text, sizeof(dam_text), " (%d)",
 				dam_reduced);
 		}
-		msg("%s%s", square_feat(cave, grid)->hurt_msg, dam_text);
+		msg("%s%s", square_feat_old(cave, grid)->hurt_msg, dam_text);
 		inven_damage(p, PROJ_FIRE, dam_taken);
 	}
-	take_hit(p, dam_reduced, square_feat(cave, grid)->die_msg);
+	take_hit(p, dam_reduced, square_feat_old(cave, grid)->die_msg);
 }
 
 /**
@@ -3670,7 +3670,7 @@ void player_handle_post_move(struct player *p, bool eval_trap,
 	/* Handle store doors, or notice objects */
 	if (square_isshop(cave, p->mon.grid)) {
 		if (player_is_shapechanged(p)) {
-			if (square(cave, p->mon.grid)->feat != FEAT_HOME) {
+			if (square(cave, p->mon.grid)->feat_old != FEAT_HOME) {
 				msg("There is a scream and the door slams shut!");
 			}
 			return;
@@ -3787,7 +3787,7 @@ void search(struct player *p)
 			int dist;
 			struct object *obj;
 			struct monster *mon = square_monster(cave, grid);
-			struct feature *featr;
+			struct feature_kind *featr;
 			int currpower;
 
 			if (!square_in_bounds_fully(cave, grid)) continue;
@@ -3798,7 +3798,7 @@ void search(struct player *p)
 			if (dist > detectpower / 25) continue;
 
 			currpower = detectpower - dist * 10;
-			featr = square_feat(cave, grid);
+			featr = square_feat_old(cave, grid);
 
 			// L: reveal anything hidden
 			if (tf_has(featr->flags, TF_HIDDEN) && square_ismemorybad(cave, grid) &&

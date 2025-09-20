@@ -88,9 +88,9 @@ static int test_nearby_kin(void *state) {
 	wolf2->hp -= 1;
 	ptreq(wolf2, choose_nearby_injured_kin(c, wolf0));
 	/* but not when LOS is lost. */
-	square_set_feat(c, loc(8, 5), FEAT_PERM);
+	square_set_feat_old(c, loc(8, 5), FEAT_PERM);
 	ptreq(NULL, choose_nearby_injured_kin(c, wolf2));
-	square_set_feat(c, loc(8, 5), FEAT_FLOOR);
+	square_set_feat_old(c, loc(8, 5), FEAT_FLOOR);
 	wolf2->hp += 1;
 
 	/* Now, injure all the canines and check for nearby kin a few times.

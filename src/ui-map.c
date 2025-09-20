@@ -131,10 +131,11 @@ static void grid_get_attr(struct grid_data *g, int *a)
 	}
 	/* Hybrid or block walls */
 	if (use_graphics == GRAPHICS_NONE && feat_is_wall(g->f_idx)) {
-		if (OPT(player, hybrid_walls))
+		if (OPT(player, hybrid_walls)) {
 			*a = *a + (MULT_BG * BG_DARK);
-		else if (OPT(player, solid_walls))
+		} else if (OPT(player, solid_walls)) {
 			*a = *a + (MULT_BG * BG_SAME);
+		}
 	}
 }
 
@@ -176,7 +177,17 @@ static void grid_get_attr(struct grid_data *g, int *a)
 void grid_data_as_text(struct grid_data *g, int *ap, wchar_t *cp, int *tap,
 					   wchar_t *tcp)
 {
-	struct feature *feat = &f_info[g->f_idx];
+	struct feature_kind *feat;
+
+	//struct feature_kind *feat; = &f_info[g->f_idx];
+	if (g->feat) {
+		assert(g->feat->kind);
+		feat = g->feat->kind;
+	} else {
+		feat = &f_info[FEAT_NONE];
+	}
+
+	assert(feat);
 
 	int a = feat_x_attr[g->lighting][feat->fidx];
 	wchar_t c = feat_x_char[g->lighting][feat->fidx];

@@ -2276,7 +2276,7 @@ static const char *feature_group_text[] =
  */
 static void display_feature(int col, int row, bool cursor, int oid )
 {
-	struct feature *feat = &f_info[oid];
+	struct feature_kind *feat = &f_info[oid];
 	uint8_t attr = curs_attrs[CURS_KNOWN][(int)cursor];
 
 	c_prt(attr, feat->name, row, col);
@@ -2300,8 +2300,8 @@ static int f_cmp_fkind(const void *a, const void *b)
 {
 	const int a_val = *(const int *)a;
 	const int b_val = *(const int *)b;
-	const struct feature *fa = &f_info[a_val];
-	const struct feature *fb = &f_info[b_val];
+	const struct feature_kind *fa = &f_info[a_val];
+	const struct feature_kind *fb = &f_info[b_val];
 
 	/* Group by */
 	int c = feat_order(a_val) - feat_order(b_val);
@@ -2333,7 +2333,7 @@ static wchar_t *f_xchar(int oid)
 }
 static void feat_lore(int oid)
 {
-	struct feature *feat = &f_info[oid];
+	struct feature_kind *feat = &f_info[oid];
 
 	if (feat->desc) {
 		textblock *tb = textblock_new();

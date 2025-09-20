@@ -668,7 +668,7 @@ static void mon_leaving(struct loc grid1, struct loc grid2)
 		}
 	}*/
 
-	if (square(cave, grid2)->feat == FEAT_ILLUSORY_WALL) {
+	if (square(cave, grid2)->feat_old == FEAT_ILLUSORY_WALL) {
 		square_force_floor(cave, grid2);
 		player->upkeep->update |= PU_UPDATE_VIEW;
 	}
@@ -687,7 +687,7 @@ static void player_leaving(struct loc grid1, struct loc grid2)
 		square_destroy_decoy(cave, decoy);
 	}
 
-	if (square(cave, grid2)->feat == FEAT_ILLUSORY_WALL) {
+	if (square(cave, grid2)->feat_old == FEAT_ILLUSORY_WALL) {
 		square_force_floor(cave, grid2);
 	}
 
@@ -1599,7 +1599,7 @@ void monster_take_timed_damage(struct monster *mon, int energy)
 bool monster_taking_terrain_damage(struct chunk *c, struct monster *mon)
 {
 	if (square_isdamaging(c, mon->grid) &&
-		!rf_has(mon->race->flags, square_feat(c, mon->grid)->resist_flag)) {
+		!rf_has(mon->race->flags, square_feat_old(c, mon->grid)->resist_flag)) {
 		return true;
 	}
 

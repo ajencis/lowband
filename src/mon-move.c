@@ -229,7 +229,7 @@ static bool monster_hates_grid(struct monster *mon, struct loc grid)
 {
 	/* Only some creatures can handle damaging terrain */
 	if (square_isdamaging(cave, grid) &&
-			!rf_has(mon->race->flags, square_feat(cave, grid)->resist_flag)) {
+			!rf_has(mon->race->flags, square_feat_old(cave, grid)->resist_flag)) {
 		return true;
 	}
 
@@ -1526,7 +1526,7 @@ static void monster_display_confused_move_msg(struct monster *mon,
 											  struct loc new)
 {
 	if (monster_is_visible(mon) && monster_is_in_view(mon)) {
-		const char *m = square_feat(cave, new)->confused_msg;
+		const char *m = square_feat_old(cave, new)->confused_msg;
 
 		msg("%s %s.", m_name, (m) ? m : "stumbles");
 	}
@@ -1942,9 +1942,9 @@ static void monster_turn(struct monster *mon)
 		for (y = 1; y < cave->height - 1; ++y) {
 			for (x = 1; x < cave->height - 1; ++x) {
 				if (square_in_bounds_fully(cave, loc(x, y)) &&
-						square(cave, loc(x, y))->feat == FEAT_OPEN_SECRET &&
+						square(cave, loc(x, y))->feat_old == FEAT_OPEN_SECRET &&
 						los(cave, mon->grid, loc(x, y))) {
-					square_set_feat(cave, loc(x, y), FEAT_OPEN);
+					square_set_feat_old(cave, loc(x, y), FEAT_OPEN);
 					if (monster_is_in_view(mon)) {
 						char desc[64];
 						monster_desc(desc, sizeof(desc), mon, MDESC_STANDARD);

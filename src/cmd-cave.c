@@ -638,9 +638,9 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 	dig_idx = square_digging(cave, grid);
 	if (dig_idx < 1 || dig_idx > DIGGING_MAX) {
 		msg("%s has misconfigured digging chance; please report this bug.",
-			(square_feat(cave, grid)->name) ?
-			square_feat(cave, grid)->name :
-			format("Terrain index %d", square_feat(cave, grid)->fidx));
+			(square_feat_old(cave, grid)->name) ?
+			square_feat_old(cave, grid)->name :
+			format("Terrain index %d", square_feat_old(cave, grid)->fidx));
 		dig_idx = DIGGING_GRANITE + 1;
 	}
 	chance = digging_chances[dig_idx - 1];
@@ -1157,7 +1157,7 @@ void move_player(int dir, bool disarm)
 	} else if (!square_ispassable(cave, grid) &&
 			(!pf_has(player->mon.state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
 
-		int prev_feat_k = square(player->cave, grid)->feat;
+		int prev_feat_k = square(player->cave, grid)->feat_old;
 		const char *issue, *prefix, *article;
 
 		disturb(player);
@@ -1172,7 +1172,7 @@ void move_player(int dir, bool disarm)
 			article = "";
 		}
 
-		if (square(player->cave, grid)->feat == prev_feat_k) prefix = "There is";
+		if (square(player->cave, grid)->feat_old == prev_feat_k) prefix = "There is";
 		else prefix = "You feel";
 
 		msgt(MSG_HITWALL, "%s %s%s blocking your way.", prefix, article, issue);
@@ -1255,7 +1255,7 @@ void move_player(int dir, bool disarm)
 		 */
 		if (square_isdamaging(cave, grid)
 				&& !player->mon.m_timed[TMD_CONFUSED]) {
-			struct feature *feat = square_feat(cave, grid);
+			struct feature_kind *feat = square_feat_old(cave, grid);
 			int dam_taken = player_check_terrain_damage(player,
 				grid, false);
 
@@ -1341,14 +1341,14 @@ static bool do_cmd_walk_test(struct player *p, struct loc grid)
 	 */
 	if (!square_ispassable(cave, grid) && (!pf_has(p->mon.state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
 		const char *imp_name, *article;
-		int prev_feat_k = square(p->cave, grid)->feat;
+		int prev_feat_k = square(p->cave, grid)->feat_old;
 
 		if (square_iscloseddoor(p->cave, grid)) {
 			return true;
 		}
 
 		square_memorize(cave, grid);
-		if (prev_feat_k != square(p->cave, grid)->feat) {
+		if (prev_feat_k != square(p->cave, grid)->feat_old) {
 			square_light_spot(cave, grid);
 		}
 
@@ -1760,7 +1760,7 @@ void do_cmd_hold(struct command *cmd)
 	/* Enter a store if we are on one, otherwise look at the floor */
 	if (square_isshop(cave, player->mon.grid)) {
 		if (player_is_shapechanged(player)) {
-			if (square(cave, player->mon.grid)->feat != FEAT_HOME) {
+			if (square(cave, player->mon.grid)->feat_old != FEAT_HOME) {
 				msg("There is a scream and the door slams shut!");
 			}
 			return;

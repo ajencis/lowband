@@ -115,12 +115,12 @@ enum {
  * At the moment this isn't very much, but eventually a primitive flag-based
  * information system will be used here.
  */
-struct feature {
+struct feature_kind {
 	char *name;
 	char *desc;
 	int fidx;
 
-	struct feature *mimic;		/**< Feature to mimic or NULL for no mimicry */
+	struct feature_kind *mimic;		/**< Feature to mimic or NULL for no mimicry */
 	uint8_t priority;			/**< Display priority */
 
 	uint8_t shopnum;			/**< Which shop does it take you to? */
@@ -141,10 +141,17 @@ struct feature {
 	int resist_flag;			/**< Monster resist flag for entering feature */
 
 	uint8_t t_elem[TE_MAX];		// L: which terrain elements it produces in what quantity
-	char *t_elem_msg;			// L: message used when it produces terrai elements
+	char *t_elem_msg;			// L: message used when it produces terrain elements
 };
 
-extern struct feature *f_info;
+struct feature {
+	struct feature *next;
+	struct feature_kind *kind;
+
+	int size;
+};
+
+extern struct feature_kind *f_info;
 
 struct terrain_element_level {
 	struct terrain_element_level *next;
@@ -211,6 +218,7 @@ struct grid_data {
 	struct object_kind *first_kind;	/* The kind of the first item on the grid */
 	struct trap *trap;		/* Trap */
 	struct terrain_element *t_elem;
+	const struct feature *feat;
 
 	bool multiple_objects;	/* Is there more than one item there? */
 	bool unseen_object;		/* Is there an unaware object there? */
@@ -223,7 +231,7 @@ struct grid_data {
 };
 
 struct square {
-	uint8_t feat;
+	uint8_t feat_old;
 	bitflag *info;
 	int light;
 	int16_t mon;
@@ -231,6 +239,8 @@ struct square {
 	struct object *obj;
 	struct trap *trap;
 	struct terrain_element *t_elem;
+
+	struct feature *feat;
 	
 	int required_rf;		// required race flag to be generated here
 };
@@ -309,6 +319,12 @@ void update_view(struct chunk *c, struct player *p);
 bool no_light(const struct player *p);
 
 /* cave-terrain-elem.c */
+bool feat_add(struct feature **list, int fidx, int size);
+bool feat_remove(struct chunk *c, struct loc grid, int fidx);
+void square_memorize_feats(struct player *p, const struct chunk *c, struct loc grid);
+void square_memorize_feat_real(struct player *p, const struct chunk *c, struct loc grid, const struct feature *feat);
+void square_forget_feats(struct player *p, struct loc grid);
+
 struct terrain_element_kind *t_elem_kind_by_idx(int idx);
 bool t_elem_has_flag(const struct terrain_element *t_elem, int flag);
 const char *t_elem_name(const struct terrain_element *t_elem);
@@ -482,8 +498,15 @@ bool square_allows_summon(struct chunk *c, struct loc grid);
 
 const char *square_impassable_name(struct chunk *c, struct loc grid);
 
-const struct square *square(struct chunk *c, struct loc grid);
 struct feature *square_feat(struct chunk *c, struct loc grid);
+bool square_has_feat(const struct chunk *c, struct loc grid, int fidx);
+struct feature *square_feat_by_type(struct chunk *c, struct loc grid, int fidx);
+bool square_add_feat(struct chunk *c, struct loc grid, int feat, int size);
+void square_clear_feats(struct chunk *c, struct loc grid);
+void square_set_feat(struct chunk *c, struct loc grid, struct feature *feat);
+
+const struct square *square(struct chunk *c, struct loc grid);
+struct feature_kind *square_feat_old(struct chunk *c, struct loc grid);
 int square_light(struct chunk *c, struct loc grid);
 struct monster *square_monster(struct chunk *c, struct loc grid);
 struct object *square_object(struct chunk *c, struct loc grid);
@@ -506,7 +529,7 @@ int square_num_walls_diagonal(struct chunk *c, struct loc grid);
 
 
 /* Feature placers */
-void square_set_feat(struct chunk *c, struct loc grid, int feat);
+void square_set_feat_old(struct chunk *c, struct loc grid, int feat);
 void square_set_mon(struct chunk *c, struct loc grid, int midx);
 void square_set_obj(struct chunk *c, struct loc grid, struct object *obj);
 void square_set_trap(struct chunk *c, struct loc grid, struct trap *trap);

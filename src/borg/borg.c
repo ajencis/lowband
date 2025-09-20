@@ -1110,7 +1110,7 @@ void do_cmd_borg(void)
         y            = l.y;
         x            = l.x;
 
-        uint8_t feat = square(cave, borg.c)->feat;
+        uint8_t feat = square(cave, borg.c)->feat_old;
 
         borg_note(format("Borg's Feat for grid (%d, %d) is %d, game Feat is %d",
             y, x, mask, feat));

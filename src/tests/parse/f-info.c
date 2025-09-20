@@ -21,7 +21,7 @@ int setup_tests(void **state) {
 
 int teardown_tests(void *state) {
 	struct parser *p = (struct parser*) state;
-	struct feature *f = (struct feature*) parser_priv(p);
+	struct feature_kind *f = (struct feature_kind*) parser_priv(p);
 
 	string_free(f->look_in_preposition);
 	string_free(f->look_prefix);
@@ -39,7 +39,7 @@ int teardown_tests(void *state) {
 
 static int test_missing_header_record0(void *state) {
 	struct parser *p = (struct parser*) state;
-	struct feature *f = (struct feature*) parser_priv(p);
+	struct feature_kind *f = (struct feature_kind*) parser_priv(p);
 	enum parser_error r;
 
 	null(f);
@@ -87,10 +87,10 @@ static int test_code_bad0(void *state) {
 static int test_code0(void *state) {
 	struct parser *p = (struct parser*) state;
 	enum parser_error r = parser_parse(p, "code:FLOOR");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	ptreq(f, &f_info[FEAT_FLOOR]);
 	null(f->name);
 	null(f->desc);
@@ -116,10 +116,10 @@ static int test_code0(void *state) {
 static int test_name0(void *state) {
 	struct parser *p = (struct parser*) state;
 	enum parser_error r = parser_parse(p, "name:Test Feature");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	notnull(f->name);
 	require(streq(f->name, "Test Feature"));
@@ -138,23 +138,23 @@ static int test_name_bad0(void *state) {
 static int test_graphics0(void *state) {
 	struct parser *p = (struct parser*) state;
 	enum parser_error r = parser_parse(p, "graphics:::Light Green");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	eq(f->d_char, L':');
 	eq(f->d_attr, COLOUR_L_GREEN);
 	/* Check that single letter code for color works. */
 	r = parser_parse(p, "graphics:^:b");
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	eq(f->d_char, L'^');
 	eq(f->d_attr, COLOUR_BLUE);
 	/* Check that full name matching for color is case insensitive. */
 	r = parser_parse(p, "graphics:#:light purple");
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	eq(f->d_char, L'#');
 	eq(f->d_attr, COLOUR_L_PURPLE);
@@ -182,7 +182,7 @@ static int test_graphics0(void *state) {
 
 static int test_mimic0(void *state) {
 	enum parser_error r = parser_parse(state, "mimic:FLOOR");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
 	f = parser_priv(state);
@@ -200,7 +200,7 @@ static int test_mimic_bad0(void *state) {
 
 static int test_priority0(void *state) {
 	enum parser_error r = parser_parse(state, "priority:2");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
 	f = parser_priv(state);
@@ -211,7 +211,7 @@ static int test_priority0(void *state) {
 
 static int test_flags0(void *state) {
 	struct parser *p = (struct parser*) state;
-	struct feature *f = (struct feature*) parser_priv(p);
+	struct feature_kind *f = (struct feature_kind*) parser_priv(p);
 	enum parser_error r;
 	bitflag eflags[TF_SIZE];
 
@@ -220,7 +220,7 @@ static int test_flags0(void *state) {
 	/* Check that specifying no flags works. */
 	r = parser_parse(p, "flags:");
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	require(flag_is_empty(f->flags, TF_SIZE));
 	/* Try setting one flag. */
@@ -229,7 +229,7 @@ static int test_flags0(void *state) {
 	/* Try setting more than one flag. */
 	r = parser_parse(state, "flags:PERMANENT | DOWNSTAIR");
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	flag_wipe(eflags, TF_SIZE);
 	flag_on_dbg(eflags, TF_SIZE, TF_LOS, "eflags", "TF_LOS");
@@ -251,7 +251,7 @@ static int test_flags_bad0(void *state) {
 static int test_digging0(void *state) {
 	struct parser *p = (struct parser*) state;
 	enum parser_error r = parser_parse(p, "digging:2");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
 	f = parser_priv(p);
@@ -280,14 +280,14 @@ static int test_desc0(void *state) {
 	struct parser *p = (struct parser*) state;
 	enum parser_error r = parser_parse(p,
 		"desc:A door that is already open.");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
 	/* Check that additional directives are appended to the first. */
 	r = parser_parse(p, "desc:  Player, monster, spell, and missile "
 		"can pass through as long as it stays open.");
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	notnull(f->desc);
 	require(streq(f->desc, "A door that is already open.  Player, "
@@ -299,13 +299,13 @@ static int test_desc0(void *state) {
 static int test_walk_msg0(void *state) {
 	struct parser *p = (struct parser*) state;
 	enum parser_error r = parser_parse(p, "walk-msg:It looks dangerous.");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
 	/* Check that additional directives are appended to the first. */
 	r = parser_parse(p, "walk-msg:  Really enter? ");
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	notnull(f->walk_msg);
 	require(streq(f->walk_msg, "It looks dangerous.  Really enter? "));
@@ -315,13 +315,13 @@ static int test_walk_msg0(void *state) {
 static int test_run_msg0(void *state) {
 	struct parser *p = (struct parser*) state;
 	enum parser_error r = parser_parse(p, "run-msg:It blocks your path.");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
 	/* Check that additional directives are appended to the first. */
 	r = parser_parse(p, "run-msg:  Really enter? ");
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	notnull(f->run_msg);
 	require(streq(f->run_msg, "It blocks your path.  Really enter? "));
@@ -331,13 +331,13 @@ static int test_run_msg0(void *state) {
 static int test_hurt_msg0(void *state) {
 	struct parser *p = (struct parser*) state;
 	enum parser_error r = parser_parse(p, "hurt-msg:Ow!");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
 	/* Check that additional directives are appended to the first. */
 	r = parser_parse(p, "hurt-msg:  That hurt!");
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	notnull(f->hurt_msg);
 	require(streq(f->hurt_msg, "Ow!  That hurt!"));
@@ -347,13 +347,13 @@ static int test_hurt_msg0(void *state) {
 static int test_die_msg0(void *state) {
 	struct parser *p = (struct parser*) state;
 	enum parser_error r = parser_parse(p, "die-msg:dissolving");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
 	/* Check that additional directives are appended to the first. */
 	r = parser_parse(p, "die-msg: in a pool of acid");
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	notnull(f->die_msg);
 	require(streq(f->die_msg, "dissolving in a pool of acid"));
@@ -363,13 +363,13 @@ static int test_die_msg0(void *state) {
 static int test_confused_msg0(void *state) {
 	struct parser *p = (struct parser*) state;
 	enum parser_error r = parser_parse(p, "confused-msg:slams into a wall");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
 	/* Check that additional directives are appended to the first. */
 	r = parser_parse(p, "confused-msg: and stumbles");
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	notnull(f->confused_msg);
 	require(streq(f->confused_msg, "slams into a wall and stumbles"));
@@ -379,13 +379,13 @@ static int test_confused_msg0(void *state) {
 static int test_look_prefix0(void *state) {
 	struct parser *p = (struct parser*) state;
 	enum parser_error r = parser_parse(p, "look-prefix:the entrance ");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
 	/* Check that additional directives are appended to the first. */
 	r = parser_parse(p, "look-prefix:to the");
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	notnull(f->look_prefix);
 	require(streq(f->look_prefix, "the entrance to the"));
@@ -395,13 +395,13 @@ static int test_look_prefix0(void *state) {
 static int test_look_in_preposition0(void *state) {
 	struct parser *p = (struct parser*) state;
 	enum parser_error r = parser_parse(p, "look-in-preposition:at the ");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
 	/* Check that additional directives are appended to the first. */
 	r = parser_parse(p, "look-in-preposition:brink of");
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	notnull(f->look_in_preposition);
 	require(streq(f->look_in_preposition, "at the brink of"));
@@ -411,10 +411,10 @@ static int test_look_in_preposition0(void *state) {
 static int test_resist_flag0(void *state) {
 	struct parser *p = (struct parser*) state;
 	enum parser_error r = parser_parse(p, "resist-flag:IM_POIS");
-	struct feature *f;
+	struct feature_kind *f;
 
 	eq(r, PARSE_ERROR_NONE);
-	f = (struct feature*) parser_priv(p);
+	f = (struct feature_kind*) parser_priv(p);
 	notnull(f);
 	eq(f->resist_flag, RF_IM_POIS);
 	ok;

@@ -9,6 +9,312 @@
 
 
 
+static struct feature *feat_new(int fidx, int size)
+{
+	//dbg_log("feat", "entering feat_new");
+
+	struct feature *new = mem_zalloc(sizeof *new);
+
+	assert(fidx > FEAT_NONE && fidx < FEAT_MAX);
+
+	if (size <= 0) return NULL;
+
+	new->kind = &f_info[fidx];
+	new->size = size;
+
+	//dbg_log("feat", "done feat_new");
+	return new;
+}
+
+static void feat_free(struct feature *feat)
+{
+	//dbg_log("feat", "entering feat_free");
+	mem_free(feat);
+	//dbg_log("feat", "done feat_free");
+}
+
+bool feat_add(struct feature **list, int fidx, int size)
+{
+	assert(list);
+	//dbg_log("feat", format("entering feat_add - fidx=%i; *list=%s", fidx, *list ? (*list)->kind->name : "NULL"));
+
+	struct feature *new, *curr;
+
+	if (!(*list) || (*list)->kind->fidx > fidx) {
+		// new feat goes first
+		//dbg_log("feat", "done feat_add");
+		curr = NULL;
+	}
+	else if ((*list)->kind->fidx == fidx) {
+		// already have that feat there
+		//dbg_log("feat", "done feat_add");
+		return false;
+	}
+	else {
+		// put it somewhere in the middle
+		for (curr = *list; curr && curr->next; curr = curr->next) {
+			if (curr->next->kind->fidx == fidx) {
+				//dbg_log("feat", "done feat_add");
+				return false;
+			}
+			else if (curr->next->kind->fidx > fidx) {
+				break;
+			}
+		}
+	}
+
+	new = feat_new(fidx, size);
+
+	if (curr) {
+		new->next = curr->next;
+		curr->next = new;
+	}
+	else {
+		new->next = *list;
+		*list = new;
+	}
+
+	//dbg_log("feat", "done feat_add");
+
+	return true;
+}
+
+/*static bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
+{
+	return feat_add(&c->squares[grid.y][grid.x].feat, fidx, size);
+}*/
+
+bool feat_remove(struct chunk *c, struct loc grid, int fidx)
+{
+	//dbg_log("feat", "entering feat_remove");
+	struct feature **prev = NULL, *to_del;
+	struct square *sq = &c->squares[grid.y][grid.x];
+
+	prev = &sq->feat;
+
+	while (true) {
+		if (!(*prev)) return false;
+		if ((*prev)->kind->fidx > fidx) return false;
+		if ((*prev)->kind->fidx == fidx) break;
+
+		prev = &((*prev)->next);
+	}
+
+	to_del = *prev;
+
+	*prev = to_del->next;
+
+	feat_free(to_del);
+
+	//dbg_log("feat", "done feat_remove");
+	return true;
+}
+
+/*static void square_feat_clear(struct chunk *c, struct loc grid)
+{
+	//dbg_log("feat", "entering square_feat_clear");
+	struct feature *feat, *next;
+	struct square *sq = &c->squares[grid.y][grid.x];
+
+	for (feat = sq->feat; feat; feat = next) {
+		next = feat->next;
+
+		feat_free(feat);
+	}
+
+	sq->feat = NULL;
+
+	//dbg_log("feat", "done square_feat_clear");
+}*/
+	
+	
+struct feature *square_feat(struct chunk *c, struct loc grid)
+{
+	return c->squares[grid.y][grid.x].feat;
+}
+
+struct feature *square_feat_by_type(struct chunk *c, struct loc grid, int fidx)
+{
+	//dbg_log("feat", "entering square_feat_by_type");
+	struct feature *feat;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (feat->kind->fidx == fidx) {
+			//dbg_log("feat", "done square_feat_by_type");
+			return feat;
+		}
+	}
+
+	//dbg_log("feat", "done square_feat_by_type");
+	return NULL;
+}
+
+bool square_has_feat(const struct chunk *c, struct loc grid, int fidx)
+{
+	//dbg_log("feat", "entering square_has_feat");
+	const struct feature *feat;
+
+	for (feat = c->squares[grid.y][grid.x].feat; feat; feat = feat->next) {
+		if (feat->kind->fidx == fidx) {
+			//dbg_log("feat", "done square_has_feat");
+			return true;
+		}
+	}
+
+	//dbg_log("feat", "done square_has_feat");
+	return false;
+}
+
+static void square_set_feat_size(struct chunk *c, struct loc grid, int fidx, int size)
+{
+	//dbg_log("feat", "entering square_set_feat_size");
+	struct feature *curr;
+	struct square *sq = &c->squares[grid.y][grid.x];
+
+	for (curr = sq->feat; curr; curr = curr->next) {
+		if (curr->kind->fidx == fidx) {
+			curr->size = size;
+			//dbg_log("feat", "done square_set_feat_size");
+			return;
+		}
+		else if (!curr->next || curr->next->kind->fidx > fidx) {
+			break;
+		}
+	}
+
+	square_add_feat(c, grid, fidx, size);
+
+	//dbg_log("feat", "donesquare_set_feat_size");
+}
+
+/**
+ * a square is mimicking a feat if the square contains a feat that mimics that feat and the player
+ * doesn't have knowledge of the actual feat being there
+ * eg if a secret door mimics a wall, the grid containing the secret door mimics a wall for players
+ * who don't know there's a secret door in that square
+ */
+/*static bool square_is_mimicking(struct chunk *c, struct player *p, struct loc grid, int which)
+{
+	//dbg_log("feat", "entering square_is_mimicking");
+	struct feature *feat;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (feat->kind->mimic && feat->kind->mimic->fidx == which && !square_has_feat(p->cave, grid, feat->kind->fidx)) {
+			//dbg_log("feat", "done square_is_mimicking");
+			return true;
+		}
+	}
+
+	//dbg_log("feat", "done square_is_mimicking");
+	return false;
+}*/
+
+/**
+ * a feat's believed version unless the feat mimics another feat and the actual feat isn't known
+ * by the player to be in the square in question
+ * eg if a secret door mimics a wall, a secret door feat's believed feat is a secret door if the
+ * player believes a secret door to be in that square and a wall otherwise
+ */
+static int feat_believed(struct player *p, struct loc grid, int feat)
+{
+	//dbg_log("feat", "entering feat_believed");
+	struct feature_kind *kind;
+
+	assert(feat > FEAT_NONE && feat < FEAT_MAX);
+	kind = &f_info[feat];
+
+	if (!kind->mimic) return kind->fidx;
+	if (square_has_feat(p->cave, grid, kind->fidx)) return kind->fidx;
+
+	//dbg_log("feat", "done feat_believed");
+	return kind->mimic->fidx;
+}
+
+static void square_update_feat_memorization(const struct chunk *c, struct player *p, struct loc grid)
+{
+	//dbg_log("feat", format("entering square_update_feat_memorization for grid (%i,%i)", grid.x, grid.y));
+	struct feature *new = NULL;
+	const struct feature *real;
+	int fidx;
+
+	assert(p);
+	assert(c);
+	assert(p->cave);
+	assert(square_in_bounds((struct chunk *)c, grid));
+
+	for (real = c->squares[grid.y][grid.x].feat; real; real = real->next) {
+		//dbg_log("feat", format("memorizing feat %s", real->kind->name));
+
+		fidx = feat_believed(p, grid, real->kind->fidx);
+
+		feat_add(&new, fidx, real->size);
+	}
+
+	//dbg_log("feat", "clearing feats");
+
+	square_set_feat(p->cave, grid, new);
+
+	/*square_clear_feats(p->cave, grid);
+
+	p->cave->squares[grid.y][grid.x].feat = new;*/
+
+	//dbg_log("feat", "done square_update_feat_memorization");
+}
+
+static void square_memorize_feat_one(struct player *p, struct loc grid, const struct feature *feat, bool real)
+{
+	//dbg_log("feat", "entering square_memorize_feat_one");
+	int to_memorize = feat->kind->fidx;
+
+	if (feat->kind->mimic &&
+			!real &&
+			!square_has_feat(p->cave, grid, feat->kind->fidx)) {
+		to_memorize = feat->kind->mimic->fidx;
+	}
+
+	to_memorize = real || !feat->kind->mimic ? feat->kind->fidx : feat->kind->mimic->fidx;
+
+	square_set_feat_size(p->cave, grid, to_memorize, feat->size);
+
+	//dbg_log("feat", "square_memorize_feat_one");
+}
+
+void square_memorize_feats(struct player *p, const struct chunk *c, struct loc grid)
+{
+	if (c != cave) return;
+
+	//dbg_log("feat", "entering square_memorize_feats");
+	assert(p);
+	assert(c);
+	assert(p->cave);
+
+	square_update_feat_memorization(c, p, grid);
+
+	//dbg_log("feat", "done square_memorize_feats");
+}
+
+void square_forget_feats(struct player *p, struct loc grid)
+{
+	square_clear_feats(p->cave, grid);
+}
+
+void square_memorize_feat_real(struct player *p, const struct chunk *c, struct loc grid, const struct feature *feat)
+{
+	//dbg_log("feat", "entering square_memorize_feat_real");
+
+	struct feature_kind *mimic = feat->kind->mimic;
+
+	if (mimic && !square_has_feat(c, grid, mimic->fidx)) {
+		feat_remove(p->cave, grid, mimic->fidx);
+	}
+
+	square_memorize_feat_one(p, grid, feat, true);
+
+	//dbg_log("feat", "done square_memorize_feat_real");
+}
+
+
+
 struct terrain_element_kind *t_elem_kind_by_idx(int idx)
 {
 	struct terrain_element_kind *t_kind;
@@ -673,7 +979,7 @@ void t_elem_reduce_durations(struct chunk *c)
 
 static bool feat_produce_t_elem(struct chunk *c, struct loc grid)
 {
-	const struct feature *feat = square_feat(c, grid);
+	const struct feature_kind *feat = square_feat_old(c, grid);
 	struct terrain_element_kind *kind;
 	uint16_t idx, amt, curr, increase;
 	bool did_something;

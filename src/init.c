@@ -2339,7 +2339,7 @@ struct file_parser trap_parser = {
 static enum parser_error parse_feat_code(struct parser *p) {
 	const char *code = parser_getstr(p, "code");
 	int idx = lookup_feat_code(code);
-	struct feature *f;
+	struct feature_kind *f;
 
 	if (idx < 0) {
 		/*
@@ -2358,7 +2358,7 @@ static enum parser_error parse_feat_code(struct parser *p) {
 
 static enum parser_error parse_feat_name(struct parser *p) {
 	const char *name = parser_getstr(p, "name");
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 
 	if (!f) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2374,7 +2374,7 @@ static enum parser_error parse_feat_graphics(struct parser *p) {
 	wchar_t glyph = parser_getchar(p, "glyph");
 	const char *color = parser_getsym(p, "color");
 	int attr = 0;
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 
 	if (!f)
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2391,7 +2391,7 @@ static enum parser_error parse_feat_graphics(struct parser *p) {
 
 static enum parser_error parse_feat_mimic(struct parser *p) {
 	const char *mimic_name = parser_getstr(p, "feat");
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 	int mimic_idx;
 
 	if (!f) {
@@ -2408,7 +2408,7 @@ static enum parser_error parse_feat_mimic(struct parser *p) {
 
 static enum parser_error parse_feat_priority(struct parser *p) {
 	unsigned int priority = parser_getuint(p, "priority");
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 
 	if (!f)
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2417,7 +2417,7 @@ static enum parser_error parse_feat_priority(struct parser *p) {
 }
 
 static enum parser_error parse_feat_flags(struct parser *p) {
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 	char *flags, *s;
 
 	if (!f) {
@@ -2439,7 +2439,7 @@ static enum parser_error parse_feat_flags(struct parser *p) {
 }
 
 static enum parser_error parse_feat_digging(struct parser *p) {
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 	int dig_idx = parser_getint(p, "dig");
 
 	if (!f)
@@ -2452,7 +2452,7 @@ static enum parser_error parse_feat_digging(struct parser *p) {
 }
 
 static enum parser_error parse_feat_desc(struct parser *p) {
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 
 	if (!f) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2462,7 +2462,7 @@ static enum parser_error parse_feat_desc(struct parser *p) {
 }
 
 static enum parser_error parse_feat_walk_msg(struct parser *p) {
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 
 	if (!f) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2472,7 +2472,7 @@ static enum parser_error parse_feat_walk_msg(struct parser *p) {
 }
 
 static enum parser_error parse_feat_run_msg(struct parser *p) {
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 
 	if (!f) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2482,7 +2482,7 @@ static enum parser_error parse_feat_run_msg(struct parser *p) {
 }
 
 static enum parser_error parse_feat_hurt_msg(struct parser *p) {
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 
 	if (!f) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2492,7 +2492,7 @@ static enum parser_error parse_feat_hurt_msg(struct parser *p) {
 }
 
 static enum parser_error parse_feat_die_msg(struct parser *p) {
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 
 	if (!f) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2502,7 +2502,7 @@ static enum parser_error parse_feat_die_msg(struct parser *p) {
 }
 
 static enum parser_error parse_feat_confused_msg(struct parser *p) {
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 
 	if (!f) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2513,7 +2513,7 @@ static enum parser_error parse_feat_confused_msg(struct parser *p) {
 }
 
 static enum parser_error parse_feat_look_prefix(struct parser *p) {
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 
 	if (!f) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2524,7 +2524,7 @@ static enum parser_error parse_feat_look_prefix(struct parser *p) {
 }
 
 static enum parser_error parse_feat_look_in_preposition(struct parser *p) {
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 
 	if (!f) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2535,7 +2535,7 @@ static enum parser_error parse_feat_look_in_preposition(struct parser *p) {
 }
 
 static enum parser_error parse_feat_resist_flag(struct parser *p) {
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 	int flag = lookup_flag(mon_race_flags, parser_getsym(p, "flag"));
 
 	if (!f) {
@@ -2549,7 +2549,7 @@ static enum parser_error parse_feat_resist_flag(struct parser *p) {
 }
 
 static enum parser_error parse_feat_t_elem_produce(struct parser *p) {
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 	int t_elem = code_index_in_array(terrain_element_names, parser_getsym(p, "t_elem"));
 	int amt = parser_getint(p, "amt");
 
@@ -2564,7 +2564,7 @@ static enum parser_error parse_feat_t_elem_produce(struct parser *p) {
 }
 
 static enum parser_error parse_feat_t_elem_msg(struct parser *p) {
-	struct feature *f = parser_priv(p);
+	struct feature_kind *f = parser_priv(p);
 	char *te_msg = string_make(parser_getstr(p, "msg"));
 
 	if (!f) return PARSE_ERROR_MISSING_RECORD_HEADER;

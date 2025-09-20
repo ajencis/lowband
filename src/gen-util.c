@@ -429,9 +429,9 @@ bool new_player_spot(struct chunk *c, struct player *p)
 	if (!OPT(p, birth_connect_stairs))
 		;
 	else if (p->upkeep->create_down_stair)
-		square_set_feat(c, grid, FEAT_MORE);
+		square_set_feat_old(c, grid, FEAT_MORE);
 	else if (p->upkeep->create_up_stair)
-		square_set_feat(c, grid, FEAT_LESS);
+		square_set_feat_old(c, grid, FEAT_LESS);
 
 	player_place(c, p, grid);
 	return true;
@@ -445,7 +445,7 @@ bool new_player_spot(struct chunk *c, struct player *p)
  */
 static void place_rubble(struct chunk *c, struct loc grid)
 {
-	square_set_feat(c, grid, one_in_(2) ? FEAT_RUBBLE : FEAT_PASS_RUBBLE);
+	square_set_feat_old(c, grid, one_in_(2) ? FEAT_RUBBLE : FEAT_PASS_RUBBLE);
 }
 
 
@@ -461,7 +461,7 @@ static void place_fume_pit(struct chunk *c, struct loc grid)
 		c->squares[curr.y][curr.x].required_rf = RF_IM_POIS;
 	}*/
 
-	square_set_feat(c, grid, FEAT_FUME_PIT);
+	square_set_feat_old(c, grid, FEAT_FUME_PIT);
 }
 
 
@@ -478,11 +478,11 @@ static void place_fume_pit(struct chunk *c, struct loc grid)
 static void place_stairs(struct chunk *c, struct loc grid, bool quest, int feat)
 {
 	if (!c->depth) {
-		square_set_feat(c, grid, FEAT_MORE);
+		square_set_feat_old(c, grid, FEAT_MORE);
 	} else if (quest || c->depth >= z_info->max_depth - 1) {
-		square_set_feat(c, grid, FEAT_LESS);
+		square_set_feat_old(c, grid, FEAT_LESS);
 	} else {
-		square_set_feat(c, grid, feat);
+		square_set_feat_old(c, grid, feat);
 	}
 }
 
@@ -639,7 +639,7 @@ void place_gold(struct chunk *c, struct loc grid, int level, uint8_t origin)
  */
 void place_secret_door(struct chunk *c, struct loc grid)
 {
-	square_set_feat(c, grid, FEAT_SECRET);
+	square_set_feat_old(c, grid, FEAT_SECRET);
 }
 
 
@@ -650,7 +650,7 @@ void place_secret_door(struct chunk *c, struct loc grid)
  */
 void place_closed_door(struct chunk *c, struct loc grid)
 {
-	square_set_feat(c, grid, FEAT_CLOSED);
+	square_set_feat_old(c, grid, FEAT_CLOSED);
 	if (one_in_(4))
 		square_set_door_lock(c, grid, randint1(7));
 }
@@ -668,9 +668,9 @@ void place_random_door(struct chunk *c, struct loc grid)
 	int tmp = randint0(100);
 
 	if (tmp < 30)
-		square_set_feat(c, grid, FEAT_OPEN);
+		square_set_feat_old(c, grid, FEAT_OPEN);
 	else if (tmp < 40)
-		square_set_feat(c, grid, FEAT_BROKEN);
+		square_set_feat_old(c, grid, FEAT_BROKEN);
 	else
 		place_closed_door(c, grid);
 }
