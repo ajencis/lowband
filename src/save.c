@@ -986,11 +986,12 @@ static void wr_dungeon_aux(struct chunk *c)
 		wr_byte(prev_char);
 	}
 
+	// features
 	for (y = 0; y < c->height; ++y) {
-		for (x = 0; x < c->height; ++x) {
+		for (x = 0; x < c->width; ++x) {
 			const struct feature *feat;
 
-			for (feat = square(c, loc(x, y))->feat; feat; feat = feat->next) {
+			for (feat = square_feat(c, loc(x, y)); feat; feat = feat->next) {
 				wr_u16b((uint16_t)feat->kind->fidx);
 				wr_u16b((uint16_t)feat->size);
 			}

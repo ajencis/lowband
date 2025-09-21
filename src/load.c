@@ -1555,23 +1555,24 @@ static int rd_dungeon_aux(struct chunk **c)
 		}
 	}
 
+	// features
 	for (y = 0; y < height; ++y) {
-		for (x = 0; x < height; ++x) {
+		for (x = 0; x < width; ++x) {
 			int feat, size;
 
 			rd_u16b(&tmp16u);
 
 			feat = (int)tmp16u;
 
-			if (feat <= FEAT_NONE || feat >= FEAT_MAX) {
-				break;
+			while (feat > FEAT_NONE && feat < FEAT_MAX) {
+				rd_u16b(&tmp16u);
+				size = (int)tmp16u;
+
+				square_add_feat(c1, loc(x, y), feat, size);
+
+				rd_u16b(&tmp16u);
+				feat = (int)tmp16u;
 			}
-
-			rd_u16b(&tmp16u);
-
-			size = (int)tmp16u;
-
-			square_add_feat(c1, loc(x, y), feat, size);
 		}
 	}
 

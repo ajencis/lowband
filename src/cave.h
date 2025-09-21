@@ -404,6 +404,16 @@ bool feat_is_fiery(int feat);
 bool feat_is_no_flow(int feat);
 bool feat_is_no_scent(int feat);
 bool feat_is_smooth(int feat);
+bool feat_is_rubble(int feat);
+bool feat_is_open_door(int feat);
+bool feat_is_closed_door(int feat);
+bool feat_is_broken_door(int feat);
+bool feat_is_door(int feat);
+bool feat_is_secret_door(int feat);
+bool feat_is_permanent(int feat);
+bool feat_is_up_stairs(int feat);
+bool feat_is_down_stairs(int feat);
+bool feat_is_stairs(int feat);
 
 /* SQUARE FEATURE PREDICATES */
 bool square_isfloor(struct chunk *c, struct loc grid);
@@ -445,6 +455,7 @@ bool square_isinvis(struct chunk *c, struct loc grid);
 bool square_iswall_inner(struct chunk *c, struct loc grid);
 bool square_iswall_outer(struct chunk *c, struct loc grid);
 bool square_iswall_solid(struct chunk *c, struct loc grid);
+bool square_iswall(struct chunk *c, struct loc grid);
 bool square_ismon_restrict(struct chunk *c, struct loc grid);
 bool square_isno_teleport(struct chunk *c, struct loc grid);
 bool square_isno_map(struct chunk *c, struct loc grid);
@@ -504,6 +515,9 @@ struct feature *square_feat_by_type(struct chunk *c, struct loc grid, int fidx);
 bool square_add_feat(struct chunk *c, struct loc grid, int feat, int size);
 void square_clear_feats(struct chunk *c, struct loc grid);
 void square_set_feat(struct chunk *c, struct loc grid, struct feature *feat);
+bool feats_equal(const struct feature *feat1, const struct feature *feat2);
+bool square_remove_feats_by_flag(struct chunk *c, struct loc grid, int flag);
+bool square_change_feat(struct chunk *c, struct loc grid, int old, int new);
 
 const struct square *square(struct chunk *c, struct loc grid);
 struct feature_kind *square_feat_old(struct chunk *c, struct loc grid);
