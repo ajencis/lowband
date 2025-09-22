@@ -240,6 +240,11 @@ bool feat_is_fiery(int feat)
 	return tf_has(f_info[feat].flags, TF_FIERY);
 }
 
+bool feat_is_damaging(int feat)
+{
+	return feat_is_fiery(feat);
+}
+
 /**
  * True if the feature doesn't carry monster flow information.
  */
@@ -262,6 +267,18 @@ bool feat_is_no_scent(int feat)
 bool feat_is_smooth(int feat)
 {
 	return tf_has(f_info[feat].flags, TF_SMOOTH);
+}
+
+/**
+ * L: true if the feat is diggable
+ */
+bool feat_is_diggable(int feat)
+{
+	return feat_is_granite(feat) ||
+			feat_is_magma(feat) ||
+			feat_is_quartz(feat) ||
+			feat_is_rubble(feat) ||
+			feat_is_closed_door(feat);
 }
 
 /**
@@ -731,6 +748,23 @@ static bool square_onlyflag(struct chunk *c, struct loc grid, int flag)
 	return true;
 }
 
+struct feature *first_feat_with_flag(struct chunk *c, struct loc grid, int flag)
+{
+	struct feature *feat;
+
+	assert(square_in_bounds(c, grid));
+	assert(flag >= 0);
+	assert(flag < TF_MAX);
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (tf_has(feat->kind->flags, flag)) {
+			return feat;
+		}
+	}
+
+	return NULL;
+}
+
 /**
  * True if the square is open (a floor square not occupied by a monster).
  */
@@ -909,7 +943,7 @@ bool square_islit(struct chunk *c, struct loc grid) {
  */
 bool square_isdamaging(struct chunk *c, struct loc grid) {
 	assert(square_in_bounds(c, grid));
-	return any_feat_is(c, grid, feat_is_fiery);
+	return any_feat_is(c, grid, feat_is_damaging);
 }
 
 /**
@@ -1892,6 +1926,7 @@ int square_digging(struct chunk *c, struct loc grid) {
 		if (feat_is_granite(feat->kind->fidx) ||
 				feat_is_magma(feat->kind->fidx) ||
 				feat_is_quartz(feat->kind->fidx) ||
+				feat_is_rubble(feat->kind->fidx) ||
 				feat_is_closed_door(feat->kind->fidx)) {
 			return feat->kind->dig;
 		}
@@ -1902,7 +1937,7 @@ int square_digging(struct chunk *c, struct loc grid) {
 
 static const struct feature_kind *feat_apparent(struct chunk *c, struct loc grid)
 {
-	return &f_info[square(c, grid)->feat_old];
+	return square_feat(c, grid)->kind;
 }
 
 /*

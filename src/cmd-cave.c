@@ -567,11 +567,12 @@ static bool do_cmd_tunnel_test(struct player *p, struct loc grid)
  * of the room, and whose "illumination" status do not change with
  * the rest of the room.
  */
-static bool twall(struct loc grid)
+static bool twall(struct loc grid, int feat)
 {
 	/* Paranoia -- Require a wall or door or some such */
-	if (!(square_isdiggable(cave, grid) || square_iscloseddoor(cave, grid)))
+	if (!(square_isdiggable(cave, grid) || square_iscloseddoor(cave, grid))) {
 		return (false);
+	}
 
 	/* Sound */
 	sound(MSG_DIG);
@@ -579,8 +580,14 @@ static bool twall(struct loc grid)
 	/* Forget the wall */
 	square_forget(cave, grid);
 
+	// remove that feat
+	feat_remove(cave, grid, feat);
+	if (!square_feat(cave, grid)) {
+		square_add_feat(cave, grid, FEAT_FLOOR, 100);
+	}
+
 	/* Remove the feature */
-	square_tunnel_wall(cave, grid);
+	//square_tunnel_wall(cave, grid);
 
 	/* Update the visuals */
 	player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
@@ -602,8 +609,6 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 	bool more = false;
 	int digging_chances[DIGGING_MAX], chance;
 	bool okay = false;
-	bool gold = square_hasgoldvein(cave, grid);
-	bool rubble = square_isrubble(cave, grid);
 	bool digger_swapped = false;
 	int weapon_slot = slot_by_type(player, EQUIP_WEAPON, true);
 	struct object *current_weapon = slot_object(player, weapon_slot);
@@ -612,6 +617,13 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 	struct player_state *used_state = &player->mon.state;
 	int oldn = 1, dig_idx;
 	const char *with_clause = current_weapon == NULL ? "with your hands" : "with your weapon";
+	struct feature *feat;
+
+	for (feat = square_feat(cave, grid); feat; feat = feat->next) {
+		if (feat_is_diggable(feat->kind->fidx)) break;
+	}
+
+	if (!feat) return false;
 
 	/* Verify legality */
 	if (!do_cmd_tunnel_test(player, grid)) return (false);
@@ -635,7 +647,8 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 	calc_digging_chances(used_state, digging_chances);
 
 	/* Do we succeed? */
-	dig_idx = square_digging(cave, grid);
+	dig_idx = feat->kind->dig;
+	//dig_idx = square_digging(cave, grid);
 	if (dig_idx < 1 || dig_idx > DIGGING_MAX) {
 		msg("%s has misconfigured digging chance; please report this bug.",
 			(square_feat_old(cave, grid)->name) ?
@@ -656,9 +669,10 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 	}
 
 	/* Success */
-	if (okay && twall(grid)) {
+	if (okay && twall(grid, feat->kind->fidx)) {
 		/* Rubble is a special case - could be handled more generally NRM */
-		if (rubble) {
+
+		if (feat_is_rubble(feat->kind->fidx)) {
 			/* Message */
 			msg("You have removed the rubble %s.", with_clause);
 
@@ -676,7 +690,7 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 					msg("You have found something!");
 				}
 			}
-		} else if (gold) {
+		} else if (feat_is_treasure(feat->kind->fidx)) {
 			/* Found treasure */
 			place_gold(cave, grid, player->depth, ORIGIN_FLOOR);
 			msg("You have found something digging %s!", with_clause);
@@ -684,22 +698,26 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 			msg("You have finished the tunnel %s.", with_clause);
 		}
 		/* On the surface, new terrain may be exposed to the sun. */
-		if (cave->depth == 0) expose_to_sun(cave, grid, is_daytime());
+		if (cave->depth == 0) {
+			expose_to_sun(cave, grid, is_daytime());
+		}
 		/* Update the visuals. */
 		square_memorize(cave, grid);
 		square_light_spot(cave, grid);
 		player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
 	} else if (chance > 0) {
 		/* Failure, continue digging */
-		if (rubble)
+		if (feat_is_rubble(feat->kind->fidx)) {
 			msg("You dig in the rubble %s.", with_clause);
-		else
+		} else {
 			msg("You tunnel into the %s %s.",
-				square_apparent_name(player->cave, grid), with_clause);
+				feat->kind->name,
+				with_clause);
+		}
 		more = true;
 	} else {
 		/* Don't automatically repeat if there's no hope. */
-		if (rubble) {
+		if (feat_is_rubble(feat->kind->fidx)) {
 			msg("You dig in the rubble %s with little effect.", with_clause);
 		} else {
 			msg("You chip away futilely %s at the %s.", with_clause,
@@ -725,8 +743,9 @@ void do_cmd_tunnel(struct command *cmd)
 	bool more = false;
 
 	/* Get arguments */
-	if (cmd_get_direction(cmd, "direction", &dir, false))
+	if (cmd_get_direction(cmd, "direction", &dir, false)) {
 		return;
+	}
 
 	/* Get location */
 	grid = loc_sum(player->mon.grid, ddgrid[dir]);
@@ -1233,6 +1252,9 @@ void move_player(int dir, bool disarm)
 		/* See if trap detection status will change */
 		bool old_dtrap = square_isdtrap(cave, player->mon.grid);
 		bool new_dtrap = square_isdtrap(cave, grid);
+		struct feature *feat;
+		char dam_name[256] = { '\0' };
+
 		step = true;
 
 		/* Note the change in the detect status */
@@ -1253,24 +1275,35 @@ void move_player(int dir, bool disarm)
 		 * If not confused, allow check before moving into damaging
 		 * terrain.
 		 */
-		if (square_isdamaging(cave, grid)
-				&& !player->mon.m_timed[TMD_CONFUSED]) {
-			struct feature_kind *feat = square_feat_old(cave, grid);
-			int dam_taken = player_check_terrain_damage(player,
-				grid, false);
-
-			/*
-			 * Check if running, or going to cost more than a
-			 * third of hp.
-			 */
-			if (player->upkeep->running && dam_taken) {
-				if (!get_check(feat->run_msg)) {
-					player->upkeep->running = 0;
-					step = false;
+		for (feat = square_feat(cave, grid); feat; feat = feat->next) {
+			if (feat_is_damaging(feat->kind->fidx)) {
+				if (!dam_name[0]) {
+					my_strcat(dam_name, " and ", sizeof dam_name);
 				}
-			} else {
-				if (dam_taken > player->mon.hp / 3) {
-					step = get_check(feat->walk_msg);
+				my_strcat(dam_name, feat->kind->name, sizeof dam_name);
+			}
+		}
+
+		for (feat = square_feat(cave, grid); feat; feat = feat->next) {
+			if (feat_is_damaging(feat->kind->fidx)
+					&& !player->mon.m_timed[TMD_CONFUSED]) {
+				
+				int dam_taken = player_check_terrain_damage(player,
+					grid, false);
+
+				/*
+				 * Check if running, or going to cost more than a
+				 * third of hp.
+				 */
+				if (player->upkeep->running && dam_taken) {
+					if (!get_check(feat->kind->run_msg)) {
+						player->upkeep->running = 0;
+						step = false;
+					}
+				} else {
+					if (dam_taken > player->mon.hp / 3) {
+						step = get_check(feat->kind->walk_msg);
+					}
 				}
 			}
 		}

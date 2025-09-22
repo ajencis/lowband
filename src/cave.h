@@ -324,6 +324,7 @@ bool feat_remove(struct chunk *c, struct loc grid, int fidx);
 void square_memorize_feats(struct player *p, const struct chunk *c, struct loc grid);
 void square_memorize_feat_real(struct player *p, const struct chunk *c, struct loc grid, const struct feature *feat);
 void square_forget_feats(struct player *p, struct loc grid);
+bool feat_is_hidden(struct player *p, struct loc grid, int fidx);
 
 struct terrain_element_kind *t_elem_kind_by_idx(int idx);
 bool t_elem_has_flag(const struct terrain_element *t_elem, int flag);
@@ -401,6 +402,7 @@ bool feat_is_projectable(int feat);
 bool feat_is_torch(int feat);
 bool feat_is_bright(int feat);
 bool feat_is_fiery(int feat);
+bool feat_is_damaging(int feat);
 bool feat_is_no_flow(int feat);
 bool feat_is_no_scent(int feat);
 bool feat_is_smooth(int feat);
@@ -414,6 +416,7 @@ bool feat_is_permanent(int feat);
 bool feat_is_up_stairs(int feat);
 bool feat_is_down_stairs(int feat);
 bool feat_is_stairs(int feat);
+bool feat_is_diggable(int feat);
 
 /* SQUARE FEATURE PREDICATES */
 bool square_isfloor(struct chunk *c, struct loc grid);
@@ -509,6 +512,7 @@ bool square_allows_summon(struct chunk *c, struct loc grid);
 
 const char *square_impassable_name(struct chunk *c, struct loc grid);
 
+struct feature *first_feat_with_flag(struct chunk *c, struct loc grid, int flag);
 struct feature *square_feat(struct chunk *c, struct loc grid);
 bool square_has_feat(const struct chunk *c, struct loc grid, int fidx);
 struct feature *square_feat_by_type(struct chunk *c, struct loc grid, int fidx);

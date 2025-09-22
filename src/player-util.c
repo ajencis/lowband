@@ -2674,6 +2674,7 @@ void player_take_terrain_damage(struct player *p, struct loc grid)
 {
 	int dam_taken = player_check_terrain_damage(p, grid, true);
 	int dam_reduced;
+	struct feature *feat;
 
 	if (!dam_taken) {
 		return;
@@ -2685,15 +2686,18 @@ void player_take_terrain_damage(struct player *p, struct loc grid)
 	 * player's damage reduction.
 	 */
 	dam_reduced = player_apply_damage_reduction(p, dam_taken);
-	if (square_isfiery(cave, grid)) {
-		char dam_text[32] = "";
 
-		if (dam_reduced > 0 && OPT(p, show_damage)) {
-			strnfmt(dam_text, sizeof(dam_text), " (%d)",
-				dam_reduced);
+	for (feat = square_feat(cave, grid); feat; feat = feat->next) {
+		if (feat_is_damaging(feat->kind->fidx)) {
+			char dam_text[64] = "";
+
+			if (dam_reduced > 0 && OPT(p, show_damage)) {
+				strnfmt(dam_text, sizeof(dam_text), " (%d)",
+					dam_reduced);
+			}
+			msg("%s%s", feat->kind->hurt_msg, dam_text);
+			inven_damage(p, PROJ_FIRE, dam_taken);
 		}
-		msg("%s%s", square_feat_old(cave, grid)->hurt_msg, dam_text);
-		inven_damage(p, PROJ_FIRE, dam_taken);
 	}
 	take_hit(p, dam_reduced, square_feat_old(cave, grid)->die_msg);
 }
@@ -3787,8 +3791,10 @@ void search(struct player *p)
 			int dist;
 			struct object *obj;
 			struct monster *mon = square_monster(cave, grid);
-			struct feature_kind *featr;
+			//struct feature_kind *featr;
 			int currpower;
+			struct feature *feat;
+			const char *pref, *name;
 
 			if (!square_in_bounds_fully(cave, grid)) continue;
 			if (!square_isview(cave, grid)) continue;
@@ -3798,10 +3804,22 @@ void search(struct player *p)
 			if (dist > detectpower / 25) continue;
 
 			currpower = detectpower - dist * 10;
-			featr = square_feat_old(cave, grid);
+			//featr = square_feat_old(cave, grid);
+
+			for (feat = square_feat(cave, grid); feat; feat = feat->next) {
+				if (feat_is_hidden(p, grid, feat->kind->fidx) && randint0(currpower < cave->depth)) {
+					square_memorize_feat_real(p, cave, grid, feat);
+
+					name = feat->kind->name;
+					pref = feat->kind->look_prefix;
+					if (!pref) pref = is_a_vowel(name[0]) ? "an " : "a ";
+
+					msg("You have discovered %s%s.", name, pref);
+				}
+			}
 
 			// L: reveal anything hidden
-			if (tf_has(featr->flags, TF_HIDDEN) && square_ismemorybad(cave, grid) &&
+			/*if (tf_has(featr->flags, TF_HIDDEN) && square_ismemorybad(cave, grid) &&
 					randint0(currpower) > cave->depth) {
 				square_true_memorize(cave, grid);
 				msg("You have discovered %s%s",
@@ -3812,6 +3830,7 @@ void search(struct player *p)
 					disturb(p);
 				}
 			}
+			}*/
 
 			/* L: find invisible monsters
 			   invisible monsters percieved will get spotted and will be visible until

@@ -201,6 +201,32 @@ static int feat_believed(struct player *p, struct loc grid, int feat)
 	return kind->mimic->fidx;
 }
 
+/**
+ * L: returns whether the feat is hidden to the player - ie the player believes the feat's
+ * mimic is in the square and doesn't know that the real feat is in the square
+ */
+bool feat_is_hidden(struct player *p, struct loc grid, int fidx)
+{
+	int mimic;
+	bool is_hidden = false;
+	struct feature *feat;
+
+	if (!f_info[fidx].mimic) return false;
+
+	mimic = f_info[fidx].mimic->fidx;
+
+	for (feat = square_feat(p->cave, grid); feat; feat = feat->next) {
+		if (feat->kind->fidx == mimic) {
+			is_hidden = true;
+		}
+		else if (feat->kind->fidx == fidx) {
+			return false;
+		}
+	}
+
+	return is_hidden;
+}
+
 static void square_update_feat_memorization(const struct chunk *c, struct player *p, struct loc grid)
 {
 	struct feature *new = NULL;

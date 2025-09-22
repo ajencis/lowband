@@ -867,33 +867,77 @@ static bool aux_object(struct chunk *c, struct player *p,
 	return result;
 }
 
+static const char *name_prefix(struct feature_kind *kind)
+{
+	if (kind->look_prefix) return kind->look_prefix;
+	if (is_a_vowel(kind->name[0])) return "an ";
+	return "a ";
+}
+
+static const char *preposition(struct feature_kind *kind)
+{
+	if (kind->look_in_preposition) return kind->look_in_preposition;
+	return "on ";
+}
+
 /**
  * Help target_set_interactive_aux():  handle terrain.
  */
 static bool aux_terrain(struct chunk *c, struct player *p,
 		struct target_aux_state *auxst)
 {
-	const char *name, *lphrase2, *lphrase3;
-	char out_val[TARGET_OUT_VAL_SIZE];
+	//const char *name, *lphrase2, *lphrase3;
+	char out_val[TARGET_OUT_VAL_SIZE], wiz_info[128];
+	struct feature *feat = square_feat(p->cave, auxst->grid);
 
 	if (!auxst->boring && !square_isinteresting(p->cave, auxst->grid)) {
 		return false;
 	}
+	if (!feat) {
+		return false;
+	}
 
-	/* Terrain feature if needed */
+	// L: loop over 
+	do {
+		strnfmt(out_val, sizeof out_val, "%s%s%s%s, %s",
+			auxst->phrase1,
+			*auxst->phrase2 ? preposition(feat->kind) : "",
+			name_prefix(feat->kind),
+			feat->kind->name,
+			auxst->coord_desc);
+
+		if (p->wizard) {
+			strnfmt(wiz_info, sizeof wiz_info, " (%d:%d, noise=%d, scent=%d, mana=%d)",
+					auxst->grid.x,
+					auxst->grid.y,
+					(int)c->noise.grids[auxst->grid.y][auxst->grid.x],
+					(int)c->scent.grids[auxst->grid.y][auxst->grid.x],
+					square(c, auxst->grid)->mana);
+
+			my_strcat(out_val, wiz_info, sizeof out_val);
+		}
+
+		my_strcat(out_val, ".", sizeof out_val);
+
+		prt(out_val, 0, 0);
+		move_cursor_relative(auxst->grid.y, auxst->grid.x);
+
+		auxst->press = inkey_m();
+		feat = feat->next;
+	} while (feat && auxst->press.type == EVT_KBRD && auxst->press.key.code == ' ');
+
+	/*
+	// Terrain feature if needed
 	name = square_apparent_name(p->cave, auxst->grid);
 
-	/* Hack -- handle unknown grids */
-
-
-	/* Pick a preposition if needed */
+	// Pick a preposition if needed 
 	lphrase2 = (*auxst->phrase2) ?
 		square_apparent_look_in_preposition(p->cave, auxst->grid) : "";
 
-	/* Pick prefix for the name */
+	// Pick prefix for the name
 	lphrase3 = square_apparent_look_prefix(p->cave, auxst->grid);
 
-	/* Display a message */
+	// Display a message
 	if (p->wizard) {
 		strnfmt(out_val, sizeof(out_val),
 			"%s%s%s%s, %s (%d:%d, noise=%d, scent=%d, mana=%d).",
@@ -920,6 +964,7 @@ static bool aux_terrain(struct chunk *c, struct player *p,
 	prt(out_val, 0, 0);
 	move_cursor_relative(auxst->grid.y, auxst->grid.x);
 	auxst->press = inkey_m();
+	*/
 
 	/*
 	 * Stop on right click of mouse or everything but "return"/"space" for

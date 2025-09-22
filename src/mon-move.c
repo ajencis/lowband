@@ -227,10 +227,13 @@ static bool monster_can_move(struct monster *mon, struct loc grid)
  */
 static bool monster_hates_grid(struct monster *mon, struct loc grid)
 {
-	/* Only some creatures can handle damaging terrain */
-	if (square_isdamaging(cave, grid) &&
-			!rf_has(mon->race->flags, square_feat_old(cave, grid)->resist_flag)) {
-		return true;
+	struct feature *feat;
+
+	for (feat = square_feat(cave, grid); feat; feat = feat->next) {
+		if (feat_is_damaging(feat->kind->fidx) &&
+				!rf_has(mon->race->flags, feat->kind->resist_flag)) {
+			return true;
+		}
 	}
 
 	if (grid_is_danger(mon, cave, grid)) return true;
@@ -1526,7 +1529,7 @@ static void monster_display_confused_move_msg(struct monster *mon,
 											  struct loc new)
 {
 	if (monster_is_visible(mon) && monster_is_in_view(mon)) {
-		const char *m = square_feat_old(cave, new)->confused_msg;
+		const char *m = square_feat(cave, new)->kind->confused_msg;
 
 		msg("%s %s.", m_name, (m) ? m : "stumbles");
 	}

@@ -683,7 +683,7 @@ void process_world(struct chunk *c)
 		for (x = player->mon.grid.x - rad; x <= player->mon.grid.x + rad; ++x) {
 			for (y = player->mon.grid.y - rad; y <= player->mon.grid.y + rad; ++y) {
 				if (!square_in_bounds_fully(cave, loc(x, y))) continue;
-				if (square_feat_old(c, loc(x, y))->fidx == FEAT_PERM) continue;
+				if (square_isperm(c, loc(x, y))) continue;
 
 				sq = &cave->squares[y][x];
 				dist = distance(player->mon.grid, loc(x, y));

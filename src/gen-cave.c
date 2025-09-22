@@ -3166,7 +3166,7 @@ struct chunk *town_gen(struct player *p, int min_height, int min_width,
 		for (grid.y = 0; grid.y < c_new->height; grid.y++) {
 			bool found = false;
 			for (grid.x = 0; grid.x < c_new->width; grid.x++) {
-				if (square_feat_old(c_new, grid)->fidx == FEAT_MORE) {
+				if (square_isdownstairs(c_new, grid)) {
 					found = true;
 					break;
 				}
