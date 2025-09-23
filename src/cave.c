@@ -383,6 +383,8 @@ struct chunk *cave_new(int height, int width) {
 	c->mon_max = 1;
 	c->mon_current = -1;
 
+	c->feat_default = &f_info[FEAT_FLOOR];
+
 	c->monster_groups = mem_zalloc(z_info->level_monster_max *
 								   sizeof(struct monster_group*));
 
@@ -430,7 +432,7 @@ void cave_free(struct chunk *c) {
 				object_pile_free(c, p_c, c->squares[y][x].obj);
 			}
 			if (c->squares[y][x].feat) {
-				square_clear_feats(c, loc(x, y));
+				square_free_feats(c, loc(x, y));
 			}
 
 			square_t_elem_remove_all(c, loc(x, y));

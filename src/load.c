@@ -1576,6 +1576,10 @@ static int rd_dungeon_aux(struct chunk **c)
 		}
 	}
 
+	rd_u16b(&tmp16u);
+	assert(tmp16u < FEAT_MAX);
+	c1->feat_default = &f_info[tmp16u];
+
 	for (y = 0; y < height; ++y) {
 		for (x = 0; x < width; ++x) {
 			uint16_t kind, timer;

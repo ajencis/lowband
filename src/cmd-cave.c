@@ -581,13 +581,10 @@ static bool twall(struct loc grid, int feat)
 	square_forget(cave, grid);
 
 	// remove that feat
-	feat_remove(cave, grid, feat);
+	square_remove_feat(cave, grid, feat);
 	if (!square_feat(cave, grid)) {
 		square_add_feat(cave, grid, FEAT_FLOOR, 100);
 	}
-
-	/* Remove the feature */
-	//square_tunnel_wall(cave, grid);
 
 	/* Update the visuals */
 	player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
@@ -651,9 +648,9 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 	//dig_idx = square_digging(cave, grid);
 	if (dig_idx < 1 || dig_idx > DIGGING_MAX) {
 		msg("%s has misconfigured digging chance; please report this bug.",
-			(square_feat_old(cave, grid)->name) ?
-			square_feat_old(cave, grid)->name :
-			format("Terrain index %d", square_feat_old(cave, grid)->fidx));
+			(feat->kind->name) ?
+			feat->kind->name :
+			format("Terrain index %d", feat->kind->fidx));
 		dig_idx = DIGGING_GRANITE + 1;
 	}
 	chance = digging_chances[dig_idx - 1];

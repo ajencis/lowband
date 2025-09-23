@@ -28,7 +28,7 @@ static void feat_free(struct feature *feat)
 	mem_free(feat);
 }
 
-bool feat_add(struct feature **list, int fidx, int size)
+static bool list_add_feat(struct feature **list, int fidx, int size)
 {
 	assert(list);
 	assert(fidx > FEAT_NONE && fidx < FEAT_MAX);
@@ -69,10 +69,44 @@ bool feat_add(struct feature **list, int fidx, int size)
 	return true;
 }
 
-bool feat_remove(struct chunk *c, struct loc grid, int fidx)
+static void square_enforce_default_feat(struct chunk *c, struct loc grid)
+{
+	struct feature *feat = square_feat(c, grid);
+
+	if (!feat) {
+		square_add_feat(c, grid, c->feat_default->fidx, 100);
+	}
+
+	else if (feat && feat->next) {
+		square_remove_feat(c, grid, c->feat_default->fidx);
+	}
+}
+
+bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
+{
+	bool success;
+
+	assert(c);
+	assert(square_in_bounds(c, grid));
+
+	success = list_add_feat(&c->squares[grid.y][grid.x].feat, fidx, size);
+
+	square_enforce_default_feat(c, grid);
+
+	return success;
+}
+
+static bool feat_can_remove(int fidx)
+{
+	return !feat_is_permanent(fidx);
+}
+
+bool square_remove_feat(struct chunk *c, struct loc grid, int fidx)
 {
 	struct feature **prev = NULL, *to_del;
 	struct square *sq = &c->squares[grid.y][grid.x];
+
+	if (!feat_can_remove(fidx)) return false;
 
 	prev = &sq->feat;
 
@@ -90,10 +124,47 @@ bool feat_remove(struct chunk *c, struct loc grid, int fidx)
 
 	feat_free(to_del);
 
+	square_enforce_default_feat(c, grid);
+
 	return true;
 }
-	
-	
+
+/**
+ * L: frees feats from a square in order to free the cave
+ */
+void square_free_feats(struct chunk *c, struct loc grid)
+{
+	assert(c);
+
+	struct feature *feat, *next;
+
+	for (feat = square_feat(c, grid); feat; feat = next) {
+		next = feat->next;
+
+		feat_free(feat);
+	}
+
+	c->squares[grid.y][grid.x].feat = NULL;
+}
+
+/**
+ * L: frees feats from a square in normal situations
+ */
+void square_clear_feats(struct chunk *c, struct loc grid)
+{
+	struct feature *feat, *next;
+
+	for (feat = square_feat(c, grid); feat; feat = next) {
+		next = feat->next;
+		
+		if (feat_can_remove(feat->kind->fidx) && (feat->kind->fidx != c->feat_default->fidx)) {
+			square_remove_feat(c, grid, feat->kind->fidx);
+		}
+	}
+
+	square_free_feats(c, grid);
+}
+
 struct feature *square_feat(struct chunk *c, struct loc grid)
 {
 	return c->squares[grid.y][grid.x].feat;
@@ -112,17 +183,46 @@ struct feature *square_feat_by_type(struct chunk *c, struct loc grid, int fidx)
 	return NULL;
 }
 
+void square_remove_feat_by_type(struct chunk *c, struct loc grid, bool (*pred)(int))
+{
+	struct feature *feat = square_feat(c, grid);
+
+	while (feat && pred(feat->kind->fidx)) {
+		square_remove_feat(c, grid, feat->kind->fidx);
+		feat = square_feat(c, grid);
+	}
+
+	while (feat && feat->next) {
+		if (pred(feat->next->kind->fidx)) {
+			square_remove_feat(c, grid, feat->next->kind->fidx);
+		}
+		else {
+			feat = feat->next;
+		}
+	}
+}
+
+void square_set_feat(struct chunk *c, struct loc grid, int fidx, int size)
+{
+	assert(c);
+	assert(square_in_bounds(c, grid));
+
+	square_clear_feats(c, grid);
+
+	square_add_feat(c, grid, fidx, size);
+}
+
 bool square_remove_feats_by_flag(struct chunk *c, struct loc grid, int flag)
 {
 	struct feature *feat = square_feat(c, grid);
 
 	while (feat) {
 		if (tf_has(feat->kind->flags, flag)) {
-			feat_remove(c, grid, feat->kind->fidx);
+			square_remove_feat(c, grid, feat->kind->fidx);
 			feat = square_feat(c, grid);
 		}
 		else if (feat->next && tf_has(feat->next->kind->flags, flag)) {
-			feat_remove(c, grid, feat->next->kind->fidx);
+			square_remove_feat(c, grid, feat->next->kind->fidx);
 		}
 		else {
 			feat = feat->next;
@@ -141,7 +241,7 @@ bool square_change_feat(struct chunk *c, struct loc grid, int old, int new)
 	for (feat = square_feat(c, grid); feat; feat = feat->next) {
 		if (feat->kind->fidx == old) {
 			square_add_feat(c, grid, new, feat->size);
-			feat_remove(c, grid, old);
+			square_remove_feat(c, grid, old);
 			return true;
 		}
 	}
@@ -242,10 +342,12 @@ static void square_update_feat_memorization(const struct chunk *c, struct player
 		fidx = feat_believed(p, grid, real->kind->fidx);
 
 		assert(fidx > FEAT_NONE && fidx < FEAT_MAX);
-		feat_add(&new, fidx, real->size);
+		list_add_feat(&new, fidx, real->size);
 	}
 
-	square_set_feat(p->cave, grid, new);
+	square_clear_feats(p->cave, grid);
+	assert(!p->cave->squares[grid.y][grid.x].feat);
+	p->cave->squares[grid.y][grid.x].feat = new;
 }
 
 static void square_memorize_feat_one(struct player *p, struct loc grid, const struct feature *feat, bool real)
@@ -284,7 +386,7 @@ void square_memorize_feat_real(struct player *p, const struct chunk *c, struct l
 	struct feature_kind *mimic = feat->kind->mimic;
 
 	if (mimic && !square_has_feat(c, grid, mimic->fidx)) {
-		feat_remove(p->cave, grid, mimic->fidx);
+		square_remove_feat(p->cave, grid, mimic->fidx);
 	}
 
 	square_memorize_feat_one(p, grid, feat, true);

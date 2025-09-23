@@ -999,6 +999,8 @@ static void wr_dungeon_aux(struct chunk *c)
 		}
 	}
 
+	wr_u16b((uint16_t)c->feat_default->fidx);
+
 	for (y = 0; y < c->height; ++y) {
 		for (x = 0; x < c->width; ++x) {
 			const struct terrain_element *t_elem;

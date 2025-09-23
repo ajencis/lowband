@@ -1022,6 +1022,7 @@ bool square_isvisibletrap(struct chunk *c, struct loc grid)
     /* Look for a visible trap */
     return square_trap_flag(c, grid, TRF_VISIBLE);
 }
+
 /**
  * True if the square is an unknown player trap (it will appear as a floor tile)
  */
@@ -1058,17 +1059,21 @@ bool square_dtrap_edge(struct chunk *c, struct loc grid)
 
 	/* Check for non-dtrap adjacent grids */
 	if (square_in_bounds_fully(c, next_grid(grid, DIR_S)) &&
-		(!square_isdtrap(c, next_grid(grid, DIR_S))))
+			(!square_isdtrap(c, next_grid(grid, DIR_S)))) {
 		return true;
+	}
 	if (square_in_bounds_fully(c, next_grid(grid, DIR_E)) &&
-		(!square_isdtrap(c, next_grid(grid, DIR_E))))
+			(!square_isdtrap(c, next_grid(grid, DIR_E)))) {
 		return true;
+	}
 	if (square_in_bounds_fully(c, next_grid(grid, DIR_N)) &&
-		(!square_isdtrap(c, next_grid(grid, DIR_N))))
+			(!square_isdtrap(c, next_grid(grid, DIR_N)))) {
 		return true;
+	}
 	if (square_in_bounds_fully(c, next_grid(grid, DIR_W)) &&
-		(!square_isdtrap(c, next_grid(grid, DIR_W))))
+			(!square_isdtrap(c, next_grid(grid, DIR_W)))) {
 		return true;
+	}
 
 	return false;
 }
@@ -1479,84 +1484,6 @@ int square_num_walls_diagonal(struct chunk *c, struct loc grid)
     return k;
 }
 
-
-void square_clear_feats(struct chunk *c, struct loc grid)
-{
-	assert(c);
-
-	struct feature *feat;
-
-	for (feat = square_feat(c, grid); feat; feat = square_feat(c, grid)) {
-		feat_remove(c, grid, feat->kind->fidx);
-	}
-}
-
-void square_set_feat(struct chunk *c, struct loc grid, struct feature *feat)
-{
-	struct square *sq;
-
-	assert(c);
-	assert(square_in_bounds(c, grid));
-
-	sq = &c->squares[grid.y][grid.x];
-
-	assert(sq);
-
-	square_clear_feats(c, grid);
-
-	assert(!sq->feat);
-
-	sq->feat = feat;
-}
-
-/**
- * L: add a feat to the square, retaining previous feats
- */
-bool square_add_feat(struct chunk *c, struct loc grid, int feat, int size)
-{
-	assert(feat > FEAT_NONE && feat < FEAT_MAX);
-	return feat_add(&c->squares[grid.y][grid.x].feat, feat, size);
-
-	struct feature *feat_new, *prev;
-	struct feature_kind *kind;
-	struct square *sq = &c->squares[grid.y][grid.x];
-
-	assert(feat > FEAT_NONE && feat < FEAT_MAX);
-	assert(size > 0);
-
-	kind = &f_info[feat];
-
-	if (!sq->feat || (sq->feat->kind->fidx > kind->fidx)) {
-		// putting the new feat at the start
-		prev = NULL;
-	} else if (sq->feat->kind->fidx == kind->fidx) {
-		return false;
-	} else {
-		for (prev = sq->feat; prev && prev->next; prev = prev->next) {
-			if (prev->next->kind->fidx == kind->fidx) return false;
-			else if (prev->next->kind->fidx > kind->fidx) {
-				break;
-			}
-		}
-	}
-
-	feat_new = mem_zalloc(sizeof *feat_new);
-
-	feat_new->kind = kind;
-	feat_new->size = size;
-
-	if (prev) {
-		feat_new->next = prev->next;
-		prev->next = feat_new;
-	}
-	else {
-		feat_new->next = sq->feat;
-		sq->feat = feat_new;
-	}
-
-	return true;
-}
-
 /**
  * Set the terrain type for a square.
  *
@@ -1680,13 +1607,11 @@ void square_add_stairs(struct chunk *c, struct loc grid, int depth) {
 
 	square_remove_feats_by_flag(c, grid, TF_WALL);
 	square_add_feat(c, grid, down ? FEAT_MORE : FEAT_LESS, 100);
-	square_set_feat_old(c, grid, down ? FEAT_MORE : FEAT_LESS);
 }
 
 void square_add_door(struct chunk *c, struct loc grid, bool closed) {
 	square_remove_feats_by_flag(c, grid, TF_WALL);
 	square_add_feat(c, grid, closed ? FEAT_CLOSED : FEAT_OPEN, 100);
-	square_set_feat_old(c, grid, closed ? FEAT_CLOSED : FEAT_OPEN);
 }
 
 void square_open_door(struct chunk *c, struct loc grid)
@@ -1762,20 +1687,17 @@ void square_tunnel_wall(struct chunk *c, struct loc grid)
 {
 	square_remove_feats_by_flag(c, grid, TF_WALL);
 	square_add_feat(c, grid, FEAT_FLOOR, 100);
-	square_set_feat_old(c, grid, FEAT_FLOOR);
 }
 
 void square_destroy_wall(struct chunk *c, struct loc grid)
 {
 	square_remove_feats_by_flag(c, grid, TF_WALL);
 	square_add_feat(c, grid, FEAT_FLOOR, 100);
-	square_set_feat_old(c, grid, FEAT_FLOOR);
 }
 
 void square_smash_wall(struct chunk *c, struct loc grid)
 {
 	int i;
-	square_set_feat_old(c, grid, FEAT_FLOOR);
 	square_remove_feats_by_flag(c, grid, TF_WALL);
 	square_add_feat(c, grid, FEAT_FLOOR, 100);
 
@@ -1805,7 +1727,6 @@ void square_smash_wall(struct chunk *c, struct loc grid)
 		}
 
 		/* Remove it */
-		square_set_feat_old(c, adj_grid, FEAT_FLOOR);
 		square_remove_feats_by_flag(c, grid, TF_WALL);
 		square_add_feat(c, grid, FEAT_FLOOR, 100);
 	}
@@ -1856,25 +1777,31 @@ void square_destroy(struct chunk *c, struct loc grid) {
 		feat = FEAT_MAGMA;
 	}
 
-	square_set_feat_old(c, grid, feat);
+	square_set_feat(c, grid, feat, 100);
 }
 
 void square_earthquake(struct chunk *c, struct loc grid) {
 	int t = randint0(100);
 	int f;
 
-	if (!square_ispassable(c, grid)) {
-		square_set_feat_old(c, grid, FEAT_FLOOR);
+	if (square_isstairs(c, grid)) {
 		return;
 	}
 
-	if (t < 20)
+	if (!square_ispassable(c, grid)) {
+		square_set_feat(c, grid, FEAT_FLOOR, 100);
+		return;
+	}
+
+	if (t < 20) {
 		f = FEAT_GRANITE;
-	else if (t < 70)
+	} else if (t < 70) {
 		f = FEAT_QUARTZ;
-	else
+	} else {
 		f = FEAT_MAGMA;
-	square_set_feat_old(c, grid, f);
+	}
+
+	square_set_feat(c, grid, f, 100);
 }
 
 /**
@@ -1886,20 +1813,21 @@ void square_upgrade_mineral(struct chunk *c, struct loc grid)
 
 	if (feat) {
 		square_add_feat(c, grid, FEAT_MAGMA_K, feat->size);
-		feat_remove(c, grid, feat->kind->fidx);
+		square_remove_feat(c, grid, feat->kind->fidx);
 	}
 
 	feat = square_feat_by_type(c, grid, FEAT_QUARTZ);
 
 	if (feat) {
 		square_add_feat(c, grid, FEAT_QUARTZ_K, feat->size);
-		feat_remove(c, grid, feat->kind->fidx);
+		square_remove_feat(c, grid, feat->kind->fidx);
 	}
 }
 
 void square_destroy_rubble(struct chunk *c, struct loc grid) {
 	assert(square_isrubble(c, grid));
-	square_set_feat_old(c, grid, FEAT_FLOOR);
+	
+	square_remove_feat_by_type(c, grid, feat_is_rubble);
 }
 
 void square_force_floor(struct chunk *c, struct loc grid) {

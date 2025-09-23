@@ -290,6 +290,8 @@ struct chunk {
 	struct monster_group **monster_groups;
 
 	struct connector *join;
+
+	const struct feature_kind *feat_default; // L: what feat the cave uses if it has no others
 };
 
 /*** Feature Indexes (see "lib/gamedata/terrain.txt") ***/
@@ -319,8 +321,9 @@ void update_view(struct chunk *c, struct player *p);
 bool no_light(const struct player *p);
 
 /* cave-terrain-elem.c */
-bool feat_add(struct feature **list, int fidx, int size);
-bool feat_remove(struct chunk *c, struct loc grid, int fidx);
+bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size);
+bool square_remove_feat(struct chunk *c, struct loc grid, int fidx);
+void square_free_feats(struct chunk *c, struct loc grid);
 void square_memorize_feats(struct player *p, const struct chunk *c, struct loc grid);
 void square_memorize_feat_real(struct player *p, const struct chunk *c, struct loc grid, const struct feature *feat);
 void square_forget_feats(struct player *p, struct loc grid);
@@ -518,10 +521,11 @@ bool square_has_feat(const struct chunk *c, struct loc grid, int fidx);
 struct feature *square_feat_by_type(struct chunk *c, struct loc grid, int fidx);
 bool square_add_feat(struct chunk *c, struct loc grid, int feat, int size);
 void square_clear_feats(struct chunk *c, struct loc grid);
-void square_set_feat(struct chunk *c, struct loc grid, struct feature *feat);
+void square_set_feat(struct chunk *c, struct loc grid, int fidx, int size);
 bool feats_equal(const struct feature *feat1, const struct feature *feat2);
 bool square_remove_feats_by_flag(struct chunk *c, struct loc grid, int flag);
 bool square_change_feat(struct chunk *c, struct loc grid, int old, int new);
+void square_remove_feat_by_type(struct chunk *c, struct loc grid, bool (*pred)(int));
 
 const struct square *square(struct chunk *c, struct loc grid);
 struct feature_kind *square_feat_old(struct chunk *c, struct loc grid);
