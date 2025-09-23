@@ -98,12 +98,6 @@ void map_info(struct loc grid, struct grid_data *g)
 	g->unseen_money = false;
 	g->feat = NULL;
 
-	/* Use real feature (remove later) */
-	/*g->f_idx = square(cave, grid)->feat_old;
-	if (f_info[g->f_idx].mimic) {
-		g->f_idx = (uint32_t) (f_info[g->f_idx].mimic - f_info);
-	}*/
-
 	g->in_view = (square_isseen(cave, grid)) ? true : false;
 	g->is_player = (square(cave, grid)->mon < 0) ? true : false;
 	g->m_idx = (g->is_player) ? 0 : square(cave, grid)->mon;
@@ -134,9 +128,6 @@ void map_info(struct loc grid, struct grid_data *g)
 	} else if (square_isglow(cave, grid)) {
 		g->lighting = LIGHTING_LIT;
 	}
-
-	/* Use known feature */
-	//g->f_idx = square(player->cave, grid)->feat_old;
 
 	// L: copy terrain element over
 	t_elem = square_t_elem(player->cave, grid);
@@ -749,7 +740,6 @@ void cave_known(struct player *p)
 
 			/* Internal walls not known */
 			if (count < 8) {
-				//p->cave->squares[y][x].feat_old = square(cave, grid)->feat_old;
 				square_memorize_feats(p, cave, loc(x, y));
 			}
 		}

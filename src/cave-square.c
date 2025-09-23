@@ -805,12 +805,20 @@ bool square_canputitem(struct chunk *c, struct loc grid) {
 	return !square_object(c, grid);
 }
 
+static bool feat_can_telem(int feat)
+{
+	struct feature_kind *kind = &f_info[feat];
+	return tf_has(kind->flags, TF_PROJECT) || tf_has(kind->flags, TF_CLOUD_PROJ);
+}
+
 /**
  * True if the terrain element in question can be put in the square
  */
 bool square_canputterrainelem(struct chunk *c, struct loc grid, uint16_t idx) {
-	int feat = square(c, grid)->feat_old;
 	struct terrain_element *t_elem;
+	struct feature *feat;
+
+	if (!all_feats_are(c, grid, feat_can_telem)) return false;
 
 	for (t_elem = square_t_elem(c, grid); t_elem; t_elem = t_elem->next) {
 		if (t_elem->kind->idx == idx) continue;
@@ -820,7 +828,7 @@ bool square_canputterrainelem(struct chunk *c, struct loc grid, uint16_t idx) {
 		}
 	}
 
-	return tf_has(f_info[feat].flags, TF_PROJECT) || tf_has(f_info[feat].flags, TF_CLOUD_PROJ);
+	return true;
 }
 
 /**
@@ -1185,12 +1193,6 @@ const struct square *square(struct chunk *c, struct loc grid)
 	return &c->squares[grid.y][grid.x];
 }
 
-struct feature_kind *square_feat_old(struct chunk *c, struct loc grid)
-{
-	assert(square_in_bounds(c, grid));
-	return &f_info[square(c, grid)->feat_old];
-}
-
 int square_light(struct chunk *c, struct loc grid)
 {
 	assert(square_in_bounds(c, grid));
@@ -1504,14 +1506,14 @@ void square_set_feat_old(struct chunk *c, struct loc grid, int feat)
 	current_feat = square(c, grid)->feat_old;
 
 	/* Track changes */
-	if (current_feat) c->feat_count[current_feat]--;
-	if (feat) c->feat_count[feat]++;
+	//if (current_feat) c->feat_count[current_feat]--;
+	//if (feat) c->feat_count[feat]++;
 
 	/* Make the change */
 	c->squares[grid.y][grid.x].feat_old = feat;
 
 	/* Light bright terrain */
-	if (feat_is_bright(feat)) {
+	if (square_is_bright(c, grid)) {
 		sqinfo_on(square(c, grid)->info, SQUARE_GLOW);
 	}
 
@@ -1831,7 +1833,7 @@ void square_destroy_rubble(struct chunk *c, struct loc grid) {
 }
 
 void square_force_floor(struct chunk *c, struct loc grid) {
-	square_set_feat_old(c, grid, FEAT_FLOOR);
+	square_clear_feats(c, grid);
 }
 
 /* Note that this returns the STORE_ index, which is one less than shopnum */

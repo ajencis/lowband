@@ -331,7 +331,7 @@ static void project_feature_handler_FIRE(project_feature_handler_context_t *cont
 			one_in_(2)) {
 		/* Forget the floor, make lava. */
 		square_unmark(cave, context->grid);
-		square_set_feat_old(cave, context->grid, FEAT_LAVA);
+		square_add_feat(cave, context->grid, FEAT_LAVA, context->dam / 10);
 		if (cave->depth == 0) {
 			expose_to_sun(cave, context->grid, is_daytime());
 		}
@@ -346,6 +346,8 @@ static void project_feature_handler_FIRE(project_feature_handler_context_t *cont
 
 static void project_feature_handler_COLD(project_feature_handler_context_t *context)
 {
+	struct feature *lava = first_feat_with_flag(cave, context->grid, TF_FIERY);
+
 	/* Grid is in line of sight and player is not blind */
 	if (square_isview(cave, context->grid) && !player->mon.m_timed[TMD_BLIND]) {
 		/* Observe */
@@ -354,19 +356,22 @@ static void project_feature_handler_COLD(project_feature_handler_context_t *cont
 
 	/* Sufficiently intense cold can solidify lava. */
 	if ((context->dam > randint1(900) + 300) &&
-		square_isfiery(cave, context->grid)) {
+			lava) {
 		bool occupied = square_isoccupied(cave, context->grid);
+		int amt = lava->size;
+
+		square_remove_feat(cave, context->grid, lava->kind->fidx);
 
 		square_unmark(cave, context->grid);
 		if (one_in_(2)) {
-			square_set_feat_old(cave, context->grid, FEAT_FLOOR);
 		} else if (one_in_(2) && !occupied) {
-			square_set_feat_old(cave, context->grid, FEAT_RUBBLE);
+			square_add_feat(cave, context->grid, FEAT_RUBBLE, randint1(amt));
 		} else {
-			square_set_feat_old(cave, context->grid, FEAT_PASS_RUBBLE);
+			square_add_feat(cave, context->grid, FEAT_PASS_RUBBLE, randint1(amt));
 		}
-		if (cave->depth == 0)
+		if (cave->depth == 0) {
 			expose_to_sun(cave, context->grid, is_daytime());
+		}
 	}
 }
 
@@ -456,6 +461,8 @@ static void project_feature_handler_WATER(project_feature_handler_context_t *con
 
 static void project_feature_handler_ICE(project_feature_handler_context_t *context)
 {
+	struct feature *lava = first_feat_with_flag(cave, context->grid, TF_FIERY);
+
 	/* Grid is in line of sight and player is not blind */
 	if (square_isview(cave, context->grid) && !player->mon.m_timed[TMD_BLIND]) {
 		/* Observe */
@@ -464,19 +471,22 @@ static void project_feature_handler_ICE(project_feature_handler_context_t *conte
 
 	/* Sufficiently intense cold can solidify lava. */
 	if ((context->dam > randint1(900) + 300) &&
-		square_isfiery(cave, context->grid)) {
+			square_isfiery(cave, context->grid)) {
 		bool occupied = square_isoccupied(cave, context->grid);
+		int amt = lava->size;
+
+		square_remove_feat(cave, context->grid, lava->kind->fidx);
 
 		square_unmark(cave, context->grid);
 		if (one_in_(2)) {
-			square_set_feat_old(cave, context->grid, FEAT_FLOOR);
 		} else if (one_in_(2) && !occupied) {
-			square_set_feat_old(cave, context->grid, FEAT_RUBBLE);
+			square_add_feat(cave, context->grid, FEAT_RUBBLE, randint1(amt));
 		} else {
-			square_set_feat_old(cave, context->grid, FEAT_PASS_RUBBLE);
+			square_add_feat(cave, context->grid, FEAT_PASS_RUBBLE, randint1(amt));
 		}
-		if (cave->depth == 0)
+		if (cave->depth == 0) {
 			expose_to_sun(cave, context->grid, is_daytime());
+		}
 	}
 }
 
@@ -529,7 +539,7 @@ static void project_feature_handler_PLASMA(project_feature_handler_context_t *co
 		square_isfloor(cave, context->grid)) {
 		/* Forget the floor, make lava. */
 		square_unmark(cave, context->grid);
-		square_set_feat_old(cave, context->grid, FEAT_LAVA);
+		square_add_feat(cave, context->grid, FEAT_LAVA, context->dam / 10);
 		if (cave->depth == 0)
 			expose_to_sun(cave, context->grid, is_daytime());
 
@@ -741,7 +751,7 @@ static void project_feature_handler_HELLFIRE(project_feature_handler_context_t *
 			one_in_(2)) {
 		/* Forget the floor, make lava. */
 		square_unmark(cave, context->grid);
-		square_set_feat_old(cave, context->grid, FEAT_LAVA);
+		square_add_feat(cave, context->grid, FEAT_LAVA, context->dam / 10);
 		if (cave->depth == 0) {
 			expose_to_sun(cave, context->grid, is_daytime());
 		}

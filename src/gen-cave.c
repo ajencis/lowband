@@ -168,6 +168,8 @@ static void forestify_level(struct chunk *c)
 	struct loc grid;
 	int tree_power, temp_tp, sapling_max;
 
+	c->feat_default = &f_info[FEAT_DIRT_FLOOR];
+
 	sapling_max = t_elem_kind_by_idx(TE_TREE)->levels->next->min_dur - 1;
 
 	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
@@ -498,7 +500,7 @@ static bool make_rooms_secret(struct chunk *c)
 		}
 
 		if (doroom) {
-			square_set_feat_old(c, end, FEAT_SECRET);
+			square_set_feat(c, end, FEAT_SECRET, 100);
 			struct loc secretlocs[1000] = { 0 };
 			int secretlocnum = all_contiguous_locs(c, center, secretlocs, N_ELEMENTS(secretlocs),
 					not_secret_door_nor_wall, not_both_walls);
@@ -567,7 +569,7 @@ static void build_streamer(struct chunk *c, int feat, int chance)
 			/* Only convert walls */
 			if (square_isrock(c, change)) {
 				/* Turn the rock into the vein type */
-				square_set_feat_old(c, change, feat);
+				square_set_feat(c, change, feat, 100);
 
 				/* Sometimes add known treasure */
 				if (one_in_(chance)) square_upgrade_mineral(c, change);

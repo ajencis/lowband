@@ -1947,7 +1947,7 @@ static void monster_turn(struct monster *mon)
 				if (square_in_bounds_fully(cave, loc(x, y)) &&
 						square(cave, loc(x, y))->feat_old == FEAT_OPEN_SECRET &&
 						los(cave, mon->grid, loc(x, y))) {
-					square_set_feat_old(cave, loc(x, y), FEAT_OPEN);
+					square_change_feat(cave, loc(x, y), FEAT_OPEN_SECRET, FEAT_OPEN);
 					if (monster_is_in_view(mon)) {
 						char desc[64];
 						monster_desc(desc, sizeof(desc), mon, MDESC_STANDARD);

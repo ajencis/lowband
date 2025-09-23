@@ -528,7 +528,6 @@ bool square_change_feat(struct chunk *c, struct loc grid, int old, int new);
 void square_remove_feat_by_type(struct chunk *c, struct loc grid, bool (*pred)(int));
 
 const struct square *square(struct chunk *c, struct loc grid);
-struct feature_kind *square_feat_old(struct chunk *c, struct loc grid);
 int square_light(struct chunk *c, struct loc grid);
 struct monster *square_monster(struct chunk *c, struct loc grid);
 struct object *square_object(struct chunk *c, struct loc grid);

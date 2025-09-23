@@ -189,9 +189,11 @@ void fill_rectangle(struct chunk *c, int y1, int x1, int y2, int x2, int feat,
 					int flag)
 {
 	int y, x;
-	for (y = y1; y <= y2; y++)
-		for (x = x1; x <= x2; x++)
-			square_set_feat_old(c, loc(x, y), feat);
+	for (y = y1; y <= y2; y++) {
+		for (x = x1; x <= x2; x++) {
+			square_set_feat(c, loc(x, y), feat, 100);
+		}
+	}
 	if (flag) generate_mark(c, y1, x1, y2, x2, flag);
 }
 
@@ -214,10 +216,10 @@ void draw_rectangle(struct chunk *c, int y1, int x1, int y2, int x2, int feat,
 
 	for (y = y1; y <= y2; y++) {
 		if (overwrite_perm || !square_isperm(c, loc(x1, y))) {
-			square_set_feat_old(c, loc(x1, y), feat);
+			square_set_feat(c, loc(x1, y), feat, 100);
 		}
 		if (overwrite_perm || !square_isperm(c, loc(x2, y))) {
-			square_set_feat_old(c, loc(x2, y), feat);
+			square_set_feat(c, loc(x2, y), feat, 100);
 		}
 	}
 	if (flag) {
@@ -226,10 +228,10 @@ void draw_rectangle(struct chunk *c, int y1, int x1, int y2, int x2, int feat,
 	}
 	for (x = x1; x <= x2; x++) {
 		if (overwrite_perm || !square_isperm(c, loc(x, y1))) {
-			square_set_feat_old(c, loc(x, y1), feat);
+			square_set_feat(c, loc(x, y1), feat, 100);
 		}
 		if (overwrite_perm || !square_isperm(c, loc(x, y2))) {
-			square_set_feat_old(c, loc(x, y2), feat);
+			square_set_feat(c, loc(x, y2), feat, 100);
 		}
 	}
 	if (flag) {
@@ -254,11 +256,12 @@ static void fill_xrange(struct chunk *c, int y, int x1, int x2, int feat,
 	int x;
 	for (x = x1; x <= x2; x++) {
 		struct loc grid = loc(x, y);
-		square_set_feat_old(c, grid, feat);
+		square_set_feat(c, grid, feat, 100);
 		sqinfo_on(square(c, grid)->info, SQUARE_ROOM);
 		if (flag) sqinfo_on(square(c, grid)->info, flag);
-		if (light)
+		if (light) {
 			sqinfo_on(square(c, grid)->info, SQUARE_GLOW);
+		}
 	}
 }
 
@@ -278,11 +281,12 @@ static void fill_yrange(struct chunk *c, int x, int y1, int y2, int feat,
 	int y;
 	for (y = y1; y <= y2; y++) {
 		struct loc grid = loc(x, y);
-		square_set_feat_old(c, grid, feat);
+		square_set_feat(c, grid, feat, 100);
 		sqinfo_on(square(c, grid)->info, SQUARE_ROOM);
 		if (flag) sqinfo_on(square(c, grid)->info, flag);
-		if (light)
+		if (light) {
 			sqinfo_on(square(c, grid)->info, SQUARE_GLOW);
+		}
 	}
 }
 
@@ -357,9 +361,9 @@ static void generate_plus(struct chunk *c, int y1, int x1, int y2, int x2,
 
 	assert(c);
 
-	for (y = y1; y <= y2; y++) square_set_feat_old(c, loc(x0, y), feat);
+	for (y = y1; y <= y2; y++) square_set_feat(c, loc(x0, y), feat, 100);
 	if (flag) generate_mark(c, y1, x0, y2, x0, flag);
-	for (x = x1; x <= x2; x++) square_set_feat_old(c, loc(x, y0), feat);
+	for (x = x1; x <= x2; x++) square_set_feat(c, loc(x, y0), feat, 100);
 	if (flag) generate_mark(c, y0, x1, y0, x2, flag);
 }
 
@@ -382,10 +386,10 @@ static void generate_open(struct chunk *c, int y1, int x1, int y2, int x2,
 	x0 = (x1 + x2) / 2;
 
 	/* Open all sides */
-	square_set_feat_old(c, loc(x0, y1), feat);
-	square_set_feat_old(c, loc(x1, y0), feat);
-	square_set_feat_old(c, loc(x0, y2), feat);
-	square_set_feat_old(c, loc(x2, y0), feat);
+	square_set_feat(c, loc(x0, y1), feat, 100);
+	square_set_feat(c, loc(x1, y0), feat, 100);
+	square_set_feat(c, loc(x0, y2), feat, 100);
+	square_set_feat(c, loc(x2, y0), feat, 100);
 }
 
 
@@ -409,10 +413,10 @@ static void generate_hole(struct chunk *c, int y1, int x1, int y2, int x2,
 
 	/* Open random side */
 	switch (randint0(4)) {
-	case 0: square_set_feat_old(c, loc(x0, y1), feat); break;
-	case 1: square_set_feat_old(c, loc(x1, y0), feat); break;
-	case 2: square_set_feat_old(c, loc(x0, y2), feat); break;
-	case 3: square_set_feat_old(c, loc(x2, y0), feat); break;
+	case 0: square_set_feat(c, loc(x0, y1), feat, 100); break;
+	case 1: square_set_feat(c, loc(x1, y0), feat, 100); break;
+	case 2: square_set_feat(c, loc(x0, y2), feat, 100); break;
+	case 3: square_set_feat(c, loc(x2, y0), feat, 100); break;
 	}
 }
 
@@ -425,7 +429,7 @@ static void generate_hole(struct chunk *c, int y1, int x1, int y2, int x2,
  */
 void set_marked_granite(struct chunk *c, struct loc grid, int flag)
 {
-	square_set_feat_old(c, grid, FEAT_GRANITE);
+	square_set_feat(c, grid, FEAT_GRANITE, 100);
 	if (flag) generate_mark(c, grid.y, grid.x, grid.y, grid.x, flag);
 }
 
@@ -636,7 +640,7 @@ extern bool generate_starburst_room(struct chunk *c, int y1, int x1, int y2,
 		if (feat_is_floor(feat)) {
 			for (y = (y1 + tmp_ay) / 2; y <= (tmp_by + y2) / 2; y++) {
 				for (x = (x1 + tmp_ax) / 2; x <= (tmp_bx + x2) / 2; x++) {
-					square_set_feat_old(c, loc(x, y), feat);
+					square_set_feat(c, loc(x, y), feat, 100);
 				}
 			}
 		} else {
@@ -796,8 +800,9 @@ extern bool generate_starburst_room(struct chunk *c, int y1, int x1, int y2,
 			nx = 20 + 10 * (x - x0) / dist_conv;
 
 			/* Illegal table access is bad. */
-			if ((ny < 0) || (ny > 40) || (nx < 0) || (nx > 40))
+			if ((ny < 0) || (ny > 40) || (nx < 0) || (nx > 40)) {
 				continue;
+			}
 
 			/* Get angle to current grid. */
 			degree = get_angle_to_grid[ny][nx];
@@ -812,7 +817,7 @@ extern bool generate_starburst_room(struct chunk *c, int y1, int x1, int y2,
 						/* If new feature is not passable, or floor, always 
 						 * place it. */
 						if (feat_is_floor(feat) || !feat_is_passable(feat)) {
-							square_set_feat_old(c, grid, feat);
+							square_set_feat(c, grid, feat, 100);
 
 							if (feat_is_floor(feat)) {
 								sqinfo_on(square(c, grid)->info, SQUARE_ROOM);
@@ -832,13 +837,15 @@ extern bool generate_starburst_room(struct chunk *c, int y1, int x1, int y2,
 						else {
 							/* Replace old feature entirely in some cases. */
 							if (feat_is_smooth(feat)) {
-								if (square_isfloor(c, grid))
-									square_set_feat_old(c, grid, feat);
+								if (square_isfloor(c, grid)) {
+									square_set_feat(c, grid, feat, 100);
+								}
 							} else {
 								/* Make denser in the middle. */
 								if (square_isfloor(c, grid) &&
-									(randint1(max_dist + 5) >= dist + 5))
-									square_set_feat_old(c, grid, feat);
+										(randint1(max_dist + 5) >= dist + 5)) {
+									square_set_feat(c, grid, feat, 100);
+								}
 							}
 
 							/* Light grid. */

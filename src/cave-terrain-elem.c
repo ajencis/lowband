@@ -88,8 +88,28 @@ bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
 
 	assert(c);
 	assert(square_in_bounds(c, grid));
+	assert(fidx > FEAT_NONE && fidx < FEAT_MAX);
 
 	success = list_add_feat(&c->squares[grid.y][grid.x].feat, fidx, size);
+
+	++c->feat_count[fidx];
+
+	if (feat_is_bright(fidx)) {
+		sqinfo_on(square(c, grid)->info, SQUARE_GLOW);
+	}
+
+	if (!feat_is_trap_holding(fidx)) {
+		square_destroy_trap(c, grid);
+	}
+
+	if (c == cave) {
+		square_note_spot(c, grid);
+		square_light_spot(c, grid);
+	} else {
+		sqinfo_off(square(c, grid)->info, SQUARE_WALL_INNER);
+		sqinfo_off(square(c, grid)->info, SQUARE_WALL_OUTER);
+		sqinfo_off(square(c, grid)->info, SQUARE_WALL_SOLID);
+	}
 
 	square_enforce_default_feat(c, grid);
 
@@ -124,7 +144,18 @@ bool square_remove_feat(struct chunk *c, struct loc grid, int fidx)
 
 	feat_free(to_del);
 
+	if (c == cave) {
+		square_note_spot(c, grid);
+		square_light_spot(c, grid);
+	} else {
+		sqinfo_off(square(c, grid)->info, SQUARE_WALL_INNER);
+		sqinfo_off(square(c, grid)->info, SQUARE_WALL_OUTER);
+		sqinfo_off(square(c, grid)->info, SQUARE_WALL_SOLID);
+	}
+
 	square_enforce_default_feat(c, grid);
+
+	--c->feat_count[fidx];
 
 	return true;
 }
@@ -269,6 +300,11 @@ static void square_set_feat_size(struct chunk *c, struct loc grid, int fidx, int
 
 	assert(fidx > FEAT_NONE && fidx < FEAT_MAX);
 
+	if (size == 0) {
+		square_remove_feat(c, grid, fidx);
+		return;
+	}
+
 	for (curr = sq->feat; curr; curr = curr->next) {
 		if (curr->kind->fidx == fidx) {
 			curr->size = size;
@@ -327,11 +363,24 @@ bool feat_is_hidden(struct player *p, struct loc grid, int fidx)
 	return is_hidden;
 }
 
+bool feat_believed_in_square(struct chunk *c, struct player *p, struct loc grid, int fidx)
+{
+	struct feature *feat;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (feat_believed(p, grid, feat->kind->fidx) == fidx) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static void square_update_feat_memorization(const struct chunk *c, struct player *p, struct loc grid)
 {
-	struct feature *new = NULL;
 	const struct feature *real;
-	int fidx;
+	int fidx, i;
+	int new[FEAT_MAX] = { 0 };
 
 	assert(p);
 	assert(c);
@@ -342,12 +391,16 @@ static void square_update_feat_memorization(const struct chunk *c, struct player
 		fidx = feat_believed(p, grid, real->kind->fidx);
 
 		assert(fidx > FEAT_NONE && fidx < FEAT_MAX);
-		list_add_feat(&new, fidx, real->size);
+		new[fidx] = MAX(new[fidx], real->size);
 	}
 
 	square_clear_feats(p->cave, grid);
-	assert(!p->cave->squares[grid.y][grid.x].feat);
-	p->cave->squares[grid.y][grid.x].feat = new;
+
+	for (i = 0; i < FEAT_MAX; ++i) {
+		if (new[i] > 0) {
+			square_add_feat(p->cave, grid, i, new[i]);
+		}
+	}
 }
 
 static void square_memorize_feat_one(struct player *p, struct loc grid, const struct feature *feat, bool real)
@@ -1076,7 +1129,7 @@ void t_elem_reduce_durations(struct chunk *c)
 
 static bool feat_produce_t_elem(struct chunk *c, struct loc grid)
 {
-	const struct feature_kind *feat = square_feat_old(c, grid);
+	const struct feature_kind *feat = square_feat(c, grid)->kind;
 	struct terrain_element_kind *kind;
 	uint16_t idx, amt, curr, increase;
 	bool did_something;

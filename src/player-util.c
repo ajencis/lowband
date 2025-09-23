@@ -2672,34 +2672,7 @@ int player_check_terrain_damage(struct player *p, struct loc grid, bool actual)
  */
 void player_take_terrain_damage(struct player *p, struct loc grid)
 {
-	int dam_taken = player_check_terrain_damage(p, grid, true);
-	int dam_reduced;
-	struct feature *feat;
-
-	if (!dam_taken) {
-		return;
-	}
-
-	/*
-	 * Damage the player and inventory; inventory damage is based on
-	 * the raw incoming damage and not the value accounting for the
-	 * player's damage reduction.
-	 */
-	dam_reduced = player_apply_damage_reduction(p, dam_taken);
-
-	for (feat = square_feat(cave, grid); feat; feat = feat->next) {
-		if (feat_is_damaging(feat->kind->fidx)) {
-			char dam_text[64] = "";
-
-			if (dam_reduced > 0 && OPT(p, show_damage)) {
-				strnfmt(dam_text, sizeof(dam_text), " (%d)",
-					dam_reduced);
-			}
-			msg("%s%s", feat->kind->hurt_msg, dam_text);
-			inven_damage(p, PROJ_FIRE, dam_taken);
-		}
-	}
-	take_hit(p, dam_reduced, square_feat_old(cave, grid)->die_msg);
+	return;
 }
 
 /**
