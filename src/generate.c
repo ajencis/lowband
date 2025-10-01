@@ -1085,6 +1085,11 @@ static struct chunk *cave_generate(struct player *p, int height, int width)
 		p->cave->objects = mem_realloc(p->cave->objects, (chunk->obj_max + 1)
 									   * sizeof(struct object*));
 		p->cave->obj_max = chunk->obj_max;
+		p->cave->feat_default = &f_info[FEAT_NONE];
+
+		assert(p->cave);
+		assert(p->cave->feat_default);
+
 		for (i = 0; i <= p->cave->obj_max; i++) {
 			p->cave->objects[i] = NULL;
 		}
@@ -1234,6 +1239,10 @@ static struct chunk *cave_generate(struct player *p, int height, int width)
 	p->cave->objects = mem_realloc(p->cave->objects, (chunk->obj_max + 1)
 								   * sizeof(struct object*));
 	p->cave->obj_max = chunk->obj_max;
+	p->cave->feat_default = &f_info[FEAT_NONE];
+
+	assert(player->cave);
+
 	for (i = 0; i <= p->cave->obj_max; i++) {
 		p->cave->objects[i] = NULL;
 	}
@@ -1414,6 +1423,9 @@ void prepare_next_level(struct player *p)
 			cave = old_level;
 			p->cave = old_known;
 
+			assert(cave);
+			assert(p->cave);
+
 			/* Associate known objects */
 			for (i = 0; i < p->cave->obj_max; i++) {
 				if (cave->objects[i] && p->cave->objects[i]) {
@@ -1540,6 +1552,10 @@ void prepare_next_level(struct player *p)
 
 	/* The dungeon is ready */
 	character_dungeon = true;
+
+	assert(cave);
+	assert(p->cave);
+	assert(player->cave);
 }
 
 /**

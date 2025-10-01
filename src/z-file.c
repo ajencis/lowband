@@ -1537,31 +1537,58 @@ void my_dclose(ang_dir *dir)
 #endif /* HAVE_DIRENT_H */
 #endif /* WINDOWS */
 
+#define MAX_DBG_FILES 5
+
+static char dbg_file_names[MAX_DBG_FILES][80] = { { '\0' } };
+static bool dbg_file_append[MAX_DBG_FILES] = { false };
+static char dbg_file_prefixes[MAX_DBG_FILES][80] = { { '\0' } };
+
+static void dbg_file_name(const char *base, char *buf, size_t bufsize)
+{
+	bool has_suffix = my_stristr(base, ".") ? true : false;
+
+	strnfmt(buf, bufsize, "%s%s", base, has_suffix ? "" : ".log");
+}
+
+void dbg_file_reset(const char *filename)
+{
+	char real_name[80];
+	int i;
+
+	dbg_file_name(filename, real_name, sizeof real_name);
+
+	for (i = (int)N_ELEMENTS(dbg_file_names) - 1; i >= 0; --i) {
+		if (streq(dbg_file_names[i], real_name)) {
+			dbg_file_append[i] = false;
+			dbg_file_prefixes[i][0] = '\0';
+			return;
+		}
+	}
+}
 
 void dbg_file_log(const char *filename, const char *dir, const char *msg)
 {
-	static char file_names[5][80] = { { '\0' } };
 	char path[256] = { '\0' }, real_name[80];
-	int mode = MODE_APPEND, i;
+	int mode, i, len;
 	ang_file *file;
 
-	strnfmt(real_name, sizeof real_name, filename);
-	if (!strstr(real_name, ".")) {
-		my_strcat(real_name, ".log", sizeof real_name);
-	}
+	dbg_file_name(filename, real_name, sizeof real_name);
 
-	for (i = (int)N_ELEMENTS(file_names) - 1; i >= 0; --i) {
-		if (!file_names[i][0]) {
-			strnfmt(file_names[i], sizeof file_names[i], real_name);
-			mode = MODE_WRITE;
+	for (i = (int)N_ELEMENTS(dbg_file_names) - 1; i >= 0; --i) {
+		if (!dbg_file_names[i][0]) {
+			strnfmt(dbg_file_names[i], sizeof dbg_file_names[i], real_name);
 			break;
 		}
-		else if (!strcmp(file_names[i], real_name)) {
+		else if (!strcmp(dbg_file_names[i], real_name)) {
 			break;
 		}
 	}
 
-	assert(i < 5);
+	mode = dbg_file_append[i] ? MODE_APPEND : MODE_WRITE;
+
+	dbg_file_append[i] = true;
+
+	assert(i < MAX_DBG_FILES);
 
 	path_build(path, sizeof path, dir, real_name);
 
@@ -1569,7 +1596,18 @@ void dbg_file_log(const char *filename, const char *dir, const char *msg)
 
 	assert(file);
 
-	file_putf(file, "%s\n", msg);
+	len = strlen(dbg_file_prefixes[i]);
+	
+	if (len > 0 && my_stristr(msg, "done")) {
+		dbg_file_prefixes[i][len - 1] = '\0';
+	}
+
+	file_putf(file, "%s%s\n", dbg_file_prefixes[i], msg);
+
+	if (((unsigned)(len + 1) < sizeof dbg_file_prefixes[i]) && my_stristr(msg, "entering")) {
+		dbg_file_prefixes[i][len] = ' ';
+		dbg_file_prefixes[i][len + 1] = '\0';
+	}
 
 	file_close(file);
 }

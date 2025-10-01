@@ -1744,6 +1744,8 @@ static bool detect_stuff(effect_handler_context_t *context,
 
 	bool have_stuff = false;
 
+	assert(player->cave);
+
 	/* Pick an area to detect */
 	y1 = player->mon.grid.y - context->y;
 	y2 = player->mon.grid.y + context->y;
@@ -3835,7 +3837,6 @@ bool effect_handler_UNSCRAMBLE_STATS(effect_handler_context_t *context)
 bool effect_handler_CREATE_WALL(effect_handler_context_t *context)
 {
 	struct loc target;
-	int feat;
 	assert(context->origin.what == SRC_PLAYER);
 
 	if (context->dir == DIR_TARGET && target_okay()) {
@@ -3870,7 +3871,6 @@ bool effect_handler_CREATE_WALL(effect_handler_context_t *context)
 bool effect_handler_CREATE_ILLUSORY_WALL(effect_handler_context_t *context)
 {
 	struct loc target;
-	int feat;
 	assert(context->origin.what == SRC_PLAYER);
 
 	if (context->dir == DIR_TARGET && target_okay()) {
@@ -3895,7 +3895,6 @@ bool effect_handler_CREATE_ILLUSORY_WALL(effect_handler_context_t *context)
 		push_object(target);
 	}
 
-	feat = FEAT_ILLUSORY_WALL;
 	square_set_feat(cave, target, FEAT_ILLUSORY_WALL, 100);
 	square_true_memorize(cave, target);
 

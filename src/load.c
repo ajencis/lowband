@@ -260,10 +260,6 @@ static void rd_body(struct monster *mon, struct chunk *c)
 	uint16_t tmp16u, i;
 	uint8_t tmp8u;
 
-	//const char *cave_name = c == cave ? "cave" : (c == player->cave ? "player->cave" : "?");
-
-	//plog_fmt("entering rd_body for cave %s", cave_name);
-
 	rd_string(body_name, sizeof body_name);
 	mon->body.name = string_make(body_name);
 
@@ -388,18 +384,6 @@ static bool rd_monster(struct chunk *c, struct monster *mon)
 	}
 
 	rd_body(mon, c);
-	// L: likewise with equipped objects
-	/*while (true) {
-		struct object *obj = rd_item();
-		if (!obj) {
-			break;
-		}
-
-		pile_insert(&mon->equipped_obj, obj);
-		assert(obj->oidx);
-		assert(c->objects[obj->oidx] == NULL);
-		c->objects[obj->oidx] = obj;
-	}*/
 
 	/* Read group info */
 	rd_u16b(&tmp16u);
@@ -1564,11 +1548,11 @@ static int rd_dungeon_aux(struct chunk **c)
 
 			feat = (int)tmp16u;
 
-			while (feat > FEAT_NONE && feat < FEAT_MAX) {
+			while (feat >= FEAT_NONE && feat < FEAT_MAX) {
 				rd_u16b(&tmp16u);
 				size = (int)tmp16u;
 
-				square_add_feat(c1, loc(x, y), feat, size);
+				assert(square_add_feat(c1, loc(x, y), feat, size));
 
 				rd_u16b(&tmp16u);
 				feat = (int)tmp16u;
@@ -1676,8 +1660,6 @@ static int rd_objects_aux(rd_item_t rd_item_version, struct chunk *c)
 		assert(c->objects[obj->oidx] == NULL);
 		c->objects[obj->oidx] = obj;
 	}
-
-	//plog(num_list);
 
 	return 0;
 }

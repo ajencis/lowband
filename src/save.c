@@ -995,7 +995,7 @@ static void wr_dungeon_aux(struct chunk *c)
 				wr_u16b((uint16_t)feat->kind->fidx);
 				wr_u16b((uint16_t)feat->size);
 			}
-			wr_u16b((uint16_t)FEAT_NONE);
+			wr_u16b(UINT16_MAX);
 		}
 	}
 

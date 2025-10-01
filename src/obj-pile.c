@@ -368,11 +368,13 @@ void object_delete(struct chunk *c, struct chunk *p_c,
 	}
 
 	/* Remove from any lists */
-	if (p_c && p_c->objects && obj->oidx && (obj == p_c->objects[obj->oidx]))
+	if (p_c && p_c->objects && obj->oidx && (obj == p_c->objects[obj->oidx])) {
 		p_c->objects[obj->oidx] = NULL;
+	}
 
-	if (c && c->objects && obj->oidx && (obj == c->objects[obj->oidx]))
+	if (c && c->objects && obj->oidx && (obj == c->objects[obj->oidx])) {
 		c->objects[obj->oidx] = NULL;
+	}
 
 	object_free(obj);
 	*obj_address = NULL;

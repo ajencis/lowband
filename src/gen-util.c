@@ -331,10 +331,11 @@ void correct_dir(struct loc *offset, struct loc grid1, struct loc grid2)
 	if (!offset->x || !offset->y) return;
 
 	/* If we need to go diagonally, then choose a random direction */
-	if (randint0(100) < 50)
+	if (randint0(100) < 50) {
 		offset->y = 0;
-	else
+	} else {
 		offset->x = 0;
+	}
 }
 
 
@@ -428,9 +429,9 @@ bool new_player_spot(struct chunk *c, struct player *p)
 	/* Create stairs the player came down if allowed and necessary */
 	if (!OPT(p, birth_connect_stairs)) {
 	} else if (p->upkeep->create_down_stair) {
-		square_set_feat(c, grid, FEAT_MORE, 100);
+		square_force_set_feat(c, grid, FEAT_MORE, 100);
 	} else if (p->upkeep->create_up_stair) {
-		square_set_feat(c, grid, FEAT_LESS, 100);
+		square_force_set_feat(c, grid, FEAT_LESS, 100);
 	}
 
 	player_place(c, p, grid);
@@ -445,7 +446,7 @@ bool new_player_spot(struct chunk *c, struct player *p)
  */
 static void place_rubble(struct chunk *c, struct loc grid)
 {
-	square_set_feat(c, grid, one_in_(2) ? FEAT_RUBBLE : FEAT_PASS_RUBBLE, 100);
+	square_force_set_feat(c, grid, one_in_(2) ? FEAT_RUBBLE : FEAT_PASS_RUBBLE, 100);
 }
 
 
@@ -461,7 +462,7 @@ static void place_fume_pit(struct chunk *c, struct loc grid)
 		c->squares[curr.y][curr.x].required_rf = RF_IM_POIS;
 	}*/
 
-	square_set_feat(c, grid, FEAT_FUME_PIT, 100);
+	square_force_set_feat(c, grid, FEAT_FUME_PIT, 100);
 }
 
 
@@ -478,11 +479,11 @@ static void place_fume_pit(struct chunk *c, struct loc grid)
 static void place_stairs(struct chunk *c, struct loc grid, bool quest, int feat)
 {
 	if (!c->depth) {
-		square_set_feat(c, grid, FEAT_MORE, 100);
+		square_force_set_feat(c, grid, FEAT_MORE, 100);
 	} else if (quest || c->depth >= z_info->max_depth - 1) {
-		square_set_feat(c, grid, FEAT_LESS, 100);
+		square_force_set_feat(c, grid, FEAT_LESS, 100);
 	} else {
-		square_set_feat(c, grid, feat, 100);
+		square_force_set_feat(c, grid, feat, 100);
 	}
 }
 
@@ -639,7 +640,7 @@ void place_gold(struct chunk *c, struct loc grid, int level, uint8_t origin)
  */
 void place_secret_door(struct chunk *c, struct loc grid)
 {
-	square_set_feat(c, grid, FEAT_SECRET, 100);
+	square_force_set_feat(c, grid, FEAT_SECRET, 100);
 }
 
 
@@ -650,7 +651,7 @@ void place_secret_door(struct chunk *c, struct loc grid)
  */
 void place_closed_door(struct chunk *c, struct loc grid)
 {
-	square_set_feat(c, grid, FEAT_CLOSED, 100);
+	square_force_set_feat(c, grid, FEAT_CLOSED, 100);
 	if (one_in_(4)) {
 		square_set_door_lock(c, grid, randint1(7));
 	}
@@ -669,9 +670,9 @@ void place_random_door(struct chunk *c, struct loc grid)
 	int tmp = randint0(100);
 
 	if (tmp < 30) {
-		square_set_feat(c, grid, FEAT_OPEN, 100);
+		square_force_set_feat(c, grid, FEAT_OPEN, 100);
 	} else if (tmp < 40) {
-		square_set_feat(c, grid, FEAT_BROKEN, 100);
+		square_force_set_feat(c, grid, FEAT_BROKEN, 100);
 	} else {
 		place_closed_door(c, grid);
 	}
@@ -1254,4 +1255,39 @@ void dump_level_body(ang_file *fo, const char *title, struct chunk *c,
 void dump_level_footer(ang_file *fo)
 {
 	file_put(fo, "  </body>\n</html>\n");
+}
+
+
+void log_cave(const char *file, struct chunk *c)
+{
+	char *buf;
+	int buflen = 0, bufmax;
+	wchar_t d_char;
+	struct loc grid;
+	const struct feature *feat;
+
+	assert(c);
+
+	bufmax = c->width + 1 + 5;
+	buf = mem_zalloc(bufmax);
+
+	for (grid.y = 0; grid.y < c->height; ++grid.y) {
+		for (grid.x = 0; grid.x < c->width; ++grid.x) {
+			feat = square_feat(c, grid);
+			assert(buflen + 1 < bufmax);
+
+			d_char = feat ? feat->kind->d_char : f_info[FEAT_NONE].d_char;
+
+			buf[buflen] = d_char;
+			++buflen;
+		}
+
+		assert(buflen + 1 < bufmax);
+		buf[buflen] = '\0';
+
+		dbg_log(file, buf);
+		buflen = 0;
+	}
+
+	mem_free(buf);
 }

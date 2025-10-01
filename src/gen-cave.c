@@ -112,14 +112,14 @@ static struct loc counterclockwise_card_dir(struct loc dir)
 }
 
 
-static int distance_from_feat(struct chunk *c, struct loc grid, uint8_t feat)
+static int distance_from_feat(struct chunk *c, struct loc grid, int feat)
 {
 	struct loc othergrid;
 	int dist_check, max_dist_check;
 	int found_dist = -1;
 
 	assert(c);
-	assert(feat > FEAT_NONE && feat < FEAT_MAX);
+	assert(feat >= FEAT_NONE && feat < FEAT_MAX);
 	assert(square_in_bounds(c, grid));
 
 	max_dist_check = distance(loc(0, 0), loc(c->width, c->height));
@@ -132,36 +132,20 @@ static int distance_from_feat(struct chunk *c, struct loc grid, uint8_t feat)
 			for (othergrid.y = miny; othergrid.y <= maxy; ++othergrid.y) {
 				assert(square_in_bounds(c, grid));
 
-				if (square(c, othergrid)->feat_old == feat) {
+				if (square(c, othergrid)->feat_old == (uint16_t)feat) {
 					int dist = distance(grid, othergrid);
 					if (found_dist < 0 || found_dist > dist) found_dist = dist;
 				}
 			}
 		}
 
-		if (found_dist >= 0) return found_dist;
+		if (found_dist >= 0) {
+			return found_dist;
+		}
 	}
 
 	return -1;
 }
-
-/*static bool floor_within_n_dist(struct chunk *c, struct loc grid, int dist)
-{
-	struct loc newgrid;
-
-	assert(square_in_bounds(c, grid));
-
-	for (newgrid.x = grid.x - dist; newgrid.x <= grid.x + dist; ++newgrid.x) {
-		for (newgrid.y = grid.y - dist; newgrid.y <= grid.y + dist; ++newgrid.y) {
-			if (!square_in_bounds(c, newgrid)) continue;
-			if (distance(newgrid, grid) > dist) continue;
-
-			if (square_isfloor(c, newgrid)) return true;
-		}
-	}
-
-	return false;
-}*/
 
 static void forestify_level(struct chunk *c)
 {
@@ -181,7 +165,7 @@ static void forestify_level(struct chunk *c)
 			} else if (square_isstairs(c, grid)) {
 				tree_power = 0;
 			} else if (square_iscloseddoor(c, grid)) {
-				square_set_feat_old(c, grid, FEAT_DIRT_FLOOR);
+				square_clear_feats(c, grid);
 				tree_power = randint1(sapling_max);
 			} else if (square_isfloor(c, grid) && square_isroom(c, grid)) {
 				temp_tp = randint0(1000) - 350;
@@ -203,7 +187,7 @@ static void forestify_level(struct chunk *c)
 	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
 		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
 			if (!square_isperm(c, grid) && !square_isstairs(c, grid)) {
-				square_set_feat_old(c, grid, FEAT_DIRT_FLOOR);
+				square_clear_feats(c, grid);
 			}
 		}
 	}
@@ -500,7 +484,7 @@ static bool make_rooms_secret(struct chunk *c)
 		}
 
 		if (doroom) {
-			square_set_feat(c, end, FEAT_SECRET, 100);
+			square_force_set_feat(c, end, FEAT_SECRET, 100);
 			struct loc secretlocs[1000] = { 0 };
 			int secretlocnum = all_contiguous_locs(c, center, secretlocs, N_ELEMENTS(secretlocs),
 					not_secret_door_nor_wall, not_both_walls);
@@ -569,7 +553,7 @@ static void build_streamer(struct chunk *c, int feat, int chance)
 			/* Only convert walls */
 			if (square_isrock(c, change)) {
 				/* Turn the rock into the vein type */
-				square_set_feat(c, change, feat, 100);
+				square_force_set_feat(c, change, feat, 100);
 
 				/* Sometimes add known treasure */
 				if (one_in_(chance)) square_upgrade_mineral(c, change);
@@ -1184,18 +1168,19 @@ static void build_tunnel(struct chunk *c, struct loc grid1, struct loc grid2)
 	/* Turn the tunnel into corridor */
 	for (i = 0; i < dun->tunn_n; i++) {
 		/* Clear previous contents, add a floor */
-		square_set_feat_old(c, dun->tunn[i], FEAT_FLOOR);
+		square_force_set_feat(c, dun->tunn[i], FEAT_FLOOR, 100);
 	}
 
 	/* Apply the piercings that we found */
 	for (i = 0; i < dun->wall_n; i++) {
 		/* Convert to floor grid */
-		square_set_feat_old(c, dun->wall[i], FEAT_FLOOR);
+		square_force_set_feat(c, dun->wall[i], FEAT_FLOOR, 100);
 
 		/* Place a random door */
 		if (randint0(100) < dun->profile->tun.pen &&
-				allows_wall_piercing_door(c, dun->wall[i]))
+				allows_wall_piercing_door(c, dun->wall[i])) {
 			place_random_door(c, dun->wall[i]);
+		}
 	}
 
 	event_signal_tunnel(EVENT_GEN_TUNNEL_FINISHED,
@@ -1903,7 +1888,7 @@ static struct chunk *labyrinth_chunk(int depth, int h, int w, bool lit, bool sof
 			int k_local = grid_to_i(grid, w);
 			struct loc diag = next_grid(grid, DIR_SE);
 			sets[k_local] = k_local;
-			square_set_feat_old(c, diag, FEAT_FLOOR);
+			square_force_set_feat(c, diag, FEAT_FLOOR, 100);
 			if (lit) sqinfo_on(square(c, diag)->info, SQUARE_GLOW);
 		}
 	}
@@ -1933,7 +1918,7 @@ static struct chunk *labyrinth_chunk(int depth, int h, int w, bool lit, bool sof
 		if (sets[a] != sets[b]) {
 			int sa = sets[a];
 			int sb = sets[b];
-			square_set_feat_old(c, next_grid(grid, DIR_SE), FEAT_FLOOR);
+			square_force_set_feat(c, next_grid(grid, DIR_SE), FEAT_FLOOR, 100);
 			if (lit) {
 				sqinfo_on(square(c, next_grid(grid, DIR_SE))->info, SQUARE_GLOW);
 			}
@@ -2116,36 +2101,36 @@ static void init_cavern(struct chunk *c, int density,
 			if (!square_isfloor(c, join->grid)) {
 				--count;
 			}
-			square_set_feat_old(c, join->grid, join->feat);
+			square_force_set_feat(c, join->grid, join->feat, 100);
 			adj = loc(join->grid.x + offx, join->grid.y + offy);
 			if (!square_isstairs(c, adj) &&
 					!square_isfloor(c, adj)) {
 				--count;
-				square_set_feat_old(c, adj, FEAT_FLOOR);
+				square_clear_feats(c, adj);
 			}
 			adj = loc(join->grid.x, join->grid.y + offy);
 			if (!square_isstairs(c, adj) &&
 					!square_isfloor(c, adj)) {
 				--count;
-				square_set_feat_old(c, adj, FEAT_FLOOR);
+				square_clear_feats(c, adj);
 			}
 			adj = loc(join->grid.x + offx, join->grid.y);
 			if (!square_isstairs(c, adj) &&
 					!square_isfloor(c, adj)) {
 				--count;
-				square_set_feat_old(c, adj, FEAT_FLOOR);
+				square_clear_feats(c, adj);
 			}
 			adj = loc(join->grid.x - offx, join->grid.y - offy);
 			if (square_isrock(c, adj)) {
-				square_set_feat_old(c, adj, FEAT_PERM);
+				square_force_set_feat(c, adj, FEAT_PERM, 100);
 			}
 			adj = loc(join->grid.x, join->grid.y - offy);
 			if (square_isrock(c, adj)) {
-				square_set_feat_old(c, adj, FEAT_PERM);
+				square_force_set_feat(c, adj, FEAT_PERM, 100);
 			}
 			adj = loc(join->grid.x - offx, join->grid.y);
 			if (square_isrock(c, adj)) {
-				square_set_feat_old(c, adj, FEAT_PERM);
+				square_force_set_feat(c, adj, FEAT_PERM, 100);
 			}
 		}
 		join = join->next;
@@ -2154,7 +2139,7 @@ static void init_cavern(struct chunk *c, int density,
 	while (count > 0) {
 		struct loc grid = loc(randint1(w - 2), randint1(h - 2));
 		if (square_isrock(c, grid)) {
-			square_set_feat_old(c, grid, FEAT_FLOOR);
+			square_clear_feats(c, grid);
 			count--;
 		}
 	}
@@ -2192,10 +2177,11 @@ static void mutate_cavern(struct chunk *c) {
 
 	for (grid.y = 1; grid.y < h - 1; grid.y++) {
 		for (grid.x = 1; grid.x < w - 1; grid.x++) {
-			if (temp[grid_to_i(grid, w)] == FEAT_GRANITE)
+			if (temp[grid_to_i(grid, w)] == FEAT_GRANITE) {
 				set_marked_granite(c, grid, SQUARE_WALL_SOLID);
-			else
-				square_set_feat_old(c, grid, temp[grid_to_i(grid, w)]);
+			} else {
+				square_force_set_feat(c, grid, temp[grid_to_i(grid, w)], 100);
+			}
 		}
 	}
 
@@ -2456,7 +2442,7 @@ static void join_region(struct chunk *c, int colors[], int counts[], int color,
 						!square_isvault(c, grid) &&
 						!(square_ispassable(c, grid) ||
 						square_isdoor(c, grid))) {
-					square_set_feat_old(c, grid, FEAT_FLOOR);
+					square_force_set_feat(c, grid, FEAT_FLOOR, 100);
 				}
 				n1 = previous[n1];
 			}
@@ -2778,7 +2764,7 @@ static bool lot_has_shop(struct chunk *c, struct loc xroads, struct loc lot,
 
 	for (probe.x = nw_corner.x; probe.x <= se_corner.x; probe.x++) {
 		for (probe.y = nw_corner.y; probe.y <= se_corner.y; probe.y++) {
-			if (feat_is_shop(square(c, probe)->feat_old)) {
+			if (square_isshop(c, probe)) {
 				return true;
 			}
 		}
@@ -2930,7 +2916,7 @@ static void build_store(struct chunk *c, int n, struct loc xroads,
 	/* Clear previous contents, add a store door */
 	for (feat = 0; feat < FEAT_MAX; feat++) {
 		if (feat_is_shop(feat) && (f_info[feat].shopnum == n + 1)) {
-			square_set_feat_old(c, door, feat);
+			square_force_set_feat(c, door, feat, 100);
 		}
 	}
 }
@@ -2965,7 +2951,7 @@ static void build_ruin(struct chunk *c, struct loc xroads, struct loc lot, int l
 		for (y = lot_north; y <= lot_south; y++) {
 			if (x >= west && x <= east && y >= north && y <= south) {
 				if (!randint0(4)) {
-					square_set_feat_old(c, loc(x,y), FEAT_RUBBLE);
+					square_force_set_feat(c, loc(x,y), FEAT_RUBBLE, 100);
 				}
 			} else if (!randint0(3) &&
 					square_isfloor(c, loc(x,y)) &&
@@ -2978,7 +2964,7 @@ static void build_ruin(struct chunk *c, struct loc xroads, struct loc lot, int l
 					!square_isperm(c, loc(x, y-1))) &&
 					(y < lot_south || y == z_info-> town_hgt-2 ||
 					!square_isperm(c, loc(x, y+1)))) {
-				square_set_feat_old(c, loc(x,y), FEAT_PASS_RUBBLE);
+				square_force_set_feat(c, loc(x,y), FEAT_PASS_RUBBLE, 100);
 			}
 		}
 	}
@@ -3014,14 +3000,16 @@ static void town_gen_layout(struct chunk *c, struct player *p)
 
 	while (!success) {
 		/* Initialize to ROCK for build_streamer precondition */
-		for (grid.y = 1; grid.y < c->height - 1; grid.y++)
+		for (grid.y = 1; grid.y < c->height - 1; grid.y++) {
 			for (grid.x = 1; grid.x < c->width - 1; grid.x++) {
-				square_set_feat_old(c, grid, FEAT_GRANITE);
+				square_force_set_feat(c, grid, FEAT_GRANITE, 100);
 			}
+		}
 
 		/* Make some lava streamers */
-		for (n = 0; n < 3 + num_lava; n++)
+		for (n = 0; n < 3 + num_lava; n++) {
 			build_streamer(c, FEAT_LAVA, 0);
+		}
 
 		/* Make a town-sized starburst room. */
 		(void) generate_starburst_room(c, 0, 0, c->height - 1,
@@ -3041,14 +3029,15 @@ static void town_gen_layout(struct chunk *c, struct player *p)
 		while (!square_isfloor(c, pgrid) && (pgrid.y < z_info->town_hgt / 4)) {
 			pgrid.y++;
 		}
-		if (pgrid.y >= z_info->town_hgt / 4) continue;
-
+		if (pgrid.y >= z_info->town_hgt / 4) {
+			continue;
+		}
 
 		/* no lava next to stairs */
 		for (x = pgrid.x - 1; x <= pgrid.x + 1; x++) {
 			for (y = pgrid.y - 1; y <= pgrid.y + 1; y++) {
 				if (square_isfiery(c, loc(x, y))) {
-					square_set_feat_old(c, loc(x, y), FEAT_GRANITE);
+					square_force_set_feat(c, loc(x, y), FEAT_GRANITE, 100);
 				}
 			}
 		}
@@ -3057,7 +3046,6 @@ static void town_gen_layout(struct chunk *c, struct player *p)
 		xroads.y = z_info->town_hgt / 2
 				- randint0(z_info->town_hgt / 4)
 				+ randint0(z_info->town_hgt / 8);
-
 
 		int lot_min_x = -1 * xroads.x / lot_wid;
 		int lot_max_x = (z_info->town_wid - xroads.x) / lot_wid;
@@ -3080,7 +3068,9 @@ static void town_gen_layout(struct chunk *c, struct player *p)
 					store_lot.x = randint0(2) ? 1 : -1;
 					store_lot.y = rand_range(lot_min_y, lot_max_y);
 				}
-				if (store_lot.y == 0 || store_lot.x == 0) continue;
+				if (store_lot.y == 0 || store_lot.x == 0) {
+					continue;
+				}
 				found_spot = lot_is_clear(c, xroads, store_lot,
 					lot_wid, lot_hgt);
 			}
@@ -3106,11 +3096,12 @@ static void town_gen_layout(struct chunk *c, struct player *p)
 				}
 			}
 		}
+
 		success = true;
 	}
 
 	/* clear the street */
-	square_set_feat_old(c, loc(pgrid.x, pgrid.y + 1), FEAT_FLOOR);
+	square_clear_feats(c, loc(pgrid.x, pgrid.y + 1));
 	fill_rectangle(c, pgrid.y + 2, pgrid.x - 1,
 		max_store_y, pgrid.x + 1, FEAT_FLOOR, SQUARE_NONE);
 
@@ -3118,7 +3109,7 @@ static void town_gen_layout(struct chunk *c, struct player *p)
 		xroads.y + 1, max_store_x, FEAT_FLOOR, SQUARE_NONE);
 
 	/* Clear previous contents, add down stairs */
-	square_set_feat_old(c, pgrid, FEAT_MORE);
+	square_force_set_feat(c, pgrid, FEAT_MORE, 100);
 
 	/* Place the player */
 	player_place(c, p, pgrid);
@@ -3157,24 +3148,26 @@ struct chunk *town_gen(struct player *p, int min_height, int min_width,
 		/* Build stuff */
 		town_gen_layout(c_new, p);
 	} else {
+		bool found = false;
+
 		/* Copy from the chunk list, remove the old one */
 		c_new->depth = c_old->depth;
-		if (!chunk_copy(c_new, p, c_old, 0, 0, 0, 0))
+		if (!chunk_copy(c_new, p, c_old, 0, 0, 0, 0)) {
 			quit_fmt("chunk_copy() level bounds failed!");
-		chunk_list_remove("Town");
-		cave_free(c_old);
+		}
 
 		/* Find the stairs (lame) */
-		for (grid.y = 0; grid.y < c_new->height; grid.y++) {
-			bool found = false;
+		for (grid.y = 0; grid.y < c_new->height && !found; grid.y++) {
 			for (grid.x = 0; grid.x < c_new->width; grid.x++) {
 				if (square_isdownstairs(c_new, grid)) {
 					found = true;
 					break;
 				}
 			}
-			if (found) break;
 		}
+
+		assert(found);
+		assert(square_in_bounds_fully(c_new, grid));
 
 		/* Place the player */
 		player_place(c_new, p, grid);
@@ -3866,7 +3859,7 @@ struct chunk *hard_centre_gen(struct player *p, int min_height, int min_width,
 		 */
 		pierce_outer_wall(centre, grid);
 		/* Convert it to a floor. */
-		square_set_feat_old(centre, grid, FEAT_FLOOR);
+		square_clear_feats(centre, grid);
 	}
 
 	/* Measure the vault, rotate to make it wider than it is high */
@@ -4347,7 +4340,7 @@ struct chunk *gauntlet_gen(struct player *p, int min_height, int min_width,
 			return NULL;
 		}
 		if (!square_isperm(gauntlet, loc_sum(grid, loc(1, 0)))) {
-			square_set_feat_old(gauntlet, grid, FEAT_GRANITE);
+			square_force_set_feat(gauntlet, grid, FEAT_GRANITE, 100);
 			break;
 		}
 		++i;
@@ -4368,7 +4361,7 @@ struct chunk *gauntlet_gen(struct player *p, int min_height, int min_width,
 			return NULL;
 		}
 		if (!square_isperm(gauntlet, loc_sum(grid, loc(-1, 0)))) {
-			square_set_feat_old(gauntlet, grid, FEAT_GRANITE);
+			square_force_set_feat(gauntlet, grid, FEAT_GRANITE, 100);
 			break;
 		}
 		++i;

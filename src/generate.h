@@ -426,6 +426,8 @@ bool room_build(struct chunk *c, int by0, int bx0, struct room_profile profile,
 /* gen-util.c */
 extern uint8_t get_angle_to_grid[41][41];
 
+void log_cave(const char *file, struct chunk *c);
+
 int grid_to_i(struct loc grid, int w);
 void i_to_grid(int i, int w, struct loc *grid);
 void shuffle(int *arr, int n);

@@ -715,9 +715,10 @@ static void prt_map_aux(void)
 				grid_data_as_text(&g, &a, &c, &ta, &tc);
 				Term_queue_char(t, vx, vy, a, c, ta, tc);
 
-				if ((tile_width > 1) || (tile_height > 1))
+				if ((tile_width > 1) || (tile_height > 1)) {
 					Term_big_queue_char(t, vx, vy, clipy,
 						255, -1, 0, 0);
+				}
 			}
 			/* Clear partial tile at the end of each line. */
 			for (; vx < t->wid; ++vx) {
@@ -826,8 +827,9 @@ void display_map(int *cy, int *cx)
 
 	/* Prevent accidents */
 	if ((map_wid < 1) || (map_hgt < 1)) {
-		for (y = 0; y < cave->height; y++)
+		for (y = 0; y < cave->height; y++) {
 			mem_free(mp[y]);
+		}
 		mem_free(mp);
 		return;
 	}

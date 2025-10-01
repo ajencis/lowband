@@ -191,7 +191,7 @@ void fill_rectangle(struct chunk *c, int y1, int x1, int y2, int x2, int feat,
 	int y, x;
 	for (y = y1; y <= y2; y++) {
 		for (x = x1; x <= x2; x++) {
-			square_set_feat(c, loc(x, y), feat, 100);
+			square_force_set_feat(c, loc(x, y), feat, 100);
 		}
 	}
 	if (flag) generate_mark(c, y1, x1, y2, x2, flag);
@@ -216,10 +216,10 @@ void draw_rectangle(struct chunk *c, int y1, int x1, int y2, int x2, int feat,
 
 	for (y = y1; y <= y2; y++) {
 		if (overwrite_perm || !square_isperm(c, loc(x1, y))) {
-			square_set_feat(c, loc(x1, y), feat, 100);
+			square_force_set_feat(c, loc(x1, y), feat, 100);
 		}
 		if (overwrite_perm || !square_isperm(c, loc(x2, y))) {
-			square_set_feat(c, loc(x2, y), feat, 100);
+			square_force_set_feat(c, loc(x2, y), feat, 100);
 		}
 	}
 	if (flag) {
@@ -228,10 +228,10 @@ void draw_rectangle(struct chunk *c, int y1, int x1, int y2, int x2, int feat,
 	}
 	for (x = x1; x <= x2; x++) {
 		if (overwrite_perm || !square_isperm(c, loc(x, y1))) {
-			square_set_feat(c, loc(x, y1), feat, 100);
+			square_force_set_feat(c, loc(x, y1), feat, 100);
 		}
 		if (overwrite_perm || !square_isperm(c, loc(x, y2))) {
-			square_set_feat(c, loc(x, y2), feat, 100);
+			square_force_set_feat(c, loc(x, y2), feat, 100);
 		}
 	}
 	if (flag) {
@@ -256,7 +256,7 @@ static void fill_xrange(struct chunk *c, int y, int x1, int x2, int feat,
 	int x;
 	for (x = x1; x <= x2; x++) {
 		struct loc grid = loc(x, y);
-		square_set_feat(c, grid, feat, 100);
+		square_force_set_feat(c, grid, feat, 100);
 		sqinfo_on(square(c, grid)->info, SQUARE_ROOM);
 		if (flag) sqinfo_on(square(c, grid)->info, flag);
 		if (light) {
@@ -281,7 +281,7 @@ static void fill_yrange(struct chunk *c, int x, int y1, int y2, int feat,
 	int y;
 	for (y = y1; y <= y2; y++) {
 		struct loc grid = loc(x, y);
-		square_set_feat(c, grid, feat, 100);
+		square_force_set_feat(c, grid, feat, 100);
 		sqinfo_on(square(c, grid)->info, SQUARE_ROOM);
 		if (flag) sqinfo_on(square(c, grid)->info, flag);
 		if (light) {
@@ -361,9 +361,9 @@ static void generate_plus(struct chunk *c, int y1, int x1, int y2, int x2,
 
 	assert(c);
 
-	for (y = y1; y <= y2; y++) square_set_feat(c, loc(x0, y), feat, 100);
+	for (y = y1; y <= y2; y++) square_force_set_feat(c, loc(x0, y), feat, 100);
 	if (flag) generate_mark(c, y1, x0, y2, x0, flag);
-	for (x = x1; x <= x2; x++) square_set_feat(c, loc(x, y0), feat, 100);
+	for (x = x1; x <= x2; x++) square_force_set_feat(c, loc(x, y0), feat, 100);
 	if (flag) generate_mark(c, y0, x1, y0, x2, flag);
 }
 
@@ -386,10 +386,10 @@ static void generate_open(struct chunk *c, int y1, int x1, int y2, int x2,
 	x0 = (x1 + x2) / 2;
 
 	/* Open all sides */
-	square_set_feat(c, loc(x0, y1), feat, 100);
-	square_set_feat(c, loc(x1, y0), feat, 100);
-	square_set_feat(c, loc(x0, y2), feat, 100);
-	square_set_feat(c, loc(x2, y0), feat, 100);
+	square_force_set_feat(c, loc(x0, y1), feat, 100);
+	square_force_set_feat(c, loc(x1, y0), feat, 100);
+	square_force_set_feat(c, loc(x0, y2), feat, 100);
+	square_force_set_feat(c, loc(x2, y0), feat, 100);
 }
 
 
@@ -413,10 +413,10 @@ static void generate_hole(struct chunk *c, int y1, int x1, int y2, int x2,
 
 	/* Open random side */
 	switch (randint0(4)) {
-	case 0: square_set_feat(c, loc(x0, y1), feat, 100); break;
-	case 1: square_set_feat(c, loc(x1, y0), feat, 100); break;
-	case 2: square_set_feat(c, loc(x0, y2), feat, 100); break;
-	case 3: square_set_feat(c, loc(x2, y0), feat, 100); break;
+	case 0: square_force_set_feat(c, loc(x0, y1), feat, 100); break;
+	case 1: square_force_set_feat(c, loc(x1, y0), feat, 100); break;
+	case 2: square_force_set_feat(c, loc(x0, y2), feat, 100); break;
+	case 3: square_force_set_feat(c, loc(x2, y0), feat, 100); break;
 	}
 }
 
@@ -429,7 +429,7 @@ static void generate_hole(struct chunk *c, int y1, int x1, int y2, int x2,
  */
 void set_marked_granite(struct chunk *c, struct loc grid, int flag)
 {
-	square_set_feat(c, grid, FEAT_GRANITE, 100);
+	square_force_set_feat(c, grid, FEAT_GRANITE, 100);
 	if (flag) generate_mark(c, grid.y, grid.x, grid.y, grid.x, flag);
 }
 
@@ -592,12 +592,14 @@ extern bool generate_starburst_room(struct chunk *c, int y1, int x1, int y2,
 
 	/* Make certain the room does not cross the dungeon edge. */
 	if ((!square_in_bounds(c, loc(x1, y1))) ||
-		(!square_in_bounds(c, loc(x2, y2))))
+			(!square_in_bounds(c, loc(x2, y2)))) {
 		return (false);
+	}
 
 	/* Robustness -- test sanity of input coordinates. */
-	if ((y1 + 2 >= y2) || (x1 + 2 >= x2))
+	if ((y1 + 2 >= y2) || (x1 + 2 >= x2)) {
 		return (false);
+	}
 
 
 	/* Get room height and width. */
@@ -640,7 +642,7 @@ extern bool generate_starburst_room(struct chunk *c, int y1, int x1, int y2,
 		if (feat_is_floor(feat)) {
 			for (y = (y1 + tmp_ay) / 2; y <= (tmp_by + y2) / 2; y++) {
 				for (x = (x1 + tmp_ax) / 2; x <= (tmp_bx + x2) / 2; x++) {
-					square_set_feat(c, loc(x, y), feat, 100);
+					square_force_set_feat(c, loc(x, y), feat, 100);
 				}
 			}
 		} else {
@@ -779,21 +781,25 @@ extern bool generate_starburst_room(struct chunk *c, int y1, int x1, int y2,
 			struct loc grid = loc(x, y);
 
 			/* Do not touch vault grids. */
-			if (square_isvault(c, grid))
+			if (square_isvault(c, grid)) {
 				continue;
+			}
 
 			/* Do not touch occupied grids. */
-			if (square_monster(c, grid))
+			if (square_monster(c, grid)) {
 				continue;
-			if (square_object(c, grid))
+			}
+			if (square_object(c, grid)) {
 				continue;
+			}
 
 			/* Get distance to grid. */
 			dist = distance(loc(x0, y0), grid);
 
 			/* Reject grid if outside check distance. */
-			if (dist >= dist_check) 
+			if (dist >= dist_check) {
 				continue;
+			}
 
 			/* Convert and reorient grid for table access. */
 			ny = 20 + 10 * (y - y0) / dist_conv;
@@ -817,8 +823,8 @@ extern bool generate_starburst_room(struct chunk *c, int y1, int x1, int y2,
 						/* If new feature is not passable, or floor, always 
 						 * place it. */
 						if (feat_is_floor(feat) || !feat_is_passable(feat)) {
-							square_set_feat(c, grid, feat, 100);
-
+							square_force_set_feat(c, grid, feat, 100);
+							
 							if (feat_is_floor(feat)) {
 								sqinfo_on(square(c, grid)->info, SQUARE_ROOM);
 							} else {
@@ -838,13 +844,13 @@ extern bool generate_starburst_room(struct chunk *c, int y1, int x1, int y2,
 							/* Replace old feature entirely in some cases. */
 							if (feat_is_smooth(feat)) {
 								if (square_isfloor(c, grid)) {
-									square_set_feat(c, grid, feat, 100);
+									square_force_set_feat(c, grid, feat, 100);
 								}
 							} else {
 								/* Make denser in the middle. */
 								if (square_isfloor(c, grid) &&
 										(randint1(max_dist + 5) >= dist + 5)) {
-									square_set_feat(c, grid, feat, 100);
+									square_force_set_feat(c, grid, feat, 100);
 								}
 							}
 
@@ -1146,8 +1152,9 @@ static bool build_room_template(struct chunk *c, struct loc centre, int ymax,
 			&rotate, &reflect, &tymax, &txmax);
 		event_signal_size(EVENT_GEN_ROOM_CHOOSE_SIZE,
 			tymax + 2, txmax + 2);
-		if (!find_space(&centre, tymax + 2, txmax + 2))
+		if (!find_space(&centre, tymax + 2, txmax + 2)) {
 			return (false);
+		}
 	} else {
 		/* Given the preset centre, don't allow transposition. */
 		get_random_symmetry_transform(ymax, xmax, SYMTR_FLAG_NONE, 0,
@@ -1174,7 +1181,7 @@ static bool build_room_template(struct chunk *c, struct loc centre, int ymax,
 			if (*t == ' ') continue;
 
 			/* Lay down a floor */
-			square_set_feat_old(c, grid, FEAT_FLOOR);
+			square_clear_feats(c, grid);
 
 			/* Debugging assertion */
 			assert(square_isempty(c, grid));
@@ -1434,7 +1441,7 @@ bool build_vault(struct chunk *c, struct loc centre, struct vault *v)
 			if (*t == ' ') continue;
 
 			/* Lay down a floor */
-			square_set_feat_old(c, grid, FEAT_FLOOR);
+			square_clear_feats(c, grid);
 
 			/* Debugging assertion */
 			assert(square_isempty(c, grid));
@@ -1460,17 +1467,17 @@ bool build_vault(struct chunk *c, struct loc centre, struct vault *v)
 				/* Inner or non-tunnelable outside granite wall */
 			case '#': set_marked_granite(c, grid, SQUARE_WALL_SOLID); break;
 				/* Permanent wall */
-			case '@': square_set_feat_old(c, grid, FEAT_PERM); break;
+			case '@': square_force_set_feat(c, grid, FEAT_PERM, 100); break;
 				/* Gold seam */
 			case '*': {
-				square_set_feat_old(c, grid, one_in_(2) ? FEAT_MAGMA_K :
-								FEAT_QUARTZ_K);
+				square_force_set_feat(c, grid, one_in_(2) ? FEAT_MAGMA_K :
+								FEAT_QUARTZ_K, 100);
 				break;
 			}
 				/* Rubble */
 			case ':': {
-				square_set_feat_old(c, grid, one_in_(2) ? FEAT_PASS_RUBBLE :
-								FEAT_RUBBLE);
+				square_force_set_feat(c, grid, one_in_(2) ? FEAT_PASS_RUBBLE :
+								FEAT_RUBBLE, 100);
 				break;
 			}
 				/* Secret door */
@@ -1490,21 +1497,21 @@ bool build_vault(struct chunk *c, struct loc centre, struct vault *v)
 				/* Stairs */
 			case '<': {
 				if (dun->persist) break;
-				square_set_feat_old(c, grid, FEAT_LESS); break;
+				square_force_set_feat(c, grid, FEAT_LESS, 100); break;
 			}
 			case '>': {
 				if (dun->persist) break;
 				/* No down stairs at bottom or on quests */
 				if (dun->quest || c->depth
 						>= z_info->max_depth - 1) {
-					square_set_feat_old(c, grid, FEAT_LESS);
+					square_force_set_feat(c, grid, FEAT_LESS, 100);
 				} else {
-					square_set_feat_old(c, grid, FEAT_MORE);
+					square_force_set_feat(c, grid, FEAT_MORE, 100);
 				}
 				break;
 			}
 				/* Lava */
-			case '`': square_set_feat_old(c, grid, FEAT_LAVA); break;
+			case '`': square_add_feat(c, grid, FEAT_LAVA, 100); break;
 				/* Included to allow simple inclusion of FA vaults */
 			case '/': /*square_set_feat(c, grid, FEAT_WATER)*/; break;
 			case ';': /*square_set_feat(c, grid, FEAT_TREE)*/; break;
@@ -1701,13 +1708,12 @@ bool build_vault(struct chunk *c, struct loc centre, struct vault *v)
 					}
 					break;
 				}
-				}
+			}
 		}
 	}
 
 	/* Place specified monsters */
 	get_vault_monsters(c, racial_symbol, v->typ, data, y1, y2, x1, x2);
-
 	return true;
 }
 
@@ -1838,7 +1844,7 @@ static void make_chamber(struct chunk *c, int y1, int x1, int y2, int x2)
 			/* Checked every direction? */
 			if (d == 8) {
 				/* Place an open door. */
-				square_set_feat_old(c, loc(x, y), FEAT_OPEN);
+				square_force_set_feat(c, loc(x, y), FEAT_OPEN, 100);
 
 				/* Success. */
 				return;
@@ -1864,14 +1870,14 @@ static void hollow_out_room(struct chunk *c, struct loc grid)
 
 		/* Change magma to floor. */
 		if (square(c, grid1)->feat_old == FEAT_MAGMA) {
-			square_set_feat_old(c, grid1, FEAT_FLOOR);
+			square_clear_feats(c, grid1);
 
 			/* Hollow out the room. */
 			hollow_out_room(c, grid1);
 		}
 		/* Change open door to broken door. */
 		else if (square(c, grid1)->feat_old == FEAT_OPEN) {
-			square_set_feat_old(c, grid1, FEAT_BROKEN);
+			square_force_set_feat(c, grid1, FEAT_BROKEN, 100);
 
 			/* Hollow out the (new) room. */
 			hollow_out_room(c, grid1);
@@ -1954,7 +1960,7 @@ bool build_staircase(struct chunk *c, struct loc centre, int rating)
 		FEAT_GRANITE, SQUARE_WALL_OUTER, false);
 
 	/* Place the correct stair */
-	square_set_feat_old(c, centre, join->feat);
+	square_force_set_feat(c, centre, join->feat, 100);
 
 	/* Success */
 	return true;
@@ -3261,8 +3267,9 @@ bool build_room_of_chambers(struct chunk *c, struct loc centre, int rating)
 	/* Find and reserve some space in the dungeon.  Get center of room. */
 	event_signal_size(EVENT_GEN_ROOM_CHOOSE_SIZE, height, width);
 	if ((centre.y >= c->height) || (centre.x >= c->width)) {
-		if (!find_space(&centre, height, width))
+		if (!find_space(&centre, height, width)) {
 			return (false);
+		}
 	}
 
 	/* Calculate the borders of the room. */
@@ -3273,8 +3280,9 @@ bool build_room_of_chambers(struct chunk *c, struct loc centre, int rating)
 
 	/* Make certain the room does not cross the dungeon edge. */
 	if ((!square_in_bounds(c, loc(x1, y1))) || 
-		(!square_in_bounds(c, loc(x2, y2))))
+			(!square_in_bounds(c, loc(x2, y2)))) {
 		return (false);
+	}
 
 	/* Determine how much space we have. */
 	area = ABS(y2 - y1) * ABS(x2 - x1);
@@ -3347,7 +3355,7 @@ bool build_room_of_chambers(struct chunk *c, struct loc centre, int rating)
 	}
 
 	/* Hollow out the first room. */
-	square_set_feat_old(c, grid, FEAT_FLOOR);
+	square_clear_feats(c, grid);
 	hollow_out_room(c, grid);
 
 	/* Attempt to change every in-room magma grid to open floor. */
@@ -3384,10 +3392,10 @@ bool build_room_of_chambers(struct chunk *c, struct loc centre, int rating)
 						joy = true;
 
 						/* Make a broken door in the wall grid. */
-						square_set_feat_old(c, grid1, FEAT_BROKEN);
+						square_force_set_feat(c, grid1, FEAT_BROKEN, 100);
 
 						/* Hollow out the new room. */
-						square_set_feat_old(c, grid, FEAT_FLOOR);
+						square_clear_feats(c, grid);
 						hollow_out_room(c, grid);
 
 						break;
@@ -3404,11 +3412,11 @@ bool build_room_of_chambers(struct chunk *c, struct loc centre, int rating)
 							joy = true;
 
 							/* Turn both wall grids into floor. */
-							square_set_feat_old(c, grid1, FEAT_FLOOR);
-							square_set_feat_old(c, grid2, FEAT_FLOOR);
+							square_clear_feats(c, grid1);
+							square_clear_feats(c, grid2);
 
 							/* Hollow out the new room. */
-							square_set_feat_old(c, grid, FEAT_FLOOR);
+							square_clear_feats(c, grid);
 							hollow_out_room(c, grid);
 
 							break;
@@ -3454,8 +3462,9 @@ bool build_room_of_chambers(struct chunk *c, struct loc centre, int rating)
 					if (square(c, grid1)->feat_old == FEAT_FLOOR) break;
 
 					/* Turn me into dungeon granite. */
-					if (d == 8)
+					if (d == 8) {
 						set_marked_granite(c, grid, SQUARE_NONE);
+					}
 				}
 			}
 			if (square_isfloor(c, grid)) {

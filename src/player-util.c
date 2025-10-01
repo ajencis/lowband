@@ -3619,7 +3619,10 @@ bool player_is_immune(const struct player *p, int element)
  */
 void player_place(struct chunk *c, struct player *p, struct loc grid)
 {
+	assert(p);
+	assert(c);
 	assert(!square_monster(c, grid));
+	assert(square_in_bounds_fully(c, grid));
 
 	/* Save player location */
 	p->mon.grid = grid;
@@ -3644,6 +3647,9 @@ void player_place(struct chunk *c, struct player *p, struct loc grid)
 void player_handle_post_move(struct player *p, bool eval_trap,
 		bool is_involuntary)
 {
+	assert(p->cave);
+	assert(player->cave);
+
 	/* Handle store doors, or notice objects */
 	if (square_isshop(cave, p->mon.grid)) {
 		if (player_is_shapechanged(p)) {
@@ -3677,7 +3683,6 @@ void player_handle_post_move(struct player *p, bool eval_trap,
 
 	/* Update view and search */
 	update_view(cave, p);
-	//search(p);
 }
 
 /*

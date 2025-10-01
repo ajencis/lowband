@@ -137,7 +137,7 @@ void map_info(struct loc grid, struct grid_data *g)
 
 	g->feat = square_feat(player->cave, grid);
 	g->f_idx = g->feat ? g->feat->kind->fidx : FEAT_NONE;
-
+	
 	/* There is a known trap in this square */
 	if (square_trap(player->cave, grid) && square_isknown(cave, grid)) {
 		struct trap *trap = square(player->cave, grid)->trap;
@@ -238,6 +238,9 @@ void square_note_spot(struct chunk *c, struct loc grid)
 	/* Require "seen" flag and the current level */
 	if (c != cave) return;
 	if (!square_isseen(c, grid) && !square_isplayer(c, grid)) return;
+	if (!player->cave) return;
+
+	assert(c);
 
 	/* Make the player know precisely what is on this grid */
 	square_know_pile(c, grid, object_not_in_container_predicate);
@@ -492,6 +495,8 @@ void wiz_light(struct chunk *c, struct player *p, bool full)
 {
 	int i, y, x;
 
+	assert(player->cave);
+
 	/* Scan all grids */
 	for (y = 1; y < c->height - 1; y++) {
 		for (x = 1; x < c->width - 1; x++) {
@@ -564,6 +569,9 @@ void wiz_light(struct chunk *c, struct player *p, bool full)
 void wiz_dark(struct chunk *c, struct player *p, bool full)
 {
 	int i, y, x;
+
+	assert(p->cave);
+	assert(player->cave);
 
 	/* Scan all grids */
 	for (y = 1; y < c->height - 1; y++) {

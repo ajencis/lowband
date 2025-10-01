@@ -46,6 +46,7 @@ uint16_t chunk_list_max = 0;   /**< current max actual chunk index */
 struct chunk *chunk_write(struct chunk *c)
 {
 	int x, y;
+	struct feature *feat;
 
 	struct chunk *new = cave_new(c->height, c->width);
 
@@ -53,7 +54,9 @@ struct chunk *chunk_write(struct chunk *c)
 	for (y = 0; y < new->height; y++) {
 		for (x = 0; x < new->width; x++) {
 			/* Terrain */
-			new->squares[y][x].feat_old = square(c, loc(x, y))->feat_old;
+			for (feat = square_feat(c, loc(x, y)); feat; feat = feat->next) {
+				assert(square_add_feat(new, loc(x, y), feat->kind->fidx, feat->size));
+			}
 			sqinfo_copy(square(new, loc(x, y))->info, square(c, loc(x, y))->info);
 		}
 	}
@@ -349,14 +352,17 @@ bool chunk_copy(struct chunk *dest, struct player *p, struct chunk *source,
 	struct loc grid;
 	int h = source->height, w = source->width;
 	int mon_skip = dest->mon_max - 1;
+	struct feature *feat;
 
 	/* Check bounds */
 	if (rotate % 1) {
-		if ((w + y0 > dest->height) || (h + x0 > dest->width))
+		if ((w + y0 > dest->height) || (h + x0 > dest->width)) {
 			return false;
+		}
 	} else {
-		if ((h + y0 > dest->height) || (w + x0 > dest->width))
+		if ((h + y0 > dest->height) || (w + x0 > dest->width)) {
 			return false;
+		}
 	}
 
 	/* Write the location stuff (terrain, objects, traps) */
@@ -367,8 +373,12 @@ bool chunk_copy(struct chunk *dest, struct player *p, struct chunk *source,
 			symmetry_transform(&dest_grid, y0, x0, h, w, rotate, reflect);
 
 			/* Terrain */
-			dest->squares[dest_grid.y][dest_grid.x].feat_old =
-				square(source, grid)->feat_old;
+			/*dest->squares[dest_grid.y][dest_grid.x].feat_old =
+				square(source, grid)->feat_old;*/
+			for (feat = square_feat(source, grid); feat; feat = feat->next) {
+				assert(square_add_feat(dest, grid, feat->kind->fidx, feat->size));
+			} 
+
 			sqinfo_copy(square(dest, dest_grid)->info,
 						square(source, grid)->info);
 
@@ -485,8 +495,9 @@ bool chunk_copy(struct chunk *dest, struct player *p, struct chunk *source,
 	object_lists_check_integrity(dest, NULL);
 
 	/* Miscellany */
-	for (i = 0; i < FEAT_MAX + 1; i++)
+	for (i = 0; i < FEAT_MAX + 1; i++) {
 		dest->feat_count[i] += source->feat_count[i];
+	}
 
 	if (dest->obj_rating < UINT32_MAX - source->obj_rating) {
 		dest->obj_rating += source->obj_rating;
@@ -495,8 +506,9 @@ bool chunk_copy(struct chunk *dest, struct player *p, struct chunk *source,
 	}
 	add_to_monster_rating(dest, source->mon_rating);
 
-	if (source->good_item)
+	if (source->good_item) {
 		dest->good_item = true;
+	}
 
 	return true;
 }

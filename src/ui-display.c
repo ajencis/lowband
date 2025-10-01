@@ -1447,11 +1447,11 @@ static void trace_map_updates(game_event_type type, game_event_data *data,
 static void update_maps(game_event_type type, game_event_data *data, void *user)
 {
 	term *t = user;
-	//msg("entering um");
 
 	/* This signals a whole-map redraw. */
-	if (data->point.x == -1 && data->point.y == -1)
+	if (data->point.x == -1 && data->point.y == -1) {
 		prt_map();
+	}
 
 	/* Single point to be redrawn */
 	else {
@@ -1507,7 +1507,6 @@ static void update_maps(game_event_type type, game_event_data *data, void *user)
 		if ((tile_width > 1) || (tile_height > 1))
 			Term_big_queue_char(t, vx, vy, clipy, a, c, COLOUR_WHITE, L' ');
 	}
-	//msg("refreshing");
 
 	/* Refresh the main screen unless the map needs to center */
 	if (player->upkeep->update & (PU_PANEL) && OPT(player, center_player)) {
@@ -1522,7 +1521,6 @@ static void update_maps(game_event_type type, game_event_data *data, void *user)
 	}
 
 	Term_fresh();
-	//msg("done");
 }
 
 /**
