@@ -1472,6 +1472,7 @@ static int rd_dungeon_aux(struct chunk **c)
 {
 	struct chunk *c1;
 	int i, n, y, x;
+	struct loc grid;
 
 	uint16_t height, width;
 
@@ -1540,8 +1541,8 @@ static int rd_dungeon_aux(struct chunk **c)
 	}
 
 	// features
-	for (y = 0; y < height; ++y) {
-		for (x = 0; x < width; ++x) {
+	for (grid.y = 0; grid.y < height; ++grid.y) {
+		for (grid.x = 0; grid.x < width; ++grid.x) {
 			int feat, size;
 
 			rd_u16b(&tmp16u);
@@ -1552,11 +1553,13 @@ static int rd_dungeon_aux(struct chunk **c)
 				rd_u16b(&tmp16u);
 				size = (int)tmp16u;
 
-				assert(square_add_feat(c1, loc(x, y), feat, size));
+				assert(square_force_add_feat(c1, grid, feat, size));
 
 				rd_u16b(&tmp16u);
 				feat = (int)tmp16u;
 			}
+
+			assert(square_feat_valid(c1, grid));
 		}
 	}
 

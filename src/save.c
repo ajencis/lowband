@@ -991,6 +991,8 @@ static void wr_dungeon_aux(struct chunk *c)
 		for (x = 0; x < c->width; ++x) {
 			const struct feature *feat;
 
+			assert(square_feat_valid(c, loc(x, y)));
+
 			for (feat = square_feat(c, loc(x, y)); feat; feat = feat->next) {
 				wr_u16b((uint16_t)feat->kind->fidx);
 				wr_u16b((uint16_t)feat->size);
