@@ -35,6 +35,7 @@
 # priority : display priority on mini-map
 # flags : terrain flags
 # digging : digging index
+# produce : name : amount : frequency
 # walk-msg: warning message - walking
 # run-msg: warning message - running
 # hurt-msg: damage message
@@ -77,6 +78,8 @@
 # of the DIGGING_* constants from player.h) where one is like rubble, two is
 # like a magma vein, three is like a quartz vein, four is like granite, and
 # five is like a closed door.
+
+# L: 'produce' is for terrain that produces other terrain. 
 
 # 'walk-msg' is the warning message for the player on stepping into damaging
 # terrain
@@ -394,6 +397,15 @@ code:FUME_PIT
 name:fume pit
 graphics:_:g
 priority:10
-t-elem:POISON_CLOUD:50
-t-elem-msg:belches forth
+#t-elem:POISON_CLOUD:50
+#t-elem-msg:belches forth
 flags:PROJECT | INTERESTING | LOS
+produce:POISON_CLOUD:100:20
+
+## Temporary terrain
+code:POISON_CLOUD
+name:poison cloud
+graphics:~:g
+priority:19
+timeout:20
+flags:PROJECT | LOS | INTERESTING | PASSABLE | CLOUD
