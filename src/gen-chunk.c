@@ -375,8 +375,9 @@ bool chunk_copy(struct chunk *dest, struct player *p, struct chunk *source,
 			/* Terrain */
 			/*dest->squares[dest_grid.y][dest_grid.x].feat_old =
 				square(source, grid)->feat_old;*/
+			assert(square_feat_valid(source, grid));
 			for (feat = square_feat(source, grid); feat; feat = feat->next) {
-				assert(square_add_feat(dest, grid, feat->kind->fidx, feat->size));
+				assert(square_force_add_feat(dest, dest_grid, feat->kind->fidx, feat->size));
 			} 
 
 			sqinfo_copy(square(dest, dest_grid)->info,
