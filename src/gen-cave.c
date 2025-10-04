@@ -195,6 +195,49 @@ static void forestify_level(struct chunk *c)
 
 
 /**
+ * L: gets sizes for a new cave of depth depth
+ * puts the new cave heiht in  hgt  and width in  wid
+ * keeps results above  min_hgt/min_wid  and below  MAX_CAVE_HEIGHT/MAX_CAVE_WIDTH
+ * returns the percentage of standard amount of stuff to put in the level
+ * ignores  min_hgt/min_wid  < 0
+ */
+static int cave_size_by_level(int *hgt, int *wid, int depth, int min_hgt, int min_wid)
+{
+	int avgh = z_info->dungeon_hgt, avgw = z_info->dungeon_wid;
+	int base_perc = my_sqrt(depth * 25) + 50;
+
+	*hgt = avgh * (base_perc + randint0(21) - 10) / 100;
+	*wid = avgw * (base_perc + randint0(21) - 10) / 100;
+
+	if (min_hgt > 0) *hgt = MAX(min_hgt, *hgt);
+	if (min_wid > 0) *wid = MAX(min_wid, *wid);
+
+	*hgt = MIN(MAX_CAVE_HEIGHT, *hgt);
+	*wid = MIN(MAX_CAVE_WIDTH, *wid);
+
+	return 100 * (*hgt) * (*wid) / avgh / avgw;
+}
+
+/**
+ * L: returns  size_percent  of  base + randint0(random)
+ */
+static int size_percent_modify_number(int size_percent, int base, int random)
+{
+	int result;
+
+	assert(size_percent > 0);
+
+	result = base;
+	result *= size_percent;
+	result += randint0(random * 100);
+	result += randint0(100);
+	result /= 100;
+
+	return result;
+}
+
+
+/**
  * L: moves around the room randomly for a while and ends up somewhere
  */
 /*static struct loc random_loc_in_room(struct chunk *c, struct loc center)
@@ -1566,20 +1609,20 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	int i, j, k;
 	int by, bx = 0, tby, tbx, key, rarity, built;
 	int num_rooms;
-	int sp = p->depth / 2 + 50;
-	int ssp = my_int_sqrt(sp * 100);
+	int hgt, wid, size_perc;
 	int dun_unusual = dun->profile->dun_unusual;
 	bool has_secret;
 
 	bool **blocks_tried;
 	struct chunk *c;
 
+	size_perc = cave_size_by_level(&hgt, &wid, p->depth, min_height, min_width);
+
 	/* scale the various generation variables */
 	num_rooms = dun->profile->dun_rooms;
 	dun->block_hgt = dun->profile->block_size;
 	dun->block_wid = dun->profile->block_size;
-	c = cave_new(z_info->dungeon_hgt * ssp / 100,
-	             z_info->dungeon_wid * ssp / 100);
+	c = cave_new(hgt, wid);
 	c->depth = p->depth;
 	ROOM_LOG("height=%d  width=%d  nrooms=%d", c->height, c->width, num_rooms);
 
@@ -1698,12 +1741,12 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	has_secret = make_rooms_secret(c);
 
 	/* Add some magma streamers */
-	for (i = 0; i < dun->profile->str.mag; i++) {
+	for (i = size_percent_modify_number(size_perc, dun->profile->str.mag, 0); i > 0; --i) {
 		build_streamer(c, FEAT_MAGMA, dun->profile->str.mc);
 	}
 
-	/* Add some quartz streamers */
-	for (i = 0; i < dun->profile->str.qua; i++) {
+	/* Add some magma streamers */
+	for (i = size_percent_modify_number(size_perc, dun->profile->str.qua, 0); i > 0; --i) {
 		build_streamer(c, FEAT_QUARTZ, dun->profile->str.qc);
 	}
 
@@ -1715,18 +1758,18 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	k = MAX(MIN(c->depth / 3, 10), 2);
 
 	/* Put some rubble in corridors */
-	alloc_objects(c, SET_CORR, TYP_RUBBLE, randint1(k), c->depth, 0);
+	alloc_objects(c, SET_CORR, TYP_RUBBLE, size_percent_modify_number(size_perc, 0, k), c->depth, 0);
 
 	if (one_in_(10)) {
 		ROOM_LOG("Fume pit floor");
-		alloc_objects(c, SET_BESIDE_WALL | SET_ROOM, TYP_FUME_PIT, randint1(k), c->depth, 0);
+		alloc_objects(c, SET_BESIDE_WALL | SET_ROOM, TYP_FUME_PIT, size_percent_modify_number(size_perc, 0, k), c->depth, 0);
 	}
 
 	/* Place some traps in the dungeon, reduce frequency by factor of 5 */
 	// L: no longer reduce trap frequency but only 1/3 of levels have traps
 	if (one_in_(3)) {
 		ROOM_LOG("Trap floor");
-		alloc_objects(c, SET_CORR | SET_NOT_AVOIDABLE, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
+		alloc_objects(c, SET_CORR | SET_NOT_AVOIDABLE, TYP_TRAP, size_percent_modify_number(size_perc, k / 2, k), c->depth, 0);
 	}
 
 	/* Determine the character location */
@@ -1746,7 +1789,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	cave_init_t_elem(c, 100);
 
 	/* Pick a base number of monsters */
-	i = (z_info->level_monster_min + randint1(8) + k) * sp / 100;
+	i = size_percent_modify_number(size_perc, z_info->level_monster_min + k, 8);
 
 	/* Put some monsters in the dungeon */
 	for (; i > 0; i--) {
@@ -1755,10 +1798,10 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 
 	/* Put some objects in rooms */
 	alloc_objects(c, SET_ROOM, TYP_OBJECT,
-		Rand_normal(z_info->room_item_av * sp / 100, 3), c->depth, ORIGIN_FLOOR);
+		Rand_normal((z_info->room_item_av * size_perc + randint0(100)) / 100, 3), c->depth, ORIGIN_FLOOR);
 	if (one_in_(3)) {
 		alloc_objects(c, SET_ROOM | SET_BESIDE_WALL, TYP_CONTAINER,
-			Rand_normal(z_info->room_item_av * sp / 100 / 2, 3), c->depth, ORIGIN_FLOOR);
+			Rand_normal((z_info->room_item_av * size_perc + randint0(100)) / 100 / 2, 3), c->depth, ORIGIN_FLOOR);
 	}
 
 	if (has_secret) {
@@ -1767,9 +1810,9 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 
 	/* Put some objects/gold in the dungeon */
 	alloc_objects(c, SET_BOTH, TYP_OBJECT,
-		Rand_normal(z_info->both_item_av * sp / 100, 3), c->depth, ORIGIN_FLOOR);
+		Rand_normal(z_info->both_item_av * size_perc / 100, 3), c->depth, ORIGIN_FLOOR);
 	alloc_objects(c, SET_BOTH, TYP_GOLD,
-		Rand_normal(z_info->both_gold_av * sp / 100, 3), c->depth, ORIGIN_FLOOR);
+		Rand_normal(z_info->both_gold_av * size_perc / 100, 3), c->depth, ORIGIN_FLOOR);
 
 	alloc_mana(c);
 
@@ -1973,12 +2016,18 @@ struct chunk *labyrinth_gen(struct player *p, int min_height, int min_width,
 	int i, k;
 	struct chunk *c;
 	struct loc grid;
+	int size_perc;
+	int h, w;
 	/* Size of the actual labyrinth part must be odd. */
 	/* NOTE: these are not the actual dungeon size, but rather the size of
 	 * the area we're generating a labyrinth in (which doesn't count the
 	 * enclosing outer walls. */
-	int h = 15 + randint0(p->depth / 10) * 2;
-	int w = 51 + randint0(p->depth / 10) * 2;
+	size_perc = cave_size_by_level(&h, &w, p->depth, min_height, min_width);
+	h = (int)((unsigned)h | 0x1U);
+	w = (int)((unsigned)w | 0x1U);
+
+	//int h = 15 + randint0(p->depth / 10) * 2;
+	//int w = 51 + randint0(p->depth / 10) * 2;
 
 	/* Most labyrinths are lit */
 	bool lit = randint0(p->depth) < 25 || randint0(2) < 1;
@@ -2015,36 +2064,38 @@ struct chunk *labyrinth_gen(struct player *p, int min_height, int min_width,
 	}
 
 	/* Generate a single set of stairs up if necessary. */
-	if (!cave_find(c, &grid, square_isupstairs))
+	if (!cave_find(c, &grid, square_isupstairs)) {
 		alloc_stairs(c, FEAT_LESS, 1, 0, false, NULL, dun->quest);
+	}
 
 	/* Generate a single set of stairs down if necessary. */
-	if (!cave_find(c, &grid, square_isdownstairs))
+	if (!cave_find(c, &grid, square_isdownstairs)) {
 		alloc_stairs(c, FEAT_MORE, 1, 0, false, NULL, dun->quest);
+	}
 
 	/* General some rubble, traps and monsters */
-	k = MAX(MIN(c->depth / 3, 10), 2);
+	k = MAX(MIN(c->depth / 3, 10), 2) * 3;
 
 	/* Scale number of monsters items by labyrinth size */
-	k = (3 * k * (h * w)) / (z_info->dungeon_hgt * z_info->dungeon_wid);
+	//k = (3 * k * (h * w)) / (z_info->dungeon_hgt * z_info->dungeon_wid);
 
 	/* Put some rubble in corridors */
-	alloc_objects(c, SET_BOTH, TYP_RUBBLE, randint1(k), c->depth, 0);
+	alloc_objects(c, SET_BOTH, TYP_RUBBLE, size_percent_modify_number(size_perc, 0, k), c->depth, 0);
 
 	/* Place some traps in the dungeon */
-	alloc_objects(c, SET_CORR | SET_NOT_AVOIDABLE, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
+	alloc_objects(c, SET_CORR | SET_NOT_AVOIDABLE, TYP_TRAP, size_percent_modify_number(size_perc, k / 2 + 1, k), c->depth, 0);
 
 	/* Put some monsters in the dungeon */
-	for (i = z_info->level_monster_min + randint1(8) + k; i > 0; i--) {
+	for (i = size_percent_modify_number(size_perc, k + z_info->level_monster_min, 8); i > 0; --i) {
 		pick_and_place_distant_monster(c, p->mon.grid, 0, true, c->depth);
 	}
 
 	/* Put some objects/gold in the dungeon */
-	alloc_objects(c, SET_BOTH, TYP_OBJECT, Rand_normal(k * 6, 2), c->depth,
+	alloc_objects(c, SET_BOTH, TYP_OBJECT, size_perc * Rand_normal(k * 6, 2) / 100, c->depth,
 		ORIGIN_LABYRINTH);
-	alloc_objects(c, SET_BOTH, TYP_GOLD, Rand_normal(k * 3, 2), c->depth,
+	alloc_objects(c, SET_BOTH, TYP_GOLD, size_perc * Rand_normal(k * 3, 2) / 100, c->depth,
 		ORIGIN_LABYRINTH);
-	alloc_objects(c, SET_BOTH, TYP_GOOD, randint1(2), c->depth,
+	alloc_objects(c, SET_BOTH, TYP_GOOD, size_percent_modify_number(size_perc, 1, 2), c->depth,
 		ORIGIN_LABYRINTH);
 
 	/* Notify if we want the player to see the maze layout */
@@ -2625,15 +2676,19 @@ struct chunk *cavern_gen(struct player *p, int min_height, int min_width,
 		const char **p_error)
 {
 	int i, k;
+	int h, w;
 
-	int ssp = my_int_sqrt(p->depth) * 5 + 50;
-	int avgh = z_info->dungeon_hgt * ssp / 100;
-	int avgw = z_info->dungeon_wid * ssp / 100;
+	int size_perc;
+	//int ssp = my_int_sqrt(p->depth) * 5 + 50;
+	//int avgh = z_info->dungeon_hgt * ssp / 100;
+	//int avgw = z_info->dungeon_wid * ssp / 100;
 
-	int h = rand_range(avgh / 2, (avgh * 3) / 4);
-	int w = rand_range(avgw / 2, (avgw * 3) / 4);
+	//int h = rand_range(avgh / 2, (avgh * 3) / 4);
+	//int w = rand_range(avgw / 2, (avgw * 3) / 4);
 
 	struct chunk *c;
+
+	size_perc = cave_size_by_level(&h, &w, p->depth, min_height, min_width);
 
 	/* Enforce minimum dimensions */
 	h = MAX(h, min_height);
@@ -2657,7 +2712,9 @@ struct chunk *cavern_gen(struct player *p, int min_height, int min_width,
 	k = MAX(MIN(c->depth / 3, 10), 2);
 
 	/* Scale number of monsters items by cavern size */
-	k = MAX((4 * k * (h * w)) / (z_info->dungeon_hgt * z_info->dungeon_wid), 6);
+	k = size_percent_modify_number(size_perc, 4 * k, 0);
+	k = MAX(k, 6);
+	//k = MAX((4 * k * (h * w)) / (z_info->dungeon_hgt * z_info->dungeon_wid), 6);
 
 	/* Put some rubble in corridors */
 	alloc_objects(c, SET_BOTH, TYP_RUBBLE, randint1(k), c->depth, 0);
@@ -3346,17 +3403,19 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 		const char **p_error)
 {
 	int i, k;
-	int size_percent, y_size, x_size;
+	int size_perc, y_size, x_size;
 	bool has_secret;
 	struct chunk *c;
 
-	size_percent = my_int_sqrt(p->depth) * 5 + 50;
+	size_perc = cave_size_by_level(&y_size, &x_size, p->depth, min_height, min_width);
+
+	/*size_percent = my_int_sqrt(p->depth) * 5 + 50;
 	y_size = z_info->dungeon_hgt * size_percent / 100;
 	x_size = z_info->dungeon_wid * size_percent / 100;
 
-	/* Enforce dimension limits */
+	// Enforce dimension limits
 	y_size = MIN(MAX(y_size, min_height), z_info->dungeon_hgt);
-	x_size = MIN(MAX(x_size, min_width), z_info->dungeon_wid);
+	x_size = MIN(MAX(x_size, min_width), z_info->dungeon_wid);*/
 
 	/* Set the block height and width */
 	dun->block_hgt = dun->profile->block_size;
@@ -3374,12 +3433,14 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 		FEAT_PERM, SQUARE_NONE, true);
 
 	/* Add some magma streamers */
-	for (i = 0; i < dun->profile->str.mag; i++)
+	for (i = 0; i < dun->profile->str.mag; i++) {
 		build_streamer(c, FEAT_MAGMA, dun->profile->str.mc);
+	}
 
 	/* Add some quartz streamers */
-	for (i = 0; i < dun->profile->str.qua; i++)
+	for (i = 0; i < dun->profile->str.qua; i++) {
 		build_streamer(c, FEAT_QUARTZ, dun->profile->str.qc);
+	}
 
 	/* Place 3 or 4 down stairs and 1 or 2 up stairs near some walls */
 	handle_level_stairs(c, dun->persist, dun->quest,
@@ -3390,6 +3451,7 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 
 	/* General amount of rubble, traps and monsters */
 	k = MAX(MIN(c->depth / 3, 10), 2);
+	k = size_percent_modify_number(size_perc, k, 0);
 
 	/* Put some rubble in corridors */
 	alloc_objects(c, SET_CORR, TYP_RUBBLE, randint1(k), c->depth, 0);
@@ -3471,7 +3533,7 @@ static struct chunk *moria_chunk(struct player *p, int depth, int height,
 
 	/* Set the intended number of floor grids based on cave floor area */
 	num_floors = c->height * c->width / 7;
-	ROOM_LOG("height=%d  width=%d  nfloors=%d", c->height, c->width,num_floors);
+	ROOM_LOG("height=%d  width=%d  nfloors=%d", c->height, c->width, num_floors);
 
 	/* Fill cave area with basic granite */
 	fill_rectangle(c, 0, 0, c->height - 1, c->width - 1, 
@@ -3487,8 +3549,9 @@ static struct chunk *moria_chunk(struct player *p, int depth, int height,
 
 	/* Initialize the room table */
 	dun->room_map = mem_zalloc(dun->row_blocks * sizeof(bool*));
-	for (i = 0; i < dun->row_blocks; i++)
+	for (i = 0; i < dun->row_blocks; i++) {
 		dun->room_map[i] = mem_zalloc(dun->col_blocks * sizeof(bool));
+	}
 
 	/* No rooms yet, pits or otherwise. */
 	dun->pit_num = 0;
@@ -3556,8 +3619,9 @@ static struct chunk *moria_chunk(struct player *p, int depth, int height,
 		}
 	}
 
-	for (i = 0; i < dun->row_blocks; i++)
+	for (i = 0; i < dun->row_blocks; i++) {
 		mem_free(dun->room_map[i]);
+	}
 	mem_free(dun->room_map);
 
 	/* Connect all the rooms together */
@@ -3594,18 +3658,20 @@ struct chunk *moria_gen(struct player *p, int min_height, int min_width,
 		const char **p_error)
 {
 	int i, k;
-	int size_percent, y_size, x_size;
+	int size_perc, y_size, x_size;
 	bool has_secret;
 	struct chunk *c;
 
-    size_percent = my_int_sqrt(p->depth) * 5 + 50;
+	size_perc = cave_size_by_level(&y_size, &x_size, p->depth, min_height, min_width);
+
+    /*size_percent = my_int_sqrt(p->depth) * 5 + 50;
 
 	y_size = z_info->dungeon_hgt * (size_percent - 5 + randint0(10)) / 100;
 	x_size = z_info->dungeon_wid * (size_percent - 5 + randint0(10)) / 100;
 
-	/* Enforce dimension limits */
+	// Enforce dimension limits
 	y_size = MIN(MAX(y_size, min_height), z_info->dungeon_hgt);
-	x_size = MIN(MAX(x_size, min_width), z_info->dungeon_wid);
+	x_size = MIN(MAX(x_size, min_width), z_info->dungeon_wid);*/
 
 	/* Set the block height and width */
 	dun->block_hgt = dun->profile->block_size;
@@ -3642,6 +3708,7 @@ struct chunk *moria_gen(struct player *p, int min_height, int min_width,
 
 	/* General amount of rubble, traps and monsters */
 	k = MAX(MIN(c->depth / 3, 10), 2);
+	k = size_percent_modify_number(size_perc, k, 0);
 
 	/* Put some rubble in corridors */
 	alloc_objects(c, SET_CORR, TYP_RUBBLE, randint1(k), c->depth, 0);
@@ -4041,7 +4108,7 @@ struct chunk *lair_gen(struct player *p, int min_height, int min_width,
 		const char **p_error)
 {
 	int i, k;
-	int size_percent, y_size, x_size;
+	int size_perc, y_size, x_size;
 	int left_width, normal_width, lair_width;
 	int normal_offset, lair_offset;
 	struct chunk *c;
@@ -4058,10 +4125,12 @@ struct chunk *lair_gen(struct player *p, int min_height, int min_width,
 	else if (i < 5) size_percent = 90;
 	else if (i < 6) size_percent = 95;
 	else size_percent = 100;*/
-    size_percent = my_sqrt(p->depth) * 5 + 50;
+	size_perc = cave_size_by_level(&y_size, &x_size, p->depth, min_height, min_width);
+
+    /*size_percent = my_sqrt(p->depth) * 5 + 50;
 
 	y_size = z_info->dungeon_hgt * (size_percent - 5 + randint0(10)) / 100;
-	x_size = z_info->dungeon_wid * (size_percent - 5 + randint0(10)) / 100;
+	x_size = z_info->dungeon_wid * (size_percent - 5 + randint0(10)) / 100;*/
 
 	/* Enforce dimension limits */
 	y_size = MIN(MAX(y_size, min_height), z_info->dungeon_hgt);
@@ -4131,6 +4200,7 @@ struct chunk *lair_gen(struct player *p, int min_height, int min_width,
 
 	/* General amount of rubble, traps and monsters */
 	k = MAX(MIN(p->depth / 3, 10), 2) / 2;
+	k = size_percent_modify_number(size_perc, k, 0);
 
 	/* Put the character in the normal half */
 	if (!new_player_spot(normal, p)) {
