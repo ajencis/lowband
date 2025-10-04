@@ -709,6 +709,7 @@ void process_world(struct chunk *c)
 
 	process_monster_timed(&player->mon);
 
+	cave_feat_upkeep(c);
 	cave_handle_t_elem(c);
 
 	/*** Damage (or healing) over Time ***/
