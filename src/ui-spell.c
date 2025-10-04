@@ -1010,15 +1010,18 @@ static int spell_compare_worked(const void *a, const void *b)
 static int spell_compare_standard(const void *a, const void *b)
 {
 	int result;
+	unsigned int i;
+	int(*subsorts[])(const void *, const void *) = {
+		spell_compare_worked,
+		spell_compare_level,
+		spell_compare_name
+	};
 
-	result = spell_compare_worked(a, b);
-	if (result) return result;
+	for (i = 0; i < N_ELEMENTS(subsorts); ++i) {
+		result = subsorts[i](a, b);
 
-	result = spell_compare_level(a, b);
-	if (result) return result;
-
-	result = spell_compare_name(a, b);
-	if (result) return result;
+		if (result) return result;
+	}
 
 	return 0;
 }
