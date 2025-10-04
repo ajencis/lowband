@@ -59,4 +59,18 @@ void add_to_point_set(struct point_set *ps, struct loc grid);
 int point_set_size(struct point_set *ps);
 int point_set_contains(struct point_set *ps, struct loc grid);
 
+
+/**
+ * L: A single array treated as a multidimensional one; the number of dimensions
+ * is variable and the number ofd variable arguments must always match the number
+ * of dimensions
+ */
+struct multidimensional_array;
+
+struct multidimensional_array *mda_new(int dimensions, ...);
+void mda_free(struct multidimensional_array *array);
+int mda_element_get(struct multidimensional_array *array, ...);
+int mda_element_set(struct multidimensional_array *array, int new_val, ...);
+int mda_element_add(struct multidimensional_array *array, int to_add, ...);
+
 #endif /* !INCLUDED_ZTYPE_H */

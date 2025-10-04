@@ -16,6 +16,7 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#include "z-form.h"
 #include "z-rand.h"
 #include "z-type.h"
 #include "z-virt.h"
@@ -116,4 +117,127 @@ int point_set_contains(struct point_set *ps, struct loc grid)
 		if (loc_eq(ps->pts[i], grid))
 			return 1;
 	return 0;
+}
+
+
+struct multidimensional_array {
+	int n_dimensions;
+	int *dimensions_size;
+	int *array;
+};
+
+struct multidimensional_array *mda_new(int dimensions, ...)
+{
+	int *dimensions_size;
+	int *array;
+	int i, new_num;
+	uint64_t factor = 1U;
+	va_list ap;
+	struct multidimensional_array *new_array;
+
+	if (dimensions <= 0) return NULL;
+
+	dimensions_size = mem_zalloc(sizeof *dimensions_size * dimensions);
+
+	va_start(ap, dimensions);
+
+	for (i = 0; i < dimensions; ++i) {
+		new_num = va_arg(ap, int);
+		dimensions_size[i] = new_num;
+
+		assert(UINT64_MAX / (unsigned)new_num > factor);
+
+		factor *= (unsigned)new_num;
+
+		if (new_num <= 0) {
+			mem_free(dimensions_size);
+			return NULL;
+		}
+	}
+
+	va_end(ap);
+
+	array = mem_zalloc(factor * sizeof *array);
+
+	new_array = mem_zalloc(sizeof *new_array);
+
+	new_array->n_dimensions = dimensions;
+	new_array->dimensions_size = dimensions_size;
+	new_array->array = array;
+
+	return new_array;
+}
+
+void mda_free(struct multidimensional_array *array)
+{
+	mem_free(array->dimensions_size);
+	mem_free(array->array);
+	mem_free(array);
+}
+
+static int *vmda_element(struct multidimensional_array *array, va_list args)
+{
+	int i, curr_va, curr_size;
+	size_t index = 0U;
+
+	for (i = 0; i < array->n_dimensions; ++i) {
+		curr_va = va_arg(args, int);
+		curr_size = array->dimensions_size[i];
+
+		if (curr_va < 0 || curr_va >= curr_size) {
+			plog_fmt("Error: array dimension %i of length %i accessed at index %i!", i, curr_size, curr_va);
+			_wassert(_CRT_WIDE("curr_va >= 0 && curr_va < curr_size"), _CRT_WIDE(__FILE__), (unsigned)(__LINE__));
+		}
+
+		index *= (unsigned)curr_size;
+		index += (unsigned)curr_va;
+	}
+
+	return &array->array[index];
+}
+
+int mda_element_get(struct multidimensional_array *array, ...)
+{
+	int *result;
+	va_list va;
+
+	va_start(va, array);
+
+	result = vmda_element(array, va);
+
+	va_end(va);
+
+	return *result;
+}
+
+int mda_element_set(struct multidimensional_array *array, int new_val, ...)
+{
+	int *result;
+	va_list va;
+
+	va_start(va, new_val);
+
+	result = vmda_element(array, va);
+
+	va_end(va);
+
+	*result = new_val;
+
+	return *result;
+}
+
+int mda_element_add(struct multidimensional_array *array, int to_add, ...)
+{
+	int *result;
+	va_list va;
+
+	va_start(va, to_add);
+
+	result = vmda_element(array, va);
+
+	va_end(va);
+
+	*result += to_add;
+
+	return *result;
 }
