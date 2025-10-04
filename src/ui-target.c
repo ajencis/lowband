@@ -907,12 +907,15 @@ static bool aux_terrain(struct chunk *c, struct player *p,
 			auxst->coord_desc);
 
 		if (p->wizard) {
-			strnfmt(wiz_info, sizeof wiz_info, " (%d:%d, noise=%d, scent=%d, mana=%d)",
+			strnfmt(wiz_info, sizeof wiz_info, " (%d:%d, noise=%d, scent=%d, mana=%d",
 					auxst->grid.x,
 					auxst->grid.y,
 					(int)c->noise.grids[auxst->grid.y][auxst->grid.x],
 					(int)c->scent.grids[auxst->grid.y][auxst->grid.x],
 					square(c, auxst->grid)->mana);
+
+			my_strcat(wiz_info, format(", size=%d", feat->size), sizeof wiz_info);
+			my_strcat(wiz_info, ")", sizeof wiz_info);
 
 			my_strcat(out_val, wiz_info, sizeof out_val);
 		}
