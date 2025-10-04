@@ -874,6 +874,10 @@ const char *square_impassable_name(struct chunk *c, struct loc grid)
 		}
 	}
 
+	if (!square_in_bounds_fully(c, grid)) {
+		return "out of bounds";
+	}
+
 	return NULL;
 }
 
