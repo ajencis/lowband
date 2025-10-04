@@ -8,6 +8,25 @@
 #include "project.h"
 
 
+/**
+ * compares the feats: returns -1 if feat1 comes first, 1 if feat2 comes first, or
+ * 0 if they are interchangeable (which should not happen...)
+ */
+static int feat_compare(int feat1, int feat2)
+{
+	struct feature_kind *kind1 = &f_info[feat1], *kind2 = &f_info[feat2];
+
+	assert(feat1 >= FEAT_NONE && feat1 < FEAT_MAX);
+	assert(feat2 >= FEAT_NONE && feat2 < FEAT_MAX);
+
+	if (kind1->priority > kind2->priority) return -1;
+	if (kind2->priority > kind1->priority) return 1;
+
+	if (feat1 > feat2) return 1;
+	if (feat2 > feat1) return -1;
+
+	return 0;
+}
 
 static struct feature *feat_new(int fidx, int size)
 {
@@ -39,13 +58,37 @@ static int feat_priority(int feat)
 	return 0;
 }
 
-static bool feat_incompat_base(int feat1, int feat2)
+static bool feat_blocks_feat(int feat1, int feat2)
+{
+	if (feat_is_permanent(feat1)) {
+		msg_add_fmt("feat %s blocks feat %s: permanent", f_info[feat1].name, f_info[feat2].name);
+		return true;
+	}
+	if (!feat_is_projectable(feat1)) {
+		msg_add_fmt("feat %s blocks feat %s: not projectable", f_info[feat1].name, f_info[feat2].name);
+		return true;
+	}
+
+	return false;
+}
+
+bool feat_incompat_base(int feat1, int feat2)
 {
 	assert(feat1 >= FEAT_NONE && feat1 < FEAT_MAX);
 	assert(feat2 >= FEAT_NONE && feat2 < FEAT_MAX);
-	if (feat1 == feat2) return false;
-	if (feat_is_permanent(feat1) || feat_is_permanent(feat2)) return true;
 
+	if (feat1 == feat2) return false;
+
+	if (feat_blocks_feat(feat1, feat2)) {
+		msg_add_fmt("%s blocks %s", f_info[feat1].name, f_info[feat2].name);
+		return true;
+	}
+	if (feat_blocks_feat(feat2, feat1)) {
+		msg_add_fmt("%s blocks %s", f_info[feat2].name, f_info[feat1].name);
+		return true;
+	}
+
+	msg_add_fmt("%s and %s are compatible", f_info[feat1].name, f_info[feat2].name);
 	return false;
 }
 
@@ -71,14 +114,66 @@ static int feat_incompatible(int new, int old)
 	return -1;
 }
 
+static bool feat_can_add(struct chunk *c, struct loc grid, int fidx_new)
+{
+	struct feature *feat;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (feat_incompat_base(feat->kind->fidx, fidx_new)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool square_feat_valid(struct chunk *c, struct loc grid)
+{
+	struct feature *feat1, *feat2;
+	const char *c_name = c->name ? c->name : "(unnamed cave)";
+
+	for (feat1 = square_feat(c, grid); feat1; feat1 = feat1->next) {
+		for (feat2 = feat1->next; feat2; feat2 = feat2->next) {
+			if (feat_incompat_base(feat1->kind->fidx, feat2->kind->fidx)) {
+				plog_fmt("Error: feats %s and %s are both on square (%i,%i) in cave %s but are incompatible!",
+						feat1->kind->name,
+						feat2->kind->name,
+						grid.x,
+						grid.y,
+						c_name);
+				return false;
+			}
+			if (feat1->kind->fidx == feat2->kind->fidx) {
+				plog_fmt("Error: cave %s has feat %s twice on square (%i,%i)!",
+						c_name,
+						feat1->kind->name,
+						grid.x,
+						grid.y);
+				return false;
+			}
+		}
+		if (feat1->size <= 0) {
+			plog_fmt("Error: cave %s has feat %s of size %i on square (%i,%i)!",
+					c_name,
+					feat1->kind->name,
+					feat1->size,
+					grid.x,
+					grid.y);
+			return false;
+		}
+	}
+
+	return true;
+}
+
 static bool list_add_feat(struct feature **list, int fidx, int size)
 {
+	struct feature *new, *curr;
+
 	assert(list);
 	assert(fidx >= FEAT_NONE && fidx < FEAT_MAX);
 
-	struct feature *new, *curr;
-
-	if (!(*list) || (*list)->kind->fidx > fidx) {
+	if (!(*list) || feat_compare((*list)->kind->fidx, fidx) > 0) {
 		// new feat goes first
 		curr = NULL;
 	}
@@ -92,7 +187,7 @@ static bool list_add_feat(struct feature **list, int fidx, int size)
 			if (curr->next->kind->fidx == fidx) {
 				return false;
 			}
-			else if (curr->next->kind->fidx > fidx) {
+			else if (feat_compare(curr->next->kind->fidx, fidx) > 0) {
 				break;
 			}
 		}
@@ -130,7 +225,7 @@ static void square_enforce_default_feat(struct chunk *c, struct loc grid)
 	}
 }
 
-bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
+bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
 {
 	bool success;
 	struct feature *feat;
@@ -138,12 +233,6 @@ bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
 	assert(c);
 	assert(square_in_bounds(c, grid));
 	assert(fidx >= FEAT_NONE && fidx < FEAT_MAX);
-
-	for (feat = square_feat(c, grid); feat; feat = feat->next) {
-		if (feat_incompatible(fidx, feat->kind->fidx) == fidx) {
-			return false;
-		}
-	}
 
 	success = list_add_feat(&c->squares[grid.y][grid.x].feat, fidx, size);
 
@@ -181,7 +270,22 @@ bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
 
 	square_enforce_default_feat(c, grid);
 
+	square_feat_valid(c, grid);
+
 	return true;
+}
+
+bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
+{
+	struct feature *feat;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (feat_incompatible(fidx, feat->kind->fidx) == fidx) {
+			return false;
+		}
+	}
+
+	return square_force_add_feat(c, grid, fidx, size);
 }
 
 static bool feat_can_remove(int fidx)
@@ -212,7 +316,7 @@ static bool square_delete_feat(struct chunk *c, struct loc grid, int fidx)
 		if (!(*prev)) {
 			return false;
 		}
-		if ((*prev)->kind->fidx > fidx) {
+		if (feat_compare((*prev)->kind->fidx, fidx) > 0) {
 			return false;
 		}
 		if ((*prev)->kind->fidx == fidx) {
@@ -313,11 +417,18 @@ void square_clear_feats(struct chunk *c, struct loc grid)
 
 struct feature *square_feat(struct chunk *c, struct loc grid)
 {
-	struct feature *feat1, *feat2, *result = c->squares[grid.y][grid.x].feat;
+	struct feature /**feat1, *feat2, */ *result = c->squares[grid.y][grid.x].feat;
 
-	for (feat1 = result; feat1; feat1 = feat1->next) {
+	/**for (feat1 = result; feat1; feat1 = feat1->next) {
 		for (feat2 = feat1->next; feat2; feat2 = feat2->next) {
 			assert(feat1 != feat2);
+		}
+	}*/
+
+	{
+		struct feature *feat;
+		for (feat = result; feat && feat->next; feat = feat->next) {
+			assert(feat_compare(feat->kind->fidx, feat->next->kind->fidx) <= 0);
 		}
 	}
 
@@ -331,6 +442,9 @@ struct feature *square_feat_by_type(struct chunk *c, struct loc grid, int fidx)
 	for (feat = square_feat(c, grid); feat; feat = feat->next) {
 		if (feat->kind->fidx == fidx) {
 			return feat;
+		}
+		if (feat_compare(feat->kind->fidx, fidx) > 0) {
+			return NULL;
 		}
 	}
 
@@ -469,7 +583,7 @@ static void square_set_feat_size(struct chunk *c, struct loc grid, int fidx, int
 
 	assert(fidx >= FEAT_NONE && fidx < FEAT_MAX);
 
-	if (size == 0) {
+	if (size <= 0) {
 		square_remove_feat(c, grid, fidx);
 		return;
 	}
@@ -479,12 +593,25 @@ static void square_set_feat_size(struct chunk *c, struct loc grid, int fidx, int
 			curr->size = size;
 			return;
 		}
-		else if (!curr->next || curr->next->kind->fidx > fidx) {
+		else if (!curr->next || feat_compare(curr->kind->fidx, fidx) > 0) {
 			break;
 		}
 	}
 
 	square_add_feat(c, grid, fidx, size);
+}
+
+static void square_increase_feat_size(struct chunk *c, struct loc grid, int fidx, int amt)
+{
+	struct feature *feat = square_feat_by_type(c, grid, fidx);
+	int curr = feat ? feat->size : 0;
+
+	square_set_feat_size(c, grid, fidx, curr + amt);
+}
+
+static void square_reduce_feat_size(struct chunk *c, struct loc grid, int fidx, int amt)
+{
+	square_increase_feat_size(c, grid, fidx, -amt);
 }
 
 /**
@@ -619,6 +746,155 @@ bool feats_equal(const struct feature *feat1, const struct feature *feat2)
 	}
 
 	return true;
+}
+
+
+/**
+ * gives the number of times something should happen this turn if that thing
+ * happens  pernmille  times per thousand turns
+ * note this is short turns not long turns
+ */
+static int per_thousand_turns(int permille)
+{
+	int last_check, this_check;
+	int turn_use = turn % (1000 * turns_per_process_world);
+
+	if (permille == 0) return 0;
+	if (permille < 0) return -per_thousand_turns(-permille);
+
+	last_check = (int)(permille * turn_use - turns_per_process_world) / 1000;
+	this_check = (int)(permille * turn_use) / 1000;
+
+	return this_check - last_check;
+}
+
+static void grid_feat_timeout(struct chunk *c, struct loc grid)
+{
+	struct feature *feat;
+	int amt;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		amt = per_thousand_turns(feat->kind->timeout);
+
+		if (amt) {
+			square_reduce_feat_size(c, grid, feat->kind->fidx, amt);
+		}
+	}
+}
+
+static void grid_feat_produce(struct chunk *c, struct loc grid)
+{
+	struct feature *feat;
+	int new_fidx, i, curr;
+	int to_produce[FEAT_MAX] = { 0 };
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		new_fidx = feat->kind->feat_produce;
+		if (new_fidx <= FEAT_NONE || new_fidx >= FEAT_MAX) continue;
+		if (per_thousand_turns(feat->kind->feat_produce_frequency) <= 0) continue;
+
+		to_produce[new_fidx] = MAX(to_produce[new_fidx], feat->kind->feat_produce_quantity);
+	}
+
+	for (i = FEAT_NONE, feat = square_feat(c, grid); i < FEAT_MAX; ++i) {
+		while (feat && feat->kind->fidx < i) {
+			feat = feat->next;
+		}
+
+		if (feat && feat->kind->fidx == i) curr = feat->size;
+		else curr = 0;
+
+		if (to_produce[i] > curr) {
+			square_set_feat_size(c, grid, i, to_produce[i]);
+		}
+	}
+}
+
+static bool feat_spreads(int f_idx)
+{
+	struct feature_kind *kind = &f_info[f_idx];
+	return tf_has(kind->flags, TF_CLOUD);
+}
+
+static void grid_feat_spread(struct chunk *c, struct multidimensional_array *values, struct loc grid)
+{
+	struct feature *feat;
+	struct loc ogrid;
+	int change, c_max, c_max_o, c_max_d;
+	static int diag_perc = 141; // sqrt(2 * 100 * 100)
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		c_max_o = feat->size / 10;
+		c_max_d = 100 * c_max_o / diag_perc; // sqrt(2)
+
+		if (c_max_o <= 0) {
+			continue;
+		}
+		if (!feat_spreads(feat->kind->fidx)) {
+			continue;
+		}
+
+		for (ogrid.y = grid.y - 1; ogrid.y <= grid.y + 1; ++ogrid.y) {
+			for (ogrid.x = grid.x - 1; ogrid.x <= grid.x + 1; ++ogrid.x) {
+				if (!square_in_bounds(c, ogrid)) continue;
+				if (!feat_can_add(c, ogrid, feat->kind->fidx)) continue;
+
+				c_max = ((ogrid.x != grid.x) && (ogrid.y != grid.y) ? c_max_d : c_max_o);
+
+				if (c_max <= 0) continue;
+
+				change = randint1(c_max);
+
+				mda_element_add(values, change, ogrid.y, ogrid.x, feat->kind->fidx);
+				mda_element_add(values, -change, grid.y, grid.x, feat->kind->fidx);
+			}
+		}
+	}
+}
+
+static void cave_feat_spread(struct chunk *c)
+{
+	struct multidimensional_array *changes = mda_new(3, c->height, c->width, FEAT_MAX);
+	int fidx, change;
+	struct loc grid;
+
+	assert(c);
+	assert(c->height <= MAX_CAVE_HEIGHT);
+	assert(c->width <= MAX_CAVE_WIDTH);
+
+	for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
+		for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
+			grid_feat_spread(c, changes, grid);
+		}
+	}
+
+	for (grid.y = 1; grid.y < c->height; ++grid.y) {
+		for (grid.x = 1; grid.x < c->width; ++grid.x) {
+			for (fidx = 0; fidx < FEAT_MAX; ++fidx) {
+				change = mda_element_get(changes, grid.y, grid.x, fidx);
+				if (change != 0) {
+					square_increase_feat_size(c, grid, fidx, change);
+				}
+			}
+		}
+	}
+
+	mda_free(changes);
+}
+
+
+void cave_feat_upkeep(struct chunk *c)
+{
+	struct loc grid;
+
+	cave_feat_spread(c);
+
+	for (grid.y = 0; grid.y < c->height; ++grid.y) {
+		for (grid.x = 0; grid.x < c->width; ++grid.x) {
+			grid_feat_timeout(c, grid);
+			grid_feat_produce(c, grid);
+		}
+	}
 }
 
 

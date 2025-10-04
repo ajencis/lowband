@@ -67,6 +67,10 @@ enum
 	SQUARE_MAX
 };
 
+
+#define MAX_CAVE_HEIGHT 256
+#define MAX_CAVE_WIDTH 512
+
 #define SQUARE_SIZE                FLAG_SIZE(SQUARE_MAX)
 
 #define sqinfo_has(f, flag)        flag_has_dbg(f, SQUARE_SIZE, flag, #f, #flag)
@@ -142,6 +146,12 @@ struct feature_kind {
 
 	uint8_t t_elem[TE_MAX];		// L: which terrain elements it produces in what quantity
 	char *t_elem_msg;			// L: message used when it produces terrain elements
+
+	int timeout;				// L: loses this much of its size / 100 turns
+
+	int feat_produce;			// L: which other feat it produces
+	int feat_produce_quantity;	// L: how much of that feat it produces
+	int feat_produce_frequency;	// L: how often it produces that feat / 100 turns
 };
 
 struct feature {
@@ -321,6 +331,10 @@ void update_view(struct chunk *c, struct player *p);
 bool no_light(const struct player *p);
 
 /* cave-terrain-elem.c */
+bool square_feat_valid(struct chunk *c, struct loc grid);
+bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx, int size);
+bool feat_incompat_base(int feat1, int feat2);
+
 bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size);
 bool square_remove_feat(struct chunk *c, struct loc grid, int fidx);
 void square_free_feats(struct chunk *c, struct loc grid);
@@ -328,6 +342,8 @@ void square_memorize_feats(struct player *p, const struct chunk *c, struct loc g
 void square_memorize_feat_real(struct player *p, const struct chunk *c, struct loc grid, const struct feature *feat);
 void square_forget_feats(struct player *p, struct loc grid);
 bool feat_is_hidden(struct player *p, struct loc grid, int fidx);
+
+void cave_feat_upkeep(struct chunk *c);
 
 struct terrain_element_kind *t_elem_kind_by_idx(int idx);
 bool t_elem_has_flag(const struct terrain_element *t_elem, int flag);

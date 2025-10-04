@@ -213,6 +213,14 @@ static const char *ability_predicate_names[] =
 	NULL
 };
 
+static const char *list_feat_names[] =
+{
+	#define FEAT(x) #x,
+	#include "list-terrain.h"
+	#undef FEAT
+	NULL
+};
+
 static const char *terrain_element_names[] =
 {
 	#define T_ELEM(x) #x,
@@ -2451,6 +2459,18 @@ static enum parser_error parse_feat_digging(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_feat_timeout(struct parser *p) {
+	struct feature_kind *f = parser_priv(p);
+	int timeout = parser_getint(p, "timeout");
+
+	if (!f) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	f->timeout = timeout;
+	return PARSE_ERROR_NONE;
+}
+
 static enum parser_error parse_feat_desc(struct parser *p) {
 	struct feature_kind *f = parser_priv(p);
 
@@ -2548,6 +2568,26 @@ static enum parser_error parse_feat_resist_flag(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_feat_feat_produce(struct parser *p) {
+	struct feature_kind *f = parser_priv(p);
+	const char *name = parser_getsym(p, "name");
+	int fidx = code_index_in_array(list_feat_names, name);
+	int amt = parser_getint(p, "amt"), freq = parser_getint(p, "freq");
+
+	if (!f) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	if (fidx >= FEAT_MAX || fidx <= FEAT_NONE) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	f->feat_produce = fidx;
+	f->feat_produce_frequency = freq;
+	f->feat_produce_quantity = amt;
+
+	return PARSE_ERROR_NONE;
+}
+
 static enum parser_error parse_feat_t_elem_produce(struct parser *p) {
 	struct feature_kind *f = parser_priv(p);
 	int t_elem = code_index_in_array(terrain_element_names, parser_getsym(p, "t_elem"));
@@ -2586,6 +2626,7 @@ static struct parser *init_parse_feat(void) {
 	parser_reg(p, "priority uint priority", parse_feat_priority);
 	parser_reg(p, "flags ?str flags", parse_feat_flags);
 	parser_reg(p, "digging int dig", parse_feat_digging);
+	parser_reg(p, "timeout int timeout", parse_feat_timeout);
 	parser_reg(p, "desc str text", parse_feat_desc);
 	parser_reg(p, "walk-msg str text", parse_feat_walk_msg);
 	parser_reg(p, "run-msg str text", parse_feat_run_msg);
@@ -2595,6 +2636,7 @@ static struct parser *init_parse_feat(void) {
 	parser_reg(p, "look-prefix str text", parse_feat_look_prefix);
 	parser_reg(p, "look-in-preposition str text", parse_feat_look_in_preposition);
 	parser_reg(p, "resist-flag sym flag", parse_feat_resist_flag);
+	parser_reg(p, "produce sym name int amt int freq", parse_feat_feat_produce);
 	parser_reg(p, "t-elem sym t_elem int amt", parse_feat_t_elem_produce);
 	parser_reg(p, "t-elem-msg str msg", parse_feat_t_elem_msg);
 
@@ -2613,29 +2655,40 @@ static errr run_parse_feat(struct parser *p) {
 
 static errr finish_parse_feat(struct parser *p) {
 	int shop_idx = 0, fidx;
+	struct feature_kind *kind, *prod;
 
 	for (fidx = 0; fidx < FEAT_MAX; ++fidx) {
+		kind = &f_info[fidx];
+
 		/*
 		 * Assign shop index based on the order within the other
 		 * terrain.
 		 */
-		if (tf_has(f_info[fidx].flags, TF_SHOP)) {
-			f_info[fidx].shopnum = ++shop_idx;
+		if (tf_has(kind->flags, TF_SHOP)) {
+			kind->shopnum = ++shop_idx;
 		}
 		/*
 		 * Ensure the prefixes and prepositions end with a space for
 		 * ease of use with the targeting code.
 		 */
-		if (f_info[fidx].look_prefix && !suffix(
-				f_info[fidx].look_prefix, " ")) {
-			f_info[fidx].look_prefix = string_append(
-				f_info[fidx].look_prefix, " ");
+		if (kind->look_prefix && !suffix(
+				kind->look_prefix, " ")) {
+			kind->look_prefix = string_append(
+				kind->look_prefix, " ");
 		}
-		if (f_info[fidx].look_in_preposition && !suffix(
-				f_info[fidx].look_in_preposition, " ")) {
-			f_info[fidx].look_in_preposition =
-				string_append(f_info[fidx].look_in_preposition,
+		if (kind->look_in_preposition && !suffix(
+				kind->look_in_preposition, " ")) {
+			kind->look_in_preposition =
+				string_append(kind->look_in_preposition,
 				" ");
+		}
+
+		if (kind->feat_produce) {
+			prod = &f_info[kind->feat_produce];
+
+			if (feat_incompat_base(fidx, prod->fidx)) {
+				quit_fmt("Terrain element %s produces terrain element %s but is not compatible with it!", kind->name, prod->name);
+			}
 		}
 	}
 	z_info->store_max = shop_idx;
@@ -2904,7 +2957,7 @@ static errr finish_parse_t_elem(struct parser *p) {
 	for (t_elem = te_info; t_elem; t_elem = t_elem->next) {
 		for (lev = t_elem->levels; lev && lev->next; lev = lev->next) {
 			if (lev->next->min_dur <= lev->min_dur) {
-				quit_fmt("Terrain element %s's cutoffs not strictly increasing", t_elem->levels->name);
+				quit_fmt("Terrain element %s's cutoffs not strictly increasing!", t_elem->levels->name);
 			}
 
 			assert(lev->name);
