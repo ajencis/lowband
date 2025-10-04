@@ -126,10 +126,12 @@ void message_add(const char *str, uint16_t type)
 {
 	message_t *m;
 
+	if (!messages) return;
+
 	if (messages->head &&
-	    messages->head->type == type &&
-	    streq(messages->head->str, str) &&
-	    messages->head->count != (uint16_t)-1) {
+	    	messages->head->type == type &&
+	    	streq(messages->head->str, str) &&
+	    	messages->head->count != (uint16_t)-1) {
 		messages->head->count++;
 		return;
 	}
@@ -140,14 +142,16 @@ void message_add(const char *str, uint16_t type)
 	m->count = 1;
 	m->older = messages->head;
 
-	if (messages->head)
+	if (messages->head) {
 		messages->head->newer = m;
+	}
 
 	messages->head = m;
 	messages->count++;
 
-	if (!messages->tail)
+	if (!messages->tail) {
 		messages->tail = m;
+	}
 
 	if (messages->count > messages->max) {
 		message_t *old_tail = messages->tail;
@@ -167,8 +171,6 @@ void msg_add_fmt(const char *fmt, ...)
 {
 	char *res;
 	va_list vp;
-
-	assert(character_generated);
 
 	/* Begin the Varargs Stuff */
 	va_start(vp, fmt);
