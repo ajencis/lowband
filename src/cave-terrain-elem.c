@@ -61,11 +61,9 @@ static int feat_priority(int feat)
 static bool feat_blocks_feat(int feat1, int feat2)
 {
 	if (feat_is_permanent(feat1)) {
-		msg_add_fmt("feat %s blocks feat %s: permanent", f_info[feat1].name, f_info[feat2].name);
 		return true;
 	}
 	if (!feat_is_projectable(feat1)) {
-		msg_add_fmt("feat %s blocks feat %s: not projectable", f_info[feat1].name, f_info[feat2].name);
 		return true;
 	}
 
@@ -80,15 +78,12 @@ bool feat_incompat_base(int feat1, int feat2)
 	if (feat1 == feat2) return false;
 
 	if (feat_blocks_feat(feat1, feat2)) {
-		msg_add_fmt("%s blocks %s", f_info[feat1].name, f_info[feat2].name);
 		return true;
 	}
 	if (feat_blocks_feat(feat2, feat1)) {
-		msg_add_fmt("%s blocks %s", f_info[feat2].name, f_info[feat1].name);
 		return true;
 	}
 
-	msg_add_fmt("%s and %s are compatible", f_info[feat1].name, f_info[feat2].name);
 	return false;
 }
 
