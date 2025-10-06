@@ -455,13 +455,18 @@ bool square_remove_feat(struct chunk *c, struct loc grid, int fidx)
  */
 void square_free_feats(struct chunk *c, struct loc grid)
 {
-	struct feature *feat;
+	struct feature *feat, *next;
 
 	assert(c);
 
-	for (feat = square_feat(c, grid); feat; feat = square_feat(c, grid)) {
-		square_delete_feat(c, grid, feat->kind->fidx);
+	for (feat = square_feat(c, grid); feat; feat = next) {
+		next = feat->next;
+		feat_free(feat);
 	}
+
+	c->squares[grid.y][grid.x].feat = NULL;
+
+	assert(!square_feat(c, grid));
 }
 
 /**

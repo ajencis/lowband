@@ -5918,7 +5918,9 @@ void cleanup_angband(void)
 
 	cmdq_release();
 
-	if (play_again) return;
+	if (play_again) {
+		return;
+	}
 
 	/* Free the format() buffer */
 	vformat_kill();
