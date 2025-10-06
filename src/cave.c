@@ -371,6 +371,7 @@ struct chunk *cave_new(int height, int width) {
 		c->squares[y] = mem_zalloc(c->width * sizeof(struct square));
 		for (x = 0; x < c->width; x++) {
 			c->squares[y][x].info = mem_zalloc(SQUARE_SIZE * sizeof(bitflag));
+			c->squares[y][x].feat = NULL;
 		}
 		c->noise.grids[y] = mem_zalloc(c->width * sizeof *c->noise.grids[y]);
 		c->scent.grids[y] = mem_zalloc(c->width * sizeof(uint16_t));
@@ -383,7 +384,7 @@ struct chunk *cave_new(int height, int width) {
 	c->mon_max = 1;
 	c->mon_current = -1;
 
-	c->feat_default = &f_info[FEAT_FLOOR];
+	c->feat_default = NULL;
 
 	c->monster_groups = mem_zalloc(z_info->level_monster_max *
 								   sizeof(struct monster_group*));

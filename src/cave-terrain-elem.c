@@ -93,6 +93,20 @@ bool feat_incompat_base(int feat1, int feat2)
 	return false;
 }
 
+static void feat_desc(const struct feature *feat, char *buf, size_t bufsize)
+{
+	bool first = true;
+	const struct feature *curr;
+
+	buf[0] = '\0';
+
+	for (curr = feat; curr; curr = curr->next) {
+		if (!first) my_strcat(buf, ", ", bufsize);
+		first = false;
+		my_strcat(buf, curr->kind->name, bufsize);
+	}
+}
+
 /**
  * if two feats are on the same square, returns which one to remove
  * usually removes the new one if feats are incompatible
@@ -162,14 +176,12 @@ static bool list_add_feat(struct feature **list, int fidx, int size)
 	}
 	else if ((*list)->kind->fidx == fidx) {
 		// already have that feat there
-		//dbg_log("feat", format("laf: adding feat %s which is already there", f_info[fidx].name));
 		return false;
 	}
 	else {
 		// put it somewhere in the middle
 		for (curr = *list; curr && curr->next; curr = curr->next) {
 			if (curr->next->kind->fidx == fidx) {
-				//dbg_log("feat", format("laf: adding feat %s which is already there", f_info[fidx].name));
 				return false;
 			}
 			else if (feat_compare(curr->next->kind->fidx, fidx) > 0) {
@@ -194,12 +206,15 @@ static bool list_add_feat(struct feature **list, int fidx, int size)
 
 static bool square_has_default(struct chunk *c, struct loc grid)
 {
+	if (!c->feat_default) return false;
 	return square_has_feat(c, grid, c->feat_default->fidx);
 }
 
 static bool square_should_have_default(struct chunk *c, struct loc grid)
 {
 	struct feature *feat;
+
+	if (!c->feat_default) return false;
 
 	for (feat = square_feat(c, grid); feat; feat = feat->next) {
 		if (feat->kind->fidx != c->feat_default->fidx &&
@@ -219,30 +234,47 @@ static bool square_should_have_default(struct chunk *c, struct loc grid)
  */
 static void square_enforce_default_feat(struct chunk *c, struct loc grid)
 {
-	//dbg_log("feat", "entering sedf");
 	bool should_have_default, has_default;
 	int feat_default;
 
-	assert(c->feat_default);
+	assert(c);
+	assert(square_in_bounds(c, grid));
+
+	if (!c->feat_default) {
+		return;
+	}
 
 	feat_default = c->feat_default->fidx;
 	has_default = square_has_default(c, grid);
 	should_have_default = square_should_have_default(c, grid);
 
 	if (should_have_default && !has_default) {
-		//dbg_log("feat", "sedf -> sfaf");
+		char buf[256];
+		feat_desc(square_feat(c, grid), buf, sizeof buf);
 		square_force_add_feat(c, grid, feat_default, 100);
 	}
 	else if (!should_have_default && has_default) {
-		//dbg_log("feat", "sedf -> sfrf");
 		square_force_remove_feat(c, grid, feat_default);
 	}
-	//dbg_log("feat", "done sedf");
+}
+
+void cave_set_default_feat(struct chunk *c, int fidx)
+{
+	struct loc grid;
+	assert(!c->feat_default);
+	assert(fidx >= FEAT_NONE && fidx < FEAT_MAX);
+
+	c->feat_default = &f_info[fidx];
+
+	for (grid.x = 0; grid.x < c->width; ++grid.x) {
+		for (grid.y = 0; grid.y < c->height; ++grid.y) {
+			square_enforce_default_feat(c, grid);
+		}
+	}
 }
 
 bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
 {
-	//dbg_log("feat", format("entering sfaf for grid %i,%i", grid.x, grid.y));
 	bool success;
 	struct feature *feat, *next;
 
@@ -253,7 +285,6 @@ bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
 	success = list_add_feat(&c->squares[grid.y][grid.x].feat, fidx, size);
 
 	if (!success) {
-		//dbg_log("feat", "done sfaf");
 		return false;
 	}
 
@@ -289,8 +320,6 @@ bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
 	square_enforce_default_feat(c, grid);
 
 	square_feat_valid(c, grid);
-	
-	//dbg_log("feat", "done sfaf");
 
 	return true;
 }
@@ -313,18 +342,13 @@ bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
 	struct feature *feat;
 	bool success;
 
-	//dbg_log("feat", "entering saf");
-
 	for (feat = square_feat(c, grid); feat; feat = feat->next) {
 		if (feat_incompatible(fidx, feat->kind->fidx) == fidx) {
-			//dbg_log("feat", "done saf");
 			return false;
 		}
 	}
 
 	success = square_force_add_feat(c, grid, fidx, size);
-
-	//dbg_log("feat", "done saf");
 
 	return success;
 }
@@ -446,11 +470,12 @@ void square_free_feats(struct chunk *c, struct loc grid)
 void square_clear_feats(struct chunk *c, struct loc grid)
 {
 	struct feature *feat, *next;
+	int def_id = c->feat_default ? c->feat_default->fidx : -1;
 
 	for (feat = square_feat(c, grid); feat; feat = next) {
 		next = feat->next;
 		
-		if (feat_can_remove(feat->kind->fidx) && (feat->kind->fidx != c->feat_default->fidx)) {
+		if (feat_can_remove(feat->kind->fidx) && (feat->kind->fidx != def_id)) {
 			square_remove_feat(c, grid, feat->kind->fidx);
 		}
 	}
@@ -458,21 +483,7 @@ void square_clear_feats(struct chunk *c, struct loc grid)
 
 struct feature *square_feat(struct chunk *c, struct loc grid)
 {
-	struct feature /**feat1, *feat2, */ *result = c->squares[grid.y][grid.x].feat;
-
-	/**for (feat1 = result; feat1; feat1 = feat1->next) {
-		for (feat2 = feat1->next; feat2; feat2 = feat2->next) {
-			assert(feat1 != feat2);
-		}
-	}*/
-
-	{
-		struct feature *feat;
-		for (feat = result; feat && feat->next; feat = feat->next) {
-			assert(feat_compare(feat->kind->fidx, feat->next->kind->fidx) <= 0);
-		}
-	}
-
+	struct feature *result = c->squares[grid.y][grid.x].feat;
 	return result;
 }
 
@@ -517,19 +528,9 @@ void square_remove_feat_by_type(struct chunk *c, struct loc grid, bool (*pred)(i
  */
 static bool square_set_feat_base(struct chunk *c, struct loc grid, int fidx, int size, bool force)
 {
-	//dbg_log("feat", "entering ssfb");
 	struct feature *feat, *next;
 	bool result;
-
-	/*if (c->feat_default->fidx == fidx) {
-		if (force) {
-			square_free_feats(c, grid);
-			square_enforce_default_feat(c, grid);
-			return true;
-		}
-		square_clear_feats(c, grid);
-		return true;
-	}*/
+	int def_id = c->feat_default ? c->feat_default->fidx : -1;
 
 	assert(c);
 	assert(square_in_bounds(c, grid));
@@ -546,7 +547,7 @@ static bool square_set_feat_base(struct chunk *c, struct loc grid, int fidx, int
 		next = feat->next;
 
 		if (feat_incompat_base(feat->kind->fidx, fidx)) {
-			if (feat->kind->fidx == c->feat_default->fidx) {
+			if (feat->kind->fidx == def_id) {
 				continue;
 			}
 			square_force_remove_feat(c, grid, feat->kind->fidx);
@@ -555,20 +556,16 @@ static bool square_set_feat_base(struct chunk *c, struct loc grid, int fidx, int
 
 	result = square_add_feat(c, grid, fidx, size);
 
-	//dbg_log("feat", "done ssfb");
-
 	return result;
 }
 
 bool square_set_feat(struct chunk *c, struct loc grid, int fidx, int size)
 {
-	//dbg_log("feat", "ssf");
 	return square_set_feat_base(c, grid, fidx, size, false);
 }
 
 bool square_force_set_feat(struct chunk *c, struct loc grid, int fidx, int size)
 {
-	//dbg_log("feat", "sfsf");
 	return square_set_feat_base(c, grid, fidx, size, true);
 }
 
@@ -644,7 +641,6 @@ static void square_set_feat_size(struct chunk *c, struct loc grid, int fidx, int
 		}
 	}
 
-	//dbg_log("feat", "ssfs saf");
 	square_add_feat(c, grid, fidx, size);
 }
 
@@ -728,7 +724,6 @@ static void square_update_feat_memorization(const struct chunk *c, struct player
 
 	for (i = 0; i < FEAT_MAX; ++i) {
 		if (new[i] > 0) {
-			//dbg_log("feat", "sufm saf");
 			square_add_feat(p->cave, grid, i, new[i]);
 		}
 	}
@@ -957,19 +952,21 @@ bool square_feat_valid(struct chunk *c, struct loc grid)
 	has_def = square_has_default(c, grid);
 	shld_def = square_should_have_default(c, grid);
 
-	if (has_def && !shld_def) {
-		strnfmt(err, sizeof err, "incorrectly has default feat %s", c->feat_default->name);
-		feat_valid_plog(c, grid, err);
-		return false;
-	}
-	if (!has_def && shld_def) {
-		strnfmt(err, sizeof err, "incorrectly does not have default feat %s", c->feat_default->name);
-		feat_valid_plog(c, grid, err);
-		return false;
-	}
-	if (!start) {
-		feat_valid_plog(c, grid, "has no feats");
-		return false;
+	if (c->feat_default) {
+		if (has_def && !shld_def) {
+			strnfmt(err, sizeof err, "incorrectly has default feat %s", c->feat_default->name);
+			feat_valid_plog(c, grid, err);
+			return false;
+		}
+		if (!has_def && shld_def) {
+			strnfmt(err, sizeof err, "incorrectly does not have default feat %s", c->feat_default->name);
+			feat_valid_plog(c, grid, err);
+			return false;
+		}
+		if (!start) {
+			feat_valid_plog(c, grid, "has no feats");
+			return false;
+		}
 	}
 
 	for (feat1 = start; feat1; feat1 = feat1->next) {
@@ -980,6 +977,12 @@ bool square_feat_valid(struct chunk *c, struct loc grid)
 		}
 
 		for (feat2 = feat1->next; feat2; feat2 = feat2->next) {
+			if (feat_compare(feat1->kind->fidx, feat2->kind->fidx) > 0) {
+				strnfmt(err, sizeof err, "has incorrectly ordered feats %s[prio %i] before %s[prio %i]",
+						feat1->kind->name, feat1->kind->priority,
+						feat2->kind->name, feat2->kind->priority);
+				feat_valid_plog(c, grid, err);
+			}
 			if (feat_incompat_base(feat1->kind->fidx, feat2->kind->fidx)) {
 				strnfmt(err, sizeof err, "has incompatible feats %s and %s", feat1->kind->name, feat2->kind->name);
 				feat_valid_plog(c, grid, err);

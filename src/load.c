@@ -1566,8 +1566,12 @@ static int rd_dungeon_aux(struct chunk **c)
 	}
 
 	rd_u16b(&tmp16u);
-	assert(tmp16u < FEAT_MAX);
-	c1->feat_default = &f_info[tmp16u];
+	if (tmp16u == FEAT_MAX) {
+		c1->feat_default = NULL;
+	} else {
+		assert(tmp16u < FEAT_MAX);
+		cave_set_default_feat(c1, (int)tmp16u);
+	}
 
 	for (y = 0; y < height; ++y) {
 		for (x = 0; x < width; ++x) {

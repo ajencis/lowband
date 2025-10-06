@@ -779,9 +779,10 @@ void prt_map(void)
 			/* Hack -- Queue it */
 			Term_queue_char(Term, vx, vy, a, c, ta, tc);
 
-			if ((tile_width > 1) || (tile_height > 1))
+			if ((tile_width > 1) || (tile_height > 1)) {
 				Term_big_queue_char(Term, vx, vy, clipy, a, c,
 					COLOUR_WHITE, L' ');
+			}
 		}
 	}
 }

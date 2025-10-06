@@ -223,7 +223,7 @@ enum grid_light_level
 
 struct grid_data {
 	uint32_t m_idx;			/* Monster index */
-	uint32_t f_idx;			/* Feature index */
+	int f_idx;			/* Feature index */
 
 	struct object_kind *first_kind;	/* The kind of the first item on the grid */
 	struct trap *trap;		/* Trap */
@@ -334,6 +334,7 @@ bool no_light(const struct player *p);
 bool square_feat_valid(struct chunk *c, struct loc grid);
 bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx, int size);
 bool feat_incompat_base(int feat1, int feat2);
+void cave_set_default_feat(struct chunk *c, int fidx);
 
 bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size);
 bool square_remove_feat(struct chunk *c, struct loc grid, int fidx);

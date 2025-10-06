@@ -1085,10 +1085,9 @@ static struct chunk *cave_generate(struct player *p, int height, int width)
 		p->cave->objects = mem_realloc(p->cave->objects, (chunk->obj_max + 1)
 									   * sizeof(struct object*));
 		p->cave->obj_max = chunk->obj_max;
-		p->cave->feat_default = &f_info[FEAT_NONE];
+		cave_set_default_feat(p->cave, FEAT_NONE);
 
 		assert(p->cave);
-		assert(p->cave->feat_default);
 
 		for (i = 0; i <= p->cave->obj_max; i++) {
 			p->cave->objects[i] = NULL;
@@ -1138,6 +1137,7 @@ static struct chunk *cave_generate(struct player *p, int height, int width)
 		dun->profile = choose_profile(p);
 		event_signal_string(EVENT_GEN_LEVEL_START, dun->profile->name);
 		chunk = dun->profile->builder(p, height, width, &error);
+		cave_set_default_feat(chunk, FEAT_FLOOR);
 		
 		if (!chunk) {
 			if (!error) {
@@ -1239,7 +1239,7 @@ static struct chunk *cave_generate(struct player *p, int height, int width)
 	p->cave->objects = mem_realloc(p->cave->objects, (chunk->obj_max + 1)
 								   * sizeof(struct object*));
 	p->cave->obj_max = chunk->obj_max;
-	p->cave->feat_default = &f_info[FEAT_NONE];
+	cave_set_default_feat(p->cave, FEAT_NONE);
 
 	assert(player->cave);
 

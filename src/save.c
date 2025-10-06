@@ -981,7 +981,7 @@ static void wr_dungeon_aux(struct chunk *c)
 		}
 	}
 	*/
-		
+
 	/* Flush the data (if any) */
 	if (count) {
 		wr_byte(count);
@@ -1003,7 +1003,11 @@ static void wr_dungeon_aux(struct chunk *c)
 		}
 	}
 
-	wr_u16b((uint16_t)c->feat_default->fidx);
+	if (c->feat_default) {
+		wr_u16b((uint16_t)c->feat_default->fidx);
+	} else {
+		wr_u16b((uint16_t)FEAT_MAX);
+	}
 
 	for (y = 0; y < c->height; ++y) {
 		for (x = 0; x < c->width; ++x) {
