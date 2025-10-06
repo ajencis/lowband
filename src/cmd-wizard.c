@@ -1942,14 +1942,13 @@ static void wiz_hack_map_query_feature(struct chunk *c, void *closure,
 {
 	const struct wiz_query_feature_closure *sel_feats = closure;
 	int i = 0;
-	int sq_feat = square(c, grid)->feat_old;
 
 	while (1) {
 		if (i >= sel_feats->n) {
 			*show = false;
 			return;
 		}
-		if (sq_feat == sel_feats->features[i]) {
+		if (square_has_feat(c, grid, sel_feats->features[i])) {
 			*show = true;
 			*color = (square_ispassable(c, grid)) ?
 				COLOUR_YELLOW : COLOUR_RED;

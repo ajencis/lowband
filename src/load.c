@@ -1518,27 +1518,29 @@ static int rd_dungeon_aux(struct chunk **c)
 		}
 	}
 
-	/* Run length decoding of dungeon data */
+	/*
+	// Run length decoding of dungeon data
 	for (x = y = 0; y < c1->height; ) {
-		/* Grab RLE info */
+		// Grab RLE info
 		rd_byte(&count);
 		rd_byte(&tmp8u);
 
-		/* Apply the RLE info */
+		// Apply the RLE info
 		for (i = count; i > 0; i--) {
-			/* Extract "feat" */
+			// Extract "feat"
 			square_set_feat_old(c1, loc(x, y), tmp8u);
 
-			/* Advance/Wrap */
+			// Advance/Wrap
 			if (++x >= c1->width) {
-				/* Wrap */
+				// Wrap
 				x = 0;
 
-				/* Advance/Wrap */
+				// Advance/Wrap
 				if (++y >= c1->height) break;
 			}
 		}
 	}
+	*/
 
 	// features
 	for (grid.y = 0; grid.y < height; ++grid.y) {

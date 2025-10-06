@@ -366,7 +366,7 @@ static void path_analyse(struct chunk *c, struct loc grid)
 		/* Forget grids which would block los */
 		if (!square_allowslos(player->cave, path_g[i])) {
 			sqinfo_off(square(c, path_g[i])->info, SQUARE_SEEN);
-			square_forget(c, path_g[i]);
+			square_forget_feats(player, path_g[i]);
 			square_light_spot(c, path_g[i]);
 		}
 	}
@@ -668,7 +668,8 @@ static void mon_leaving(struct loc grid1, struct loc grid2)
 		}
 	}*/
 
-	if (square(cave, grid2)->feat_old == FEAT_ILLUSORY_WALL) {
+	if (square_has_feat(cave, grid2, FEAT_ILLUSORY_WALL)) {
+		square_remove_feat(cave, grid2, FEAT_ILLUSORY_WALL);
 		square_force_floor(cave, grid2);
 		player->upkeep->update |= PU_UPDATE_VIEW;
 	}
@@ -687,7 +688,8 @@ static void player_leaving(struct loc grid1, struct loc grid2)
 		square_destroy_decoy(cave, decoy);
 	}
 
-	if (square(cave, grid2)->feat_old == FEAT_ILLUSORY_WALL) {
+	if (square_has_feat(cave, grid2, FEAT_ILLUSORY_WALL)) {
+		square_remove_feat(cave, grid2, FEAT_ILLUSORY_WALL);
 		square_force_floor(cave, grid2);
 	}
 

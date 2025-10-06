@@ -105,7 +105,7 @@ static void project_feature_handler_KILL_WALL(project_feature_handler_context_t 
 			context->obvious = true;
 
 			/* Forget the wall */
-			square_forget(cave, grid);
+			square_forget_feats(player, grid);
 		}
 
 		/* Destroy the rubble */
@@ -130,7 +130,7 @@ static void project_feature_handler_KILL_WALL(project_feature_handler_context_t 
 			context->obvious = true;
 
 			/* Forget the wall */
-			square_forget(cave, grid);
+			square_forget_feats(player, grid);
 		}
 
 		/* Destroy the feature */
@@ -143,7 +143,7 @@ static void project_feature_handler_KILL_WALL(project_feature_handler_context_t 
 			context->obvious = true;
 
 			/* Forget the wall */
-			square_forget(cave, grid);
+			square_forget_feats(player, grid);
 		}
 
 		/* Destroy the wall */
@@ -158,7 +158,7 @@ static void project_feature_handler_KILL_WALL(project_feature_handler_context_t 
 			context->obvious = true;
 
 			/* Forget the wall */
-			square_forget(cave, grid);
+			square_forget_feats(player, grid);
 		}
 
 		/* Destroy the wall */
@@ -170,7 +170,7 @@ static void project_feature_handler_KILL_WALL(project_feature_handler_context_t 
 			context->obvious = true;
 
 			/* Forget the wall */
-			square_forget(cave, grid);
+			square_forget_feats(player, grid);
 		}
 
 		/* Destroy the wall */
@@ -201,7 +201,7 @@ static void project_feature_handler_KILL_DOOR(project_feature_handler_context_t 
 			player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
 
 			/* Forget the door */
-			square_forget(cave, grid);
+			square_forget_feats(player, grid);
 		}
 
 		/* Destroy the feature */

@@ -267,7 +267,7 @@ static bool do_cmd_open_aux(struct loc grid)
 			square_open_door(cave, grid);
 
 			/* Update the visuals */
-			square_memorize(cave, grid);
+			square_memorize_feats(player, cave, grid);
 			square_light_spot(cave, grid);
 			player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
 
@@ -286,7 +286,7 @@ static bool do_cmd_open_aux(struct loc grid)
 	} else {
 		/* Closed door */
 		square_open_door(cave, grid);
-		square_memorize(cave, grid);
+		square_memorize_feats(player, cave, grid);
 		square_light_spot(cave, grid);
 		player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
 		sound(MSG_OPENDOOR);
@@ -408,7 +408,7 @@ static bool do_cmd_close_test(struct player *p, struct loc grid)
 		msg("You see nothing there to close.");
 		if (square_isopendoor(p->cave, grid)
 				|| square_isbrokendoor(p->cave, grid)) {
-			square_forget(cave, grid);
+			square_forget_feats(p, grid);
 			square_light_spot(cave, grid);
 		}
 
@@ -450,7 +450,7 @@ static bool do_cmd_close_aux(struct loc grid)
 	} else {
 		/* Close door */
 		square_close_door(cave, grid);
-		square_true_memorize(cave, grid);
+		square_memorize_feats(player, cave, grid);
 		square_light_spot(cave, grid);
 		player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
 		sound(MSG_SHUTDOOR);
@@ -535,7 +535,7 @@ static bool do_cmd_tunnel_test(struct player *p, struct loc grid)
 	if (square_isperm(cave, grid)) {
 		msg("This seems to be permanent rock.");
 		if (!square_isperm(p->cave, grid)) {
-			square_memorize(cave, grid);
+			square_memorize_feats(p, cave, grid);
 			square_light_spot(cave, grid);
 		}
 		return (false);
@@ -546,7 +546,7 @@ static bool do_cmd_tunnel_test(struct player *p, struct loc grid)
 		msg("You see nothing there to tunnel.");
 		if (square_isdiggable(p->cave, grid)
 				|| square_iscloseddoor(p->cave, grid)) {
-			square_forget(cave, grid);
+			square_forget_feats(p, grid);
 			square_light_spot(cave, grid);
 		}
 		return (false);
@@ -578,7 +578,7 @@ static bool twall(struct loc grid, int feat)
 	sound(MSG_DIG);
 
 	/* Forget the wall */
-	square_forget(cave, grid);
+	square_forget_feats(player, grid);
 
 	// remove that feat
 	square_remove_feat(cave, grid, feat);
@@ -699,7 +699,7 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 			expose_to_sun(cave, grid, is_daytime());
 		}
 		/* Update the visuals. */
-		square_memorize(cave, grid);
+		square_memorize_feats(player, cave, grid);
 		square_light_spot(cave, grid);
 		player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
 	} else if (chance > 0) {
@@ -1173,12 +1173,20 @@ void move_player(int dir, bool disarm)
 	} else if (!square_ispassable(cave, grid) &&
 			(!pf_has(player->mon.state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
 
-		int prev_feat_k = square(player->cave, grid)->feat_old;
+		//int prev_feat_k = square(player->cave, grid)->feat->kind->fidx;
 		const char *issue, *prefix, *article;
+		struct feature *feat;
+		int prev_k, new_k;
+		
+		feat = first_feat_not_meets_pred(player->cave, grid, feat_is_passable);
+		prev_k = feat ? feat->kind->fidx : FEAT_NONE;
 
 		disturb(player);
 
-		square_memorize(cave, grid);
+		square_memorize_feats(player, cave, grid);
+
+		feat = first_feat_not_meets_pred(player->cave, grid, feat_is_passable);
+		new_k = feat ? feat->kind->fidx : FEAT_NONE;
 		
 		issue = square_impassable_name(player->cave, grid);
 		if (issue) {
@@ -1188,7 +1196,7 @@ void move_player(int dir, bool disarm)
 			article = "";
 		}
 
-		if (square(player->cave, grid)->feat_old == prev_feat_k) prefix = "There is";
+		if (new_k == FEAT_NONE || new_k != prev_k) prefix = "There is";
 		else prefix = "You feel";
 
 		msgt(MSG_HITWALL, "%s %s%s blocking your way.", prefix, article, issue);
@@ -1371,17 +1379,12 @@ static bool do_cmd_walk_test(struct player *p, struct loc grid)
 	 */
 	if (!square_ispassable(cave, grid) && (!pf_has(p->mon.state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
 		const char *imp_name, *article;
-		int prev_feat_k = square(p->cave, grid)->feat_old;
 
 		if (square_iscloseddoor(p->cave, grid)) {
 			return true;
 		}
 
-		square_memorize(cave, grid);
-		if (prev_feat_k != square(p->cave, grid)->feat_old) {
-			square_light_spot(cave, grid);
-		}
-
+		square_memorize_feats(p, cave, grid);
 
 		imp_name = square_impassable_name(p->cave, grid);
 		if (imp_name) {
@@ -1790,7 +1793,7 @@ void do_cmd_hold(struct command *cmd)
 	/* Enter a store if we are on one, otherwise look at the floor */
 	if (square_isshop(cave, player->mon.grid)) {
 		if (player_is_shapechanged(player)) {
-			if (square(cave, player->mon.grid)->feat_old != FEAT_HOME) {
+			if (square_shopnum(cave, player->mon.grid) != f_info[FEAT_HOME].shopnum) {
 				msg("There is a scream and the door slams shut!");
 			}
 			return;

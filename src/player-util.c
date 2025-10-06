@@ -3653,7 +3653,7 @@ void player_handle_post_move(struct player *p, bool eval_trap,
 	/* Handle store doors, or notice objects */
 	if (square_isshop(cave, p->mon.grid)) {
 		if (player_is_shapechanged(p)) {
-			if (square(cave, p->mon.grid)->feat_old != FEAT_HOME) {
+			if (square_shopnum(cave, p->mon.grid) == f_info[FEAT_HOME].shopnum) {
 				msg("There is a scream and the door slams shut!");
 			}
 			return;
@@ -3782,11 +3782,10 @@ void search(struct player *p)
 			if (dist > detectpower / 25) continue;
 
 			currpower = detectpower - dist * 10;
-			//featr = square_feat_old(cave, grid);
 
 			for (feat = square_feat(cave, grid); feat; feat = feat->next) {
 				if (feat_is_hidden(p, grid, feat->kind->fidx) && randint0(currpower < cave->depth)) {
-					square_memorize_feat_real(p, cave, grid, feat);
+					square_memorize_feat_real(p, cave, grid, feat->kind->fidx);
 
 					name = feat->kind->name;
 					pref = feat->kind->look_prefix;

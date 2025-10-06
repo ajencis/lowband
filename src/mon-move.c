@@ -1945,7 +1945,7 @@ static void monster_turn(struct monster *mon)
 		for (y = 1; y < cave->height - 1; ++y) {
 			for (x = 1; x < cave->height - 1; ++x) {
 				if (square_in_bounds_fully(cave, loc(x, y)) &&
-						square(cave, loc(x, y))->feat_old == FEAT_OPEN_SECRET &&
+						square_has_feat(cave, loc(x, y), FEAT_OPEN_SECRET) &&
 						los(cave, mon->grid, loc(x, y))) {
 					square_change_feat(cave, loc(x, y), FEAT_OPEN_SECRET, FEAT_OPEN);
 					if (monster_is_in_view(mon)) {

@@ -962,24 +962,26 @@ static void wr_dungeon_aux(struct chunk *c)
 	count = 0;
 	prev_char = 0;
 
-	/* Dump for each grid */
+	/*
+	// Dump for each grid
 	for (y = 0; y < c->height; y++) {
 		for (x = 0; x < c->width; x++) {
-			/* Extract a byte */
+			// Extract a byte
 			tmp8u = square(c, loc(x, y))->feat_old;
 
-			/* If the run is broken, or too full, flush it */
+			// If the run is broken, or too full, flush it
 			if ((tmp8u != prev_char) || (count == UCHAR_MAX)) {
 				wr_byte(count);
 				wr_byte(prev_char);
 				prev_char = tmp8u;
 				count = 1;
-			} else { /* Continue the run */
+			} else { // Continue the run
 				count++;
 			}
 		}
 	}
-
+	*/
+		
 	/* Flush the data (if any) */
 	if (count) {
 		wr_byte(count);
@@ -991,7 +993,7 @@ static void wr_dungeon_aux(struct chunk *c)
 		for (x = 0; x < c->width; ++x) {
 			const struct feature *feat;
 
-			assert(square_feat_valid(c, loc(x, y)));
+			//assert(square_feat_valid(c, loc(x, y)));
 
 			for (feat = square_feat(c, loc(x, y)); feat; feat = feat->next) {
 				wr_u16b((uint16_t)feat->kind->fidx);

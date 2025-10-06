@@ -444,7 +444,7 @@ bool square_reveal_trap(struct chunk *c, struct loc grid, bool always,
 		}
 
 		/* Memorize */
-		square_memorize(c, grid);
+		square_memorize_feats(player, c, grid);
 
 		/* Redraw */
 		square_light_spot(c, grid);

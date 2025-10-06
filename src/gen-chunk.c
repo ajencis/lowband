@@ -45,21 +45,56 @@ uint16_t chunk_list_max = 0;   /**< current max actual chunk index */
  */
 struct chunk *chunk_write(struct chunk *c)
 {
-	int x, y;
-	struct feature *feat;
+	//int x, y;
+	struct loc grid;
+	//struct feature *feat;
 
 	struct chunk *new = cave_new(c->height, c->width);
 
-	/* Write the location stuff */
+	new->feat_default = c->feat_default;
+
+	for (grid.x = 0; grid.x < new->width; ++grid.x) {
+		for (grid.y = 0; grid.y < new->height; ++grid.y) {
+			square_copy_feat(c, new, grid, grid);
+			sqinfo_copy(square(new, grid)->info, square(c, grid)->info);
+		}
+	}
+
+	/*
+	// Write the location stuff
 	for (y = 0; y < new->height; y++) {
 		for (x = 0; x < new->width; x++) {
-			/* Terrain */
+
+			char dbg_msg[512];
+			char new_feats_start[512] = "";
+			bool success, allsuccess = true;
+
+			assert(square_feat_valid(c, loc(x, y)));
+
+			strnfmt(dbg_msg, sizeof dbg_msg, "square (%i,%i) has feats ", x, y);
+
+			square_free_feats(new, loc(x, y));
+
+			assert(!square_feat(new, loc(x, y)));
+
+			// Terrain
 			for (feat = square_feat(c, loc(x, y)); feat; feat = feat->next) {
-				assert(square_add_feat(new, loc(x, y), feat->kind->fidx, feat->size));
+				my_strcat(dbg_msg, format("%s[%i], ", feat->kind->name, feat->size), sizeof dbg_msg);
+				success = square_force_add_feat(new, loc(x, y), feat->kind->fidx, feat->size);
+
+				allsuccess = allsuccess && success;
+				assert(success);
+				if (!success) my_strcat(dbg_msg, " (failed)", sizeof dbg_msg);
 			}
+
+			if (!allsuccess) {
+				plog_fmt("%s, old = %s", dbg_msg, new_feats_start);
+			}
+
 			sqinfo_copy(square(new, loc(x, y))->info, square(c, loc(x, y))->info);
 		}
 	}
+	*/
 
 	return new;
 }
@@ -373,8 +408,6 @@ bool chunk_copy(struct chunk *dest, struct player *p, struct chunk *source,
 			symmetry_transform(&dest_grid, y0, x0, h, w, rotate, reflect);
 
 			/* Terrain */
-			/*dest->squares[dest_grid.y][dest_grid.x].feat_old =
-				square(source, grid)->feat_old;*/
 			assert(square_feat_valid(source, grid));
 			for (feat = square_feat(source, grid); feat; feat = feat->next) {
 				assert(square_force_add_feat(dest, dest_grid, feat->kind->fidx, feat->size));

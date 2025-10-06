@@ -88,6 +88,15 @@ bool feat_is_floor(int feat)
 }
 
 /**
+ * L: true if feat is part of the structure of the level - is
+ * either a wall or floor or stairs
+ */
+bool feat_is_structural(int feat)
+{
+	return feat_is_wall(feat) || feat_is_floor(feat) || feat_is_stairs(feat);
+}
+
+/**
  * L: True if the feature is rubble
  */
 bool feat_is_rubble(int feat)
@@ -758,6 +767,40 @@ struct feature *first_feat_with_flag(struct chunk *c, struct loc grid, int flag)
 
 	for (feat = square_feat(c, grid); feat; feat = feat->next) {
 		if (tf_has(feat->kind->flags, flag)) {
+			return feat;
+		}
+	}
+
+	return NULL;
+}
+
+struct feature *first_feat_meets_pred(struct chunk *c, struct loc grid, bool (*pred)(int))
+{
+	struct feature *feat;
+
+	assert(c);
+	assert(pred);
+	assert(square_in_bounds(c, grid));
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (pred(feat->kind->fidx)) {
+			return feat;
+		}
+	}
+
+	return NULL;
+}
+
+struct feature *first_feat_not_meets_pred(struct chunk *c, struct loc grid, bool (*pred)(int))
+{
+	struct feature *feat;
+
+	assert(c);
+	assert(pred);
+	assert(square_in_bounds(c, grid));
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (!pred(feat->kind->fidx)) {
 			return feat;
 		}
 	}
@@ -1519,6 +1562,7 @@ int square_num_walls_diagonal(struct chunk *c, struct loc grid)
     return k;
 }
 
+#if 0
 /**
  * Set the terrain type for a square.
  *
@@ -1571,6 +1615,7 @@ static void square_set_known_feat(struct chunk *c, struct loc grid, int feat)
 	if (c != cave) return;
 	player->cave->squares[grid.y][grid.x].feat_old = feat;
 }
+#endif
 
 /**
  * Set the occupying monster for a square.
@@ -1957,6 +2002,7 @@ const char *square_apparent_look_in_preposition(struct chunk *c, struct loc grid
 	return (fp->look_in_preposition) ?  fp->look_in_preposition : "on ";*/
 }
 
+#if 0
 /* Memorize the terrain */
 void square_memorize(struct chunk *c, struct loc grid) {
 	uint8_t feat = square(c, grid)->feat_old;
@@ -1978,6 +2024,7 @@ void square_forget(struct chunk *c, struct loc grid) {
 	if (c != cave) return;
 	square_set_known_feat(c, grid, FEAT_NONE);
 }
+#endif
 
 void square_mark(struct chunk *c, struct loc grid) {
 	sqinfo_on(square(c, grid)->info, SQUARE_MARK);

@@ -1228,7 +1228,6 @@ static int longest_terrain_name(void)
  */
 static size_t prt_terrain(int row, int col)
 {
-	//struct feature_kind *feat = square_feat_old(cave, player->mon.grid);
 	struct feature_kind *feat = square_feat(cave, player->mon.grid)->kind;
 	struct trap *trap = square_trap(cave, player->mon.grid);
 	char buf[30];

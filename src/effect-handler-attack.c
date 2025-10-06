@@ -1267,7 +1267,7 @@ bool effect_handler_DESTRUCTION(effect_handler_context_t *context)
 				sqinfo_off(square(cave, grid)->info, SQUARE_GLOW);
 			}
 			sqinfo_off(square(cave, grid)->info, SQUARE_SEEN);
-			square_forget(cave, grid);
+			square_forget_feats(player, grid);
 			square_light_spot(cave, grid);
 
 			/* Deal with player later */
@@ -1419,7 +1419,7 @@ bool effect_handler_EARTHQUAKE(effect_handler_context_t *context)
 				sqinfo_off(square(cave, grid)->info, SQUARE_GLOW);
 			}
 			sqinfo_off(square(cave, grid)->info, SQUARE_SEEN);
-			square_forget(cave, grid);
+			square_forget_feats(player, grid);
 			square_light_spot(cave, grid);
 
 			/* Skip the epicenter */

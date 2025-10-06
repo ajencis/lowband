@@ -997,7 +997,7 @@ void update_view(struct chunk *c, struct player *p)
 	 */
 	if (p->mon.m_timed[TMD_BLIND] && square_isknown(c, p->mon.grid)
 			&& !square_ispassable(p->cave, p->mon.grid)) {
-		square_forget(c, p->mon.grid);
+		square_forget_feats(p, p->mon.grid);
 	}
 
 	/* Squares we have LOS to get marked as in the view, and perhaps seen */

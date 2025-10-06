@@ -337,11 +337,13 @@ bool feat_incompat_base(int feat1, int feat2);
 
 bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size);
 bool square_remove_feat(struct chunk *c, struct loc grid, int fidx);
+bool square_force_remove_feat(struct chunk *c, struct loc grid, int fidx);
 void square_free_feats(struct chunk *c, struct loc grid);
 void square_memorize_feats(struct player *p, const struct chunk *c, struct loc grid);
-void square_memorize_feat_real(struct player *p, const struct chunk *c, struct loc grid, const struct feature *feat);
+void square_memorize_feat_real(struct player *p, struct chunk *c, struct loc grid, int fidx);
 void square_forget_feats(struct player *p, struct loc grid);
 bool feat_is_hidden(struct player *p, struct loc grid, int fidx);
+void square_copy_feat(struct chunk *from_c, struct chunk *to_c, struct loc from_grid, struct loc to_grid);
 
 void cave_feat_upkeep(struct chunk *c);
 
@@ -411,6 +413,7 @@ bool feat_is_granite(int feat);
 bool feat_is_treasure(int feat);
 bool feat_is_wall(int feat);
 bool feat_is_floor(int feat);
+bool feat_is_structural(int feat);
 bool feat_is_trap_holding(int feat);
 bool feat_is_object_holding(int feat);
 bool feat_is_monster_walkable(int feat);
@@ -532,6 +535,8 @@ bool square_allows_summon(struct chunk *c, struct loc grid);
 const char *square_impassable_name(struct chunk *c, struct loc grid);
 
 struct feature *first_feat_with_flag(struct chunk *c, struct loc grid, int flag);
+struct feature *first_feat_meets_pred(struct chunk *c, struct loc grid, bool (*pred)(int));
+struct feature *first_feat_not_meets_pred(struct chunk *c, struct loc grid, bool (*pred)(int));
 struct feature *square_feat(struct chunk *c, struct loc grid);
 bool square_has_feat(const struct chunk *c, struct loc grid, int fidx);
 struct feature *square_feat_by_type(struct chunk *c, struct loc grid, int fidx);
@@ -567,7 +572,7 @@ int square_num_walls_diagonal(struct chunk *c, struct loc grid);
 
 
 /* Feature placers */
-void square_set_feat_old(struct chunk *c, struct loc grid, int feat);
+//void square_set_feat_old(struct chunk *c, struct loc grid, int feat);
 void square_set_mon(struct chunk *c, struct loc grid, int midx);
 void square_set_obj(struct chunk *c, struct loc grid, struct object *obj);
 void square_set_trap(struct chunk *c, struct loc grid, struct trap *trap);
@@ -605,9 +610,9 @@ const char *square_apparent_name(struct chunk *c, struct loc grid);
 const char *square_apparent_look_prefix(struct chunk *c, struct loc grid);
 const char *square_apparent_look_in_preposition(struct chunk *c, struct loc grid);
 
-void square_memorize(struct chunk *c, struct loc grid);
-void square_true_memorize(struct chunk *c, struct loc grid);
-void square_forget(struct chunk *c, struct loc grid);
+//void square_memorize(struct chunk *c, struct loc grid);
+//void square_true_memorize(struct chunk *c, struct loc grid);
+//void square_forget(struct chunk *c, struct loc grid);
 void square_mark(struct chunk *c, struct loc grid);
 void square_unmark(struct chunk *c, struct loc grid);
 
