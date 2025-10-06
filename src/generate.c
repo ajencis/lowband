@@ -65,6 +65,7 @@ static const struct {
 	#define DUN(a, b) { a, b##_gen },
 	#include "list-dun-profiles.h"
 	#undef DUN
+	{ NULL, NULL }
 };
 
 static const struct {
@@ -76,6 +77,7 @@ static const struct {
 	#define ROOM(a, b, c, d) { a, b, c, build_##d },
 	#include "list-rooms.h"
 	#undef ROOM
+	{ NULL, 0, 0, NULL }
 };
 
 static const char *room_flags[] = {
@@ -96,13 +98,13 @@ static enum parser_error parse_profile_name(struct parser *p) {
 	size_t i;
 
 	c->name = string_make(parser_getstr(p, "name"));
-	for (i = 0; i < N_ELEMENTS(cave_builders); i++) {
+	for (i = 0; cave_builders[i].builder; i++) {
 		if (streq(c->name, cave_builders[i].name)) {
 			break;
 		}
 	}
 
-	if (i == N_ELEMENTS(cave_builders)) {
+	if (!cave_builders[i].builder) {
 		return PARSE_ERROR_NO_BUILDER_FOUND;
 	}
 	c->builder = cave_builders[i].builder;
@@ -171,12 +173,15 @@ static enum parser_error parse_profile_room(struct parser *p) {
 
 	/* Now read the data */
 	r->name = string_make(parser_getsym(p, "name"));
-	for (i = 0; i < N_ELEMENTS(room_builders); i++)
-		if (streq(r->name, room_builders[i].name))
+	for (i = 0; room_builders[i].builder; i++) {
+		if (streq(r->name, room_builders[i].name)) {
 			break;
+		}
+	}
 
-	if (i == N_ELEMENTS(room_builders))
+	if (!room_builders[i].builder) {
 		return PARSE_ERROR_NO_ROOM_FOUND;
+	}
 	r->builder = room_builders[i].builder;
 	r->rating = parser_getint(p, "rating");
 	r->height = parser_getint(p, "height");
@@ -355,10 +360,10 @@ static enum parser_error parse_room_height(struct parser *p) {
 	t->hgt = parser_getuint(p, "height");
 
 	/* Make sure rooms are no higher than the room profiles allow. */
-	for (i = 0; i < N_ELEMENTS(room_builders); i++)
+	for (i = 0; room_builders[i].builder; i++)
 		if (streq("room template", room_builders[i].name))
 			break;
-	if (i == N_ELEMENTS(room_builders))
+	if (!room_builders[i].builder)
 		return PARSE_ERROR_NO_ROOM_FOUND;
 	if (t->hgt > room_builders[i].max_height)
 		return PARSE_ERROR_VAULT_TOO_BIG;
@@ -374,10 +379,10 @@ static enum parser_error parse_room_width(struct parser *p) {
 	t->wid = parser_getuint(p, "width");
 
 	/* Make sure rooms are no wider than the room profiles allow. */
-	for (i = 0; i < N_ELEMENTS(room_builders); i++)
+	for (i = 0; room_builders[i].builder; i++)
 		if (streq("room template", room_builders[i].name))
 			break;
-	if (i == N_ELEMENTS(room_builders))
+	if (!room_builders[i].builder)
 		return PARSE_ERROR_NO_ROOM_FOUND;
 	if (t->wid > room_builders[i].max_width)
 		return PARSE_ERROR_VAULT_TOO_BIG;
@@ -516,10 +521,10 @@ static enum parser_error parse_vault_rows(struct parser *p) {
 	v->hgt = parser_getuint(p, "height");
 
 	/* Make sure vaults are no higher than the room profiles allow. */
-	for (i = 0; i < N_ELEMENTS(room_builders); i++)
+	for (i = 0; room_builders[i].builder; i++)
 		if (streq(v->typ, room_builders[i].name))
 			break;
-	if (i == N_ELEMENTS(room_builders))
+	if (!room_builders[i].builder)
 		return PARSE_ERROR_NO_ROOM_FOUND;
 	if (v->hgt > room_builders[i].max_height)
 		return PARSE_ERROR_VAULT_TOO_BIG;
@@ -535,10 +540,10 @@ static enum parser_error parse_vault_columns(struct parser *p) {
 	v->wid = parser_getuint(p, "width");
 
 	/* Make sure vaults are no wider than the room profiles allow. */
-	for (i = 0; i < N_ELEMENTS(room_builders); i++)
+	for (i = 0; room_builders[i].builder; i++)
 		if (streq(v->typ, room_builders[i].name))
 			break;
-	if (i == N_ELEMENTS(room_builders))
+	if (!room_builders[i].builder)
 		return PARSE_ERROR_NO_ROOM_FOUND;
 	if (v->wid > room_builders[i].max_width)
 		return PARSE_ERROR_VAULT_TOO_BIG;
@@ -1563,7 +1568,7 @@ void prepare_next_level(struct player *p)
  */
 int get_room_builder_count(void)
 {
-	return (int) N_ELEMENTS(room_builders);
+	return (int) N_ELEMENTS(room_builders) - 1;
 }
 
 /**
@@ -1575,7 +1580,7 @@ int get_room_builder_index_from_name(const char *name)
 	int i = 0;
 
 	while (1) {
-		if (i >= (int) N_ELEMENTS(room_builders)) {
+		if (!room_builders[i].name) {
 			return -1;
 		}
 		if (streq(name, room_builders[i].name)) {
@@ -1592,7 +1597,7 @@ int get_room_builder_index_from_name(const char *name)
  */
 const char *get_room_builder_name_from_index(int i)
 {
-	return (i >= 0 && i < (int) get_room_builder_count()) ?
+	return (i >= 0 && i < get_room_builder_count()) ?
 		room_builders[i].name : NULL;
 }
 
