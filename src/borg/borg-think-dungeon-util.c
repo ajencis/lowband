@@ -326,7 +326,7 @@ bool borg_think_stair_scum(bool from_town)
 
     borg_grid *ag = &borg_grids[borg.c.y][borg.c.x];
 
-    uint8_t feat  = square(cave, borg.c)->feat_old;
+    uint8_t feat  = square_feat(cave, borg.c)->kind->fidx;
 
     enum borg_need need;
 

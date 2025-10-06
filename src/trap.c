@@ -272,19 +272,21 @@ bool square_player_trap_allowed(struct chunk *c, struct loc grid)
 /**
  * Instantiate a player trap
  */
-static int pick_trap(struct chunk *c, int feat, int trap_level)
+static int pick_trap(struct chunk *c, struct loc grid, int trap_level)
 {
     int i, pick;
 	int *trap_probs = NULL;
 	int trap_prob_max = 0;
 
     /* Paranoia */
-    if (!feat_is_trap_holding(feat))
+	if (!square_istrappable(c, grid)) {
 		return -1;
+	}
 
     /* No traps in town */
-    if (c->depth == 0)
+    if (c->depth == 0) {
 		return -1;
+	}
 
     /* Get trap probabilities */
 	trap_probs = mem_zalloc(z_info->trap_max * sizeof(int));
@@ -302,8 +304,9 @@ static int pick_trap(struct chunk *c, int feat, int trap_level)
 		if (kind->min_depth > trap_level) continue;
 
 		/* Floor? */
-		if (feat_is_floor(feat) && !trf_has(kind->flags, TRF_FLOOR))
+		if (square_isfloor(c, grid) && !trf_has(kind->flags, TRF_FLOOR)) {
 			continue;
+		}
 
 		/* Check legality of trapdoors. */
 		if (trf_has(kind->flags, TRF_DOWN)) {
@@ -362,7 +365,7 @@ void place_trap(struct chunk *c, struct loc grid, int t_idx, int trap_level)
 		/* Require the correct terrain */
 		if (!square_player_trap_allowed(c, grid)) return;
 
-		t_idx = pick_trap(c, square(c, grid)->feat_old, trap_level);
+		t_idx = pick_trap(c, grid, trap_level);
 	}
 
 	/* Failure */

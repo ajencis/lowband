@@ -241,7 +241,7 @@ struct grid_data {
 };
 
 struct square {
-	uint8_t feat_old;
+	//uint8_t feat_old;
 	bitflag *info;
 	int light;
 	int16_t mon;
@@ -251,7 +251,7 @@ struct square {
 	struct terrain_element *t_elem;
 
 	struct feature *feat;
-	
+
 	int required_rf;		// required race flag to be generated here
 };
 

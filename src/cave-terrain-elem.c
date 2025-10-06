@@ -952,34 +952,42 @@ bool square_feat_valid(struct chunk *c, struct loc grid)
 {
 	struct feature *feat1, *feat2, *start = square_feat(c, grid);
 	bool has_def, shld_def;
-
-	if (!start) {
-		feat_valid_plog(c, grid, "has no feats");
-	}
+	char err[256];
 
 	has_def = square_has_default(c, grid);
 	shld_def = square_should_have_default(c, grid);
 
 	if (has_def && !shld_def) {
-		feat_valid_plog(c, grid, format("incorrectly has default feat %s", c->feat_default->name));
+		strnfmt(err, sizeof err, "incorrectly has default feat %s", c->feat_default->name);
+		feat_valid_plog(c, grid, err);
+		return false;
 	}
 	if (!has_def && shld_def) {
-		feat_valid_plog(c, grid, format("incorrectly does not have default feat %s", c->feat_default->name));
+		strnfmt(err, sizeof err, "incorrectly does not have default feat %s", c->feat_default->name);
+		feat_valid_plog(c, grid, err);
+		return false;
+	}
+	if (!start) {
+		feat_valid_plog(c, grid, "has no feats");
+		return false;
 	}
 
 	for (feat1 = start; feat1; feat1 = feat1->next) {
 		if (feat1->size <= 0) {
-			feat_valid_plog(c, grid, format("has feat %s of size %i", feat1->kind->name, feat1->size));
+			strnfmt(err, sizeof err, "has feat %s of size %i", feat1->kind->name, feat1->size);
+			feat_valid_plog(c, grid, err);
 			return false;
 		}
 
 		for (feat2 = feat1->next; feat2; feat2 = feat2->next) {
 			if (feat_incompat_base(feat1->kind->fidx, feat2->kind->fidx)) {
-				feat_valid_plog(c, grid, format("has incompatible feats %s and %s", feat1->kind->name, feat2->kind->name));
+				strnfmt(err, sizeof err, "has incompatible feats %s and %s", feat1->kind->name, feat2->kind->name);
+				feat_valid_plog(c, grid, err);
 				return false;
 			}
 			if (feat1->kind->fidx == feat2->kind->fidx) {
-				feat_valid_plog(c, grid, format("has duplicate feat %s", feat1->kind->name));
+				strnfmt(err, sizeof err, "has duplicate feat %s", feat1->kind->name);
+				feat_valid_plog(c, grid, err);
 				return false;
 			}
 		}
