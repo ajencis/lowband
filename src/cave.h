@@ -152,6 +152,10 @@ struct feature_kind {
 	int feat_produce;			// L: which other feat it produces
 	int feat_produce_quantity;	// L: how much of that feat it produces
 	int feat_produce_frequency;	// L: how often it produces that feat / 100 turns
+
+	int proj;					// L: what it projects nearby
+	int proj_range;				// L: how far it projects
+	int proj_amt;				// L: how much it projects
 };
 
 struct feature {

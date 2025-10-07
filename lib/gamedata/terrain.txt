@@ -36,6 +36,7 @@
 # flags : terrain flags
 # digging : digging index
 # produce : name : amount : frequency
+# project : name : amount : ?radius
 # walk-msg: warning message - walking
 # run-msg: warning message - running
 # hurt-msg: damage message
@@ -80,6 +81,9 @@
 # five is like a closed door.
 
 # L: 'produce' is for terrain that produces other terrain. 
+
+# L: 'project' is for terrain that projects on its square; if not set,  radius
+# will be 0
 
 # 'walk-msg' is the warning message for the player on stepping into damaging
 # terrain
@@ -409,3 +413,4 @@ graphics:~:g
 priority:19
 timeout:20
 flags:PROJECT | LOS | INTERESTING | PASSABLE | CLOUD
+project:POIS:5

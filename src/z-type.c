@@ -185,7 +185,7 @@ static int *vmda_element(struct multidimensional_array *array, va_list args)
 		curr_size = array->dimensions_size[i];
 
 		if (curr_va < 0 || curr_va >= curr_size) {
-			plog_fmt("Error: array dimension %i of length %i accessed at index %i!", i, curr_size, curr_va);
+			quit_fmt("Error: array dimension %i of length %i accessed at index %i!", i, curr_size, curr_va);
 			_wassert(_CRT_WIDE("curr_va >= 0 && curr_va < curr_size"), _CRT_WIDE(__FILE__), (unsigned)(__LINE__));
 		}
 

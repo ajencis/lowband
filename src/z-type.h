@@ -66,6 +66,7 @@ int point_set_contains(struct point_set *ps, struct loc grid);
  * of dimensions
  */
 struct multidimensional_array;
+typedef struct multidimensional_array md_array;
 
 struct multidimensional_array *mda_new(int dimensions, ...);
 void mda_free(struct multidimensional_array *array);

@@ -157,6 +157,16 @@ const char *list_element_names[] = {
 	NULL
 };
 
+const char *list_proj_names[] = {
+	#define ELEM(a) #a,
+	#include "list-elements.h"
+	#undef ELEM
+	#define PROJ(a) #a,
+	#include "list-projections.h"
+	#undef PROJ
+	NULL
+};
+
 static const char *effect_list[] = {
 	"NONE",
 	#define EFFECT(x, a, b, c, d, e, f) #x,
@@ -2359,7 +2369,10 @@ static enum parser_error parse_feat_code(struct parser *p) {
 	}
 	assert(idx < FEAT_MAX);
 	f = &f_info[idx];
+
 	f->fidx = idx;
+	f->proj = -1;
+
 	parser_setpriv(p, f);
 	return PARSE_ERROR_NONE;
 }
@@ -2572,7 +2585,7 @@ static enum parser_error parse_feat_feat_produce(struct parser *p) {
 	struct feature_kind *f = parser_priv(p);
 	const char *name = parser_getsym(p, "name");
 	int fidx = code_index_in_array(list_feat_names, name);
-	int amt = parser_getint(p, "amt"), freq = parser_getint(p, "freq");
+	int amt = parser_getint(p, "amount"), freq = parser_getint(p, "freq");
 
 	if (!f) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2615,6 +2628,33 @@ static enum parser_error parse_feat_t_elem_msg(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_feat_proj(struct parser *p) {
+	struct feature_kind *f = parser_priv(p);
+	int type, range = 0, amt;
+
+	if (!f) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	if (parser_hasval(p, "range")) {
+		range = parser_getint(p, "range");
+	}
+
+	type = code_index_in_array(list_proj_names, parser_getsym(p, "type"));
+
+	if (type < 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	amt = parser_getint(p, "amount");
+
+	f->proj = type;
+	f->proj_range = range;
+	f->proj_amt = amt;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_feat(void) {
 	struct parser *p = parser_new();
 
@@ -2636,7 +2676,8 @@ static struct parser *init_parse_feat(void) {
 	parser_reg(p, "look-prefix str text", parse_feat_look_prefix);
 	parser_reg(p, "look-in-preposition str text", parse_feat_look_in_preposition);
 	parser_reg(p, "resist-flag sym flag", parse_feat_resist_flag);
-	parser_reg(p, "produce sym name int amt int freq", parse_feat_feat_produce);
+	parser_reg(p, "produce sym name int amount int freq", parse_feat_feat_produce);
+	parser_reg(p, "project sym type int amount ?int range", parse_feat_proj);
 	parser_reg(p, "t-elem sym t_elem int amt", parse_feat_t_elem_produce);
 	parser_reg(p, "t-elem-msg str msg", parse_feat_t_elem_msg);
 

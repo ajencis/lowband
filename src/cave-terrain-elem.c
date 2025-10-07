@@ -829,12 +829,13 @@ bool feats_equal(const struct feature *feat1, const struct feature *feat2)
 static int per_thousand_turns(int permille)
 {
 	int last_check, this_check;
-	int turn_use = turn % (1000 * turns_per_process_world);
+	int turn_use = turn % (1000 * turns_per_process_world) + (1000 * turns_per_process_world);
 
 	if (permille == 0) return 0;
 	if (permille < 0) return -per_thousand_turns(-permille);
 
-	last_check = (int)(permille * turn_use - turns_per_process_world) / 1000;
+	// how many times it would happen between this check and the last after rounding
+	last_check = (int)(permille * (turn_use - turns_per_process_world)) / 1000;
 	this_check = (int)(permille * turn_use) / 1000;
 
 	return this_check - last_check;
@@ -888,7 +889,7 @@ static bool feat_spreads(int f_idx)
 	return tf_has(kind->flags, TF_CLOUD);
 }
 
-static void grid_feat_spread(struct chunk *c, struct multidimensional_array *values, struct loc grid)
+static void grid_feat_spread(struct chunk *c, md_array *values, struct loc grid)
 {
 	struct feature *feat;
 	struct loc ogrid;
@@ -926,7 +927,7 @@ static void grid_feat_spread(struct chunk *c, struct multidimensional_array *val
 
 static void cave_feat_spread(struct chunk *c)
 {
-	struct multidimensional_array *changes = mda_new(3, c->height, c->width, FEAT_MAX);
+	md_array *changes = mda_new(3, c->height, c->width, PROJ_MAX);
 	int fidx, change;
 	struct loc grid;
 
@@ -954,6 +955,59 @@ static void cave_feat_spread(struct chunk *c)
 	mda_free(changes);
 }
 
+static void grid_feat_proj(struct chunk *c, struct loc grid, md_array *proj_amt)
+{
+	struct loc ogrid;
+	struct feature *feat;
+	int which, dist, amt;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		which = feat->kind->proj;
+		dist = feat->kind->proj_range;
+		amt = feat->kind->proj_amt;
+
+		if (which < 0) continue;
+
+		for (ogrid.x = grid.x - dist; ogrid.x <= grid.x + dist; ++ogrid.x) {
+			for (ogrid.y = grid.y - dist; ogrid.y <= grid.y + dist; ++ogrid.y) {
+				if (!square_in_bounds_fully(c, ogrid)) continue;
+				if (!square_isprojectable(c, ogrid)) continue;
+				if (distance(grid, ogrid) > dist) continue;
+
+				mda_element_add(proj_amt, amt, ogrid.y, ogrid.x, which);
+			}
+		}
+	}
+}
+
+static void cave_feat_proj(struct chunk *c)
+{
+	md_array *proj_amt = mda_new(3, c->height, c->width, PROJ_MAX);
+	struct loc grid;
+	int which, amt;
+	int flg = PROJECT_HIDE | PROJECT_JUMP | PROJECT_KILL | PROJECT_ITEM | PROJECT_GRID | PROJECT_PLAY;
+
+	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
+		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
+			grid_feat_proj(c, grid, proj_amt);
+		}
+	}
+
+	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
+		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
+			for (which = 0; which < PROJ_MAX; ++which) {
+				amt = mda_element_get(proj_amt, grid.y, grid.x, which);
+
+				if (amt > 0) {
+					project(source_grid(grid), 0, grid, amt, which, flg, 0, 0, NULL);
+				}
+			}
+		}
+	}
+
+	mda_free(proj_amt);
+}
+
 
 void cave_feat_upkeep(struct chunk *c)
 {
@@ -967,6 +1021,8 @@ void cave_feat_upkeep(struct chunk *c)
 			grid_feat_produce(c, grid);
 		}
 	}
+
+	cave_feat_proj(c);
 }
 
 bool square_feat_valid(struct chunk *c, struct loc grid)
