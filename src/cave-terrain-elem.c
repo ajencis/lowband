@@ -93,6 +93,7 @@ bool feat_incompat_base(int feat1, int feat2)
 	return false;
 }
 
+/*
 static void feat_desc(const struct feature *feat, char *buf, size_t bufsize)
 {
 	bool first = true;
@@ -106,6 +107,7 @@ static void feat_desc(const struct feature *feat, char *buf, size_t bufsize)
 		my_strcat(buf, curr->kind->name, bufsize);
 	}
 }
+*/
 
 /**
  * if two feats are on the same square, returns which one to remove
@@ -256,11 +258,32 @@ static void square_enforce_default_feat(struct chunk *c, struct loc grid)
 	}
 }
 
+static void cave_clear_default_feat(struct chunk *c)
+{
+	int prev_default;
+	struct loc grid;
+
+	if (!c->feat_default) return;
+
+	prev_default = c->feat_default->fidx;
+
+	c->feat_default = NULL;
+
+	for (grid.x = 0; grid.x < c->width; ++grid.x) {
+		for (grid.y = 0; grid.y < c->width; ++grid.y) {
+			square_force_remove_feat(c, grid, prev_default);
+		}
+	}
+}
+
 void cave_set_default_feat(struct chunk *c, int fidx)
 {
 	struct loc grid;
-	assert(!c->feat_default);
 	assert(fidx >= FEAT_NONE && fidx < FEAT_MAX);
+
+	if (c->feat_default) {
+		cave_clear_default_feat(c);
+	}
 
 	c->feat_default = &f_info[fidx];
 

@@ -1142,8 +1142,10 @@ static struct chunk *cave_generate(struct player *p, int height, int width)
 		dun->profile = choose_profile(p);
 		event_signal_string(EVENT_GEN_LEVEL_START, dun->profile->name);
 		chunk = dun->profile->builder(p, height, width, &error);
-		cave_set_default_feat(chunk, FEAT_FLOOR);
-		
+		if (!chunk->feat_default) {
+			cave_set_default_feat(chunk, FEAT_FLOOR);
+		}
+
 		if (!chunk) {
 			if (!error) {
 				error = "unspecified level builder failure";
