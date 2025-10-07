@@ -249,8 +249,6 @@ static void square_enforce_default_feat(struct chunk *c, struct loc grid)
 	should_have_default = square_should_have_default(c, grid);
 
 	if (should_have_default && !has_default) {
-		char buf[256];
-		feat_desc(square_feat(c, grid), buf, sizeof buf);
 		square_force_add_feat(c, grid, feat_default, 100);
 	}
 	else if (!should_have_default && has_default) {
@@ -1762,6 +1760,8 @@ void cave_handle_t_elem(struct chunk *c)
 void cave_init_t_elem(struct chunk *c, int times)
 {
 	int i;
+
+	return;
 
 	for (i = 0; i < times; ++i) {
 		if (!(i % T_ELEM_PRODUCE_FREQ)) {
