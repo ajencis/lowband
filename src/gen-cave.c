@@ -64,6 +64,7 @@
 #include "cave.h"
 #include "datafile.h"
 #include "game-event.h"
+#include "game-input.h"
 #include "game-world.h"
 #include "generate.h"
 #include "init.h"
@@ -1618,7 +1619,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	int num_rooms;
 	int hgt, wid, size_perc;
 	int dun_unusual = dun->profile->dun_unusual;
-	bool has_secret;
+	bool has_secret, has_fume;
 
 	bool **blocks_tried;
 	struct chunk *c;
@@ -1767,7 +1768,9 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	/* Put some rubble in corridors */
 	alloc_objects(c, SET_CORR, TYP_RUBBLE, size_percent_modify_number(size_perc, 0, k), c->depth, 0);
 
-	if (one_in_(10)) {
+	if (player->wizard) has_fume = get_check("Fume pit floor?");
+	else has_fume = one_in_(10);
+	if (has_fume) {
 		ROOM_LOG("Fume pit floor");
 		alloc_objects(c, SET_BESIDE_WALL | SET_ROOM, TYP_FUME_PIT, size_percent_modify_number(size_perc, 0, k), c->depth, 0);
 	}
@@ -1793,7 +1796,10 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 		forestify_level(c);
 	}
 
-	cave_init_t_elem(c, 100);
+	if (!c->feat_default) {
+		cave_set_default_feat(c, FEAT_FLOOR);
+	}
+	cave_feat_initial_upkeep(c);
 
 	/* Pick a base number of monsters */
 	i = size_percent_modify_number(size_perc, z_info->level_monster_min + k, 8);
@@ -2091,6 +2097,11 @@ struct chunk *labyrinth_gen(struct player *p, int min_height, int min_width,
 
 	/* Place some traps in the dungeon */
 	alloc_objects(c, SET_CORR | SET_NOT_AVOIDABLE, TYP_TRAP, size_percent_modify_number(size_perc, k / 2 + 1, k), c->depth, 0);
+
+	if (!c->feat_default) {
+		cave_set_default_feat(c, FEAT_FLOOR);
+	}
+	cave_feat_initial_upkeep(c);
 
 	/* Put some monsters in the dungeon */
 	for (i = size_percent_modify_number(size_perc, k + z_info->level_monster_min, 8); i > 0; --i) {
@@ -2740,6 +2751,11 @@ struct chunk *cavern_gen(struct player *p, int min_height, int min_width,
 		return NULL;
 	}
 
+	if (!c->feat_default) {
+		cave_set_default_feat(c, FEAT_FLOOR);
+	}
+	cave_feat_initial_upkeep(c);
+
 	/* Put some monsters in the dungeon */
 	for (i = randint1(8) + k; i > 0; i--) {
 		pick_and_place_distant_monster(c, p->mon.grid, 0, true, c->depth);
@@ -3248,6 +3264,11 @@ struct chunk *town_gen(struct player *p, int min_height, int min_width,
 	/* Apply illumination */
 	cave_illuminate(c_new, is_daytime());
 
+	if (!c_new->feat_default) {
+		cave_set_default_feat(c_new, FEAT_FLOOR);
+	}
+	cave_feat_initial_upkeep(c_new);
+
 	/* Make some residents */
 	for (i = 0; i < residents; i++) {
 		int maxdepth = MAX(0, turn / 1000 - 5000);
@@ -3491,6 +3512,11 @@ struct chunk *modified_gen(struct player *p, int min_height, int min_width,
 
 	/* Remove all monster restrictions. */
 	mon_restrict(NULL, c->depth, c->depth, true);
+
+	if (!c->feat_default) {
+		cave_set_default_feat(c, FEAT_FLOOR);
+	}
+	cave_feat_initial_upkeep(c);
 
 	/* Put some monsters in the dungeon */
 	for (; i > 0; i--) {
@@ -3748,6 +3774,11 @@ struct chunk *moria_gen(struct player *p, int min_height, int min_width,
 
 	/* Moria levels have a high proportion of cave dwellers. */
 	mon_restrict("Moria dwellers", c->depth, c->depth, true);
+
+	if (!c->feat_default) {
+		cave_set_default_feat(c, FEAT_FLOOR);
+	}
+	cave_feat_initial_upkeep(c);
 
 	/* Put some monsters in the dungeon */
 	for (; i > 0; i--) {
@@ -4085,6 +4116,11 @@ struct chunk *hard_centre_gen(struct player *p, int min_height, int min_width,
 		return NULL;
 	}
 
+	if (!c->feat_default) {
+		cave_set_default_feat(c, FEAT_FLOOR);
+	}
+	cave_feat_initial_upkeep(c);
+
 	/* Put some monsters in the dungeon */
 	for (i = randint1(8) + k; i > 0; i--) {
 		pick_and_place_distant_monster(c, p->mon.grid, 0, true, c->depth);
@@ -4227,6 +4263,16 @@ struct chunk *lair_gen(struct player *p, int min_height, int min_width,
 		*p_error = "could not place player";
 		return NULL;
 	}
+
+	if (!normal->feat_default) {
+		cave_set_default_feat(normal, FEAT_FLOOR);
+	}
+	cave_feat_initial_upkeep(normal);
+
+	if (!lair->feat_default) {
+		cave_set_default_feat(lair, FEAT_FLOOR);
+	}
+	cave_feat_initial_upkeep(lair);
 
 	/* Pick a smallish number of monsters for the normal half */
 	i = randint1(4) + k;
@@ -4467,6 +4513,20 @@ struct chunk *gauntlet_gen(struct player *p, int min_height, int min_width,
 		*p_error = "could not place player";
 		return NULL;
 	}
+
+	if (!gauntlet->feat_default) {
+		cave_set_default_feat(gauntlet, FEAT_FLOOR);
+	}
+	cave_feat_initial_upkeep(gauntlet);
+	if (!left->feat_default) {
+		cave_set_default_feat(left, FEAT_FLOOR);
+	}
+	cave_feat_initial_upkeep(left);
+	if (!right->feat_default) {
+		cave_set_default_feat(right, FEAT_FLOOR);
+	}
+	cave_feat_initial_upkeep(right);
+
 	/*
 	 * Account for the player's location relative to the right and left
 	 * chunks for use in pick_and_place_distant_monster().  The

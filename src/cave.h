@@ -351,6 +351,7 @@ bool feat_is_hidden(struct player *p, struct loc grid, int fidx);
 void square_copy_feat(struct chunk *from_c, struct chunk *to_c, struct loc from_grid, struct loc to_grid);
 
 void cave_feat_upkeep(struct chunk *c);
+void cave_feat_initial_upkeep(struct chunk *c);
 
 struct terrain_element_kind *t_elem_kind_by_idx(int idx);
 bool t_elem_has_flag(const struct terrain_element *t_elem, int flag);

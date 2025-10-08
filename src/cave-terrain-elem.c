@@ -826,13 +826,13 @@ bool feats_equal(const struct feature *feat1, const struct feature *feat2)
  * happens  pernmille  times per thousand turns
  * note this is short turns not long turns
  */
-static int per_thousand_turns(int permille)
+static int per_thousand_turns(int permille, int trn)
 {
 	int last_check, this_check;
-	int turn_use = turn % (1000 * turns_per_process_world) + (1000 * turns_per_process_world);
+	int turn_use = trn % (1000 * turns_per_process_world); // overflow unlikely but paranoia
 
 	if (permille == 0) return 0;
-	if (permille < 0) return -per_thousand_turns(-permille);
+	if (permille < 0) return -per_thousand_turns(-permille, trn);
 
 	// how many times it would happen between this check and the last after rounding
 	last_check = (int)(permille * (turn_use - turns_per_process_world)) / 1000;
@@ -841,13 +841,13 @@ static int per_thousand_turns(int permille)
 	return this_check - last_check;
 }
 
-static void grid_feat_timeout(struct chunk *c, struct loc grid)
+static void grid_feat_timeout(struct chunk *c, struct loc grid, int trn)
 {
 	struct feature *feat;
 	int amt;
 
 	for (feat = square_feat(c, grid); feat; feat = feat->next) {
-		amt = per_thousand_turns(feat->kind->timeout);
+		amt = per_thousand_turns(feat->kind->timeout, trn);
 
 		if (amt) {
 			square_reduce_feat_size(c, grid, feat->kind->fidx, amt);
@@ -855,7 +855,7 @@ static void grid_feat_timeout(struct chunk *c, struct loc grid)
 	}
 }
 
-static void grid_feat_produce(struct chunk *c, struct loc grid)
+static void grid_feat_produce(struct chunk *c, struct loc grid, int trn)
 {
 	struct feature *feat;
 	int new_fidx, i, curr;
@@ -864,17 +864,15 @@ static void grid_feat_produce(struct chunk *c, struct loc grid)
 	for (feat = square_feat(c, grid); feat; feat = feat->next) {
 		new_fidx = feat->kind->feat_produce;
 		if (new_fidx <= FEAT_NONE || new_fidx >= FEAT_MAX) continue;
-		if (per_thousand_turns(feat->kind->feat_produce_frequency) <= 0) continue;
+		if (per_thousand_turns(feat->kind->feat_produce_frequency, trn) <= 0) continue;
 
 		to_produce[new_fidx] = MAX(to_produce[new_fidx], feat->kind->feat_produce_quantity);
 	}
 
-	for (i = FEAT_NONE, feat = square_feat(c, grid); i < FEAT_MAX; ++i) {
-		while (feat && feat->kind->fidx < i) {
-			feat = feat->next;
-		}
+	for (i = FEAT_NONE; i < FEAT_MAX; ++i) {
+		feat = square_feat_by_type(c, grid, i);
 
-		if (feat && feat->kind->fidx == i) curr = feat->size;
+		if (feat) curr = feat->size;
 		else curr = 0;
 
 		if (to_produce[i] > curr) {
@@ -898,7 +896,7 @@ static void grid_feat_spread(struct chunk *c, md_array *values, struct loc grid)
 
 	for (feat = square_feat(c, grid); feat; feat = feat->next) {
 		c_max_o = feat->size / 10;
-		c_max_d = 100 * c_max_o / diag_perc; // sqrt(2)
+		c_max_d = 100 * c_max_o / diag_perc;
 
 		if (c_max_o <= 0) {
 			continue;
@@ -909,6 +907,7 @@ static void grid_feat_spread(struct chunk *c, md_array *values, struct loc grid)
 
 		for (ogrid.y = grid.y - 1; ogrid.y <= grid.y + 1; ++ogrid.y) {
 			for (ogrid.x = grid.x - 1; ogrid.x <= grid.x + 1; ++ogrid.x) {
+				if (loc_eq(ogrid, grid)) continue;
 				if (!square_in_bounds(c, ogrid)) continue;
 				if (!feat_can_add(c, ogrid, feat->kind->fidx)) continue;
 
@@ -982,10 +981,14 @@ static void grid_feat_proj(struct chunk *c, struct loc grid, md_array *proj_amt)
 
 static void cave_feat_proj(struct chunk *c)
 {
-	md_array *proj_amt = mda_new(3, c->height, c->width, PROJ_MAX);
+	md_array *proj_amt;
 	struct loc grid;
 	int which, amt;
 	int flg = PROJECT_HIDE | PROJECT_JUMP | PROJECT_KILL | PROJECT_ITEM | PROJECT_GRID | PROJECT_PLAY;
+
+	if (c != cave) return;
+	
+	proj_amt = mda_new(3, c->height, c->width, PROJ_MAX);
 
 	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
 		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
@@ -1009,7 +1012,7 @@ static void cave_feat_proj(struct chunk *c)
 }
 
 
-void cave_feat_upkeep(struct chunk *c)
+static void cave_feat_upkeep_base(struct chunk *c, int trn)
 {
 	struct loc grid;
 
@@ -1017,12 +1020,34 @@ void cave_feat_upkeep(struct chunk *c)
 
 	for (grid.y = 0; grid.y < c->height; ++grid.y) {
 		for (grid.x = 0; grid.x < c->width; ++grid.x) {
-			grid_feat_timeout(c, grid);
-			grid_feat_produce(c, grid);
+			grid_feat_timeout(c, grid, trn);
+		}
+	}
+	for (grid.y = 0; grid.y < c->height; ++grid.y) {
+		for (grid.x = 0; grid.x < c->width; ++grid.x) {
+			grid_feat_produce(c, grid, trn);
 		}
 	}
 
 	cave_feat_proj(c);
+}
+
+void cave_feat_upkeep(struct chunk *c)
+{
+	cave_feat_upkeep_base(c, turn);
+}
+
+void cave_feat_initial_upkeep(struct chunk *c)
+{
+	int faketurn, faketurn_start;
+	int num_fake = 100;
+
+	faketurn_start = turn - num_fake * turns_per_process_world;
+	faketurn_start -= faketurn_start % turns_per_process_world;
+
+	for (faketurn = faketurn_start; faketurn <= turn; faketurn += turns_per_process_world) {
+		cave_feat_upkeep_base(c, faketurn);
+	}
 }
 
 bool square_feat_valid(struct chunk *c, struct loc grid)
