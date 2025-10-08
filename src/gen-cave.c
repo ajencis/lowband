@@ -3179,7 +3179,7 @@ static void town_gen_layout(struct chunk *c, struct player *p)
 				if (y == 0) continue;
 				if (randint0(100) > ruins_percent) continue;
 				if (one_in_(2) &&
-					!lot_has_shop(c, xroads, loc(x, y), lot_wid, lot_hgt)) {
+						!lot_has_shop(c, xroads, loc(x, y), lot_wid, lot_hgt)) {
 					build_ruin(c, xroads, loc(x, y), lot_wid, lot_hgt);
 				}
 			}

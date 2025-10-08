@@ -413,4 +413,4 @@ graphics:~:g
 priority:19
 timeout:20
 flags:PROJECT | LOS | INTERESTING | PASSABLE | CLOUD
-project:POIS:5
+project:POIS:1

@@ -124,6 +124,7 @@ int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 
 int mon_resist_proj_percent(struct monster *mon, int proj_type);
 bool mon_proj_is_immune(const struct monster *mon, int proj_type);
+bool mon_race_proj_is_immune(const struct monster_race *mr, int proj_type);
 
 bool project_f(struct source, int r, struct loc grid, int dam, int typ);
 bool project_o(struct source, int r, struct loc grid, int dam, int typ,

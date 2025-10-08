@@ -83,21 +83,31 @@ const char *proj_idx_to_name(int type)
  * L: Projection predicates
  */
 
-bool mon_proj_is_immune(const struct monster *mon, int proj_type)
+static bool el_info_proj_is_immune(const struct element_info el_info[ELEM_MAX], int proj_type)
 {
-	int i;
+	int i, lev;
 	struct projection *proj = &projections[proj_type];
 
 	assert(proj_type >= 0 && proj_type < PROJ_MAX);
 
 	for (i = 0; i < ELEM_MAX; ++i) {
-		int lev = mon->state.el_info[i].res_level;
+		lev = el_info[i].res_level;
 
 		if (proj->resist_types[i] == RES_TYPE_NORMAL && lev >= 3) return true;
 		if (proj->resist_types[i] == RES_TYPE_EASY_IMMUNE && lev >= 1) return true;
 	}
 
 	return false;
+}
+
+bool mon_race_proj_is_immune(const struct monster_race *mr, int proj_type)
+{
+	return el_info_proj_is_immune(mr->el_info, proj_type);
+}
+
+bool mon_proj_is_immune(const struct monster *mon, int proj_type)
+{
+	return el_info_proj_is_immune(mon->state.el_info, proj_type);
 }
 
 /**

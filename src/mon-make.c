@@ -37,6 +37,7 @@
 #include "player-calcs.h"
 #include "player-enum.h"
 #include "player-timed.h"
+#include "project.h"
 #include "target.h"
 
 /**
@@ -1665,16 +1666,37 @@ bool place_new_monster(struct chunk *c, struct loc grid,
 }
 
 
-int required_rf = RF_NONE;
+const struct square *curr_sq;
 
 static bool get_mon_num_hook_acceptable_square(struct monster_race *race)
 {
-	assert(required_rf >= RF_NONE && required_rf < RF_MAX);
+	const struct feature *feat;
+	int proj_type;
 
-	if (required_rf == RF_NONE) return true;
+	assert(curr_sq);
+
+	/* L: mon is invalid if there is any overlap between flags they don't
+	   have and flags they need to have */
+	if (curr_sq->required_rf != RF_NONE &&
+			!rf_has(race->flags, curr_sq->required_rf)) {
+		return false;
+	}
+
+	/* L: mon is invalid if it's in a square that damages it */
+	for (feat = curr_sq->feat; feat; feat = feat->next) {
+		proj_type = feat->kind->proj;
+
+		if (proj_type < 0 || proj_type >= PROJ_MAX) continue;
+
+		if (!mon_race_proj_is_immune(race, proj_type)) return false;
+	}
+
+	return true;
+
+	/*if (required_rf == RF_NONE) return true;
 	if (rf_has(race->flags, required_rf)) return true;
 
-	return false;
+	return false;*/
 }
 
 
@@ -1700,13 +1722,13 @@ bool pick_and_place_monster(struct chunk *c, struct loc grid, int depth,
 	struct monster_race *race;
 	struct monster_group_info info = { 0, 0 };
 
-	required_rf = square(c, grid)->required_rf;
+	curr_sq = square(c, grid);
 	get_mon_num_prep(get_mon_num_hook_acceptable_square);
 
 	/* Pick a monster race, no specified group */
 	race = get_mon_num(depth, c->depth);
 
-	required_rf = RF_NONE;
+	curr_sq = NULL;
 	get_mon_num_prep(NULL);
 
 	if (race) {

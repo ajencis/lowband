@@ -823,7 +823,10 @@ bool square_isempty(struct chunk *c, struct loc grid) {
 	if (square_isplayertrap(c, grid)) return false;
 	if (square_iswebbed(c, grid)) return false;
 	if (square_t_elem(c, grid)) return false;
-	return square_isopen(c, grid) && !square_object(c, grid);
+	if (!square_ispassable(c, grid)) return false;
+	if (square(c, grid)->mon) return false;
+	if (square_object(c, grid)) return false;
+	return true;
 }
 
 /**
