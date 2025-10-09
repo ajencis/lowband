@@ -529,7 +529,7 @@ struct feature *square_feat_by_type(struct chunk *c, struct loc grid, int fidx)
 	return NULL;
 }
 
-void square_remove_feat_by_type(struct chunk *c, struct loc grid, bool (*pred)(int))
+void square_remove_feat_by_type(struct chunk *c, struct loc grid, feat_predicate pred)
 {
 	struct feature *feat = square_feat(c, grid);
 
@@ -623,8 +623,8 @@ bool square_change_feat(struct chunk *c, struct loc grid, int old, int new)
 
 	for (feat = square_feat(c, grid); feat; feat = feat->next) {
 		if (feat->kind->fidx == old) {
-			square_add_feat(c, grid, new, feat->size);
-			square_remove_feat(c, grid, old);
+			square_force_add_feat(c, grid, new, feat->size);
+			square_force_remove_feat(c, grid, old);
 			return true;
 		}
 	}
@@ -689,7 +689,7 @@ static void square_reduce_feat_size(struct chunk *c, struct loc grid, int fidx, 
  * eg if a secret door mimics a wall, a secret door feat's believed feat is a secret door if the
  * player believes a secret door to be in that square and a wall otherwise
  */
-static int feat_believed(struct player *p, struct loc grid, int feat)
+int feat_believed(struct player *p, struct loc grid, int feat)
 {
 	struct feature_kind *kind;
 
@@ -728,7 +728,11 @@ bool feat_is_hidden(struct player *p, struct loc grid, int fidx)
 	return is_hidden;
 }
 
-static void square_update_feat_memorization(const struct chunk *c, struct player *p, struct loc grid)
+/**
+ * updates feat memorization for a square by clearing the square then adding back all of the feats that
+ * would be believed to be there if they meet predicate  pred
+ */
+static void square_update_feat_memorization(const struct chunk *c, struct player *p, struct loc grid, bool(*pred)(int))
 {
 	const struct feature *real;
 	int fidx, i;
@@ -749,13 +753,13 @@ static void square_update_feat_memorization(const struct chunk *c, struct player
 	square_clear_feats(p->cave, grid);
 
 	for (i = 0; i < FEAT_MAX; ++i) {
-		if (new[i] > 0) {
+		if (new[i] > 0 && (!pred || pred(i))) {
 			square_add_feat(p->cave, grid, i, new[i]);
 		}
 	}
 }
 
-static void square_memorize_feat_one(struct player *p, struct loc grid, const struct feature *feat, bool real)
+void square_memorize_feat_one(struct player *p, struct loc grid, const struct feature *feat, bool real)
 {
 	int to_memorize = feat->kind->fidx;
 
@@ -780,7 +784,58 @@ void square_memorize_feats(struct player *p, const struct chunk *c, struct loc g
 	assert(c);
 	assert(p->cave);
 
-	square_update_feat_memorization(c, p, grid);
+	square_update_feat_memorization(c, p, grid, NULL);
+}
+
+void square_memorize_struct_feats(struct player *p, const struct chunk *c, struct loc grid)
+{
+	if (c != cave) {
+		return;
+	}
+
+	assert(p);
+	assert(c);
+	assert(p->cave);
+
+	square_update_feat_memorization(c, p, grid, feat_is_structural);
+}
+
+static void square_forget_feats_imagined_by_pred(struct player *p, struct chunk *c, struct loc grid, feat_predicate pred)
+{
+	struct feature *imagined, *real;
+
+	for (imagined = square_feat(p->cave, grid), real = square_feat(c, grid); imagined; imagined = imagined->next) {
+		if (p->cave->feat_default->fidx == imagined->kind->fidx) continue;
+		if (pred && !pred(imagined->kind->fidx)) continue;
+
+		while (real && feat_compare(real->kind->fidx, imagined->kind->fidx) < 0) {
+			real = real->next;
+		}
+
+		if (!real || feat_compare(real->kind->fidx, imagined->kind->fidx) > 0) {
+			square_remove_feat(c, grid, imagined->kind->fidx);
+		}
+	}
+}
+
+/**
+ * Memorizes all feats on a square of a certain type
+ */
+static void square_memorize_feats_real_by_pred(struct player *p, struct chunk *c, struct loc grid, feat_predicate pred)
+{
+	struct feature *feat;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (!pred || pred(feat->kind->fidx)) {
+			square_memorize_feat_real(p, c, grid, feat->kind->fidx);
+		}
+	}
+}
+
+void square_ensure_correct_memorization_by_pred(struct player *p, struct chunk *c, struct loc grid, feat_predicate pred)
+{
+	square_forget_feats_imagined_by_pred(p, c, grid, pred);
+	square_memorize_feats_real_by_pred(p, c, grid, pred);
 }
 
 void square_forget_feats(struct player *p, struct loc grid)

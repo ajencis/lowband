@@ -261,7 +261,6 @@ void square_note_spot(struct chunk *c, struct loc grid)
 	/* Memorize this grid */
 	square_memorize_feats(player, c, grid);
 	square_memorize_t_elem(c, grid);
-	square_memorize_feats(player, c, grid);
 }
 
 
@@ -407,7 +406,7 @@ static void cave_unlight(struct point_set *ps)
 		/* ...but dark-loving characters remember them */
 		if (unlight_power(player) > 0) {
 			square_memorize_t_elem(cave, grid);
-			square_memorize_feats(player, cave, grid);
+			square_memorize_struct_feats(player, cave, grid);
 		}
 
 		/* Hack -- Forget "boring" grids */
@@ -491,15 +490,21 @@ void light_room(struct loc grid, bool light)
  */
 void wiz_light(struct chunk *c, struct player *p, bool full)
 {
-	int i, y, x;
+	int /*i,*/ y, x;
 
-	assert(player->cave);
+	assert(p->cave);
 
 	/* Scan all grids */
 	for (y = 1; y < c->height - 1; y++) {
 		for (x = 1; x < c->width - 1; x++) {
 			struct loc grid = loc(x, y);
 
+			if (!square_in_bounds(c, grid)) continue;
+			if (square_iswallsurrounded(c, grid)) continue;
+
+			square_ensure_correct_memorization_by_pred(p, c, grid, feat_gets_mapped);
+
+#if 0
 			/* Process all non-walls */
 			if (!square_seemslikewall(c, grid)) {
 				if (!square_in_bounds_fully(c, grid)) continue;
@@ -515,11 +520,12 @@ void wiz_light(struct chunk *c, struct player *p, bool full)
 					if (!square_isfloor(c, a_grid) || 
 							square_isvisibletrap(c, a_grid)) {
 						square_memorize_t_elem(c, a_grid);
-						square_memorize_feats(player, c, a_grid);
+						square_memorize_struct_feats(player, c, a_grid);
 						square_mark(c, a_grid);
 					}
 				}
 			}
+#endif
 
 			/* Memorize objects */
 			if (full) {
@@ -528,6 +534,7 @@ void wiz_light(struct chunk *c, struct player *p, bool full)
 				square_sense_pile(c, grid, NULL);
 			}
 
+#if 0
 			/*
 			 * Forget grids that are both unprocessed and
 			 * misremembered in the mapping area.
@@ -536,6 +543,7 @@ void wiz_light(struct chunk *c, struct player *p, bool full)
 					&& square_ismemorybad(c, grid)) {
 				square_forget_feats(player, grid);
 			}
+#endif
 		}
 	}
 
@@ -590,7 +598,7 @@ void wiz_dark(struct chunk *c, struct player *p, bool full)
 					if (!square_isfloor(c, a_grid) || 
 							square_isvisibletrap(c, a_grid)) {
 						square_memorize_t_elem(c, a_grid);
-						square_memorize_feats(player, c, a_grid);
+						square_memorize_struct_feats(player, c, a_grid);
 						square_mark(c, a_grid);
 					}
 				}
@@ -664,7 +672,7 @@ void cave_illuminate(struct chunk *c, bool daytime)
 				sqinfo_on(square(c, grid)->info, SQUARE_GLOW);
 				if (light) {
 					square_memorize_t_elem(c, grid);
-					square_memorize_feats(player, c, grid);
+					square_memorize_struct_feats(player, c, grid);
 				}
 			} else if (!square_isbright(c, grid)) {
 				sqinfo_off(square(c, grid)->info, SQUARE_GLOW);
@@ -687,7 +695,7 @@ void cave_illuminate(struct chunk *c, bool daytime)
 			for (i = 0; i < 8; i++) {
 				struct loc a_grid = loc_sum(grid, ddgrid_ddd[i]);
 				sqinfo_on(square(c, a_grid)->info, SQUARE_GLOW);
-				square_memorize_feats(player, c, a_grid);
+				square_memorize_struct_feats(player, c, a_grid);
 				square_memorize_t_elem(c, a_grid);
 			}
 		}
@@ -742,7 +750,7 @@ void cave_known(struct player *p)
 
 			/* Internal walls not known */
 			if (count < 8) {
-				square_memorize_feats(p, cave, loc(x, y));
+				square_memorize_struct_feats(p, cave, loc(x, y));
 			}
 		}
 	}

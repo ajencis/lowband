@@ -327,6 +327,7 @@ extern uint16_t chunk_list_max;
  * see if the predicate in question is true.
  */
 typedef bool (*square_predicate)(struct chunk *c, struct loc grid);
+typedef bool (*feat_predicate)(int feat);
 
 /* cave-view.c */
 int distance(struct loc grid1, struct loc grid2);
@@ -344,9 +345,15 @@ bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size);
 bool square_remove_feat(struct chunk *c, struct loc grid, int fidx);
 bool square_force_remove_feat(struct chunk *c, struct loc grid, int fidx);
 void square_free_feats(struct chunk *c, struct loc grid);
+
+int feat_believed(struct player *p, struct loc grid, int feat);
 void square_memorize_feats(struct player *p, const struct chunk *c, struct loc grid);
+void square_memorize_struct_feats(struct player *p, const struct chunk *c, struct loc grid);
 void square_memorize_feat_real(struct player *p, struct chunk *c, struct loc grid, int fidx);
+void square_memorize_feat_one(struct player *p, struct loc grid, const struct feature *feat, bool real);
 void square_forget_feats(struct player *p, struct loc grid);
+void square_ensure_correct_memorization_by_pred(struct player *p, struct chunk *c, struct loc grid, feat_predicate pred);
+
 bool feat_is_hidden(struct player *p, struct loc grid, int fidx);
 void square_copy_feat(struct chunk *from_c, struct chunk *to_c, struct loc from_grid, struct loc to_grid);
 
@@ -445,6 +452,7 @@ bool feat_is_up_stairs(int feat);
 bool feat_is_down_stairs(int feat);
 bool feat_is_stairs(int feat);
 bool feat_is_diggable(int feat);
+bool feat_gets_mapped(int fidx);
 
 /* SQUARE FEATURE PREDICATES */
 bool square_isfloor(struct chunk *c, struct loc grid);
@@ -471,6 +479,7 @@ bool square_isplayer(struct chunk *c, struct loc grid);
 bool square_isoccupied(struct chunk *c, struct loc grid);
 bool square_isknown(struct chunk *c, struct loc grid);
 bool square_ismemorybad(struct chunk *c, struct loc grid);
+bool square_iswallsurrounded(struct chunk *c, struct loc grid);
 
 /* SQUARE INFO PREDICATES */
 bool square_ismark(struct chunk *c, struct loc grid);

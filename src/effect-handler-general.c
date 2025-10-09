@@ -1299,7 +1299,7 @@ bool effect_handler_ALTER_REALITY(effect_handler_context_t *context)
  */
 bool effect_handler_MAP_AREA(effect_handler_context_t *context)
 {
-	int i, x, y;
+	int /*i,*/ x, y;
 	int x1, x2, y1, y2;
 	int dist_y = context->y ? context->y : context->value.dice;
 	int dist_x = context->x ? context->x : context->value.sides;
@@ -1323,36 +1323,40 @@ bool effect_handler_MAP_AREA(effect_handler_context_t *context)
 			struct loc grid = loc(x, y);
 
 			/* Some squares can't be mapped */
+			if (!square_in_bounds(cave, grid)) continue;
 			if (square_isno_map(cave, grid)) continue;
+			if (square_iswallsurrounded(cave, grid)) continue;
 
-			/* All non-walls are "checked" */
+			square_ensure_correct_memorization_by_pred(player, cave, grid, feat_gets_mapped);
+
+			/*
+			// All non-walls are "checked"
 			if (!square_seemslikewall(cave, grid)) {
 				if (!square_in_bounds_fully(cave, grid)) continue;
 
-				/* Memorize normal features */
+				// Memorize normal features
 				if (!square_isfloor(cave, grid)) {
-					square_memorize_feats(player, cave, grid);
+					square_memorize_struct_feats(player, cave, grid);
 				}
 
-				/* Memorize known walls */
+				// Memorize known walls
 				for (i = 0; i < 8; i++) {
 					int yy = y + ddy_ddd[i];
 					int xx = x + ddx_ddd[i];
 
-					/* Memorize walls (etc) */
+					// Memorize walls (etc)
 					if (square_seemslikewall(cave, loc(xx, yy))) {
-						square_memorize_feats(player, cave, loc(xx, yy));
+						square_memorize_struct_feats(player, cave, loc(xx, yy));
 					}
 				}
 			}
 
-			/*
-			 * Forget grids that are both unprocessed and
-			 * misremembered in the mapping area.
-			 */
+			// Forget grids that are both unprocessed and
+			// misremembered in the mapping area.
 			if (square_ismemorybad(cave, grid)) {
 				square_forget_feats(player, grid);
 			}
+			*/
 		}
 	}
 
@@ -1523,23 +1527,28 @@ bool effect_handler_DETECT_DOORS(effect_handler_context_t *context)
 
 			if (!square_in_bounds_fully(cave, grid)) continue;
 
+			square_ensure_correct_memorization_by_pred(player, cave, grid, feat_is_door);
+
+			if (square_isdoor(player->cave, grid)) doors = true;
+			
+			/*
 			if (square_issecretdoor(cave, grid)) {
 				// L: know what the grid actually is
 				struct feature *sdoor = first_feat_meets_pred(cave, grid, feat_is_secret_door);
 				square_memorize_feat_real(player, cave, grid, sdoor->kind->fidx);
 
-				/* Detect secret doors */
-				/* Put an actual door */
+				// Detect secret doors
+				// Put an actual door
 				//place_closed_door(cave, grid);
 
-				/* Memorize */
+				// Memorize
 				//square_memorize(cave, grid);
 				square_light_spot(cave, grid);
 
-				/* Obvious */
+				// Obvious
 				doors = true;
 			} else if (square_isdoor(cave, grid)) {
-				/* Detect other types of doors. */
+				// Detect other types of doors.
 				if (square_ismemorybad(cave, grid)) {
 					square_memorize_feats(player, cave, grid);
 					square_light_spot(cave, grid);
@@ -1547,12 +1556,12 @@ bool effect_handler_DETECT_DOORS(effect_handler_context_t *context)
 				}
 			} else if (square_isdoor(player->cave, grid)
 					&& square_ismemorybad(cave, grid)) {
-				/*
-				 * Forget misremembered doors in the mapping
-				 * area.
-				 */
+				
+				// Forget misremembered doors in the mapping
+				// area.
 				square_forget_feats(player, grid);
 			}
+			*/
 		}
 	}
 
@@ -1597,15 +1606,20 @@ bool effect_handler_DETECT_STAIRS(effect_handler_context_t *context)
 
 			if (!square_in_bounds_fully(cave, grid)) continue;
 
-			/* Detect stairs */
+			square_ensure_correct_memorization_by_pred(player, cave, grid, feat_is_stairs);
+
+			if (square_isstairs(player->cave, grid)) stairs = true;
+
+			/*
+			// Detect stairs
 			if (square_isstairs(cave, grid)) {
-				/* Memorize */
+				// Memorize
 				square_memorize_feats(player, cave, grid);
 				square_light_spot(cave, grid);
 
-				/* Obvious */
+				// Obvious
 				stairs = true;
-			}
+			}*/
 		}
 	}
 
@@ -1649,19 +1663,25 @@ bool effect_handler_DETECT_ORE(effect_handler_context_t *context)
 
 			if (!square_in_bounds_fully(cave, grid)) continue;
 
-			/* Magma/Quartz + Known Gold */
+			square_ensure_correct_memorization_by_pred(player, cave, grid, feat_is_treasure);
+
+			if (square_hasgoldvein(player->cave, grid)) gold_buried = true;
+
+			/*
+			// Magma/Quartz + Known Gold
 			if (square_hasgoldvein(cave, grid)) {
-				/* Memorize */
+				// Memorize
 				square_memorize_feats(player, cave, grid);
 				square_light_spot(cave, grid);
 
-				/* Detect */
+				// Detect
 				gold_buried = true;
 			} else if (square_hasgoldvein(player->cave, grid)) {
-				/* Something removed previously seen or
-				 * detected buried gold.  Notice the change. */
+				// Something removed previously seen or
+				// detected buried gold.  Notice the change.
 				square_forget_feats(player, grid);
 			}
+			*/
 		}
 	}
 

@@ -290,6 +290,11 @@ bool feat_is_diggable(int feat)
 			feat_is_closed_door(feat);
 }
 
+bool feat_gets_mapped(int fidx)
+{
+	return feat_is_structural(fidx) && !feat_is_floor(fidx);
+}
+
 /**
  * SQUARE FEATURE PREDICATES
  *
@@ -535,6 +540,23 @@ bool square_hasunknownitem(struct chunk *c, struct loc grid)
 }
 
 /**
+ * return whether the square is surrounded by walls
+ */
+bool square_iswallsurrounded(struct chunk *c, struct loc grid)
+{
+	struct loc ogrid;
+
+	for (ogrid.x = grid.x - 1; ogrid.x <= grid.x + 1; ++ogrid.x) {
+		for (ogrid.y = grid.y - 1; ogrid.y <= grid.y + 1; ++ogrid.y) {
+			if (!square_in_bounds(c, ogrid)) continue;
+			if (!square_seemslikewall(c, ogrid)) return false;
+		}
+	}
+
+	return true;
+}
+
+/**
  * SQUARE INFO PREDICATES
  *
  * These functions tell whether a square is marked with one of the SQUARE_*
@@ -774,7 +796,7 @@ struct feature *first_feat_with_flag(struct chunk *c, struct loc grid, int flag)
 	return NULL;
 }
 
-struct feature *first_feat_meets_pred(struct chunk *c, struct loc grid, bool (*pred)(int))
+struct feature *first_feat_meets_pred(struct chunk *c, struct loc grid, feat_predicate pred)
 {
 	struct feature *feat;
 
@@ -791,7 +813,7 @@ struct feature *first_feat_meets_pred(struct chunk *c, struct loc grid, bool (*p
 	return NULL;
 }
 
-struct feature *first_feat_not_meets_pred(struct chunk *c, struct loc grid, bool (*pred)(int))
+struct feature *first_feat_not_meets_pred(struct chunk *c, struct loc grid, feat_predicate pred)
 {
 	struct feature *feat;
 
@@ -1039,7 +1061,15 @@ bool square_iswebbed(struct chunk *c, struct loc grid)
 
 bool square_seemslikewall(struct chunk *c, struct loc grid)
 {
-	return square_hasflag(c, grid, TF_ROCK);
+	int fidx;
+	struct feature *feat;
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		fidx = feat_believed(player, grid, feat->kind->fidx);
+
+		if (!feat_is_wall(fidx)) return false;
+	}
+
+	return true;
 }
 
 bool square_isinteresting(struct chunk *c, struct loc grid)
