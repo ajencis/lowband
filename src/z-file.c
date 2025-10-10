@@ -1612,3 +1612,15 @@ void dbg_file_log(const char *filename, const char *dir, const char *msg)
 	file_close(file);
 }
 
+void dbg_file_log_fmt(const char *filename, const char *dir, const char *fmt, ...)
+{
+	va_list vp;
+	char buf[256];
+
+	va_start(vp, fmt);
+	vstrnfmt(buf, sizeof buf, fmt, vp);
+	va_end(vp);
+
+	dbg_file_log(filename, dir, buf);
+}
+

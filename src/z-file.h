@@ -354,6 +354,8 @@ void my_dclose(ang_dir *dir);
  */
 void dbg_file_reset(const char *filename);
 void dbg_file_log(const char *filename, const char *dir, const char *msg);
+void dbg_file_log_fmt(const char *filename, const char *dir, const char *fmt, ...);
 #define dbg_log(filename, msg) (dbg_file_log((filename), (ANGBAND_DIR_USER), (msg)))
+#define dbg_log_fmt(filename, fmt, ...) (dbg_file_log_fmt((filename), (ANGBAND_DIR_USER), (fmt), __VA_ARGS__))
 
 #endif /* INCLUDED_Z_FILE_H */
