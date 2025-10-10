@@ -306,6 +306,11 @@ struct chunk {
 	struct connector *join;
 
 	const struct feature_kind *feat_default; // L: what feat the cave uses if it has no others
+
+	struct point_set *timeout_points;
+	struct point_set *spread_points;
+	struct point_set *produce_points;
+	struct point_set *project_points;
 };
 
 /*** Feature Indexes (see "lib/gamedata/terrain.txt") ***/
@@ -453,6 +458,11 @@ bool feat_is_down_stairs(int feat);
 bool feat_is_stairs(int feat);
 bool feat_is_diggable(int feat);
 bool feat_gets_mapped(int fidx);
+
+bool feat_times_out(int fidx);
+bool feat_spreads(int fidx);
+bool feat_produces(int fidx);
+bool feat_projects(int fidx);
 
 /* SQUARE FEATURE PREDICATES */
 bool square_isfloor(struct chunk *c, struct loc grid);

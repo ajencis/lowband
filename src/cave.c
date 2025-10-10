@@ -360,6 +360,7 @@ struct chunk *cave_new(int height, int width) {
 	int y, x;
 
 	struct chunk *c = mem_zalloc(sizeof *c);
+
 	c->height = height;
 	c->width = width;
 	c->feat_count = mem_zalloc((FEAT_MAX + 1) * sizeof(int));
@@ -388,6 +389,11 @@ struct chunk *cave_new(int height, int width) {
 
 	c->monster_groups = mem_zalloc(z_info->level_monster_max *
 								   sizeof(struct monster_group*));
+
+	c->timeout_points = point_set_new(5);
+	c->spread_points = point_set_new(5);
+	c->produce_points = point_set_new(5);
+	c->project_points = point_set_new(5);
 
 	c->turn = turn;
 	return c;
@@ -452,6 +458,12 @@ void cave_free(struct chunk *c) {
 	mem_free(c->objects);
 	mem_free(c->monsters);
 	mem_free(c->monster_groups);
+
+	point_set_dispose(c->timeout_points);
+	point_set_dispose(c->spread_points);
+	point_set_dispose(c->produce_points);
+	point_set_dispose(c->project_points);
+
 	if (c->name) {
 		string_free(c->name);
 	}

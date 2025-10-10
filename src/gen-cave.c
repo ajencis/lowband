@@ -1768,7 +1768,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	/* Put some rubble in corridors */
 	alloc_objects(c, SET_CORR, TYP_RUBBLE, size_percent_modify_number(size_perc, 0, k), c->depth, 0);
 
-	if (player->wizard) has_fume = get_check("Fume pit floor?");
+	if (player->wizard) has_fume = get_check("Fume pit floor? ");
 	else has_fume = one_in_(10);
 	if (has_fume) {
 		ROOM_LOG("Fume pit floor");

@@ -28,6 +28,7 @@
 #include "object.h"
 #include "player-quest.h"
 #include "player-timed.h"
+#include "project.h"
 #include "trap.h"
 
 
@@ -294,6 +295,28 @@ bool feat_gets_mapped(int fidx)
 {
 	return feat_is_structural(fidx) && !feat_is_floor(fidx);
 }
+
+
+bool feat_times_out(int fidx)
+{
+	return f_info[fidx].timeout != 0;
+}
+
+bool feat_spreads(int fidx)
+{
+	return tf_has(f_info[fidx].flags, TF_CLOUD);
+}
+
+bool feat_produces(int fidx)
+{
+	return f_info[fidx].feat_produce > FEAT_NONE && f_info[fidx].feat_produce < FEAT_MAX;
+}
+
+bool feat_projects(int fidx)
+{
+	return f_info[fidx].proj >= 0 && f_info[fidx].proj < PROJ_MAX;
+}
+
 
 /**
  * SQUARE FEATURE PREDICATES

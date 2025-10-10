@@ -30,14 +30,19 @@ static int feat_compare(int feat1, int feat2)
 
 static struct feature *feat_new(int fidx, int size)
 {
-	struct feature *new = mem_zalloc(sizeof *new);
+	struct feature *new;
 
 	assert(fidx >= FEAT_NONE && fidx < FEAT_MAX);
 
 	if (size <= 0) return NULL;
 
+	new = mem_zalloc(sizeof *new);
+
 	new->kind = &f_info[fidx];
 	new->size = size;
+
+	assert(new->kind);
+	assert(new->kind->name);
 
 	return new;
 }
@@ -144,27 +149,6 @@ static bool feat_can_add(struct chunk *c, struct loc grid, int fidx_new)
 	return true;
 }
 
-static void feat_valid_plog(struct chunk *c, struct loc grid, const char *error)
-{
-	const char *c_name = c->name ? c->name : "(unnamed cave)";
-	const char *type = c == cave ? "cave" : (c == player->cave ? "player->cave" : NULL);
-	char type_str[128] = "";
-
-	assert(c);
-	assert(error);
-
-	if (type) {
-		strnfmt(type_str, sizeof type_str, " (%s)", type);
-	}
-
-	plog_fmt("Error: chunk %s%s %s at grid (%i,%i)!",
-			c_name,
-			type_str,
-			error,
-			grid.x,
-			grid.y);
-}
-
 static bool list_add_feat(struct feature **list, int fidx, int size)
 {
 	struct feature *new, *curr;
@@ -203,6 +187,12 @@ static bool list_add_feat(struct feature **list, int fidx, int size)
 		*list = new;
 	}
 
+	for (curr = *list; curr; curr = curr->next) {
+		assert(curr);
+		assert(curr->kind);
+		assert(curr->kind->name);
+	}
+
 	return true;
 }
 
@@ -224,6 +214,107 @@ static bool square_should_have_default(struct chunk *c, struct loc grid)
 			return false;
 		}
 	}
+
+	return true;
+}
+
+static struct point_set *cave_timeout_point_set(struct chunk *c)
+{
+	return c->timeout_points;
+}
+
+static struct point_set *cave_spread_point_set(struct chunk *c)
+{
+	return c->spread_points;
+}
+
+static struct point_set *cave_produce_point_set(struct chunk *c)
+{
+	return c->produce_points;
+}
+
+static struct point_set *cave_project_point_set(struct chunk *c)
+{
+	return c->project_points;
+}
+
+struct point_set_match {
+	struct point_set *(*set_get)(struct chunk *);
+	feat_predicate pred;
+	const char *name;
+} point_set_matches[] = {
+	{ cave_timeout_point_set, feat_times_out, "timeout" },
+	{ cave_spread_point_set, feat_spreads, "spread" },
+	{ cave_produce_point_set, feat_produces, "produce" },
+	{ cave_project_point_set, feat_projects, "project" }
+};
+
+static void square_update_point_sets(struct chunk *c, struct loc grid, int changing_fidx, bool adding)
+{
+	int i;
+	feat_predicate pred;
+	struct point_set *curr_set;
+
+	assert(c);
+
+	for (i = N_ELEMENTS(point_set_matches) - 1; i >= 0; --i) {
+		curr_set = point_set_matches[i].set_get(c);
+		pred = point_set_matches[i].pred;
+
+		if (!curr_set) continue;
+		if (!pred(changing_fidx)) continue;
+
+		if (adding) {
+			add_to_point_set_no_dup(curr_set, grid);
+		}
+		else if (!first_feat_meets_pred(c, grid, pred)) {
+			remove_from_point_set(curr_set, grid);
+		}
+	}
+}
+
+/**
+ * L: removes a feat from a square with no upkeep (rememorizing, counting feats)
+ */
+static bool square_delete_feat(struct chunk *c, struct loc grid, int fidx)
+{
+	struct feature **prev = NULL, *to_del;
+	struct square *sq;
+
+	assert(c);
+	assert(square_in_bounds(c, grid));
+	assert(c->squares);
+
+	sq = &c->squares[grid.y][grid.x];
+	assert(sq);
+
+	prev = &sq->feat;
+
+	while (true) {
+		if (!(*prev)) {
+			return false;
+		}
+		if (feat_compare((*prev)->kind->fidx, fidx) > 0) {
+			return false;
+		}
+		if ((*prev)->kind->fidx == fidx) {
+			break;
+		}
+
+		prev = &((*prev)->next);
+	}
+
+	to_del = *prev;
+
+	assert(to_del);
+
+	*prev = to_del->next;
+
+	feat_free(to_del);
+
+	square_update_point_sets(c, grid, fidx, false);
+
+	//if (character_dungeon) assert(square_feat_valid(c, grid));
 
 	return true;
 }
@@ -271,7 +362,7 @@ static void cave_clear_default_feat(struct chunk *c)
 
 	for (grid.x = 0; grid.x < c->width; ++grid.x) {
 		for (grid.y = 0; grid.y < c->width; ++grid.y) {
-			square_force_remove_feat(c, grid, prev_default);
+			square_delete_feat(c, grid, prev_default);
 		}
 	}
 }
@@ -340,7 +431,7 @@ bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
 
 	square_enforce_default_feat(c, grid);
 
-	square_feat_valid(c, grid);
+	square_update_point_sets(c, grid, fidx, true);
 
 	return true;
 }
@@ -351,10 +442,12 @@ void square_copy_feat(struct chunk *from_c, struct chunk *to_c, struct loc from_
 
 	square_free_feats(to_c, to_grid);
 
-	assert(square_feat_valid(from_c, from_grid));
+	//assert(square_feat_valid(from_c, from_grid));
 
 	for (feat = square_feat(from_c, from_grid); feat; feat = feat->next) {
 		list_add_feat(&to_c->squares[to_grid.y][to_grid.x].feat, feat->kind->fidx, feat->size);
+
+		square_update_point_sets(to_c, to_grid, feat->kind->fidx, true);
 	}
 }
 
@@ -382,48 +475,6 @@ static bool feat_can_remove(int fidx)
 }
 
 /**
- * L: removes a feat from a square with no upkeep (rememorizing, counting feats)
- */
-static bool square_delete_feat(struct chunk *c, struct loc grid, int fidx)
-{
-	struct feature **prev = NULL, *to_del;
-	struct square *sq;
-
-	assert(c);
-	assert(square_in_bounds(c, grid));
-	assert(c->squares);
-
-	sq = &c->squares[grid.y][grid.x];
-	assert(sq);
-
-	prev = &sq->feat;
-
-	while (true) {
-		if (!(*prev)) {
-			return false;
-		}
-		if (feat_compare((*prev)->kind->fidx, fidx) > 0) {
-			return false;
-		}
-		if ((*prev)->kind->fidx == fidx) {
-			break;
-		}
-
-		prev = &((*prev)->next);
-	}
-
-	to_del = *prev;
-
-	assert(to_del);
-
-	*prev = to_del->next;
-
-	feat_free(to_del);
-
-	return true;
-}
-
-/**
  * L: removes a feat from a square and performs upkeep
  */
 bool square_force_remove_feat(struct chunk *c, struct loc grid, int fidx)
@@ -443,6 +494,8 @@ bool square_force_remove_feat(struct chunk *c, struct loc grid, int fidx)
 		--c->feat_count[fidx];
 	}
 
+	square_enforce_default_feat(c, grid);
+
 	return true;
 }
 
@@ -452,7 +505,7 @@ bool square_force_remove_feat(struct chunk *c, struct loc grid, int fidx)
 bool square_remove_feat(struct chunk *c, struct loc grid, int fidx)
 {
 	assert(c);
-	
+
 	bool success;
 
 	assert(fidx < FEAT_MAX && fidx >= FEAT_NONE);
@@ -477,12 +530,15 @@ bool square_remove_feat(struct chunk *c, struct loc grid, int fidx)
 void square_free_feats(struct chunk *c, struct loc grid)
 {
 	struct feature *feat, *next;
+	int fidx;
 
 	assert(c);
 
 	for (feat = square_feat(c, grid); feat; feat = next) {
 		next = feat->next;
+		fidx = feat->kind->fidx;
 		feat_free(feat);
+		square_update_point_sets(c, grid, fidx, false);
 	}
 
 	c->squares[grid.y][grid.x].feat = NULL;
@@ -509,7 +565,10 @@ void square_clear_feats(struct chunk *c, struct loc grid)
 
 struct feature *square_feat(struct chunk *c, struct loc grid)
 {
+	assert(c);
+
 	struct feature *result = c->squares[grid.y][grid.x].feat;
+
 	return result;
 }
 
@@ -898,10 +957,14 @@ static int per_thousand_turns(int permille, int trn)
 
 static void grid_feat_timeout(struct chunk *c, struct loc grid, int trn)
 {
-	struct feature *feat;
+	struct feature *feat, *next;
 	int amt;
 
-	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+	for (feat = square_feat(c, grid); feat; feat = next) {
+		next = feat->next;
+
+		if (!feat_times_out(feat->kind->fidx)) continue;
+
 		amt = per_thousand_turns(feat->kind->timeout, trn);
 
 		if (amt) {
@@ -934,12 +997,6 @@ static void grid_feat_produce(struct chunk *c, struct loc grid, int trn)
 			square_set_feat_size(c, grid, i, to_produce[i]);
 		}
 	}
-}
-
-static bool feat_spreads(int f_idx)
-{
-	struct feature_kind *kind = &f_info[f_idx];
-	return tf_has(kind->flags, TF_CLOUD);
 }
 
 static void grid_feat_spread(struct chunk *c, md_array *values, struct loc grid)
@@ -982,18 +1039,21 @@ static void grid_feat_spread(struct chunk *c, md_array *values, struct loc grid)
 static void cave_feat_spread(struct chunk *c)
 {
 	md_array *changes = mda_new(3, c->height, c->width, PROJ_MAX);
-	int fidx, change;
+	int fidx, change, i;
 	struct loc grid;
 
 	assert(c);
 	assert(c->height <= MAX_CAVE_HEIGHT);
 	assert(c->width <= MAX_CAVE_WIDTH);
 
-	for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
+	for (i = 0; i < c->spread_points->n; ++i) {
+		grid_feat_spread(c, changes, c->spread_points->pts[i]);
+	}
+	/*for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
 		for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
 			grid_feat_spread(c, changes, grid);
 		}
-	}
+	}*/
 
 	for (grid.y = 1; grid.y < c->height; ++grid.y) {
 		for (grid.x = 1; grid.x < c->width; ++grid.x) {
@@ -1038,17 +1098,15 @@ static void cave_feat_proj(struct chunk *c)
 {
 	md_array *proj_amt;
 	struct loc grid;
-	int which, amt;
+	int which, amt, i;
 	int flg = PROJECT_HIDE | PROJECT_JUMP | PROJECT_KILL | PROJECT_ITEM | PROJECT_GRID | PROJECT_PLAY;
 
 	if (c != cave) return;
-	
+
 	proj_amt = mda_new(3, c->height, c->width, PROJ_MAX);
 
-	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
-		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
-			grid_feat_proj(c, grid, proj_amt);
-		}
+	for (i = 0; i < c->project_points->n; ++i) {
+		grid_feat_proj(c, c->project_points->pts[i], proj_amt);
 	}
 
 	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
@@ -1069,11 +1127,24 @@ static void cave_feat_proj(struct chunk *c)
 
 static void cave_feat_upkeep_base(struct chunk *c, int trn)
 {
-	struct loc grid;
+	int i;
+
+	assert(c);
+	assert(c->spread_points);
+	assert(c->timeout_points);
+	assert(c->produce_points);
+	assert(c->project_points);
 
 	cave_feat_spread(c);
+	
+	for (i = 0; i < c->timeout_points->n; ++i) {
+		grid_feat_timeout(c, c->timeout_points->pts[i], trn);
+	}
 
-	for (grid.y = 0; grid.y < c->height; ++grid.y) {
+	for (i = 0; i < c->produce_points->n; ++i) {
+		grid_feat_produce(c, c->produce_points->pts[i], trn);
+	}
+	/*for (grid.y = 0; grid.y < c->height; ++grid.y) {
 		for (grid.x = 0; grid.x < c->width; ++grid.x) {
 			grid_feat_timeout(c, grid, trn);
 		}
@@ -1082,14 +1153,29 @@ static void cave_feat_upkeep_base(struct chunk *c, int trn)
 		for (grid.x = 0; grid.x < c->width; ++grid.x) {
 			grid_feat_produce(c, grid, trn);
 		}
+	}*/
+	cave_feat_proj(c);
+}
+
+static bool cave_all_feats_valid(struct chunk *c)
+{
+	struct loc grid;
+	bool valid = true;
+
+	for (grid.x = 0; grid.x < c->width; ++grid.x) {
+		for (grid.y = 0; grid.y < c->height; ++grid.y) {
+			if (!square_feat_valid(c, grid)) valid = false;
+		}
 	}
 
-	cave_feat_proj(c);
+	return valid;
 }
 
 void cave_feat_upkeep(struct chunk *c)
 {
 	cave_feat_upkeep_base(c, turn);
+
+	assert(cave_all_feats_valid(c));
 }
 
 void cave_feat_initial_upkeep(struct chunk *c)
@@ -1103,26 +1189,56 @@ void cave_feat_initial_upkeep(struct chunk *c)
 	for (faketurn = faketurn_start; faketurn <= turn; faketurn += turns_per_process_world) {
 		cave_feat_upkeep_base(c, faketurn);
 	}
+
+	assert(cave_all_feats_valid(c));
+}
+
+static void feat_valid_plog(struct chunk *c, struct loc grid, const char *fmt, ...)
+{
+	const char *c_name = c->name ? c->name : "(unnamed cave)";
+	const char *type = c == cave ? "cave" : (c == player->cave ? "player->cave" : NULL);
+	char type_str[128] = "";
+	char error[128];
+	va_list vp;
+
+	assert(c);
+	assert(fmt);
+
+	va_start(vp, fmt);
+	vstrnfmt(error, sizeof error, fmt, vp);
+	va_end(vp);
+
+	if (type) {
+		strnfmt(type_str, sizeof type_str, " (%s)", type);
+	}
+
+	//msg_add_fmt("Error: chunk %s%s %s at grid (%i,%i)!",
+	dbg_log_fmt("feat", "Error: chunk %s%s %s at grid (%i,%i)!",
+	//plog_fmt("Error: chunk %s%s %s at grid (%i,%i)!",
+			c_name,
+			type_str,
+			error,
+			grid.x,
+			grid.y);
 }
 
 bool square_feat_valid(struct chunk *c, struct loc grid)
 {
+	assert(c);
+
 	struct feature *feat1, *feat2, *start = square_feat(c, grid);
 	bool has_def, shld_def;
-	char err[256];
 
 	has_def = square_has_default(c, grid);
 	shld_def = square_should_have_default(c, grid);
 
 	if (c->feat_default) {
 		if (has_def && !shld_def) {
-			strnfmt(err, sizeof err, "incorrectly has default feat %s", c->feat_default->name);
-			feat_valid_plog(c, grid, err);
+			feat_valid_plog(c, grid, "incorrectly has default feat %s", c->feat_default->name);
 			return false;
 		}
 		if (!has_def && shld_def) {
-			strnfmt(err, sizeof err, "incorrectly does not have default feat %s", c->feat_default->name);
-			feat_valid_plog(c, grid, err);
+			feat_valid_plog(c, grid, "incorrectly does not have default feat %s", c->feat_default->name);
 			return false;
 		}
 		if (!start) {
@@ -1131,28 +1247,65 @@ bool square_feat_valid(struct chunk *c, struct loc grid)
 		}
 	}
 
+	if (c == cave) {
+		assert(c->timeout_points);
+		assert(c->spread_points);
+		assert(c->produce_points);
+		assert(c->project_points);
+		if (!first_feat_meets_pred(c, grid, feat_times_out) && point_set_contains(c->timeout_points, grid)) {
+			feat_valid_plog(c, grid, "has no timeout feat but grid is marked");
+			return false;
+		}
+		if (!first_feat_meets_pred(c, grid, feat_spreads) && point_set_contains(c->spread_points, grid)) {
+			feat_valid_plog(c, grid, "has no spread feat but grid is marked");
+			return false;
+		}
+		if (!first_feat_meets_pred(c, grid, feat_produces) && point_set_contains(c->produce_points, grid)) {
+			feat_valid_plog(c, grid, "has no produce feat but grid is marked");
+			return false;
+		}
+		if (!first_feat_meets_pred(c, grid, feat_projects) && point_set_contains(c->project_points, grid)) {
+			feat_valid_plog(c, grid, "has no project feat but grid is marked");
+			return false;
+		}
+	}
+
 	for (feat1 = start; feat1; feat1 = feat1->next) {
 		if (feat1->size <= 0) {
-			strnfmt(err, sizeof err, "has feat %s of size %i", feat1->kind->name, feat1->size);
-			feat_valid_plog(c, grid, err);
+			feat_valid_plog(c, grid, "has feat %s of size %i", feat1->kind->name, feat1->size);
+			return false;
+		}
+
+		if (feat_times_out(feat1->kind->fidx) && !point_set_contains(c->timeout_points, grid)) {
+			feat_valid_plog(c, grid, "has timeout feat %s but grid is not marked", feat1->kind->name);
+			return false;
+		}
+		if (feat_spreads(feat1->kind->fidx) && !point_set_contains(c->spread_points, grid)) {
+			feat_valid_plog(c, grid, "has spread feat %s but grid is not marked", feat1->kind->name);
+			return false;
+		}
+		if (feat_produces(feat1->kind->fidx) && !point_set_contains(c->produce_points, grid)) {
+			feat_valid_plog(c, grid, "has produce feat %s but grid is not marked", feat1->kind->name);
+			return false;
+		}
+		if (feat_projects(feat1->kind->fidx) && !point_set_contains(c->project_points, grid)) {
+			feat_valid_plog(c, grid, "has project feat %s but grid is not marked", feat1->kind->name);
 			return false;
 		}
 
 		for (feat2 = feat1->next; feat2; feat2 = feat2->next) {
 			if (feat_compare(feat1->kind->fidx, feat2->kind->fidx) > 0) {
-				strnfmt(err, sizeof err, "has incorrectly ordered feats %s[prio %i] before %s[prio %i]",
+				feat_valid_plog(c, grid, "has incorrectly ordered feats %s[prio %i] before %s[prio %i]",
 						feat1->kind->name, feat1->kind->priority,
 						feat2->kind->name, feat2->kind->priority);
-				feat_valid_plog(c, grid, err);
+				return false;
 			}
 			if (feat_incompat_base(feat1->kind->fidx, feat2->kind->fidx)) {
-				strnfmt(err, sizeof err, "has incompatible feats %s and %s", feat1->kind->name, feat2->kind->name);
-				feat_valid_plog(c, grid, err);
+				feat_valid_plog(c, grid, "has incompatible feats %s and %s", feat1->kind->name, feat2->kind->name);
 				return false;
 			}
 			if (feat1->kind->fidx == feat2->kind->fidx) {
-				strnfmt(err, sizeof err, "has duplicate feat %s", feat1->kind->name);
-				feat_valid_plog(c, grid, err);
+				feat_valid_plog(c, grid, "has duplicate feat %s", feat1->kind->name);
 				return false;
 			}
 		}
