@@ -58,6 +58,8 @@ void point_set_dispose(struct point_set *ps);
 void add_to_point_set(struct point_set *ps, struct loc grid);
 int point_set_size(struct point_set *ps);
 int point_set_contains(struct point_set *ps, struct loc grid);
+void add_to_point_set_no_dup(struct point_set *ps, struct loc grid);
+void remove_from_point_set(struct point_set *ps, struct loc grid);
 
 
 /**

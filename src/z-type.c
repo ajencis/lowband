@@ -80,7 +80,7 @@ struct point_set *point_set_new(int initial_size)
 {
 	struct point_set *ps = mem_alloc(sizeof(struct point_set));
 	ps->n = 0;
-	ps->allocated = initial_size;
+	ps->allocated = MAX(initial_size, 1);
 	ps->pts = mem_zalloc(sizeof(*(ps->pts)) * ps->allocated);
 	return ps;
 }
@@ -110,13 +110,49 @@ int point_set_size(struct point_set *ps)
 	return ps->n;
 }
 
-int point_set_contains(struct point_set *ps, struct loc grid)
+static int point_set_index(struct point_set *ps, struct loc grid)
 {
 	int i;
-	for (i = 0; i < ps->n; i++)
-		if (loc_eq(ps->pts[i], grid))
-			return 1;
-	return 0;
+	for (i = 0; i < ps->n; ++i) {
+		if (loc_eq(ps->pts[i], grid)) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+int point_set_contains(struct point_set *ps, struct loc grid)
+{
+	return point_set_index(ps, grid) >= 0;
+}
+
+/**
+ * L: adds to a point set only if the point set doesn't have that point yet
+ */
+void add_to_point_set_no_dup(struct point_set *ps, struct loc grid)
+{
+	if (!point_set_contains(ps, grid)) {
+		add_to_point_set(ps, grid);
+	}
+}
+
+/**
+ * L: removes from a point set; can mess up ordering
+ */
+void remove_from_point_set(struct point_set *ps, struct loc grid)
+{
+	int ind = point_set_index(ps, grid);
+
+	if (ind >= 0) {
+		assert(ps->n > 0);
+		assert(ind < ps->n);
+		assert(ind < ps->allocated);
+		assert(ps->n < ps->allocated);
+		ps->pts[ind] = ps->pts[ps->n - 1];
+		ps->pts[ps->n - 1] = loc(0, 0);
+		--ps->n;
+	}
 }
 
 
