@@ -356,7 +356,7 @@ const char *get_feat_code_name(int idx)
 /**
  * Allocate a new chunk of the world
  */
-struct chunk *cave_new(int height, int width) {
+struct chunk *cave_new(int height, int width, bool pointset) {
 	int y, x;
 
 	struct chunk *c = mem_zalloc(sizeof *c);
@@ -390,10 +390,12 @@ struct chunk *cave_new(int height, int width) {
 	c->monster_groups = mem_zalloc(z_info->level_monster_max *
 								   sizeof(struct monster_group*));
 
-	c->timeout_points = point_set_new(5);
-	c->spread_points = point_set_new(5);
-	c->produce_points = point_set_new(5);
-	c->project_points = point_set_new(5);
+	if (pointset) {
+		c->timeout_points = point_set_new(5);
+		c->spread_points = point_set_new(5);
+		c->produce_points = point_set_new(5);
+		c->project_points = point_set_new(5);
+	}
 
 	c->turn = turn;
 	return c;

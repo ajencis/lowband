@@ -1085,7 +1085,7 @@ static struct chunk *cave_generate(struct player *p, int height, int width)
 		chunk = arena_gen(p, height, width);
 
 		/* Allocate new known level, light it if requested */
-		p->cave = cave_new(chunk->height, chunk->width);
+		p->cave = cave_new(chunk->height, chunk->width, false);
 		p->cave->depth = chunk->depth;
 		p->cave->objects = mem_realloc(p->cave->objects, (chunk->obj_max + 1)
 									   * sizeof(struct object*));
@@ -1241,7 +1241,7 @@ static struct chunk *cave_generate(struct player *p, int height, int width)
 	chunk_validate_objects(chunk);
 
 	/* Allocate new known level, light it if requested */
-	p->cave = cave_new(chunk->height, chunk->width);
+	p->cave = cave_new(chunk->height, chunk->width, false);
 	p->cave->depth = chunk->depth;
 	p->cave->objects = mem_realloc(p->cave->objects, (chunk->obj_max + 1)
 								   * sizeof(struct object*));

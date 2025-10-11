@@ -1489,8 +1489,11 @@ static int rd_dungeon_aux(struct chunk **c)
 	rd_u16b(&height);
 	rd_u16b(&width);
 
+	// pointsets?
+	rd_byte(&tmp8u);
+
 	/* We need a cave struct */
-	c1 = cave_new(height, width);
+	c1 = cave_new(height, width, tmp8u ? true : false);
 	c1->name = string_make(name);
 
     /* Run length decoding of cave->squares[y][x].info */

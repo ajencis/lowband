@@ -49,7 +49,7 @@ struct chunk *chunk_write(struct chunk *c)
 	struct loc grid;
 	//struct feature *feat;
 
-	struct chunk *new = cave_new(c->height, c->width);
+	struct chunk *new = cave_new(c->height, c->width, true);
 
 	new->feat_default = c->feat_default;
 

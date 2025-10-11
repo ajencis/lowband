@@ -655,7 +655,7 @@ struct loc next_grid(struct loc grid, int dir);
 int lookup_feat(const char *name);
 int lookup_feat_code(const char *code);
 const char *get_feat_code_name(int idx);
-struct chunk *cave_new(int height, int width);
+struct chunk *cave_new(int height, int width, bool pointset);
 void cave_connectors_free(struct connector *join);
 void cave_free(struct chunk *c);
 void list_object(struct chunk *c, struct object *obj);

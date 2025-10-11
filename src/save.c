@@ -928,6 +928,14 @@ static void wr_dungeon_aux(struct chunk *c)
 	wr_u16b(c->height);
 	wr_u16b(c->width);
 
+	// pointsets
+	tmp8u = 0;
+	for (i = 0; point_set_matches[i].set_get && !tmp8u; ++i) {
+		if (point_set_matches[i].set_get(c)) ++tmp8u;
+	}
+
+	wr_byte(tmp8u ? 1U : 0U);
+
 	/* Run length encoding of c->squares[y][x].info */
 	for (i = 0; i < SQUARE_SIZE; i++) {
 		count = 0;

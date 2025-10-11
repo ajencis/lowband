@@ -1630,7 +1630,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	num_rooms = dun->profile->dun_rooms;
 	dun->block_hgt = dun->profile->block_size;
 	dun->block_wid = dun->profile->block_size;
-	c = cave_new(hgt, wid);
+	c = cave_new(hgt, wid, true);
 	c->depth = p->depth;
 	ROOM_LOG("height=%d  width=%d  nrooms=%d", c->height, c->width, num_rooms);
 
@@ -1917,7 +1917,7 @@ static struct chunk *labyrinth_chunk(int depth, int h, int w, bool lit, bool sof
 	int *walls;
 
 	/* The labyrinth chunk */
-	struct chunk *c = cave_new(h + 2, w + 2);
+	struct chunk *c = cave_new(h + 2, w + 2, true);
 	c->depth = depth;
 	/* allocate our arrays */
 	sets = mem_zalloc(n * sizeof(int));
@@ -2631,7 +2631,7 @@ static struct chunk *cavern_chunk(int depth, int h, int w,
 	bool *stairs = (join) ? mem_zalloc(size * sizeof(*stairs)) : NULL;
 	int tries;
 
-	struct chunk *c = cave_new(h, w);
+	struct chunk *c = cave_new(h, w, true);
 	c->depth = depth;
 
 	ROOM_LOG("cavern h=%d w=%d size=%d density=%d times=%d", h, w, size,
@@ -3228,7 +3228,7 @@ struct chunk *town_gen(struct player *p, int min_height, int min_width,
 	struct chunk *c_new, *c_old = chunk_find_name("Town");
 
 	/* Make a new chunk */
-	c_new = cave_new(z_info->town_hgt, z_info->town_wid);
+	c_new = cave_new(z_info->town_hgt, z_info->town_wid, true);
 
 	/* First time */
 	if (!c_old) {
@@ -3305,7 +3305,7 @@ static struct chunk *modified_chunk(struct player *p, int depth, int height,
 	int n_attempt;
 
 	/* Make the cave */
-	struct chunk *c = cave_new(height, width);
+	struct chunk *c = cave_new(height, width, true);
 	c->depth = depth;
 
 	/* Set the intended number of floor grids based on cave floor area */
@@ -3570,7 +3570,7 @@ static struct chunk *moria_chunk(struct player *p, int depth, int height,
 	int n_attempt;
 
 	/* Make the cave */
-	struct chunk *c = cave_new(height, width);
+	struct chunk *c = cave_new(height, width, true);
 	c->depth = depth;
 
 	/* Set the intended number of floor grids based on cave floor area */
@@ -3828,7 +3828,7 @@ static struct chunk *vault_chunk(struct player *p)
 	bool built;
 
 	/* Make the chunk */
-	c = cave_new(v->hgt, v->wid);
+	c = cave_new(v->hgt, v->wid, true);
 	c->depth = p->depth;
 
 	/* Fill with granite; the vault will override for the grids it sets. */
@@ -4031,7 +4031,7 @@ struct chunk *hard_centre_gen(struct player *p, int min_height, int min_width,
 	}
 
 	/* Make a cave to copy them into, and find a floor square in each cavern */
-	c = cave_new(z_info->dungeon_hgt, z_info->dungeon_wid);
+	c = cave_new(z_info->dungeon_hgt, z_info->dungeon_wid, true);
 	c->depth = p->depth;
 
 	/* Left */
@@ -4316,7 +4316,7 @@ struct chunk *lair_gen(struct player *p, int min_height, int min_width,
 	(void) mon_restrict(NULL, lair->depth, lair->depth, false);
 
 	/* Make the level */
-	c = cave_new(y_size, x_size);
+	c = cave_new(y_size, x_size, true);
 	c->depth = p->depth;
 	chunk_copy(c, p, normal, 0, normal_offset, 0, false);
 	chunk_copy(c, p, lair, 0, lair_offset, 0, false);
@@ -4587,7 +4587,7 @@ struct chunk *gauntlet_gen(struct player *p, int min_height, int min_width,
 	(void) mon_restrict(NULL, gauntlet->depth, gauntlet->depth, false);
 
 	/* Make the level */
-	c = cave_new(y_size, left->width + gauntlet->width + right->width);
+	c = cave_new(y_size, left->width + gauntlet->width + right->width, true);
 	c->depth = p->depth;
 
 	/* Fill cave area with basic granite */
@@ -4652,7 +4652,7 @@ struct chunk *arena_gen(struct player *p, int min_height, int min_width) {
 	struct chunk *c;
 	struct monster *mon = p->upkeep->health_who;
 
-	c = cave_new(min_height, min_width);
+	c = cave_new(min_height, min_width, true);
 	c->depth = p->depth;
 	c->name = string_make("arena");
 
