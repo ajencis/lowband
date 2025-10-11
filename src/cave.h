@@ -357,6 +357,8 @@ bool square_remove_feat(struct chunk *c, struct loc grid, int fidx);
 bool square_force_remove_feat(struct chunk *c, struct loc grid, int fidx);
 void square_free_feats(struct chunk *c, struct loc grid);
 
+void cave_refresh_point_sets(struct chunk *c);
+
 int feat_believed(struct player *p, struct loc grid, int feat);
 void square_memorize_feats(struct player *p, const struct chunk *c, struct loc grid);
 void square_memorize_struct_feats(struct player *p, const struct chunk *c, struct loc grid);

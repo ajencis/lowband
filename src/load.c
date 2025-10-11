@@ -1620,6 +1620,9 @@ static int rd_dungeon_aux(struct chunk **c)
 		}
 	}
 
+	// L: get point sets working
+	cave_refresh_point_sets(c1);
+
 	/* Assign */
 	*c = c1;
 

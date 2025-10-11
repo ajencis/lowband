@@ -271,6 +271,35 @@ static void square_update_point_sets(struct chunk *c, struct loc grid, int chang
 	}
 }
 
+void cave_refresh_point_sets(struct chunk *c)
+{
+	struct loc grid;
+	struct point_set *ps;
+	struct feature *feat;
+	int i;
+	bool has_sets;
+
+	has_sets = false;
+	for (i = 0; point_set_matches[i].set_get; ++i) {
+		ps = point_set_matches[i].set_get(c);
+
+		if (ps) {
+			has_sets = true;
+			clear_point_set(ps);
+		}
+	}
+
+	if (!has_sets) return;
+
+	for (grid.x = 0; grid.x < c->width; ++grid.x) {
+		for (grid.y = 0; grid.y < c->height; ++grid.y) {
+			for (feat = square_feat(c, grid); feat; feat = feat->next) {
+				square_update_point_sets(c, grid, feat->kind->fidx, true);
+			}
+		}
+	}
+}
+
 /**
  * L: removes a feat from a square with no upkeep (rememorizing, counting feats)
  */
