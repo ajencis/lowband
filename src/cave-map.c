@@ -394,6 +394,8 @@ static void cave_unlight(struct point_set *ps)
 {
 	int i;
 
+	if (!cave) return;
+
 	/* Apply flag changes */
 	for (i = 0; i < ps->n; i++)	{
 		struct loc grid = ps->pts[i];
@@ -406,7 +408,7 @@ static void cave_unlight(struct point_set *ps)
 		/* ...but dark-loving characters remember them */
 		if (unlight_power(player) > 0) {
 			square_memorize_t_elem(cave, grid);
-			square_memorize_struct_feats(player, cave, grid);
+			square_ensure_correct_memorization_by_pred(player, cave, grid, feat_gets_mapped);
 		}
 
 		/* Hack -- Forget "boring" grids */
@@ -598,7 +600,7 @@ void wiz_dark(struct chunk *c, struct player *p, bool full)
 					if (!square_isfloor(c, a_grid) || 
 							square_isvisibletrap(c, a_grid)) {
 						square_memorize_t_elem(c, a_grid);
-						square_memorize_struct_feats(player, c, a_grid);
+						square_ensure_correct_memorization_by_pred(player, c, a_grid, feat_gets_mapped);
 						square_mark(c, a_grid);
 					}
 				}
@@ -646,6 +648,9 @@ void cave_illuminate(struct chunk *c, bool daytime)
 {
 	int y, x, i;
 
+	assert(c);
+	if (!c) return;
+
 	/* Apply light or darkness */
 	for (y = 0; y < c->height; y++) {
 		for (x = 0; x < c->width; x++) {
@@ -672,7 +677,7 @@ void cave_illuminate(struct chunk *c, bool daytime)
 				sqinfo_on(square(c, grid)->info, SQUARE_GLOW);
 				if (light) {
 					square_memorize_t_elem(c, grid);
-					square_memorize_struct_feats(player, c, grid);
+					square_ensure_correct_memorization_by_pred(player, c, grid, feat_not_times_out);
 				}
 			} else if (!square_isbright(c, grid)) {
 				sqinfo_off(square(c, grid)->info, SQUARE_GLOW);
@@ -695,7 +700,7 @@ void cave_illuminate(struct chunk *c, bool daytime)
 			for (i = 0; i < 8; i++) {
 				struct loc a_grid = loc_sum(grid, ddgrid_ddd[i]);
 				sqinfo_on(square(c, a_grid)->info, SQUARE_GLOW);
-				square_memorize_struct_feats(player, c, a_grid);
+				square_ensure_correct_memorization_by_pred(player, c, a_grid, feat_not_times_out);
 				square_memorize_t_elem(c, a_grid);
 			}
 		}
@@ -730,6 +735,9 @@ void expose_to_sun(struct chunk *c, struct loc grid, bool daytime)
 void cave_known(struct player *p)
 {
 	int y, x;
+
+	if (!cave) return;
+
 	for (y = 0; y < cave->height; y++) {
 		for (x = 0; x < cave->width; x++) {
 			struct loc grid = loc(x, y);
@@ -750,7 +758,7 @@ void cave_known(struct player *p)
 
 			/* Internal walls not known */
 			if (count < 8) {
-				square_memorize_struct_feats(p, cave, loc(x, y));
+				square_ensure_correct_memorization_by_pred(p, cave, loc(x, y), feat_not_times_out);
 			}
 		}
 	}

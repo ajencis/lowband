@@ -471,6 +471,7 @@ bool feat_times_out(int fidx);
 bool feat_spreads(int fidx);
 bool feat_produces(int fidx);
 bool feat_projects(int fidx);
+bool feat_not_times_out(int fidx);
 
 /* SQUARE FEATURE PREDICATES */
 bool square_isfloor(struct chunk *c, struct loc grid);

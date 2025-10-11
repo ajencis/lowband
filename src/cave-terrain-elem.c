@@ -920,6 +920,11 @@ static void square_memorize_feats_real_by_pred(struct player *p, struct chunk *c
 
 void square_ensure_correct_memorization_by_pred(struct player *p, struct chunk *c, struct loc grid, feat_predicate pred)
 {
+	if (c != cave) return;
+	
+	assert(c);
+	assert(p);
+
 	square_forget_feats_imagined_by_pred(p, c, grid, pred);
 	square_memorize_feats_real_by_pred(p, c, grid, pred);
 }

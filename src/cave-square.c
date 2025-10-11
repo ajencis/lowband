@@ -317,6 +317,11 @@ bool feat_projects(int fidx)
 	return f_info[fidx].proj >= 0 && f_info[fidx].proj < PROJ_MAX;
 }
 
+bool feat_not_times_out(int fidx)
+{
+	return !feat_times_out(fidx);
+}
+
 
 /**
  * SQUARE FEATURE PREDICATES
