@@ -387,7 +387,8 @@ bool chunk_copy(struct chunk *dest, struct player *p, struct chunk *source,
 	struct loc grid;
 	int h = source->height, w = source->width;
 	int mon_skip = dest->mon_max - 1;
-	struct feature *feat;
+	//struct feature *feat;
+	struct point_set *src_set, *dest_set;
 
 	/* Check bounds */
 	if (rotate % 1) {
@@ -409,9 +410,7 @@ bool chunk_copy(struct chunk *dest, struct player *p, struct chunk *source,
 
 			/* Terrain */
 			assert(square_feat_valid(source, grid));
-			for (feat = square_feat(source, grid); feat; feat = feat->next) {
-				assert(square_force_add_feat(dest, dest_grid, feat->kind->fidx, feat->size));
-			} 
+			square_copy_feat(source, dest, grid, dest_grid);
 
 			sqinfo_copy(square(dest, dest_grid)->info,
 						square(source, grid)->info);
@@ -447,6 +446,21 @@ bool chunk_copy(struct chunk *dest, struct player *p, struct chunk *source,
 			if (square(source, grid)->mon == -1) {
 				dest->squares[dest_grid.y][dest_grid.x].mon = -1;
 				p->mon.grid = dest_grid;
+			}
+
+			// L: pointsets
+			for (i = 0; point_set_matches[i].set_get; ++i) {
+				src_set = point_set_matches[i].set_get(source);
+				dest_set = point_set_matches[i].set_get(dest);
+
+				if (!src_set) continue;
+				assert(dest_set);
+
+				if (point_set_contains(src_set, grid)) {
+					add_to_point_set_no_dup(dest_set, dest_grid);
+				} else {
+					remove_from_point_set(dest_set, dest_grid);
+				}
 			}
 		}
 	}

@@ -238,15 +238,13 @@ static struct point_set *cave_project_point_set(struct chunk *c)
 	return c->project_points;
 }
 
-struct point_set_match {
-	struct point_set *(*set_get)(struct chunk *);
-	feat_predicate pred;
-	const char *name;
-} point_set_matches[] = {
+
+struct point_set_match point_set_matches[] = {
 	{ cave_timeout_point_set, feat_times_out, "timeout" },
 	{ cave_spread_point_set, feat_spreads, "spread" },
 	{ cave_produce_point_set, feat_produces, "produce" },
-	{ cave_project_point_set, feat_projects, "project" }
+	{ cave_project_point_set, feat_projects, "project" },
+	{ NULL, NULL, NULL }
 };
 
 static void square_update_point_sets(struct chunk *c, struct loc grid, int changing_fidx, bool adding)
@@ -257,7 +255,7 @@ static void square_update_point_sets(struct chunk *c, struct loc grid, int chang
 
 	assert(c);
 
-	for (i = N_ELEMENTS(point_set_matches) - 1; i >= 0; --i) {
+	for (i = 0; point_set_matches[i].set_get; ++i) {
 		curr_set = point_set_matches[i].set_get(c);
 		pred = point_set_matches[i].pred;
 

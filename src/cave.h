@@ -39,6 +39,8 @@ extern const int *dist_offsets_y[10];
 extern const int *dist_offsets_x[10];
 extern const uint8_t side_dirs[20][8];
 
+typedef bool (*feat_predicate)(int feat);
+
 int loc_to_dir(struct loc grid);
 
 enum {
@@ -313,6 +315,8 @@ struct chunk {
 	struct point_set *project_points;
 };
 
+typedef bool (*square_predicate)(struct chunk *c, struct loc grid);
+
 /*** Feature Indexes (see "lib/gamedata/terrain.txt") ***/
 enum {
 	#define FEAT(x) FEAT_##x,
@@ -321,18 +325,20 @@ enum {
 	FEAT_MAX
 };
 
+
+struct point_set_match {
+	struct point_set *(*set_get)(struct chunk *);
+	feat_predicate pred;
+	const char *name;
+};
+
+extern struct point_set_match point_set_matches[];
+
 /* Current level */
 extern struct chunk *cave;
 /* Stored levels */
 extern struct chunk **chunk_list;
 extern uint16_t chunk_list_max;
-
-/**
- * square_predicate is a function pointer which tests a given square to
- * see if the predicate in question is true.
- */
-typedef bool (*square_predicate)(struct chunk *c, struct loc grid);
-typedef bool (*feat_predicate)(int feat);
 
 /* cave-view.c */
 int distance(struct loc grid1, struct loc grid2);
