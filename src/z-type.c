@@ -150,9 +150,13 @@ void remove_from_point_set(struct point_set *ps, struct loc grid)
 		assert(ind < ps->allocated);
 		assert(ps->n < ps->allocated);
 		ps->pts[ind] = ps->pts[ps->n - 1];
-		ps->pts[ps->n - 1] = loc(0, 0);
 		--ps->n;
 	}
+}
+
+void clear_point_set(struct point_set *ps)
+{
+	ps->n = 0;
 }
 
 
