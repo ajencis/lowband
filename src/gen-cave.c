@@ -2175,19 +2175,19 @@ static void init_cavern(struct chunk *c, int density,
 			if (!square_isstairs(c, adj) &&
 					!square_isfloor(c, adj)) {
 				--count;
-				square_clear_feats(c, adj);
+				square_force_set_feat(c, adj, FEAT_FLOOR, 100);
 			}
 			adj = loc(join->grid.x, join->grid.y + offy);
 			if (!square_isstairs(c, adj) &&
 					!square_isfloor(c, adj)) {
 				--count;
-				square_clear_feats(c, adj);
+				square_force_set_feat(c, adj, FEAT_FLOOR, 100);
 			}
 			adj = loc(join->grid.x + offx, join->grid.y);
 			if (!square_isstairs(c, adj) &&
 					!square_isfloor(c, adj)) {
 				--count;
-				square_clear_feats(c, adj);
+				square_force_set_feat(c, adj, FEAT_FLOOR, 100);
 			}
 			adj = loc(join->grid.x - offx, join->grid.y - offy);
 			if (square_isrock(c, adj)) {
@@ -2208,7 +2208,7 @@ static void init_cavern(struct chunk *c, int density,
 	while (count > 0) {
 		struct loc grid = loc(randint1(w - 2), randint1(h - 2));
 		if (square_isrock(c, grid)) {
-			square_clear_feats(c, grid);
+			square_force_set_feat(c, grid, FEAT_FLOOR, 100);
 			count--;
 		}
 	}
@@ -2220,7 +2220,7 @@ static void init_cavern(struct chunk *c, int density,
  */
 static void mutate_cavern(struct chunk *c) {
 	struct loc grid;
-	struct feature *stairs, *perm;
+	struct feature *stairperm;
 	int h = c->height;
 	int w = c->width;
 
@@ -2231,12 +2231,12 @@ static void mutate_cavern(struct chunk *c) {
 			int count = 8 - count_neighbors(NULL, c, grid,
 				square_ispassable, false);
 
-			stairs = first_feat_meets_pred(c, grid, feat_is_stairs);
-			perm = first_feat_meets_pred(c, grid, feat_is_permanent);
+			stairperm = first_feat_meets_pred(c, grid, feat_is_permanent);
+			if (!stairperm) stairperm = first_feat_meets_pred(c, grid, feat_is_stairs);
 
-			if (stairs || perm) {
+			if (stairperm) {
 				temp[grid_to_i(grid, w)] =
-					perm ? perm->kind->fidx : stairs->kind->fidx;
+					stairperm->kind->fidx;
 			} else if (count > 5) {
 				temp[grid_to_i(grid, w)] = FEAT_GRANITE;
 			} else if (count < 4) {
@@ -2641,6 +2641,7 @@ static struct chunk *cavern_chunk(int depth, int h, int w,
 	for (tries = 0; tries < MAX_CAVERN_TRIES; tries++) {
 		/* Build a random cavern and mutate it a number of times */
 		init_cavern(c, density, join);
+
 		for (i = 0; i < times; i++) mutate_cavern(c);
 
 		/* If there are enough open squares then we're done */
