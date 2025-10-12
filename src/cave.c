@@ -421,6 +421,7 @@ void cave_connectors_free(struct connector *join)
 void cave_free(struct chunk *c) {
 	struct chunk *p_c = (c == cave && player) ? player->cave : NULL;
 	int y, x, i;
+	struct point_set *ps;
 
 	cave_connectors_free(c->join);
 
@@ -461,10 +462,11 @@ void cave_free(struct chunk *c) {
 	mem_free(c->monsters);
 	mem_free(c->monster_groups);
 
-	point_set_dispose(c->timeout_points);
-	point_set_dispose(c->spread_points);
-	point_set_dispose(c->produce_points);
-	point_set_dispose(c->project_points);
+	for (i = 0; point_set_matches[i].set_get; ++i) {
+		ps = point_set_matches[i].set_get(c);
+
+		if (ps) point_set_dispose(ps);
+	}
 
 	if (c->name) {
 		string_free(c->name);
