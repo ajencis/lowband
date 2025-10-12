@@ -118,7 +118,7 @@ static struct loc counterclockwise_card_dir(struct loc dir)
 }
 
 
-static int distance_from_feat(struct chunk *c, struct loc grid, int feat)
+/*static int distance_from_feat(struct chunk *c, struct loc grid, int feat)
 {
 	struct loc othergrid;
 	int dist_check, max_dist_check;
@@ -151,54 +151,67 @@ static int distance_from_feat(struct chunk *c, struct loc grid, int feat)
 	}
 
 	return -1;
+}*/
+
+static int random_tree(int sapling, int young, int tree, int old, int floor)
+{
+	int sum = sapling + young + tree + old + floor;
+	int choice = randint0(sum);
+
+	choice -= sapling;
+	if (choice < 0) return FEAT_SAPLING;
+
+	choice -= young;
+	if (choice < 0) return FEAT_YOUNG_TREE;
+
+	choice -= tree;
+	if (choice < 0) return FEAT_TREE;
+
+	choice -= old;
+	if (choice < 0) return FEAT_OLD_TREE;
+
+	return FEAT_DIRT_FLOOR;
 }
 
 static void forestify_level(struct chunk *c)
 {
 	struct loc grid;
-	int tree_power, temp_tp, sapling_max;
+	int feat;
 
 	if (c->depth == 0) return;
 
-	c->feat_default = &f_info[FEAT_DIRT_FLOOR];
-
-	sapling_max = t_elem_kind_by_idx(TE_TREE)->levels->next->min_dur - 1;
+	cave_set_default_feat(c, FEAT_DIRT_FLOOR);
 
 	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
 		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
-			tree_power = 0;
+			feat = FEAT_NONE;
 
-			if (square_isperm(c, grid)) {
-				tree_power = 0;
-			} else if (square_isstairs(c, grid)) {
-				tree_power = 0;
-			} else if (square_iscloseddoor(c, grid)) {
-				square_clear_feats(c, grid);
-				tree_power = randint1(sapling_max);
+			if (square_isperm(c, grid)) continue;
+			if (square_isstairs(c, grid)) continue;
+
+			if (square_isdoor(c, grid)) {
+				feat = FEAT_SAPLING;
 			} else if (square_isfloor(c, grid) && square_isroom(c, grid)) {
-				temp_tp = randint0(1000) - 350;
-				tree_power = randint0(1000) - 350;
-				tree_power = MIN(temp_tp, tree_power);
+				feat = random_tree(5, 4, 3, 2, 8);
+			} else if (square_isroom(c, grid)) {
+				feat = random_tree(5, 4, 3, 2, 3);
 			} else if (square_isfloor(c, grid)) {
-				tree_power = randint1(1000) - 1000 + sapling_max;
+				feat = random_tree(1, 0, 0, 0, 5);
 			} else if (square_ismineral(c, grid)) {
-				square_set_feat(c, grid, FEAT_DIRT_FLOOR, 100);
-				tree_power = randint1(1000) - 100 + 100 * distance_from_feat(c, grid, FEAT_FLOOR);
+				feat = random_tree(2, 3, 4, 5, 3);
 			}
 
-			if (tree_power > 0 && !square_isstairs(c, grid)) {
-				terrain_element_increase_dur(c, grid, TE_TREE, (uint16_t)tree_power);
-			}
+			square_force_set_feat(c, grid, feat, 100);
 		}
 	}
 
-	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
+	/*for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
 		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
 			if (!square_isperm(c, grid) && !square_isstairs(c, grid)) {
 				square_clear_feats(c, grid);
 			}
 		}
-	}
+	}*/
 }
 
 

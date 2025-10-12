@@ -406,6 +406,32 @@ priority:10
 flags:PROJECT | INTERESTING | LOS
 produce:POISON_CLOUD:100:20
 
+code:SAPLING
+name:sapling
+graphics:#:G
+priority:10
+flags:PASSABLE
+desc:A very young tree.
+
+code:YOUNG_TREE
+name:young tree
+graphics:#:g
+priority:10
+desc:A young tree.
+
+code:TREE
+name:young tree
+graphics:#:U
+priority:10
+desc:A tree.
+
+code:OLD_TREE
+name:old tree
+graphics:#:u
+priority:10
+desc:An old tree.
+
+
 ## Temporary terrain
 code:POISON_CLOUD
 name:poison cloud

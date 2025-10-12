@@ -399,6 +399,8 @@ void cave_set_default_feat(struct chunk *c, int fidx)
 	struct loc grid;
 	assert(fidx >= FEAT_NONE && fidx < FEAT_MAX);
 
+	plog_fmt("setting default feat to %s", f_info[fidx].name);
+
 	if (c->feat_default) {
 		cave_clear_default_feat(c);
 	}
@@ -421,18 +423,18 @@ bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
 	assert(square_in_bounds(c, grid));
 	assert(fidx >= FEAT_NONE && fidx < FEAT_MAX);
 
+	for (feat = square_feat(c, grid); feat; feat = next) {
+		next = feat->next;
+
+		if (feat_incompat_base(fidx, feat->kind->fidx)) {
+			square_force_remove_feat(c, grid, feat->kind->fidx);
+		}
+	}
+
 	success = list_add_feat(&c->squares[grid.y][grid.x].feat, fidx, size);
 
 	if (!success) {
 		return false;
-	}
-
-	for (feat = square_feat(c, grid); feat; feat = next) {
-		next = feat->next;
-
-		if (feat_incompatible(fidx, feat->kind->fidx) == feat->kind->fidx) {
-			square_force_remove_feat(c, grid, feat->kind->fidx);
-		}
 	}
 
 	if (c->feat_count) {
@@ -921,7 +923,7 @@ static void square_memorize_feats_real_by_pred(struct player *p, struct chunk *c
 void square_ensure_correct_memorization_by_pred(struct player *p, struct chunk *c, struct loc grid, feat_predicate pred)
 {
 	if (c != cave) return;
-	
+
 	assert(c);
 	assert(p);
 
