@@ -452,3 +452,11 @@ default-size:10
 flags:PROJECT | LOS | INTERESTING | PASSABLE | CLOUD
 project:POIS:1
 desc:A cloud of unpleasant gas.
+
+code:FIRE
+name:fire
+graphics:^:o
+priority:19
+timeout:25
+default-size:5
+flags:PROJECT | LOS | INTERESTING | PASSABLE | FIRE

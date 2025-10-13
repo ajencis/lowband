@@ -398,7 +398,7 @@ struct terrain_element *square_t_elem_by_type(struct chunk *c, struct loc grid, 
 bool grid_is_danger(const struct monster *mon, struct chunk *c, struct loc grid);
 bool mon_in_t_elem_danger(const struct monster *mon, struct chunk *c);
 
-int burn_square(struct chunk *c, struct loc grid, int power);
+int burn_square(struct chunk *c, struct loc grid, int power, int fidx);
 
 struct terrain_element *terrain_element_new(int timer, int idx);
 struct terrain_element_level *t_elem_level(const struct terrain_element_kind *kind, int timer);
@@ -470,6 +470,9 @@ bool feat_is_down_stairs(int feat);
 bool feat_is_stairs(int feat);
 bool feat_is_diggable(int feat);
 bool feat_gets_mapped(int fidx);
+bool feat_burns_fast(int fidx);
+bool feat_burns_slow(int fidx);
+bool feat_burns(int fidx);
 
 bool feat_times_out(int fidx);
 bool feat_spreads(int fidx);

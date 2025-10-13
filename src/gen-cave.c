@@ -1632,7 +1632,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	int num_rooms;
 	int hgt, wid, size_perc;
 	int dun_unusual = dun->profile->dun_unusual;
-	bool has_secret, has_fume;
+	bool has_secret;
 
 	bool **blocks_tried;
 	struct chunk *c;
@@ -1781,9 +1781,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 	/* Put some rubble in corridors */
 	alloc_objects(c, SET_CORR, TYP_RUBBLE, size_percent_modify_number(size_perc, 0, k), c->depth, 0);
 
-	if (player->wizard) has_fume = get_check("Fume pit floor? ");
-	else has_fume = one_in_(10);
-	if (has_fume) {
+	if (player->wizard ? get_check("Fume pit floor? ") : one_in_(10)) {
 		ROOM_LOG("Fume pit floor");
 		alloc_objects(c, SET_BESIDE_WALL | SET_ROOM, TYP_FUME_PIT, size_percent_modify_number(size_perc, 0, k), c->depth, 0);
 	}
@@ -1804,7 +1802,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 		return NULL;
 	}
 
-	if (one_in_(10)) {
+	if (player->wizard ? get_check("Forest floor? ") : one_in_(10)) {
 		ROOM_LOG("Forest floor");
 		forestify_level(c);
 	}

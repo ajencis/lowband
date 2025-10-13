@@ -322,6 +322,21 @@ bool feat_not_times_out(int fidx)
 	return !feat_times_out(fidx);
 }
 
+bool feat_burns_fast(int fidx)
+{
+	return tf_has(f_info[fidx].flags, TF_BURN_FAST);
+}
+
+bool feat_burns_slow(int fidx)
+{
+	return tf_has(f_info[fidx].flags, TF_BURN);
+}
+
+bool feat_burns(int fidx)
+{
+	return feat_burns_fast(fidx) || feat_burns_slow(fidx);
+}
+
 
 /**
  * SQUARE FEATURE PREDICATES

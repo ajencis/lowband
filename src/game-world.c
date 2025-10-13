@@ -640,14 +640,15 @@ void process_world(struct chunk *c)
 	for (i = 0; i < cave_monster_max(c); ++i) {
 		struct monster *mon = i == 0 ? &player->mon : cave_monster(c, i);
 		uint16_t j;
+		const struct object *obj;
 
 		if (!mon || !mon->race) continue;
 
 		for (j = 0; j < mon->body.count; ++j) {
-			const struct object *obj = mon->body.slots[j].obj;
+			obj = mon->body.slots[j].obj;
 
 			if (obj /*&& one_in_(10)*/ && my_stristr(obj->kind->name, "torch")) {
-				burn_square(c, mon->grid, 3);
+				burn_square(c, mon->grid, 3, FEAT_FIRE);
 			}
 		}
 	}

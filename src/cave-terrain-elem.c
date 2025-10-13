@@ -1353,6 +1353,52 @@ bool square_feat_valid(struct chunk *c, struct loc grid)
 	return true;
 }
 
+int burn_square(struct chunk *c, struct loc grid, int power, int fidx)
+{
+	struct feature *feat, *next;
+	int burn_amt, total_amt = 0;
+	int burn_num = 0;
+
+	assert(square_in_bounds_fully(c, grid));
+	if (!square_in_bounds_fully(c, grid)) return 0;
+	assert(fidx < FEAT_MAX && fidx > FEAT_NONE);
+	assert(c);
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (feat_burns(feat->kind->fidx)) ++burn_num;
+	}
+
+	if (burn_num <= 0) {
+		return 0;
+	}
+	else {
+		power = (power + burn_num - 1) / burn_num;
+	}
+
+	for (feat = square_feat(c, grid); feat; feat = next) {
+		next = feat->next;
+
+		if (feat_burns_fast(feat->kind->fidx)) {
+			burn_amt = MIN(power, (feat->size + 2) / 3);
+		}
+		else if (feat_burns_slow(feat->kind->fidx)) {
+			burn_amt = my_int_cbrt(feat->size * feat->size);
+			burn_amt = MIN(power, burn_amt);
+			burn_amt  = (burn_amt + 2) / 3;
+		}
+		else {
+			continue;
+		}
+
+		square_reduce_feat_size(c, grid, feat->kind->fidx, burn_amt);
+		square_increase_feat_size(c, grid, fidx, burn_amt + f_info[fidx].timeout);
+
+		total_amt += burn_amt;
+	}
+
+	return total_amt;
+}
+
 
 
 struct terrain_element_kind *t_elem_kind_by_idx(int idx)
@@ -1568,6 +1614,8 @@ void terrain_elem_free(struct terrain_element *to_free)
 bool terrain_element_add(struct chunk *c, struct loc grid, int idx, uint16_t timer)
 {
 	struct terrain_element *prev = NULL, *new = terrain_element_new(timer, idx);
+
+	return false;
 
 	if (!square_canputterrainelem(c, grid, idx)) return false;
 
@@ -1839,6 +1887,7 @@ void t_elem_spread(struct chunk *c)
 }
 
 
+#if 0
 /**
  * Sets a square on fire, or continues its burning
  * Returns the new amount of fire on the square
@@ -1893,6 +1942,7 @@ int burn_square(struct chunk *c, struct loc grid, int power)
 
 	return t_elem_timer(c, grid, TE_FIRE);
 }
+#endif
 
 
 static void t_elem_effect_message(struct chunk *c, struct loc grid, int which)

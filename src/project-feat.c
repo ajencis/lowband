@@ -341,7 +341,7 @@ static void project_feature_handler_FIRE(project_feature_handler_context_t *cont
 	}
 
 	// L: sets things on fire
-	burn_square(cave, context->grid, context->dam);
+	burn_square(cave, context->grid, context->dam, FEAT_FIRE);
 }
 
 static void project_feature_handler_COLD(project_feature_handler_context_t *context)
