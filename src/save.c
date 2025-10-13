@@ -923,6 +923,8 @@ static void wr_dungeon_aux(struct chunk *c)
 	uint8_t count;
 	uint8_t prev_char;
 
+	const struct feature *feat;
+
 	/* Dungeon specific info follows */
 	wr_string(c->name ? c->name : "Blank");
 	wr_u16b(c->height);
@@ -996,18 +998,21 @@ static void wr_dungeon_aux(struct chunk *c)
 		wr_byte(prev_char);
 	}
 
-	// features
+	int totalnum = 0;
+	// L: features
 	for (y = 0; y < c->height; ++y) {
 		for (x = 0; x < c->width; ++x) {
-			const struct feature *feat;
-
-			//assert(square_feat_valid(c, loc(x, y)));
+			int num = 0;
 
 			for (feat = square_feat(c, loc(x, y)); feat; feat = feat->next) {
+				++num;
 				wr_u16b((uint16_t)feat->kind->fidx);
 				wr_u16b((uint16_t)feat->size);
 			}
+
 			wr_u16b(UINT16_MAX);
+
+			totalnum += num;
 		}
 	}
 

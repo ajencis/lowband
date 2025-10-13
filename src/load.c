@@ -1473,6 +1473,7 @@ static int rd_dungeon_aux(struct chunk **c)
 	struct chunk *c1;
 	int i, n, y, x;
 	struct loc grid;
+	int fidx, size, num;
 
 	uint16_t height, width;
 
@@ -1545,36 +1546,40 @@ static int rd_dungeon_aux(struct chunk **c)
 	}
 	*/
 
-	// features
+	int totalnum = 0;
+	// L: features
 	for (grid.y = 0; grid.y < height; ++grid.y) {
 		for (grid.x = 0; grid.x < width; ++grid.x) {
-			int feat, size;
+			num = 0;
 
 			rd_u16b(&tmp16u);
 
-			feat = (int)tmp16u;
+			fidx = (int)tmp16u;
 
-			while (feat >= FEAT_NONE && feat < FEAT_MAX) {
+			while (fidx >= FEAT_NONE && fidx < FEAT_MAX) {
+				++num;
 				rd_u16b(&tmp16u);
 				size = (int)tmp16u;
 
-				assert(square_force_add_feat_size(c1, grid, feat, size));
+				assert(square_force_add_feat_size(c1, grid, fidx, size));
 
 				rd_u16b(&tmp16u);
-				feat = (int)tmp16u;
+				fidx = (int)tmp16u;
 			}
-
-			assert(square_feat_valid(c1, grid));
+			totalnum += num;
 		}
 	}
 
 	rd_u16b(&tmp16u);
-	if (tmp16u == FEAT_MAX) {
+	fidx = (int)tmp16u;
+	if (fidx >= FEAT_MAX) {
 		c1->feat_default = NULL;
 	} else {
-		assert(tmp16u < FEAT_MAX);
-		cave_set_default_feat(c1, (int)tmp16u);
+		assert(fidx < FEAT_MAX && fidx >= 0);
+		cave_set_default_feat(c1, fidx);
 	}
+
+	assert(cave_all_feats_valid(c1));
 
 	for (y = 0; y < height; ++y) {
 		for (x = 0; x < width; ++x) {

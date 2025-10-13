@@ -350,6 +350,7 @@ bool no_light(const struct player *p);
 
 /* cave-terrain-elem.c */
 bool square_feat_valid(struct chunk *c, struct loc grid);
+bool cave_all_feats_valid(struct chunk *c);
 bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx);
 bool square_force_add_feat_size(struct chunk *c, struct loc grid, int fidx, int size);
 bool feat_incompat_base(int feat1, int feat2);
@@ -377,6 +378,8 @@ void square_copy_feat(struct chunk *from_c, struct chunk *to_c, struct loc from_
 void cave_feat_upkeep(struct chunk *c);
 void cave_feat_initial_upkeep(struct chunk *c);
 
+int burn_square(struct chunk *c, struct loc grid, int power, int fidx);
+
 struct terrain_element_kind *t_elem_kind_by_idx(int idx);
 bool t_elem_has_flag(const struct terrain_element *t_elem, int flag);
 const char *t_elem_name(const struct terrain_element *t_elem);
@@ -397,8 +400,6 @@ struct terrain_element *square_t_elem_by_type(struct chunk *c, struct loc grid, 
 
 bool grid_is_danger(const struct monster *mon, struct chunk *c, struct loc grid);
 bool mon_in_t_elem_danger(const struct monster *mon, struct chunk *c);
-
-int burn_square(struct chunk *c, struct loc grid, int power, int fidx);
 
 struct terrain_element *terrain_element_new(int timer, int idx);
 struct terrain_element_level *t_elem_level(const struct terrain_element_kind *kind, int timer);

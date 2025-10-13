@@ -1196,7 +1196,7 @@ static void cave_feat_upkeep_base(struct chunk *c, int trn)
 	cave_feat_proj(c);
 }
 
-static bool cave_all_feats_valid(struct chunk *c)
+bool cave_all_feats_valid(struct chunk *c)
 {
 	struct loc grid;
 	bool valid = true;
@@ -1234,28 +1234,35 @@ void cave_feat_initial_upkeep(struct chunk *c)
 
 static void feat_valid_plog(struct chunk *c, struct loc grid, const char *fmt, ...)
 {
-	const char *c_name = c->name ? c->name : "(unnamed cave)";
-	const char *type = c == cave ? "cave" : (c == player->cave ? "player->cave" : NULL);
-	char type_str[128] = "";
+	const char *c_name;
+	const char *type;
 	char error[128];
 	va_list vp;
 
+	dbg_log("feat", "Error!");
+
 	assert(c);
 	assert(fmt);
+
+	c_name = c->name ? c->name : "(unnamed cave)";
 
 	va_start(vp, fmt);
 	vstrnfmt(error, sizeof error, fmt, vp);
 	va_end(vp);
 
-	if (type) {
-		strnfmt(type_str, sizeof type_str, " (%s)", type);
+	if (c == cave) {
+		type = " (cave)";
+	} else if (player && c == player->cave) {
+		type = " (player->cave)";
+	} else {
+		type = "";
 	}
 
 	//msg_add_fmt("Error: chunk %s%s %s at grid (%i,%i)!",
 	dbg_log_fmt("feat", "Error: chunk %s%s %s at grid (%i,%i)!",
 	//plog_fmt("Error: chunk %s%s %s at grid (%i,%i)!",
 			c_name,
-			type_str,
+			type,
 			error,
 			grid.x,
 			grid.y);
@@ -1264,9 +1271,11 @@ static void feat_valid_plog(struct chunk *c, struct loc grid, const char *fmt, .
 bool square_feat_valid(struct chunk *c, struct loc grid)
 {
 	assert(c);
+	assert(square_in_bounds(c, grid));
 
 	struct feature *feat1, *feat2, *start = square_feat(c, grid);
 	bool has_def, shld_def;
+	int i;
 
 	has_def = square_has_default(c, grid);
 	shld_def = square_should_have_default(c, grid);
@@ -1286,25 +1295,21 @@ bool square_feat_valid(struct chunk *c, struct loc grid)
 		}
 	}
 
-	if (c == cave) {
-		assert(c->timeout_points);
-		assert(c->spread_points);
-		assert(c->produce_points);
-		assert(c->project_points);
-		if (!first_feat_meets_pred(c, grid, feat_times_out) && point_set_contains(c->timeout_points, grid)) {
-			feat_valid_plog(c, grid, "has no timeout feat but grid is marked");
+	for (i = 0; point_set_matches[i].set_get; ++i) {
+		struct point_set *ps = point_set_matches[i].set_get(c);
+		bool should, has;
+
+		if (!ps) continue;
+
+		should = first_feat_meets_pred(c, grid, point_set_matches[i].pred) ? true : false;
+		has = point_set_contains(ps, grid) ? true : false;
+
+		if (should && !has) {
+			feat_valid_plog(c, grid, "has a %s feat but grid is not in pointset", point_set_matches[i].name);
 			return false;
 		}
-		if (!first_feat_meets_pred(c, grid, feat_spreads) && point_set_contains(c->spread_points, grid)) {
-			feat_valid_plog(c, grid, "has no spread feat but grid is marked");
-			return false;
-		}
-		if (!first_feat_meets_pred(c, grid, feat_produces) && point_set_contains(c->produce_points, grid)) {
-			feat_valid_plog(c, grid, "has no produce feat but grid is marked");
-			return false;
-		}
-		if (!first_feat_meets_pred(c, grid, feat_projects) && point_set_contains(c->project_points, grid)) {
-			feat_valid_plog(c, grid, "has no project feat but grid is marked");
+		else if (!should && has) {
+			feat_valid_plog(c, grid, "has no %s feat but grid is in pointset", point_set_matches[i].name);
 			return false;
 		}
 	}
@@ -1315,26 +1320,12 @@ bool square_feat_valid(struct chunk *c, struct loc grid)
 			return false;
 		}
 
-		if (feat_times_out(feat1->kind->fidx) && !point_set_contains(c->timeout_points, grid)) {
-			feat_valid_plog(c, grid, "has timeout feat %s but grid is not marked", feat1->kind->name);
-			return false;
-		}
-		if (feat_spreads(feat1->kind->fidx) && !point_set_contains(c->spread_points, grid)) {
-			feat_valid_plog(c, grid, "has spread feat %s but grid is not marked", feat1->kind->name);
-			return false;
-		}
-		if (feat_produces(feat1->kind->fidx) && !point_set_contains(c->produce_points, grid)) {
-			feat_valid_plog(c, grid, "has produce feat %s but grid is not marked", feat1->kind->name);
-			return false;
-		}
-		if (feat_projects(feat1->kind->fidx) && !point_set_contains(c->project_points, grid)) {
-			feat_valid_plog(c, grid, "has project feat %s but grid is not marked", feat1->kind->name);
-			return false;
-		}
-
 		for (feat2 = feat1->next; feat2; feat2 = feat2->next) {
+			assert(feat2);
+			assert(feat2->kind);
+
 			if (feat_compare(feat1->kind->fidx, feat2->kind->fidx) > 0) {
-				feat_valid_plog(c, grid, "has incorrectly ordered feats %s[prio %i] before %s[prio %i]",
+				feat_valid_plog(c, grid, "has incorrectly ordered feats %s [prio %i] before %s [prio %i]",
 						feat1->kind->name, feat1->kind->priority,
 						feat2->kind->name, feat2->kind->priority);
 				return false;
