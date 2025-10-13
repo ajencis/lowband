@@ -1545,9 +1545,25 @@ static char dbg_file_prefixes[MAX_DBG_FILES][80] = { { '\0' } };
 
 static void dbg_file_name(const char *base, char *buf, size_t bufsize)
 {
-	bool has_suffix = my_stristr(base, ".") ? true : false;
+	bool has_suffix = false;
+	size_t i;
 
-	strnfmt(buf, bufsize, "%s%s", base, has_suffix ? "" : ".log");
+	strnfmt(buf, bufsize, "%s", base);
+	for (i = 0; buf[i] && i < bufsize; ++i) {
+		if (!isalnum((int)buf[i])) {
+			if (buf[i] == '.') {
+				has_suffix = true;
+			}
+			else {
+				buf[i] = '\0';
+				break;
+			}
+		}
+	}
+
+	if (!has_suffix) {
+		my_strcat(buf, ".log", bufsize);
+	}
 }
 
 void dbg_file_reset(const char *filename)
