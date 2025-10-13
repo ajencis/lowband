@@ -870,8 +870,7 @@ static bool aux_object(struct chunk *c, struct player *p,
 static const char *name_prefix(struct feature_kind *kind)
 {
 	if (kind->look_prefix) return kind->look_prefix;
-	if (is_a_vowel(kind->name[0])) return "an ";
-	return "a ";
+	return "";
 }
 
 static const char *preposition(struct feature_kind *kind)

@@ -2039,9 +2039,8 @@ const char *square_apparent_name(struct chunk *c, struct loc grid) {
  * The prefix is usually an indefinite article.  It may be an empty string.
  */
 const char *square_apparent_look_prefix(struct chunk *c, struct loc grid) {
-	const char *name = square_apparent_name(c, grid);
 	const struct feature_kind *fp = feat_apparent(c, grid);
-	return fp->look_prefix ? fp->look_prefix : (is_a_vowel(name[0]) ? "an " : "a ");
+	return fp->look_prefix ? fp->look_prefix : "";
 	/*int actual = square(c, grid)->feat;
 	const struct feature *fp = f_info[actual].mimic ?
 		f_info[actual].mimic : &f_info[actual];
