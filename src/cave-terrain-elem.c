@@ -399,8 +399,6 @@ void cave_set_default_feat(struct chunk *c, int fidx)
 	struct loc grid;
 	assert(fidx >= FEAT_NONE && fidx < FEAT_MAX);
 
-	plog_fmt("setting default feat to %s", f_info[fidx].name);
-
 	if (c->feat_default) {
 		cave_clear_default_feat(c);
 	}
