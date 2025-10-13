@@ -331,7 +331,7 @@ static void project_feature_handler_FIRE(project_feature_handler_context_t *cont
 			one_in_(2)) {
 		/* Forget the floor, make lava. */
 		square_unmark(cave, context->grid);
-		square_add_feat(cave, context->grid, FEAT_LAVA, context->dam / 10);
+		square_set_feat_size(cave, context->grid, FEAT_LAVA, context->dam / 10);
 		if (cave->depth == 0) {
 			expose_to_sun(cave, context->grid, is_daytime());
 		}
@@ -365,9 +365,9 @@ static void project_feature_handler_COLD(project_feature_handler_context_t *cont
 		square_unmark(cave, context->grid);
 		if (one_in_(2)) {
 		} else if (one_in_(2) && !occupied) {
-			square_add_feat(cave, context->grid, FEAT_RUBBLE, randint1(amt));
+			square_set_feat_size(cave, context->grid, FEAT_RUBBLE, randint1(amt));
 		} else {
-			square_add_feat(cave, context->grid, FEAT_PASS_RUBBLE, randint1(amt));
+			square_set_feat_size(cave, context->grid, FEAT_PASS_RUBBLE, randint1(amt));
 		}
 		if (cave->depth == 0) {
 			expose_to_sun(cave, context->grid, is_daytime());
@@ -480,9 +480,9 @@ static void project_feature_handler_ICE(project_feature_handler_context_t *conte
 		square_unmark(cave, context->grid);
 		if (one_in_(2)) {
 		} else if (one_in_(2) && !occupied) {
-			square_add_feat(cave, context->grid, FEAT_RUBBLE, randint1(amt));
+			square_set_feat_size(cave, context->grid, FEAT_RUBBLE, randint1(amt));
 		} else {
-			square_add_feat(cave, context->grid, FEAT_PASS_RUBBLE, randint1(amt));
+			square_set_feat_size(cave, context->grid, FEAT_PASS_RUBBLE, randint1(amt));
 		}
 		if (cave->depth == 0) {
 			expose_to_sun(cave, context->grid, is_daytime());
@@ -539,7 +539,7 @@ static void project_feature_handler_PLASMA(project_feature_handler_context_t *co
 		square_isfloor(cave, context->grid)) {
 		/* Forget the floor, make lava. */
 		square_unmark(cave, context->grid);
-		square_add_feat(cave, context->grid, FEAT_LAVA, context->dam / 10);
+		square_set_feat_size(cave, context->grid, FEAT_LAVA, context->dam / 10);
 		if (cave->depth == 0)
 			expose_to_sun(cave, context->grid, is_daytime());
 
@@ -751,7 +751,7 @@ static void project_feature_handler_HELLFIRE(project_feature_handler_context_t *
 			one_in_(2)) {
 		/* Forget the floor, make lava. */
 		square_unmark(cave, context->grid);
-		square_add_feat(cave, context->grid, FEAT_LAVA, context->dam / 10);
+		square_set_feat_size(cave, context->grid, FEAT_LAVA, context->dam / 10);
 		if (cave->depth == 0) {
 			expose_to_sun(cave, context->grid, is_daytime());
 		}

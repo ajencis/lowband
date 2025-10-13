@@ -1515,7 +1515,7 @@ bool build_vault(struct chunk *c, struct loc centre, struct vault *v)
 				break;
 			}
 				/* Lava */
-			case '`': square_add_feat(c, grid, FEAT_LAVA, 100); break;
+			case '`': square_add_feat(c, grid, FEAT_LAVA); break;
 				/* Included to allow simple inclusion of FA vaults */
 			case '/': /*square_set_feat(c, grid, FEAT_WATER)*/; break;
 			case ';': /*square_set_feat(c, grid, FEAT_TREE)*/; break;

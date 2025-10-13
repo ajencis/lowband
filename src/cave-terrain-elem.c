@@ -369,7 +369,7 @@ static void square_enforce_default_feat(struct chunk *c, struct loc grid)
 	should_have_default = square_should_have_default(c, grid);
 
 	if (should_have_default && !has_default) {
-		square_force_add_feat(c, grid, feat_default, 100);
+		square_force_add_feat(c, grid, feat_default);
 	}
 	else if (!should_have_default && has_default) {
 		square_force_remove_feat(c, grid, feat_default);
@@ -412,7 +412,7 @@ void cave_set_default_feat(struct chunk *c, int fidx)
 	}
 }
 
-bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
+bool square_force_add_feat_size(struct chunk *c, struct loc grid, int fidx, int size)
 {
 	bool success;
 	struct feature *feat, *next;
@@ -463,6 +463,13 @@ bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
 	return true;
 }
 
+bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx)
+{
+	int size = f_info[fidx].default_size;
+
+	return square_force_add_feat_size(c, grid, fidx, size);
+}
+
 void square_copy_feat(struct chunk *from_c, struct chunk *to_c, struct loc from_grid, struct loc to_grid)
 {
 	struct feature *feat;
@@ -478,7 +485,7 @@ void square_copy_feat(struct chunk *from_c, struct chunk *to_c, struct loc from_
 	}
 }
 
-bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
+bool square_add_feat(struct chunk *c, struct loc grid, int fidx)
 {
 	struct feature *feat;
 	bool success;
@@ -489,7 +496,7 @@ bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size)
 		}
 	}
 
-	success = square_force_add_feat(c, grid, fidx, size);
+	success = square_force_add_feat(c, grid, fidx);
 
 	return success;
 }
@@ -666,7 +673,7 @@ static bool square_set_feat_base(struct chunk *c, struct loc grid, int fidx, int
 		}
 	}
 
-	result = square_add_feat(c, grid, fidx, size);
+	result = square_add_feat(c, grid, fidx);
 
 	return result;
 }
@@ -709,7 +716,7 @@ bool square_change_feat(struct chunk *c, struct loc grid, int old, int new)
 
 	for (feat = square_feat(c, grid); feat; feat = feat->next) {
 		if (feat->kind->fidx == old) {
-			square_force_add_feat(c, grid, new, feat->size);
+			square_force_add_feat_size(c, grid, new, feat->size);
 			square_force_remove_feat(c, grid, old);
 			return true;
 		}
@@ -731,7 +738,7 @@ bool square_has_feat(const struct chunk *c, struct loc grid, int fidx)
 	return false;
 }
 
-static void square_set_feat_size(struct chunk *c, struct loc grid, int fidx, int size)
+void square_set_feat_size(struct chunk *c, struct loc grid, int fidx, int size)
 {
 	struct feature *curr;
 	struct square *sq = &c->squares[grid.y][grid.x];
@@ -753,7 +760,7 @@ static void square_set_feat_size(struct chunk *c, struct loc grid, int fidx, int
 		}
 	}
 
-	square_add_feat(c, grid, fidx, size);
+	square_force_add_feat_size(c, grid, fidx, size);
 }
 
 static void square_increase_feat_size(struct chunk *c, struct loc grid, int fidx, int amt)
@@ -840,7 +847,7 @@ static void square_update_feat_memorization(const struct chunk *c, struct player
 
 	for (i = 0; i < FEAT_MAX; ++i) {
 		if (new[i] > 0 && (!pred || pred(i))) {
-			square_add_feat(p->cave, grid, i, new[i]);
+			square_force_add_feat_size(p->cave, grid, i, new[i]);
 		}
 	}
 }

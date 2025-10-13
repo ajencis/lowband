@@ -1744,12 +1744,12 @@ void square_add_stairs(struct chunk *c, struct loc grid, int depth) {
 	}
 
 	square_remove_feats_by_flag(c, grid, TF_WALL);
-	square_add_feat(c, grid, down ? FEAT_MORE : FEAT_LESS, 100);
+	square_add_feat(c, grid, down ? FEAT_MORE : FEAT_LESS);
 }
 
 void square_add_door(struct chunk *c, struct loc grid, bool closed) {
 	square_remove_feats_by_flag(c, grid, TF_WALL);
-	square_add_feat(c, grid, closed ? FEAT_CLOSED : FEAT_OPEN, 100);
+	square_add_feat(c, grid, closed ? FEAT_CLOSED : FEAT_OPEN);
 }
 
 void square_open_door(struct chunk *c, struct loc grid)
@@ -1824,20 +1824,20 @@ void square_destroy_decoy(struct chunk *c, struct loc grid)
 void square_tunnel_wall(struct chunk *c, struct loc grid)
 {
 	square_remove_feats_by_flag(c, grid, TF_WALL);
-	square_add_feat(c, grid, FEAT_FLOOR, 100);
+	square_add_feat(c, grid, FEAT_FLOOR);
 }
 
 void square_destroy_wall(struct chunk *c, struct loc grid)
 {
 	square_remove_feats_by_flag(c, grid, TF_WALL);
-	square_add_feat(c, grid, FEAT_FLOOR, 100);
+	square_add_feat(c, grid, FEAT_FLOOR);
 }
 
 void square_smash_wall(struct chunk *c, struct loc grid)
 {
 	int i;
 	square_remove_feats_by_flag(c, grid, TF_WALL);
-	square_add_feat(c, grid, FEAT_FLOOR, 100);
+	square_add_feat(c, grid, FEAT_FLOOR);
 
 	for (i = 0; i < 8; i++) {
 		/* Extract adjacent location */
@@ -1866,7 +1866,7 @@ void square_smash_wall(struct chunk *c, struct loc grid)
 
 		/* Remove it */
 		square_remove_feats_by_flag(c, grid, TF_WALL);
-		square_add_feat(c, grid, FEAT_FLOOR, 100);
+		square_add_feat(c, grid, FEAT_FLOOR);
 	}
 }
 
@@ -1947,19 +1947,8 @@ void square_earthquake(struct chunk *c, struct loc grid) {
  */
 void square_upgrade_mineral(struct chunk *c, struct loc grid)
 {
-	struct feature *feat = square_feat_by_type(c, grid, FEAT_MAGMA);
-
-	if (feat) {
-		square_add_feat(c, grid, FEAT_MAGMA_K, feat->size);
-		square_remove_feat(c, grid, feat->kind->fidx);
-	}
-
-	feat = square_feat_by_type(c, grid, FEAT_QUARTZ);
-
-	if (feat) {
-		square_add_feat(c, grid, FEAT_QUARTZ_K, feat->size);
-		square_remove_feat(c, grid, feat->kind->fidx);
-	}
+	square_change_feat(c, grid, FEAT_MAGMA, FEAT_MAGMA_K);
+	square_change_feat(c, grid, FEAT_QUARTZ, FEAT_QUARTZ_K);
 }
 
 void square_destroy_rubble(struct chunk *c, struct loc grid) {

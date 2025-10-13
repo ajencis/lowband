@@ -2372,6 +2372,7 @@ static enum parser_error parse_feat_code(struct parser *p) {
 
 	f->fidx = idx;
 	f->proj = -1;
+	f->default_size = 100;
 
 	parser_setpriv(p, f);
 	return PARSE_ERROR_NONE;
@@ -2655,6 +2656,23 @@ static enum parser_error parse_feat_proj(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_feat_default_size(struct parser *p)
+{
+	struct feature_kind *f = parser_priv(p);
+	int size = parser_getint(p, "size");
+
+	if (!f) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	if (size <= 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	f->default_size = size;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_feat(void) {
 	struct parser *p = parser_new();
 
@@ -2678,6 +2696,7 @@ static struct parser *init_parse_feat(void) {
 	parser_reg(p, "resist-flag sym flag", parse_feat_resist_flag);
 	parser_reg(p, "produce sym name int amount int freq", parse_feat_feat_produce);
 	parser_reg(p, "project sym type int amount ?int range", parse_feat_proj);
+	parser_reg(p, "default-size int size", parse_feat_default_size);
 	parser_reg(p, "t-elem sym t_elem int amt", parse_feat_t_elem_produce);
 	parser_reg(p, "t-elem-msg str msg", parse_feat_t_elem_msg);
 

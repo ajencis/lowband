@@ -292,6 +292,7 @@ code:RUBBLE
 name:pile of rubble
 graphics:::W
 priority:13
+default-size:50
 flags:ROCK | NO_SCENT | NO_FLOW | INTERESTING | TORCH
 digging:1
 confused-msg:bumps into some rocks
@@ -382,6 +383,7 @@ code:PASS_RUBBLE
 name:pile of passable rubble
 graphics:::u
 priority:13
+default-size:25
 flags:ROCK | PASSABLE | INTERESTING | TORCH
 digging:1
 desc:Ends LOS, stops missiles, bolts, and beams, and reduces the radius of ball
@@ -405,30 +407,38 @@ priority:10
 #t-elem-msg:belches forth
 flags:PROJECT | INTERESTING | LOS
 produce:POISON_CLOUD:100:20
+desc:A pit of vile liquid.
 
 code:SAPLING
 name:sapling
 graphics:#:G
 priority:10
-flags:PASSABLE
+default-size:25
+flags:PASSABLE | BURN
 desc:A very young tree.
 
 code:YOUNG_TREE
 name:young tree
 graphics:#:g
 priority:10
+default-size:50
+flags:BURN
 desc:A young tree.
 
 code:TREE
 name:young tree
 graphics:#:U
 priority:10
+default-size:100
+flags:BURN
 desc:A tree.
 
 code:OLD_TREE
 name:old tree
 graphics:#:u
 priority:10
+default-size:200
+flags:BURN
 desc:An old tree.
 
 
@@ -438,5 +448,7 @@ name:poison cloud
 graphics:~:g
 priority:19
 timeout:20
+default-size:10
 flags:PROJECT | LOS | INTERESTING | PASSABLE | CLOUD
 project:POIS:1
+desc:A cloud of unpleasant gas.

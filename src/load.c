@@ -1558,7 +1558,7 @@ static int rd_dungeon_aux(struct chunk **c)
 				rd_u16b(&tmp16u);
 				size = (int)tmp16u;
 
-				assert(square_force_add_feat(c1, grid, feat, size));
+				assert(square_force_add_feat_size(c1, grid, feat, size));
 
 				rd_u16b(&tmp16u);
 				feat = (int)tmp16u;

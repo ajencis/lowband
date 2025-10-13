@@ -158,6 +158,8 @@ struct feature_kind {
 	int proj;					// L: what it projects nearby
 	int proj_range;				// L: how far it projects
 	int proj_amt;				// L: how much it projects
+
+	int default_size;			// L: what size it is by default
 };
 
 struct feature {
@@ -348,11 +350,13 @@ bool no_light(const struct player *p);
 
 /* cave-terrain-elem.c */
 bool square_feat_valid(struct chunk *c, struct loc grid);
-bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx, int size);
+bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx);
+bool square_force_add_feat_size(struct chunk *c, struct loc grid, int fidx, int size);
 bool feat_incompat_base(int feat1, int feat2);
 void cave_set_default_feat(struct chunk *c, int fidx);
+void square_set_feat_size(struct chunk *c, struct loc grid, int fidx, int size);
 
-bool square_add_feat(struct chunk *c, struct loc grid, int fidx, int size);
+bool square_add_feat(struct chunk *c, struct loc grid, int fidx);
 bool square_remove_feat(struct chunk *c, struct loc grid, int fidx);
 bool square_force_remove_feat(struct chunk *c, struct loc grid, int fidx);
 void square_free_feats(struct chunk *c, struct loc grid);
@@ -574,7 +578,6 @@ struct feature *first_feat_not_meets_pred(struct chunk *c, struct loc grid, bool
 struct feature *square_feat(struct chunk *c, struct loc grid);
 bool square_has_feat(const struct chunk *c, struct loc grid, int fidx);
 struct feature *square_feat_by_type(struct chunk *c, struct loc grid, int fidx);
-bool square_add_feat(struct chunk *c, struct loc grid, int feat, int size);
 void square_clear_feats(struct chunk *c, struct loc grid);
 bool square_set_feat(struct chunk *c, struct loc grid, int fidx, int size);
 bool square_force_set_feat(struct chunk *c, struct loc grid, int fidx, int size);

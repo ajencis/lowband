@@ -3137,9 +3137,9 @@ bool effect_handler_RUBBLE(effect_handler_context_t *context)
 
 			if (one_in_(3)) {
 				if (one_in_(2)) {
-					square_add_feat(cave, grid, FEAT_PASS_RUBBLE, 100);
+					square_add_feat(cave, grid, FEAT_PASS_RUBBLE);
 				} else {
-					square_add_feat(cave, grid, FEAT_RUBBLE, 100);
+					square_add_feat(cave, grid, FEAT_RUBBLE);
 				}
 				if (cave->depth == 0) {
 					expose_to_sun(cave, grid, is_daytime());
@@ -3165,7 +3165,7 @@ bool effect_handler_RUBBLE(effect_handler_context_t *context)
 bool effect_handler_GRANITE(effect_handler_context_t *context)
 {
 	struct trap *trap = context->origin.which.trap;
-	square_add_feat(cave, trap->grid, FEAT_GRANITE, 100);
+	square_add_feat(cave, trap->grid, FEAT_GRANITE);
 	if (cave->depth == 0) {
 		expose_to_sun(cave, trap->grid, is_daytime());
 	}

@@ -582,9 +582,6 @@ static bool twall(struct loc grid, int feat)
 
 	// remove that feat
 	square_remove_feat(cave, grid, feat);
-	if (!square_feat(cave, grid)) {
-		square_add_feat(cave, grid, FEAT_FLOOR, 100);
-	}
 
 	/* Update the visuals */
 	player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
