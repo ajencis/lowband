@@ -122,7 +122,7 @@ static int point_set_index(struct point_set *ps, struct loc grid)
 	return -1;
 }
 
-int point_set_contains(struct point_set *ps, struct loc grid)
+bool point_set_contains(struct point_set *ps, struct loc grid)
 {
 	return point_set_index(ps, grid) >= 0;
 }
