@@ -2389,6 +2389,12 @@ static enum parser_error parse_feat_name(struct parser *p) {
 		return PARSE_ERROR_REPEATED_DIRECTIVE;
 	}
 	f->name = string_make(name);
+
+	if (!f->look_prefix) {
+		if (is_a_vowel(f->name[0])) f->look_prefix = string_make("an");
+		else f->look_prefix = string_make("a");
+	}
+
 	return PARSE_ERROR_NONE;
 }
 
@@ -2548,12 +2554,17 @@ static enum parser_error parse_feat_confused_msg(struct parser *p) {
 
 static enum parser_error parse_feat_look_prefix(struct parser *p) {
 	struct feature_kind *f = parser_priv(p);
+	const char *prefix = parser_getstr(p, "text");
 
 	if (!f) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
-	f->look_prefix =
-		string_append(f->look_prefix, parser_getstr(p, "text"));
+	
+	string_free(f->look_prefix);
+
+	if (streq(prefix, "NONE")) f->look_prefix = NULL;
+	else f->look_prefix = string_make(prefix);
+
 	return PARSE_ERROR_NONE;
 }
 

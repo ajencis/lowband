@@ -101,6 +101,7 @@
 # 'look-prefix' is printed before the name in the result of looking at the
 # terrain.  If not set, the default is to use 'an' if the name starts with
 # a vowel or 'a' if the name does not start with a vowel.
+# L: if look-prefix is exactly  NONE  will not use a look prefix at all
 
 # 'look-in-preposition' is the preposition that will be used when printing
 # the result for an observer looking at the observer's grid:  'You are
@@ -132,6 +133,7 @@ code:DIRT_FLOOR
 name:dirt
 graphics:.:U
 priority:5
+look-prefix:NONE
 flags:LOS | PROJECT | PASSABLE | FLOOR | OBJECT | EASY | TRAP | TORCH
 desc:An open dirt floor.  Can be walked across by anything, and can
 desc: hold traps or items.  Does not break line of sight.
