@@ -1108,7 +1108,7 @@ static void cave_feat_spread(struct chunk *c)
 	mda_free(changes);
 }
 
-static void grid_feat_proj(struct chunk *c, struct loc grid, md_array *proj_amt)
+static void grid_feat_proj(struct chunk *c, struct loc grid, md_array *proj_amt, md_array *feats_projecting)
 {
 	struct loc ogrid;
 	struct feature *feat;
@@ -1128,24 +1128,61 @@ static void grid_feat_proj(struct chunk *c, struct loc grid, md_array *proj_amt)
 				if (distance(grid, ogrid) > dist) continue;
 
 				mda_element_add(proj_amt, amt, ogrid.y, ogrid.x, which);
+				mda_element_set(feats_projecting, 1, ogrid.y, ogrid.x, feat->kind->fidx);
 			}
 		}
 	}
 }
 
+static bool cave_feat_proj_msg(struct chunk *c, struct loc grid, int proj, md_array *feats_projecting)
+{
+	struct player *p = square_isplayer(c, grid) ? player : NULL;
+	struct monster *mon = square_monster(c, grid);
+	char mdesc[64], message[256];
+	int i;
+
+	if (p) {
+		strnfmt(mdesc, sizeof mdesc, "you");
+		mon = &p->mon;
+	}
+	else if (mon) {
+		monster_desc(mdesc, sizeof mdesc, mon, 0);
+	}
+
+	if (!mon) return false;
+	if (mon_proj_is_immune(mon, proj)) return false;
+
+	for (i = 0; i < FEAT_MAX; ++i) {
+		if (f_info[i].proj != proj) continue;
+		if (!mda_element_get(feats_projecting, grid.y, grid.x, i)) continue;
+
+		strnfmt(message, sizeof message, "%s%s %s %s.",
+				f_info[i].look_prefix,
+				f_info[i].name,
+				projections[proj].verb_third,
+				mdesc);
+		my_strcap(message);
+		msg(message);
+	}
+
+	return true;
+}
+
 static void cave_feat_proj(struct chunk *c)
 {
-	md_array *proj_amt;
+	md_array *proj_amt, *feats_projecting;
 	struct loc grid;
 	int which, amt, i;
 	int flg = PROJECT_HIDE | PROJECT_JUMP | PROJECT_KILL | PROJECT_ITEM | PROJECT_GRID | PROJECT_PLAY;
 
 	if (c != cave) return;
+	assert(c->project_points);
 
 	proj_amt = mda_new(3, c->height, c->width, PROJ_MAX);
+	feats_projecting = mda_new(3, c->height, c->width, FEAT_MAX);
 
 	for (i = 0; i < c->project_points->n; ++i) {
-		grid_feat_proj(c, c->project_points->pts[i], proj_amt);
+		grid_feat_proj(c, c->project_points->pts[i], proj_amt, feats_projecting);
 	}
 
 	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
@@ -1154,6 +1191,7 @@ static void cave_feat_proj(struct chunk *c)
 				amt = mda_element_get(proj_amt, grid.y, grid.x, which);
 
 				if (amt > 0) {
+					cave_feat_proj_msg(c, grid, which, feats_projecting);
 					project(source_grid(grid), 0, grid, amt, which, flg, 0, 0, NULL);
 				}
 			}
@@ -1161,6 +1199,7 @@ static void cave_feat_proj(struct chunk *c)
 	}
 
 	mda_free(proj_amt);
+	mda_free(feats_projecting);
 }
 
 
