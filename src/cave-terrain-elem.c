@@ -8,6 +8,9 @@
 #include "project.h"
 
 
+const struct feature *ref_feat = NULL;
+
+
 /**
  * compares the feats: returns -1 if feat1 comes first, 1 if feat2 comes first, or
  * 0 if they are interchangeable (which should not happen...)
@@ -1117,9 +1120,10 @@ static void grid_feat_proj(struct chunk *c, struct loc grid, md_array *proj_amt,
 	for (feat = square_feat(c, grid); feat; feat = feat->next) {
 		which = feat->kind->proj;
 		dist = feat->kind->proj_range;
-		amt = feat->kind->proj_amt;
 
 		if (which < 0) continue;
+
+		ref_feat = feat;
 
 		for (ogrid.x = grid.x - dist; ogrid.x <= grid.x + dist; ++ogrid.x) {
 			for (ogrid.y = grid.y - dist; ogrid.y <= grid.y + dist; ++ogrid.y) {
@@ -1127,11 +1131,15 @@ static void grid_feat_proj(struct chunk *c, struct loc grid, md_array *proj_amt,
 				if (!square_isprojectable(c, ogrid)) continue;
 				if (distance(grid, ogrid) > dist) continue;
 
+				amt = dice_roll(feat->kind->proj_amt, NULL);
+
 				mda_element_add(proj_amt, amt, ogrid.y, ogrid.x, which);
 				mda_element_set(feats_projecting, 1, ogrid.y, ogrid.x, feat->kind->fidx);
 			}
 		}
 	}
+
+	ref_feat = NULL;
 }
 
 static bool cave_feat_proj_msg(struct chunk *c, struct loc grid, int proj, md_array *feats_projecting)
@@ -1151,6 +1159,7 @@ static bool cave_feat_proj_msg(struct chunk *c, struct loc grid, int proj, md_ar
 
 	if (!mon) return false;
 	if (mon_proj_is_immune(mon, proj)) return false;
+	if (!monster_is_visible(mon) && !p) return false;
 
 	for (i = 0; i < FEAT_MAX; ++i) {
 		if (f_info[i].proj != proj) continue;

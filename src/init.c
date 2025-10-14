@@ -2642,7 +2642,7 @@ static enum parser_error parse_feat_t_elem_msg(struct parser *p) {
 
 static enum parser_error parse_feat_proj(struct parser *p) {
 	struct feature_kind *f = parser_priv(p);
-	int type, range = 0, amt;
+	int type, range = 0;
 
 	if (!f) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -2658,13 +2658,72 @@ static enum parser_error parse_feat_proj(struct parser *p) {
 		return PARSE_ERROR_GENERIC;
 	}
 
-	amt = parser_getint(p, "amount");
-
 	f->proj = type;
 	f->proj_range = range;
-	f->proj_amt = amt;
 
 	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_feat_proj_dice(struct parser *p) {
+	struct feature_kind *f = parser_priv(p);
+	dice_t *dice;
+	const char *string;
+
+	if (!f) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	dice = dice_new();
+	if (!dice) {
+		return PARSE_ERROR_INVALID_DICE;
+	}
+
+	string = parser_getstr(p, "dice");
+	if (dice_parse_string(dice, string)) {
+		dice_free(f->proj_amt);
+		f->proj_amt = dice;
+	} else {
+		dice_free(dice);
+		return PARSE_ERROR_INVALID_DICE;
+	}
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_feat_proj_expr(struct parser *p) {
+	struct feature_kind *f = parser_priv(p);
+	expression_t *expression;
+	expression_base_value_f function;
+	const char *name;
+	const char *base;
+	const char *expr;
+	enum parser_error result;
+
+	if (!f->proj_amt) {
+		return PARSE_ERROR_NONE;
+	}
+	name = parser_getsym(p, "name");
+	base = parser_getsym(p, "base");
+	expr = parser_getstr(p, "expr");
+	expression = expression_new();
+
+	if (!expression) {
+		return PARSE_ERROR_INVALID_EXPRESSION;
+	}
+	function = effect_value_base_by_name(base);
+	expression_set_base_value(expression, function);
+
+	if (expression_add_operations_string(expression, expr) < 0) {
+		result = PARSE_ERROR_BAD_EXPRESSION_STRING;
+	} else if (dice_bind_expression(f->proj_amt, name, expression) < 0) {
+		result = PARSE_ERROR_UNBOUND_EXPRESSION;
+	} else {
+		result = PARSE_ERROR_NONE;
+	}
+
+	expression_free(expression);
+
+	return result;
 }
 
 static enum parser_error parse_feat_default_size(struct parser *p)
@@ -2706,7 +2765,9 @@ static struct parser *init_parse_feat(void) {
 	parser_reg(p, "look-in-preposition str text", parse_feat_look_in_preposition);
 	parser_reg(p, "resist-flag sym flag", parse_feat_resist_flag);
 	parser_reg(p, "produce sym name int amount int freq", parse_feat_feat_produce);
-	parser_reg(p, "project sym type int amount ?int range", parse_feat_proj);
+	parser_reg(p, "project sym type ?int range", parse_feat_proj);
+	parser_reg(p, "project-dice str dice", parse_feat_proj_dice);
+	parser_reg(p, "project-expr sym name sym base str expr", parse_feat_proj_expr);
 	parser_reg(p, "default-size int size", parse_feat_default_size);
 	parser_reg(p, "t-elem sym t_elem int amt", parse_feat_t_elem_produce);
 	parser_reg(p, "t-elem-msg str msg", parse_feat_t_elem_msg);
@@ -2781,6 +2842,7 @@ static void cleanup_feat(void) {
 		string_free(f_info[idx].desc);
 		string_free(f_info[idx].name);
 		string_free(f_info[idx].t_elem_msg);
+		dice_free(f_info[idx].proj_amt);
 	}
 	mem_free(f_info);
 }

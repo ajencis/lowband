@@ -452,7 +452,9 @@ priority:19
 timeout:20
 default-size:10
 flags:PROJECT | LOS | INTERESTING | PASSABLE | CLOUD
-project:POIS:1
+project:POIS
+project-dice:2d$D
+project-expr:D:FEAT_SIZE:+ 3 / 4
 desc:A cloud of unpleasant gas.
 
 code:FIRE
@@ -462,5 +464,7 @@ priority:19
 timeout:25
 default-size:5
 flags:PROJECT | LOS | INTERESTING | PASSABLE | FIRE
-project:FIRE:1
+project:FIRE
+project-dice:2d$D
+project-expr:D:FEAT_SIZE:+ 3 / 4
 desc:An open flame.

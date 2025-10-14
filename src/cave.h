@@ -19,6 +19,7 @@
 #ifndef CAVE_H
 #define CAVE_H
 
+#include "z-dice.h"
 #include "z-type.h"
 #include "z-bitflag.h"
 
@@ -157,7 +158,7 @@ struct feature_kind {
 
 	int proj;					// L: what it projects nearby
 	int proj_range;				// L: how far it projects
-	int proj_amt;				// L: how much it projects
+	dice_t *proj_amt;			// L: how much it projects
 
 	int default_size;			// L: what size it is by default
 };
@@ -349,6 +350,8 @@ void update_view(struct chunk *c, struct player *p);
 bool no_light(const struct player *p);
 
 /* cave-terrain-elem.c */
+extern const struct feature *ref_feat;
+
 bool square_feat_valid(struct chunk *c, struct loc grid);
 bool cave_all_feats_valid(struct chunk *c);
 bool square_force_add_feat(struct chunk *c, struct loc grid, int fidx);

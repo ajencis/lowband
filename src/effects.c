@@ -354,6 +354,15 @@ static int32_t effect_value_base_caster_hp(void)
 
 	return power;
 }
+
+static int32_t effect_value_base_feat_size(void)
+{
+	if (ref_feat) {
+		return ref_feat->size;
+	}
+	return 0;
+}
+
 expression_base_value_f effect_value_base_by_name(const char *name)
 {
 	static const struct value_base_s {
@@ -369,6 +378,7 @@ expression_base_value_f effect_value_base_by_name(const char *name)
 		{ "MONSTER_PERCENT_HP_GONE",
 		  effect_value_base_monster_percent_hp_gone },
 		{ "CASTER_HP", effect_value_base_caster_hp },
+		{ "FEAT_SIZE", effect_value_base_feat_size },
 		{ NULL, NULL },
 	};
 	const struct value_base_s *current = value_bases;

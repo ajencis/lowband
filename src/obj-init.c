@@ -551,6 +551,7 @@ static void cleanup_projection(void)
 		string_free(projections[idx].player_desc);
 		string_free(projections[idx].blind_desc);
 		string_free(projections[idx].verb_second);
+		string_free(projections[idx].verb_third);
 	}
 	mem_free(projections);
 }
