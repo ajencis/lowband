@@ -41,7 +41,8 @@ struct projection {
 	char *player_desc;
 	char *blind_desc;
 	char *lash_desc;
-	char *player_message;			/* L: message when caused by the player */
+	char *verb_second;			/* L: message when caused by the player */
+	char *verb_third;
 	int numerator;
 	random_value denominator;
 	int divisor;

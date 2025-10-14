@@ -418,15 +418,26 @@ static enum parser_error parse_projection_color(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
-static enum parser_error parse_projection_player_message(struct parser *p) {
+static enum parser_error parse_projection_verb(struct parser *p) {
 	struct projection *projection = parser_priv(p);
-	const char *message;
+	const char *sym;
 
 	if (!projection) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
-	message = parser_getstr(p, "message");
-	projection->player_message = string_make(message);
+
+	sym = parser_getsym(p, "second");
+	projection->verb_second = string_make(sym);
+
+	if (parser_hasval(p, "third")) {
+		sym = parser_getsym(p, "third");
+		projection->verb_third = string_make(sym);
+	}
+	else {
+		projection->verb_third = string_make(projection->verb_second);
+		projection->verb_third = string_append(projection->verb_third, "s");
+	}
+
 	return PARSE_ERROR_NONE;
 }
 
@@ -469,7 +480,7 @@ static struct parser *init_parse_projection(void) {
 	parser_reg(p, "player-desc str desc", parse_projection_player_desc);
 	parser_reg(p, "blind-desc str desc", parse_projection_blind_desc);
 	parser_reg(p, "lash-desc str desc", parse_projection_lash_desc);
-	parser_reg(p, "player-brand str message", parse_projection_player_message);
+	parser_reg(p, "verb sym second ?sym third", parse_projection_verb);
 	parser_reg(p, "numerator uint num", parse_projection_numerator);
 	parser_reg(p, "denominator rand denom", parse_projection_denominator);
 	parser_reg(p, "divisor uint div", parse_projection_divisor);
@@ -491,28 +502,10 @@ static errr finish_parse_projection(struct parser *p) {
 	//int element_count = 0, count = 0, i = 0;
 	int i = 0;
 
-	/* Count the entries */
-	/*z_info->projection_max = 0;
-	projection = parser_priv(p);
-	while (projection) {
-		z_info->projection_max++;
-		if (projection->type && streq(projection->type, "element")) {
-			element_count++;
-		}
-		projection = projection->next;
-	}*/
-
 	z_info->projection_max = PROJ_MAX;
-
-	/*if (element_count + 1 < (int) N_ELEMENTS(element_names)) {
-		quit_fmt("Too few elements in projection.txt!");
-	} else if (element_count + 1 > (int) N_ELEMENTS(element_names)) {
-		quit_fmt("Too many elements in projection.txt!");
-	}*/
 
 	/* Allocate the direct access list and copy the data to it */
 	projections = mem_zalloc((z_info->projection_max) * sizeof(*projection));
-	//count = z_info->projection_max - 1;
 
 	for (projection = parser_priv(p); projection; projection = next) {
 		i = projection->index;
@@ -557,7 +550,7 @@ static void cleanup_projection(void)
 		string_free(projections[idx].lash_desc);
 		string_free(projections[idx].player_desc);
 		string_free(projections[idx].blind_desc);
-		string_free(projections[idx].player_message);
+		string_free(projections[idx].verb_second);
 	}
 	mem_free(projections);
 }

@@ -1674,11 +1674,11 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct py_att
 			dmg_text = format(" (%d)", dmg);
 		}
 
-		if (proj->player_message) {
+		if (proj->verb_second) {
 			assert(mon);
 			char proj_name[64];
 			monster_desc(proj_name, sizeof(proj_name), mon, MDESC_PRO_VIS | MDESC_OBJE);
-			proj_text = format("; you %s %s", proj->player_message, proj_name);
+			proj_text = format("; you %s %s", proj->verb_second, proj_name);
 		}
 
 		if (melee_hit_types[i].text) {

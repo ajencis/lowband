@@ -27,6 +27,7 @@
 # player-desc: player description
 # blind-desc: blind description
 # lash-desc: lash description
+# verb : second-person : third-person
 # numerator: damage multiplier
 # denominator: damage divisor
 # divisor: HP divisor
@@ -62,6 +63,10 @@
 
 # 'lash-desc' is the description for the "lash" effect used for spitting or
 # whipping monsters.
+
+# L: 'verb' is the verb used for describing projecting on something. the third
+# person verb is optional and will be the second person verb plus  's'  if not
+# specified
 
 # 'numerator' and 'denominator' define the fraction of damage allowed through
 # player resistance to an element.  The numerator is a simple non-negative
@@ -104,7 +109,7 @@ desc:acid
 player-desc:acid
 blind-desc:acid
 lash-desc:acid
-player-brand:dissolve
+verb:dissolve
 numerator:1  
 denominator:3
 divisor:3
@@ -121,7 +126,7 @@ desc:lightning
 player-desc:lightning
 blind-desc:lightning
 lash-desc:lightning
-player-brand:shock
+verb:shock
 numerator:1  
 denominator:3
 divisor:3
@@ -138,7 +143,7 @@ desc:fire
 player-desc:fire
 blind-desc:fire
 lash-desc:fire
-player-brand:burn
+verb:burn
 numerator:1  
 denominator:3
 divisor:3
@@ -155,7 +160,7 @@ desc:cold
 player-desc:frost
 blind-desc:cold
 lash-desc:frost
-player-brand:freeze
+verb:freeze
 numerator:1
 denominator:3
 divisor:3
@@ -172,7 +177,7 @@ desc:poison
 player-desc:poison gas
 blind-desc:poison
 lash-desc:venom
-player-brand:envenom
+verb:envenom
 numerator:1  
 denominator:3
 divisor:3
@@ -189,7 +194,7 @@ desc:light
 player-desc:light
 blind-desc:something
 lash-desc:brightness
-player-brand:illuminate
+verb:illuminate
 numerator:6
 denominator:8+1d4
 divisor:6
@@ -206,7 +211,7 @@ desc:dark
 player-desc:dark
 blind-desc:something
 lash-desc:blackness
-player-brand:benight
+verb:benight
 numerator:6
 denominator:8+1d4
 divisor:6
@@ -223,7 +228,7 @@ desc:sound
 player-desc:sound
 blind-desc:noise
 lash-desc:sound
-player-brand:deafen
+verb:deafen
 numerator:6
 denominator:8+1d4
 divisor:6
@@ -240,7 +245,7 @@ desc:shards
 player-desc:shards
 blind-desc:something sharp
 lash-desc:razors
-player-brand:shred
+verb:shred
 numerator:6
 denominator:8+1d4
 divisor:6
@@ -257,7 +262,7 @@ desc:nexus
 player-desc:nexus
 blind-desc:something strange
 lash-desc:dislocation
-player-brand:dislocate
+verb:dislocate
 numerator:6
 denominator:8+1d4
 divisor:6
@@ -274,7 +279,7 @@ desc:nether
 player-desc:nether
 blind-desc:something cold
 lash-desc:withering
-player-brand:wither
+verb:wither
 numerator:6
 denominator:8+1d4
 divisor:6
@@ -291,7 +296,7 @@ desc:chaos
 player-desc:chaos
 blind-desc:something strange
 lash-desc:confusion
-player-brand:confuse
+verb:confuse
 numerator:6
 denominator:8+1d4
 divisor:6
@@ -308,7 +313,7 @@ desc:disenchantment
 player-desc:disenchantment
 blind-desc:something strange
 lash-desc:unmagic
-player-brand:disenchant
+verb:disenchant
 numerator:6
 denominator:8+1d4
 divisor:6
@@ -325,7 +330,7 @@ desc:water
 player-desc:water
 blind-desc:water
 lash-desc:water
-player-brand:soak
+verb:soak
 divisor:6
 damage-cap:0
 msgt:GENERIC
@@ -340,7 +345,7 @@ desc:ice
 player-desc:ice
 blind-desc:something sharp
 lash-desc:icicles
-player-brand:ice
+verb:ice
 numerator:1
 denominator:3
 divisor:6
@@ -357,7 +362,7 @@ desc:gravity
 player-desc:gravity
 blind-desc:something strange
 lash-desc:gravity
-player-brand:pull at
+verb:pull at:pulls at
 divisor:3
 damage-cap:200
 msgt:BR_GRAVITY
@@ -372,7 +377,7 @@ desc:inertia
 player-desc:inertia
 blind-desc:something strange
 lash-desc:lassitude
-player-brand:enervate
+verb:enervate
 divisor:6
 damage-cap:200
 msgt:BR_INERTIA
@@ -387,7 +392,7 @@ desc:force
 player-desc:force
 blind-desc:something hard
 lash-desc:impact
-player-brand:impact
+verb:impact
 divisor:6
 damage-cap:200
 msgt:BR_FORCE
@@ -402,7 +407,7 @@ desc:time
 player-desc:time
 blind-desc:something strange
 lash-desc:ruination
-player-brand:antedeluvify
+verb:antedeluvify:antedelvifies
 divisor:3
 damage-cap:150
 msgt:BR_TIME
@@ -417,7 +422,7 @@ desc:plasma
 player-desc:plasma
 blind-desc:something
 lash-desc:living fire
-player-brand:incinerate
+verb:incinerate
 divisor:6
 damage-cap:150
 msgt:BR_PLASMA
@@ -432,7 +437,7 @@ desc:a meteor
 player-desc:meteor
 blind-desc:something
 lash-desc:meteoric iron
-player-brand:meteorize
+verb:meteorize
 divisor:6
 damage-cap:0
 msgt:GENERIC
@@ -446,7 +451,7 @@ type:element
 desc:a missile
 player-desc:magical energy
 blind-desc:something
-player-brand:blast magic at
+verb:blast magic at:blasts magic at
 divisor:6
 damage-cap:0
 msgt:GENERIC
@@ -461,7 +466,7 @@ desc:mana
 player-desc:the elements
 blind-desc:something
 lash-desc:raw magic
-player-brand:blast raw magic at
+verb:blast raw magic at:blasts raw magic at
 divisor:3
 damage-cap:1600
 msgt:BR_ELEMENTS
@@ -476,7 +481,7 @@ desc:a holy orb
 player-desc:holy power
 blind-desc:something
 lash-desc:holy power
-player-brand:sanctify
+verb:sanctify:sanctifies
 divisor:6
 damage-cap:0
 msgt:GENERIC
@@ -490,7 +495,7 @@ type:element
 desc:an arrow
 player-desc:arrows
 blind-desc:something sharp
-player-brand:impale
+verb:impale
 divisor:6
 damage-cap:0
 msgt:GENERIC
@@ -504,7 +509,7 @@ type:element
 desc:stab
 player-desc:stab
 lash-desc:impalement
-player-brand:stab
+verb:stab
 blind-desc:something
 obvious:1
 color:Light Blue
@@ -515,7 +520,7 @@ type:element
 desc:slash
 player-desc:slash
 lash-desc:slashing
-player-brand:slash
+verb:slash
 blind-desc:something
 obvious:1
 color:Light Blue
@@ -526,7 +531,7 @@ type:element
 desc:bash
 player-desc:bash
 lash-desc:bludgeoning
-player-brand:bludgeon
+verb:bludgeon
 blind-desc:something
 obvious:1
 color:Light Blue
@@ -538,7 +543,7 @@ desc:holy fire
 player-desc:holy fire
 blind-desc:something
 lash-desc:holy fire
-player-brand:immolate
+verb:immolate
 divisor:6
 damage-cap:0
 msgt:GENERIC
@@ -553,7 +558,7 @@ desc:hellfire
 player-desc:hellfire
 blind-desc:something
 lash-desc:hellfire
-player-brand:incinerate
+verb:incinerate
 divisor:6
 damage-cap:0
 msgt:GENERIC
@@ -808,7 +813,7 @@ desc:exsanguination
 player-desc:exsanguination
 blind-desc:something draining
 lash-desc:exsangunation
-player-brand:exsangunate
+verb:exsangunate
 numerator:6
 denominator:8+1d4
 divisor:6
@@ -825,7 +830,7 @@ desc:woe
 player-desc:woe
 blind-desc:something mournful
 lash-desc:woe
-player-brand:enwoe
+verb:enwoe
 numerator:6
 denominator:8+1d4
 divisor:6
@@ -842,7 +847,7 @@ desc:poison gas
 player-desc:poison gas
 blind-desc:something foul-smelling
 lash-desc:poison gas
-player-brand:engas
+verb:engas:engases
 numerator:0
 msgt:BR_GAS
 obvious:1
@@ -856,7 +861,7 @@ desc:noxious gas
 player-desc:noxious gas
 blind-desc:something foul-smelling
 lash-desc:noxious gas
-player-brand:engas
+verb:engas:engases
 numerator:0
 msgt:BR_GAS
 obvious:1
@@ -871,7 +876,7 @@ desc:poison
 player-desc:poison gas
 blind-desc:poison
 lash-desc:venom
-player-brand:envenom
+verb:envenom
 numerator:1
 denominator:3
 divisor:3
@@ -889,7 +894,7 @@ desc:noxious gas
 player-desc:noxious gas
 blind-desc:poison
 lash-desc:venom
-player-brand:envenom
+verb:envenom
 numerator:1
 denominator:3
 divisor:3
