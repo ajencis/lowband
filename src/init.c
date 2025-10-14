@@ -2559,10 +2559,10 @@ static enum parser_error parse_feat_look_prefix(struct parser *p) {
 	if (!f) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
-	
+
 	string_free(f->look_prefix);
 
-	if (streq(prefix, "NONE")) f->look_prefix = NULL;
+	if (streq(prefix, "NONE")) f->look_prefix = string_make("");
 	else f->look_prefix = string_make(prefix);
 
 	return PARSE_ERROR_NONE;
@@ -2742,10 +2742,10 @@ static errr finish_parse_feat(struct parser *p) {
 		 * Ensure the prefixes and prepositions end with a space for
 		 * ease of use with the targeting code.
 		 */
-		if (kind->look_prefix && !suffix(
-				kind->look_prefix, " ")) {
-			kind->look_prefix = string_append(
-				kind->look_prefix, " ");
+		assert(kind->look_prefix);
+
+		if (kind->look_prefix[0] && !suffix(kind->look_prefix, " ")) {
+			kind->look_prefix = string_append(kind->look_prefix, " ");
 		}
 		if (kind->look_in_preposition && !suffix(
 				kind->look_in_preposition, " ")) {
