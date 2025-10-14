@@ -869,8 +869,8 @@ static bool aux_object(struct chunk *c, struct player *p,
 
 static const char *name_prefix(struct feature_kind *kind)
 {
-	if (kind->look_prefix) return kind->look_prefix;
-	return "";
+	assert(kind->look_prefix);
+	return kind->look_prefix;
 }
 
 static const char *preposition(struct feature_kind *kind)

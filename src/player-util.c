@@ -3789,7 +3789,6 @@ void search(struct player *p)
 
 					name = feat->kind->name;
 					pref = feat->kind->look_prefix;
-					if (!pref) pref = "";
 
 					msg("You have discovered %s%s.", name, pref);
 				}

@@ -2040,7 +2040,7 @@ const char *square_apparent_name(struct chunk *c, struct loc grid) {
  */
 const char *square_apparent_look_prefix(struct chunk *c, struct loc grid) {
 	const struct feature_kind *fp = feat_apparent(c, grid);
-	return fp->look_prefix ? fp->look_prefix : "";
+	return fp->look_prefix;
 	/*int actual = square(c, grid)->feat;
 	const struct feature *fp = f_info[actual].mimic ?
 		f_info[actual].mimic : &f_info[actual];
