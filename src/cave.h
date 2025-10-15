@@ -359,11 +359,14 @@ bool square_force_add_feat_size(struct chunk *c, struct loc grid, int fidx, int 
 bool feat_incompat_base(int feat1, int feat2);
 void cave_set_default_feat(struct chunk *c, int fidx);
 void square_set_feat_size(struct chunk *c, struct loc grid, int fidx, int size);
+bool square_can_add_feat(struct chunk *c, struct loc grid, int fidx);
 
 bool square_add_feat(struct chunk *c, struct loc grid, int fidx);
 bool square_remove_feat(struct chunk *c, struct loc grid, int fidx);
 bool square_force_remove_feat(struct chunk *c, struct loc grid, int fidx);
 void square_free_feats(struct chunk *c, struct loc grid);
+void square_increase_feat_size(struct chunk *c, struct loc grid, int fidx, int amt);
+void square_reduce_feat_size(struct chunk *c, struct loc grid, int fidx, int amt);
 
 void cave_refresh_point_sets(struct chunk *c);
 

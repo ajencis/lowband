@@ -101,6 +101,17 @@ bool feat_incompat_base(int feat1, int feat2)
 	return false;
 }
 
+bool square_can_add_feat(struct chunk *c, struct loc grid, int fidx)
+{
+	struct feature *feat;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (feat_incompat_base(feat->kind->fidx, fidx)) return false;
+	}
+
+	return true;
+}
+
 /*
 static void feat_desc(const struct feature *feat, char *buf, size_t bufsize)
 {
@@ -766,7 +777,7 @@ void square_set_feat_size(struct chunk *c, struct loc grid, int fidx, int size)
 	square_force_add_feat_size(c, grid, fidx, size);
 }
 
-static void square_increase_feat_size(struct chunk *c, struct loc grid, int fidx, int amt)
+void square_increase_feat_size(struct chunk *c, struct loc grid, int fidx, int amt)
 {
 	struct feature *feat = square_feat_by_type(c, grid, fidx);
 	int curr = feat ? feat->size : 0;
@@ -774,7 +785,7 @@ static void square_increase_feat_size(struct chunk *c, struct loc grid, int fidx
 	square_set_feat_size(c, grid, fidx, curr + amt);
 }
 
-static void square_reduce_feat_size(struct chunk *c, struct loc grid, int fidx, int amt)
+void square_reduce_feat_size(struct chunk *c, struct loc grid, int fidx, int amt)
 {
 	square_increase_feat_size(c, grid, fidx, -amt);
 }
@@ -1416,16 +1427,19 @@ int burn_square(struct chunk *c, struct loc grid, int power, int fidx)
 
 	for (feat = square_feat(c, grid); feat; feat = next) {
 		next = feat->next;
+		burn_amt = 0;
 
 		if (feat_burns_fast(feat->kind->fidx)) {
 			burn_amt = MIN(power, (feat->size + 2) / 3);
 		}
 		else if (feat_burns_slow(feat->kind->fidx)) {
 			burn_amt = my_int_cbrt(feat->size * feat->size);
+			burn_amt = burn_amt - feat->size * 3;
 			burn_amt = MIN(power, burn_amt);
-			burn_amt  = (burn_amt + 2) / 3;
+			burn_amt = (burn_amt + 2) / 3;
 		}
-		else {
+
+		if (burn_amt <= 0) {
 			continue;
 		}
 
