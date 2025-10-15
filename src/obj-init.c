@@ -237,9 +237,6 @@ static enum parser_error parse_projection_code(struct parser *p) {
 	parser_setpriv(p, projection);
 	projection->next = h;
 	projection->index = index;
-	/*if ((index < ELEM_MAX) && !streq(code, element_names[index])) {
-		return PARSE_ERROR_ELEMENT_NAME_MISMATCH;
-	}*/
 
 	if (index < ELEM_MAX) {
 		projection->resist_types[index] = RES_TYPE_NORMAL;

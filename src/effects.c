@@ -271,6 +271,10 @@ int effect_subtype(int index, const char *type)
 			}
 			break;
 
+		// L: terrain feature id
+		case EF_TERRAIN_FEAT:
+			return lookup_feat_code(type);
+
 		/* Some effects only want a radius, so this is a dummy */
 		default:
 			if (streq(type, "NONE")) {

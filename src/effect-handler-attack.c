@@ -124,7 +124,7 @@ static bool project_touch(int dam, int rad, int typ, bool aware,
 	return (project(source_player(), rad, pgrid, dam, typ, flg, 0, 0, obj));
 }
 
-static bool ball_spell(effect_handler_context_t *context, uint8_t diameter_of_source, bool hit_caster)
+static bool ball_spell(effect_handler_context_t *context, uint8_t diameter_of_source, bool hit_caster, int subtype)
 {
 	int dam = effect_calculate_value(context, true);
 	int rad = context->radius ? context->radius : 2;
@@ -202,7 +202,7 @@ static bool ball_spell(effect_handler_context_t *context, uint8_t diameter_of_so
 	}
 
 	/* Aim at the target, explode */
-	if (project(context->origin, rad, target, dam, context->subtype, flg, 0,
+	if (project(context->origin, rad, target, dam, subtype, flg, 0,
 				diameter_of_source, context->obj)) {
 		context->ident = true;
 	}
@@ -725,13 +725,13 @@ bool effect_handler_SPHERE(effect_handler_context_t *context)
  */
 bool effect_handler_BALL(effect_handler_context_t *context)
 {
-	return ball_spell(context, context->other, false);
+	return ball_spell(context, context->other, false, context->subtype);
 }
 
 bool effect_handler_BALL_NO_DAM_RED(effect_handler_context_t *context)
 {
 	uint8_t dos = MIN(context->radius * 2, UINT8_MAX);
-	return ball_spell(context, dos, true);
+	return ball_spell(context, dos, true, context->subtype);
 }
 
 /**
@@ -2077,6 +2077,17 @@ bool effect_handler_RANDOM_MON_DAMAGE(effect_handler_context_t *context)
 	}
 
 	return false;
+}
+
+bool effect_handler_TERRAIN_FEAT(effect_handler_context_t *context)
+{
+	bool success;
+
+	proj_subtype = context->subtype;
+	success = ball_spell(context, context->radius * 2, true, PROJ_TERRAIN_FEAT);
+	proj_subtype = -1;
+
+	return success;
 }
 
 /**
