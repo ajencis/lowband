@@ -451,7 +451,7 @@ graphics:~:g
 priority:19
 timeout:20
 default-size:10
-flags:PROJECT | LOS | INTERESTING | PASSABLE | CLOUD
+flags:PROJECT | LOS | INTERESTING | PASSABLE | CLOUD | BURN_FAST
 project:POIS
 project-dice:2d$D
 project-expr:D:FEAT_SIZE:+ 3 / 4
@@ -464,7 +464,7 @@ priority:19
 timeout:25
 default-size:5
 flags:PROJECT | LOS | INTERESTING | PASSABLE | FIRE
-project:FIRE
+project:FIRE:1
 project-dice:2d$D
 project-expr:D:FEAT_SIZE:+ 3 / 4
 desc:An open flame.
