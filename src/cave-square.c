@@ -558,9 +558,18 @@ bool square_isoccupied(struct chunk *c, struct loc grid) {
  * True if the player knows the terrain of the square
  */
 bool square_isknown(struct chunk *c, struct loc grid) {
+	struct feature *feat;
+
 	if (c != cave && (!player || c != player->cave)) return false;
 	if (!player->cave) return false;
-	return square(player->cave, grid)->feat ? true : false;
+
+	feat = square_feat(player->cave, grid);
+
+	if (!feat) return false;
+
+	if (feat->kind->fidx == player->cave->feat_default->fidx && !feat->next) return false;
+
+	return true;
 }
 
 /**
