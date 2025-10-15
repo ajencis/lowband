@@ -181,9 +181,8 @@ desc:Toxic-poisons a monster, causing it to get more poisoned over time.
 school:POISON
 
 spell:Poison Cloud:10
-effect:BALL:POISON_CLOUD:3
-dice:$Dd$S
-expr:D:SPELL_POWER:+ 1 * 3 / 4
+effect:TERRAIN_FEAT:POISON_CLOUD
+dice:2d$S
 expr:S:SPELL_POWER:+ 1 * 2 / 3
 desc:Produces a poison cloud.
 school:POISON
