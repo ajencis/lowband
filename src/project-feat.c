@@ -791,6 +791,15 @@ static void project_feature_handler_MEPHITIC(project_feature_handler_context_t *
 {
 }
 
+static void project_feature_handler_TERRAIN_FEAT(project_feature_handler_context_t *context)
+{
+	if (proj_subtype < 0 || proj_subtype >= PROJ_MAX) return;
+
+	if (square_can_add_feat(cave, context->grid, proj_subtype)) {
+		square_increase_feat_size(cave, context->grid, proj_subtype, context->dam);
+	}
+}
+
 static const project_feature_handler_f feature_handlers[] = {
 	#define ELEM(a) project_feature_handler_##a,
 	#include "list-elements.h"

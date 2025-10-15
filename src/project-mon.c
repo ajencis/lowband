@@ -1153,6 +1153,10 @@ static void project_monster_handler_MEPHITIC(project_monster_handler_context_t *
 	if (pwr > 0) mon_inc_timed(context->mon, TMD_STUN, pwr, flg);
 }
 
+static void project_monster_handler_TERRAIN_FEAT(project_monster_handler_context_t *context)
+{
+}
+
 static const project_monster_handler_f monster_handlers[] = {
 	#define ELEM(a) project_monster_handler_##a,
 	#include "list-elements.h"

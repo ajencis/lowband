@@ -904,4 +904,11 @@ obvious:1
 wake:1
 color:Yellow
 
+code:TERRAIN_FEAT
+type:environs
+desc:produces terrain
+blind-desc:something
+obvious:0
+color:White
+
 

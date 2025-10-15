@@ -40,6 +40,9 @@ struct projection *projections;
 uint8_t proj_to_attr[PROJ_MAX][BOLT_MAX];
 wchar_t proj_to_char[PROJ_MAX][BOLT_MAX];
 
+
+int proj_subtype = -1;
+
 /**
  * ------------------------------------------------------------------------
  * PROJ type info needed for projections
@@ -820,14 +823,16 @@ bool project(struct source origin, int rad, struct loc finish,
 			centre = start;
 
 			/* The radius of arcs cannot be more than 20 */
-			if (rad > 20)
+			if (rad > 20) {
 				rad = 20;
+			}
 
 			/* Ensure legal access into get_angle_to_grid table */
-			if (num_path_grids < 21)
+			if (num_path_grids < 21) {
 				i = num_path_grids - 1;
-			else
+			} else {
 				i = 20;
+			}
 
 			/* Reorient the grid forming the end of the arc's centerline. */
 			n1y = path_grid[i].y - centre.y + 20;
@@ -979,8 +984,8 @@ bool project(struct source origin, int rad, struct loc finish,
 	/* Establish which grids are visible - no blast visuals with PROJECT_HIDE */
 	for (i = 0; i < num_grids; i++) {
 		if (panel_contains(blast_grid[i].y, blast_grid[i].x) &&
-			square_isview(cave, blast_grid[i]) &&
-			!blind && !(flg & (PROJECT_HIDE))) {
+				square_isview(cave, blast_grid[i]) &&
+				!blind && !(flg & (PROJECT_HIDE))) {
 			player_sees_grid[i] = true;
 		} else {
 			player_sees_grid[i] = false;
