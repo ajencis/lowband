@@ -189,10 +189,9 @@ school:POISON
 school:AIR
 
 spell:Mephitic Cloud:10
-effect:BALL:MEPHITIC_CLOUD:1
-dice:$Dd$S
-expr:D:SPELL_POWER:+ 1 * 3 / 4
-expr:S:SPELL_POWER:+ 1 * 2 / 3
+effect:TERRAIN_FEAT:NOXIOUS_GAS
+dice:2d$S
+expr:S:SPELL_POWER:+ 1 / 3
 desc:Produces a noxious cloud that can confuse and stun enemies.
 school:POISON
 school:AIR

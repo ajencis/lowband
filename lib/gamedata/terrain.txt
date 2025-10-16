@@ -457,6 +457,18 @@ project-dice:2d$D
 project-expr:D:FEAT_SIZE:+ 3 / 4
 desc:A cloud of unpleasant gas.
 
+code:NOXIOUS_GAS
+name:noxious gas
+graphics:~:M
+priority:21
+timeout:30
+default-size:10
+flags:PROJECT | LOS | INTERESTING | PASSABLE | CLOUD
+project:MEPHITIC
+project-dice:2d$D
+project-expr:D:FEAT_SIZE:+ 4 / 5
+desc:A cloud of disgusting gas.
+
 code:FIRE
 name:fire
 graphics:^:o
