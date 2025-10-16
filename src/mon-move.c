@@ -1960,6 +1960,7 @@ static void monster_turn(struct monster *mon)
 
 	/* If we're in a web, deal with that */
 	if (square_iswebbed(cave, mon->grid)) {
+
 		/* Learn web behaviour */
 		if (monster_is_visible(mon)) {
 			rf_on(lore->flags, RF_PASS_WEB);
@@ -1978,17 +1979,8 @@ static void monster_turn(struct monster *mon)
 				/* Insubstantial monsters go right through */
 			} else if (monster_passes_walls(mon)) {
 				/* If you can destroy a wall, you can destroy a web */
-				struct trap_kind *web = lookup_trap("web");
-
-				assert(web);
-				square_remove_all_traps_of_type(cave,
-					mon->grid, web->tidx);
+				square_remove_feat(cave, mon->grid, FEAT_WEB);
 			} else if (rf_has(mon->race->flags, RF_CLEAR_WEB)) {
-				/* Clearing costs a turn (assume there are no other "traps") */
-				struct trap_kind *web = lookup_trap("web");
-
-				assert(web);
-
 				// L: clearing webs is somewhat difficult
 				// L: but you can clear and move in the same turn
 				if (one_in_(10)) {
@@ -1996,8 +1988,7 @@ static void monster_turn(struct monster *mon)
 						msg("%s clears a web.", m_name);
 						rf_on(lore->flags, RF_CLEAR_WEB);
 					}
-					square_remove_all_traps_of_type(cave,
-							mon->grid, web->tidx);
+					square_remove_feat(cave, mon->grid, FEAT_WEB);
 				}
 				else {
 					if (one_in_(5)) {

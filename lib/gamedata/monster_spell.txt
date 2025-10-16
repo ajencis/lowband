@@ -545,6 +545,8 @@ knowable:0
 msgt:CREATE_TRAP
 hit:100
 effect:WEB
+dice:2d$S
+expr:S:SPELL_POWER:+ 5
 lore:weave webs
 lore-color-base:Yellow
 message-vis:{name} weaves a web.

@@ -313,6 +313,7 @@ bool square_force_remove_feat(struct chunk *c, struct loc grid, int fidx);
 void square_free_feats(struct chunk *c, struct loc grid);
 void square_increase_feat_size(struct chunk *c, struct loc grid, int fidx, int amt);
 void square_reduce_feat_size(struct chunk *c, struct loc grid, int fidx, int amt);
+int square_feat_size(struct chunk *c, struct loc grid, int fidx);
 
 void cave_refresh_point_sets(struct chunk *c);
 

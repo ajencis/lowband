@@ -890,8 +890,7 @@ bool square_isopen(struct chunk *c, struct loc grid) {
 }
 
 /**
- * True if the square is empty (an open square without any items).
- * L: and no terrain elements!
+ * True if the square is empty (an open square without any items).\
  */
 bool square_isempty(struct chunk *c, struct loc grid) {
 	if (square_isplayertrap(c, grid)) return false;
@@ -945,6 +944,7 @@ bool square_isdiggable(struct chunk *c, struct loc grid) {
  * L: also require no monster or player there
  */
 bool square_iswebbable(struct chunk *c, struct loc grid) {
+	return square_can_add_feat(c, grid, FEAT_WEB);
 	if (square_trap(c, grid)) return false;
 	return square_isfloor(c, grid);
 }
@@ -1097,8 +1097,7 @@ bool square_isdecoyed(struct chunk *c, struct loc grid)
 
 bool square_iswebbed(struct chunk *c, struct loc grid)
 {
-	struct trap_kind *web = lookup_trap("web");
-	return square_trap_specific(c, grid, web->tidx);
+	return square_has_feat(c, grid, FEAT_WEB);
 }
 
 bool square_seemslikewall(struct chunk *c, struct loc grid)
@@ -1739,8 +1738,7 @@ void square_add_glyph(struct chunk *c, struct loc grid, int type)
 
 void square_add_web(struct chunk *c, struct loc grid)
 {
-	struct trap_kind *web = lookup_trap("web");
-	place_trap(c, grid, web->tidx, 0);
+	square_add_feat(c, grid, FEAT_WEB);
 }
 
 void square_add_stairs(struct chunk *c, struct loc grid, int depth) {

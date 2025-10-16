@@ -789,8 +789,9 @@ bool effect_handler_GLYPH(effect_handler_context_t *context)
 	}
 
 	/* Push objects off the grid */
-	if (square_object(cave, player->mon.grid))
+	if (square_object(cave, player->mon.grid)) {
 		push_object(player->mon.grid);
+	}
 
 	/* Create a glyph */
 	square_add_glyph(cave, player->mon.grid, context->subtype);
@@ -803,12 +804,14 @@ bool effect_handler_GLYPH(effect_handler_context_t *context)
  */
 bool effect_handler_WEB(effect_handler_context_t *context)
 {
-	int rad = 1;
-	struct loc grid, origin;
-	int power;
+	int rad;
+	struct loc grid, ogrid;
+	int power, sq_power, curr_power, dist;
 
+	power = effect_calculate_value(context, true);
+	ogrid = origin_get_loc(context->origin);
 	/* Get the monster creating */
-	if (context->origin.what == SRC_PLAYER) {
+	/*if (context->origin.what == SRC_PLAYER) {
 		power = innate_spell_power(player, RSF_WEAVE);
 		origin = player->mon.grid;
 	}
@@ -819,36 +822,33 @@ bool effect_handler_WEB(effect_handler_context_t *context)
 	}
 	else {
 		return false;
-	}
+	}*/
 
 	/* Always notice */
 	context->ident = true;
 
 	/* Increase the radius for higher spell power */
-	if (power > 40) rad++;
-	if (power > 80) rad++;
+	rad = power / 40;
 
 	/* Check within the radius for clear floor */
-	for (grid.y = origin.y - rad; grid.y <= origin.y + rad; grid.y++) {
-		for (grid.x = origin.x - rad; grid.x <= origin.x + rad; grid.x++){
-
-			// L: webs take some time to build
-			if (!one_in_(3) && !loc_eq(grid, origin)) continue;
-
-			if (distance(grid, origin) > rad) continue;
-			if (!square_in_bounds_fully(cave, grid)) continue;
-
+	for (grid.y = ogrid.y - rad; grid.y <= ogrid.y + rad; grid.y++) {
+		for (grid.x = ogrid.x - rad; grid.x <= ogrid.x + rad; grid.x++) {
 			/* Require a floor grid with no existing traps or glyphs */
+			if (!square_in_bounds_fully(cave, grid)) continue;
 			if (!square_iswebbable(cave, grid)) continue;
-
-			// L: don't web a grid that has someone there already unless it's the source
 			if ((square_monster(cave, grid) || square_isplayer(cave, grid)) &&
-					!loc_eq(grid, origin)) {
+					!loc_eq(grid, ogrid)) {
 				continue;
 			}
 
+			dist = distance(grid, ogrid);
+			sq_power = randint1(power) - dist * 40 + 40;
+			curr_power = square_feat_size(cave, grid, FEAT_WEB);
+
+			if (sq_power <= curr_power) continue;
+
 			/* Create a web */
-			square_add_web(cave, grid);
+			square_set_feat_size(cave, grid, FEAT_WEB, sq_power);
 		}
 	}
 

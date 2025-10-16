@@ -790,6 +790,13 @@ void square_reduce_feat_size(struct chunk *c, struct loc grid, int fidx, int amt
 	square_increase_feat_size(c, grid, fidx, -amt);
 }
 
+int square_feat_size(struct chunk *c, struct loc grid, int fidx)
+{
+	struct feature *feat = square_feat_by_type(c, grid, fidx);
+
+	return feat ? feat->size : 0;
+}
+
 /**
  * a feat's believed version unless the feat mimics another feat and the actual feat isn't known
  * by the player to be in the square in question

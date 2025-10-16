@@ -88,26 +88,30 @@ static bool check_can_take_stairs(struct player *p, int time)
  */
 static bool clear_web(struct player *p)
 {
+	int dam;
+
+	if (!square_iswebbed(cave, p->mon.grid)) {
+		return false;
+	}
 	if (player_of_has(p, OF_PASS_WEB)) {
 		return false;
 	}
 	if (pf_has(p->mon.state.pflags, PF_PASS_WALL)) {
 		return false;
 	}
-	if (square_iswebbed(cave, p->mon.grid)) {
-		if (adj_str_web(p->mon.state.stat_ind[STAT_STR]) < randint1(100)) {
-			msg("You struggle against the web.");
-			player->upkeep->energy_use = z_info->move_energy;
-			return true;
-		}
-		/* Clear the web, finish turn */
-		struct trap_kind *web = lookup_trap("web");
 
-		msg("You clear the web.");
-		assert(web);
-		square_remove_all_traps_of_type(cave, player->mon.grid, web->tidx);
-		return true;
+	dam = adj_str_web(p->mon.state.stat_ind[STAT_STR]);
+	dam = randint1(dam);
+
+	square_reduce_feat_size(cave, p->mon.grid, FEAT_WEB, dam);
+
+	if (square_has_feat(cave, p->mon.grid, FEAT_WEB)) {
+		msg("You struggle against the web.");
 	}
+	else {
+		msg("You clear the web.");
+	}
+
 	return false;
 }
 
