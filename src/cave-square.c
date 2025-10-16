@@ -1013,6 +1013,15 @@ bool square_ispassable(struct chunk *c, struct loc grid) {
 }
 
 /**
+ * True if the pathfinder will move through the square
+ */
+bool square_ispathable(struct chunk *c, struct loc grid) {
+	assert(player);
+
+	return square_ispassable(c, grid) && !grid_is_danger(&player->mon, c, grid);
+}
+
+/**
  * True if any projectable can pass through the square.
  */
 bool square_isprojectable(struct chunk *c, struct loc grid) {

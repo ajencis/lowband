@@ -401,7 +401,7 @@ struct pfdistances *prepare_pfdistances(struct player *p, struct loc start,
 			 * if it is known and hard to traverse.
 			 */
 			if (!square_isknown(p->cave, next)
-					|| square_ispassable(p->cave, next)) {
+					|| square_ispathable(p->cave, next)) {
 				result->rows[next.y][next.x] = cur_distance;
 			} else {
 				int penalty, penalized_distance;

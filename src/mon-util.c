@@ -1600,15 +1600,7 @@ void monster_take_timed_damage(struct monster *mon, int energy)
  */
 bool monster_taking_terrain_damage(struct chunk *c, struct monster *mon)
 {
-	struct feature *feat;
-
-	for (feat = square_feat(c, mon->grid); feat; feat = feat->next) {
-		if (feat_is_damaging(feat->kind->fidx) && !rf_has(mon->race->flags, feat->kind->resist_flag)) {
-			return true;
-		}
-	}
-
-	if (mon_in_t_elem_danger(mon, c)) return true;
+	if (grid_is_danger(mon, c, mon->grid)) return true;
 
 	return false;
 }

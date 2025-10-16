@@ -405,7 +405,6 @@ int t_elem_timer(struct chunk *c, struct loc grid, uint16_t which);
 struct terrain_element *square_t_elem_by_type(struct chunk *c, struct loc grid, uint16_t which);
 
 bool grid_is_danger(const struct monster *mon, struct chunk *c, struct loc grid);
-bool mon_in_t_elem_danger(const struct monster *mon, struct chunk *c);
 
 struct terrain_element *terrain_element_new(int timer, int idx);
 struct terrain_element_level *t_elem_level(const struct terrain_element_kind *kind, int timer);
@@ -579,6 +578,7 @@ bool square_isknownpassable(struct chunk *c, struct loc grid);
 bool square_suits_stairs_well(struct chunk *c, struct loc grid);
 bool square_suits_stairs_ok(struct chunk *c, struct loc grid);
 bool square_allows_summon(struct chunk *c, struct loc grid);
+bool square_ispathable(struct chunk *c, struct loc grid);
 
 const char *square_impassable_name(struct chunk *c, struct loc grid);
 
