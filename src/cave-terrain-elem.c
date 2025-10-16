@@ -1418,10 +1418,7 @@ int burn_square(struct chunk *c, struct loc grid, int power, int fidx)
 		if (feat_burns(feat->kind->fidx)) ++burn_num;
 	}
 
-	if (burn_num <= 0) {
-		return 0;
-	}
-	else {
+	if (burn_num > 0) {
 		power = (power + burn_num - 1) / burn_num;
 	}
 
@@ -1444,12 +1441,34 @@ int burn_square(struct chunk *c, struct loc grid, int power, int fidx)
 		}
 
 		square_reduce_feat_size(c, grid, feat->kind->fidx, burn_amt);
-		square_increase_feat_size(c, grid, fidx, burn_amt + f_info[fidx].timeout);
+		//square_increase_feat_size(c, grid, fidx, burn_amt + f_info[fidx].timeout);
 
 		total_amt += burn_amt;
 	}
 
+	feat = square_feat_by_type(c, grid, fidx);
+	if (burn_amt > 0) {
+		burn_amt += f_info[fidx].timeout;
+		square_increase_feat_size(c, grid, fidx, burn_amt);
+	}
+	else if (feat) {
+		square_reduce_feat_size(c, grid, fidx, -randint1(feat->size));
+	}
+
 	return total_amt;
+}
+
+bool grid_is_danger(const struct monster *mon, struct chunk *c, struct loc grid)
+{
+	struct feature *feat;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (feat->kind->proj >= 0 && !mon_proj_is_immune(mon, feat->kind->proj)) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 
@@ -1836,7 +1855,7 @@ struct terrain_element *square_t_elem_by_type(struct chunk *c, struct loc grid, 
 
 
 
-
+/*
 bool grid_is_danger(const struct monster *mon, struct chunk *c, struct loc grid)
 {
 	const struct terrain_element *t_elem;
@@ -1858,7 +1877,7 @@ bool mon_in_t_elem_danger(const struct monster *mon, struct chunk *c)
 {
 	return grid_is_danger(mon, c, mon->grid);
 }
-
+*/
 
 
 
