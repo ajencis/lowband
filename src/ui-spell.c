@@ -718,14 +718,65 @@ int textui_get_innate(struct player *p,
 struct gener_spell_menu_data {
 	const struct player_spell **spells;
 	int n_splls;
+	int mode;
 
 	bool browse;
-	bool autocast;
 	int (*is_valid)(const struct player *p, int spell_index);
 	bool show_description;
 
+	char name[128];
+
 	int selected_spell;
 };
+
+struct menu_mode {
+	int id;
+	const char *act_name;
+} gener_spell_menu_modes[] = {
+	{ GSM_MODE_CAST, "cast" },
+	{ GSM_MODE_AUTOCAST, "autocast"},
+	{ GSM_MODE_MAX, NULL}
+};
+
+static int gener_spell_menu_next_mode(int curr_mode)
+{
+	return (curr_mode + 1) % GSM_MODE_MAX;
+}
+
+static void gener_spell_menu_fmt_title(struct menu *m)
+{
+	struct gener_spell_menu_data *data = menu_priv(m);
+	int curr_mode = data->mode, next_mode = gener_spell_menu_next_mode(curr_mode);
+	const char *curr_name = gener_spell_menu_modes[curr_mode].act_name;
+	const char *next_name = gener_spell_menu_modes[next_mode].act_name;
+
+	if (curr_mode == next_mode) {
+		strnfmt(data->name, sizeof data->name, "%s which spell? ('?' to toggle description)", curr_name);
+	} else {
+		strnfmt(data->name, sizeof data->name, "%s which spell? ('?' to toggle description, '/' to %s)", curr_name, next_name);
+	}
+
+	my_strcap(data->name);
+}
+
+static void gener_spell_menu_set_mode(struct menu *m, int new_mode)
+{
+	struct gener_spell_menu_data *data = menu_priv(m);
+
+	assert(new_mode >= 0 && new_mode < GSM_MODE_MAX);
+
+	data->mode = new_mode;
+
+	gener_spell_menu_fmt_title(m);
+}
+
+static void gener_spell_menu_increment_mode(struct menu *m)
+{
+	struct gener_spell_menu_data *data = menu_priv(m);
+	int new_mode = gener_spell_menu_next_mode(data->mode);
+
+	gener_spell_menu_set_mode(m, new_mode);
+}
 
 static int gener_spell_menu_valid(struct menu *m, int oid)
 {
@@ -758,7 +809,7 @@ static void gener_spell_menu_display(struct menu *m, int oid, bool cursor,
 	int attr = COLOUR_WHITE;
 	size_t u8len;
 
-	if (d->autocast) {
+	if (d->mode == GSM_MODE_AUTOCAST) {
 		if (!can_autocast(spell)) {
 			comment = " cannot autocast";
 			attr = COLOUR_L_RED;
@@ -831,15 +882,12 @@ static bool gener_spell_menu_handler(struct menu *m, const ui_event *e, int oid)
 	else if (e->type == EVT_KBRD) {
 		if (e->key.code == '?') {
 			d->show_description = !d->show_description;
+			return true;
 		}
 		else if (e->key.code == '/' && !d->browse) {
-			d->autocast = !d->autocast;
-			if (d->autocast) {
-				m->title = "Autocast which spell? ('?' to toggle description, '/' to cast)";
-			} else {
-				m->title = "Cast which spell? ('?' to toggle description, '/' to autocast)";
-			}
+			gener_spell_menu_increment_mode(m);
 			menu_refresh(m, false);
+			return true;
 		}
 	}
 
@@ -1063,7 +1111,6 @@ static struct menu *gener_spell_menu_new(struct player *p,
 	d->is_valid = is_valid;
 	d->selected_spell = -1;
 	d->browse = false;
-	d->autocast = false;
 	d->show_description = show_description;
 
 	menu_setpriv(m, d->n_splls, d);
@@ -1074,7 +1121,10 @@ static struct menu *gener_spell_menu_new(struct player *p,
 	m->selections = all_letters_nohjkl;
 	m->browse_hook = gener_spell_menu_browser;
 	m->cmd_keys = "?/";
-	m->title = "Cast which spell? (? to toggle description, / to autocast)";
+	m->title = d->name;
+
+	// L: set initial mode
+	gener_spell_menu_set_mode(m, GSM_MODE_CAST);
 
 	/* Set size */
 	loc.page_rows = d->n_splls + 3;
@@ -1099,8 +1149,6 @@ static int gener_spell_menu_select(struct menu *m)
 
 	screen_save();
 	region_erase_bordered(&m->active);
-
-	m->title = "Cast which spell? (? to toggle description, / to autocast)";
 
 	ue = menu_select(m, 0, true);
 	screen_load();
@@ -1143,7 +1191,7 @@ int textui_get_gener_spell(struct player *p, const char *error,
 			spell_index = gener_spell_menu_select(m);
 			ps = player_spell_lookup(spell_index);
 			d = m->menu_data;
-			if (d->autocast && spell_index >= 0) {
+			if (d->mode == GSM_MODE_AUTOCAST && spell_index >= 0) {
 				if (p->player_spell_flags[spell_index] & PY_SPELL_AUTOCAST) {
 					p->player_spell_flags[spell_index] &= ~PY_SPELL_AUTOCAST;
 				}

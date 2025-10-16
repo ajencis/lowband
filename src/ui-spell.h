@@ -21,6 +21,12 @@
 
 struct player;
 
+enum gener_spell_menu_modes {
+	GSM_MODE_CAST,
+	GSM_MODE_AUTOCAST,
+	GSM_MODE_MAX
+};
+
 void textui_book_browse(const struct object *obj);
 void textui_spell_browse(void);
 int textui_get_spell_from_book(struct player *p, const char *verb,
