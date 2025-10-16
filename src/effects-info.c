@@ -537,6 +537,10 @@ textblock *effect_describe(const struct effect *e, const char *prefix,
 				projections[e->subtype].desc);
 			break;
 
+		case EFINFO_FEAT:
+			strnfmt(desc, sizeof(desc), f_info[e->subtype].name);
+			break;
+
 		case EFINFO_NONE:
 			strnfmt(desc, sizeof(desc), "%s", edesc);
 			break;
@@ -705,6 +709,10 @@ size_t effect_get_menu_name(char *buf, size_t max, const struct effect *e)
 		len = strnfmt(buf, max, fmt, projections[e->subtype].lash_desc);
 		break;
 
+	case EFINFO_FEAT:
+		len = strnfmt(buf, max, f_info[e->subtype].name);
+		break;
+
 	default:
 		len = strnfmt(buf, max, "%s", "");
 		msg("Bad effect description passed to effect_get_menu_name().  Please report this bug.");
@@ -727,6 +735,12 @@ int ef_attr(const struct effect *e)
 	case EFINFO_SHORT:
 	case EFINFO_LASH:
 		return projections[e->subtype].color;
+
+	case EFINFO_FEAT: {
+			int proj = f_info[e->subtype].proj;
+			if (proj >= 0) return projections[proj].color;
+			break;
+		}
 	}
 
 	return COLOUR_WHITE;
