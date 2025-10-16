@@ -2013,27 +2013,19 @@ static void frightening_presence(struct chunk *c, struct monster *mon)
 
 static void stench(struct chunk *c, struct monster *mon)
 {
-	int pwr, curr, amt, max, perc;
-	struct terrain_element *t_elem;
+	struct feature *curr_feat;
+	int curr, max, perc, inc;
 
 	if (!mon_has_power(mon, PP_STENCH)) return;
 
-	pwr = get_mon_power_scale(mon, PP_STENCH, 30) + 20;
-	curr = 0;
+	curr_feat = square_feat_by_type(c, mon->grid, FEAT_NOXIOUS_GAS);
+	curr = curr_feat ? curr_feat->size : 0;
+	max = get_mon_power_scale(mon, PP_STENCH, 30) + 20;
 	perc = get_mon_power_scale(mon, PP_STENCH, 15) + 10;
+	inc = (max - curr) * perc / 100;
 
-	for (t_elem = square_t_elem(c, mon->grid); t_elem; t_elem = t_elem->next) {
-		if (t_elem->kind->idx == TE_MEPHITIC_CLOUD) {
-			curr = t_elem->timer;
-			break;
-		}
-	}
-
-	max = pwr;
-	amt = (max - curr) * perc / 100 + 1;
-
-	if (amt > 0) {
-		terrain_element_increase_dur(c, mon->grid, TE_MEPHITIC_CLOUD, amt);
+	if (inc > 0) {
+		square_increase_feat_size(c, mon->grid, FEAT_NOXIOUS_GAS, inc);
 	}
 }
 
