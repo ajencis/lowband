@@ -76,14 +76,6 @@ struct source source_chest_trap(struct chest_trap *chest_trap)
 	return src;
 }
 
-struct source source_t_elem(struct terrain_element *t_elem)
-{
-	struct source src;
-	src.what = SRC_TERRAIN_ELEM;
-	src.which.t_elem = t_elem;
-	return src;
-}
-
 struct source source_grid(struct loc grid)
 {
 	struct source src;
@@ -121,12 +113,6 @@ void death_message_by_source(struct source origin, char *buf, size_t bufsize)
 		case SRC_PLAYER:
 		{
 			strnfmt(buf, bufsize, "yourself");
-			break;
-		}
-
-		case SRC_TERRAIN_ELEM:
-		{
-			strnfmt(buf, bufsize, t_elem_name(origin.which.t_elem));
 			break;
 		}
 

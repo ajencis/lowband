@@ -767,20 +767,10 @@ static void project_feature_handler_BANSHEE(project_feature_handler_context_t *c
 
 static void project_feature_handler_POISON_CLOUD(project_feature_handler_context_t *context)
 {
-	square_t_elem_add(cave, context->grid, TE_POISON_CLOUD, context->dam);
-
-	if (square_isview(cave, context->grid)) {
-		player->upkeep->update |= PU_UPDATE_VIEW;
-	}
 }
 
 static void project_feature_handler_MEPHITIC_CLOUD(project_feature_handler_context_t *context)
 {
-	square_t_elem_add(cave, context->grid, TE_MEPHITIC_CLOUD, context->dam);
-
-	if (square_isview(cave, context->grid)) {
-		player->upkeep->update |= PU_UPDATE_VIEW;
-	}
 }
 
 static void project_feature_handler_POISON_TMD(project_feature_handler_context_t *context)

@@ -456,36 +456,6 @@ static bool aux_hallucinate(struct chunk *c, struct player *p,
 	return auxst->press.key.code != KC_ENTER;
 }
 
-static bool aux_terrain_element(struct chunk *c, struct player *p,
-		struct target_aux_state *auxst)
-{
-	char out_val[128];
-	const struct terrain_element *t_elem = NULL;
-
-	if (!square_t_elem(p->cave, auxst->grid)) return false;
-
-	do {
-		t_elem = t_elem ? t_elem->next : square_t_elem(p->cave, auxst->grid);
-
-		if (!t_elem) break;
-
-		strnfmt(out_val, sizeof out_val, "%s%s%s, %s", auxst->phrase1, auxst->phrase2, t_elem_name(t_elem), auxst->coord_desc);
-
-		if (p->wizard) {
-			my_strcat(out_val,
-					format(" (%d:%d, timer=%d)", auxst->grid.y, auxst->grid.x, t_elem->timer),
-					sizeof out_val);
-		}
-
-		prt(out_val, 0, 0);
-		move_cursor_relative(auxst->grid.y, auxst->grid.x);
-
-		auxst->press.key = inkey();
-	} while (auxst->press.key.code == ' ');
-
-	return true;
-}
-
 /**
  * Help target_set_interactive_aux():  handle monsters.
  *
@@ -1020,7 +990,6 @@ static ui_event target_set_interactive_aux(int y, int x, int mode)
 		aux_reinit,
 		aux_hallucinate,
 		aux_monster,
-		aux_terrain_element,
 		aux_trap,
 		aux_object,
 		aux_terrain,

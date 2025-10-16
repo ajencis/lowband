@@ -147,9 +147,6 @@ struct feature_kind {
 	char *look_in_preposition;	/**< Preposition in look result when on the terrain */
 	int resist_flag;			/**< Monster resist flag for entering feature */
 
-	uint8_t t_elem[TE_MAX];		// L: which terrain elements it produces in what quantity
-	char *t_elem_msg;			// L: message used when it produces terrain elements
-
 	int timeout;				// L: loses this much of its size / 100 turns
 
 	int feat_produce;			// L: which other feat it produces
@@ -172,55 +169,6 @@ struct feature {
 
 extern struct feature_kind *f_info;
 
-struct terrain_element_level {
-	struct terrain_element_level *next;
-	int min_dur;
-
-	char *name;
-
-	uint8_t d_attr;
-	uint8_t d_char;
-
-	int timeout;
-	
-	int proj;
-	int proj_range;
-
-	bitflag flags[TF_SIZE];
-};
-
-/**
- * L: information about additional temporary terrain 
- */
-struct terrain_element_kind {
-	struct terrain_element_kind *next;
-
-	int idx;
-
-	struct terrain_element_level *levels;
-	/*uint16_t idx;
-
-	char *name;
-
-	uint8_t d_attr;
-	uint8_t d_char;
-
-	int timeout;				// if not 0 it loses one point every  timeout  turns
-
-	int proj;					// the projection it projects on its square
-	int proj_range;				// how far from its square it projects, default 0 (only the square in question);
-	bitflag flags[TF_SIZE];*/
-};
-
-struct terrain_element {
-	const struct terrain_element_kind *kind;
-	struct terrain_element *next;
-
-	int timer;
-};
-
-extern struct terrain_element_kind *te_info;
-
 enum grid_light_level
 {
 	LIGHTING_LOS = 0,   /* line of sight */
@@ -236,7 +184,6 @@ struct grid_data {
 
 	struct object_kind *first_kind;	/* The kind of the first item on the grid */
 	struct trap *trap;		/* Trap */
-	struct terrain_element *t_elem;
 	const struct feature *feat;
 
 	bool multiple_objects;	/* Is there more than one item there? */
@@ -257,7 +204,6 @@ struct square {
 	int8_t mana;
 	struct object *obj;
 	struct trap *trap;
-	struct terrain_element *t_elem;
 
 	struct feature *feat;
 
@@ -349,7 +295,7 @@ bool los(struct chunk *c, struct loc grid1, struct loc grid2);
 void update_view(struct chunk *c, struct player *p);
 bool no_light(const struct player *p);
 
-/* cave-terrain-elem.c */
+/* cave-feat.c */
 extern const struct feature *ref_feat;
 
 bool square_feat_valid(struct chunk *c, struct loc grid);
@@ -384,46 +330,9 @@ void square_copy_feat(struct chunk *from_c, struct chunk *to_c, struct loc from_
 void cave_feat_upkeep(struct chunk *c);
 void cave_feat_initial_upkeep(struct chunk *c);
 
-int burn_square(struct chunk *c, struct loc grid, int power, int fidx);
-
-struct terrain_element_kind *t_elem_kind_by_idx(int idx);
-bool t_elem_has_flag(const struct terrain_element *t_elem, int flag);
-const char *t_elem_name(const struct terrain_element *t_elem);
-uint8_t t_elem_d_attr(const struct terrain_element *t_elem);
-uint8_t t_elem_d_char(const struct terrain_element *t_elem);
-int t_elem_timeout(const struct terrain_element *t_elem);
-int t_elem_proj(const struct terrain_element *t_elem);
-int t_elem_proj_range(const struct terrain_element *t_elem);
-
-bool t_elem_reduces(const struct terrain_element *t_elem);
-
-bool t_elem_is_los(const struct terrain_element_kind *kind);
-bool sq_any_t_elem_has_flag(const struct square *sq, int flag);
-bool sq_all_t_elem_has_flag(const struct square *sq, int flag);
-void square_memorize_t_elem(struct chunk *c, struct loc grid);
-int t_elem_timer(struct chunk *c, struct loc grid, uint16_t which);
-struct terrain_element *square_t_elem_by_type(struct chunk *c, struct loc grid, uint16_t which);
-
 bool grid_is_danger(const struct monster *mon, struct chunk *c, struct loc grid);
 
-struct terrain_element *terrain_element_new(int timer, int idx);
-struct terrain_element_level *t_elem_level(const struct terrain_element_kind *kind, int timer);
-void terrain_elem_free(struct terrain_element *to_free);
-bool terrain_element_add(struct chunk *c, struct loc grid, int idx, uint16_t timer);
-bool terrain_elem_remove(struct chunk *c, struct loc grid, uint16_t idx);
-int terrain_element_increase_dur(struct chunk *c, struct loc grid, uint16_t idx, uint16_t change);
-int terrain_element_reduce_dur(struct chunk *c, struct loc grid, uint16_t idx, uint16_t change);
-bool terrain_elem_remove_all(struct chunk *c, struct loc grid);
-int terrain_element_change_dur(struct chunk *c, struct loc grid, uint16_t idx, int change);
-
-void t_elem_spread(struct chunk *c);
-void t_elem_reduce_durations(struct chunk *c);
-void t_elem_effects(struct chunk *c);
-
-bool cave_produce_t_elem(struct chunk *c);
-
-void cave_handle_t_elem(struct chunk *c);
-void cave_init_t_elem(struct chunk *c, int times);
+int burn_square(struct chunk *c, struct loc grid, int power, int fidx);
 
 /* cave-map.c */
 void map_info(struct loc grid, struct grid_data *g);
@@ -601,7 +510,6 @@ int square_light(struct chunk *c, struct loc grid);
 struct monster *square_monster(struct chunk *c, struct loc grid);
 struct object *square_object(struct chunk *c, struct loc grid);
 struct trap *square_trap(struct chunk *c, struct loc grid);
-struct terrain_element *square_t_elem(struct chunk *c, struct loc grid);
 bool square_holds_object(struct chunk *c, struct loc grid, struct object *obj);
 void square_excise_object(struct chunk *c, struct loc grid, struct object *obj);
 void square_excise_pile(struct chunk *c, struct loc grid);

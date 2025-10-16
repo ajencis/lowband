@@ -493,8 +493,6 @@ struct loc origin_get_loc(struct source origin)
 		case SRC_PLAYER:
 		case SRC_OBJECT:	/* Currently only worn cursed objects use this */
 		case SRC_CHEST_TRAP:
-		case SRC_TERRAIN_ELEM:
-			return player->mon.grid;
 
 		case SRC_GRID:
 			return origin.which.grid;
@@ -1087,9 +1085,6 @@ bool project(struct source origin, int rad, struct loc finish,
 			if (monster_is_powerful(mon)) {
 				power = MAX(power, 80);
 			}
-		}
-		else if (origin.what == SRC_TERRAIN_ELEM) {
-			power = origin.which.t_elem->timer / 5 + 5;
 		}
 		for (i = 0; i < num_grids; i++) {
 			if (project_p(origin, distance_to_grid[i], blast_grid[i],

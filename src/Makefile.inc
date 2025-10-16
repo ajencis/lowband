@@ -67,7 +67,7 @@ depgen:
  mon-timed.h list-mon-timed.h mon-blows.h list-mon-temp-flags.h \
  list-mon-race-flags.h list-mon-spells.h player-calcs.h player-timed.h \
  list-player-timed.h trap.h list-trap-flags.h
-./cave-terrain-elem.o: cave-terrain-elem.c angband.h h-basic.h z-bitflag.h z-form.h \
+./cave-feat.o: cave-feat.c angband.h h-basic.h z-bitflag.h z-form.h \
  z-virt.h z-color.h z-util.h z-rand.h config.h game-event.h z-type.h \
  message.h list-message.h player.h guid.h obj-properties.h z-file.h \
  list-tvals.h list-object-flags.h list-kind-flags.h list-stats.h \

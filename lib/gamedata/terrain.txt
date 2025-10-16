@@ -371,7 +371,6 @@ code:LAVA
 name:lava
 graphics:#:r
 priority:10
-t-elem:FIRE:50
 flags:LOS | PROJECT | FIERY | PASSABLE | NO_SCENT | BRIGHT
 look-prefix:some
 desc:A fiery pool of glowing lava.  Step in it at your peril!
@@ -405,8 +404,6 @@ code:FUME_PIT
 name:fume pit
 graphics:_:g
 priority:10
-#t-elem:POISON_CLOUD:50
-#t-elem-msg:belches forth
 flags:PROJECT | INTERESTING | LOS
 produce:POISON_CLOUD:100:20
 desc:A pit of vile liquid.

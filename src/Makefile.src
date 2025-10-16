@@ -163,7 +163,7 @@ ANGFILES0 = \
 	cave.o \
 	cave-map.o \
 	cave-square.o \
-	cave-terrain-elem.o \
+	cave-feat.o \
 	cave-view.o \
 	cmd-cave.o \
 	cmd-core.o \

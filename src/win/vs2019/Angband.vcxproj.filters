@@ -243,7 +243,7 @@
     <ClCompile Include="src\cave-view.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\cave-terrain-elem.c">
+    <ClCompile Include="src\cave-feat.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cmd-cave.c">

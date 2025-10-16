@@ -999,11 +999,6 @@ bool project_p(struct source origin, int r, struct loc grid, int dam, int typ,
 			break;
 		}
 
-		case SRC_TERRAIN_ELEM: {
-			my_strcpy(killer, t_elem_name(origin.which.t_elem), sizeof killer);
-			break;
-		}
-
 		case SRC_GRID:
 		case SRC_NONE: {
 			/* Use the same message as the DAMAGE handler. */

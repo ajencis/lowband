@@ -896,7 +896,6 @@ bool square_isopen(struct chunk *c, struct loc grid) {
 bool square_isempty(struct chunk *c, struct loc grid) {
 	if (square_isplayertrap(c, grid)) return false;
 	if (square_iswebbed(c, grid)) return false;
-	if (square_t_elem(c, grid)) return false;
 	if (!square_ispassable(c, grid)) return false;
 	if (square(c, grid)->mon) return false;
 	if (square_object(c, grid)) return false;
@@ -925,29 +924,11 @@ bool square_canputitem(struct chunk *c, struct loc grid) {
 	return !square_object(c, grid);
 }
 
-static bool feat_can_telem(int feat)
-{
-	struct feature_kind *kind = &f_info[feat];
-	return tf_has(kind->flags, TF_PROJECT) || tf_has(kind->flags, TF_CLOUD_PROJ);
-}
-
 /**
  * True if the terrain element in question can be put in the square
  */
 bool square_canputterrainelem(struct chunk *c, struct loc grid, uint16_t idx) {
-	struct terrain_element *t_elem;
-
-	if (!all_feats_are(c, grid, feat_can_telem)) return false;
-
-	for (t_elem = square_t_elem(c, grid); t_elem; t_elem = t_elem->next) {
-		if (t_elem->kind->idx == idx) continue;
-		if (!t_elem_has_flag(t_elem, TF_PROJECT) &&
-				!t_elem_has_flag(t_elem, TF_CLOUD_PROJ)) {
-			return false;
-		}
-	}
-
-	return true;
+	return false;
 }
 
 /**
@@ -1387,12 +1368,6 @@ struct trap *square_trap(struct chunk *c, struct loc grid)
 {
 	if (!square_in_bounds(c, grid)) return NULL;
     return square(c, grid)->trap;
-}
-
-struct terrain_element *square_t_elem(struct chunk *c, struct loc grid)
-{
-	if (!square_in_bounds(c, grid)) return NULL;
-	return square(c, grid)->t_elem;
 }
 
 /**
@@ -1905,35 +1880,14 @@ void square_smash_wall(struct chunk *c, struct loc grid)
 
 void square_t_elem_remove(struct chunk *c, struct loc grid, int idx)
 {
-	terrain_elem_remove(c, grid, idx);
 }
 
 void square_t_elem_remove_all(struct chunk *c, struct loc grid)
 {
-	struct square *sq = &c->squares[grid.y][grid.x];
-
-	terrain_elem_remove_all(c, grid);
-	assert(!sq->t_elem);
 }
 
 void square_t_elem_add(struct chunk *c, struct loc grid, uint16_t idx, int timer)
 {
-	struct square *sq = &c->squares[grid.y][grid.x];
-	struct terrain_element *new, *old;
-
-	if (!square_ispassable(c, grid)) return;
-
-	for (old = sq->t_elem; old; old = old->next) {
-		if (old->kind->idx == idx) {
-			old->timer = MAX(timer, old->timer) + MIN(timer, old->timer) / 2;
-			return;
-		}
-	}
-
-	new = terrain_element_new(timer, idx);
-
-	new->next = sq->t_elem;
-	sq->t_elem = new;
 }
 
 void square_destroy(struct chunk *c, struct loc grid) {

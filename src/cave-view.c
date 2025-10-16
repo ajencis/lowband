@@ -951,7 +951,6 @@ static void update_one(struct chunk *c, struct loc grid, struct player *p)
 	}
 
 	if (c == cave) {
-		square_memorize_t_elem(c, grid);
 		//square_memorize_feats(p, c, grid);
 	}
 

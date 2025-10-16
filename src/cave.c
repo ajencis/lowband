@@ -34,7 +34,6 @@
 #include "trap.h"
 
 struct feature_kind *f_info;
-struct terrain_element_kind *te_info;
 struct chunk *cave = NULL;
 
 /**
@@ -444,8 +443,6 @@ void cave_free(struct chunk *c) {
 			if (c->squares[y][x].feat) {
 				square_free_feats(c, loc(x, y));
 			}
-
-			square_t_elem_remove_all(c, loc(x, y));
 		}
 
 		mem_free(c->squares[y]);
