@@ -448,7 +448,7 @@ desc:An old tree.
 code:POISON_CLOUD
 name:poison cloud
 graphics:~:g
-priority:19
+priority:21
 timeout:20
 default-size:10
 flags:PROJECT | LOS | INTERESTING | PASSABLE | CLOUD | BURN_FAST
@@ -460,7 +460,7 @@ desc:A cloud of unpleasant gas.
 code:FIRE
 name:fire
 graphics:^:o
-priority:19
+priority:22
 timeout:25
 default-size:5
 flags:PROJECT | LOS | INTERESTING | PASSABLE | FIRE
