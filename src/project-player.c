@@ -842,18 +842,6 @@ static int project_player_handler_BANSHEE(project_player_handler_context_t *cont
 	return 0;
 }
 
-static int project_player_handler_POISON_CLOUD(project_player_handler_context_t *context)
-{
-	context->dam = 0;
-	return 0;
-}
-
-static int project_player_handler_MEPHITIC_CLOUD(project_player_handler_context_t *context)
-{
-	context->dam = 0;
-	return 0;
-}
-
 static int project_player_handler_POISON_TMD(project_player_handler_context_t *context)
 {
 	mon_inc_timed(&player->mon, TMD_POISONED, context->power, MON_TMD_FLG_GETS_SAVE);

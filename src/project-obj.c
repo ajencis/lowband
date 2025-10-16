@@ -513,14 +513,6 @@ static void project_object_handler_BANSHEE(project_object_handler_context_t *con
 {
 }
 
-static void project_object_handler_POISON_CLOUD(project_object_handler_context_t *context)
-{
-}
-
-static void project_object_handler_MEPHITIC_CLOUD(project_object_handler_context_t *context)
-{
-}
-
 static void project_object_handler_POISON_TMD(project_object_handler_context_t *context)
 {
 }

@@ -1114,16 +1114,6 @@ static void project_monster_handler_BANSHEE(project_monster_handler_context_t *c
 	context->dam = kill ? context->mon->hp + 1 : 0;
 }
 
-static void project_monster_handler_POISON_CLOUD(project_monster_handler_context_t *context)
-{
-	context->dam = 0;
-}
-
-static void project_monster_handler_MEPHITIC_CLOUD(project_monster_handler_context_t *context)
-{
-	context->dam = 0;
-}
-
 static void project_monster_handler_POISON_TMD(project_monster_handler_context_t *context)
 {
 	int flg = MON_TMD_FLG_GETS_SAVE, pwr;
