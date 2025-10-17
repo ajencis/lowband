@@ -86,7 +86,7 @@ static bool check_can_take_stairs(struct player *p, int time)
  * L: try to clear a web from the current square
  * \return whether player should thereby skip their turn
  */
-static bool clear_web(struct player *p)
+/*static bool clear_web(struct player *p)
 {
 	int dam;
 
@@ -113,7 +113,7 @@ static bool clear_web(struct player *p)
 	}
 
 	return false;
-}
+}*/
 
 
 /**
@@ -1443,9 +1443,7 @@ void do_cmd_walk(struct command *cmd)
 	}
 
 	/* If we're in a web, deal with that */
-	if (clear_web(player)) {
-		return;
-	}
+	if (monster_turn_web(cave, &player->mon)) return;
 
 	/* Apply confusion if necessary */
 	/* Confused movements use energy no matter what */
@@ -1479,9 +1477,7 @@ void do_cmd_jump(struct command *cmd)
 		return;
 
 	/* If we're in a web, deal with that */
-	if (clear_web(player)) {
-		return;
-	}
+	if (monster_turn_web(cave, &player->mon)) return;
 
 	/* Apply confusion if necessary */
 	if (player_confuse_dir(player, &dir, false))
@@ -1512,9 +1508,7 @@ void do_cmd_run(struct command *cmd)
 		return;
 
 	/* If we're in a web, deal with that */
-	if (clear_web(player)) {
-		return;
-	}
+	if (monster_turn_web(cave, &player->mon)) return;
 
 	if (player_confuse_dir(player, &dir, true))
 		return;
@@ -1554,12 +1548,8 @@ void do_cmd_navigate_down(struct command *cmd)
 	   	return;
 	}
 
-
 	/* If we're in a web, deal with that */
-	if (clear_web(player)) {
-		return;
-	}
-	
+	if (monster_turn_web(cave, &player->mon)) return;
 
 	/* Screen for visible monsters */
 	for (int y = 0; y < cave->height; y++) {
@@ -1615,10 +1605,7 @@ void do_cmd_navigate_up(struct command *cmd)
 
 
 	/* If we're in a web, deal with that */
-	if (clear_web(player)) {
-		return;
-	}
-	
+	if (monster_turn_web(cave, &player->mon)) return;
 
 	/* Screen for visible monsters */
 	for (int y = 0; y < cave->height; y++) {
@@ -1674,12 +1661,8 @@ void do_cmd_explore(struct command *cmd)
 	   	return;
 	}
 
-
 	/* If we're in a web, deal with that */
-	if (clear_web(player)) {
-		return;
-	}
-	
+	if (monster_turn_web(cave, &player->mon)) return;
 
 	/* Screen for visible monsters */
 	for (y = 0; y < cave->height && !visible_monster; y++) {

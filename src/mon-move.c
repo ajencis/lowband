@@ -1896,6 +1896,68 @@ static bool monster_turn_talk(struct monster *mon)
 	return true;
 }
 
+/**
+ * L: returns true if the monster should lose their turn to a web in
+ * their square
+ */
+bool monster_turn_web(struct chunk *c, struct monster *mon)
+{
+	struct monster_lore *lore = monster_is_visible(mon) ? get_lore(mon->race) : NULL;
+	int curr_web_size = square_feat_size(c, mon->grid, FEAT_WEB), dam = 0;
+	char mdesc[80];
+	const char *act;
+	bool ply = mon_is_player(mon), do_msg = false;
+
+	if (curr_web_size <= 0) return false;
+	if (of_has(mon->state.flags, OF_PASS_WEB)) return false;
+	if (pf_has(mon->state.pflags, PF_PASS_WALL)) return false;
+	if (rf_has(mon->race->flags, RF_PASS_WEB)) {
+		if (lore) rf_on(lore->flags, RF_PASS_WEB);
+		return false;
+	}
+	if (rf_has(mon->race->flags, RF_PASS_WALL)) {
+		if (lore) rf_on(lore->flags, RF_PASS_WEB);
+		return false;
+	}
+
+	monster_desc(mdesc, sizeof mdesc, mon, MDESC_CAPITAL | MDESC_IND_HID | MDESC_COMMA);
+
+	if (rf_has(mon->race->flags, RF_CLEAR_WEB)) {
+		if (lore) rf_on(lore->flags, RF_CLEAR_WEB);
+		dam += randint1(adj_str_web(mon->state.stat_ind[STAT_STR]));
+	}
+	if (rf_has(mon->race->flags, RF_SMASH_WALL)) {
+		if (lore) rf_on(lore->flags, RF_SMASH_WALL);
+		dam += 50;
+	}
+	if (rf_has(mon->race->flags, RF_KILL_WALL)) {
+		if (lore) rf_on(lore->flags, RF_KILL_WALL);
+		dam += 1000;
+	}
+
+	dam = MAX(dam, 1);
+
+	if (dam >= curr_web_size) {
+		act = ply ? "clear" : "clears";
+		do_msg = true;
+	}
+	else if (dam > 1) {
+		act = ply ? "struggle in" : "struggles in";
+		do_msg = one_in_(4);
+	}
+	else {
+		dam = 1;
+		act = ply ? "struggle futilely in" : "struggles futilely in";
+		do_msg = one_in_(10);
+	}
+
+	if (do_msg) msg("%s %s a web.", mdesc, act);
+
+	square_reduce_feat_size(c, mon->grid, FEAT_WEB, dam);
+
+	return true;
+}
+
 
 /**
  * Process a monster's turn
@@ -1959,26 +2021,29 @@ static void monster_turn(struct monster *mon)
 	}
 
 	/* If we're in a web, deal with that */
+	if (monster_turn_web(cave, mon)) return;
+
+	/*
 	if (square_iswebbed(cave, mon->grid)) {
 
-		/* Learn web behaviour */
+		// Learn web behaviour
 		if (monster_is_visible(mon)) {
 			rf_on(lore->flags, RF_PASS_WEB);
 		}
 
-		/* If we can pass, no need to clear */
+		// If we can pass, no need to clear
 		if (!rf_has(mon->race->flags, RF_PASS_WEB)) {
-			/* Learn wall behaviour */
+			// Learn wall behaviour
 			if (monster_is_visible(mon)) {
 				rf_on(lore->flags, RF_PASS_WALL);
 				rf_on(lore->flags, RF_KILL_WALL);
 			}
 
-			/* Now several possibilities */
+			// Now several possibilities
 			if (rf_has(mon->race->flags, RF_PASS_WALL)) {
-				/* Insubstantial monsters go right through */
+				// Insubstantial monsters go right through
 			} else if (monster_passes_walls(mon)) {
-				/* If you can destroy a wall, you can destroy a web */
+				// If you can destroy a wall, you can destroy a web
 				square_remove_feat(cave, mon->grid, FEAT_WEB);
 			} else if (rf_has(mon->race->flags, RF_CLEAR_WEB)) {
 				// L: clearing webs is somewhat difficult
@@ -2000,11 +2065,11 @@ static void monster_turn(struct monster *mon)
 				if (one_in_(25)) {
 					msg("%s struggles futilely in a web.", m_name);
 				}
-				/* Stuck */
+				// Stuck
 				return;
 			}
 		}
-	}
+	}*/
 
 	// L: check our target
 	mon_check_target(cave, mon);
