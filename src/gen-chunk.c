@@ -487,10 +487,10 @@ bool chunk_copy(struct chunk *dest, struct player *p, struct chunk *source,
 		dest->squares[dest_mon->grid.y][dest_mon->grid.x].mon = dest_mon->midx;
 
 		/* Held or mimicked objects */
-		if (source_mon->held_obj) {
+		if (source_mon->gear) {
 			struct object *obj;
-			dest_mon->held_obj = source_mon->held_obj;
-			for (obj = source_mon->held_obj; obj; obj = obj->next) {
+			dest_mon->gear = source_mon->gear;
+			for (obj = source_mon->gear; obj; obj = obj->next) {
 				obj->held_m_idx = dest_mon->midx;
 			}
 		}
@@ -578,8 +578,8 @@ void chunk_validate_objects(struct chunk *c) {
 				assert(obj->tval != 0);
 			if (square(c, grid)->mon > 0) {
 				struct monster *mon = square_monster(c, grid);
-				if (mon->held_obj)
-					for (obj = mon->held_obj; obj; obj = obj->next)
+				if (mon->gear)
+					for (obj = mon->gear; obj; obj = obj->next)
 						assert(obj->tval != 0);
 			}
 		}

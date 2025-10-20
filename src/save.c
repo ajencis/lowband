@@ -234,7 +234,7 @@ static void wr_monster(const struct monster *mon)
 {
 	size_t j;
 	int i;
-	struct object *obj = mon->held_obj; 
+	struct object *obj = mon->gear; 
 	struct object *dummy = object_new();
 
 	wr_u16b(mon->midx);
@@ -878,7 +878,7 @@ static void wr_gear_aux(struct object *gear)
 
 void wr_gear(void)
 {
-	wr_gear_aux(player->gear);
+	wr_gear_aux(player->mon.gear);
 	wr_gear_aux(player->gear_k);
 }
 

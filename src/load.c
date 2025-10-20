@@ -377,7 +377,7 @@ static bool rd_monster(struct chunk *c, struct monster *mon)
 			break;
 		}
 
-		pile_insert(&mon->held_obj, obj);
+		pile_insert(&mon->gear, obj);
 		assert(obj->oidx);
 		assert(c->objects[obj->oidx] == NULL);
 		c->objects[obj->oidx] = obj;
@@ -1357,7 +1357,7 @@ int rd_gear(void)
 	struct object *obj, *known_obj;
 
 	/* Get real gear */
-	if (rd_gear_aux(rd_item, &player->gear))
+	if (rd_gear_aux(rd_item, &player->mon.gear))
 		return -1;
 
 	/* Get known gear */
@@ -1365,7 +1365,7 @@ int rd_gear(void)
 		return -1;
 
 	/* Align the two, add weight */
-	for (obj = player->gear, known_obj = player->gear_k; obj;
+	for (obj = player->mon.gear, known_obj = player->gear_k; obj;
 		 obj = obj->next, known_obj = known_obj->next) {
 		obj->known = known_obj;
 		player->upkeep->total_weight +=

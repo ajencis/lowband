@@ -69,7 +69,7 @@ int teardown_tests(void *state) {
 
 /* Remove all of the gear. */
 static bool flush_gear(void) {
-	struct object *curr = player->gear;
+	struct object *curr = player->mon.gear;
 
 	while (curr != NULL) {
 		struct object *next = curr->next;
@@ -135,7 +135,7 @@ static bool populate_gear(const struct in_slot_desc *slots) {
 
 /* Verify that the gear matches a given layout. */
 static bool verify_gear(struct player *p, const struct out_slot_desc *slots) {
-	struct object *obj = player->gear;
+	struct object *obj = player->mon.gear;
 	bool result = true;
 
 	while (1) {
@@ -180,7 +180,7 @@ static bool verify_stability(struct player *p) {
 	int n = 0, i = 0;
 	struct object *obj;
 
-	for (obj = player->gear; obj; obj = obj->next) {
+	for (obj = player->mon.gear; obj; obj = obj->next) {
 		if (n >= allocated) {
 			allocated += allocated;
 			old_gear = mem_realloc(old_gear,
@@ -192,7 +192,7 @@ static bool verify_stability(struct player *p) {
 
 	combine_pack(p);
 
-	for (obj = player->gear; obj && result; obj = obj->next) {
+	for (obj = player->mon.gear; obj && result; obj = obj->next) {
 		if (i >= n || obj != old_gear[i]) {
 			result = false;
 		}

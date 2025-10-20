@@ -4689,7 +4689,7 @@ struct chunk *arena_gen(struct player *p, int min_height, int min_width) {
 	p->upkeep->health_who = mon;
 
 	/* Ignore its held objects */
-	mon->held_obj = NULL;
+	mon->gear = NULL;
 
 	/* Give it a group */
 	monster_group_start(c, mon, 0);

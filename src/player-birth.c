@@ -629,7 +629,7 @@ void wield_all(struct player *p)
 	int slot;
 
 	/* Scan through the slots */
-	for (obj = p->gear; obj; obj = obj->next) {
+	for (obj = p->mon.gear; obj; obj = obj->next) {
 		struct object *obj_temp;
 
 		/* Skip non-objects */
@@ -666,7 +666,7 @@ void wield_all(struct player *p)
 
 	/* Now add the unwielded split objects to the gear */
 	if (new_pile) {
-		pile_insert_end(&p->gear, new_pile);
+		pile_insert_end(&p->mon.gear, new_pile);
 		pile_insert_end(&p->gear_k, new_known_pile);
 	}
 	return;

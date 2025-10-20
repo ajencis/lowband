@@ -334,7 +334,7 @@ static void log_all_objects(int level)
 					if (!mon) {
 						break;
 					}
-					obj = mon->held_obj;
+					obj = mon->gear;
 					if (!obj) {
 						break;
 					}

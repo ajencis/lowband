@@ -1173,9 +1173,9 @@ void monster_death(struct monster *mon, struct player *p, bool stats)
 	while (true) {
 		struct object *obj;
 		int slot = first_slot_with_object_equipped(&mon->body);
-		if (mon->held_obj) {
-			obj = mon->held_obj;
-			pile_excise(&mon->held_obj, obj);
+		if (mon->gear) {
+			obj = mon->gear;
+			pile_excise(&mon->gear, obj);
 		}
 		else if (slot > 0) {
 			obj = mon->body.slots[slot].obj;
@@ -1213,7 +1213,7 @@ void monster_death(struct monster *mon, struct player *p, bool stats)
 	}
 
 	/* Forget objects */
-	mon->held_obj = NULL;
+	mon->gear = NULL;
 
 	/* Take note of any dropped treasure */
 	if (visible && (dump_item || dump_gold)) {
@@ -1646,7 +1646,7 @@ struct object *monster_best_takeable_item(struct chunk *c, struct monster *mon, 
  */
 bool monster_carry(struct chunk *c, struct monster *mon, struct object *obj)
 {
-	struct object *held_obj;
+	struct object *gear;
 	int i;
 
 	if (player->cave && player->cave->objects) {
@@ -1657,11 +1657,11 @@ bool monster_carry(struct chunk *c, struct monster *mon, struct object *obj)
 	mflag_on(mon->mflag, MFLAG_CHECK_EQ);
 
 	/* Scan objects already being held for combination */
-	for (held_obj = mon->held_obj; held_obj; held_obj = held_obj->next) {
+	for (gear = mon->gear; gear; gear = gear->next) {
 		/* Check for combination */
-		if (object_mergeable(held_obj, obj, OSTACK_MONSTER)) {
+		if (object_mergeable(gear, obj, OSTACK_MONSTER)) {
 			/* Combine the items */
-			object_absorb(held_obj, obj);
+			object_absorb(gear, obj);
 			
 			if (player->cave && player->cave->objects) {
 				assert(!player->cave->objects[obj->oidx] || player->cave->objects[obj->oidx] == obj->known);
@@ -1694,7 +1694,7 @@ bool monster_carry(struct chunk *c, struct monster *mon, struct object *obj)
 		player->cave->objects[obj->oidx] = obj->known;
 	}
 
-	pile_insert(&mon->held_obj, obj);
+	pile_insert(&mon->gear, obj);
 
 	verify_mon_ownership(mon);
 
@@ -1775,7 +1775,7 @@ struct object *get_random_monster_object(struct monster *mon)
     int i = 1;
 
     /* Pick a random object */
-    for (obj = mon->held_obj; obj; obj = obj->next)
+    for (obj = mon->gear; obj; obj = obj->next)
     {
         /* Check it isn't a quest artifact */
         if (obj->artifact && kf_has(obj->kind->kind_flags, KF_QUEST_ART))
@@ -1842,7 +1842,7 @@ void steal_monster_item(struct monster *mon, int midx)
 
 			/* Success! */
 			obj->held_m_idx = 0;
-			pile_excise(&mon->held_obj, obj);
+			pile_excise(&mon->gear, obj);
 			if (tval_is_money(obj)) {
 				msg("You steal %d gold pieces worth of treasure.", obj->pval);
 				player->au += obj->pval;
@@ -1921,7 +1921,7 @@ void steal_monster_item(struct monster *mon, int midx)
 
 			/* Steal and carry */
 			obj->held_m_idx = 0;
-			pile_excise(&mon->held_obj, obj);
+			pile_excise(&mon->gear, obj);
 			(void)monster_carry(cave, thief, obj);
 		}
 	}
@@ -2616,7 +2616,7 @@ void verify_mon_items_ownership(const struct monster *mon, const char *file, int
 		verify_mon_item_ownership(mon, slot->obj, slot->name, file, line);
 	}
 
-	for (obj = mon->held_obj; obj; obj = obj->next) {
+	for (obj = mon->gear; obj; obj = obj->next) {
 		verify_mon_item_ownership(mon, obj, NULL, file, line);
 	}
 }

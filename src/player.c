@@ -626,8 +626,8 @@ void player_cleanup_members(struct player *p)
 		player_quests_free(p);
 	}
 	player_spells_free(p);
-	if (p->gear) {
-		object_pile_free(NULL, NULL, p->gear);
+	if (p->mon.gear) {
+		object_pile_free(NULL, NULL, p->mon.gear);
 		object_pile_free(NULL, NULL, p->gear_k);
 	}
 	if (p->mon.body.slots) {

@@ -236,7 +236,7 @@ static void recharge_objects(void)
 	struct object *obj;
 
 	/* Recharge carried gear */
-	for (obj = player->gear; obj; obj = obj->next) {
+	for (obj = player->mon.gear; obj; obj = obj->next) {
 		/* Skip non-objects */
 		assert(obj->kind);
 
@@ -1329,7 +1329,7 @@ static void monsters_to_followers(struct chunk *c)
 		fmon->group_info[PRIMARY_GROUP].role = 0;
 		fmon->grid = loc(0, 0);
 		fmon->mimicked_obj = NULL;
-		fmon->held_obj = NULL;
+		fmon->gear = NULL;
 		fmon->midx = 0;
 		fmon->energy = 0;
 

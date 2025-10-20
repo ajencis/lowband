@@ -1109,7 +1109,7 @@ static void monster_death_stats(int m_idx)
 	mon->mimicked_obj = NULL;
 
 	/* Drop objects being carried */
-	obj = mon->held_obj;
+	obj = mon->gear;
 	while (obj) {
 		struct object *next = obj->next;
 
@@ -1128,7 +1128,7 @@ static void monster_death_stats(int m_idx)
 	}
 
 	/* Forget objects */
-	mon->held_obj = NULL;
+	mon->gear = NULL;
 }
 
 

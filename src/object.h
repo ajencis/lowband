@@ -416,7 +416,7 @@ struct curse_data {
  * field, forming a doubly linked list, which in game terms represents a
  * stack of objects in the same grid.
  *
- * Each monster points to one (or zero) objects via the "held_obj"
+ * Each monster points to one (or zero) objects via the "gear"
  * field (see monster.h).  Each object then points to one (or zero) objects
  * and back to previous objects by its own "next" and "prev" fields,
  * forming a doubly linked list, which in game terms represents the

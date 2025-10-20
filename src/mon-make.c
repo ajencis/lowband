@@ -464,7 +464,7 @@ void delete_monster_idx(struct chunk *c, int m_idx)
 	monster_remove_from_groups(c, mon);
 
 	/* Delete objects */
-	struct object *obj = mon->held_obj;
+	struct object *obj = mon->gear;
 	while (obj) {
 		struct object *next = obj->next;
 
@@ -561,7 +561,7 @@ void monster_index_move(struct chunk *c, int i1, int i2)
 	}
 
 	/* Repair objects being carried by monster */
-	for (obj = mon->held_obj; obj; obj = obj->next) {
+	for (obj = mon->gear; obj; obj = obj->next) {
 		obj->held_m_idx = i2;
 	}
 
@@ -693,15 +693,15 @@ void wipe_mon_list(struct chunk *c, struct player *p)
 	/* Delete all the monsters */
 	for (m_idx = cave_monster_max(c) - 1; m_idx >= 1; m_idx--) {
 		struct monster *mon = cave_monster(c, m_idx);
-		struct object *held_obj = mon ? mon->held_obj : NULL;
+		struct object *gear = mon ? mon->gear : NULL;
 
 		/* Skip dead monsters */
 		if (!mon->race) continue;
 
 		/* Delete all the objects */
-		if (held_obj) {
+		if (gear) {
 			/* Go through all held objects and check for artifacts */
-			struct object *obj = held_obj;
+			struct object *obj = gear;
 			while (obj) {
 				if (obj->artifact && !obj_is_known_artifact(obj)) {
 					mark_artifact_created(obj->artifact,
@@ -720,7 +720,7 @@ void wipe_mon_list(struct chunk *c, struct player *p)
 				obj = obj->next;
 			}
 			object_pile_free(c, (p && c == cave) ? p->cave : NULL,
-				held_obj);
+				gear);
 		}
 
 		/* Reduce the racial counter */

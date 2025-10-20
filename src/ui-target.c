@@ -587,7 +587,7 @@ static bool aux_monster(struct chunk *c, struct player *p,
 		lphrase2 = "carrying ";
 
 		/* Scan all objects being carried */
-		for (obj = mon->held_obj; obj; obj = obj->next) {
+		for (obj = mon->gear; obj; obj = obj->next) {
 			char o_name[80];
 
 			/* Obtain an object description */

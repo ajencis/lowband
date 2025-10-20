@@ -141,7 +141,7 @@ int teardown_tests(void *state) {
 
 static bool fill_pack_quiver(struct carry_num_state *cns, int n_pack,
 		int n_arrow, int n_shot, int n_flask) {
-	struct object *curr = cns->p->gear;
+	struct object *curr = cns->p->mon.gear;
 	int qslot = 0;
 	int i;
 

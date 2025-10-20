@@ -2558,7 +2558,7 @@ static int initialize_summary(struct player *p,
 	apply_visitor_to_equipped(p, &visitor);
 	visitor.selfunc = select_nonequipped_wearable;
 	visitor.selfunc_closure = p;
-	apply_visitor_to_pile(p->gear, &visitor);
+	apply_visitor_to_pile(p->mon.gear, &visitor);
 	if (cave) {
 		visitor.selfunc = select_seen_wearable;
 		visitor.selfunc_closure = p;
@@ -2597,7 +2597,7 @@ static int initialize_summary(struct player *p,
 	add_obj_data.src = EQUIP_SOURCE_PACK;
 	visitor.selfunc = select_nonequipped_wearable;
 	visitor.selfunc_closure = p;
-	apply_visitor_to_pile(p->gear, &visitor);
+	apply_visitor_to_pile(p->mon.gear, &visitor);
 	if (cave) {
 		add_obj_data.src = EQUIP_SOURCE_FLOOR;
 		visitor.selfunc = select_seen_wearable;

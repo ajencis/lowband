@@ -449,7 +449,7 @@ struct monster_race {
  *
  * Note: fy, fx constrain dungeon size to 256x256
  *
- * The "held_obj" field points to the first object of a stack
+ * The "gear" field points to the first object of a stack
  * of objects (if any) being carried by the monster (see above).
  */
 struct monster {
@@ -476,7 +476,7 @@ struct monster {
 	bitflag mflag[MFLAG_SIZE];			/* Temporary monster flags */
 
 	struct object *mimicked_obj;		/* Object this monster is mimicking */
-	struct object *held_obj;			/* Object being held (if any) */
+	struct object *gear;				/* Object being held (if any) */
 	//struct object *equipped_obj;		/* L: objects being worn */
 
 	uint8_t attr;  						/* attr last used for drawing monster */

@@ -156,7 +156,7 @@ bool object_is_equipped(struct player_body body, const struct object *obj)
 
 bool object_is_carried(struct player *p, const struct object *obj)
 {
-	return pile_contains(p->gear, obj);
+	return pile_contains(p->mon.gear, obj);
 }
 
 /**
@@ -198,7 +198,7 @@ uint16_t object_pack_total(struct player *p, const struct object *obj,
 	if (first) {
 		*first = NULL;
 	}
-	for (cursor = p->gear; cursor; cursor = cursor->next) {
+	for (cursor = p->mon.gear; cursor; cursor = cursor->next) {
 		bool like;
 
 		if (cursor == obj) {
@@ -262,7 +262,7 @@ int pack_slots_used(const struct player *p)
 	int i, pack_slots = 0;
 	int quiver_ammo = 0;
 
-	for (obj = p->gear; obj; obj = obj->next) {
+	for (obj = p->mon.gear; obj; obj = obj->next) {
 		bool found = false;
 		/* Equipment doesn't count */
 		if (!object_is_equipped(p->mon.body, obj)) {
@@ -398,7 +398,7 @@ bool minus_ac(struct player *p)
 	struct object *obj = NULL;
 
 	/* Avoid crash during monster power calculations */
-	if (!p->gear) return false;
+	if (!p->mon.gear) return false;
 
 	/* Count the armor slots */
 	for (i = 0; i < p->mon.body.count; i++) {
@@ -498,7 +498,7 @@ static bool gear_excise_object(struct player *p, struct object *obj)
 	int i;
 
 	pile_excise(&p->gear_k, obj->known);
-	pile_excise(&p->gear, obj);
+	pile_excise(&p->mon.gear, obj);
 
 	/* Change the weight */
 	p->upkeep->total_weight -= obj->number * object_weight_one(obj);
@@ -524,12 +524,12 @@ static bool gear_excise_object(struct player *p, struct object *obj)
 
 struct object *gear_last_item(struct player *p)
 {
-	return pile_last_item(p->gear);
+	return pile_last_item(p->mon.gear);
 }
 
 void gear_insert_end(struct player *p, struct object *obj)
 {
-	pile_insert_end(&p->gear, obj);
+	pile_insert_end(&p->mon.gear, obj);
 	pile_insert_end(&p->gear_k, obj->known);
 }
 
@@ -845,7 +845,7 @@ void inven_carry(struct player *p, struct object *obj, bool absorb,
 	if (absorb) {
 		struct object *combine_item = NULL;
 
-		struct object *gear_obj = p->gear;
+		struct object *gear_obj = p->mon.gear;
 		while ((combine_item == NULL) && (gear_obj != NULL)) {
 			object_stack_t stack_mode =
 				object_is_in_quiver(p, gear_obj) ?
@@ -1275,7 +1275,7 @@ void combine_pack(struct player *p)
 		prev = obj1->prev;
 
 		/* Scan the items above that item */
-		for (obj2 = p->gear; obj2 && obj2 != obj1; obj2 = obj2->next) {
+		for (obj2 = p->mon.gear; obj2 && obj2 != obj1; obj2 = obj2->next) {
 			object_stack_t stack_mode2 =
 				object_is_in_quiver(p, obj2) ?
 				OSTACK_QUIVER : OSTACK_PACK;

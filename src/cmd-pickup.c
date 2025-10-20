@@ -128,7 +128,7 @@ static void player_pickup_gold(struct player *p)
 static const struct object *find_stack_object_in_inventory(const struct object *obj, const struct object *start)
 {
 	const struct object *gear_obj;
-	for (gear_obj = (start) ? start : player->gear; gear_obj; gear_obj = gear_obj->next) {
+	for (gear_obj = (start) ? start : player->mon.gear; gear_obj; gear_obj = gear_obj->next) {
 		if (!object_is_equipped(player->mon.body, gear_obj) &&
 				object_similar(gear_obj, obj, OSTACK_PACK)) {
 			/* We found the object */

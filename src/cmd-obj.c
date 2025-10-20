@@ -1315,7 +1315,7 @@ static int gener_spell_is_castable(const struct player *p, int spell) {
 	if (!(p->player_spell_flags[spell] & PY_SPELL_LEARNED)) return 2;
 	
 	if (!realm || !realm->realm_special[RLM_SPCL_INNATE]) {
-		for (spellbook = p->gear; spellbook; spellbook = spellbook->next) {
+		for (spellbook = p->mon.gear; spellbook; spellbook = spellbook->next) {
 			if (spellbook->spell && spellbook->spell->sidx == spell) {
 				break;
 			}

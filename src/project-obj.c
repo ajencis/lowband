@@ -42,7 +42,7 @@
 int inven_damage(struct player *p, int type, int cperc)
 {
 	int j, k, amt;
-	struct object *obj = p->gear;
+	struct object *obj = p->mon.gear;
 	char o_name[80];
 	bool damage;
 

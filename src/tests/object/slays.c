@@ -121,7 +121,7 @@ static void fill_in_monster(struct monster *mon, struct monster_race *race)
 	mon->cdis = 100;
 	rf_wipe(mon->mflag);
 	mon->mimicked_obj = NULL;
-	mon->held_obj = NULL;
+	mon->gear = NULL;
 	mon->attr = race->d_attr;
 	memset(&mon->known_pstate, 0, sizeof(mon->known_pstate));
 	mon->target.grid = loc(0, 0);

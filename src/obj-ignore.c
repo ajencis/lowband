@@ -206,7 +206,7 @@ void rune_autoinscribe(struct player *p, int i)
 				rune_add_autoinscription(obj, i);
 
 	/* Autoinscribe each object in the inventory */
-	for (obj = p->gear; obj; obj = obj->next)
+	for (obj = p->mon.gear; obj; obj = obj->next)
 		if (object_has_rune(obj, i))
 			rune_add_autoinscription(obj, i);
 }
@@ -349,7 +349,7 @@ void autoinscribe_pack(struct player *p)
 	struct object *obj;
 
 	/* Autoinscribe each object in the inventory */
-	for (obj = p->gear; obj; obj = obj->next)
+	for (obj = p->mon.gear; obj; obj = obj->next)
 		apply_autoinscription(p, obj);
 }
 

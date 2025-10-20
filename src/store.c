@@ -1624,7 +1624,7 @@ int find_inven(const struct object *obj)
 	int num = 0;
 
 	/* Similar slot? */
-	for (gear_obj = player->gear; gear_obj; gear_obj = gear_obj->next) {
+	for (gear_obj = player->mon.gear; gear_obj; gear_obj = gear_obj->next) {
 		/* Check only the inventory and the quiver */
 		if (object_is_equipped(player->mon.body, gear_obj))
 			continue;

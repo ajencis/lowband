@@ -517,7 +517,7 @@ void calc_inventory(struct player *p)
 	 * Equipped items are already taken care of.  Only the others need
 	 * to be tested for assignment to the quiver or pack.
 	 */
-	for (current = p->gear, j = 0; current; current = current->next, ++j) {
+	for (current = p->mon.gear, j = 0; current; current = current->next, ++j) {
 		assert(j < n_max);
 		assigned[j] = object_is_equipped(p->mon.body, current);
 	}
@@ -539,7 +539,7 @@ void calc_inventory(struct player *p)
 	}
 
 	/* Fill quiver.  First, allocate inscribed items. */
-	for (current = p->gear, j = 0; current; current = current->next, ++j) {
+	for (current = p->mon.gear, j = 0; current; current = current->next, ++j) {
 		int prefslot;
 
 		/* Skip already assigned (i.e. equipped) items. */
@@ -604,7 +604,7 @@ void calc_inventory(struct player *p)
 
 		/* Find the quiver object that should go there. */
 		j = 0;
-		current = p->gear;
+		current = p->mon.gear;
 		while (1) {
 			if (!current) break;
 			assert(j < n_max);
@@ -673,7 +673,7 @@ void calc_inventory(struct player *p)
 
 		/* Find the object that should go there. */
 		j = 0;
-		current = p->gear;
+		current = p->mon.gear;
 		while (1) {
 			if (!current) break;
 			assert(j < n_max);

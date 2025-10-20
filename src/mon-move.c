@@ -517,7 +517,7 @@ static bool monster_turn_equip_item(struct monster *mon)
 		struct object *curr, *best = body->slots[i].obj;
 		int curr_score, best_score = best ? item_score(best) : 0;
 		// check every item that could be in that slot
-		for (curr = mon->held_obj; curr; curr = curr->next) {
+		for (curr = mon->gear; curr; curr = curr->next) {
 			if (wield_slot_type(curr) != body->slots[i].type) {
 				continue;
 			}
@@ -565,7 +565,7 @@ static bool monster_turn_equip_item(struct monster *mon)
 		if (to_equip->number > 1) {
 			to_equip = object_split(to_equip, 1);
 		} else {
-			pile_excise(&mon->held_obj, to_equip);
+			pile_excise(&mon->gear, to_equip);
 		}
 		monster_equip(cave, mon, to_equip);
 		if (monster_is_visible(mon)) {

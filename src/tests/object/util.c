@@ -61,13 +61,13 @@ static int test_obj_can_refill(void *state) {
 
     /* Torches cannot be refilled */
     object_prep(&obj_torch, &test_torch, 1, AVERAGE);
-	player->gear = &obj_torch;
+	player->mon.gear = &obj_torch;
     player->mon.body.slots->obj = &obj_torch; 
     eq(obj_can_refill(&obj_torch), false);
 
     /* Lanterns can be refilled */    
     object_prep(&obj_lantern, &test_lantern, 1, AVERAGE);
-	player->gear = &obj_lantern;
+	player->mon.gear = &obj_lantern;
     player->mon.body.slots->obj = &obj_lantern; 
 
     /* Not by torches */

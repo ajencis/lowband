@@ -1484,14 +1484,14 @@ static struct object *find_artifact(struct artifact *artifact)
 	}
 
 	/* Player objects */
-	for (obj = player->gear; obj; obj = obj->next) {
+	for (obj = player->mon.gear; obj; obj = obj->next) {
 		if (obj->artifact == artifact) return obj;
 	}
 
 	/* Monster objects */
 	for (i = cave_monster_max(cave) - 1; i >= 1; i--) {
 		struct monster *mon = cave_monster(cave, i);
-		obj = mon ? mon->held_obj : NULL;
+		obj = mon ? mon->gear : NULL;
 
 		while (obj) {
 			if (obj->artifact == artifact) return obj;
@@ -1526,7 +1526,7 @@ static struct object *find_artifact(struct artifact *artifact)
 		/* Monster objects */
 		for (j = cave_monster_max(c) - 1; j >= 1; j--) {
 			struct monster *mon = cave_monster(c, j);
-			obj = mon ? mon->held_obj : NULL;
+			obj = mon ? mon->gear : NULL;
 
 			while (obj) {
 				if (obj->artifact == artifact) return obj;

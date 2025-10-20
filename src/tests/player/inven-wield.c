@@ -37,7 +37,7 @@ static bool find_empty_spot(struct chunk *c, struct player *p)
 }
 
 static bool empty_gear(struct player *p) {
-	struct object *curr = p->gear;
+	struct object *curr = p->mon.gear;
 	int pass = 0;
 
 	/*
@@ -51,7 +51,7 @@ static bool empty_gear(struct player *p) {
 
 		if (curr == NULL) {
 			if (pass == 0) {
-				curr = p->gear;
+				curr = p->mon.gear;
 				if (curr == NULL) {
 					break;
 				}

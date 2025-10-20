@@ -73,7 +73,7 @@ static void forget_flavors(void) {
 
 /* Remove all of the gear. */
 static bool flush_gear(void) {
-	struct object *curr = player->gear;
+	struct object *curr = player->mon.gear;
 
 	while (curr != NULL) {
 		struct object *next = curr->next;
@@ -372,7 +372,7 @@ static int test_calc_inventory_only_quiver(void *state) {
 	 * Inscribe the spear so it goes to the quiver.  Also, compute how
 	 * much space the quiver will take.
 	 */
-	obj = player->gear;
+	obj = player->mon.gear;
 	quiver_size = 0;
 	while (obj) {
 		if (obj->tval == TV_POLEARM) {
@@ -458,7 +458,7 @@ static int test_calc_inventory_equipped_pack_quiver(void *state) {
 	 * Inscribe the dagger so it goes to the quiver.  Also, compute how
 	 * much space the quiver will take.
 	 */
-	obj = player->gear;
+	obj = player->mon.gear;
 	quiver_size = 0;
 	while (obj) {
 		if (obj->tval == TV_SWORD) {
@@ -523,7 +523,7 @@ static int test_calc_inventory_oversubscribed_quiver(void *state) {
 	require(flush_gear());
 	require(populate_gear(this_test_case.gear_in));
 	/* Compute how much space the quiver will take. */
-	obj = player->gear;
+	obj = player->mon.gear;
 	quiver_size = 0;
 	while (obj) {
 		if (tval_is_ammo(obj)) {
@@ -582,7 +582,7 @@ static int test_calc_inventory_oversubscribed_quiver_slot(void *state) {
 	 * each slot.  Also, compute the total size for the things in the
 	 * quiver;
 	 */
-	obj = player->gear;
+	obj = player->mon.gear;
 	i = 0;
 	quiver_size = 0;
 	while (obj) {
@@ -628,7 +628,7 @@ static int test_calc_inventory_quiver_split_pile(void *state) {
 	require(flush_gear());
 	require(populate_gear(this_test_case.gear_in));
 	/* Inscribe the flasks so they want to go to the quiver. */
-	player->gear->note = quark_add("@v1");
+	player->mon.gear->note = quark_add("@v1");
 	calc_inventory(player);
 	require(verify_pack(player, this_test_case.pack_out, 1));
 	require(verify_quiver(player, this_test_case.quiv_out));
@@ -653,7 +653,7 @@ static int test_calc_inventory_equipped_throwing_inscribed(void *state) {
 	require(flush_gear());
 	require(populate_gear(this_test_case.gear_in));
 	/* Inscribe the dagger so it would go to the quiver if not equipped. */
-	player->gear->note = quark_add("@v1");
+	player->mon.gear->note = quark_add("@v1");
 	calc_inventory(player);
 	require(verify_pack(player, this_test_case.pack_out, 0));
 	require(verify_quiver(player, this_test_case.quiv_out));

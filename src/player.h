@@ -474,13 +474,13 @@ struct player {
 	char died_from[80];					/* Cause of death */
 	char *history;						/* Player history */
 	struct quest *quests;				/* Quest history */
-	uint16_t total_winner;			/* Total winner */
+	uint16_t total_winner;				/* Total winner */
 
-	uint16_t noscore;			/* Cheating flags */
+	uint16_t noscore;					/* Cheating flags */
 
-	bool is_dead;				/* Player is dead */
+	bool is_dead;						/* Player is dead */
 
-	bool wizard;				/* Player is in wizard mode */
+	bool wizard;						/* Player is in wizard mode */
 
 	int16_t player_hp[PY_MAX_LEVEL];	/* HP gained per level */
 
@@ -496,16 +496,16 @@ struct player {
 	//struct player_body body;			/* Equipment slots available */
 	struct player_shape *shape;			/* Current player shape */
 
-	struct object *gear;				/* Real gear */
+	//struct object *gear;				/* Real gear */
 	struct object *gear_k;				/* Known gear */
 
 	struct object *obj_k;				/* Object knowledge ("runes") */
 	struct chunk *cave;					/* Known version of current level */
 
-	//struct player_state state;			/* Calculatable state */
+	//struct player_state state;		/* Calculatable state */
 	struct player_state known_state;	/* What the player can know of the above */
 	struct player_upkeep *upkeep;		/* Temporary player-related values */
-	
+
 	const struct monster_race **evol_choices;	// L: which monster the player is choosing to evolve into
 	int num_evol_choices;				// L: how many evolution choices the player has made
 

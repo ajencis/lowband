@@ -1063,7 +1063,7 @@ bool check_learn_powers(struct player *p, int xpgain)
 	int tind = 0;
 
 	// collect tomes from inventory
-	for (obj = p->gear; obj && (tind < maxtomes); obj = obj->next) {
+	for (obj = p->mon.gear; obj && (tind < maxtomes); obj = obj->next) {
 		if (obj_can_learn_extra_from(obj)) {
 			tomes[tind] = obj;
 			++tind;
@@ -1145,7 +1145,7 @@ bool tome_max_learnable_extra_array(bool metaprog, int *learn_array, int *extra_
 			learn_array[i] = LEARN_MAX;
 		}
 	} else {
-		for (obj = p->gear; obj; obj = obj->next) {
+		for (obj = p->mon.gear; obj; obj = obj->next) {
 			max_learnable_object(obj, learn_array, z_info->learn_max);
 		}
 
@@ -1941,7 +1941,7 @@ void death_knowledge(struct player *p)
 	}
 
 	player_learn_all_runes(p);
-	for (obj = p->gear; obj; obj = obj->next) {
+	for (obj = p->mon.gear; obj; obj = obj->next) {
 		object_flavor_aware(p, obj);
 		obj->known->effect = obj->effect;
 		obj->known->activation = obj->activation;
@@ -2367,7 +2367,7 @@ struct object *player_best_digger(struct player *p, bool forbid_stack)
 
 	if (weapon_slot == -1) return NULL;
 
-	for (obj = p->gear; obj; obj = obj->next) {
+	for (obj = p->mon.gear; obj; obj = obj->next) {
 		int score, old_number;
 		if (!tval_is_melee_weapon(obj)) continue;
 		if (obj->number < 1 || (forbid_stack && obj->number > 1)) continue;

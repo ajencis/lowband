@@ -1224,7 +1224,7 @@ void update_player_object_knowledge(struct player *p)
 			player_know_object(p, cave->objects[i]);
 
 	/* Player objects */
-	for (obj = p->gear; obj; obj = obj->next)
+	for (obj = p->mon.gear; obj; obj = obj->next)
 		player_know_object(p, obj);
 
 	/* Store objects */
@@ -2283,7 +2283,7 @@ void object_flavor_aware(struct player *p, struct object *obj)
 	p->upkeep->notice |= PN_IGNORE;
 
 	/* Update player objects */
-	for (obj1 = p->gear; obj1; obj1 = obj1->next)
+	for (obj1 = p->mon.gear; obj1; obj1 = obj1->next)
 		object_set_base_known(p, obj1);
 
 	/* Store objects */
