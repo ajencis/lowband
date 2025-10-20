@@ -17,6 +17,7 @@
  *    and not for profit purposes provided that this copyright and statement
  *    are included in all such copies.  Other copyrights may also apply.
  */
+#include "z-form.h"
 #include "z-rand.h"
 #ifdef _WIN32
 #include <windows.h> /* GetCurrentProcessId() */
@@ -157,7 +158,7 @@ void Rand_init(void)
 bool verify_rand(uint32_t num, const wchar_t *msg, const wchar_t *file, unsigned int line)
 {
 	if (num <= 0x10000000) return true;
-	_wassert(msg, file, line);
+	plog_fmt("Error: random() called with value too large (%i)!", (signed)num);
 	return false;
 }
 
