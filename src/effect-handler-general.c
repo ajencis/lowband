@@ -220,8 +220,8 @@ static bool uncurse_object(struct object *obj, int strength, char *dice_string)
 					dam);
 			}
 			msg("%s%s", "There is a bang and a flash!", dam_text);
-			if (object_is_carried(player, obj)) {
-				destroyed = gear_object_for_use(player, obj,
+			if (object_is_carried(&player->mon, obj)) {
+				destroyed = gear_object_for_use(&player->mon, obj,
 					1, false, &none_left);
 				if (destroyed->artifact) {
 					/* Artifacts are marked as lost */
@@ -404,7 +404,7 @@ static bool enchant_spell(int num_hit, int num_dam, int num_ac, struct command *
 
 	/* Describe */
 	msg("%s %s glow%s brightly!",
-		(object_is_carried(player, obj) ? "Your" : "The"), o_name,
+		(object_is_carried(&player->mon, obj) ? "Your" : "The"), o_name,
 			   ((obj->number > 1) ? "" : "s"));
 
 	/* Enchant */
@@ -1018,8 +1018,8 @@ bool effect_handler_DRAIN_LIGHT(effect_handler_context_t *context)
 {
 	int drain = effect_calculate_value(context, false);
 
-	int light_slot = slot_by_type(player, EQUIP_LIGHT, true);
-	struct object *obj = slot_object(player, light_slot);
+	int light_slot = slot_by_type(&player->mon, EQUIP_LIGHT, true);
+	struct object *obj = slot_object(&player->mon, light_slot);
 
 	if (obj && !of_has(obj->flags, OF_NO_FUEL) && (obj->timeout > 0)) {
 		/* Reduce fuel */
@@ -2142,9 +2142,9 @@ bool effect_handler_DISENCHANT(effect_handler_context_t *context)
 	/* Count slots */
 	for (i = 0; i < player->mon.body.count; i++) {
 		/* Ignore rings, amulets and lights */
-		if (slot_type_is(player, i, EQUIP_RING)) continue;
-		if (slot_type_is(player, i, EQUIP_AMULET)) continue;
-		if (slot_type_is(player, i, EQUIP_LIGHT)) continue;
+		if (slot_type_is(&player->mon, i, EQUIP_RING)) continue;
+		if (slot_type_is(&player->mon, i, EQUIP_AMULET)) continue;
+		if (slot_type_is(&player->mon, i, EQUIP_LIGHT)) continue;
 
 		/* Count disenchantable slots */
 		count++;
@@ -2153,9 +2153,9 @@ bool effect_handler_DISENCHANT(effect_handler_context_t *context)
 	/* Pick one at random */
 	for (i = player->mon.body.count - 1; i >= 0; i--) {
 		/* Ignore rings, amulets and lights */
-		if (slot_type_is(player, i, EQUIP_RING)) continue;
-		if (slot_type_is(player, i, EQUIP_AMULET)) continue;
-		if (slot_type_is(player, i, EQUIP_LIGHT)) continue;
+		if (slot_type_is(&player->mon, i, EQUIP_RING)) continue;
+		if (slot_type_is(&player->mon, i, EQUIP_AMULET)) continue;
+		if (slot_type_is(&player->mon, i, EQUIP_LIGHT)) continue;
 
 		if (one_in_(count--)) break;
 	}
@@ -2164,7 +2164,7 @@ bool effect_handler_DISENCHANT(effect_handler_context_t *context)
 	context->ident = true;
 
 	/* Get the item */
-	obj = slot_object(player, i);
+	obj = slot_object(&player->mon, i);
 
 	/* No item, nothing happens */
 	if (!obj) return true;
@@ -2187,8 +2187,8 @@ bool effect_handler_DISENCHANT(effect_handler_context_t *context)
 	}
 
 	/* Apply disenchantment, depending on which kind of equipment */
-	if (slot_type_is(player, i, EQUIP_WEAPON)
-			|| slot_type_is(player, i, EQUIP_BOW)) {
+	if (slot_type_is(&player->mon, i, EQUIP_WEAPON)
+			|| slot_type_is(&player->mon, i, EQUIP_BOW)) {
 		/* Disenchant to-hit */
 		if (obj->to_h > 0) obj->to_h--;
 		if ((obj->to_h > 5) && (randint0(100) < 20)) obj->to_h--;
@@ -2294,8 +2294,8 @@ bool effect_handler_RECHARGE(effect_handler_context_t *context)
 		msg("There is a bright flash of light.");
 
 		/* Reduce and describe inventory */
-		if (object_is_carried(player, obj)) {
-			destroyed = gear_object_for_use(player, obj, 1, true,
+		if (object_is_carried(&player->mon, obj)) {
+			destroyed = gear_object_for_use(&player->mon, obj, 1, true,
 				&none_left);
 		} else {
 			destroyed = floor_object_for_use(player, obj, 1, true,
@@ -3283,7 +3283,7 @@ bool effect_handler_CURSE_ARMOR(effect_handler_context_t *context)
 	char o_name[80];
 
 	/* Curse the body armor */
-	obj = slot_object(player, slot_by_type(player, EQUIP_BODY_ARMOR, true));
+	obj = slot_object(&player->mon, slot_by_type(&player->mon, EQUIP_BODY_ARMOR, true));
 
 	/* Nothing to curse */
 	if (!obj) return (true);
@@ -3347,7 +3347,7 @@ bool effect_handler_CURSE_WEAPON(effect_handler_context_t *context)
 	char o_name[80];
 
 	/* Curse the weapon */
-	obj = equipped_item_by_slot_name(player, "weapon");
+	obj = equipped_item_by_slot_name(&player->mon, "weapon");
 
 	/* Nothing to curse */
 	if (!obj) return (true);
@@ -3408,7 +3408,7 @@ bool effect_handler_CURSE_WEAPON(effect_handler_context_t *context)
  */
 bool effect_handler_BRAND_WEAPON(effect_handler_context_t *context)
 {
-	struct object *obj = equipped_item_by_slot_name(player, "weapon");
+	struct object *obj = equipped_item_by_slot_name(&player->mon, "weapon");
 
 	/* Select the brand */
 	const char *brand = one_in_(2) ? "Flame" : "Frost";
@@ -3522,8 +3522,8 @@ bool effect_handler_CREATE_ARROWS(effect_handler_context_t *context)
 	}
 
 	/* Destroy the staff */
-	if (object_is_carried(player, obj)) {
-		staff = gear_object_for_use(player, obj, 1, true, &none_left);
+	if (object_is_carried(&player->mon, obj)) {
+		staff = gear_object_for_use(&player->mon, obj, 1, true, &none_left);
 	} else {
 		staff = floor_object_for_use(player, obj, 1, true, &none_left);
 	}

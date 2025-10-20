@@ -18,15 +18,12 @@
 
 #include "angband.h"
 #include "cmd-core.h"
-#include "cmds.h"
 #include "game-event.h"
-#include "game-input.h"
 #include "game-world.h"
 #include "init.h"
 #include "mon-lore.h"
 #include "mon-util.h"
 #include "monster.h"
-#include "obj-curse.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
 #include "obj-init.h"
@@ -47,7 +44,6 @@
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
-#include "savefile.h"
 #include "store.h"
 #include "ui-player-properties.h"
 #include "ui-birth.h"
@@ -636,12 +632,12 @@ void wield_all(struct player *p)
 		assert(obj);
 
 		/* Make sure we can wield it */
-		slot = wield_slot(obj);
+		slot = wield_slot(&p->mon, obj);
 		if (slot < 0 || slot >= p->mon.body.count) {
 			continue;
 		}
 
-		obj_temp = slot_object(p, slot);
+		obj_temp = slot_object(&p->mon, slot);
 		if (obj_temp) {
 			continue;
 		}
@@ -823,7 +819,7 @@ static void player_outfit(struct player *p)
 		p->au -= object_value_real(obj, obj->number);
 
 		/* Carry the item */
-		inven_carry(p, obj, true, false);
+		inven_carry(&p->mon, obj, true, false);
 		kind->everseen = true;
 	}
 

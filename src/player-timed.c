@@ -758,7 +758,7 @@ static bool player_of_has_not_timed(struct player *p, int flag)
     player_flags(p, collect_f);
 
     for (i = 0; i < p->mon.body.count; i++) {
-        struct object *obj = slot_object(p, i);
+        struct object *obj = slot_object(&p->mon, i);
 
         if (!obj) continue;
         object_flags(obj, f);
@@ -797,7 +797,7 @@ bool player_set_timed(struct player *p, int idx, int v, bool notify,
 	struct timed_effect_data *effect = &timed_effects[idx];
 	struct timed_grade *new_grade = effect->grade;
 	struct timed_grade *current_grade = effect->grade;
-	struct object *weapon = slot_object(p, slot_by_type(p, EQUIP_WEAPON, true));
+	struct object *weapon = slot_object(&p->mon, slot_by_type(&p->mon, EQUIP_WEAPON, true));
 
 	/* Lower bound */
 	v = MAX(v, effect->lower_bound);

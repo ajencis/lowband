@@ -502,7 +502,7 @@ void calc_inventory(struct player *p)
 {
 	int old_inven_cnt = p->upkeep->inven_cnt;
 	int n_stack_split = 0;
-	int n_pack_remaining = z_info->pack_size - pack_slots_used(p);
+	int n_pack_remaining = z_info->pack_size - pack_slots_used(&p->mon);
 	int n_max = 1 + z_info->pack_size + z_info->quiver_size
 		+ p->mon.body.count;
 	struct object **old_quiver = mem_zalloc(z_info->quiver_size
@@ -576,7 +576,7 @@ void calc_inventory(struct player *p)
 					 * combine_pack().
 					 */
 					to_quiver = current;
-					gear_insert_end(p, object_split(current,
+					gear_insert_end(&p->mon, object_split(current,
 						current->number - nsplit));
 					++n_stack_split;
 				} else {
@@ -639,7 +639,7 @@ void calc_inventory(struct player *p)
 			assert(z_info->quiver_slot_size > 0
 				&& n_stack_split <= n_pack_remaining);
 			/* As above, split off the portion going to the pack. */
-			gear_insert_end(p, object_split(first,
+			gear_insert_end(&p->mon, object_split(first,
 				first->number - z_info->quiver_slot_size));
 		}
 		p->upkeep->quiver[i] = first;
@@ -938,14 +938,14 @@ static void calc_mana(struct player *p, struct player_state *state, bool update)
 	/* Weigh the armor */
 	cur_wgt = 0;
 	for (i = 0; i < p->mon.body.count; i++) {
-		struct object *obj_local = slot_object(p, i);
+		struct object *obj_local = slot_object(&p->mon, i);
 
 		/* Ignore non-armor */
-		if (slot_type_is(p, i, EQUIP_WEAPON)) continue;
-		if (slot_type_is(p, i, EQUIP_BOW)) continue;
-		if (slot_type_is(p, i, EQUIP_RING)) continue;
-		if (slot_type_is(p, i, EQUIP_AMULET)) continue;
-		if (slot_type_is(p, i, EQUIP_LIGHT)) continue;
+		if (slot_type_is(&p->mon, i, EQUIP_WEAPON)) continue;
+		if (slot_type_is(&p->mon, i, EQUIP_BOW)) continue;
+		if (slot_type_is(&p->mon, i, EQUIP_RING)) continue;
+		if (slot_type_is(&p->mon, i, EQUIP_AMULET)) continue;
+		if (slot_type_is(&p->mon, i, EQUIP_LIGHT)) continue;
 
 		/* Add weight */
 		if (obj_local) {
@@ -1053,7 +1053,7 @@ static void calc_light(struct player *p, struct player_state *state,
 	/* Examine all wielded objects, use the brightest */
 	for (i = 0; i < p->mon.body.count; i++) {
 		int amt = 0;
-		struct object *obj = slot_object(p, i);
+		struct object *obj = slot_object(&p->mon, i);
 
 		/* Skip empty slots */
 		if (!obj) continue;
@@ -1650,15 +1650,15 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	/* Analyze equipment */
 	for (i = 0; i < p->mon.body.count; i++) {
 		int index = 0;
-		struct object *obj = slot_object(p, i);
+		struct object *obj = slot_object(&p->mon, i);
 		struct curse_data *curse = obj ? obj->curses : NULL;
 		
-		if (slot_type_is(p, i, EQUIP_WEAPON) && num_weapons < PY_MAX_ATTACKS) {
+		if (slot_type_is(&p->mon, i, EQUIP_WEAPON) && num_weapons < PY_MAX_ATTACKS) {
 			weapons[num_weapons] = obj;
 			++num_weapons;
 		}
 
-		if (slot_type_is(p, i, EQUIP_BOOTS)) {
+		if (slot_type_is(&p->mon, i, EQUIP_BOOTS)) {
 			has_feet = true;
 		}
 
@@ -1667,11 +1667,11 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 			int owgt = object_weight_one(obj);
 
 			/* L: track armour weight */
-			if (slot_type_is(p, i, EQUIP_BODY_ARMOR)) {
+			if (slot_type_is(&p->mon, i, EQUIP_BODY_ARMOR)) {
 			    armwgt = MAX(armwgt, owgt);
 			}
 
-			if (!launcher && slot_type_is(p, i, EQUIP_BOW)) {
+			if (!launcher && slot_type_is(&p->mon, i, EQUIP_BOW)) {
 				launcher = obj;
 			}
 
@@ -1745,8 +1745,8 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 			if (!known_only || obj->known->to_a) {
 				state->to_a += obj->to_a;
 			}*/
-			if (!slot_type_is(p, i, EQUIP_WEAPON)
-					&& !slot_type_is(p, i, EQUIP_BOW)) {
+			if (!slot_type_is(&p->mon, i, EQUIP_WEAPON)
+					&& !slot_type_is(&p->mon, i, EQUIP_BOW)) {
 				if (!known_only || obj->known->to_h) {
 					state->to_h += obj->to_h;
 				}
@@ -2314,7 +2314,7 @@ static void update_bonuses(struct player *p)
 			/* Message */
 			if (state.heavy_shoot) {
 				msg("You have trouble wielding such a heavy bow.");
-			} else if (slot_object(p, slot_by_type(p, EQUIP_BOW, true))) {
+			} else if (slot_object(&p->mon, slot_by_type(&p->mon, EQUIP_BOW, true))) {
 				msg("You have no trouble wielding your bow.");
 			} else {
 				msg("You feel relieved to put down your heavy bow.");
@@ -2326,7 +2326,7 @@ static void update_bonuses(struct player *p)
 			/* Message */
 			if (state.heavy_wield) {
 				msg("You have trouble wielding such a heavy weapon.");
-			} else if (slot_object(p, slot_by_type(p, EQUIP_WEAPON, true))) {
+			} else if (slot_object(&p->mon, slot_by_type(&p->mon, EQUIP_WEAPON, true))) {
 				msg("You have no trouble wielding your weapon.");
 			} else {
 				msg("You feel relieved to put down your heavy weapon.");
@@ -2338,7 +2338,7 @@ static void update_bonuses(struct player *p)
 			/* Message */
 			if (state.bless_wield) {
 				msg("You feel attuned to your weapon.");
-			} else if (slot_object(p, slot_by_type(p, EQUIP_WEAPON, true))) {
+			} else if (slot_object(&p->mon, slot_by_type(&p->mon, EQUIP_WEAPON, true))) {
 				msg("You feel less attuned to your weapon.");
 			}
 		}
@@ -2449,7 +2449,7 @@ void notice_stuff(struct player *p)
 	/* Combine the pack */
 	if (p->upkeep->notice & PN_COMBINE) {
 		p->upkeep->notice &= ~(PN_COMBINE);
-		combine_pack(p);
+		combine_pack(&p->mon);
 	}
 
 	/* Dump the monster messages */

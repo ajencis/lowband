@@ -287,7 +287,7 @@ static void build_obj_list(int last, struct object **list, item_tester tester,
 	/* Build the object list */
 	for (i = 0; i <= last; i++) {
 		char buf[80];
-		struct object *obj = equip ? slot_object(player, i) : list[i];
+		struct object *obj = equip ? slot_object(&player->mon, i) : list[i];
 
 		/* Acceptable items get a label */
 		if (object_test(tester, obj) ||	(obj && tval_is_money(obj) && gold_ok))
@@ -304,7 +304,7 @@ static void build_obj_list(int last, struct object **list, item_tester tester,
 
 		/* Show full slot labels for equipment (or quiver in subwindow) */
 		if (equip) {
-			const char *mention = equip_mention(player, i);
+			const char *mention = equip_mention(&player->mon, i);
 			size_t u8len = utf8_strlen(mention);
 
 			if (u8len < 14) {
@@ -1326,9 +1326,9 @@ bool textui_get_item(struct object **choice, const char *pmt, const char *str,
 
 	/* Restrict equipment indexes unless starting with no command */
 	if ((cmd != CMD_NULL) || (tester != NULL)) {
-		while ((e1 <= e2) && (!object_test(tester, slot_object(player, e1))))
+		while ((e1 <= e2) && (!object_test(tester, slot_object(&player->mon, e1))))
 			e1++;
-		while ((e1 <= e2) && (!object_test(tester, slot_object(player, e2))))
+		while ((e1 <= e2) && (!object_test(tester, slot_object(&player->mon, e2))))
 			e2--;
 	}
 

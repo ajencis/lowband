@@ -864,7 +864,7 @@ void compute_ui_entry_values_for_player(const struct ui_entry *entry,
 				 */
 				switch (ind) {
 				case PF_FAST_SHOT:
-					launcher = slot_object(p, slot_by_type(p, EQUIP_BOW, true));
+					launcher = slot_object(&p->mon, slot_by_type(&p->mon, EQUIP_BOW, true));
 					if (launcher && kf_has(launcher->kind->kind_flags,
 						KF_SHOOTS_ARROWS)) {
 						v = p->lev / 3;

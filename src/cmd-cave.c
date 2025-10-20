@@ -608,8 +608,8 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 	int digging_chances[DIGGING_MAX], chance;
 	bool okay = false;
 	bool digger_swapped = false;
-	int weapon_slot = slot_by_type(player, EQUIP_WEAPON, true);
-	struct object *current_weapon = slot_object(player, weapon_slot);
+	int weapon_slot = slot_by_type(&player->mon, EQUIP_WEAPON, true);
+	struct object *current_weapon = slot_object(&player->mon, weapon_slot);
 	struct object *best_digger = NULL;
 	struct player_state local_state;
 	struct player_state *used_state = &player->mon.state;
@@ -2456,7 +2456,7 @@ void do_cmd_dip_gift(struct command *cmd)
 		return;
 	}
 
-	gift = gear_object_for_use(player, selection, quantity, true, &none_left);
+	gift = gear_object_for_use(&player->mon, selection, quantity, true, &none_left);
 	value = object_value_real(gift, gift->number);
 
 	monster_carry(cave, mon, gift);

@@ -18,18 +18,14 @@
 
 #include "angband.h"
 #include "cave.h"
-#include "cmds.h"
 #include "effects.h"
 #include "game-event.h"
 #include "game-input.h"
-#include "generate.h"
 #include "init.h"
 #include "mon-attack.h"
 #include "mon-blows.h"
 #include "mon-calcs.h"
 #include "mon-desc.h"
-#include "mon-lore.h"
-#include "mon-make.h"
 #include "mon-move.h"
 #include "mon-msg.h"
 #include "mon-predicate.h"
@@ -939,7 +935,7 @@ static void specialization_mod_attack(struct py_attack_roll *aroll, struct objec
 {
 	if (!obj) return;
 	int spec;
-    if (obj->tval == TV_HAFTED) spec = PP_HAFTED_SPECIALIZATION;
+	if (obj->tval == TV_HAFTED) spec = PP_HAFTED_SPECIALIZATION;
 	else if (obj->tval == TV_POLEARM) spec = PP_POLEARM_SPECIALIZATION;
 	else if (obj->tval == TV_SWORD) spec = PP_SWORD_SPECIALIZATION;
 	else if (kf_has(obj->kind->kind_flags, KF_SHOOTS_ARROWS)) spec = PP_BOW_SPECIALIZATION;
@@ -1611,10 +1607,10 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct py_att
 	b = 0;
 	s = 0;
 	for (j = 0; j < p->mon.body.count; j++) {
-		if (slot_type_is(p, j, EQUIP_BOW) || slot_type_is(p, j, EQUIP_WEAPON)) {
+		if (slot_type_is(&p->mon, j, EQUIP_BOW) || slot_type_is(&p->mon, j, EQUIP_WEAPON)) {
 			continue;
 		}
-		struct object *obj_local = slot_object(p, j);
+		struct object *obj_local = slot_object(&p->mon, j);
 		if (obj_local) {
 			improve_attack_modifier(p, obj_local, mon, &b, &s,
 				verb, false);
@@ -1733,7 +1729,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct py_att
  */
 static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fear)
 {
-	struct object *weapon = slot_object(p, slot_by_type(p, EQUIP_WEAPON, true));
+	struct object *weapon = slot_object(&p->mon, slot_by_type(&p->mon, EQUIP_WEAPON, true));
 	struct object *shield = NULL;
 	int i;
 	int nblows = p->mon.state.num_blows / 100;
@@ -2452,8 +2448,8 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 	}
 
 	/* Get the missile */
-	if (obj && object_is_carried(p, obj)) {
-		missile = gear_object_for_use(p, obj, 1, true, &none_left);
+	if (obj && object_is_carried(&p->mon, obj)) {
+		missile = gear_object_for_use(&p->mon, obj, 1, true, &none_left);
 	} else if (obj) {
 		missile = floor_object_for_use(p, obj, 1, true, &none_left);
 	}
@@ -2478,7 +2474,7 @@ struct attack_result make_ranged_shot(struct player *p,
 {
 	char *hit_verb = mem_alloc(20 * sizeof(char));
 	struct attack_result result = {false, 0, 0, hit_verb};
-	struct object *bow = slot_object(p, slot_by_type(p, EQUIP_BOW, true));
+	struct object *bow = slot_object(&p->mon, slot_by_type(&p->mon, EQUIP_BOW, true));
 	struct monster *mon = square_monster(cave, grid);
 	int b = 0, s = 0;
 
@@ -2614,7 +2610,7 @@ void do_cmd_fire(struct command *cmd) {
 
 	struct py_attack_roll aroll = player->mon.state.ranged_attack;
 
-	struct object *bow = aroll.obj;// slot_object(player, slot_by_type(player, EQUIP_BOW, true));
+	struct object *bow = aroll.obj;// slot_object(&player->mon, slot_by_type(&player->mon, EQUIP_BOW, true));
 	struct object *obj = NULL;
 
 	if (!player_get_resume_normal_shape(player, cmd)) {
@@ -2707,7 +2703,7 @@ void do_cmd_throw(struct command *cmd) {
 
 	if (object_is_equipped(player->mon.body, obj)) {
 		assert(obj_can_takeoff(obj) && tval_is_melee_weapon(obj));
-		inven_takeoff(obj);
+		inven_takeoff(&player->mon, obj);
 	}
 
 	weight = MAX(object_weight_one(obj), 10);
@@ -2725,7 +2721,7 @@ void do_cmd_throw(struct command *cmd) {
 void do_cmd_fire_at_nearest(void) {
 	int i, dir = DIR_TARGET;
 	struct object *ammo = NULL;
-	struct object *bow = slot_object(player, slot_by_type(player, EQUIP_BOW, true));
+	struct object *bow = slot_object(&player->mon, slot_by_type(&player->mon, EQUIP_BOW, true));
 
 	/* Require a usable launcher */
 	if (!bow || !player->mon.state.ammo_tval) {

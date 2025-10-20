@@ -26,7 +26,6 @@
 #include "mon-blows.h"
 #include "mon-desc.h"
 #include "mon-lore.h"
-#include "mon-make.h"
 #include "mon-msg.h"
 #include "mon-util.h"
 #include "obj-desc.h"
@@ -300,7 +299,7 @@ static void steal_player_item(melee_effect_handler_context_t *context)
 				gear_to_label(context->p, obj));
 
 			/* Steal and carry */
-			stolen = gear_object_for_use(context->p, obj, 1,
+			stolen = gear_object_for_use(&context->p->mon, obj, 1,
 				false, &none_left);
 			(void)monster_carry(cave, context->mon, stolen);
 		}
@@ -1033,7 +1032,7 @@ static void melee_effect_handler_EAT_FOOD(melee_effect_handler_context_t *contex
 		}
 
 		/* Steal and eat */
-		eaten = gear_object_for_use(context->p, obj, 1, false,
+		eaten = gear_object_for_use(&context->p->mon, obj, 1, false,
 			&none_left);
 		if (eaten->known)
 			object_delete(player->cave, NULL, &eaten->known);

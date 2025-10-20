@@ -18,13 +18,11 @@
  */
 
 #include "angband.h"
-#include "cmds.h"
 #include "effects.h"
 #include "effects-info.h"
 #include "game-world.h"
 #include "init.h"
 #include "monster.h"
-#include "mon-util.h"
 #include "obj-curse.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
@@ -882,8 +880,8 @@ static int obj_known_blows(const struct object *obj, int max_num,
 
 	struct player_state state;
 
-	int weapon_slot = slot_by_type(player, EQUIP_WEAPON, true);
-	struct object *current_weapon = slot_object(player, weapon_slot);
+	int weapon_slot = slot_by_type(&player->mon, EQUIP_WEAPON, true);
+	struct object *current_weapon = slot_object(&player->mon, weapon_slot);
 	int num = 0;
 
 	if (weapon_slot == -1) return 0;
@@ -1064,16 +1062,16 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 	bool *total_slays;
 	bool has_brands_or_slays = false;
 
-	int bow_slot = slot_by_type(player, EQUIP_BOW, true);
-	struct object *bow = slot_object(player, bow_slot);
+	int bow_slot = slot_by_type(&player->mon, EQUIP_BOW, true);
+	struct object *bow = slot_object(&player->mon, bow_slot);
 	bool weapon = tval_is_melee_weapon(obj) && !throw;
 	bool ammo   = (player->mon.state.ammo_tval == obj->tval) && (bow) && !throw;
 	int melee_adj_mult = (ammo || throw) ? 0 : 1;
 	int multiplier = 1;
 
 	struct player_state state;
-	int weapon_slot = slot_by_type(player, EQUIP_WEAPON, true);
-	struct object *current_weapon = slot_object(player, weapon_slot);
+	int weapon_slot = slot_by_type(&player->mon, EQUIP_WEAPON, true);
+	struct object *current_weapon = slot_object(&player->mon, weapon_slot);
 
 	if (weapon_slot == -1) return false;
 
@@ -1145,7 +1143,7 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 	*nonweap_slay = false;
 	if (weapon)	{
 		for (i = 2; i < player->mon.body.count; i++) {
-			struct object *slot_obj = slot_object(player, i);
+			struct object *slot_obj = slot_object(&player->mon, i);
 			if (!slot_obj)
 				continue;
 
@@ -1309,15 +1307,15 @@ bool o_obj_known_damage(const struct object *obj, int *normal_damage,
 	bool *total_slays;
 	bool has_brands_or_slays = false;
 
-	int bow_slot = slot_by_type(player, EQUIP_WEAPON, true);
-	struct object *bow = slot_object(player, bow_slot);
+	int bow_slot = slot_by_type(&player->mon, EQUIP_WEAPON, true);
+	struct object *bow = slot_object(&player->mon, bow_slot);
 	bool weapon = tval_is_melee_weapon(obj) && !throw;
 	bool ammo   = (player->mon.state.ammo_tval == obj->tval) && (bow) && !throw;
 	int multiplier = 1;
 
 	struct player_state state;
-	int weapon_slot = slot_by_type(player, EQUIP_WEAPON, true);
-	struct object *current_weapon = slot_object(player, weapon_slot);
+	int weapon_slot = slot_by_type(&player->mon, EQUIP_WEAPON, true);
+	struct object *current_weapon = slot_object(&player->mon, weapon_slot);
 
 	if (weapon_slot == -1) return false;
 
@@ -1395,7 +1393,7 @@ bool o_obj_known_damage(const struct object *obj, int *normal_damage,
 	*nonweap_slay = false;
 	if (weapon)	{
 		for (i = 2; i < player->mon.body.count; i++) {
-			struct object *slot_obj = slot_object(player, i);
+			struct object *slot_obj = slot_object(&player->mon, i);
 			if (!slot_obj)
 				continue;
 
@@ -1740,7 +1738,7 @@ static bool describe_damage(textblock *tb, const struct object *obj, bool throw)
 static void obj_known_misc_combat(const struct object *obj, bool *thrown_effect,
 								  int *range, int *break_chance, bool *heavy)
 {
-	struct object *bow = slot_object(player, slot_by_type(player, EQUIP_BOW, true));
+	struct object *bow = slot_object(&player->mon, slot_by_type(&player->mon, EQUIP_BOW, true));
 	bool weapon = tval_is_melee_weapon(obj);
 	bool ammo   = (player->mon.state.ammo_tval == obj->tval) && (bow);
 
@@ -1763,8 +1761,8 @@ static void obj_known_misc_combat(const struct object *obj, bool *thrown_effect,
 	/* Is the weapon too heavy? */
 	if (weapon) {
 		struct player_state state;
-		int weapon_slot = slot_by_type(player, EQUIP_WEAPON, true);
-		struct object *current = slot_object(player, slot_by_type(player, EQUIP_WEAPON, true));
+		int weapon_slot = slot_by_type(&player->mon, EQUIP_WEAPON, true);
+		struct object *current = slot_object(&player->mon, slot_by_type(&player->mon, EQUIP_WEAPON, true));
 
 		if (weapon_slot == -1) return;
 
@@ -1791,7 +1789,7 @@ static void obj_known_misc_combat(const struct object *obj, bool *thrown_effect,
  */
 static bool describe_combat(textblock *tb, const struct object *obj)
 {
-	struct object *bow = slot_object(player, slot_by_type(player, EQUIP_BOW, true));
+	struct object *bow = slot_object(&player->mon, slot_by_type(&player->mon, EQUIP_BOW, true));
 	bool weapon = tval_is_melee_weapon(obj);
 	bool ammo   = (player->mon.state.ammo_tval == obj->tval) && (bow);
 	bool throwing_weapon = weapon && of_has(obj->flags, OF_THROWING);
@@ -1869,8 +1867,8 @@ static bool obj_known_digging(struct object *obj, int deciturns[])
 		return false;
 
 	/* Pretend we're wielding the object */
-	slot = wield_slot(obj);
-	current = slot_object(player, slot);
+	slot = wield_slot(&player->mon, obj);
+	current = slot_object(&player->mon, slot);
 	if (slot == -1) return false; // no weapon slot to put it in
 	player->mon.body.slots[slot].obj = obj;
 

@@ -1001,7 +1001,7 @@ struct object *store_carry(struct store *store, struct object *obj)
 	struct object_kind *kind = obj->kind;
 
 	/* Evaluate the object */
-	if (object_is_carried(player, obj)) {
+	if (object_is_carried(&player->mon, obj)) {
 		value = object_value(obj, 1);
 	} else {
 		value = object_value_real(obj, 1);
@@ -1787,7 +1787,7 @@ void do_cmd_buy(struct command *cmd)
 	object_copy_amt(bought, obj, amt);
 
 	/* Ensure we have room */
-	if (bought->number > inven_carry_num(player, bought)) {
+	if (bought->number > inven_carry_num(&player->mon, bought)) {
 		msg("You cannot carry that many items.");
 		object_delete(NULL, NULL, &bought);
 		return;
@@ -1848,7 +1848,7 @@ void do_cmd_buy(struct command *cmd)
 	}
 
 	/* Give it to the player */
-	inven_carry(player, bought, true, true);
+	inven_carry(&player->mon, bought, true, true);
 
 	/* Handle stuff */
 	handle_stuff(player);
@@ -1918,7 +1918,7 @@ void do_cmd_retrieve(struct command *cmd)
 	object_copy_amt(picked_item, obj, amt);
 
 	/* Ensure we have room */
-	if (picked_item->number > inven_carry_num(player, picked_item)) {
+	if (picked_item->number > inven_carry_num(&player->mon, picked_item)) {
 		msg("You cannot carry that many items.");
 		object_delete(NULL, NULL, &picked_item);
 		return;
@@ -1933,7 +1933,7 @@ void do_cmd_retrieve(struct command *cmd)
 	picked_item->known = known_obj;
 
 	/* Give it to the player */
-	inven_carry(player, picked_item, true, true);
+	inven_carry(&player->mon, picked_item, true, true);
 
 	/* Handle stuff */
 	handle_stuff(player);
@@ -2048,7 +2048,7 @@ void do_cmd_sell(struct command *cmd)
 	}
 
 	/* Take a proper copy of the now known-about object. */
-	sold_item = gear_object_for_use(player, obj, amt, false, &none_left);
+	sold_item = gear_object_for_use(&player->mon, obj, amt, false, &none_left);
 
 	/* Get the "actual" value */
 	value = object_value_real(sold_item, amt);
@@ -2149,7 +2149,7 @@ void do_cmd_stash(struct command *cmd)
 	label = gear_to_label(player, obj);
 
 	/* Now get the real item */
-	dropped = gear_object_for_use(player, obj, amt, false, &none_left);
+	dropped = gear_object_for_use(&player->mon, obj, amt, false, &none_left);
 
 	/* Describe */
 	object_desc(o_name, sizeof(o_name), dropped,

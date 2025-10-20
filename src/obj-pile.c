@@ -18,11 +18,8 @@
 
 #include "angband.h"
 #include "cave.h"
-#include "effects.h"
 #include "cmd-core.h"
 #include "game-input.h"
-#include "generate.h"
-#include "grafmode.h"
 #include "init.h"
 #include "mon-make.h"
 #include "mon-util.h"
@@ -31,20 +28,14 @@
 #include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
-#include "obj-info.h"
 #include "obj-knowledge.h"
-#include "obj-make.h"
 #include "obj-pile.h"
-#include "obj-slays.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
-#include "player-history.h"
-#include "player-spell.h"
-#include "player-util.h"
-#include "randname.h"
 #include "trap.h"
 #include "z-queue.h"
+#include "z-textblock.h"
 
 /* #define LIST_DEBUG */
 
@@ -872,6 +863,7 @@ struct object *floor_object_for_use(struct player *p, struct object *obj,
 {
 	struct object *usable;
 	char name[80];
+	bool p_use = loc_eq(p->mon.grid, obj->grid);
 
 	/* Bounds check */
 	num = MIN(num, obj->number);
@@ -888,11 +880,14 @@ struct object *floor_object_for_use(struct player *p, struct object *obj,
 		*none_left = true;
 
 		/* Stop tracking item */
-		if (tracked_object_is(p->upkeep, obj))
+		if (tracked_object_is(p->upkeep, obj)) {
 			track_object(p->upkeep, NULL);
+		}
 
-		/* The pile is gone, so disable repeat command */
-		cmd_disable_repeat();
+		if (p_use) {
+			/* The pile is gone, so disable repeat command */
+			cmd_disable_repeat();
+		}
 	}
 
 	/* Object no longer has a location */
@@ -900,7 +895,7 @@ struct object *floor_object_for_use(struct player *p, struct object *obj,
 	usable->grid = loc(0, 0);
 
 	/* Print a message if requested and there is anything left */
-	if (message) {
+	if (message && p_use) {
 		if (usable == obj)
 			obj->number = 0;
 
@@ -1442,8 +1437,8 @@ int scan_items(struct object **item_list, size_t item_max, struct player *p,
 
 	if (use_equip)
 		for (i = 0; i < p->mon.body.count && item_num < item_max; i++) {
-			if (object_test(tester, slot_object(p, i)))
-				item_list[item_num++] = slot_object(p, i);
+			if (object_test(tester, slot_object(&p->mon, i)))
+				item_list[item_num++] = slot_object(&p->mon, i);
 		}
 
 	if (use_quiver)
@@ -1471,7 +1466,7 @@ int scan_items(struct object **item_list, size_t item_max, struct player *p,
  */
 bool item_is_available(struct object *obj)
 {
-	if (object_is_carried(player, obj)) return true;
+	if (object_is_carried(&player->mon, obj)) return true;
 	if (cave && square_holds_object(cave, player->mon.grid, obj))
 		return true;
 	return false;

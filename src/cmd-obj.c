@@ -28,9 +28,7 @@
 #include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
-#include "obj-info.h"
 #include "obj-knowledge.h"
-#include "obj-make.h"
 #include "obj-pile.h"
 #include "obj-tval.h"
 #include "obj-util.h"
@@ -249,9 +247,9 @@ void do_cmd_takeoff(struct command *cmd)
 		return;
 	}
 
-	inven_takeoff(obj);
-	combine_pack(player);
-	pack_overflow(obj);
+	inven_takeoff(&player->mon, obj);
+	combine_pack(&player->mon);
+	pack_overflow(&player->mon, obj);
 	player->upkeep->energy_use = z_info->move_energy / 2;
 }
 
@@ -294,15 +292,15 @@ void do_cmd_wield(struct command *cmd)
 		return;
 
 	/* Get the slot the object wants to go in, and the item currently there */
-	slot = wield_slot(obj);
-	equip_obj = slot_object(player, slot);
+	slot = wield_slot(&player->mon, obj);
+	equip_obj = slot_object(&player->mon, slot);
 
 	/* No slot to put it in */
 	if (slot == -1) return;
 
 	/* If the slot is open, wield and be done */
 	if (!equip_obj) {
-		inven_wield(obj, slot, true);
+		inven_wield(&player->mon, obj, slot, true);
 		return;
 	}
 
@@ -339,7 +337,7 @@ void do_cmd_wield(struct command *cmd)
 		object_desc(o_name, sizeof(o_name), equip_obj, ODESC_BASE,
 			player);
 		msg("You cannot remove the %s you are %s.", o_name,
-			equip_describe(player, slot));
+			equip_describe(&player->mon, slot));
 		return;
 	}
 
@@ -359,19 +357,19 @@ void do_cmd_wield(struct command *cmd)
 		ODESC_PREFIX | ODESC_FULL, player);
 
 	/* Took off weapon */
-	if (slot_type_is(player, slot, EQUIP_WEAPON))
+	if (slot_type_is(&player->mon, slot, EQUIP_WEAPON))
 		act = "You were wielding";
 	/* Took off bow */
-	else if (slot_type_is(player, slot, EQUIP_BOW))
+	else if (slot_type_is(&player->mon, slot, EQUIP_BOW))
 		act = "You were holding";
 	/* Took off light */
-	else if (slot_type_is(player, slot, EQUIP_LIGHT))
+	else if (slot_type_is(&player->mon, slot, EQUIP_LIGHT))
 		act = "You were holding";
 	/* Took off something else */
 	else
 		act = "You were wearing";
 
-	inven_wield(obj, slot, true);
+	inven_wield(&player->mon, obj, slot, true);
 
 	/* Message */
 	msgt(MSG_WIELD, "%s %s (%c).", act, o_name,
@@ -407,7 +405,7 @@ void do_cmd_drop(struct command *cmd)
 	if (cmd_get_quantity(cmd, "quantity", &amt, obj->number) != CMD_OK)
 		return;
 
-	inven_drop(obj, amt);
+	inven_drop(&player->mon, obj, amt);
 	player->upkeep->energy_use = z_info->move_energy / 2;
 }
 
@@ -430,7 +428,7 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 					int snd)
 {
 	struct effect *effect = object_effect(obj);
-	bool from_floor = !object_is_carried(player, obj);
+	bool from_floor = !object_is_carried(&player->mon, obj);
 	bool can_use = true;
 	bool was_aware;
 	bool known_aim = false;
@@ -493,7 +491,7 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 			 * stack.
 			 */
 			if (use != USE_CHARGE && use != USE_TIMEOUT) {
-				number = object_pack_total(player, obj, false,
+				number = object_pack_total(&player->mon, obj, false,
 					&first_remainder);
 				if (first_remainder && first_remainder->number
 						== number) {
@@ -617,7 +615,7 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 							player->mon.grid, false,
 							true);
 					} else {
-						inven_carry(player, wcopy,
+						inven_carry(&player->mon, wcopy,
 							true, false);
 					}
 				} else if (use == USE_CHARGE) {
@@ -688,7 +686,7 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 				work_obj->timeout += adj;
 			} else if (use == USE_SINGLE) {
 				struct object *used_obj = gear_object_for_use(
-					player, obj, 1, false, &none_left);
+					&player->mon, obj, 1, false, &none_left);
 
 				if (used_obj->known) {
 					object_delete(cave, player->cave,
@@ -988,8 +986,8 @@ static void refill_lamp(struct object *lamp, struct object *obj)
 			used->timeout = 0;
 
 			/* Carry or drop */
-			if (object_is_carried(player, obj) && inven_carry_okay(used))
-				inven_carry(player, used, true, true);
+			if (object_is_carried(&player->mon, obj) && inven_carry_okay(&player->mon, used))
+				inven_carry(&player->mon, used, true, true);
 			else
 				drop_near(cave, &used, 0, player->mon.grid, false, true);
 		} else
@@ -1006,8 +1004,8 @@ static void refill_lamp(struct object *lamp, struct object *obj)
 		bool none_left = false;
 
 		/* Decrease the item from the pack or the floor */
-		if (object_is_carried(player, obj)) {
-			used = gear_object_for_use(player, obj, 1, true,
+		if (object_is_carried(&player->mon, obj)) {
+			used = gear_object_for_use(&player->mon, obj, 1, true,
 				&none_left);
 		} else {
 			used = floor_object_for_use(player, obj, 1, true,
@@ -1028,7 +1026,7 @@ static void refill_lamp(struct object *lamp, struct object *obj)
 
 void do_cmd_refill(struct command *cmd)
 {
-	struct object *light = slot_object(player, slot_by_type(player, EQUIP_LIGHT, true));
+	struct object *light = slot_object(&player->mon, slot_by_type(&player->mon, EQUIP_LIGHT, true));
 	struct object *obj;
 
 	if (!player_get_resume_normal_shape(player, cmd)) {

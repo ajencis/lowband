@@ -371,7 +371,7 @@ static void wiz_play_item_notify_changed(void)
  */
 static void wiz_play_item_standard_upkeep(struct player *p, struct object *obj)
 {
-	if (object_is_carried(p, obj)) {
+	if (object_is_carried(&p->mon, obj)) {
 		p->upkeep->update |= (PU_BONUS | PU_INVEN);
 		p->upkeep->notice |= (PN_COMBINE);
 		p->upkeep->redraw |= (PR_INVEN | PR_EQUIP);
@@ -561,7 +561,7 @@ void do_cmd_wiz_change_item_quantity(struct command *cmd)
 		/* Accept change. */
 		if (cmd_get_arg_choice(cmd, "update", &update) != CMD_OK ||
 				update) {
-			if (object_is_carried(player, obj)) {
+			if (object_is_carried(&player->mon, obj)) {
 				/*
 				 * Remove the weight of the old number of
 				 * objects.
@@ -1728,7 +1728,7 @@ void do_cmd_wiz_play_item(struct command *cmd)
 				rejected = false;
 				if (object_changed) {
 					/* Mark for updates. */
-					if (object_is_carried(player, obj)
+					if (object_is_carried(&player->mon, obj)
 							&& (obj->number !=
 							orig_obj->number
 							|| object_weight_one(obj)

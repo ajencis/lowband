@@ -72,7 +72,7 @@ int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 		return 0;
 
 	/* Hack - acid damage is halved by armour */
-	if (type == PROJ_ACID && p && minus_ac(p))
+	if (type == PROJ_ACID && p && minus_ac(&p->mon))
 		dam = (dam + 1) / 2;
 
 	if (resist == -1) /* vulnerable */

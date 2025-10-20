@@ -36,7 +36,6 @@
 #include "mon-make.h"
 #include "mon-move.h"
 #include "mon-predicate.h"
-#include "mon-spell.h"
 #include "mon-util.h"
 #include "mon-timed.h"
 #include "obj-desc.h"
@@ -46,7 +45,6 @@
 #include "obj-pile.h"
 #include "obj-power.h"
 #include "obj-slays.h"
-#include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
 #include "player-timed.h"
@@ -477,7 +475,7 @@ bool mon_check_target(struct chunk *c, struct monster *mon)
  * will move on its turn
  * ------------------------------------------------------------------------ */
 
-static int item_score(struct object *obj)
+static int item_score(struct monster *mon, struct object *obj)
 {
 	int score = 0;
 	if (!obj) return score;
@@ -515,13 +513,13 @@ static bool monster_turn_equip_item(struct monster *mon)
 	// check every slot
 	for (i = 0; i < body->count; ++i) {
 		struct object *curr, *best = body->slots[i].obj;
-		int curr_score, best_score = best ? item_score(best) : 0;
+		int curr_score, best_score = best ? item_score(mon, best) : 0;
 		// check every item that could be in that slot
 		for (curr = mon->gear; curr; curr = curr->next) {
 			if (wield_slot_type(curr) != body->slots[i].type) {
 				continue;
 			}
-			curr_score = item_score(curr);
+			curr_score = item_score(mon, curr);
 			if (curr_score > best_score) {
 				best = curr;
 				best_score = curr_score;
@@ -530,7 +528,7 @@ static bool monster_turn_equip_item(struct monster *mon)
 
 		// save the object to equip / unequip that has the best difference in score
 		if (best && best != body->slots[i].obj) {
-			int best_benefit = best_score - (body->slots[i].obj ? item_score(body->slots[i].obj) : 0);
+			int best_benefit = best_score - (body->slots[i].obj ? item_score(mon, body->slots[i].obj) : 0);
 			if (best_benefit > best_best_benefit) {
 				best_best_benefit = best_benefit;
 				if (body->slots[i].obj) {

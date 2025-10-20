@@ -2086,7 +2086,7 @@ static void add_obj_to_summary(const struct object *obj, void *closure)
 		break;
 	}
 
-	e->slot = wield_slot(obj);
+	e->slot = wield_slot(&player->mon, obj);
 	e->ch = object_char(obj);
 	e->at = object_attr(obj);
 }
@@ -2119,7 +2119,7 @@ static void apply_visitor_to_equipped(struct player *p,
 	int i;
 
 	for (i = 0; i < p->mon.body.count; ++i) {
-		const struct object *obj = slot_object(p, i);
+		const struct object *obj = slot_object(&p->mon, i);
 
 		if (obj && (*visitor->selfunc)(obj,
 			visitor->selfunc_closure)) {
@@ -2301,7 +2301,7 @@ static void compute_player_and_equipment_values(struct player *p,
 
 	/* Combine with the values from the equipment. */
 	for (i = 0; i < p->mon.body.count; ++i) {
-		const struct object *obj = slot_object(p, i);
+		const struct object *obj = slot_object(&p->mon, i);
 		struct cached_object_data *cache = NULL;
 		int j;
 

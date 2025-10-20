@@ -19,11 +19,9 @@
 #include "angband.h"
 #include "cave.h"
 #include "cmd-core.h"
-#include "cmds.h"
 #include "game-input.h"
 #include "mon-desc.h"
 #include "mon-lore.h"
-#include "mon-util.h"
 #include "obj-chest.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
@@ -44,9 +42,7 @@
 #include "ui-menu.h"
 #include "ui-mon-lore.h"
 #include "ui-object.h"
-#include "ui-player.h"
 #include "ui-spell.h"
-#include "ui-store.h"
 #include "ui-target.h"
 #include "wizard.h"
 
@@ -296,7 +292,7 @@ int context_menu_player(int mx, int my)
 
 			/* 'f' isn't in rogue keymap, so we can use it here. */
   			menu_dynamic_add_label(m, "Floor", 'f', MENU_VALUE_FLOOR, labels);
-			valid = (inven_carry_okay(obj)) ? MN_ROW_VALID : MN_ROW_INVALID;
+			valid = (inven_carry_okay(&player->mon, obj)) ? MN_ROW_VALID : MN_ROW_INVALID;
 			ADD_LABEL("Pick up", CMD_PICKUP, valid);
 	}
 
@@ -723,7 +719,7 @@ int context_menu_object(struct object *obj)
 		ADD_LABEL("Equip", CMD_WIELD, MN_ROW_VALID);
 	}
 
-	if (object_is_carried(player, obj)) {
+	if (object_is_carried(&player->mon, obj)) {
 		if (!square_isshop(cave, player->mon.grid)) {
 			ADD_LABEL("Drop", CMD_DROP, MN_ROW_VALID);
 
@@ -746,7 +742,7 @@ int context_menu_object(struct object *obj)
 			ADD_LABEL("Sell", CMD_DROP, MN_ROW_VALID);
 		}
 	} else {
-		menu_row_validity_t valid = (inven_carry_okay(obj)) ?
+		menu_row_validity_t valid = (inven_carry_okay(&player->mon, obj)) ?
 			MN_ROW_VALID : MN_ROW_INVALID;
 		ADD_LABEL("Pick up", CMD_PICKUP, valid);
 	}

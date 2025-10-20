@@ -24,7 +24,6 @@
 #include "mon-calcs.h"
 #include "mon-desc.h"
 #include "mon-group.h"
-#include "mon-list.h"
 #include "mon-lore.h"
 #include "mon-make.h"
 #include "mon-move.h"
@@ -1855,7 +1854,7 @@ void steal_monster_item(struct monster *mon, int midx)
 				delist_object(cave, obj);
 				/* Drop immediately if ignored,
 				   or if inventory already full to prevent pack overflow */
-				if (ignore_item_ok(player, obj) || !inven_carry_okay(obj)) {
+				if (ignore_item_ok(player, obj) || !inven_carry_okay(&player->mon, obj)) {
 					char o_name[80];
 					object_desc(o_name, sizeof(o_name), obj,
 						ODESC_PREFIX | ODESC_FULL,
@@ -1863,7 +1862,7 @@ void steal_monster_item(struct monster *mon, int midx)
 					drop_near(cave, &obj, 0, player->mon.grid, true, true);
 					msg("You drop %s.", o_name);
 				} else {
-					inven_carry(player, obj, true, true);
+					inven_carry(&player->mon, obj, true, true);
 				}
 			}
 

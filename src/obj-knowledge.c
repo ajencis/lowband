@@ -1184,7 +1184,7 @@ void player_know_object(struct player *p, struct object *obj)
 		char o_name[80];
 
 		/* Describe the object if it's available */
-		if (object_is_carried(p, obj)) {
+		if (object_is_carried(&p->mon, obj)) {
 			object_desc(o_name, sizeof(o_name), obj,
 				ODESC_PREFIX | ODESC_FULL, p);
 			msg("You have %s (%c).", o_name, gear_to_label(p, obj));
@@ -1982,7 +1982,7 @@ void equip_learn_on_defend(struct player *p)
 	if (p->obj_k->to_a) return;
 
 	for (i = 0; i < p->mon.body.count; i++) {
-		struct object *obj = slot_object(p, i);
+		struct object *obj = slot_object(&p->mon, i);
 		if (obj) {
 			assert(obj->known);
 			if (obj->to_a) {
@@ -2015,7 +2015,7 @@ void equip_learn_on_ranged_attack(struct player *p)
 	if (p->obj_k->to_h) return;
 
 	for (i = 0; i < p->mon.body.count; i++) {
-		struct object *obj = slot_object(p, i);
+		struct object *obj = slot_object(&p->mon, i);
 		if (p->mon.body.slots[i].type == EQUIP_WEAPON) continue;
 		if (p->mon.body.slots[i].type == EQUIP_BOW) continue;
 		if (obj) {
@@ -2052,7 +2052,7 @@ void equip_learn_on_melee_attack(struct player *p)
 		return;
 
 	for (i = 0; i < p->mon.body.count; i++) {
-		struct object *obj = slot_object(p, i);
+		struct object *obj = slot_object(&p->mon, i);
 		if (p->mon.body.slots[i].type == EQUIP_BOW) continue;
 		if (obj) {
 			assert(obj->known);
@@ -2101,7 +2101,7 @@ void equip_learn_flag(struct player *p, int flag)
 
 	/* All wielded items eligible */
 	for (i = 0; i < p->mon.body.count; i++) {
-		struct object *obj = slot_object(p, i);
+		struct object *obj = slot_object(&p->mon, i);
 		if (!obj) continue;
 		assert(obj->known);
 
@@ -2141,7 +2141,7 @@ void equip_learn_element(struct player *p, int element)
 
 	/* All wielded items eligible */
 	for (i = 0; i < p->mon.body.count; i++) {
-		struct object *obj = slot_object(p, i);
+		struct object *obj = slot_object(&p->mon, i);
 		if (!obj) continue;
 		assert(obj->known);
 
@@ -2189,7 +2189,7 @@ void equip_learn_after_time(struct player *p)
 	/* All wielded items eligible */
 	for (i = 0; i < p->mon.body.count; i++) {
 		char o_name[80];
-		struct object *obj = slot_object(p, i);
+		struct object *obj = slot_object(&p->mon, i);
 
 		if (!obj) continue;
 		assert(obj->known);

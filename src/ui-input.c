@@ -1962,7 +1962,7 @@ bool key_confirm_command(unsigned char c)
 		char verify_inscrip[] = "^*";
 		unsigned n;
 
-		struct object *obj = slot_object(player, i);
+		struct object *obj = slot_object(&player->mon, i);
 		if (!obj) continue;
 
 		/* Set up string to look for, e.g. "^d" */

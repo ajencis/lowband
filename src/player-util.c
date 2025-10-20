@@ -22,14 +22,12 @@
 #include "effects.h"
 #include "game-input.h"
 #include "game-world.h"
-#include "generate.h"
 #include "init.h"
 #include "mon-calcs.h"
 #include "mon-desc.h"
 #include "mon-lore.h"
 #include "mon-util.h"
 #include "obj-chest.h"
-#include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
 #include "obj-knowledge.h"
@@ -50,7 +48,6 @@
 #include "target.h"
 #include "trap.h"
 #include "ui-input.h"
-#include "ui-knowledge.h"
 #include "ui-player-properties.h"
 
 
@@ -254,7 +251,7 @@ static void change_player_body(struct player *p, struct player_body *new)
 			p->upkeep->update |= (PU_BONUS | PU_INVEN | PU_UPDATE_VIEW);
 			p->upkeep->notice |= (PN_IGNORE);
 
-			obj = gear_object_for_use(p, obj, obj->number, false, &anyleft);
+			obj = gear_object_for_use(&p->mon, obj, obj->number, false, &anyleft);
 
 			pile_insert(&equipped_pile, obj);
 		}
@@ -286,15 +283,15 @@ static void change_player_body(struct player *p, struct player_body *new)
 	equipped = pile_last_item(equipped_pile);
 	while (equipped) {
 		pile_excise(&equipped_pile, equipped);
-		int slot = wield_slot(equipped);
-		if (slot >= 0 && !slot_object(p, slot)) {
-			inven_carry(p, equipped, false, false);
-			inven_wield(equipped, slot, false);
+		int slot = wield_slot(&p->mon, equipped);
+		if (slot >= 0 && !slot_object(&p->mon, slot)) {
+			inven_carry(&p->mon, equipped, false, false);
+			inven_wield(&p->mon, equipped, slot, false);
 		}
 		else {
-			inven_carry(p, equipped, true, false);
-			combine_pack(p);
-			pack_overflow(equipped);
+			inven_carry(&p->mon, equipped, true, false);
+			combine_pack(&p->mon);
+			pack_overflow(&p->mon, equipped);
 		}
 		equipped = pile_last_item(equipped_pile);
 	}
@@ -2297,7 +2294,7 @@ void player_regen_hp(struct player *p)
 void player_update_light(struct player *p)
 {
 	/* Check for light being wielded */
-	struct object *obj = slot_object(p, slot_by_type(p, EQUIP_LIGHT, true));
+	struct object *obj = slot_object(&p->mon, slot_by_type(&p->mon, EQUIP_LIGHT, true));
 
 	/* Burn some fuel in the current light */
 	if (obj && tval_is_light(obj)) {
@@ -2334,7 +2331,7 @@ void player_update_light(struct player *p)
 				if (of_has(obj->flags, OF_BURNS_OUT)) {
 					bool dummy;
 					struct object *burnt =
-						gear_object_for_use(p, obj, 1,
+						gear_object_for_use(&p->mon, obj, 1,
 						false, &dummy);
 					if (burnt->known)
 						object_delete(p->cave, NULL, &burnt->known);
@@ -2358,8 +2355,8 @@ void player_update_light(struct player *p)
  */
 struct object *player_best_digger(struct player *p, bool forbid_stack)
 {
-	int weapon_slot = slot_by_type(p, EQUIP_WEAPON, true);
-	struct object *current_weapon = slot_object(p, weapon_slot);
+	int weapon_slot = slot_by_type(&p->mon, EQUIP_WEAPON, true);
+	struct object *current_weapon = slot_object(&p->mon, weapon_slot);
 	struct object *obj, *best = NULL;
 	/* Prefer any melee weapon over unarmed digging, i.e. best == NULL. */
 	int best_score = -1;
@@ -2945,7 +2942,7 @@ bool player_can_fire(struct player *p, bool show_msg)
  */
 bool player_can_refuel(struct player *p, bool show_msg)
 {
-	struct object *obj = slot_object(p, slot_by_type(p, EQUIP_LIGHT, true));
+	struct object *obj = slot_object(&p->mon, slot_by_type(&p->mon, EQUIP_LIGHT, true));
 
 	if (obj && of_has(obj->flags, OF_TAKES_FUEL)) {
 		return true;

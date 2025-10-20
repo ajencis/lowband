@@ -24,11 +24,9 @@
 #include "game-event.h"
 #include "game-world.h"
 #include "grafmode.h"
-#include "hint.h"
 #include "init.h"
 #include "mon-lore.h"
 #include "mon-predicate.h"
-#include "mon-util.h"
 #include "monster.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
@@ -40,7 +38,6 @@
 #include "player-util.h"
 #include "player.h"
 #include "project.h"
-#include "savefile.h"
 #include "target.h"
 #include "trap.h"
 #include "ui-birth.h"
@@ -289,7 +286,7 @@ static void prt_equippy(int row, int col)
 	/* Dump equippy chars */
 	for (i = 0; i < player->mon.body.count; i++) {
 		/* Object */
-		obj = slot_object(player, i);
+		obj = slot_object(&player->mon, i);
 
 		/* Get attr/char for display; clear if big tiles or no object */
 		if (obj && tile_width == 1 && tile_height == 1) {
@@ -2707,7 +2704,7 @@ static void see_floor_items(game_event_type type, game_event_data *data,
 
 	/* Can we pick any up? */
 	for (i = 0; i < floor_num; i++) {
-	    if (inven_carry_okay(floor_list[i])) {
+	    if (inven_carry_okay(&player->mon, floor_list[i])) {
 			can_pickup = true;
 		}
 	}

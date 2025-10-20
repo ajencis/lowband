@@ -480,7 +480,7 @@ static void learn_brand_slay_helper(struct player *p, struct object *obj1,
 		/* Check for an off-weapon brand. */
 		if (allow_off) {
 			for (j = 0; j < p->mon.body.count; ++j) {
-				struct object *obj = slot_object(p, j);
+				struct object *obj = slot_object(&p->mon, j);
 
 				if (obj && obj->brands && obj->brands[i]
 						&& !tval_is_weapon(obj)
@@ -537,7 +537,7 @@ static void learn_brand_slay_helper(struct player *p, struct object *obj1,
 		/* Check for an off-weapon slay. */
 		if (allow_off) {
 			for (j = 0; j < p->mon.body.count; ++j) {
-				struct object *obj = slot_object(p, j);
+				struct object *obj = slot_object(&p->mon, j);
 
 				if (obj && obj->slays && obj->slays[i]
 						&& !tval_is_weapon(obj)

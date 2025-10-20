@@ -22,12 +22,7 @@
 #include "cmds.h"
 #include "game-event.h"
 #include "game-input.h"
-#include "generate.h"
 #include "init.h"
-#include "mon-lore.h"
-#include "mon-timed.h"
-#include "mon-util.h"
-#include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
 #include "obj-pile.h"
@@ -35,9 +30,7 @@
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
-#include "player-history.h"
 #include "player-util.h"
-#include "trap.h"
 
 /**
  * Pick up all gold at the player's current location.
@@ -167,7 +160,7 @@ static int auto_pickup_okay(const struct object *obj)
 	 * inscriptions.  The player option to pickup if in the inventory
 	 * honors those inscriptions.
 	 */
-	int num = inven_carry_num(player, obj);
+	int num = inven_carry_num(&player->mon, obj);
 	unsigned obj_has_auto, obj_has_maxauto;
 	int obj_maxauto;
 
@@ -236,7 +229,7 @@ static int auto_pickup_okay(const struct object *obj)
 static void player_pickup_aux(struct player *p, struct object *obj,
 							  int auto_max, bool domsg)
 {
-	int max = inven_carry_num(p, obj);
+	int max = inven_carry_num(&p->mon, obj);
 
 	/* Confirm at least some of the object can be picked up */
 	if (max == 0)
@@ -258,7 +251,7 @@ static void player_pickup_aux(struct player *p, struct object *obj,
 		}
 		square_excise_object(cave, p->mon.grid, obj);
 		delist_object(cave, obj);
-		inven_carry(p, obj, true, domsg);
+		inven_carry(&p->mon, obj, true, domsg);
 	} else {
 		int num;
 		bool dummy;
@@ -270,7 +263,7 @@ static void player_pickup_aux(struct player *p, struct object *obj,
 			num = get_quantity(NULL, max);
 		if (!num) return;
 		picked_up = floor_object_for_use(p, obj, num, false, &dummy);
-		inven_carry(p, picked_up, true, domsg);
+		inven_carry(&p->mon, picked_up, true, domsg);
 	}
 }
 
@@ -332,7 +325,7 @@ static uint8_t player_pickup_item(struct player *p, struct object *obj, bool men
 	/* We're given an object - pick it up */
 	if (obj) {
 		mem_free(floor_list);
-		if (inven_carry_num(p, obj) > 0) {
+		if (inven_carry_num(&p->mon, obj) > 0) {
 			player_pickup_aux(p, obj, 0, domsg);
 			objs_picked_up = 1;
 		}
@@ -342,7 +335,7 @@ static uint8_t player_pickup_item(struct player *p, struct object *obj, bool men
 	/* Tally objects that can be at least partially picked up.*/
 	floor_num = scan_floor(floor_list, floor_max, p, OFLOOR_VISIBLE, NULL);
 	for (i = 0; i < floor_num; i++)
-	    if (inven_carry_num(p, floor_list[i]) > 0)
+	    if (inven_carry_num(&p->mon, floor_list[i]) > 0)
 			can_pickup++;
 
 	if (!can_pickup) {
@@ -367,7 +360,7 @@ static uint8_t player_pickup_item(struct player *p, struct object *obj, bool men
 		/* Get an object or exit. */
 		q = "Get which item?";
 		s = "You see nothing there.";
-		if (!get_item(&obj_local, q, s, CMD_PICKUP, inven_carry_okay, USE_FLOOR)) {
+		if (!get_item(&obj_local, q, s, CMD_PICKUP, player_inven_carry_okay, USE_FLOOR)) {
 			mem_free(floor_list);
 			return (objs_picked_up);
 		}

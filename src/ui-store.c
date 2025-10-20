@@ -18,8 +18,6 @@
  */
 #include "angband.h"
 #include "cave.h"
-#include "cmds.h"
-#include "effects.h"
 #include "game-event.h"
 #include "game-input.h"
 #include "hint.h"
@@ -30,15 +28,11 @@
 #include "obj-ignore.h"
 #include "obj-info.h"
 #include "obj-knowledge.h"
-#include "obj-make.h"
 #include "obj-pile.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
-#include "player-history.h"
-#include "player-util.h"
 #include "store.h"
-#include "target.h"
 #include "ui-display.h"
 #include "ui-input.h"
 #include "ui-menu.h"
@@ -50,7 +44,6 @@
 #include "ui-spell.h"
 #include "ui-command.h"
 #include "ui-store.h"
-#include "z-debug.h"
 
 
 /**
@@ -691,14 +684,14 @@ static bool store_purchase(struct store_context *ctx, int item, bool single)
 		}
 
 		/* Limit to the number that can be carried */
-		amt = MIN(amt, inven_carry_num(player, obj));
+		amt = MIN(amt, inven_carry_num(&player->mon, obj));
 
 		/* Fail if there is no room.  Don't leak information about
 		 * unknown flavors for a purchase (getting it from home doesn't
 		 * leak information since it doesn't show the true flavor). */
 		flavor_aware = object_flavor_is_aware(obj);
 		if (amt <= 0 || (!flavor_aware && store->feat != FEAT_HOME &&
-				pack_is_full())) {
+				pack_is_full(&player->mon))) {
 			msg("You cannot carry that many items.");
 			return false;
 		}
@@ -726,7 +719,7 @@ static bool store_purchase(struct store_context *ctx, int item, bool single)
 	object_copy_amt(dummy, obj, amt);
 
 	/* Ensure we have room */
-	if (!inven_carry_okay(dummy)) {
+	if (!inven_carry_okay(&player->mon, dummy)) {
 		msg("You cannot carry that many items.");
 		object_delete(NULL, NULL, &dummy);
 		return false;

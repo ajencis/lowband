@@ -1157,7 +1157,7 @@ void process_player(void)
 		event_signal(EVENT_REFRESH);
 
 		/* Hack -- Pack Overflow */
-		pack_overflow(NULL);
+		pack_overflow(&player->mon, NULL);
 
 		/* Assume free turn */
 		player->upkeep->energy_use = 0;

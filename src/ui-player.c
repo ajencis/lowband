@@ -373,7 +373,7 @@ static void display_player_equippy(int y, int x)
 	/* Dump equippy chars */
 	for (i = 0; i < player->mon.body.count; ++i) {
 		/* Object */
-		obj = slot_object(player, i);
+		obj = slot_object(&player->mon, i);
 
 		/* Get attr/char for display; clear if big tiles or no object */
 		if (obj && tile_width == 1 && tile_height == 1) {
@@ -406,7 +406,7 @@ static void display_resistance_panel(int ipart, struct char_sheet_config *config
 	int row = config->res_regions[ipart].row;
 
 	for (i = 0; i < player->mon.body.count; i++) {
-		equipment[i] = slot_object(player, i);
+		equipment[i] = slot_object(&player->mon, i);
 	}
 
 	/* Equippy */
@@ -546,7 +546,7 @@ static void display_player_sust_info(struct char_sheet_config *config)
 	int i, row, col;
 
 	for (i = 0; i < player->mon.body.count; i++) {
-		equipment[i] = slot_object(player, i);
+		equipment[i] = slot_object(&player->mon, i);
 	}
 
 	/* Row */
@@ -1301,7 +1301,7 @@ void write_character_dump(ang_file *fff)
 	/* Dump the equipment */
 	file_putf(fff, "  [Character Equipment]\n\n");
 	for (i = 0; i < player->mon.body.count; i++) {
-		struct object *obj = slot_object(player, i);
+		struct object *obj = slot_object(&player->mon, i);
 		if (!obj) continue;
 
 		object_desc(o_name, sizeof(o_name), obj,

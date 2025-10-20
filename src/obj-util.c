@@ -22,26 +22,18 @@
 #include "effects.h"
 #include "game-input.h"
 #include "game-world.h"
-#include "generate.h"
-#include "grafmode.h"
 #include "init.h"
-#include "mon-make.h"
 #include "monster.h"
 #include "obj-curse.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
 #include "obj-knowledge.h"
-#include "obj-make.h"
 #include "obj-pile.h"
-#include "obj-slays.h"
 #include "obj-tval.h"
 #include "obj-util.h"
-#include "player-history.h"
 #include "player-spell.h"
-#include "player-util.h"
 #include "randname.h"
-#include "z-queue.h"
 
 struct object_base *kb_info;
 struct object_kind *k_info;
@@ -750,7 +742,7 @@ bool obj_can_activate(const struct object *obj)
  */
 bool obj_can_refill(const struct object *obj)
 {
-	const struct object *light = slot_object(player, slot_by_type(player, EQUIP_LIGHT, true));
+	const struct object *light = slot_object(&player->mon, slot_by_type(&player->mon, EQUIP_LIGHT, true));
 
 	/* Need fuel? */
 	if (of_has(obj->flags, OF_NO_FUEL)) return false;
@@ -863,12 +855,12 @@ bool obj_can_throw(const struct object *obj)
 /* Can only put on wieldable items */
 bool obj_can_wear(const struct object *obj)
 {
-	return (wield_slot(obj) >= 0);
+	return (wield_slot(&player->mon, obj) >= 0);
 }
 
 bool obj_can_wear_k(const struct object_kind *obj)
 {
-	return (wield_slot_k(obj) >= 0);
+	return (wield_slot_k(&player->mon, obj) >= 0);
 }
 
 /* Can only fire an item with the right tval */
@@ -974,7 +966,7 @@ bool obj_can_fail(const struct object *o)
 	if (tval_can_have_failure(o))
 		return true;
 
-	return wield_slot(o) == -1 ? false : true;
+	return wield_slot_type(o) == -1 ? false : true;
 }
 
 

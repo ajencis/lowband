@@ -262,7 +262,7 @@ int apply_autoinscription(struct player *p, struct object *obj)
 		return 0;
 
 	/* Don't inscribe unless the player is carrying it */
-	if (!object_is_carried(p, obj))
+	if (!object_is_carried(&p->mon, obj))
 		return 0;
 
 	/* Don't inscribe if ignored */
@@ -649,7 +649,7 @@ void ignore_drop(struct player *p)
 	struct object *obj;
 
 	/* Scan through the slots backwards */
-	for (obj = gear_last_item(p); obj; obj = obj->prev) {
+	for (obj = gear_last_item(&p->mon); obj; obj = obj->prev) {
 		/* Skip non-objects and unignoreable objects */
 		assert(obj->kind);
 		if (!ignore_item_ok(p, obj)) continue;

@@ -33,42 +33,43 @@ enum
 	EQUIP_MAX
 };
 
-int slot_by_name(struct player *p, const char *name);
-int slot_by_type(struct player *p, int type, bool full);
-bool slot_type_is(struct player *p, int slot, int type);
-struct object *slot_object(struct player *p, int slot);
-struct object *equipped_item_by_slot_name(struct player *p, const char *name);
+int slot_by_name(struct monster *mon, const char *name);
+int slot_by_type(struct monster *mon, int type, bool full);
+bool slot_type_is(struct monster *mon, int slot, int type);
+struct object *slot_object(struct monster *mon, int slot);
+struct object *equipped_item_by_slot_name(struct monster *mon, const char *name);
 int object_slot(struct player_body body, const struct object *obj);
 bool object_is_equipped(struct player_body body, const struct object *obj);
-bool object_is_carried(struct player *p, const struct object *obj);
+bool object_is_carried(struct monster *mon, const struct object *obj);
 bool object_is_in_quiver(struct player *p, const struct object *obj);
-uint16_t object_pack_total(struct player *p, const struct object *obj,
+uint16_t object_pack_total(struct monster *mon, const struct object *obj,
 	bool ignore_inscrip, struct object **first);
-int pack_slots_used(const struct player *p);
-const char *equip_mention(struct player *p, int slot);
-const char *equip_describe(struct player *p, int slot);
+int pack_slots_used(const struct monster *mon);
+const char *equip_mention(struct monster *mon, int slot);
+const char *equip_describe(struct monster *mon, int slot);
 int wield_slot_type(const struct object *obj);
 int wield_slot_type_k(const struct object_kind *obj);
-int wield_slot(const struct object *obj);
-int wield_slot_k(const struct object_kind *obj);
-bool minus_ac(struct player *p);
+int wield_slot(struct monster *mon, const struct object *obj);
+int wield_slot_k(struct monster *mon, const struct object_kind *obj);
+bool minus_ac(struct monster *mon);
 char gear_to_label(struct player *p, struct object *obj);
-struct object *gear_last_item(struct player *p);
-void gear_insert_end(struct player *p, struct object *obj);
-struct object *gear_object_for_use(struct player *p, struct object *obj,
+struct object *gear_last_item(struct monster *mon);
+void gear_insert_end(struct monster *mon, struct object *obj);
+struct object *gear_object_for_use(struct monster *mon, struct object *obj,
 	int num, bool message, bool *none_left);
-int inven_carry_num(const struct player *p, const struct object *obj);
-bool inven_carry_okay(const struct object *obj);
+int inven_carry_num(const struct monster *mon, const struct object *obj);
+bool inven_carry_okay(struct monster *mon, const struct object *obj);
+bool player_inven_carry_okay(const struct object *obj);
 void inven_item_charges(struct object *obj);
-void inven_carry(struct player *p, struct object *obj, bool absorb,
+void inven_carry(struct monster *mon, struct object *obj, bool absorb,
 				 bool message);
-void inven_wield(struct object *obj, int slot, bool verbose);
-void inven_takeoff(struct object *item);
-void inven_drop(struct object *obj, int amt);
-void combine_pack(struct player *p);
-bool pack_is_full(void);
-bool pack_is_overfull(void);
-void pack_overflow(struct object *obj);
+void inven_wield(struct monster *mon, struct object *obj, int slot, bool verbose);
+void inven_takeoff(struct monster *mon, struct object *item);
+void inven_drop(struct monster *mon, struct object *obj, int amt);
+void combine_pack(struct monster *mon);
+bool pack_is_full(struct monster *mon);
+bool pack_is_overfull(struct monster *mon);
+void pack_overflow(struct monster *mon, struct object *obj);
 int preferred_quiver_slot(const struct object *obj);
 
 
