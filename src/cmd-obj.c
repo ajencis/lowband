@@ -300,7 +300,7 @@ void do_cmd_wield(struct command *cmd)
 
 	/* If the slot is open, wield and be done */
 	if (!equip_obj) {
-		inven_wield(&player->mon, obj, slot, true);
+		inven_wield(cave, &player->mon, obj, slot, true);
 		return;
 	}
 
@@ -369,7 +369,7 @@ void do_cmd_wield(struct command *cmd)
 	else
 		act = "You were wearing";
 
-	inven_wield(&player->mon, obj, slot, true);
+	inven_wield(cave, &player->mon, obj, slot, true);
 
 	/* Message */
 	msgt(MSG_WIELD, "%s %s (%c).", act, o_name,
@@ -615,7 +615,7 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 							player->mon.grid, false,
 							true);
 					} else {
-						inven_carry(&player->mon, wcopy,
+						inven_carry(cave, &player->mon, wcopy,
 							true, false);
 					}
 				} else if (use == USE_CHARGE) {
@@ -987,7 +987,7 @@ static void refill_lamp(struct object *lamp, struct object *obj)
 
 			/* Carry or drop */
 			if (object_is_carried(&player->mon, obj) && inven_carry_okay(&player->mon, used))
-				inven_carry(&player->mon, used, true, true);
+				inven_carry(cave, &player->mon, used, true, true);
 			else
 				drop_near(cave, &used, 0, player->mon.grid, false, true);
 		} else

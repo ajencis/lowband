@@ -25,9 +25,7 @@
 #include "mon-group.h"
 #include "mon-lore.h"
 #include "mon-make.h"
-#include "mon-move.h"
 #include "mon-predicate.h"
-#include "mon-timed.h"
 #include "mon-util.h"
 #include "obj-knowledge.h"
 #include "obj-make.h"
@@ -77,7 +75,7 @@ static void duplicate_body(const struct player_body *source, struct player_body 
 	new->next = NULL;
 	new->slots = NULL;
 
-	size = sizeof *new->slots * new->count;
+	size = (sizeof *new->slots) * new->count;
 	if (size > 0U) {
 		new->slots = mem_zalloc(size);
 		memcpy(new->slots, source->slots, size);
@@ -125,6 +123,7 @@ static void mon_disembody(struct monster *mon)
 {
 	assert(mon);
 	free_body(&mon->body);
+	mon->body.count = 0;
 }
 
 
@@ -540,6 +539,7 @@ void monster_index_move(struct chunk *c, int i1, int i2)
 {
 	struct monster *mon;
 	struct object *obj;
+	int i;
 
 	/* Do nothing */
 	if (i1 == i2) return;
@@ -563,6 +563,14 @@ void monster_index_move(struct chunk *c, int i1, int i2)
 	/* Repair objects being carried by monster */
 	for (obj = mon->gear; obj; obj = obj->next) {
 		obj->held_m_idx = i2;
+	}
+
+	for (i = 0; i < mon->body.count; ++i) {
+		obj = mon->body.slots[i].obj;
+
+		if (obj) {
+			obj->held_m_idx = i2;
+		}
 	}
 
 	/* Move mimicked objects (heh) */
@@ -889,6 +897,8 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 
 	struct object *obj;
 
+	verify_cave_items(c);
+
 	assert(mon);
 	lore = get_lore(mon->race);
 	effective_race = (mon->original_race) ? mon->original_race : mon->race;
@@ -943,15 +953,13 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 			obj->number = 1;
 
 			/* Try to carry */
-			if (monster_carry(c, mon, obj)) {
-				any = true;
-			} else {
-				mark_artifact_created(obj->artifact, false);
-				object_wipe(obj);
-				mem_free(obj);
-			}
+			inven_carry(c, mon, obj, false, false);
+
+			assert(obj->oidx == 0 || c->objects[obj->oidx] == obj);
 		}
 	}
+
+	verify_cave_items(c);
 
 	/* Specified drops */
 	for (drop = effective_race->drops; drop; drop = drop->next) {
@@ -981,19 +989,20 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 		obj->number = (obj->artifact) ?
 			1 : randint0(drop->max - drop->min) + drop->min;
 
-		/* Try to carry */
-		if (monster_carry(c, mon, obj)) {
-			any = true;
-		} else {
-			object_wipe(obj);
-			mem_free(obj);
-		}
+		inven_carry(c, mon, obj, true, false);
+
+		verify_item(obj, c);
+		assert(obj->oidx == 0 || c->objects[obj->oidx] == obj);
 	}
+
+	verify_cave_items(c);
 
 	/* Make some objects */
 	for (j = 0; j < number; j++) {
 		struct loc droploc;
 		bool dummy = true;
+
+		verify_cave_items(c);
 
 		if (gold_ok && (!item_ok || (randint0(100) < 50))) {
 			obj = make_gold(level, "any");
@@ -1003,6 +1012,9 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 			if (!obj) continue;
 		}
 
+		assert(obj->oidx == 0 || c->objects[obj->oidx] == obj);
+		verify_cave_items(c);
+
 		/* Set origin details */
 		obj->origin = origin;
 		obj->origin_depth = convert_depth_to_origin(c->depth);
@@ -1010,27 +1022,32 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 
 		droploc = mon->grid;
 
+		assert(obj->oidx == 0 || c->objects[obj->oidx] == obj);
+		verify_cave_items(c);
+
 		drop_find_grid(player, c, obj, false, &droploc);
 		assert(square_in_bounds_fully(c, droploc));
 
-		/* Try to carry */
 		if (floor_carry(c, droploc, obj, &dummy)) {
-            any = true;
-		} else if (monster_carry(c, mon, obj)) {
 			any = true;
 		} else {
-			if (obj->artifact) {
-				mark_artifact_created(obj->artifact, false);
-			}
-			object_wipe(obj);
-			mem_free(obj);
+			inven_carry(c, mon, obj, true, false);
+			any = true;
 		}
+
+		verify_item(obj, c);
+
+		verify_cave_items(c);
 	}
+
+	verify_cave_items(c);
 
 	// L: give them gear
 	if (rf_has(effective_race->flags, RF_GEAR) && effective_race->body && effective_race->body->count) {
 		const struct equip_slot *slot;
-		for (slot = effective_race->body->slots; slot; slot = slot->next) {
+		for (j = 0; j < mon->body.count; ++j) {
+			slot = &mon->body.slots[j];
+			assert(slot);
 			int tvals[3] = { -1, -1, -1 };
 			switch (slot->type)
 			{
@@ -1047,31 +1064,29 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 			if (choice != -1) {
 				obj = make_object(c, level, one_in_(100), false, false, NULL, choice);
 				if (obj) {
-					bool success;
-
 					obj->origin = origin;
 					obj->origin_depth = convert_depth_to_origin(c->depth);
 					obj->origin_race = effective_race;
 					obj->number = 1;
+
 					list_object(c, obj);
 
-					success = monster_equip(c, mon, obj);
+					inven_carry(c, mon, obj, true, false);
 
-					assert(success);
+					inven_wield(c, mon, obj, j, false);
 
-					if (!success) {
-						monster_carry(cave, mon, obj);
-					}
-
+					verify_item(obj, c);
 					verify_mon_ownership(mon);
+					assert(obj->oidx == 0 || c->objects[obj->oidx] == obj);
 
-					//obj->grid = loc(0, 0);
-					//obj->held_m_idx = mon->midx;
-					//pile_insert(&mon->equipped_obj, obj);
+					any = true;
 				}
 			}
 		}
 	}
+
+	verify_cave_items(c);
+	verify_mon_ownership(mon);
 
 	return any;
 }
@@ -1124,7 +1139,7 @@ void mon_create_mimicked_object(struct chunk *c, struct monster *mon, int index)
 
 		/* Give the object to the monster if appropriate */
 		if (rf_has(mon->race->flags, RF_MIMIC_INV)) {
-			monster_carry(c, mon, obj);
+			inven_carry(c, mon, obj, false, false);
 		} else {
 			/* Otherwise delete the mimicked object */
 			object_delete(c, NULL, &obj);
@@ -1251,6 +1266,7 @@ int16_t place_monster(struct chunk *c, struct loc grid, struct monster *mon,
 	//update_mon_attacks(new_mon);
 
 	verify_mon_ownership(new_mon);
+	verify_cave_items(c);
 
 	/* Result */
 	return m_idx;
@@ -1594,6 +1610,8 @@ bool place_new_monster(struct chunk *c, struct loc grid,
 	assert(c);
 	assert(race);
 
+	verify_cave_items(c);
+
 	/* If we don't have a group index already, make one; our first monster
 	 * will be the leader */
 	if (!group_info.index) {
@@ -1660,6 +1678,8 @@ bool place_new_monster(struct chunk *c, struct loc grid,
 		place_friends(c, grid, race, friends_race, total, sleep, group_info,
 					  origin);
 	}
+
+	verify_cave_items(c);
 
 	/* Success */
 	return (true);

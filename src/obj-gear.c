@@ -18,6 +18,7 @@
  */
 
 #include "angband.h"
+#include "cave.h"
 #include "cmd-core.h"
 #include "game-event.h"
 #include "init.h"
@@ -872,12 +873,19 @@ void inven_item_charges(struct object *obj)
  * it is placed into the inventory, but takes no responsibility for removing
  * the object from any other pile it was in.
  */
-void inven_carry(struct monster *mon, struct object *obj, bool absorb,
+void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool absorb,
 				 bool message)
 {
 	bool combining = false;
 	bool is_p = mon_is_player(mon);
 	struct player *p = mon->player;
+
+	assert(c || is_p);
+
+	verify_mon_ownership(mon);
+	verify_cave_items(c);
+
+	assert(obj->oidx == 0 || c->objects[obj->oidx] == obj);
 
 	/* Check for combining, if appropriate */
 	if (absorb) {
@@ -917,20 +925,48 @@ void inven_carry(struct monster *mon, struct object *obj, bool absorb,
 		}
 	}
 
+	verify_mon_ownership(mon);
+	verify_cave_items(c);
+
 	/* We didn't manage the find an object to combine with */
 	if (!combining) {
 		/* Paranoia */
 		assert(pack_slots_used(mon) <= z_info->pack_size);
 
+		verify_mon_ownership(mon);
+		verify_cave_items(c);
+
 		gear_insert_end(mon, obj);
+		obj->held_m_idx = mon->midx;
+
+		verify_cave_items(c);
+
+		if (obj->oidx == 0 && !is_p) {
+			assert(c);
+			list_object(c, obj);
+			verify_cave_items(c);
+			assert(obj->oidx > 0 && c->objects[obj->oidx] == obj);
+			if (obj->known && c == cave) {
+				obj->known->oidx = obj->oidx;
+				assert(!player->cave->objects[obj->oidx] || (player->cave->objects[obj->oidx] == obj->known));
+				player->cave->objects[obj->oidx] = obj->known;
+			}
+		} else if (c && obj->oidx > 0 && is_p) {
+			delist_object(c, obj);
+		}
+
 		if (p) {
 			apply_autoinscription(p, obj);
 		}
 
 		/* Remove cave object details */
-		obj->held_m_idx = 0;
+		obj->held_m_idx = mon->midx;
 		obj->grid = loc(0, 0);
-		obj->known->grid = loc(0, 0);
+		if (obj->known) {
+			obj->known->grid = loc(0, 0);
+		}
+
+		verify_mon_ownership(mon);
 
 		if (p) {
 			/* Update the inventory */
@@ -939,7 +975,7 @@ void inven_carry(struct monster *mon, struct object *obj, bool absorb,
 		}
 
 		/* Hobbits ID mushrooms on pickup, gnomes ID wands and staffs on pickup */
-		if (is_p && !object_flavor_is_aware(obj)) {
+		if (p && !object_flavor_is_aware(obj)) {
 			if (player_has(p, PF_KNOW_MUSHROOM) && tval_is_mushroom(obj)) {
 				object_flavor_aware(p, obj);
 				msg("Mushrooms for breakfast!");
@@ -948,11 +984,15 @@ void inven_carry(struct monster *mon, struct object *obj, bool absorb,
 		}
 	}
 
+	verify_mon_ownership(mon);
+
 	if (p) {
 		p->upkeep->update |= (PU_BONUS | PU_INVEN);
 		p->upkeep->redraw |= (PR_INVEN);
 		update_stuff(p);
 	}
+
+	verify_mon_ownership(mon);
 
 	if (message && is_p) {
 		char o_name[80];
@@ -987,14 +1027,19 @@ void inven_carry(struct monster *mon, struct object *obj, bool absorb,
 	if (is_p && object_is_in_quiver(p, obj)) {
 		sound(MSG_QUIVER);
 	}
+
+	verify_mon_ownership(mon);
 }
 
 
 /**
  * Wield or wear a single item from the pack or floor
  */
-void inven_wield(struct monster *mon, struct object *obj, int slot, bool verbose)
+void inven_wield(struct chunk *c, struct monster *mon, struct object *obj, int slot, bool verbose)
 {
+	assert(mon);
+	assert(obj);
+
 	struct object *wielded, *old = mon->body.slots[slot].obj;
 
 	const char *fmt;
@@ -1044,7 +1089,7 @@ void inven_wield(struct monster *mon, struct object *obj, int slot, bool verbose
 	} else {
 		/* Get a floor item and carry it */
 		wielded = floor_object_for_use(player, obj, 1, false, &dummy);
-		inven_carry(mon, wielded, false, false);
+		inven_carry(c, mon, wielded, false, false);
 	}
 
 	/* Wear the new stuff */
@@ -1182,6 +1227,8 @@ void inven_drop(struct monster *mon, struct object *obj, int amt)
 	if (!object_is_carried(mon, obj))
 		return;
 
+	verify_item(obj, cave);
+
 	if (p) {
 		/* Get where the object is now */
 		label = gear_to_label(p, obj);
@@ -1268,6 +1315,8 @@ void inven_drop(struct monster *mon, struct object *obj, int amt)
 		event_signal(EVENT_INVENTORY);
 		event_signal(EVENT_EQUIPMENT);
 	}
+
+	verify_item(obj, cave);
 }
 
 
@@ -1336,6 +1385,9 @@ static bool inven_can_stack_partial(struct monster *mon, const struct object *ob
  */
 void combine_pack(struct monster *mon)
 {
+	assert(mon);
+	assert(mon->race);
+
 	struct object *obj1, *obj2, *prev;
 	bool display_message = false;
 	bool disable_repeat = false;
@@ -1346,32 +1398,49 @@ void combine_pack(struct monster *mon)
 	obj1 = gear_last_item(mon);
 	while (obj1) {
 		assert(obj1->kind);
-		assert(!tval_is_money(obj1));
 		prev = obj1->prev;
+
+		if (object_is_equipped(mon->body, obj1)) {
+			obj1 = prev;
+			continue;
+		}
 
 		/* Scan the items above that item */
 		for (obj2 = mon->gear; obj2 && obj2 != obj1; obj2 = obj2->next) {
+			assert(obj2->kind);
 			object_stack_t stack_mode2 =
-				object_is_in_quiver(p, obj2) ?
+				p && object_is_in_quiver(p, obj2) ?
 				OSTACK_QUIVER : OSTACK_PACK;
 
-			assert(obj2->kind);
+			if (object_is_equipped(mon->body, obj2)) continue;
 
 			/* Can we drop "obj1" onto "obj2"? */
 			if (object_mergeable(obj2, obj1, stack_mode2)) {
 				display_message = true;
 				disable_repeat = true;
-				object_absorb(obj2->known, obj1->known);
-				obj1->known = NULL;
+
+				if (obj1->known && obj2->known) {
+					object_absorb(obj2->known, obj1->known);
+					obj1->known = NULL;
+				} else if (obj1->known) {
+					obj2->known = obj1->known;
+					obj2->known->oidx = obj2->oidx;
+					assert(!player->cave->objects[obj2->oidx]);
+					player->cave->objects[obj2->oidx] = obj2->known;
+					obj1->known = NULL;
+				}
+
 				object_absorb(obj2, obj1);
 
-				/* Ensure numbers align (should not be necessary, but safer) */
-				obj2->known->number = obj2->number;
+				if (obj2->known) {
+					/* Ensure numbers align (should not be necessary, but safer) */
+					obj2->known->number = obj2->number;
+				}
 
 				break;
 			} else {
 				object_stack_t stack_mode1 =
-					object_is_in_quiver(p, obj1) ?
+					p && object_is_in_quiver(p, obj1) ?
 					OSTACK_QUIVER : OSTACK_PACK;
 
 				if (inven_can_stack_partial(mon, obj2, obj1,
@@ -1405,9 +1474,11 @@ void combine_pack(struct monster *mon)
 		calc_inventory(p);
 	}
 
-	/* Redraw gear */
-	event_signal(EVENT_INVENTORY);
-	event_signal(EVENT_EQUIPMENT);
+	if (is_p) {
+		/* Redraw gear */
+		event_signal(EVENT_INVENTORY);
+		event_signal(EVENT_EQUIPMENT);
+	}
 
 	/* Message */
 	if (display_message && is_p) {

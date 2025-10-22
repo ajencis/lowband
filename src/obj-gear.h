@@ -61,9 +61,9 @@ int inven_carry_num(const struct monster *mon, const struct object *obj);
 bool inven_carry_okay(struct monster *mon, const struct object *obj);
 bool player_inven_carry_okay(const struct object *obj);
 void inven_item_charges(struct object *obj);
-void inven_carry(struct monster *mon, struct object *obj, bool absorb,
+void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool absorb,
 				 bool message);
-void inven_wield(struct monster *mon, struct object *obj, int slot, bool verbose);
+void inven_wield(struct chunk *c, struct monster *mon, struct object *obj, int slot, bool verbose);
 void inven_takeoff(struct monster *mon, struct object *item);
 void inven_drop(struct monster *mon, struct object *obj, int amt);
 void combine_pack(struct monster *mon);

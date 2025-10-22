@@ -251,7 +251,7 @@ static void player_pickup_aux(struct player *p, struct object *obj,
 		}
 		square_excise_object(cave, p->mon.grid, obj);
 		delist_object(cave, obj);
-		inven_carry(&p->mon, obj, true, domsg);
+		inven_carry(cave, &p->mon, obj, true, domsg);
 	} else {
 		int num;
 		bool dummy;
@@ -263,7 +263,7 @@ static void player_pickup_aux(struct player *p, struct object *obj,
 			num = get_quantity(NULL, max);
 		if (!num) return;
 		picked_up = floor_object_for_use(p, obj, num, false, &dummy);
-		inven_carry(&p->mon, picked_up, true, domsg);
+		inven_carry(cave, &p->mon, picked_up, true, domsg);
 	}
 }
 

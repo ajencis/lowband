@@ -325,6 +325,7 @@ void object_delete(struct chunk *c, struct chunk *p_c,
 	struct object *obj = *obj_address;
 	struct object *prev = obj->prev;
 	struct object *next = obj->next;
+	struct monster *mon = cave_monster(c, obj->held_m_idx);
 
 	/* Check any next and previous objects */
 	if (next) {
@@ -336,6 +337,16 @@ void object_delete(struct chunk *c, struct chunk *p_c,
 		}
 	} else if (prev) {
 		prev->next = NULL;
+	}
+
+	// L: remove from equipment if appropriate
+	if (mon && mon->race) {
+		int i;
+		for (i = 0; i < mon->body.count; ++i) {
+			if (mon->body.slots[i].obj == obj) {
+				mon->body.slots[i].obj = NULL;
+			}
+		}
 	}
 
 	/* If we're tracking the object, stop */
@@ -864,6 +875,7 @@ struct object *floor_object_for_use(struct player *p, struct object *obj,
 	struct object *usable;
 	char name[80];
 	bool p_use = loc_eq(p->mon.grid, obj->grid);
+	struct loc oldgrid = obj->grid;
 
 	/* Bounds check */
 	num = MIN(num, obj->number);
@@ -873,11 +885,12 @@ struct object *floor_object_for_use(struct player *p, struct object *obj,
 		usable = object_split(obj, num);
 	} else {
 		usable = obj;
+		assert(usable->known);
 		square_excise_object(p->cave, usable->grid, usable->known);
 		delist_object(p->cave, usable->known);
 		square_excise_object(cave, usable->grid, usable);
 		delist_object(cave, usable);
-		*none_left = true;
+		if (none_left) *none_left = true;
 
 		/* Stop tracking item */
 		if (tracked_object_is(p->upkeep, obj)) {
@@ -888,6 +901,9 @@ struct object *floor_object_for_use(struct player *p, struct object *obj,
 			/* The pile is gone, so disable repeat command */
 			cmd_disable_repeat();
 		}
+
+		square_note_spot(cave, oldgrid);
+		square_light_spot(cave, oldgrid);
 	}
 
 	/* Object no longer has a location */
@@ -941,6 +957,8 @@ bool floor_carry(struct chunk *c, struct loc grid, struct object *drop,
 {
 	int n = 0;
 	struct object *obj, *ignore = floor_get_oldest_ignored(player, c, grid);
+
+	verify_cave_items(c);
 
 	/* Fail if the square can't hold objects */
 	if (!square_isobjectholding(c, grid)) {
@@ -997,6 +1015,7 @@ bool floor_carry(struct chunk *c, struct loc grid, struct object *drop,
 	/* Record in the level list */
 	object_lists_check_integrity(c, player->cave);
 	list_object(c, drop);
+	verify_cave_items(c);
 	object_lists_check_integrity(c, player->cave);
 
 	/* If there's a known version, put it in the player's view of the
@@ -1018,6 +1037,7 @@ bool floor_carry(struct chunk *c, struct loc grid, struct object *drop,
 		*note = false;
 	}
 
+	verify_cave_items(c);
 	object_lists_check_integrity(c, player->cave);
 
 	/* Result */

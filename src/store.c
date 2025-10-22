@@ -19,7 +19,6 @@
 
 #include "angband.h"
 #include "cave.h"
-#include "cmds.h"
 #include "game-event.h"
 #include "game-world.h"
 #include "hint.h"
@@ -28,20 +27,15 @@
 #include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
-#include "obj-info.h"
 #include "obj-knowledge.h"
 #include "obj-make.h"
 #include "obj-pile.h"
 #include "obj-power.h"
-#include "obj-slays.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
 #include "player-history.h"
-#include "player-spell.h"
 #include "store.h"
-#include "target.h"
-#include "debug.h"
 
 
 static void store_maint(struct store *s, bool reset);
@@ -1848,7 +1842,7 @@ void do_cmd_buy(struct command *cmd)
 	}
 
 	/* Give it to the player */
-	inven_carry(&player->mon, bought, true, true);
+	inven_carry(cave, &player->mon, bought, true, true);
 
 	/* Handle stuff */
 	handle_stuff(player);
@@ -1933,7 +1927,7 @@ void do_cmd_retrieve(struct command *cmd)
 	picked_item->known = known_obj;
 
 	/* Give it to the player */
-	inven_carry(&player->mon, picked_item, true, true);
+	inven_carry(cave, &player->mon, picked_item, true, true);
 
 	/* Handle stuff */
 	handle_stuff(player);

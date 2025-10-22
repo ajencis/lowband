@@ -18,7 +18,6 @@
 
 #include "angband.h"
 #include "cave.h"
-#include "cmds.h"
 #include "cmd-core.h"
 #include "game-event.h"
 #include "game-world.h"
@@ -27,10 +26,8 @@
 #include "monster.h"
 #include "obj-ignore.h"
 #include "obj-pile.h"
-#include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
-#include "player-timed.h"
 #include "trap.h"
 
 struct feature_kind *f_info;
@@ -499,6 +496,12 @@ void list_object(struct chunk *c, struct object *obj)
 		if (c->objects[i] == NULL) {
 			c->objects[i] = obj;
 			obj->oidx = i;
+
+			// L: maintain object-known linkage
+			if (c == cave && player && player->cave) {
+				player->cave->objects[i] = obj->known;
+				obj->known->oidx = i;
+			}
 
 			return;
 		}

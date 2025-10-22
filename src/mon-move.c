@@ -501,9 +501,9 @@ static bool monster_turn_equip_item(struct monster *mon)
 	}
 	const struct player_body *body = &mon->body;
 	struct object *to_equip = NULL, *to_unequip = NULL;
-	int best_best_benefit = 0;
+	int best_best_benefit = 0, best_slot;
 	uint16_t i;
-	char mdesc[80], odesc[80];
+	char mdesc[80];
 	bool did_something = false;
 
 	if (!body || body->count == 0) {
@@ -531,6 +531,7 @@ static bool monster_turn_equip_item(struct monster *mon)
 			int best_benefit = best_score - (body->slots[i].obj ? item_score(mon, body->slots[i].obj) : 0);
 			if (best_benefit > best_best_benefit) {
 				best_best_benefit = best_benefit;
+				best_slot = i;
 				if (body->slots[i].obj) {
 					assert(body->slots[i].obj);
 					to_unequip = body->slots[i].obj;
@@ -547,34 +548,24 @@ static bool monster_turn_equip_item(struct monster *mon)
 		if (body->slots[i].obj) assert(body->slots[i].obj->held_m_idx == mon->midx);
 	}
 
+	verify_mon_ownership(mon);
+
 	monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG | MDESC_CAPITAL);
 
 	if (to_unequip) {
-		monster_unequip(cave, mon, to_unequip);
-		if (monster_is_visible(mon)) {
-			object_desc(odesc, sizeof(odesc), to_unequip, ODESC_TERSE | ODESC_PREFIX, player);
-			msg("%s unequips %s.", mdesc, odesc);
-		}
+		inven_takeoff(mon, to_unequip);
 		assert(player->cave->objects[to_unequip->oidx] == to_unequip->known);
 		assert(cave->objects[to_unequip->oidx] == to_unequip);
 		did_something = true;
 	}
 	else if (to_equip) {
-		if (to_equip->number > 1) {
-			to_equip = object_split(to_equip, 1);
-		} else {
-			pile_excise(&mon->gear, to_equip);
-		}
-		monster_equip(cave, mon, to_equip);
-		if (monster_is_visible(mon)) {
-			object_see(player, to_equip);
-			object_desc(odesc, sizeof(odesc), to_equip, ODESC_PREFIX, player);
-			msg("%s equips %s.", mdesc, odesc);
-		}
+		inven_wield(cave, mon, to_equip, best_slot, monster_is_visible(mon));
 		assert(cave->objects[to_equip->oidx] == to_equip);
 		assert(player->cave->objects[to_equip->oidx] == to_equip->known);
 		did_something = true;
 	}
+
+	verify_mon_ownership(mon);
 
 	// looked through everything and no changes to make, so we can stop rechecking
 	if (did_something) {
@@ -1843,29 +1834,23 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 			}
 		} else if (rf_has(mon->race->flags, RF_TAKE_ITEM)) {
 			/* Try to carry */
-			assert(player->cave->objects[obj->oidx] == obj->known);
-			assert(cave->objects[obj->oidx] == obj);
-			square_excise_object(cave, new, obj);
-			assert(player->cave->objects[obj->oidx] == obj->known);
-			assert(cave->objects[obj->oidx] == obj);
-			if (monster_carry(cave, mon, obj)) {
-				assert(!player->cave->objects[obj->oidx] || player->cave->objects[obj->oidx] == obj->known);
-				assert(cave->objects[obj->oidx] == obj || !cave->objects[obj->oidx]);
-				/* Describe observable situations */
-				if (square_isseen(cave, new) && !ignore_item_ok(player, obj)) {
-					assert(obj->known);
-					msg("%s picks up %s.", m_name, o_name);
-				}
+			obj = floor_object_for_use(player, obj, obj->number, true, NULL);
+			inven_carry(cave, mon, obj, true, false);
+			verify_mon_ownership(mon);
 
-				/* Delete the object */
-				square_note_spot(cave, new);
-				square_light_spot(cave, new);
+			/* Describe observable situations */
+			/*if (square_isseen(cave, new) && !ignore_item_ok(player, obj)) {
+				assert(obj->known);
+				msg("%s picks up %s.", m_name, o_name);
+			}*/
 
-				assert(!player->cave->objects[obj->oidx] || player->cave->objects[obj->oidx] == obj->known);
-				assert(cave->objects[obj->oidx] == obj || !cave->objects[obj->oidx]);
-			} else if (!floor_carry(cave, new, obj, NULL)) {
+			/* Delete the object */
+			/*square_note_spot(cave, new);
+			square_light_spot(cave, new);*/
+
+			/*} else if (!floor_carry(cave, new, obj, NULL)) {
 				drop_near(cave, &obj, 0, new, false, false);
-			}
+			}*/
 		} else {
 			/* Describe observable situations */
 			if (square_isseen(cave, new) && !ignore_item_ok(player, obj)) {

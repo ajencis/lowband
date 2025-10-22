@@ -301,7 +301,7 @@ static void steal_player_item(melee_effect_handler_context_t *context)
 			/* Steal and carry */
 			stolen = gear_object_for_use(&context->p->mon, obj, 1,
 				false, &none_left);
-			(void)monster_carry(cave, context->mon, stolen);
+			inven_carry(cave, context->mon, stolen, true, true);
 		}
 
         /* Obvious */
@@ -944,7 +944,7 @@ static void melee_effect_handler_EAT_GOLD(melee_effect_handler_context_t *contex
             obj->origin_depth = convert_depth_to_origin(current_player->depth);
 
             /* Give the gold to the monster */
-            monster_carry(cave, context->mon, obj);
+			inven_carry(cave, context->mon, obj, true, true);
         }
 
         /* Redraw gold */

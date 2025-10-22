@@ -285,11 +285,11 @@ static void change_player_body(struct player *p, struct player_body *new)
 		pile_excise(&equipped_pile, equipped);
 		int slot = wield_slot(&p->mon, equipped);
 		if (slot >= 0 && !slot_object(&p->mon, slot)) {
-			inven_carry(&p->mon, equipped, false, false);
-			inven_wield(&p->mon, equipped, slot, false);
+			inven_carry(cave, &p->mon, equipped, false, false);
+			inven_wield(cave, &p->mon, equipped, slot, false);
 		}
 		else {
-			inven_carry(&p->mon, equipped, true, false);
+			inven_carry(cave, &p->mon, equipped, true, false);
 			combine_pack(&p->mon);
 			pack_overflow(&p->mon, equipped);
 		}

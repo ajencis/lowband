@@ -17,6 +17,7 @@
  */
 
 #include "angband.h"
+#include "cave.h"
 #include "cmd-core.h"
 #include "effects.h"
 #include "game-world.h"
@@ -49,8 +50,11 @@
 #include "player-quest.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "player.h"
 #include "project.h"
 #include "trap.h"
+#include "z-form.h"
+#include "z-type.h"
 
 
 void mark_mon_as_playable(struct monster_race *mr)
@@ -730,13 +734,14 @@ static void move_mimicked_object(struct chunk *c, struct monster *mon,
 		moved->mimicking_m_idx = 0;
 		mon->mimicked_obj = NULL;
 		/* Give object to monster if appropriate; otherwise, delete. */
-		if (!rf_has(mon->race->flags, RF_MIMIC_INV) ||
-			!monster_carry(c, mon, moved)) {
+		if (!rf_has(mon->race->flags, RF_MIMIC_INV)) {
 			struct chunk *p_c = (c == cave) ? player->cave : NULL;
 			if (moved->known) {
 				object_delete(p_c, NULL, &moved->known);
 			}
 			object_delete(c, p_c, &moved);
+		} else {
+			inven_carry(c, mon, moved, true, false);
 		}
 	}
 	square_delete_object(c, src, mimicked, true, false);
@@ -942,13 +947,7 @@ void become_aware(struct chunk *c, struct monster *mon)
 					given->known->oidx = 0;
 					given->known->grid = loc(0, 0);
 				}
-				if (!monster_carry(c, mon, given)) {
-					struct chunk *p_c = (c == cave) ? player->cave : NULL;
-					if (given->known) {
-						object_delete(p_c, NULL, &given->known);
-					}
-					object_delete(c, p_c, &given);
-				}
+				inven_carry(c, mon, given, true, false);
 			}
 
 			/*
@@ -1862,7 +1861,7 @@ void steal_monster_item(struct monster *mon, int midx)
 					drop_near(cave, &obj, 0, player->mon.grid, true, true);
 					msg("You drop %s.", o_name);
 				} else {
-					inven_carry(&player->mon, obj, true, true);
+					inven_carry(cave, &player->mon, obj, true, true);
 				}
 			}
 
@@ -2567,31 +2566,98 @@ void rearrange_monsters(struct monster_race *mraces, uint32_t seed)
 	Rand_quick = false;
 }
 
+
 #ifdef DBG_MON_OWNER
+
 static bool obj_name_normal_filter(int chr)
 {
 	return ((chr == '#') || (chr == '&') || (chr == '~'));
 }
 
-static void verify_mon_item_ownership(const struct monster *mon, const struct object *obj, const char *slot, const char *file, int line)
+void verify_item_file(struct object *obj, struct chunk *c, const char *file, int line)
 {
-	char obj_name[80], mon_name[80], hold_desc[80] = "held";
-
-	if (!mon || !mon->race) return;
 	if (!obj) return;
-	if (obj->held_m_idx == mon->midx) return;
+	char obj_name[80], mon_name[80] = "", hold_desc[80] = " held", oobj_name[80], objk_name[80];
+	struct object *oobj;
+	struct monster *mon = cave_monster(c, obj->held_m_idx);
+	int i;
+	struct object *objk = obj->known;
+	struct equip_slot *slot = NULL;
+	if (mon && !mon->race) mon = NULL;
 
-	monster_desc(mon_name, sizeof mon_name, mon, MDESC_DIED_FROM);
-
-	strnfmt(obj_name, sizeof obj_name, obj->kind->name);
+	strnfmt(obj_name, sizeof obj_name, "%s", obj->kind->name);
 	strfilter(obj_name, sizeof obj_name, obj_name_normal_filter);
 
-	if (slot) {
-		strnfmt(hold_desc, sizeof hold_desc, "in slot %s", slot);
+	if (mon) {
+		monster_desc(mon_name, sizeof mon_name, mon, MDESC_DIED_FROM);
+		for (i = 0; i < mon->body.count; ++i) {
+			if (mon->body.slots[i].obj == obj) {
+				slot = &mon->body.slots[i];
+				strnfmt(hold_desc, sizeof hold_desc, " in slot %s", mon->body.slots[i].name);
+			}
+		}
 	}
 
-	plog_fmt("Monster %s (midx %i) has object %s %s (held_mon_midx %i).\n(%s line %i)",
-		mon_name, mon->midx, obj_name, hold_desc, obj->held_m_idx, file, line);
+	if (c && c->objects && obj->oidx > 0 && (c->objects[obj->oidx] != obj)) {
+		oobj = cave->objects[obj->oidx];
+
+		strnfmt(oobj_name, sizeof oobj_name, "%s", oobj ? oobj->kind->name : "NULL");
+		strfilter(oobj_name, sizeof oobj_name, obj_name_normal_filter);
+
+		plog_fmt("Object %s oidx = %i but cave->objects[%i] is %s.\n(%s line %i)", 
+			obj_name, obj->oidx, obj->oidx, oobj_name, file, line);
+	}
+
+	if (c == cave && player && player->cave && obj->oidx > 0 && (player->cave->objects[obj->oidx] != objk)) {
+		oobj = player->cave->objects[obj->oidx];
+		
+		strnfmt(oobj_name, sizeof oobj_name, "%s", oobj ? oobj->kind->name : "NULL");
+		strnfmt(objk_name, sizeof objk_name, "%s", objk ? obj->known->kind->name : "NULL");
+
+		strfilter(oobj_name, sizeof oobj_name, obj_name_normal_filter);
+		strfilter(objk_name, sizeof objk_name, obj_name_normal_filter);
+
+		plog_fmt("Object %s (oidx %i) has known object %s but player->cave->objects[%i] = %s.\n(%s line %i)",
+			obj_name, obj->oidx, objk_name, obj->oidx, oobj_name, file, line);
+	}
+
+	if (mon && obj->held_m_idx != mon->midx) {
+		plog_fmt("Monster %s (midx %i) has object %s%s (held_mon_midx %i).\n(%s line %i)",
+			mon_name, mon->midx, obj_name, hold_desc, obj->held_m_idx, file, line);
+	}
+
+	if (mon && !loc_is_zero(obj->grid)) {
+		plog_fmt("Monster %s (midx %i) has object %s%s with location (%i,%i).\n(%s line %i)",
+			mon_name, mon->midx, obj_name, hold_desc, obj->grid.x, obj->grid.y,
+			file, line);
+	}
+
+	if (!loc_is_zero(obj->grid) && !square_holds_object(c, obj->grid, obj)) {
+		plog_fmt("Object %s grid is (%i,%i) but square (%i,%i) does not hold it.\n(%s line %i)",
+			obj_name,
+			obj->grid.x, obj->grid.y,
+			obj->grid.x, obj->grid.y,
+			file, line);
+	}
+
+	if (objk && (obj->oidx != objk->oidx)) {
+		plog_fmt("Object %s oidx = %i but its known object oidx = %i.\n(%s line %i)",
+			obj_name,
+			obj->oidx,
+			objk->oidx,
+			file, line);
+	}
+
+	if (mon && slot && wield_slot_type(obj) != slot->type) {
+		plog_fmt("Monster %s (midx %i) has object %s (wield_slot_type %i) equipped in slot %s (type %i).\n(%s line %i)",
+			mon_name,
+			mon->midx,
+			obj_name,
+			wield_slot_type(obj),
+			slot->name,
+			slot->type,
+			file, line);
+	}
 }
 
 void verify_mon_items_ownership(const struct monster *mon, const char *file, int line)
@@ -2600,6 +2666,7 @@ void verify_mon_items_ownership(const struct monster *mon, const char *file, int
 	const struct object *obj;
 
 	if (!mon) return;
+	if (!mon->race) return;
 	if (mon_is_player(mon)) return;
 
 	if (mon->midx <= 0) {
@@ -2611,12 +2678,85 @@ void verify_mon_items_ownership(const struct monster *mon, const char *file, int
 	}
 
 	for (i = 0; i < mon->body.count; ++i) {
-		struct equip_slot *slot = &mon->body.slots[i];
-		verify_mon_item_ownership(mon, slot->obj, slot->name, file, line);
+		//verify_mon_item_ownership(mon, slot->obj, slot->name, file, line);
 	}
 
 	for (obj = mon->gear; obj; obj = obj->next) {
-		verify_mon_item_ownership(mon, obj, NULL, file, line);
+		//verify_mon_item_ownership(mon, obj, NULL, file, line);
+	}
+}
+
+void verify_cave_items_file(struct chunk *c, const char *file, int line)
+{
+	struct object *obj;
+	struct monster *mon;
+	int i;
+	uint16_t j;
+	char cave_desc[128];
+
+	if (!c) return;
+
+	strnfmt(cave_desc, sizeof cave_desc, "cave %s%s",
+		c->name ? c->name : "unnamed cave",
+		c == cave ? " (cave)" : (c == player->cave ? " (player->cave)" : "")
+	);
+
+	assert(c->objects);
+	for (j = 0; j < c->obj_max; ++j) {
+		obj = c->objects[j];
+
+		if (!obj) continue;
+		assert(obj->kind);
+		assert(obj->kind->name);
+
+		verify_item_file(obj, c, file, line);
+
+		/*dbg_log_fmt("obj", "checking a %s", obj->kind->name);
+
+		if (obj->oidx != i) {
+			plog_fmt("Error: %s objects[%i] is object %s (oidx %i).\n(%s line %i)",
+				cave_desc,
+				i,
+				obj->kind->name,
+				obj->oidx,
+				file,
+				line);
+		}
+
+		if ((c == cave) && player && player->cave && (obj->known != player->cave->objects[obj->oidx])) {
+			plog_fmt("Error: %s objects[%i]->known = %s and player->cave->objects[%i] = %s.\n(%s line %i)",
+				cave_desc,
+				i,
+				obj->known ? obj->known->kind->name : "NULL",
+				i,
+				player->cave->objects[i] ? player->cave->objects[i]->kind->name : "NULL",
+				file,
+				line);
+		}
+
+		if (!loc_is_zero(obj->grid) && !square_holds_object(c, obj->grid, obj)) {
+			plog_fmt("Error: %s objects[%i] has grid (%i,%i) but this cave does not have that object there.\n(%s line %i)",
+				cave_desc,
+				obj->oidx,
+				obj->grid.x, obj->grid.y,
+				file,
+				line);
+		}*/
+	}
+
+	assert(c->monsters);
+	for (i = 1; i < cave_monster_max(c); ++i) {
+		mon = cave_monster(c, i);
+		if (!mon || !mon->race) continue;
+
+		for (obj = mon->gear; obj; obj = obj->next) {
+			verify_item_file(obj, c, file, line);
+		}
+
+		for (j = 0; j < mon->body.count; ++j) {
+			obj = mon->body.slots[j].obj;
+			if (obj) verify_item_file(obj, c, file, line);
+		}
 	}
 }
 #endif

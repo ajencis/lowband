@@ -32,7 +32,6 @@
 #include "mon-move.h"
 #include "mon-predicate.h"
 #include "mon-spell.h"
-#include "mon-timed.h"
 #include "mon-util.h"
 #include "monster.h"
 #include "obj-chest.h"
@@ -46,20 +45,18 @@
 #include "player-attack.h"
 #include "player-calcs.h"
 #include "player-path.h"
-#include "player-properties.h"
 #include "player-quest.h"
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
-#include "store.h"
 #include "ui-mon-list.h"
 #include "trap.h"
 
 
 static bool check_can_take_stairs(struct player *p, int time)
 {
-    if (p->mon.m_timed[TMD_CUT])
+	if (p->mon.m_timed[TMD_CUT])
 	{
 		msg("You would bleed out on the stairs.");
 		return false;
@@ -2459,7 +2456,7 @@ void do_cmd_dip_gift(struct command *cmd)
 	gift = gear_object_for_use(&player->mon, selection, quantity, true, &none_left);
 	value = object_value_real(gift, gift->number);
 
-	monster_carry(cave, mon, gift);
+	inven_carry(cave, mon, gift, true, false);
 
 	reactbonus = (randint1(value) + value / 2) / (mon->race->level + 25);
 

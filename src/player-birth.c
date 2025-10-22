@@ -819,7 +819,7 @@ static void player_outfit(struct player *p)
 		p->au -= object_value_real(obj, obj->number);
 
 		/* Carry the item */
-		inven_carry(&p->mon, obj, true, false);
+		inven_carry(cave, &p->mon, obj, true, false);
 		kind->everseen = true;
 	}
 
