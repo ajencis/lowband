@@ -204,14 +204,6 @@ static void forestify_level(struct chunk *c)
 			square_force_set_feat(c, grid, feat, 100);
 		}
 	}
-
-	/*for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
-		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
-			if (!square_isperm(c, grid) && !square_isstairs(c, grid)) {
-				square_clear_feats(c, grid);
-			}
-		}
-	}*/
 }
 
 
@@ -3257,13 +3249,14 @@ struct chunk *town_gen(struct player *p, int min_height, int min_width,
 		}
 
 		/* Find the stairs (lame) */
-		for (grid.y = 0; grid.y < c_new->height && !found; grid.y++) {
+		for (grid.y = 0; grid.y < c_new->height; grid.y++) {
 			for (grid.x = 0; grid.x < c_new->width; grid.x++) {
 				if (square_isdownstairs(c_new, grid)) {
 					found = true;
 					break;
 				}
 			}
+			if (found) break;
 		}
 
 		assert(found);
