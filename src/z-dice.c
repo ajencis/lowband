@@ -129,21 +129,21 @@ static dice_input_t dice_input_for_char(char c)
 static dice_state_t dice_parse_state_transition(dice_state_t state,
 												dice_input_t input)
 {
-	static unsigned char state_table[DICE_STATE_MAX][DICE_INPUT_MAX] = {
+	static unsigned char state_table[DICE_STATE_MAX][DICE_INPUT_MAX + 1] = {
 		/* Input:								&-+dm$DU0 */
-		/*[DICE_STATE_START] = */	   /* A */ ".B.EHKB..",
-		/*[DICE_STATE_BASE_DIGIT] = */  /* B */ "..CE..B.C",
-		/*[DICE_STATE_FLUSH_BASE] = */  /* C */ "...EHKD..",
-		/*[DICE_STATE_DICE_DIGIT] = */  /* D */ "...E..D..",
-		/*[DICE_STATE_FLUSH_DICE] = */  /* E */ ".....KF..",
-		/*[DICE_STATE_SIDE_DIGIT] = */  /* F */ "G...H.F.G",
-		/*[DICE_STATE_FLUSH_SIDE] = */  /* G */ "....H....",
-		/*[DICE_STATE_BONUS] = */	   /* H */ ".....KI..",
-		/*[DICE_STATE_BONUS_DIGIT] = */ /* I */ "......I.J",
-		/*[DICE_STATE_FLUSH_BONUS] = */ /* J */ ".........",
-		/*[DICE_STATE_VAR] = */		 /* K */ ".......L.",
-		/*[DICE_STATE_VAR_CHAR] = */	/* L */ "G.CEH..LM",
-		/*[DICE_STATE_FLUSH_ALL] = */   /* M */ "........."
+		/*[DICE_STATE_START] = */        /* A */ ".B.EHKB..",
+		/*[DICE_STATE_BASE_DIGIT] = */   /* B */ "..CE..B.C",
+		/*[DICE_STATE_FLUSH_BASE] = */   /* C */ "...EHKD..",
+		/*[DICE_STATE_DICE_DIGIT] = */   /* D */ "...E..D..",
+		/*[DICE_STATE_FLUSH_DICE] = */   /* E */ ".....KF..",
+		/*[DICE_STATE_SIDE_DIGIT] = */   /* F */ "G...H.F.G",
+		/*[DICE_STATE_FLUSH_SIDE] = */   /* G */ "....H....",
+		/*[DICE_STATE_BONUS] = */        /* H */ ".....KI..",
+		/*[DICE_STATE_BONUS_DIGIT] = */  /* I */ "......I.J",
+		/*[DICE_STATE_FLUSH_BONUS] = */  /* J */ ".........",
+		/*[DICE_STATE_VAR] = */	         /* K */ ".......L.",
+		/*[DICE_STATE_VAR_CHAR] = */     /* L */ "G.CEH..LM",
+		/*[DICE_STATE_FLUSH_ALL] = */    /* M */ "........."
 	};
 
 	if (state == DICE_STATE_MAX || input == DICE_INPUT_MAX)
