@@ -365,6 +365,11 @@ struct chunk *gauntlet_gen(struct player *p, int min_height, int min_width,
 	const char **p_error);
 struct chunk *arena_gen(struct player *p, int min_height, int min_width);
 
+void build_streamer(struct chunk *c, int feat, int chance);
+void handle_level_stairs(struct chunk *c, bool persistent, bool quest,
+		int down_count, int up_count);
+bool make_rooms_secret(struct chunk *c);
+
 /* gen-chunk.c */
 struct chunk *chunk_write(struct chunk *c);
 void chunk_list_add(struct chunk *c);
@@ -380,6 +385,11 @@ void get_random_symmetry_transform(int height, int width, int flags,
 int calc_default_transpose_weight(int height, int width);
 bool chunk_copy(struct chunk *dest, struct player *p, struct chunk *source,
 	 int y0, int x0, int rotate, bool reflect);
+
+void dungeon_monster_allocs(struct chunk *c, struct player *p);
+void dungeon_terrain_allocs(struct chunk *c);
+void dungeon_object_allocs(struct chunk *c);
+void dungeon_secret_allocs(struct chunk *c);
 
 void chunk_validate_objects(struct chunk *c);
 

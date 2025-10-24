@@ -586,3 +586,82 @@ void chunk_validate_objects(struct chunk *c) {
 	}
 }
 
+
+static int get_size_percent(struct chunk *c)
+{
+	int normal = (int)(z_info->dungeon_hgt * z_info->dungeon_wid);
+	int actual = c->height * c->width;
+
+	return actual * 100 / normal;
+}
+
+void dungeon_secret_allocs(struct chunk *c)
+{
+	make_rooms_secret(c);
+}
+
+void dungeon_monster_allocs(struct chunk *c, struct player *p)
+{
+	int size_perc = get_size_percent(c);
+	int k = MAX(MIN(c->depth * size_perc / 3, 10 * size_perc), 200) / 100, i;
+	int base_mon = z_info->level_monster_min + randint0(k);
+	int n_mon = (base_mon * size_perc + 50) / 100;
+
+	for (i = 0; i < n_mon; ++i) {
+		pick_and_place_distant_monster(c, p->mon.grid, 0, true, c->depth);
+	}
+}
+
+void dungeon_terrain_allocs(struct chunk *c)
+{
+	int size_perc = get_size_percent(c);
+	int k = MAX(MIN(c->depth * size_perc / 3, 10 * size_perc), 200) / 100, i;
+
+	handle_level_stairs(c, dun->persist, dun->quest, rand_range(3, 4), rand_range(1, 2));
+
+	/* Add some magma streamers */
+	for (i = (dun->profile->str.qua * size_perc + 50) / 100; i > 0; --i) {
+		build_streamer(c, FEAT_MAGMA, dun->profile->str.mc);
+	}
+
+	/* Add some magma streamers */
+	for (i = (dun->profile->str.qua * size_perc + 50) / 100; i > 0; --i) {
+		build_streamer(c, FEAT_QUARTZ, dun->profile->str.qc);
+	}
+
+	/* Put some rubble in corridors */
+	alloc_objects(c, SET_CORR, TYP_RUBBLE, randint1(k), c->depth, 0);
+
+	if (!c->feat_default) {
+		cave_set_default_feat(c, FEAT_FLOOR);
+	}
+
+	/* Place some traps in the dungeon */
+	if (one_in_(3)) {
+		alloc_objects(c, SET_CORR & SET_NOT_AVOIDABLE, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
+	}
+}
+
+void dungeon_object_allocs(struct chunk *c)
+{
+	int size_perc = get_size_percent(c);
+	//int k = MAX(MIN(c->depth * size_perc / 3, 10 * size_perc), 200) / 100;
+
+	/* Put some objects in rooms */
+	alloc_objects(c, SET_ROOM, TYP_OBJECT,
+		Rand_normal(z_info->room_item_av, 3), c->depth, ORIGIN_FLOOR);
+	
+	if (one_in_(3)) {
+		alloc_objects(c, SET_ROOM | SET_BESIDE_WALL, TYP_CONTAINER,
+			Rand_normal(z_info->room_item_av / 2, 3), c->depth, ORIGIN_FLOOR);
+	}
+
+	/* Put some objects/gold in the dungeon */
+	alloc_objects(c, SET_BOTH, TYP_OBJECT,
+		Rand_normal(z_info->both_item_av * size_perc, 3) / 100, c->depth, ORIGIN_FLOOR);
+	alloc_objects(c, SET_BOTH, TYP_GOLD,
+		Rand_normal(z_info->both_gold_av * size_perc, 3) / 100, c->depth, ORIGIN_FLOOR);
+
+	alloc_mana(c);
+}
+
