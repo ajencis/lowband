@@ -18,13 +18,11 @@
 
 #include "angband.h"
 #include "cave.h"
-#include "init.h"
 #include "monster.h"
 #include "mon-predicate.h"
 #include "mon-util.h"
 #include "obj-ignore.h"
 #include "obj-pile.h"
-#include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
 #include "player-timed.h"
@@ -486,8 +484,8 @@ void wiz_light(struct chunk *c, struct player *p, bool full)
 	assert(p->cave);
 
 	/* Scan all grids */
-	for (y = 1; y < c->height - 1; y++) {
-		for (x = 1; x < c->width - 1; x++) {
+	for (y = 0; y < c->height; y++) {
+		for (x = 0; x < c->width; x++) {
 			struct loc grid = loc(x, y);
 
 			if (!square_in_bounds(c, grid)) continue;
@@ -501,17 +499,6 @@ void wiz_light(struct chunk *c, struct player *p, bool full)
 			} else {
 				square_sense_pile(c, grid, NULL);
 			}
-
-#if 0
-			/*
-			 * Forget grids that are both unprocessed and
-			 * misremembered in the mapping area.
-			 */
-			if (!square_ismark(c, grid)
-					&& square_ismemorybad(c, grid)) {
-				square_forget_feats(player, grid);
-			}
-#endif
 		}
 	}
 
@@ -547,8 +534,8 @@ void wiz_dark(struct chunk *c, struct player *p, bool full)
 	assert(player->cave);
 
 	/* Scan all grids */
-	for (y = 1; y < c->height - 1; y++) {
-		for (x = 1; x < c->width - 1; x++) {
+	for (y = 0; y < c->height; y++) {
+		for (x = 0; x < c->width; x++) {
 			struct loc grid = loc(x, y);
 
 			/* Process all non-walls */

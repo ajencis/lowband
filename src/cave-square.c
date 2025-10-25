@@ -18,7 +18,6 @@
 
 #include "angband.h"
 #include "cave.h"
-#include "game-world.h"
 #include "init.h"
 #include "monster.h"
 #include "mon-util.h"
@@ -293,7 +292,7 @@ bool feat_is_diggable(int feat)
 
 bool feat_gets_mapped(int fidx)
 {
-	return feat_is_structural(fidx) && !feat_is_floor(fidx);
+	return (feat_is_structural(fidx) || !feat_is_passable(fidx)) && !feat_is_floor(fidx);
 }
 
 
