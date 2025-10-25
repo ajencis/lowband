@@ -37,17 +37,16 @@
 #include "init.h"
 #include "mon-make.h"
 #include "mon-move.h"
-#include "mon-spell.h"
 #include "monster.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
+#include "parser.h"
 #include "player-history.h"
 #include "player-quest.h"
 #include "player-util.h"
-#include "trap.h"
-#include "z-queue.h"
 #include "z-type.h"
+#include "z-util.h"
 
 /*
  * Array of pit types
@@ -88,6 +87,26 @@ static const char *room_flags[] = {
 	NULL
 };
 
+static const char *feature_names[] = {
+	#define FEAT(x) #x,
+	#include "list-terrain.h"
+	#undef FEAT
+	"MAX"
+};
+
+static int cave_builder_index_by_name(const char *name)
+{
+	int i;
+
+	for (i = 0; cave_builders[i].builder; ++i) {
+		if (streq(name, cave_builders[i].name)) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
 
 /**
  * Parsing functions for dungeon_profile.txt
@@ -95,20 +114,12 @@ static const char *room_flags[] = {
 static enum parser_error parse_profile_name(struct parser *p) {
 	struct cave_profile *h = parser_priv(p);
 	struct cave_profile *c = mem_zalloc(sizeof *c);
-	size_t i;
 
 	c->name = string_make(parser_getstr(p, "name"));
-	for (i = 0; cave_builders[i].builder; i++) {
-		if (streq(c->name, cave_builders[i].name)) {
-			break;
-		}
-	}
-
-	if (!cave_builders[i].builder) {
-		return PARSE_ERROR_NO_BUILDER_FOUND;
-	}
-	c->builder = cave_builders[i].builder;
 	c->next = h;
+
+	c->feat_default = -1;
+
 	parser_setpriv(p, c);
 	return PARSE_ERROR_NONE;
 }
@@ -211,6 +222,84 @@ static enum parser_error parse_profile_alloc(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_profile_function(struct parser *p) {
+	struct cave_profile *c = parser_priv(p);
+	char name[80];
+	int build_ind;
+
+	if (!c) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	strnfmt(name, sizeof name, "%s", parser_getstr(p, "name"));
+
+	build_ind = cave_builder_index_by_name(name);
+
+	if (build_ind < 0 || !cave_builders[build_ind].builder) {
+		return PARSE_ERROR_NO_BUILDER_FOUND;
+	}
+
+	c->builder = cave_builders[build_ind].builder;
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_profile_wall(struct parser *p) {
+	struct cave_profile *c = parser_priv(p);
+	char name[80];
+	int feat, chance = 100;
+
+	if (!c) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	strnfmt(name, sizeof name, "%s", parser_getsym(p, "name"));
+
+	feat = code_index_in_array(feature_names, name);
+
+	if (feat < FEAT_NONE || feat >= FEAT_MAX) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	if (parser_hasval(p, "chance")) {
+		chance = parser_getint(p, "chance");
+	}
+
+	c->wall_feat_chances[feat] = chance;
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_profile_floor(struct parser *p) {
+	struct cave_profile *c = parser_priv(p);
+	char name[80];
+	int feat, chance = 100;
+
+	if (!c) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	strnfmt(name, sizeof name, "%s", parser_getsym(p, "name"));
+
+	feat = code_index_in_array(feature_names, name);
+
+	if (feat < FEAT_NONE || feat >= FEAT_MAX) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	if (parser_hasval(p, "chance")) {
+		chance = parser_getint(p, "chance");
+	}
+
+	c->floor_feat_chances[feat] = chance;
+
+	if (c->feat_default < 0) {
+		c->feat_default = feat;
+	}
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_profile(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -221,6 +310,9 @@ static struct parser *init_parse_profile(void) {
 	parser_reg(p, "room sym name int rating int height int width int level int pit int rarity int cutoff", parse_profile_room);
 	parser_reg(p, "min-level int min", parse_profile_min_level);
 	parser_reg(p, "alloc int alloc", parse_profile_alloc);
+	parser_reg(p, "function str name", parse_profile_function);
+	parser_reg(p, "wall sym name ?int chance", parse_profile_wall);
+	parser_reg(p, "floor sym name ?int chance", parse_profile_floor);
 	return p;
 }
 
@@ -230,7 +322,7 @@ static errr run_parse_profile(struct parser *p) {
 
 static errr finish_parse_profile(struct parser *p) {
 	struct cave_profile *n, *c = parser_priv(p);
-	int num;
+	int num, i, build_ind;
 
 	/* Count the list */
 	z_info->profile_max = 0;
@@ -255,7 +347,6 @@ static errr finish_parse_profile(struct parser *p) {
 		if (c->room_profiles) {
 			struct room_profile *r_old = c->room_profiles;
 			struct room_profile *r_new;
-			int i;
 
 			/* Count the room profiles */
 			cave_profiles[num].n_room_profiles = 0;
@@ -290,6 +381,22 @@ static errr finish_parse_profile(struct parser *p) {
 			cave_profiles[num].n_room_profiles = 0;
 			cave_profiles[num].room_profiles = NULL;
 		}
+
+		if (!cave_profiles[num].builder) {
+			build_ind = cave_builder_index_by_name(cave_profiles[num].name);
+
+			if (build_ind < 0) {
+				quit_fmt("Error: cannot find builder named %s!", cave_profiles[num].name);
+			}
+
+			cave_profiles[num].builder = cave_builders[build_ind].builder;
+		}
+
+		if (cave_profiles[num].feat_default < 0) {
+			cave_profiles[num].feat_default = FEAT_FLOOR;
+		}
+
+		assert(cave_profiles[num].builder);
 
 		mem_free(c);
 		num--;

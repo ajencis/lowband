@@ -425,7 +425,7 @@ flags:BURN
 desc:A young tree.
 
 code:TREE
-name:young tree
+name:tree
 graphics:#:U
 priority:10
 default-size:100

@@ -249,6 +249,10 @@ struct cave_profile {
     struct room_profile *room_profiles;	/*!< Used to build rooms */
     int min_level;			/*!< Shallowest level to use this profile */
     int alloc;				/*!< Allocation weight for this profile */
+
+    int wall_feat_chances[FEAT_MAX];          // L: chances of feat to use as the wall in this profile
+    int floor_feat_chances[FEAT_MAX];         // L: chances of feat to use as the floor in this profile
+    int feat_default;
 };
 
 

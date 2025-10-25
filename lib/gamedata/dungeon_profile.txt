@@ -232,3 +232,21 @@ name:hard centre
 params:1:0:200:0
 min-level:50
 alloc:1
+
+
+## L: New
+
+## Forest
+name:forest
+function:cavern
+params:1:50:250:2
+tunnel:10:30:15:25:30
+alloc:10
+wall:SAPLING:50
+wall:YOUNG_TREE:100
+wall:TREE:150
+wall:OLD_TREE:100
+floor:DIRT_FLOOR:150
+floor:SAPLING:100
+floor:YOUNG_TREE:50
+

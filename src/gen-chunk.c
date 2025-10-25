@@ -595,6 +595,38 @@ static int get_size_percent(struct chunk *c)
 	return actual * 100 / normal;
 }
 
+static int floor_feat(void)
+{
+	int choice = FEAT_FLOOR, i, total_chance = 0, chance;
+
+	for (i = FEAT_NONE + 1; i < FEAT_MAX; ++i) {
+		chance = dun->profile->floor_feat_chances[i];
+
+		total_chance += chance;
+		if (randint0(total_chance) < chance) {
+			choice = i;
+		}
+	}
+
+	return choice;
+}
+
+static int wall_feat(void)
+{
+	int choice = FEAT_GRANITE, i, total_chance = 0, chance;
+
+	for (i = FEAT_NONE + 1; i < FEAT_MAX; ++i) {
+		chance = dun->profile->wall_feat_chances[i];
+
+		total_chance += chance;
+		if (randint0(total_chance) < chance) {
+			choice = i;
+		}
+	}
+
+	return choice;
+}
+
 void dungeon_secret_allocs(struct chunk *c)
 {
 	make_rooms_secret(c);
@@ -616,6 +648,7 @@ void dungeon_terrain_allocs(struct chunk *c)
 {
 	int size_perc = get_size_percent(c);
 	int k = MAX(MIN(c->depth * size_perc / 3, 10 * size_perc), 200) / 100, i;
+	struct loc grid;
 
 	handle_level_stairs(c, dun->persist, dun->quest, rand_range(3, 4), rand_range(1, 2));
 
@@ -632,9 +665,20 @@ void dungeon_terrain_allocs(struct chunk *c)
 	/* Put some rubble in corridors */
 	alloc_objects(c, SET_CORR, TYP_RUBBLE, randint1(k), c->depth, 0);
 
-	if (!c->feat_default) {
-		cave_set_default_feat(c, FEAT_FLOOR);
+	// replace walls with profile walls
+	// handled after generation proper in case of overlap between walla nd floor grids in a profile
+	for (grid.x = 0; grid.x < c->width; ++grid.x) {
+		for (grid.y = 0; grid.y < c->height; ++grid.y) {
+			if (square_iswall(c, grid)) {
+				square_set_feat(c, grid, wall_feat(), 100);
+			}
+			else if (square_isfloor(c, grid)) {
+				square_set_feat(c, grid, floor_feat(), 100);
+			}
+		}
 	}
+
+	cave_set_default_feat(c, dun->profile->feat_default);
 
 	/* Place some traps in the dungeon */
 	if (one_in_(3)) {
