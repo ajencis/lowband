@@ -253,6 +253,8 @@ struct cave_profile {
     int wall_feat_chances[FEAT_MAX];          // L: chances of feat to use as the wall in this profile
     int floor_feat_chances[FEAT_MAX];         // L: chances of feat to use as the floor in this profile
     int feat_default;
+
+    struct pit_profile *mon_restrict;         // L: restriction of monsters to place
 };
 
 
@@ -488,8 +490,10 @@ void dump_level_body(ang_file *fo, const char *title, struct chunk *c,
 void dump_level_footer(ang_file *fo);
 
 /* gen-monster.c */
-bool mon_restrict(const char *monster_type, int depth,
+struct pit_profile *lookup_pit_profile(const char *name);
+bool mon_restrict(struct pit_profile *profile, int depth,
 	int current_depth, bool unique_ok);
+bool mon_unrestrict(int current_depth, bool unique_ok);
 void spread_monsters(struct chunk *c, const char *type, int depth, int num, 
 	int y0, int x0, int dy, int dx, uint8_t origin);
 void get_vault_monsters(struct chunk *c, char racial_symbol[], char *vault_type,

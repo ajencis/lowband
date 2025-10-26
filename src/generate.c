@@ -246,16 +246,13 @@ static enum parser_error parse_profile_function(struct parser *p) {
 
 static enum parser_error parse_profile_wall(struct parser *p) {
 	struct cave_profile *c = parser_priv(p);
-	char name[80];
 	int feat, chance = 100;
 
 	if (!c) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
 
-	strnfmt(name, sizeof name, "%s", parser_getsym(p, "name"));
-
-	feat = code_index_in_array(feature_names, name);
+	feat = code_index_in_array(feature_names, parser_getsym(p, "name"));
 
 	if (feat < FEAT_NONE || feat >= FEAT_MAX) {
 		return PARSE_ERROR_GENERIC;
@@ -272,16 +269,13 @@ static enum parser_error parse_profile_wall(struct parser *p) {
 
 static enum parser_error parse_profile_floor(struct parser *p) {
 	struct cave_profile *c = parser_priv(p);
-	char name[80];
 	int feat, chance = 100;
 
 	if (!c) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
 
-	strnfmt(name, sizeof name, "%s", parser_getsym(p, "name"));
-
-	feat = code_index_in_array(feature_names, name);
+	feat = code_index_in_array(feature_names, parser_getsym(p, "name"));
 
 	if (feat < FEAT_NONE || feat >= FEAT_MAX) {
 		return PARSE_ERROR_GENERIC;
@@ -300,6 +294,25 @@ static enum parser_error parse_profile_floor(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_profile_mon_restrict(struct parser *p) {
+	struct cave_profile *c = parser_priv(p);
+	struct pit_profile *prof;
+
+	if (!c) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	prof = lookup_pit_profile(parser_getstr(p, "name"));
+
+	if (!prof) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	c->mon_restrict = prof;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_profile(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -313,6 +326,7 @@ static struct parser *init_parse_profile(void) {
 	parser_reg(p, "function str name", parse_profile_function);
 	parser_reg(p, "wall sym name ?int chance", parse_profile_wall);
 	parser_reg(p, "floor sym name ?int chance", parse_profile_floor);
+	parser_reg(p, "mon-restrict str name", parse_profile_mon_restrict);
 	return p;
 }
 
@@ -1249,9 +1263,6 @@ static struct chunk *cave_generate(struct player *p, int height, int width)
 		dun->profile = choose_profile(p);
 		event_signal_string(EVENT_GEN_LEVEL_START, dun->profile->name);
 		chunk = dun->profile->builder(p, height, width, &error);
-		if (!chunk->feat_default) {
-			cave_set_default_feat(chunk, FEAT_FLOOR);
-		}
 
 		if (!chunk) {
 			if (!error) {

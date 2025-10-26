@@ -387,3 +387,18 @@ room:3
 alloc:1:40
 mon-base:elemental
 mon-base:vortex
+
+name:Natural
+mon-base:ant
+mon-base:centipede
+mon-base:killer beetle
+mon-base:insect
+mon-base:snake
+mon-base:reptile
+mon-base:bird
+mon-base:canine
+mon-base:feline
+mon-base:quadruped
+mon-base:rodent
+mon-base:spider
+

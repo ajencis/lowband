@@ -639,9 +639,15 @@ void dungeon_monster_allocs(struct chunk *c, struct player *p)
 	int base_mon = z_info->level_monster_min + randint0(k);
 	int n_mon = (base_mon * size_perc + 50) / 100;
 
+	if (dun->profile->mon_restrict) {
+		mon_restrict(dun->profile->mon_restrict, c->depth, c->depth, true);
+	}
+
 	for (i = 0; i < n_mon; ++i) {
 		pick_and_place_distant_monster(c, p->mon.grid, 0, true, c->depth);
 	}
+
+	mon_unrestrict(c->depth, true);
 }
 
 void dungeon_terrain_allocs(struct chunk *c)

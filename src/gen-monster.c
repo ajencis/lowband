@@ -24,12 +24,10 @@
 
 #include "angband.h"
 #include "cave.h"
-#include "game-event.h"
 #include "generate.h"
 #include "init.h"
 #include "monster.h"
 #include "mon-make.h"
-#include "mon-spell.h"
 
 /**
  * Restrictions on monsters, used in pits, vaults, and chambers.  Used in
@@ -44,9 +42,11 @@ static int select_current_level;
  * \param name the pit profile name
  * \return the pit profile
  */
-static struct pit_profile *lookup_pit_profile(const char *name)
+struct pit_profile *lookup_pit_profile(const char *name)
 {
 	struct pit_profile *profile;
+
+	assert(pit_info);
 
 	/* Look for it */
 	for (profile = pit_info; profile; profile = profile->next) {
@@ -112,68 +112,80 @@ static bool mon_select(struct monster_race *race)
  * If called with monster_type "random", it will get a random monster base and 
  * describe the monsters by its name (for use by cheat_room).
  */
-bool mon_restrict(const char *monster_type, int depth, int current_depth,
+bool mon_unrestrict(int current_depth, bool unique_ok)
+{
+	allow_unique = unique_ok;
+	base_d_char = 0;
+    select_current_level = current_depth;
+
+	get_mon_num_prep(NULL);
+
+	return true;
+}
+
+bool mon_restrict(/*const char *monster_type*/ struct pit_profile *profile, int depth, int current_depth,
 		bool unique_ok)
 {
-	int i, j = 0;
+	if (!profile) {
+		return mon_unrestrict(current_depth, unique_ok);
+	}
 
 	/* Clear global monster restriction variables. */
 	allow_unique = unique_ok;
 	base_d_char = 0;
-        select_current_level = current_depth;
+    select_current_level = current_depth;
 
-	/* No monster type specified, no restrictions. */
-	if (monster_type == NULL) {
-		get_mon_num_prep(NULL);
-		return true;
-	} else if (streq(monster_type, "random")) {
-		/* Handle random */
-		for (i = 0; i < 2500; i++) {
-			/* Get a random monster. */
-			j = randint1(z_info->r_max - 1);
+	/* Accept the profile or leave area empty if none found */
+	dun->pit_type = profile;
 
-			/* Must be a real monster */
-			if (!r_info[j].rarity)
-				continue;
+	/* Prepare allocation table */
+	get_mon_num_prep(mon_pit_hook);
+	return true;
+}
 
-			/* Try for close to depth, accept in-depth if necessary */
-			if (i < 200) {
-				if ((!rf_has(r_info[j].flags, RF_UNIQUE))
+static bool mon_restrict_random(int depth, int current_depth, bool unique_ok)
+{
+	int i, j = 0;
+
+	allow_unique = unique_ok;
+	base_d_char = 0;
+    select_current_level = current_depth;
+
+	/* Handle random */
+	for (i = 0; i < 2500; i++) {
+		/* Get a random monster. */
+		j = randint1(z_info->r_max - 1);
+
+		/* Must be a real monster */
+		if (!r_info[j].rarity) {
+			continue;
+		}
+
+		/* Try for close to depth, accept in-depth if necessary */
+		if (i < 200) {
+			if ((!rf_has(r_info[j].flags, RF_UNIQUE))
 					&& (r_info[j].level != 0) && (r_info[j].level <= depth)
 					&& (ABS(r_info[j].level - current_depth) <
 						1 + (current_depth / 4)))
-					break;
-			} else {
-				if ((!rf_has(r_info[j].flags, RF_UNIQUE))
+				break;
+		} else {
+			if ((!rf_has(r_info[j].flags, RF_UNIQUE))
 					&& (r_info[j].level != 0) && (r_info[j].level <= depth))
-					break;
-			}
+				break;
 		}
+	}
 
-		/* We've found a monster. */
-		if (i < 2499) {
-			/* Use that monster's base type for all monsters. */
-			base_d_char = r_info[j].base->d_char;
-
-			/* Prepare allocation table */
-			get_mon_num_prep(mon_select);
-			return true;
-		} else
-			/* Paranoia - area stays empty if no monster is found */
-			return false;
-	} else {
-		/* Use a pit profile */
-		struct pit_profile *profile = lookup_pit_profile(monster_type);
-
-		/* Accept the profile or leave area empty if none found */
-		if (profile)
-			dun->pit_type = profile;
-		else
-			return false;
+	/* We've found a monster. */
+	if (i < 2499) {
+		/* Use that monster's base type for all monsters. */
+		base_d_char = r_info[j].base->d_char;
 
 		/* Prepare allocation table */
-		get_mon_num_prep(mon_pit_hook);
+		get_mon_num_prep(mon_select);
 		return true;
+	} else {
+		/* Paranoia - area stays empty if no monster is found */
+		return false;
 	}
 }
 
@@ -205,13 +217,12 @@ void spread_monsters(struct chunk *c, const char *type, int depth, int num,
 	int start_mon_num = c->mon_max;
 
 	/* Restrict monsters.  Allow uniques. Leave area empty if none found. */
-	if (!mon_restrict(type, depth, c->depth, true))
+	if (!mon_restrict(lookup_pit_profile(type), depth, c->depth, true))
 		return;
 
 	/* Build the monster probability table. */
 	if (!get_mon_num(depth, c->depth))
 		return;
-
 
 	/* Try to summon monsters within our rectangle of effect. */
 	for (count = 0, i = 0; ((count < num) && (i < 50)); i++) {
@@ -220,8 +231,9 @@ void spread_monsters(struct chunk *c, const char *type, int depth, int num,
 			y = y0;
 			x = x0;
 			if (!square_in_bounds(c, loc(x, y))) {
-				(void) mon_restrict(NULL, depth,
-					c->depth, true);
+				mon_unrestrict(c->depth, true);
+				/*(void) mon_restrict(NULL, depth,
+					c->depth, true);*/
 				return;
 			}
 		} else {
@@ -232,8 +244,9 @@ void spread_monsters(struct chunk *c, const char *type, int depth, int num,
 					if (j < 9) {
 						continue;
 					} else {
-						(void) mon_restrict(NULL, depth,
-							c->depth, true);
+						mon_unrestrict(c->depth, true);
+						/*(void) mon_restrict(NULL, depth,
+							c->depth, true);*/
 						return;
 					}
 				}
@@ -257,7 +270,8 @@ void spread_monsters(struct chunk *c, const char *type, int depth, int num,
 	}
 
 	/* Remove monster restrictions. */
-	(void) mon_restrict(NULL, depth, c->depth, true);
+	mon_unrestrict(c->depth, true);
+	//(void) mon_restrict(NULL, depth, c->depth, true);
 }
 
 
@@ -369,18 +383,20 @@ void get_chamber_monsters(struct chunk *c, int y1, int x1, int y2, int x2,
 
 	/* Set monster generation restrictions. Occasionally random. */
 	if (random) {
-		if (!mon_restrict("random", depth, c->depth, true))
+		if (!mon_restrict_random(depth, c->depth, true))
+		//if (!mon_restrict("random", depth, c->depth, true))
 			return;
 		my_strcpy(name, "random", sizeof(name));
 	} else {
-		if (!mon_restrict(dun->pit_type->name, depth, c->depth, true))
+		if (!mon_restrict(dun->pit_type, depth, c->depth, true))
 			return;
 		my_strcpy(name, dun->pit_type->name, sizeof(name));
 	}
 
 	/* Build the monster probability table. */
 	if (!get_mon_num(depth, c->depth)) {
-		(void) mon_restrict(NULL, depth, c->depth, false);
+		mon_unrestrict(c->depth, false);
+		//(void) mon_restrict(NULL, depth, c->depth, false);
 		name = NULL;
 		return;
 	}
@@ -414,6 +430,7 @@ void get_chamber_monsters(struct chunk *c, int y1, int x1, int y2, int x2,
 	}
 
 	/* Remove our restrictions. */
-	(void) mon_restrict(NULL, depth, c->depth, false);
+	mon_unrestrict(c->depth, false);
+	//(void) mon_restrict(NULL, depth, c->depth, false);
 }
 

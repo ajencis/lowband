@@ -157,6 +157,7 @@ room:staircase room:0:3:3:1:0:99:0
 ## To completely turn them off, set alloc to zero
 name:moria
 params:1:50:250:2
+mon-restrict:Moria dwellers
 tunnel:10:30:15:25:30
 streamer:5:2:3:90:2:40
 alloc:-1
@@ -240,6 +241,7 @@ alloc:1
 name:forest
 function:cavern
 params:1:50:250:2
+mon-restrict:Natural
 tunnel:10:30:15:25:30
 alloc:10
 wall:SAPLING:50
@@ -248,5 +250,4 @@ wall:TREE:150
 wall:OLD_TREE:100
 floor:DIRT_FLOOR:150
 floor:SAPLING:100
-floor:YOUNG_TREE:50
 
