@@ -47,6 +47,7 @@
 #include "player-util.h"
 #include "z-type.h"
 #include "z-util.h"
+#include "z-virt.h"
 
 /*
  * Array of pit types
@@ -91,7 +92,30 @@ static const char *feature_names[] = {
 	#define FEAT(x) #x,
 	#include "list-terrain.h"
 	#undef FEAT
-	"MAX"
+	NULL
+};
+
+static const char *alloc_type_names[] = {
+	#define AR_TYP(x, a) #x,
+	#include "list-alloc-info-types.h"
+	#undef AR_TYP
+	NULL
+};
+
+static const char *alloc_restrict_names[] = {
+	"NONE",
+	#define AR_SET(x) #x,
+	#include "list-alloc-info-restrictions.h"
+	#undef AR_SET
+	NULL
+};
+
+struct ao_info_subtype_match {
+	enum alloc_type type;
+	const char **name_array;
+} ao_info_subtype_matches[] = {
+	{ AR_TYP_FEAT, feature_names },
+	{ AR_TYP_MAX, NULL },
 };
 
 static int cave_builder_index_by_name(const char *name)
@@ -105,6 +129,20 @@ static int cave_builder_index_by_name(const char *name)
 	}
 
 	return -1;
+}
+
+static int alloc_type_subtype(enum alloc_type type, const char *subtype)
+{
+	int i;
+	const char **name_array = NULL;
+
+	for (i = 0; ao_info_subtype_matches[i].type < AR_TYP_MAX; ++i) {
+		if (ao_info_subtype_matches[i].type == type) {
+			name_array = ao_info_subtype_matches[i].name_array;
+		}
+	}
+
+	return name_array ? code_index_in_array(name_array, subtype) : -1;
 }
 
 
@@ -313,6 +351,95 @@ static enum parser_error parse_profile_mon_restrict(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_profile_alloc_info_types(struct parser *p) {
+	struct cave_profile *c = parser_priv(p);
+	struct alloc_object_info *new_ao;
+	const char *type_name, *subtype_name;
+	int type, subtype = 0;
+
+	if (!c) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	type_name = parser_getsym(p, "name");
+
+	type = code_index_in_array(alloc_type_names, type_name);
+
+	if (type < 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	if (parser_hasval(p, "subname")) {
+		subtype_name = parser_getsym(p, "subname");
+		subtype = alloc_type_subtype(type, subtype_name);
+
+		if (subtype < 0) {
+			return PARSE_ERROR_GENERIC;
+		}
+	}
+
+	new_ao = mem_zalloc(sizeof *new_ao);
+
+	new_ao->type = type;
+	new_ao->subtype = subtype;
+
+	new_ao->next = c->alloc_obj;
+	c->alloc_obj = new_ao;
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_profile_alloc_info_restrict(struct parser *p) {
+	struct cave_profile *c = parser_priv(p);
+	const char *restrict_name;
+	int restrict_id;
+
+	if (!c) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	if (!c->alloc_obj) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	restrict_name = parser_getsym(p, "restrict");
+	restrict_id = code_index_in_array(alloc_restrict_names, restrict_name);
+
+	if (restrict_id < 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	ar_set_on(c->alloc_obj->restrictions, restrict_id);
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_profile_alloc_chance(struct parser *p) {
+	struct cave_profile *c = parser_priv(p);
+	int num, denom = 100;
+
+	if (!c) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	if (!c->alloc_obj) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	num = parser_getint(p, "numerator");
+	if (parser_hasval(p, "denominator")) {
+		denom = parser_getint(p, "denominator");
+	}
+
+	if (denom <= 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	c->alloc_obj->chance = ((double)num) / ((double)denom);
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_profile(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
@@ -327,6 +454,9 @@ static struct parser *init_parse_profile(void) {
 	parser_reg(p, "wall sym name ?int chance", parse_profile_wall);
 	parser_reg(p, "floor sym name ?int chance", parse_profile_floor);
 	parser_reg(p, "mon-restrict str name", parse_profile_mon_restrict);
+	parser_reg(p, "alloc-info sym name ?sym subname", parse_profile_alloc_info_types);
+	parser_reg(p, "alloc-restrict sym restrict", parse_profile_alloc_info_restrict);
+	parser_reg(p, "alloc-chance int numerator ?int denominator", parse_profile_alloc_chance);
 	return p;
 }
 
@@ -423,9 +553,16 @@ static errr finish_parse_profile(struct parser *p) {
 static void cleanup_profile(void)
 {
 	int i, j;
+	struct alloc_object_info *aoi, *aoi_next;
 	for (i = 0; i < z_info->profile_max; i++) {
-		for (j = 0; j < cave_profiles[i].n_room_profiles; j++)
+		for (aoi = cave_profiles[i].alloc_obj; aoi; aoi = aoi_next) {
+			aoi_next = aoi->next;
+			mem_free(aoi);
+		}
+
+		for (j = 0; j < cave_profiles[i].n_room_profiles; j++) {
 			string_free((char *) cave_profiles[i].room_profiles[j].name);
+		}
 		mem_free(cave_profiles[i].room_profiles);
 		string_free((char *) cave_profiles[i].name);
 	}

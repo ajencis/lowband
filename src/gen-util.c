@@ -22,21 +22,20 @@
 
 #include "angband.h"
 #include "cave.h"
-#include "datafile.h"
 #include "game-event.h"
 #include "game-world.h"
 #include "generate.h"
 #include "init.h"
 #include "mon-make.h"
-#include "mon-spell.h"
 #include "obj-make.h"
 #include "obj-pile.h"
-#include "obj-tval.h"
 #include "obj-util.h"
 #include "player-util.h"
 #include "trap.h"
-#include "z-queue.h"
+#include "z-file.h"
+#include "z-rand.h"
 #include "z-type.h"
+#include <stdbool.h>
 
 /**
  * Accept values for y and x (considered as the endpoints of lines) between
@@ -835,6 +834,102 @@ void alloc_objects(struct chunk *c, int set, int typ, int num, int depth,
 	}
 
 	object_lists_check_integrity(c, player->cave);
+}
+
+
+static bool can_alloc_in_grid(struct chunk *c, struct loc grid, bitflag restrictions[AR_SET_SIZE])
+{
+	if (!square_in_bounds_fully(c, grid)) return false;
+
+	if (ar_set_has(restrictions, AR_SET_PASSABLE)) {
+		if (!square_ispassable(c, grid)) return false;
+	}
+
+	if (ar_set_has(restrictions, AR_SET_CORR)) {
+		if (square_isroom(c, grid)) return false;
+	}
+
+	if (ar_set_has(restrictions, AR_SET_ROOM)) {
+		if (!square_isroom(c, grid)) return false;
+	}
+
+	if (ar_set_has(restrictions, AR_SET_SECRET)) {
+		if (!square_issecret(c, grid)) return false;
+	}
+
+	if (ar_set_has(restrictions, AR_SET_NOT_SECRET)) {
+		if (square_issecret(c, grid)) return false;
+	}
+
+	if (ar_set_has(restrictions, AR_SET_AVOIDABLE)) {
+		if (!square_isavoidable(c, grid)) return false;
+	}
+
+	if (ar_set_has(restrictions, AR_SET_NOT_AVOIDABLE)) {
+		if (square_isavoidable(c, grid)) return false;
+	}
+
+	if (ar_set_has(restrictions, AR_SET_BESIDE_WALL)) {
+		if (!square_num_walls_adjacent(c, grid)) return false;
+	}
+
+	return true;
+}
+
+
+void handle_profile_allocs(struct chunk *c, uint8_t origin)
+{
+	struct loc grid;
+	struct alloc_object_info *ao_info;
+	double roll;
+
+	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
+		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
+			roll = ((double)randint0(0x10000000)) / ((double)0x10000000);
+
+			for (ao_info = dun->profile->alloc_obj; ao_info; ao_info = ao_info->next) {
+
+				if (!can_alloc_in_grid(c, grid, ao_info->restrictions)) {
+					continue;
+				}
+
+				roll -= ao_info->chance;
+
+				if (roll > 0.0) {
+					continue;
+				}
+				roll += 1.0;
+
+				switch (ao_info->type) {
+					case AR_TYP_TRAP:
+						place_trap(c, grid, -1, c->depth);
+						break;
+					case AR_TYP_GOLD:
+						place_gold(c, grid, c->depth, origin);
+						break;
+					case AR_TYP_OBJECT:
+						place_object(c, grid, c->depth, false, false, origin, 0);
+						break;
+					case AR_TYP_OBJ_GOOD:
+						place_object(c, grid, c->depth, true, false, origin, 0);
+						break;
+					case AR_TYP_OBJ_GREAT:
+						place_object(c, grid, c->depth, true, true, origin, 0);
+						break;
+					case AR_TYP_CONTAINER:
+						place_container(c, grid, c->depth, false, false, origin);
+						break;
+					case AR_TYP_FEAT:
+						square_add_feat(c, grid, ao_info->subtype);
+						break;
+
+					case AR_TYP_MAX:
+					default:
+						break;
+				}
+			}
+		}
+	}
 }
 
 

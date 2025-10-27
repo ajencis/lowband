@@ -29,7 +29,7 @@ enum
     SET_NOT_AVOIDABLE = 0x20
 };
 
-enum
+enum alloc_object_type
 {
 	TYP_RUBBLE,	/*!< Rubble */
 	TYP_TRAP,	/*!< Trap */
@@ -38,8 +38,50 @@ enum
 	TYP_GOOD,	/*!< Good object */
 	TYP_GREAT,	/*!< Great object */
     TYP_CONTAINER,  // L: containers
-    TYP_FUME_PIT    // L: fume pit
+    TYP_FUME_PIT,    // L: fume pit
+    TYP_FEAT
 };
+
+enum alloc_type
+{
+    #define AR_TYP(x, a) AR_TYP_##x,
+    #include "list-alloc-info-types.h"
+    #undef AR_TYP
+    AR_TYP_MAX
+};
+
+/**
+ * flag for allocatikon set restrictions
+ */
+enum alloc_restrict
+{
+    AR_SET_NONE,
+    #define AR_SET(x) AR_SET_##x,
+    #include "list-alloc-info-restrictions.h"
+    #undef AR_SET
+    AR_SET_MAX
+};
+
+#define AR_SET_SIZE FLAG_SIZE(ROOMF_MAX)
+
+#define ar_set_has(f, flag) flag_has_dbg(f, AR_SET_SIZE, flag, #f, #flag)
+#define ar_set_next(f, flag) flag_next(f, AR_SET_SIZE, flag)
+#define ar_set_count(f) flag_count(f, AR_SET_SIZE)
+#define ar_set_is_empty(f) flag_is_empty(f, AR_SET_SIZE)
+#define ar_set_is_full(f) flag_is_full(f, AR_SET_SIZE)
+#define ar_set_is_inter(f1, f2) flag_is_inter(f1, f2, AR_SET_SIZE)
+#define ar_set_is_subset(f1, f2) flag_is_subset(f1, f2, AR_SET_SIZE)
+#define ar_set_is_equal(f1, f2) flag_is_equal(f1, f2, AR_SET_SIZE)
+#define ar_set_on(f, flag) flag_on_dbg(f, AR_SET_SIZE, flag, #f, #flag)
+#define ar_set_off(f, flag) flag_off(f, AR_SET_SIZE, flag)
+#define ar_set_wipe(f) flag_wipe(f, AR_SET_SIZE)
+#define ar_set_setall(f) flag_setall(f, AR_SET_SIZE)
+#define ar_set_negate(f) flag_negate(f, AR_SET_SIZE)
+#define ar_set_copy(f1, f2) flag_copy(f1, f2, AR_SET_SIZE)
+#define ar_set_union(f1, f2) flag_union(f1, f2, AR_SET_SIZE)
+#define ar_set_inter(f1, f2) flag_iter(f1, f2, AR_SET_SIZE)
+#define ar_set_diff(f1, f2) flag_diff(f1, f2, AR_SET_SIZE)
+
 
 /**
  * Flag for room types
@@ -132,6 +174,17 @@ struct pit_profile {
 
 extern struct pit_profile *pit_info;
 
+
+struct alloc_object_info {
+    struct alloc_object_info *next;
+
+    enum alloc_type type;               // type of thing allocated
+    int subtype;                        // subtype, eg feature fidx
+
+    bitflag restrictions[AR_SET_SIZE];  // which locations can have it
+
+    double chance;                      // percentage chance of any given appropriate square having this
+};
 
 /**
  * Structure to hold all "dungeon generation" data
@@ -254,7 +307,9 @@ struct cave_profile {
     int floor_feat_chances[FEAT_MAX];         // L: chances of feat to use as the floor in this profile
     int feat_default;
 
-    struct pit_profile *mon_restrict;         // L: restriction of monsters to place
+    struct pit_profile *mon_restrict;         // L: restriction of monsters to plac
+    
+    struct alloc_object_info *alloc_obj;      // L: allocation of objects
 };
 
 
@@ -451,6 +506,7 @@ int *cave_find_init(struct loc top_left, struct loc bottom_right);
 void cave_find_reset(int *state);
 bool cave_find_get_grid(struct loc *grid, int *state);
 
+void handle_profile_allocs(struct chunk *c, uint8_t origin);
 bool cave_find_in_range(struct chunk *c, struct loc *grid, struct loc top_left,
 	struct loc bottom_right, square_predicate pred);
 bool cave_find(struct chunk *c, struct loc *grid, square_predicate pred);

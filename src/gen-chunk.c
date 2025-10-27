@@ -31,6 +31,7 @@
 #include "mon-group.h"
 #include "mon-make.h"
 #include "obj-util.h"
+#include "object.h"
 #include "trap.h"
 
 #define CHUNK_LIST_INCR 10
@@ -690,6 +691,8 @@ void dungeon_terrain_allocs(struct chunk *c)
 	if (one_in_(3)) {
 		alloc_objects(c, SET_CORR & SET_NOT_AVOIDABLE, TYP_TRAP, randint1(k) + k / 2, c->depth, 0);
 	}
+
+	handle_profile_allocs(c, ORIGIN_FLOOR);
 }
 
 void dungeon_object_allocs(struct chunk *c)

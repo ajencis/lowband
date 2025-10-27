@@ -71,17 +71,20 @@ streamer:1:1:0:0:0:0
 params:1:0:200:0
 alloc:-1
 
+
 ## Labyrinth - these have alloc -1, but still appear after other checks
 ## To completely turn them off, set alloc to zero
 name:labyrinth
 params:1:0:200:0
 alloc:-1
 
+
 ## Cavern
 name:cavern
 params:1:0:200:0
 min-level:15
 alloc:10
+
 
 ## Classic
 name:classic
@@ -114,6 +117,7 @@ room:simple room:0:11:33:1:0:0:100
 # Staircase rooms - rarity 99 to prevent random occurrence
 # these rooms are specially generated to join persistent levels
 room:staircase room:0:3:3:1:0:99:0
+
 
 ## Modified
 name:modified
@@ -153,6 +157,7 @@ room:simple room:0:11:33:1:0:0:100
 # these rooms are specially generated to join persistent levels
 room:staircase room:0:3:3:1:0:99:0
 
+
 ## Moria - these have alloc -1, but still appear after other checks
 ## To completely turn them off, set alloc to zero
 name:moria
@@ -182,6 +187,7 @@ room:moria room:0:11:33:1:0:0:100
 # Staircase rooms - rarity 99 to prevent random occurrence
 # these rooms are specially generated to join persistent levels
 room:staircase room:0:3:3:1:0:99:0
+
 
 ## Lair
 name:lair
@@ -222,11 +228,13 @@ room:simple room:0:11:33:1:0:0:100
 # these rooms are specially generated to join persistent levels
 room:staircase room:0:3:3:1:0:99:0
 
+
 ## Gauntlet
 name:gauntlet
 params:1:0:200:0
 min-level:20
 alloc:1
+
 
 ## Hard Centre
 name:hard centre
@@ -250,4 +258,16 @@ wall:TREE:150
 wall:OLD_TREE:100
 floor:DIRT_FLOOR:150
 floor:SAPLING:100
+alloc-info:FEAT:YOUNG_TREE
+alloc-restrict:PASSABLE
+alloc-restrict:AVOIDABLE
+alloc-chance:1:5
+alloc-info:FEAT:TREE
+alloc-restrict:PASSABLE
+alloc-restrict:AVOIDABLE
+alloc-chance:1:15
+alloc-info:FEAT:WEB
+alloc-restrict:PASSABLE
+alloc-restrict:NOT_AVOIDABLE
+alloc-chance:1:50
 
