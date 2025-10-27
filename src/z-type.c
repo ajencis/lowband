@@ -110,6 +110,11 @@ int point_set_size(struct point_set *ps)
 	return ps->n;
 }
 
+bool point_set_empty(struct point_set *ps)
+{
+	return point_set_size(ps) <= 0;
+}
+
 static int point_set_index(struct point_set *ps, struct loc grid)
 {
 	int i;
