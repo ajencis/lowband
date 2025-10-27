@@ -3,8 +3,6 @@
 #include "game-world.h"
 #include "init.h"
 #include "mon-desc.h"
-#include "player-calcs.h"
-#include "player-util.h"
 #include "project.h"
 
 
@@ -364,7 +362,6 @@ static bool square_delete_feat(struct chunk *c, struct loc grid, int fidx)
  * make sure each square has at least one feat by adding the cave's
  * default feat if the feat is empty
  * removes the default feat if it conflicts with other feats
- * default feats of  FEAT_NONE  get special-cased for the moment
  */
 static void square_enforce_default_feat(struct chunk *c, struct loc grid)
 {
@@ -402,7 +399,7 @@ static void cave_clear_default_feat(struct chunk *c)
 	c->feat_default = NULL;
 
 	for (grid.x = 0; grid.x < c->width; ++grid.x) {
-		for (grid.y = 0; grid.y < c->width; ++grid.y) {
+		for (grid.y = 0; grid.y < c->height; ++grid.y) {
 			square_delete_feat(c, grid, prev_default);
 		}
 	}
@@ -511,7 +508,6 @@ bool square_add_feat(struct chunk *c, struct loc grid, int fidx)
 	}
 
 	success = square_force_add_feat(c, grid, fidx);
-
 	return success;
 }
 
