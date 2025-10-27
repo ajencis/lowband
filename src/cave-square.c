@@ -18,6 +18,7 @@
 
 #include "angband.h"
 #include "cave.h"
+#include "h-basic.h"
 #include "init.h"
 #include "monster.h"
 #include "mon-util.h"
@@ -29,6 +30,7 @@
 #include "player-timed.h"
 #include "project.h"
 #include "trap.h"
+#include "z-type.h"
 
 
 /**
@@ -782,6 +784,12 @@ bool square_isno_stairs(struct chunk *c, struct loc grid) {
 	return sqinfo_has(square(c, grid)->info, SQUARE_NO_STAIRS);
 }
 
+bool square_issecret(struct chunk *c, struct loc grid) {
+	assert(square_in_bounds(c, grid));
+	return sqinfo_has(square(c, grid)->info, SQUARE_SECRET);
+}
+
+
 
 /**
  * SQUARE BEHAVIOR PREDICATES
@@ -1312,6 +1320,90 @@ bool square_allows_summon(struct chunk *c, struct loc grid)
 		&& !square_isdecoyed(c, grid);
 }
 
+
+/**
+ * L: checks if any open square adjacent to the square is reachable through
+ * open squares adjacent to the square without going through the square
+ * does not guarantee that the square itself is passable
+ */
+bool square_isavoidable(struct chunk *c, struct loc grid)
+{
+	struct point_set *ps_checked;
+	struct point_set *ps_unchecked;
+
+	int dir;
+	struct loc ogrid, nextgrid;
+	bool check_diagonal;
+
+	for (dir = 1; dir <= 9; ++dir) {
+		if (dir == 5) continue;
+
+		ogrid = loc_sum(ddgrid[dir], grid);
+
+		if (square_ispassable(c, ogrid)) {
+			break;
+		}
+	}
+
+	if (dir > 9) {
+		// no adjacent open square at all
+		return false;
+	}
+
+	ps_checked = point_set_new(10);
+	ps_unchecked = point_set_new(10);
+
+	add_to_point_set(ps_unchecked, ddgrid[dir]);
+
+	while (!point_set_empty(ps_unchecked)) {
+		ogrid = ps_unchecked->pts[0];
+		check_diagonal = !ogrid.x || !ogrid.y;
+
+		nextgrid = clockwise_next_orthogonal_grid(ogrid);
+		if (square_in_bounds_fully(c, loc_sum(grid, nextgrid))
+				&& square_ispassable(c, loc_sum(grid, nextgrid)) && !point_set_contains(ps_checked, nextgrid)) {
+			add_to_point_set_no_dup(ps_unchecked, nextgrid);
+		}
+
+		nextgrid = counterclockwise_next_orthogonal_grid(ogrid);
+		if (square_in_bounds_fully(c, loc_sum(grid, nextgrid))
+				&& square_ispassable(c, loc_sum(grid, nextgrid)) && !point_set_contains(ps_checked, nextgrid)) {
+			add_to_point_set_no_dup(ps_unchecked, nextgrid);
+		}
+
+		nextgrid = clockwise_next_diagonal_grid(ogrid);
+		if (check_diagonal && square_in_bounds_fully(c, loc_sum(grid, nextgrid))
+				&& square_ispassable(c, loc_sum(grid, nextgrid)) && !point_set_contains(ps_checked, nextgrid)) {
+			add_to_point_set_no_dup(ps_unchecked, nextgrid);
+		}
+
+		nextgrid = counterclockwise_next_diagonal_grid(ogrid);
+		if (check_diagonal && square_in_bounds_fully(c, loc_sum(grid, nextgrid))
+				&& square_ispassable(c, loc_sum(grid, nextgrid)) && !point_set_contains(ps_checked, nextgrid)) {
+			add_to_point_set_no_dup(ps_unchecked, nextgrid);
+		}
+
+		add_to_point_set_no_dup(ps_checked, ogrid);
+		remove_from_point_set(ps_unchecked, ogrid);
+	}
+
+	point_set_dispose(ps_unchecked);
+
+	for (dir = 1; dir <= 9; ++dir) {
+		if (dir == 5) continue;
+
+		ogrid = loc_sum(ddgrid[dir], grid);
+
+		if (square_ispassable(c, ogrid) && !point_set_contains(ps_checked, ogrid)) {
+			point_set_dispose(ps_checked);
+			// ogrid passable but not reachable from original grid, therefore square not avoidable
+			return false;
+		}
+	}
+
+	point_set_dispose(ps_checked);
+	return true;
+}
 
 
 /**

@@ -21,6 +21,7 @@
 #include "cmd-core.h"
 #include "game-event.h"
 #include "game-world.h"
+#include "h-basic.h"
 #include "init.h"
 #include "mon-group.h"
 #include "monster.h"
@@ -29,6 +30,7 @@
 #include "obj-util.h"
 #include "object.h"
 #include "trap.h"
+#include "z-type.h"
 
 struct feature_kind *f_info;
 struct chunk *cave = NULL;
@@ -288,6 +290,98 @@ int motion_dir(struct loc start, struct loc finish)
 struct loc next_grid(struct loc grid, int dir)
 {
 	return loc(grid.x + ddgrid[dir].x, grid.y + ddgrid[dir].y);
+}
+
+
+static int clockwise_grid_index(struct loc grid)
+{
+	int i;
+
+	for (i = 0; !loc_is_zero(clockwise_grid[i]); ++i) {
+		if (loc_eq(grid, clockwise_grid[i])) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+/**
+ * L: Given a grid in  clockwise_grid , gives the next clockwise grid from there
+ */
+struct loc clockwise_next_grid(struct loc grid)
+{
+	int index = clockwise_grid_index(grid);
+
+	if (index < 0) return loc(0, 0);
+
+	index = (index + 1) % 8;
+
+	return clockwise_grid[index];
+}
+
+struct loc clockwise_next_orthogonal_grid(struct loc grid)
+{
+	struct loc other = clockwise_next_grid(grid);
+
+	if (loc_is_zero(other)) return other;
+
+	while (other.x && other.y) {
+		other = clockwise_next_grid(other);
+	}
+
+	return other;
+}
+
+struct loc clockwise_next_diagonal_grid(struct loc grid)
+{
+	struct loc other = clockwise_next_grid(grid);
+
+	if (loc_is_zero(other)) return other;
+
+	while (!other.x || !other.y) {
+		other = clockwise_next_grid(other);
+	}
+
+	return other;
+}
+
+struct loc counterclockwise_next_grid(struct loc grid)
+{
+	int index = clockwise_grid_index(grid);
+
+	if (index < 0) return loc(0, 0);
+
+	index = (index - 1);
+	if (index < 0) index += 8;
+
+	return clockwise_grid[index];
+}
+
+struct loc counterclockwise_next_orthogonal_grid(struct loc grid)
+{
+	struct loc other = counterclockwise_next_grid(grid);
+
+	if (loc_is_zero(other)) return other;
+
+	while (other.x && other.y) {
+		other = counterclockwise_next_grid(other);
+	}
+
+	return other;
+}
+
+struct loc counterclockwise_next_diagonal_grid(struct loc grid)
+{
+	struct loc other = counterclockwise_next_grid(grid);
+
+	if (loc_is_zero(other)) return other;
+
+	while (!other.x || !other.y) {
+		other = counterclockwise_next_grid(other);
+	}
+
+	return other;
 }
 
 /**

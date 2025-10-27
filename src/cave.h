@@ -445,6 +445,7 @@ bool square_isno_esp(struct chunk *c, struct loc grid);
 bool square_isproject(struct chunk *c, struct loc grid);
 bool square_isdtrap(struct chunk *c, struct loc grid);
 bool square_isno_stairs(struct chunk *c, struct loc grid);
+bool square_issecret(struct chunk *c, struct loc grid);
 bool square_hasunknownitem(struct chunk *c, struct loc grid);
 
 /* SQUARE BEHAVIOR PREDICATES */
@@ -488,6 +489,7 @@ bool square_isknownpassable(struct chunk *c, struct loc grid);
 bool square_suits_stairs_well(struct chunk *c, struct loc grid);
 bool square_suits_stairs_ok(struct chunk *c, struct loc grid);
 bool square_allows_summon(struct chunk *c, struct loc grid);
+bool square_isavoidable(struct chunk *c, struct loc grid);
 bool square_ispathable(struct chunk *c, struct loc grid);
 
 const char *square_impassable_name(struct chunk *c, struct loc grid);
@@ -573,6 +575,13 @@ void square_mark(struct chunk *c, struct loc grid);
 void square_unmark(struct chunk *c, struct loc grid);
 
 /* cave.c */
+struct loc clockwise_next_grid(struct loc grid);
+struct loc clockwise_next_orthogonal_grid(struct loc grid);
+struct loc clockwise_next_diagonal_grid(struct loc grid);
+struct loc counterclockwise_next_grid(struct loc grid);
+struct loc counterclockwise_next_orthogonal_grid(struct loc grid);
+struct loc counterclockwise_next_diagonal_grid(struct loc grid);
+
 int motion_dir(struct loc source, struct loc target);
 struct loc next_grid(struct loc grid, int dir);
 int lookup_feat(const char *name);
