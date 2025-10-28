@@ -1802,6 +1802,7 @@ static void make_chamber(struct chunk *c, int y1, int x1, int y2, int x2)
 		make_inner_chamber_wall(c, y2, x);
 	}
 
+#if 0
 	/* Try a few times to place a door. */
 	for (i = 0; i < 20; i++) {
 		/* Pick a square along the edge, not a corner. */
@@ -1856,6 +1857,7 @@ static void make_chamber(struct chunk *c, int y1, int x1, int y2, int x2)
 			}
 		}
 	}
+#endif
 }
 
 /**

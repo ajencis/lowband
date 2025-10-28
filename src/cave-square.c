@@ -18,7 +18,6 @@
 
 #include "angband.h"
 #include "cave.h"
-#include "h-basic.h"
 #include "init.h"
 #include "monster.h"
 #include "mon-util.h"
@@ -1394,7 +1393,7 @@ bool square_isavoidable(struct chunk *c, struct loc grid)
 
 		ogrid = loc_sum(ddgrid[dir], grid);
 
-		if (square_ispassable(c, ogrid) && !point_set_contains(ps_checked, ogrid)) {
+		if (square_ispassable(c, ogrid) && !point_set_contains(ps_checked, ddgrid[dir])) {
 			point_set_dispose(ps_checked);
 			// ogrid passable but not reachable from original grid, therefore square not avoidable
 			return false;
@@ -1403,6 +1402,25 @@ bool square_isavoidable(struct chunk *c, struct loc grid)
 
 	point_set_dispose(ps_checked);
 	return true;
+}
+
+bool square_isbeside_corridor(struct chunk *c, struct loc grid)
+{
+	struct loc ogrid;
+
+	for (ogrid.y = grid.y - 1; ogrid.y <= grid.y + 1; ++ogrid.y) {
+		for (ogrid.x = grid.x - 1; ogrid.x <= grid.x + 1; ++ogrid.x) {
+			if (loc_eq(ogrid, grid)) {
+				continue;
+			}
+
+			if (!square_isroom(c, grid)) {
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 

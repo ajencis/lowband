@@ -873,6 +873,10 @@ static bool can_alloc_in_grid(struct chunk *c, struct loc grid, bitflag restrict
 		if (!square_num_walls_adjacent(c, grid)) return false;
 	}
 
+	if (ar_set_has(restrictions, AR_SET_BESIDE_CORRIDOR)) {
+		if (!square_isbeside_corridor(c, grid)) return false;
+	}
+
 	return true;
 }
 
@@ -888,7 +892,6 @@ void handle_profile_allocs(struct chunk *c, uint8_t origin)
 			roll = ((double)randint0(0x10000000)) / ((double)0x10000000);
 
 			for (ao_info = dun->profile->alloc_obj; ao_info; ao_info = ao_info->next) {
-
 				if (!can_alloc_in_grid(c, grid, ao_info->restrictions)) {
 					continue;
 				}

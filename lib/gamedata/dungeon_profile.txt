@@ -65,6 +65,25 @@
 # there are also restrictions in the code that make their generation fail
 # frequently.
 
+# alloc-info tries to allocate a trap, an object, a feat, etc in some percentage
+# of acceptable squares. types are TRAP, GOLD, OBJECT, OBJ_GOOD, OBJ_GREAT,
+# CONTAINER, and FEAT. FEAT takes a second argument: the name of the specific
+# feat to place.
+
+# alloc-restrict restricts the characteristics of squares considered
+# acceptable. Possible restrictions are PASSABLE, CORR (not a room), ROOM,
+# SECRET, NOT_SECRET, AVOIDABLE (a normal monster could pass by it without
+# stepping on that square), NOT_AVOIDABLE. If multiple restrictions are given,
+# all must be satisfied. These restrictions will apply to the mose recent
+# alloc-info.
+
+# alloc-chance gives the chance of the allocation happening for each
+# appropriate square. It takes two arguments, numerator and denominator, and
+# allocation will occur numerator times in denominator. If denominator is not
+# given, it will default to 100 (giving a percent chance). The code currently
+# assumes that the total allocation chance for any square does not exceed 100%.
+# These chances apply to the most recent alloc-info.
+
 ## Town
 name:town
 streamer:1:1:0:0:0:0
@@ -92,6 +111,31 @@ params:11:50:200:2
 tunnel:10:30:15:25:50
 streamer:5:2:3:90:2:40
 alloc:90
+alloc-info:FEAT:OPEN
+alloc-restrict:ROOM
+alloc-restrict:NOT_AVOIDABLE
+alloc-restrict:PASSABLE
+alloc-restrict:BESIDE_CORRIDOR
+alloc-chance:40
+alloc-info:FEAT:CLOSED
+alloc-restrict:ROOM
+alloc-restrict:NOT_AVOIDABLE
+alloc-restrict:PASSABLE
+alloc-restrict:BESIDE_CORRIDOR
+alloc-chance:40
+alloc-info:FEAT:BROKEN
+alloc-restrict:ROOM
+alloc-restrict:NOT_AVOIDABLE
+alloc-restrict:PASSABLE
+alloc-restrict:BESIDE_CORRIDOR
+alloc-chance:10
+alloc-info:FEAT:SECRET
+alloc-restrict:ROOM
+alloc-restrict:NOT_AVOIDABLE
+alloc-restrict:PASSABLE
+alloc-restrict:BESIDE_CORRIDOR
+alloc-chance:10
+
 
 # Greater vaults only have rarity 0 but they have other checks
 room:Greater vault:0:44:66:35:0:0:100

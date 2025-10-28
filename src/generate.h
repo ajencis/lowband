@@ -55,14 +55,14 @@ enum alloc_type
  */
 enum alloc_restrict
 {
-    AR_SET_NONE,
+    AR_SET_NONE = 0,
     #define AR_SET(x) AR_SET_##x,
     #include "list-alloc-info-restrictions.h"
     #undef AR_SET
     AR_SET_MAX
 };
 
-#define AR_SET_SIZE FLAG_SIZE(ROOMF_MAX)
+#define AR_SET_SIZE FLAG_SIZE(AR_SET_MAX)
 
 #define ar_set_has(f, flag) flag_has_dbg(f, AR_SET_SIZE, flag, #f, #flag)
 #define ar_set_next(f, flag) flag_next(f, AR_SET_SIZE, flag)

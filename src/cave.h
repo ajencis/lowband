@@ -490,6 +490,7 @@ bool square_suits_stairs_well(struct chunk *c, struct loc grid);
 bool square_suits_stairs_ok(struct chunk *c, struct loc grid);
 bool square_allows_summon(struct chunk *c, struct loc grid);
 bool square_isavoidable(struct chunk *c, struct loc grid);
+bool square_isbeside_corridor(struct chunk *c, struct loc grid);
 bool square_ispathable(struct chunk *c, struct loc grid);
 
 const char *square_impassable_name(struct chunk *c, struct loc grid);
