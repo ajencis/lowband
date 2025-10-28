@@ -62,18 +62,14 @@
 
 #include "angband.h"
 #include "cave.h"
-#include "datafile.h"
 #include "game-event.h"
-#include "game-input.h"
 #include "game-world.h"
 #include "generate.h"
 #include "init.h"
 #include "mon-group.h"
 #include "mon-make.h"
-#include "mon-spell.h"
 #include "mon-util.h"
 #include "player-util.h"
-#include "store.h"
 #include "trap.h"
 #include "z-queue.h"
 #include "z-type.h"
@@ -152,59 +148,6 @@ static struct loc counterclockwise_card_dir(struct loc dir)
 
 	return -1;
 }*/
-
-static int random_tree(int sapling, int young, int tree, int old, int floor)
-{
-	int sum = sapling + young + tree + old + floor;
-	int choice = randint0(sum);
-
-	choice -= sapling;
-	if (choice < 0) return FEAT_SAPLING;
-
-	choice -= young;
-	if (choice < 0) return FEAT_YOUNG_TREE;
-
-	choice -= tree;
-	if (choice < 0) return FEAT_TREE;
-
-	choice -= old;
-	if (choice < 0) return FEAT_OLD_TREE;
-
-	return FEAT_DIRT_FLOOR;
-}
-
-static void forestify_level(struct chunk *c)
-{
-	struct loc grid;
-	int feat;
-
-	if (c->depth == 0) return;
-
-	cave_set_default_feat(c, FEAT_DIRT_FLOOR);
-
-	for (grid.x = 1; grid.x < c->width - 1; ++grid.x) {
-		for (grid.y = 1; grid.y < c->height - 1; ++grid.y) {
-			feat = FEAT_NONE;
-
-			if (square_isperm(c, grid)) continue;
-			if (square_isstairs(c, grid)) continue;
-
-			if (square_isdoor(c, grid)) {
-				feat = FEAT_SAPLING;
-			} else if (square_isfloor(c, grid) && square_isroom(c, grid)) {
-				feat = random_tree(5, 4, 3, 2, 8);
-			} else if (square_isroom(c, grid)) {
-				feat = random_tree(5, 4, 3, 2, 3);
-			} else if (square_isfloor(c, grid)) {
-				feat = random_tree(1, 0, 0, 0, 5);
-			} else if (square_ismineral(c, grid)) {
-				feat = random_tree(2, 3, 4, 5, 3);
-			}
-
-			square_force_set_feat(c, grid, feat, 100);
-		}
-	}
-}
 
 
 /**
@@ -1795,16 +1738,7 @@ struct chunk *classic_gen(struct player *p, int min_height, int min_width,
 		*p_error = "could not place player";
 		return NULL;
 	}
-
-	if (player->wizard ? get_check("Forest floor? ") : one_in_(10)) {
-		ROOM_LOG("Forest floor");
-		forestify_level(c);
-	}
-
-	if (!c->feat_default) {
-		cave_set_default_feat(c, FEAT_FLOOR);
-	}
-	cave_feat_initial_upkeep(c);
+	
 
 	dungeon_terrain_allocs(c);
 	dungeon_secret_allocs(c);

@@ -686,6 +686,7 @@ void dungeon_terrain_allocs(struct chunk *c)
 	}
 
 	cave_set_default_feat(c, dun->profile->feat_default);
+	cave_feat_initial_upkeep(c);
 
 	/* Place some traps in the dungeon */
 	if (one_in_(3)) {

@@ -30,16 +30,13 @@
 
 #include "angband.h"
 #include "cave.h"
-#include "datafile.h"
 #include "game-event.h"
 #include "generate.h"
 #include "init.h"
 #include "mon-group.h"
 #include "mon-make.h"
 #include "mon-spell.h"
-#include "obj-tval.h"
 #include "trap.h"
-#include "z-queue.h"
 #include "z-type.h"
 
 /**
@@ -1780,8 +1777,8 @@ static void make_inner_chamber_wall(struct chunk *c, int y, int x)
  */
 static void make_chamber(struct chunk *c, int y1, int x1, int y2, int x2)
 {
-	int i, d, y, x;
-	int count;
+	int /*i, d,*/ y, x;
+	//int count;
 
 	/* Fill with soft granite (will later be replaced with floor). */
 	fill_rectangle(c, y1 + 1, x1 + 1, y2 - 1, x2 - 1, FEAT_MAGMA,
