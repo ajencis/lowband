@@ -533,7 +533,7 @@ name:BOULDER
 hit:60
 effect:BOLT:ARROW
 dice:$Dd12
-expr:D:SPELL_POWER: / 7 + 1
+expr:D:MONSTER_LEVEL: / 7 + 1
 lore:throw boulders
 lore-color-base:Yellow
 message-vis:{name} hurls a boulder.
@@ -546,7 +546,7 @@ msgt:CREATE_TRAP
 hit:100
 effect:WEB
 dice:2d$S
-expr:S:SPELL_POWER:+ 5
+expr:S:MONSTER_LEVEL:+ 5
 lore:weave webs
 lore-color-base:Yellow
 message-vis:{name} weaves a web.

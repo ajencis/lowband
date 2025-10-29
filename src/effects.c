@@ -21,6 +21,7 @@
 #include "effect-handler.h"
 #include "game-input.h"
 #include "init.h"
+#include "mon-calcs.h"
 #include "mon-summon.h"
 #include "obj-gear.h"
 #include "player-history.h"
@@ -296,7 +297,7 @@ static int32_t effect_value_base_spell_power(void)
 	}
 	/* Check the reference race first */
 	else if (ref_race) {
-	   power = ref_race->spell_power;
+		power = ref_race->spell_power;
 	}
 	/* Otherwise the current monster if there is one */
 	else if (cave->mon_current > 0) {
@@ -367,6 +368,24 @@ static int32_t effect_value_base_feat_size(void)
 	return 0;
 }
 
+static int32_t effect_value_base_monster_level(void)
+{
+	const struct monster_race *monr = NULL;
+
+	if (cave && cave->mon_current > 0) {
+		struct monster *mon = cave_monster(cave, cave->mon_current);
+		if (mon && mon->race) {
+			monr = mon->race;
+		}
+	}
+
+	if (!monr && ref_race) {
+		monr = ref_race;
+	}
+
+	return monr ? monr->level : 0;
+}
+
 expression_base_value_f effect_value_base_by_name(const char *name)
 {
 	static const struct value_base_s {
@@ -383,6 +402,7 @@ expression_base_value_f effect_value_base_by_name(const char *name)
 		  effect_value_base_monster_percent_hp_gone },
 		{ "CASTER_HP", effect_value_base_caster_hp },
 		{ "FEAT_SIZE", effect_value_base_feat_size },
+		{ "MONSTER_LEVEL", effect_value_base_monster_level },
 		{ NULL, NULL },
 	};
 	const struct value_base_s *current = value_bases;

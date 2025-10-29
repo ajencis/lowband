@@ -79,39 +79,6 @@ static bool check_can_take_stairs(struct player *p, int time)
 	return true;
 }
 
-/**
- * L: try to clear a web from the current square
- * \return whether player should thereby skip their turn
- */
-/*static bool clear_web(struct player *p)
-{
-	int dam;
-
-	if (!square_iswebbed(cave, p->mon.grid)) {
-		return false;
-	}
-	if (player_of_has(p, OF_PASS_WEB)) {
-		return false;
-	}
-	if (pf_has(p->mon.state.pflags, PF_PASS_WALL)) {
-		return false;
-	}
-
-	dam = adj_str_web(p->mon.state.stat_ind[STAT_STR]);
-	dam = randint1(dam);
-
-	square_reduce_feat_size(cave, p->mon.grid, FEAT_WEB, dam);
-
-	if (square_has_feat(cave, p->mon.grid, FEAT_WEB)) {
-		msg("You struggle against the web.");
-	}
-	else {
-		msg("You clear the web.");
-	}
-
-	return false;
-}*/
-
 
 /**
  * Go up one level
@@ -1391,27 +1358,6 @@ static bool do_cmd_walk_test(struct player *p, struct loc grid)
 		} else {
 			msgt(MSG_HITWALL, "There is something in the way!");
 		}
-
-		/*if (square_isrubble(cave, grid)) {
-			// Rubble
-			msgt(MSG_HITWALL, "There is a pile of rubble in the way!");
-			if (!square_isrubble(p->cave, grid)) {
-				square_memorize(cave, grid);
-				square_light_spot(cave, grid);
-			}
-		} else if (square_iscloseddoor(cave, grid)) {
-			// Door
-			return true;
-		} else {
-			// Wall
-			msgt(MSG_HITWALL, "There is a wall in the way!");
-			if (square_ispassable(p->cave, grid)
-					|| square_isrubble(p->cave, grid)
-					|| square_iscloseddoor(p->cave, grid)) {
-				square_forget(cave, grid);
-				square_light_spot(cave, grid);
-			}
-		}*/
 
 		/* Cancel repeat */
 		disturb(p);

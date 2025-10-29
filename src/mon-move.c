@@ -1926,12 +1926,12 @@ bool monster_turn_web(struct chunk *c, struct monster *mon)
 	}
 	else if (dam > 1) {
 		act = ply ? "struggle in" : "struggles in";
-		do_msg = one_in_(4);
+		do_msg = one_in_(4) || ply;
 	}
 	else {
 		dam = 1;
 		act = ply ? "struggle futilely in" : "struggles futilely in";
-		do_msg = one_in_(10);
+		do_msg = one_in_(10) || ply;
 	}
 
 	if (do_msg) msg("%s %s a web.", mdesc, act);
