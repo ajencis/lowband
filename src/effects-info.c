@@ -32,10 +32,10 @@
 
 
 static struct {
-        int index;
-        int args;
-        int efinfo_flag;
-        const char *desc;
+	int index;
+	int args;
+	int efinfo_flag;
+	const char *desc;
 	const char *menu_name;
 } base_descs[] = {
         { EF_NONE, 0, EFINFO_NONE, "", "" },
@@ -538,7 +538,7 @@ textblock *effect_describe(const struct effect *e, const char *prefix,
 			break;
 
 		case EFINFO_FEAT:
-			strnfmt(desc, sizeof(desc), f_info[e->subtype].name);
+			strnfmt(desc, sizeof(desc), edesc, f_info[e->subtype].name);
 			break;
 
 		case EFINFO_NONE:
@@ -710,7 +710,7 @@ size_t effect_get_menu_name(char *buf, size_t max, const struct effect *e)
 		break;
 
 	case EFINFO_FEAT:
-		len = strnfmt(buf, max, f_info[e->subtype].name);
+		len = strnfmt(buf, max, fmt, f_info[e->subtype].name);
 		break;
 
 	default:

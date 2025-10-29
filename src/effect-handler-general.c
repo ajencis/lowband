@@ -828,7 +828,7 @@ bool effect_handler_WEB(effect_handler_context_t *context)
 	context->ident = true;
 
 	/* Increase the radius for higher spell power */
-	rad = power / 40;
+	rad = power / 25;
 
 	/* Check within the radius for clear floor */
 	for (grid.y = ogrid.y - rad; grid.y <= ogrid.y + rad; grid.y++) {
@@ -849,6 +849,46 @@ bool effect_handler_WEB(effect_handler_context_t *context)
 
 			/* Create a web */
 			square_set_feat_size(cave, grid, FEAT_WEB, sq_power);
+		}
+	}
+
+	return true;
+}
+
+bool effect_handler_FEAT_GROW(effect_handler_context_t *context)
+{
+	int rad;
+	struct loc grid, ogrid;
+	int power, sq_power, curr_power, dist, fidx = context->subtype;
+
+	power = effect_calculate_value(context, true);
+	ogrid = origin_get_loc(context->origin);
+
+	/* Always notice */
+	context->ident = true;
+
+	/* Increase the radius for higher spell power */
+	rad = power / 25;
+
+	/* Check within the radius for clear floor */
+	for (grid.y = ogrid.y - rad; grid.y <= ogrid.y + rad; grid.y++) {
+		for (grid.x = ogrid.x - rad; grid.x <= ogrid.x + rad; grid.x++) {
+			/* Require a floor grid with no existing traps or glyphs */
+			if (!square_in_bounds_fully(cave, grid)) continue;
+			if (!square_can_add_feat(cave, grid, fidx)) continue;
+			if ((square_monster(cave, grid) || square_isplayer(cave, grid)) &&
+					!loc_eq(grid, ogrid)) {
+				continue;
+			}
+
+			dist = distance(grid, ogrid);
+			sq_power = randint1(power) - dist * 40 + 40;
+			curr_power = square_feat_size(cave, grid, fidx);
+
+			if (sq_power <= curr_power) continue;
+
+			/* Create a web */
+			square_set_feat_size(cave, grid, fidx, sq_power);
 		}
 	}
 

@@ -274,6 +274,7 @@ int effect_subtype(int index, const char *type)
 
 		// L: terrain feature id
 		case EF_TERRAIN_FEAT:
+		case EF_FEAT_GROW:
 			return lookup_feat_code(type);
 
 		/* Some effects only want a radius, so this is a dummy */

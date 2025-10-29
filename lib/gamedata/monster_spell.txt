@@ -544,7 +544,8 @@ name:WEAVE
 knowable:0
 msgt:CREATE_TRAP
 hit:100
-effect:WEB
+#effect:WEB
+effect:FEAT_GROW:WEB
 dice:2d$S
 expr:S:MONSTER_LEVEL:+ 5
 lore:weave webs
