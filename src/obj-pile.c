@@ -885,9 +885,10 @@ struct object *floor_object_for_use(struct player *p, struct object *obj,
 		usable = object_split(obj, num);
 	} else {
 		usable = obj;
-		assert(usable->known);
-		square_excise_object(p->cave, usable->grid, usable->known);
-		delist_object(p->cave, usable->known);
+		if (usable->known) {
+			square_excise_object(p->cave, usable->grid, usable->known);
+			delist_object(p->cave, usable->known);
+		}
 		square_excise_object(cave, usable->grid, usable);
 		delist_object(cave, usable);
 		if (none_left) *none_left = true;

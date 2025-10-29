@@ -592,7 +592,7 @@ void list_object(struct chunk *c, struct object *obj)
 			obj->oidx = i;
 
 			// L: maintain object-known linkage
-			if (c == cave && player && player->cave) {
+			if (c == cave && player && player->cave && obj->known) {
 				player->cave->objects[i] = obj->known;
 				obj->known->oidx = i;
 			}
