@@ -76,6 +76,8 @@
 # stepping on that square), NOT_AVOIDABLE. If multiple restrictions are given,
 # all must be satisfied. These restrictions will apply to the mose recent
 # alloc-info.
+# ROOM_DOOR is a special alloc restrict that combines ROOM, AVOIDABLE,
+# PASSABLE, and BESIDE_CORRIDOR
 
 # alloc-chance gives the chance of the allocation happening for each
 # appropriate square. It takes two arguments, numerator and denominator, and
@@ -112,28 +114,16 @@ tunnel:10:30:15:25:50
 streamer:5:2:3:90:2:40
 alloc:90
 alloc-info:FEAT:OPEN
-alloc-restrict:ROOM
-alloc-restrict:NOT_AVOIDABLE
-alloc-restrict:PASSABLE
-alloc-restrict:BESIDE_CORRIDOR
+alloc-restrict:ROOM_DOOR
 alloc-chance:40
 alloc-info:FEAT:CLOSED
-alloc-restrict:ROOM
-alloc-restrict:NOT_AVOIDABLE
-alloc-restrict:PASSABLE
-alloc-restrict:BESIDE_CORRIDOR
+alloc-restrict:ROOM_DOOR
 alloc-chance:40
 alloc-info:FEAT:BROKEN
-alloc-restrict:ROOM
-alloc-restrict:NOT_AVOIDABLE
-alloc-restrict:PASSABLE
-alloc-restrict:BESIDE_CORRIDOR
+alloc-restrict:ROOM_DOOR
 alloc-chance:10
 alloc-info:FEAT:SECRET
-alloc-restrict:ROOM
-alloc-restrict:NOT_AVOIDABLE
-alloc-restrict:PASSABLE
-alloc-restrict:BESIDE_CORRIDOR
+alloc-restrict:ROOM_DOOR
 alloc-chance:10
 
 
@@ -169,6 +159,18 @@ params:1:50:300:2
 tunnel:10:30:15:25:50
 streamer:5:2:3:90:2:40
 alloc:97
+alloc-info:FEAT:OPEN
+alloc-restrict:ROOM_DOOR
+alloc-chance:40
+alloc-info:FEAT:CLOSED
+alloc-restrict:ROOM_DOOR
+alloc-chance:40
+alloc-info:FEAT:BROKEN
+alloc-restrict:ROOM_DOOR
+alloc-chance:10
+alloc-info:FEAT:SECRET
+alloc-restrict:ROOM_DOOR
+alloc-chance:10
 
 # Really big rooms only have rarity 0 but they have other checks
 room:Greater vault:0:44:66:35:0:0:50
@@ -210,6 +212,18 @@ mon-restrict:Moria dwellers
 tunnel:10:30:15:25:30
 streamer:5:2:3:90:2:40
 alloc:-1
+alloc-info:FEAT:OPEN
+alloc-restrict:ROOM_DOOR
+alloc-chance:40
+alloc-info:FEAT:CLOSED
+alloc-restrict:ROOM_DOOR
+alloc-chance:40
+alloc-info:FEAT:BROKEN
+alloc-restrict:ROOM_DOOR
+alloc-chance:10
+alloc-info:FEAT:SECRET
+alloc-restrict:ROOM_DOOR
+alloc-chance:10
 
 # Really big rooms only have rarity 0 but they have other checks
 room:Greater vault:0:44:66:35:0:0:50

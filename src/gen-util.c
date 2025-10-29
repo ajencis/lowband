@@ -33,6 +33,7 @@
 #include "player-util.h"
 #include "trap.h"
 #include "z-file.h"
+#include "z-form.h"
 #include "z-rand.h"
 #include "z-type.h"
 #include <stdbool.h>
@@ -842,39 +843,58 @@ static bool can_alloc_in_grid(struct chunk *c, struct loc grid, bitflag restrict
 	if (!square_in_bounds_fully(c, grid)) return false;
 
 	if (ar_set_has(restrictions, AR_SET_PASSABLE)) {
-		if (!square_ispassable(c, grid)) return false;
+		if (!square_ispassable(c, grid)) {
+			return false;
+		}
 	}
 
+
 	if (ar_set_has(restrictions, AR_SET_CORR)) {
-		if (square_isroom(c, grid)) return false;
+		if (square_isroom(c, grid)) {
+			return false;
+		}
 	}
 
 	if (ar_set_has(restrictions, AR_SET_ROOM)) {
-		if (!square_isroom(c, grid)) return false;
+		if (!square_isroom(c, grid)) {
+			return false;
+		}
 	}
 
 	if (ar_set_has(restrictions, AR_SET_SECRET)) {
-		if (!square_issecret(c, grid)) return false;
+		if (!square_issecret(c, grid)) {
+			return false;
+		}
 	}
 
 	if (ar_set_has(restrictions, AR_SET_NOT_SECRET)) {
-		if (square_issecret(c, grid)) return false;
+		if (square_issecret(c, grid)) {
+			return false;
+		}
 	}
 
 	if (ar_set_has(restrictions, AR_SET_AVOIDABLE)) {
-		if (!square_isavoidable(c, grid)) return false;
+		if (!square_isavoidable(c, grid)) {
+			return false;
+		}
 	}
 
 	if (ar_set_has(restrictions, AR_SET_NOT_AVOIDABLE)) {
-		if (square_isavoidable(c, grid)) return false;
+		if (square_isavoidable(c, grid)) {
+			return false;
+		}
 	}
 
 	if (ar_set_has(restrictions, AR_SET_BESIDE_WALL)) {
-		if (!square_num_walls_adjacent(c, grid)) return false;
+		if (!square_num_walls_adjacent(c, grid)) {
+			return false;
+		}
 	}
 
 	if (ar_set_has(restrictions, AR_SET_BESIDE_CORRIDOR)) {
-		if (!square_isbeside_corridor(c, grid)) return false;
+		if (!square_isbeside_corridor(c, grid)) {
+			return false;
+		}
 	}
 
 	return true;
@@ -892,6 +912,7 @@ void handle_profile_allocs(struct chunk *c, uint8_t origin)
 			roll = ((double)randint0(0x10000000)) / ((double)0x10000000);
 
 			for (ao_info = dun->profile->alloc_obj; ao_info; ao_info = ao_info->next) {
+
 				if (!can_alloc_in_grid(c, grid, ao_info->restrictions)) {
 					continue;
 				}

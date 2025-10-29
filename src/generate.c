@@ -34,6 +34,7 @@
 #include "game-input.h"
 #include "game-world.h"
 #include "generate.h"
+#include "h-basic.h"
 #include "init.h"
 #include "mon-make.h"
 #include "mon-move.h"
@@ -110,6 +111,13 @@ static const char *alloc_restrict_names[] = {
 	NULL
 };
 
+static const struct special_alloc_type {
+	const char *name;
+	int types_array[10];
+} special_alloc_types[] = {
+	{ "ROOM_DOOR", { AR_SET_ROOM, AR_SET_NOT_AVOIDABLE, AR_SET_PASSABLE, AR_SET_BESIDE_CORRIDOR, AR_SET_NONE } }
+};
+
 struct ao_info_subtype_match {
 	enum alloc_type type;
 	const char **name_array;
@@ -143,6 +151,19 @@ static int alloc_type_subtype(enum alloc_type type, const char *subtype)
 	}
 
 	return name_array ? code_index_in_array(name_array, subtype) : -1;
+}
+
+static const struct special_alloc_type *special_alloc_type_by_name(const char *name)
+{
+	uint16_t i;
+
+	for (i = 0; i < N_ELEMENTS(special_alloc_types); ++i) {
+		if (streq(name, special_alloc_types[i].name)) {
+			return &special_alloc_types[i];
+		}
+	}
+
+	return NULL;
 }
 
 
@@ -393,6 +414,7 @@ static enum parser_error parse_profile_alloc_info_restrict(struct parser *p) {
 	struct cave_profile *c = parser_priv(p);
 	const char *restrict_name;
 	int restrict_id;
+	const struct special_alloc_type *sat;
 
 	if (!c) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -405,13 +427,24 @@ static enum parser_error parse_profile_alloc_info_restrict(struct parser *p) {
 	restrict_name = parser_getsym(p, "restrict");
 	restrict_id = code_index_in_array(alloc_restrict_names, restrict_name);
 
-	if (restrict_id < 0) {
-		return PARSE_ERROR_GENERIC;
+	if (restrict_id >= 0) {
+		ar_set_on(c->alloc_obj->restrictions, restrict_id);
+		return PARSE_ERROR_NONE;
 	}
 
-	ar_set_on(c->alloc_obj->restrictions, restrict_id);
+	sat = special_alloc_type_by_name(restrict_name);
 
-	return PARSE_ERROR_NONE;
+	if (sat) {
+		int i;
+
+		for (i = 0; sat->types_array[i] != AR_SET_NONE; ++i) {
+			ar_set_on(c->alloc_obj->restrictions, sat->types_array[i]);
+		}
+
+		return PARSE_ERROR_NONE;
+	}
+ 
+	return PARSE_ERROR_GENERIC;
 }
 
 static enum parser_error parse_profile_alloc_chance(struct parser *p) {

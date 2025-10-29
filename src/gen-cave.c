@@ -861,6 +861,7 @@ static struct loc find_normal_to_wall(struct chunk *c, struct loc grid,
 }
 
 
+#if 0
 /**
  * Help build_tunnel():  test if a wall-piercing location can have a door.
  * Don't want a door that's only adjacent to terrain that is either
@@ -894,6 +895,7 @@ static bool allows_wall_piercing_door(struct chunk *c, struct loc grid)
 	}
 	return n_outside_good > 0 && n_inside_good > 0;
 }
+#endif
 
 
 /**
@@ -1177,11 +1179,13 @@ static void build_tunnel(struct chunk *c, struct loc grid1, struct loc grid2)
 		/* Convert to floor grid */
 		square_force_set_feat(c, dun->wall[i], FEAT_FLOOR, 100);
 
+#if 0
 		/* Place a random door */
 		if (randint0(100) < dun->profile->tun.pen &&
 				allows_wall_piercing_door(c, dun->wall[i])) {
 			place_random_door(c, dun->wall[i]);
 		}
+#endif
 	}
 
 	event_signal_tunnel(EVENT_GEN_TUNNEL_FINISHED,
