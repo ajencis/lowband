@@ -1414,7 +1414,7 @@ bool square_isbeside_corridor(struct chunk *c, struct loc grid)
 				continue;
 			}
 
-			if (!square_isroom(c, grid)) {
+			if (!square_isroom(c, ogrid)) {
 				return true;
 			}
 		}
