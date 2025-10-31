@@ -80,6 +80,7 @@ static void init_rune(void)
 	count = COMBAT_RUNE_MAX;
 	for (i = 1; i < OF_MAX; i++) {
 		struct obj_property *prop = lookup_obj_property(OBJ_PROPERTY_FLAG, i);
+		if (!prop) plog_fmt("Error: Object flag %i has no associated property!", i);
 		assert(prop);
 		if (prop->subtype == OFT_NONE) continue;
 		if (prop->subtype == OFT_LIGHT) continue;

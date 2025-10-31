@@ -41,6 +41,7 @@
 #include "obj-knowledge.h"
 #include "obj-pile.h"
 #include "obj-power.h"
+#include "obj-properties.h"
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
@@ -1135,8 +1136,9 @@ void move_player(int dir, bool disarm)
 		disturb(player);
 		/* No move made so no energy spent. */
 		player->upkeep->energy_use = 0;
-	} else if (!square_ispassable(cave, grid) &&
-			(!pf_has(player->mon.state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
+	} else if (!monster_passes_grid(&player->mon, cave, grid)) {
+	//} else if (!square_ispassable(cave, grid) &&
+	//		(!pf_has(player->mon.state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
 
 		//int prev_feat_k = square(player->cave, grid)->feat->kind->fidx;
 		const char *issue, *prefix, *article;
@@ -1342,7 +1344,8 @@ static bool do_cmd_walk_test(struct player *p, struct loc grid)
 	 * that does not agree with the player's memory then update the
 	 * player's memory
 	 */
-	if (!square_ispassable(cave, grid) && (!pf_has(p->mon.state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
+	if (!monster_passes_grid(&p->mon, cave, grid)) {
+	//if (!square_ispassable(cave, grid) && (!pf_has(p->mon.state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
 		const char *imp_name, *article;
 
 		if (square_iscloseddoor(p->cave, grid)) {
@@ -1393,7 +1396,7 @@ void do_cmd_walk(struct command *cmd)
 	if (player_confuse_dir(player, &dir, false)) {
 		player->upkeep->energy_use = z_info->move_energy;
 	}
-	
+
 	/* Verify walkability */
 	grid = loc_sum(player->mon.grid, ddgrid[dir]);
 	if (!do_cmd_walk_test(player, grid)) {

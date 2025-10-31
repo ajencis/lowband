@@ -99,17 +99,6 @@ bool feat_incompat_base(int feat1, int feat2)
 	return false;
 }
 
-bool square_can_add_feat(struct chunk *c, struct loc grid, int fidx)
-{
-	struct feature *feat;
-
-	for (feat = square_feat(c, grid); feat; feat = feat->next) {
-		if (feat_incompat_base(feat->kind->fidx, fidx)) return false;
-	}
-
-	return true;
-}
-
 /*
 static void feat_desc(const struct feature *feat, char *buf, size_t bufsize)
 {
@@ -146,6 +135,17 @@ static int feat_incompatible(int new, int old)
 	}
 
 	return -1;
+}
+
+bool square_can_add_feat(struct chunk *c, struct loc grid, int fidx)
+{
+	struct feature *feat;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (feat_incompatible(fidx, feat->kind->fidx) == fidx) return false;
+	}
+
+	return true;
 }
 
 static bool feat_can_add(struct chunk *c, struct loc grid, int fidx_new)

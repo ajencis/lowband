@@ -44,6 +44,7 @@
 #include "obj-knowledge.h"
 #include "obj-pile.h"
 #include "obj-power.h"
+#include "obj-properties.h"
 #include "obj-slays.h"
 #include "obj-util.h"
 #include "player-calcs.h"
@@ -237,6 +238,24 @@ static bool monster_hates_grid(struct monster *mon, struct loc grid)
 	if (grid_is_danger(mon, cave, grid)) return true;
 
 	return false;
+}
+
+
+bool monster_passes_grid(struct monster *mon, struct chunk *c, struct loc grid)
+{
+	struct feature *feat;
+
+	if (square_ispassable(c, grid)) return true;
+
+	for (feat = square_feat(c, grid); feat; feat = feat->next) {
+		if (feat_is_passable(feat->kind->fidx)) continue;
+		if (feat_is_tree(feat->kind->fidx) && of_has(mon->state.flags, OF_PASS_TREE)) continue;
+		if (!feat_is_permanent(feat->kind->fidx) && monster_passes_walls(mon)) continue;
+
+		return false;
+	}
+
+	return true;
 }
 
 
@@ -948,11 +967,12 @@ static bool get_move_find_safety(struct monster *mon)
 			if (!square_in_bounds_fully(cave, grid)) continue;
 
 			/* Skip locations in a wall */
-			if (!square_ispassable(cave, grid)) continue;
+			if (!monster_passes_grid(mon, cave, grid)) continue;
+			//if (!square_ispassable(cave, grid)) continue;
 
 			/* Ignore too-distant grids */
 			if (cave->noise.grids[grid.y][grid.x] >
-				cave->noise.grids[mon->grid.y][mon->grid.x] + 2 * d)
+					cave->noise.grids[mon->grid.y][mon->grid.x] + 2 * d)
 				continue;
 
 			/* Ignore damaging terrain if they can't handle it */
@@ -1294,7 +1314,8 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 			/* Check grid around the player for room interior (room walls count)
 			 * or other empty space */
 			struct loc test = loc_sum(mon->target.grid, ddgrid_ddd[i]);
-			if (square_ispassable(cave, test) || square_isroom(cave, test)) {
+			if (monster_passes_grid(mon, cave, test) || square_isroom(cave, grid)) {
+			//if (square_ispassable(cave, test) || square_isroom(cave, test)) {
 				/* One more open grid */
 				open++;
 			}
@@ -1560,7 +1581,8 @@ static bool monster_turn_can_move(struct monster *mon, const char *m_name,
 	}
 
 	/* Floor is open? */
-	if (square_ispassable(cave, new)) {
+	if (monster_passes_grid(mon, cave, new)) {
+	//if (square_ispassable(cave, new)) {
 		return true;
 	}
 
@@ -1740,7 +1762,8 @@ static bool monster_turn_try_push(struct monster *mon, const char *m_name,
 	/* Move weaker monsters if they can swap places */
 	/* (not in a wall) */
 	int move_ok = (monster_can_move(mon, new) &&
-				   square_ispassable(cave, mon->grid));
+			monster_passes_grid(mon1, cave, mon->grid));
+	//			   square_ispassable(cave, mon->grid));
 
 	if (kill_ok || move_ok) {
 		/* Get the names of the monsters involved */

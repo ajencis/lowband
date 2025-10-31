@@ -761,6 +761,21 @@ experience:0
 flags:PLAYABLE
 desc:A skeletal.
 
+name:treefolk
+evolution:hasty ent
+base:person
+color:g
+speed:110
+hit-points:5
+hearing:4
+armor-class:-25
+sleepiness:40
+depth:0
+rarity:15
+experience:0
+flags:PLAYABLE
+desc:A treefolk.
+
 
 
 ##### Monster races proper #####
@@ -12156,6 +12171,8 @@ flags:DROP_2
 flags:MOVE_BODY | KILL_WALL | KILL_ITEM
 flags:NO_STUN | NO_SLOW | NO_SLEEP | IM_ACID
 friends:100:3d4:huorn
+innate-freq:5
+spells:GROW_TREES
 desc:Ents are not altogether on anybody's side, because nobody is altogether on
 desc: their side.  This one seems quite roused, and does not seem to be on
 desc: your side.

@@ -605,11 +605,12 @@ glyph:l
 pain:9
 flags:CLEAR_WEB | COLD_BLOOD | REGENERATE
 flags:NO_FEAR | NO_CONF | HURT_FIRE | IM_WATER
-flags:RES_BLUDGEONING | RES_PIERCING
+flags:RES_BLUDGEONING | RES_PIERCING | PASS_TREE
 desc:Tree/Ent
 attr:HP:2
 attr:AC:2
 attr:SPEED:-3
+stats:1:-1:1:-3:2
 
 # Trolls are evil, larger than human-size humanoids. They have strong melee
 # combat, and many are hurt by light.  They fall roughly between ogres and

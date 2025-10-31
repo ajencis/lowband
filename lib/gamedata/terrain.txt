@@ -413,7 +413,7 @@ name:sapling
 graphics:#:G
 priority:10
 default-size:25
-flags:PASSABLE | BURN
+flags:PASSABLE | BURN | TREE
 desc:A very young tree.
 
 code:YOUNG_TREE
@@ -421,7 +421,7 @@ name:young tree
 graphics:#:g
 priority:10
 default-size:50
-flags:BURN
+flags:BURN | TREE
 desc:A young tree.
 
 code:TREE
@@ -429,7 +429,7 @@ name:tree
 graphics:#:U
 priority:10
 default-size:100
-flags:BURN
+flags:BURN | TREE
 desc:A tree.
 
 code:OLD_TREE
@@ -437,7 +437,7 @@ name:old tree
 graphics:#:u
 priority:10
 default-size:200
-flags:BURN
+flags:BURN | TREE
 desc:An old tree.
 
 

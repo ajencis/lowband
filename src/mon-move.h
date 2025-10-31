@@ -29,6 +29,7 @@ enum monster_stagger {
 	 INNATE_STAGGER = 2
 };
 
+bool monster_passes_grid(struct monster *mon, struct chunk *c, struct loc grid);
 bool mon_will_follow_player(const struct monster *mon, const struct player *p);
 bool mon_will_attack_player(const struct monster *mon, const struct player *player);
 bool mon_will_attack_mon(const struct monster *mon, const struct monster *other);

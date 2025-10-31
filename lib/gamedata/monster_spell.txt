@@ -553,6 +553,26 @@ lore-color-base:Yellow
 message-vis:{name} weaves a web.
 message-invis:You hear soft rustling.
 
+name:GROW_TREES
+knowable:0
+hit:100
+effect:FEAT_GROW:OLD_TREE
+dice:-75+1d$S
+expr:S:MONSTER_LEVEL:+ 30
+effect:FEAT_GROW:TREE
+dice:-50+1d$S
+expr:S:MONSTER_LEVEL:+ 20
+effect:FEAT_GROW:YOUNG_TREE
+dice:-25+1d$S
+expr:S:MONSTER_LEVEL:+ 10
+effect:FEAT_GROW:SAPLING
+dice:1d$S
+expr:S:MONSTER_LEVEL:+ 0
+lore:grow trees
+lore-color-base:green
+message-vis:{name} produces trees
+message-invis:You feel nature in your presence.
+
 name:BA_ACID
 hit:100
 effect:BALL:ACID:2

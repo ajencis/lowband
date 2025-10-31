@@ -1008,6 +1008,13 @@ type-mult:gloves:0
 type-mult:boots:1
 desc:Lets you walk through webs
 
+name:tree walking
+type:flag
+code:PASS_TREE
+power:10
+mult:5
+desc:Lets you walk through trees
+
 name:invisibility
 type:flag
 subtype:misc ability

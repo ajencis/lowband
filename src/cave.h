@@ -359,6 +359,7 @@ bool feat_is_granite(int feat);
 bool feat_is_treasure(int feat);
 bool feat_is_wall(int feat);
 bool feat_is_floor(int feat);
+bool feat_is_tree(int feat);
 bool feat_is_structural(int feat);
 bool feat_is_trap_holding(int feat);
 bool feat_is_object_holding(int feat);

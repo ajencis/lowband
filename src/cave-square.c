@@ -89,6 +89,14 @@ bool feat_is_floor(int feat)
 }
 
 /**
+ * True if the feat is a tree
+ */
+bool feat_is_tree(int feat)
+{
+	return tf_has(f_info[feat].flags, TF_TREE);
+}
+
+/**
  * L: true if feat is part of the structure of the level - is
  * either a wall or floor or stairs
  */

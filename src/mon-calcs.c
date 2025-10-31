@@ -28,6 +28,7 @@ struct mon_player_match of_matches[] = {
 	{ RF_PASS_WEB, OF_PASS_WEB },
 	{ RF_INVISIBLE, OF_INVISIBILITY },
 	{ RF_HI_REGEN, OF_HI_REGEN },
+	{ RF_PASS_TREE, OF_PASS_TREE },
 	{ RF_NONE, -1 }
 };
 

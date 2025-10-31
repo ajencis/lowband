@@ -49,6 +49,7 @@
 #include "source.h"
 #include "target.h"
 #include "trap.h"
+#include "z-rand.h"
 
 
 /**
@@ -65,7 +66,7 @@ int effect_calculate_value(effect_handler_context_t *context, bool use_boost)
 	}
 
 	if (context->value.base > 0 ||
-		(context->value.dice > 0 && context->value.sides > 0)) {
+			(context->value.dice > 0 && context->value.sides > 0)) {
 		final = context->value.base +
 			damroll(context->value.dice, context->value.sides);
 	}
@@ -860,6 +861,7 @@ bool effect_handler_FEAT_GROW(effect_handler_context_t *context)
 	int rad;
 	struct loc grid, ogrid;
 	int power, sq_power, curr_power, dist, fidx = context->subtype;
+	random_value rv = context->value;
 
 	power = effect_calculate_value(context, true);
 	ogrid = origin_get_loc(context->origin);
@@ -868,7 +870,7 @@ bool effect_handler_FEAT_GROW(effect_handler_context_t *context)
 	context->ident = true;
 
 	/* Increase the radius for higher spell power */
-	rad = power / 25;
+	rad = (rv.base + rv.dice * rv.sides) * (100 + rv.m_bonus) / 100 / 20;
 
 	/* Check within the radius for clear floor */
 	for (grid.y = ogrid.y - rad; grid.y <= ogrid.y + rad; grid.y++) {
@@ -881,8 +883,12 @@ bool effect_handler_FEAT_GROW(effect_handler_context_t *context)
 				continue;
 			}
 
+			power = (damroll(rv.dice, rv.sides) + rv.base) * (100 + rv.m_bonus) / 100;
+
+			if (power * 20 < rad) continue;
+
 			dist = distance(grid, ogrid);
-			sq_power = randint1(power) - dist * 40 + 40;
+			sq_power = randint1(power) - dist * 20 + 20;
 			curr_power = square_feat_size(cave, grid, fidx);
 
 			if (sq_power <= curr_power) continue;
