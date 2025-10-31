@@ -29,7 +29,7 @@ EFFECT(SELF_TIMED_INC,				false,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s tu
 EFFECT(OTHER_TIMED_INC,				false,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s turns to target", "impose %s")
 EFFECT(TIMED_DEC,					false,	NULL,		2,		EFINFO_TIMED,	"reduces length of %s by %s turns",	"reduce %s")
 EFFECT(GLYPH,						false,	NULL,		1,		EFINFO_NONE,	"inscribes a glyph beneath you",	"inscribe a glyph")
-EFFECT(WEB,							false,	NULL,		0,		EFINFO_NONE,	"creates a web",	"create a web")
+//EFFECT(WEB,							false,	NULL,		0,		EFINFO_NONE,	"creates a web",	"create a web")
 EFFECT(RESTORE_STAT,				false,	NULL,		1,		EFINFO_STAT,	"restores your %s",	"restore %s")
 EFFECT(DRAIN_STAT,					false,	NULL,		1,		EFINFO_STAT,	"reduces your %s",	"")
 EFFECT(LOSE_RANDOM_STAT,			false,	NULL,		1,		EFINFO_STAT,	"reduces a stat other than %s",	"")

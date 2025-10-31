@@ -800,6 +800,7 @@ bool effect_handler_GLYPH(effect_handler_context_t *context)
 	return true;
 }
 
+#if 0
 /**
  * Create a web.
  */
@@ -855,6 +856,7 @@ bool effect_handler_WEB(effect_handler_context_t *context)
 
 	return true;
 }
+#endif
 
 bool effect_handler_FEAT_GROW(effect_handler_context_t *context)
 {
