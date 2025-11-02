@@ -28,7 +28,6 @@
 #include "mon-calcs.h"
 #include "mon-msg.h"
 #include "mon-util.h"
-#include "obj-curse.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
@@ -1647,6 +1646,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 		state->powers[i] += MIN((p->extra_powers[i] + 1) / 2, p->lev * 3);
 	}*/
 
+#if 0
 	/* Analyze equipment */
 	for (i = 0; i < p->mon.body.count; i++) {
 		int index = 0;
@@ -1772,18 +1772,19 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 			}
 		}
 	}
+#endif
 
 	/* Apply the collected flags */
-	of_union(state->flags, collect_f);
+	//of_union(state->flags, collect_f);
 
 	/* Add shapechange info */
-	calc_shapechange(state, vuln, p->shape, &extra_blows, &extra_shots,
-		&extra_might, &extra_moves);
+	/*calc_shapechange(state, vuln, p->shape, &extra_blows, &extra_shots,
+		&extra_might, &extra_moves);*/
 
 	/* L: add monster info */
-	if (mrace) {
+	/*if (mrace) {
 		calc_monster(p, state, vuln, &extra_moves);
-	}
+	}*/
 
 	/* Calculate light */
 	calc_light(p, state, update);

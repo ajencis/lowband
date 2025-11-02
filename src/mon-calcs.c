@@ -9,6 +9,7 @@
 #include "mon-util.h"
 #include "obj-tval.h"
 #include "object.h"
+#include "obj-curse.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-util.h"
@@ -361,10 +362,12 @@ static void get_mon_ac(struct monster *mon, struct player_state *state)
 
 void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 {
-	int i, extra_blows = 0;
+	int i, j;
+	int extra_blows = 0, extra_shots = 0, extra_might = 0, extra_moves = 0;;
 	int arm_wgt = 0;
 	//struct element_info race_elem_info[ELEM_MAX] = { 0 };
 	struct monster_race *mrace = mon->race;
+	bitflag f[OF_SIZE];
 
 	verify_mon_ownership(mon);
 
@@ -425,15 +428,80 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 
 
 	for (i = 0; i < mon->body.count; ++i) {
-		struct object *obj = mon->body.slots[i].obj;
+		struct object *obj = slot_object(mon, i);
+		int dig, index = 0;
+		struct curse_data *curse;
 
 		if (!obj) continue;
 
 		if (tval_is_armor(obj)) {
 			arm_wgt = MAX(object_weight_one(obj), arm_wgt);
 		}
+
+		while (obj) {
+			object_flags(obj, f);
+			of_union(state->flags, f);
+
+			state->stat_add[STAT_STR] += obj->modifiers[OBJ_MOD_STR];
+			state->stat_add[STAT_INT] += obj->modifiers[OBJ_MOD_INT];
+			state->stat_add[STAT_WIS] += obj->modifiers[OBJ_MOD_WIS];
+			state->stat_add[STAT_DEX] += obj->modifiers[OBJ_MOD_DEX];
+			state->stat_add[STAT_CON] += obj->modifiers[OBJ_MOD_CON];
+			state->skills[SKILL_STEALTH] += obj->modifiers[OBJ_MOD_STEALTH];
+			state->skills[SKILL_SEARCH] += (obj->modifiers[OBJ_MOD_SEARCH] * 5);
+			state->see_infra += obj->modifiers[OBJ_MOD_INFRA];
+			if (tval_is_digger(obj)) {
+				if (of_has(obj->flags, OF_DIG_1)) {
+					dig = 1;
+				} else if (of_has(obj->flags, OF_DIG_2)) {
+					dig = 2;
+				} else if (of_has(obj->flags, OF_DIG_3)) {
+					dig = 3;
+				}
+			}
+			
+			dig += obj->modifiers[OBJ_MOD_TUNNEL];
+			state->skills[SKILL_DIGGING] += (dig * 20);
+			state->speed += obj->modifiers[OBJ_MOD_SPEED];
+			state->dam_red += obj->modifiers[OBJ_MOD_DAM_RED];
+			extra_blows += obj->modifiers[OBJ_MOD_BLOWS] * 100;
+			extra_shots += obj->modifiers[OBJ_MOD_SHOTS];
+			extra_might += obj->modifiers[OBJ_MOD_MIGHT];
+			extra_moves += obj->modifiers[OBJ_MOD_MOVES];
+
+			for (j = 0; j < ELEM_MAX; ++j) {
+				state->el_info[j].res_level += obj->el_info[j].res_level;
+			}
+
+			if (!slot_type_is(mon, i, EQUIP_WEAPON)
+					&& !slot_type_is(mon, i, EQUIP_BOW)) {
+				state->to_h += obj->to_h;
+				state->to_d += obj->to_d;
+			}
+
+			curse = obj->curses;
+
+			/* Move to any unprocessed curse object */
+			if (curse) {
+				index++;
+				obj = NULL;
+				while (index < z_info->curse_max) {
+					if (curse[index].power) {
+						obj = curses[index].obj;
+						break;
+					} else {
+						index++;
+					}
+				}
+			} else {
+				obj = NULL;
+			}
+		}
 	}
 
+	if (rf_has(mon->race->flags, RF_NEVER_MOVE)) {
+		extra_moves -= 25;
+	}
 
 	unarmoured_ac_bonus(mon, state, arm_wgt);
 	unarmoured_speed_bonus(mon, state, arm_wgt);
