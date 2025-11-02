@@ -726,6 +726,17 @@ static void blow_side_effects(struct player *p, struct monster *mon)
 	}
 }
 
+static bool mon_blow_side_effects(struct monster *mon, struct monster *t_mon)
+{
+	if (mon->m_timed[TMD_ATT_CONF]) {
+		mon_clear_timed(mon, TMD_ATT_CONF, MON_TMD_FLG_NOFAIL);
+
+		mon_inc_timed(t_mon, TMD_CONFUSED, (10 + randint0(mon_lev(mon)) / 10), MON_TMD_FLG_NOTIFY);
+	}
+
+	return false;
+}
+
 static void do_breath_bite(struct player *p, struct loc grid)
 {
 	int i, sel, numsel;
@@ -1966,6 +1977,10 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 		int brand = 0, slay = 0;
 		char verb[80];
 
+		plog("side effects");
+		mon_blow_side_effects(mon, t_mon);
+		plog("done side effects");
+
 		// get verb and brand / slay
 		my_strcpy(verb, which->atk->message, sizeof verb);
 		if (which->atk->obj) {
@@ -2087,13 +2102,17 @@ static void free_temp_attack_data(struct temp_attack_data *data)
 bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 {
 	struct loc t_grid = t_mon->grid;
-	int t_midx = t_mon->midx;
+	int t_midx = t_mon->midx, i;
 	//const struct attack *atk;
 	struct temp_attack_data *tmp_data, *curr;
 	struct attack *atk;
 	int energy;
 	bool did_attack = false;
+	struct player *ap = mon->player;
 	const char *err_msg;
+	int16_t pretimed[TMD_MAX];
+
+	memcpy(pretimed, t_mon->m_timed, sizeof pretimed);
 
 	assert(mon);
 	assert(t_mon);
@@ -2109,6 +2128,14 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 			err_msg = attack_error(mon, t_mon, atk, cave);
 			if (err_msg) msg(err_msg);
 		}
+
+		if (!mon->atk) {
+			msg("You don't have any attacks!");
+		}
+	}
+
+	if (ap) {
+		disturb(ap);
 	}
 
 	tmp_data = get_temp_attack_data(mon, t_mon, cave);
@@ -2142,6 +2169,21 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 	}
 
 	free_temp_attack_data(tmp_data);
+
+	t_mon = cave_monster(cave, t_midx);
+	if (t_mon && t_mon->race) {
+		if (mon_is_player(mon) && mon_will_attack_player(t_mon, ap)) {
+			t_mon->target.who = TARGET_WHO_PLAYER;
+		}
+		else if (!mon_is_player(mon) && mon_will_attack_mon(t_mon, mon)) {
+			t_mon->target.who = TARGET_WHO_MONSTER;
+			t_mon->target.midx = mon->midx;
+		}
+
+		for (i = 0; i < TMD_MAX; ++i) {
+			add_mon_timed_message(t_mon, i, true, pretimed[i], (int)t_mon->m_timed[i]);
+		}
+	}
 
 	return did_attack;
 }
