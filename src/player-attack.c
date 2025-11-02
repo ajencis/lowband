@@ -21,6 +21,7 @@
 #include "effects.h"
 #include "game-event.h"
 #include "game-input.h"
+#include "h-basic.h"
 #include "init.h"
 #include "mon-attack.h"
 #include "mon-blows.h"
@@ -42,10 +43,13 @@
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
+#include "player-enum.h"
+#include "player-properties.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
 #include "target.h"
+#include <stdbool.h>
 
 
 
@@ -368,7 +372,7 @@ static int critical_shot(const struct player *p,
 			this_l = this_l->next;
 		}
 		*msg_type = this_l->msgt;
-		new_dam = this_l->add + this_l->mult * dam;
+		new_dam = this_l->add + this_l->dice * dam;
 	}
 
 	return new_dam;
@@ -455,7 +459,7 @@ static int critical_melee(const struct player *p, const struct monster *monster,
 			this_l = this_l->next;
 		}
 		*msg_type = this_l->msgt;
-		new_dam = this_l->add + this_l->mult * dam;
+		new_dam = this_l->add + this_l->dice * dam;
 	}
 
 	if (crit_power) {
@@ -1467,17 +1471,8 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 	//struct object *weap = aroll->obj;
 	struct loc end;
 	int rad = aroll->range;
-	int maxspin = rad * 2 + get_power_scale(p, PP_WHIRLWIND, rad * 3) + 1;
-
-	/*if (weap) {
-		int slotnum = object_slot(p->mon.body, weap);
-		if (slotnum < p->mon.body.count && my_stristr(p->mon.body.slots[slotnum].name, "left")) {
-			clockwise = true;
-		}
-		else if (slotnum < p->mon.body.count && my_stristr(p->mon.body.slots[slotnum].name, "right")) {
-			clockwise = false;
-		}
-	}*/
+	int norm_maxspin = rad * 2 + 1;
+	int maxspin = norm_maxspin + get_power_scale(p, PP_WHIRLWIND, rad * 3);
 
 	for (i = 0, end = grid; i < maxspin; ++i, end = clockwise_orbit(p->mon.grid, end, rad)) {
 		struct monster *mon = monster_in_direction(p->mon.grid, end, rad);
@@ -1517,13 +1512,13 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
  * ------------------------------------------------------------------------ */
 /* Melee and throwing hit types */
 static const struct hit_types melee_hit_types[] = {
-	{ MSG_MISS, NULL },
-	{ MSG_HIT, NULL },
-	{ MSG_HIT_GOOD, "It was a good hit!" },
-	{ MSG_HIT_GREAT, "It was a great hit!" },
-	{ MSG_HIT_SUPERB, "It was a superb hit!" },
-	{ MSG_HIT_HI_GREAT, "It was a *GREAT* hit!" },
-	{ MSG_HIT_HI_SUPERB, "It was a *SUPERB* hit!" },
+	{ MSG_MISS, NULL, },
+	{ MSG_HIT, NULL, },
+	{ MSG_HIT_GOOD, "It was a good hit!", },
+	{ MSG_HIT_GREAT, "It was a great hit!", },
+	{ MSG_HIT_SUPERB, "It was a superb hit!", },
+	{ MSG_HIT_HI_GREAT, "It was a *GREAT* hit!", },
+	{ MSG_HIT_HI_SUPERB, "It was a *SUPERB* hit!",  },
 };
 
 /**
@@ -1819,6 +1814,44 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 }
 
 
+
+
+
+static void mon_critical_melee(struct monster *mon, struct temp_attack_data *which, random_value *rv, uint32_t *msg_type) {
+	const struct attack *atk = which->atk;
+	int chance = which->atk->crit_chance;
+	int powerbonus = chance + get_mon_power_scale(mon, PP_CRITICAL_HITS, 20);
+	int power = 0, wgt;
+	const struct critical_level *this_l;
+	chance = my_int_sqrt(chance * 5);
+
+	if (is_debuffed(mon)) {
+		chance += z_info->m_crit_debuff_toh;
+	}
+
+	if (randint1(100) > chance) {
+		*msg_type = MSG_HIT;
+	} else {
+		wgt = atk->obj ? atk->obj->weight : mon_lev(mon);
+
+		do {
+			power += randint0(wgt * z_info->m_crit_power_weight_scl * 2 / 100);
+			power += randint0(powerbonus * 5 * 2);
+		} while (randint0(100) < chance);
+
+		power += randint0(wgt * z_info->m_crit_power_weight_scl * 2 / 100 + 1);
+		this_l = z_info->m_crit_level_head;
+
+		while (power >= this_l->cutoff && this_l->next) {
+			this_l = this_l->next;
+		}
+		*msg_type = this_l->msgt;
+
+		rv->dice += this_l->dice;
+		rv->m_bonus += this_l->add;
+	}
+}
+
 static bool mon_valid(int midx, struct loc grid)
 {
 	struct monster *mon = midx >= 0 ? cave_monster(cave, midx) : &player->mon;
@@ -1840,6 +1873,41 @@ static const char *attack_error(const struct monster *attacker, const struct mon
 	return NULL;
 }
 
+static bool blow_message(struct monster *mon, struct monster *t_mon, struct temp_attack_data *which, bool hit, uint32_t msg_type)
+{
+	char mon_desc[80], crit_desc[80] = "";
+	struct player *ap = mon_is_player(mon) ? mon->player : NULL, *tp = mon_is_player(t_mon) ? t_mon->player : NULL;
+	char *message = NULL;
+	uint16_t i;
+
+	if (!ap && !tp && !monster_is_obvious(mon) && !monster_is_obvious(t_mon)) {
+		return false;
+	}
+
+	monster_desc(mon_desc, sizeof mon_desc, mon, MDESC_TARG | MDESC_CAPITAL);
+
+	if (hit) {
+		message = monster_blow_method_desc(which->atk->message, t_mon->midx);
+	} else if (ap) {
+		message = monster_blow_method_desc("miss {target}", t_mon->midx);
+	} else {
+		message = monster_blow_method_desc("misses {target}", t_mon->midx);
+	}
+
+	for (i = 0; i < N_ELEMENTS(melee_hit_types); i++) {
+		if (melee_hit_types[i].msg_type == msg_type) {
+			if (melee_hit_types[i].text) {
+				strnfmt(crit_desc, sizeof crit_desc, " %s", melee_hit_types[i].text);
+			}
+			break;
+		}
+	}
+
+	msg("%s %s.%s", mon_desc, message, crit_desc);
+
+	return true;
+}
+
 /*static bool attack_valid(const struct monster *attacker, const struct monster *defender,
 		const struct attack *atk, const struct chunk *c)
 {
@@ -1850,10 +1918,7 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 {
 	struct player *ap = mon_is_player(mon) ? mon->player : NULL;
 	struct player *tp = mon_is_player(t_mon) ? t_mon->player : NULL;
-
-	char attacker[80] = "You";
-	char target[80] = "you";
-	//char message[80] = "hit";
+	uint32_t msg_type;
 
 	bool success;
 
@@ -1868,26 +1933,6 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 	/* See if the player hit */
 	success = test_hit(which->atk->to_hit, mon_ac(t_mon));
 
-	char *message;
-
-	if (success) {
-		message = monster_blow_method_desc(which->atk->message, t_mon->midx);
-	}
-	else if (ap) {
-		message = monster_blow_method_desc("miss {target}", t_mon->midx);
-	}
-	else {
-		message = monster_blow_method_desc("misses {target}", t_mon->midx);
-	}
-
-	if (!ap) {
-		monster_desc(attacker, sizeof attacker, mon, MDESC_TARG | MDESC_CAPITAL);
-	}
-
-	if (!tp) {
-		monster_desc(target, sizeof target, t_mon, MDESC_TARG);
-	}
-
 	/* Auto-Recall and track if possible and visible */
 	if (monster_is_visible(t_mon) && ap) {
 		monster_race_track(ap->upkeep, t_mon->race);
@@ -1896,26 +1941,31 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 
 	/* Handle player fear (only for invisible monsters) */
 	if (ap && player_of_has(ap, OF_AFRAID)) {
+		char target[80];
+
+		monster_desc(target, sizeof target, t_mon, MDESC_TARG);
+
 		equip_learn_flag(ap, OF_AFRAID);
+
 		msgt(MSG_AFRAID, "You are too afraid to attack %s!", target);
 		return;
-	}
-
-	if (tp || ap || monster_is_obvious(mon) || monster_is_obvious(t_mon)) {
-		msg("%s %s.", attacker, message);
 	}
 
 	if (success) {
 		assert(which->atk);
 		assert(which->atk->ef);
 		bool id = false;
-		struct effect tmp_ef = *which->atk->ef;
+		struct effect tmp_ef = *which->atk->ef; // shallow copy
 		random_value rv = { 0, 0, 0, 0 };
 		dice_t *tmp_dice = dice_new();
 
 		dice_random_value(tmp_ef.dice, &rv);
 
 		rv.sides = MAX(rv.sides - which->penalty * 2, 1);
+
+		mon_critical_melee(mon, which, &rv, &msg_type);
+
+		blow_message(mon, t_mon, which, true, msg_type);
 
 		dice_parse_random_value(tmp_dice, rv);
 
@@ -1925,8 +1975,9 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 
 		dice_free(tmp_dice);
 	}
-
-	string_free(message);
+	else {
+		blow_message(mon, t_mon, which, false, MSG_MISS);
+	}
 }
 
 

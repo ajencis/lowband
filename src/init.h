@@ -25,7 +25,7 @@ struct critical_level {
 	struct critical_level *next;
 	int cutoff;		/* powers less than this are included;
 					ignored for last level */
-	int mult;		/* damage multiplier for this level */
+	int dice;		// L: bonus to dice for this level
 	int add;		/* additive damage for this level */
 	int msgt;		/* message type to use for this level */
 };

@@ -524,7 +524,7 @@ static void calculate_melee_crits(struct player_state *state, int weight,
 				w = this_l->cutoff - min_power;
 				min_power = this_l->cutoff;
 			}
-			mult_sum += w * (this_l->mult - 1);
+			mult_sum += w * (this_l->dice - 1);
 			add_sum += w * this_l->add;
 			this_l = this_l->next;
 		}
@@ -689,7 +689,7 @@ static void calculate_missile_crits(struct player_state *state, int weight,
 				w = this_l->cutoff - min_power;
 				min_power = this_l->cutoff;
 			}
-			mult_sum += w * (this_l->mult - 1);
+			mult_sum += w * (this_l->dice - 1);
 			add_sum += w * this_l->add;
 			this_l = this_l->next;
 		}

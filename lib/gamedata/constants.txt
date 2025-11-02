@@ -257,15 +257,15 @@ melee-critical:power-weight-scale:100
 # in that level.  The cutoff for the last level is not used and that level
 # will catch any criticals not caught by the previous levels.  To be valid,
 # the cutoffs for all levels but the last must be in scrictly ascending order.
-# The second value is the damage multiplier for that power level.
+# The second value is the bonus to damage dice for that level.
 # The third value is the amount added to the damage for that power level.
 # The fourth value is the name of the message, from list-messages.h, to use when
 # a critical happens for that power level.
-melee-critical-level:400:2:5:HIT_GOOD
+melee-critical-level:400:1:5:HIT_GOOD
 melee-critical-level:700:2:10:HIT_GREAT
 melee-critical-level:900:3:15:HIT_SUPERB
-melee-critical-level:1300:3:20:HIT_HI_GREAT
-melee-critical-level:-1:4:20:HIT_HI_SUPERB
+melee-critical-level:1300:4:20:HIT_HI_GREAT
+melee-critical-level:-1:5:20:HIT_HI_SUPERB
 
 # Amount added to the to-hit value for calculating the chance of a ranged
 # critical when the target is debuffed

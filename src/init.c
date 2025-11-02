@@ -26,47 +26,34 @@
 #include "angband.h"
 #include "buildid.h"
 #include "cave.h"
-#include "cmds.h"
 #include "cmd-core.h"
 #include "datafile.h"
 #include "effects.h"
 #include "game-event.h"
-#include "game-input.h"
 #include "game-world.h"
-#include "generate.h"
 #include "hint.h"
 #include "init.h"
 #include "message.h"
 #include "mon-init.h"
 #include "mon-list.h"
-#include "mon-lore.h"
 #include "mon-make.h"
-#include "mon-msg.h"
 #include "mon-summon.h"
 #include "mon-util.h"
 #include "monster.h"
 #include "obj-chest.h"
-#include "obj-ignore.h"
 #include "obj-init.h"
 #include "obj-list.h"
-#include "obj-make.h"
 #include "obj-pile.h"
-#include "obj-power.h"
-#include "obj-randart.h"
-#include "obj-slays.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
 #include "option.h"
 #include "player.h"
-#include "player-history.h"
 #include "player-properties.h"
 #include "player-quest.h"
-#include "player-spell.h"
 #include "player-timed.h"
 #include "project.h"
 #include "randname.h"
-#include "store.h"
 #include "trap.h"
 #include "ui-entry.h"
 #include "ui-entry-init.h"
@@ -859,19 +846,22 @@ static enum parser_error parse_constants_melee_critical_level(struct parser *p)
 	if (msgt < 0) {
 		return PARSE_ERROR_INVALID_MESSAGE;
 	}
+
 	new_level = mem_alloc(sizeof(*new_level));
 	new_level->next = NULL;
 	new_level->cutoff = parser_getint(p, "cutoff");
-	new_level->mult = parser_getint(p, "mult");
+	new_level->dice = parser_getint(p, "dice");
 	new_level->add = parser_getint(p, "add");
 	new_level->msgt = msgt;
+
 	/* Add it to the end of the linked list. */
 	if (z->m_crit_level_head) {
 		struct critical_level *cursor = z->m_crit_level_head;
 
-		while (cursor->next) {
+		while (cursor->next && cursor->cutoff < new_level->cutoff) {
 			cursor = cursor->next;
 		}
+
 		cursor->next = new_level;
 	} else {
 		z->m_crit_level_head = new_level;
@@ -925,7 +915,7 @@ static enum parser_error parse_constants_ranged_critical_level(struct parser *p)
 	new_level = mem_alloc(sizeof(*new_level));
 	new_level->next = NULL;
 	new_level->cutoff = parser_getint(p, "cutoff");
-	new_level->mult = parser_getint(p, "mult");
+	new_level->dice = parser_getint(p, "dice");
 	new_level->add = parser_getint(p, "add");
 	new_level->msgt = msgt;
 	/* Add it to the end of the linked list. */
@@ -1081,11 +1071,11 @@ static struct parser *init_parse_constants(void) {
 	parser_reg(p, "player sym label int value", parse_constants_player);
 	parser_reg(p, "melee-critical sym label int value",
 		parse_constants_melee_critical);
-	parser_reg(p, "melee-critical-level int cutoff int mult int add "
+	parser_reg(p, "melee-critical-level int cutoff int dice int add "
 		"str msg", parse_constants_melee_critical_level);
 	parser_reg(p, "ranged-critical sym label int value",
 		parse_constants_ranged_critical);
-	parser_reg(p, "ranged-critical-level int cutoff int mult int add "
+	parser_reg(p, "ranged-critical-level int cutoff int dice int add "
 		"str msg", parse_constants_ranged_critical_level);
 	parser_reg(p, "o-melee-critical sym label int value",
 		parse_constants_o_melee_critical);

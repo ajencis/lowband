@@ -4,7 +4,6 @@
 
 #include "angband.h"
 #include "effects.h"
-#include "game-world.h"
 #include "init.h"
 #include "mon-calcs.h"
 #include "mon-util.h"
@@ -84,6 +83,8 @@ struct embryo_attack {
 	int dam_stat;
 
 	int blows;
+
+	int crit_chance;
 
 	int auto_freq;
 
@@ -405,7 +406,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	
 
 	state->el_info[ELEM_HOLY_FIRE].res_level = state->el_info[ELEM_HOLY_ORB].res_level * 2 + state->el_info[ELEM_FIRE].res_level;
-	state->el_info[ELEM_HELLFIRE].res_level = state->el_info[ELEM_FIRE].res_level + pf_has(state->pflags, PF_EVIL) ? 0 : -1;
+	state->el_info[ELEM_HELLFIRE].res_level = state->el_info[ELEM_FIRE].res_level + (pf_has(state->pflags, PF_EVIL) ? 0 : -1);
 
 
 	for (i = 0; of_matches[i].mval != RF_NONE; ++i) {
@@ -635,6 +636,22 @@ emb_atk_mod_fn mod_fns[] = {
 };
 
 
+static void calc_emb_crit(const struct monster *mon, struct embryo_attack *emb)
+{
+	int chance = 5;
+	const struct object *obj = emb->obj;
+
+	if (obj) {
+		chance += z_info->m_crit_chance_weight_scl * obj->weight / 100;
+	}
+
+	chance += z_info->m_crit_chance_toh_skill_scl * mon->state.skills[emb->skill] / 100;
+
+	chance += get_mon_power_scale(mon, PP_CRITICAL_HITS, 15);
+
+	emb->crit_chance = chance;
+}
+
 static void calc_emb_blows(const struct monster *mon, struct embryo_attack *emb, int numblows)
 {
 	int wgt = emb->obj ? object_weight_one(emb->obj) : 0;
@@ -785,7 +802,7 @@ static struct embryo_attack *get_natural_attack(const struct monster *mon, const
 	}
 
 	emb->msg = p ? blow->method->fmessage : blow->method->messages->act_msg;
-	strnfmt(emb->title, sizeof emb->title, blow->method->name);
+	strnfmt(emb->title, sizeof emb->title, "%s", blow->method->name);
 
 	emb->extra = NULL;
 
@@ -848,7 +865,7 @@ static struct embryo_attack *get_special_attack(const struct monster *mon, int s
 	emb->sides = 1;
 	
 	emb->msg = p ? data->fmsg : data->msg;
-	strnfmt(emb->title, sizeof emb->title, data->msg);
+	strnfmt(emb->title, sizeof emb->title, "%s", data->msg);
 
 	emb->extra = NULL;
 
@@ -1070,18 +1087,20 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 	result->to_hit = emb->to_h;
 	result->num = emb->num;
 	result->auto_freq = emb->auto_freq;
+	result->crit_chance = emb->crit_chance;
+
 	if (emb->skill >= 0 && emb->skill < SKILL_MAX) {
 		result->to_hit += mon->state.skills[emb->skill];
 	}
 
 	siz = strlen(emb->msg) + 1U;
 	result->message = mem_zalloc(siz);
-	strnfmt(result->message, siz, emb->msg);
+	strnfmt(result->message, siz, "%s", emb->msg);
 	my_struncap_full(result->message);
 
 	siz = strlen(emb->title) + 1U;
 	result->title = mem_zalloc(siz);
-	strnfmt(result->title, siz, emb->title);
+	strnfmt(result->title, siz, "%s", emb->title);
 	my_struncap_full(result->title);
 
 	for (struct effect *ef = result->ef; ef; ef = ef->next) {
@@ -1114,6 +1133,8 @@ static void get_mon_attacks(struct monster *mon)
 		modify_unarmed_attack(curr, mon);
 
 		calc_emb_blows(mon, curr, count);
+
+		calc_emb_crit(mon, curr);
 
 		for (i = N_ELEMENTS(mod_fns) - 1; i >= 0; --i) {
 			mod_fns[i](mon, curr);
