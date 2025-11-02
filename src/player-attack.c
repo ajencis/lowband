@@ -1704,7 +1704,7 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct py_att
 	stop = proj_melee_attack_mon(mon, &p->mon, dmg, aroll->proj_type, fear, NULL);
 	
 	// L: berserkers go berserk
-	check_berserk(p, mon);
+	check_berserk(&p->mon, mon);
 
 	/* Small chance of bloodlust side-effects */
 	if (p->mon.m_timed[TMD_BLOODLUST] && one_in_(50)) {
@@ -1977,9 +1977,7 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 		int brand = 0, slay = 0;
 		char verb[80];
 
-		plog("side effects");
 		mon_blow_side_effects(mon, t_mon);
-		plog("done side effects");
 
 		// get verb and brand / slay
 		my_strcpy(verb, which->atk->message, sizeof verb);
@@ -2017,6 +2015,8 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 
 		blow_message(mon, t_mon, which, verb, MSG_MISS);
 	}
+
+	check_berserk(mon, t_mon);
 }
 
 

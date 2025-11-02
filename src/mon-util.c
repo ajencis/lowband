@@ -1323,7 +1323,7 @@ static void player_kill_monster(struct monster *mon, struct player *p,
 
 	/* Bloodlust bonus */
 	if (p->mon.m_timed[TMD_BLOODLUST]) {
-		check_berserk(p, mon);
+		check_berserk(&p->mon, mon);
 		//player_inc_timed(p, TMD_BLOODLUST, 10, false, false, true);
 		player_over_exert(p, PY_EXERT_CONF, 5, 2);
 		//player_over_exert(p, PY_EXERT_HALLU, 10, 15);

@@ -406,7 +406,7 @@ static bool monster_damage_target(melee_effect_handler_context_t *context,
 			context->p, reduced);
 		take_hit(context->p, reduced, context->ddesc);
 		if (context->p->is_dead) return true;
-		check_berserk(context->p, context->mon);
+		check_berserk(&context->p->mon, context->mon);
 	} else {
 		bool dead;
 
@@ -494,7 +494,7 @@ static void melee_effect_elemental(melee_effect_handler_context_t *context,
 						break;
 				}
 
-				check_berserk(context->p, context->mon);
+				check_berserk(&context->p->mon, context->mon);
 			}
 		} else {
 			assert(context->t_mon);
@@ -563,7 +563,7 @@ static void melee_effect_physical(melee_effect_handler_context_t *context,
 			}
 			take_hit(context->p, reduced, context->ddesc);
 			if (!context->p->is_dead) {
-				check_berserk(context->p, context->mon);
+				check_berserk(&context->p->mon, context->mon);
 			}
 		} else {
 			assert(context->t_mon);

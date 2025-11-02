@@ -1025,7 +1025,7 @@ bool project_p(struct source origin, int r, struct loc grid, int dam, int typ,
 		}
 		take_hit(player, reduced, killer);
 		if (!player->is_dead && origin.what == SRC_MONSTER) {
-			check_berserk(player, cave_monster(cave, origin.which.monster));
+			check_berserk(&player->mon, cave_monster(cave, origin.which.monster));
 		}
 	}
 

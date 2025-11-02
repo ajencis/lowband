@@ -26,6 +26,7 @@
 #include "mon-calcs.h"
 #include "mon-desc.h"
 #include "mon-lore.h"
+#include "mon-timed.h"
 #include "mon-util.h"
 #include "obj-chest.h"
 #include "obj-gear.h"
@@ -1873,36 +1874,37 @@ bool take_hit(struct player *p, int dam, const char *kb_str)
 	return p->is_dead;
 }
 
-bool check_berserk(struct player *p, struct monster *mon)
+bool check_berserk(struct monster *mon, struct monster *o_mon)
 {
-	int p_berserk = get_power_scale(p, PP_BERSERK, 25);
+	int berserk = get_mon_power_scale(mon, PP_BERSERK, 25);
 
 	if (!mon || !mon->race) {
 		return false;
 	}
-	if (!monster_is_visible(mon)) {
+	if (!o_mon || !o_mon->race) {
+		return false;
+	}
+	/*if (!monster_is_visible(o_mon)) {
 		// can't get mad at something you can't see
 		return false;
-	}
-	if (p->is_dead) {
+	}*/
+	if (berserk <= 0) {
 		return false;
 	}
-	if (p_berserk <= 0) {
-		return false;
-	}
-	if (p->mon.m_timed[TMD_SLOW]) {
+	if (mon->m_timed[TMD_SLOW]) {
 		// too tired to berserk
 		return false;
 	}
 	// somewhere between the amount of hp lost and the ratio of hp lost to max hp
 	// 25 max hp = up to 25 increase; 100 max hp = up to 40 increase (with max roll at 0 hp)
-	int increase = (randint1(p->mon.maxhp) - p->mon.hp * 2 / 3) * (p_berserk + 25) / (p->mon.maxhp + 25);
+	int increase = (randint1(mon->maxhp) - mon->hp * 2 / 3) * (berserk + 25) / (mon->maxhp + 25);
 	
 	if (increase >= 0) {
 		// higher increase the less you are already
-		increase -= p->mon.m_timed[TMD_BLOODLUST] / 3 - 5;
+		increase -= mon->m_timed[TMD_BLOODLUST] / 3 - 5;
 
-		return player_inc_timed(p, TMD_BLOODLUST, MAX(increase, 0), true, true, false);
+		return mon_inc_timed(mon, TMD_BLOODLUST, MAX(increase, 0), MON_TMD_FLG_NOTIFY | MON_TMD_FLG_NOFAIL);
+		//return player_inc_timed(p, TMD_BLOODLUST, MAX(increase, 0), true, true, false);
 	}
 	return false;
 }
@@ -2442,11 +2444,11 @@ static bool player_bloodlust_attack_monster(struct player *p, struct monster *mo
 
 		disturb(p);
 
+		msg("You furiously lash out at %s!", mdesc);
+
 		cmdq_push(CMD_MELEE);
 		// we have to use DIR_TARGET in case we attack something not adjacent
 		cmd_set_arg_target(cmdq_peek(), "target", DIR_TARGET);
-
-		msg("You furiously lash out at %s!", mdesc);
 		event_signal(EVENT_MESSAGE_FLUSH);
 
 		return true;
@@ -2500,13 +2502,13 @@ static bool player_bloodlust_charge_monster(struct player *p, struct monster *mo
 			monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG);
 		}
 
-		msg("You furiously charge at %s!", mdesc);
-		event_signal(EVENT_MESSAGE_FLUSH);
-
 		disturb(p); // make sure we don't repeat commands
+
+		msg("You furiously charge at %s!", mdesc);
 
 		cmdq_push(CMD_WALK);
 		cmd_set_arg_direction(cmdq_peek(), "direction", dir);
+		event_signal(EVENT_MESSAGE_FLUSH);
 		return true;
 	}
 
