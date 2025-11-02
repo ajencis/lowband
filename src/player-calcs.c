@@ -25,10 +25,8 @@
 #include "game-input.h"
 #include "game-world.h"
 #include "init.h"
-#include "mon-attack.h"
 #include "mon-calcs.h"
 #include "mon-msg.h"
-#include "mon-spell.h"
 #include "mon-util.h"
 #include "obj-curse.h"
 #include "obj-desc.h"
@@ -287,6 +285,7 @@ int adj_stat_skill_percent(int index, int skill) {
  * L: monk agility bonuses
  */
 
+/*
 static int unarmoured_speed_bonus(struct player_state *s, int wgt)
 {
 	int wpen = wgt / 5 - get_power_scale_state(s, PP_AGILITY, 10, player->lev);
@@ -308,6 +307,7 @@ static int unarmoured_ac_bonus(struct player_state *s, int wgt)
     s->to_a += bonus;
 	return bonus;
 }
+*/
 
 #if 0
 static int monster_modify_stat(int which, struct monster_race *mr)
@@ -1910,8 +1910,8 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	}
 
 	/* L: monk bonuses */
-	unarmoured_speed_bonus(state, armwgt);
-	unarmoured_ac_bonus(state, armwgt);
+	//unarmoured_speed_bonus(state, armwgt);
+	//unarmoured_ac_bonus(state, armwgt);
 
 	/* Other timed effects */
 	player_flags_timed(p, state->flags);

@@ -62,4 +62,7 @@ const char *ability_subchoice_name(int id, const struct player_ability *parent);
 bool make_ability_subchoice(struct player *p);
 bool ability_satisfies_all_prereqs(const struct player_ability *abil, const struct player *p);
 
+int unarmoured_speed_bonus(struct monster *mon, struct player_state *s, int wgt);
+int unarmoured_ac_bonus(struct monster *mon, struct player_state *s, int wgt);
+
 #endif /* !PLAYER_PROPS_H */

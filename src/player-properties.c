@@ -400,3 +400,37 @@ int attack_specialization_power(const struct monster *mon, const struct object *
 }
 
 
+/**
+ * L: utilities for specific powers
+ */
+
+
+// agility power
+int unarmoured_speed_bonus(struct monster *mon, struct player_state *s, int wgt)
+{
+	int wpen, bonus;
+
+	wpen = wgt / 5 - get_power_scale_state(s, PP_AGILITY, 10, mon_lev(mon));
+	wpen = MAX(0, wpen);
+
+	bonus = get_power_scale_state(s, PP_AGILITY, 10, mon_lev(mon));
+	bonus = MAX(0, bonus - wpen);
+
+    s->speed += bonus;
+	return bonus;
+}
+
+int unarmoured_ac_bonus(struct monster *mon, struct player_state *s, int wgt)
+{
+	int wpen, bonus;
+
+	wpen = wgt - get_power_scale_state(s, PP_AGILITY, 250, mon_lev(mon));
+	wpen = MAX(0, wpen);
+    bonus = get_power_scale_state(s, PP_AGILITY, 50, mon_lev(mon));
+	bonus = MAX(bonus / 2, bonus - wpen);
+
+    s->to_a += bonus;
+	return bonus;
+}
+
+

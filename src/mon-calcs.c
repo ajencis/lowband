@@ -7,6 +7,7 @@
 #include "init.h"
 #include "mon-calcs.h"
 #include "mon-util.h"
+#include "obj-tval.h"
 #include "object.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
@@ -361,6 +362,7 @@ static void get_mon_ac(struct monster *mon, struct player_state *state)
 void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 {
 	int i, extra_blows = 0;
+	int arm_wgt = 0;
 	//struct element_info race_elem_info[ELEM_MAX] = { 0 };
 	struct monster_race *mrace = mon->race;
 
@@ -403,7 +405,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	/*for (i = 0; i < ELEM_MAX; i++) {
 		state->el_info[i].res_level = race_elem_info[i].res_level;
 	}*/
-	
+
 
 	state->el_info[ELEM_HOLY_FIRE].res_level = state->el_info[ELEM_HOLY_ORB].res_level * 2 + state->el_info[ELEM_FIRE].res_level;
 	state->el_info[ELEM_HELLFIRE].res_level = state->el_info[ELEM_FIRE].res_level + (pf_has(state->pflags, PF_EVIL) ? 0 : -1);
@@ -420,6 +422,21 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 			pf_on(state->pflags, pf_matches[i].pval);
 		}
 	}
+
+
+	for (i = 0; i < mon->body.count; ++i) {
+		struct object *obj = mon->body.slots[i].obj;
+
+		if (!obj) continue;
+
+		if (tval_is_armor(obj)) {
+			arm_wgt = MAX(object_weight_one(obj), arm_wgt);
+		}
+	}
+
+
+	unarmoured_ac_bonus(mon, state, arm_wgt);
+	unarmoured_speed_bonus(mon, state, arm_wgt);
 
 
 	if (mon->m_timed[TMD_INVULN]) {
@@ -491,6 +508,12 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	}
 	if (mon->m_timed[TMD_STEALTH]) {
 		state->skills[SKILL_STEALTH] += 10;
+	}
+
+	if (of_has(state->flags, OF_AFRAID)) {
+		state->to_h -= 20;
+		state->to_a += 8;
+		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 20, 0);
 	}
 
 	if (state->skills[SKILL_DIGGING] < 1) state->skills[SKILL_DIGGING] = 1;
