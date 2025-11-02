@@ -376,7 +376,7 @@ static int borg_best_mult(borg_item *obj, struct monster_race *r_ptr)
                 continue;
         } else {
             /* Temporary brand */
-            if (!player_has_temporary_brand(player, i))
+            if (!monster_has_temporary_brand(&player->mon, i))
                 continue;
         }
 
@@ -399,7 +399,7 @@ static int borg_best_mult(borg_item *obj, struct monster_race *r_ptr)
                 continue;
         } else {
             /* Temporary slay */
-            if (!player_has_temporary_slay(player, i))
+            if (!monster_has_temporary_slay(&player->mon, i))
                 continue;
         }
 

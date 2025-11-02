@@ -1158,14 +1158,14 @@ bool obj_known_damage(const struct object *obj, int *normal_damage,
 		}
 
 		for (i = 1; i < z_info->brand_max; i++) {
-			if (player_has_temporary_brand(player, i)
+			if (monster_has_temporary_brand(&player->mon, i)
 					&& append_brand(&total_brands, i)) {
 				*nonweap_slay = true;
 			}
 		}
 
 		for (i = 1; i < z_info->slay_max; i++) {
-			if (player_has_temporary_slay(player, i)
+			if (monster_has_temporary_slay(&player->mon, i)
 					&& append_slay(&total_slays, i)) {
 				*nonweap_slay = true;
 			}

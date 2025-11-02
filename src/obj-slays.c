@@ -21,9 +21,7 @@
 #include "init.h"
 #include "mon-lore.h"
 #include "mon-predicate.h"
-#include "obj-desc.h"
 #include "obj-gear.h"
-#include "obj-init.h"
 #include "obj-knowledge.h"
 #include "obj-slays.h"
 #include "obj-tval.h"
@@ -280,12 +278,12 @@ static bool react_to_specific_slay(struct slay *slay, const struct monster *mon)
  * \param p is the player
  * \param idx is the index of the brand
  */
-bool player_has_temporary_brand(const struct player *p, int idx)
+bool monster_has_temporary_brand(const struct monster *mon, int idx)
 {
 	int i = 0;
 
 	while (i < TMD_MAX) {
-		if (timed_effects[i].temp_brand == idx && p->mon.m_timed[i]) {
+		if (timed_effects[i].temp_brand == idx && mon->m_timed[i]) {
 			return true;
 		}
 		++i;
@@ -299,12 +297,12 @@ bool player_has_temporary_brand(const struct player *p, int idx)
  * \param p is the player
  * \param idx is the index of the slay
  */
-bool player_has_temporary_slay(const struct player *p, int idx)
+bool monster_has_temporary_slay(const struct monster *mon, int idx)
 {
 	int i = 0;
 
 	while (i < TMD_MAX) {
-		if (timed_effects[i].temp_slay == idx && p->mon.m_timed[i]) {
+		if (timed_effects[i].temp_slay == idx && mon->m_timed[i]) {
 			return true;
 		}
 		++i;
@@ -347,22 +345,22 @@ int get_monster_brand_multiplier(const struct monster *mon,
  * \param verb is the verb used in the attack ("smite", etc)
  * \param range is whether or not this is a ranged attack
  */
-void improve_attack_modifier(struct player *p, const struct object *obj,
+void improve_attack_modifier(struct monster *a_mon, const struct object *obj,
 	const struct monster *mon, int *brand_used, int *slay_used,
 	char *verb, bool range)
 {
-	bool pctdam = OPT(p, birth_percent_damage);
+	//bool pctdam = OPT(p, birth_percent_damage);
 	int i, best_mult = 1;
 
 	/* Set the current best multiplier */
 	if (*brand_used) {
 		struct brand *b = &brands[*brand_used];
 		best_mult = MAX(best_mult,
-			get_monster_brand_multiplier(mon, b, pctdam));
+			get_monster_brand_multiplier(mon, b, false));
 	} else if (*slay_used) {
 		struct slay *s = &slays[*slay_used];
-		int mult = (pctdam) ? s->o_multiplier : s->multiplier;
-		best_mult = MAX(best_mult, mult);
+		//int mult = (pctdam) ? s->o_multiplier : s->multiplier;
+		best_mult = MAX(best_mult, s->multiplier);
 	}
 
 	/* Brands */
@@ -373,12 +371,12 @@ void improve_attack_modifier(struct player *p, const struct object *obj,
 			if (!obj->brands || !obj->brands[i]) continue;
 		} else {
 			/* Temporary brand */
-			if (!player_has_temporary_brand(p, i)) continue;
+			if (!monster_has_temporary_brand(a_mon, i)) continue;
 		}
  
 		/* Is the monster vulnerable? */
 		if (!rf_has(mon->race->flags, b->resist_flag)) {
-			int mult = get_monster_brand_multiplier(mon, b, pctdam);
+			int mult = get_monster_brand_multiplier(mon, b, false);
 
 			/* Record the best multiplier */
 			if (best_mult < mult) {
@@ -399,12 +397,12 @@ void improve_attack_modifier(struct player *p, const struct object *obj,
 			if (!obj->slays || !obj->slays[i]) continue;
 		} else {
 			/* Temporary slay */
-			if (!player_has_temporary_slay(p, i)) continue;
+			if (!monster_has_temporary_slay(a_mon, i)) continue;
 		}
  
 		/* Is the monster is vulnerable? */
 		if (react_to_specific_slay(s, mon)) {
-			int mult = pctdam ? s->o_multiplier : s->multiplier;
+			int mult = /*pctdam ? s->o_multiplier :*/ s->multiplier;
 
 			/* Record the best multiplier */
 			if (best_mult < mult) {
@@ -494,7 +492,7 @@ static void learn_brand_slay_helper(struct player *p, struct object *obj1,
 		 * Check for the temporary brand (only relevant if the brand
 		 * is not already present).
 		 */
-		if (n == 0 && allow_temp && !player_has_temporary_brand(p, i)) {
+		if (n == 0 && allow_temp && !monster_has_temporary_brand(&p->mon, i)) {
 			continue;
 		}
 
@@ -551,7 +549,7 @@ static void learn_brand_slay_helper(struct player *p, struct object *obj1,
 		 * Check for the temporary slay (only relevant if the slay
 		 * is not already present.
 		 */
-		if (n == 0 && allow_temp && !player_has_temporary_slay(p, i)) {
+		if (n == 0 && allow_temp && !monster_has_temporary_slay(&p->mon, i)) {
 			continue;
 		}
 

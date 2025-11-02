@@ -49,7 +49,9 @@
 #include "player-util.h"
 #include "project.h"
 #include "target.h"
+#include "z-util.h"
 #include <stdbool.h>
+#include <unistd.h>
 
 
 
@@ -1607,16 +1609,16 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct py_att
 		}
 		struct object *obj_local = slot_object(&p->mon, j);
 		if (obj_local) {
-			improve_attack_modifier(p, obj_local, mon, &b, &s,
+			improve_attack_modifier(&p->mon, obj_local, mon, &b, &s,
 				verb, false);
 		}
 	}
 
 	/* Get the best attack from all slays or brands - weapon or temporary */
 	if (obj) {
-		improve_attack_modifier(p, obj, mon, &b, &s, verb, false);
+		improve_attack_modifier(&p->mon, obj, mon, &b, &s, verb, false);
 	}
-	improve_attack_modifier(p, NULL, mon, &b, &s, verb, false);
+	improve_attack_modifier(&p->mon, NULL, mon, &b, &s, verb, false);
 
 	/* Get the damage */
 	dmg = get_attack_dam(aroll, mon, b, s);
@@ -1873,9 +1875,9 @@ static const char *attack_error(const struct monster *attacker, const struct mon
 	return NULL;
 }
 
-static bool blow_message(struct monster *mon, struct monster *t_mon, struct temp_attack_data *which, bool hit, uint32_t msg_type)
+static bool blow_message(struct monster *mon, struct monster *t_mon, struct temp_attack_data *which, const char *verb, uint32_t msg_type)
 {
-	char mon_desc[80], crit_desc[80] = "";
+	char mon_desc[80], crit_desc[80] = "", real_verb[80];
 	struct player *ap = mon_is_player(mon) ? mon->player : NULL, *tp = mon_is_player(t_mon) ? t_mon->player : NULL;
 	char *message = NULL;
 	uint16_t i;
@@ -1886,13 +1888,13 @@ static bool blow_message(struct monster *mon, struct monster *t_mon, struct temp
 
 	monster_desc(mon_desc, sizeof mon_desc, mon, MDESC_TARG | MDESC_CAPITAL);
 
-	if (hit) {
-		message = monster_blow_method_desc(which->atk->message, t_mon->midx);
-	} else if (ap) {
-		message = monster_blow_method_desc("miss {target}", t_mon->midx);
-	} else {
-		message = monster_blow_method_desc("misses {target}", t_mon->midx);
+	my_strcpy(real_verb, verb, sizeof real_verb);
+
+	if (!my_stristr(real_verb, "{target}")) {
+		my_strcat(real_verb, " {target}", sizeof real_verb);
 	}
+
+	message = monster_blow_method_desc(real_verb, t_mon->midx);
 
 	for (i = 0; i < N_ELEMENTS(melee_hit_types); i++) {
 		if (melee_hit_types[i].msg_type == msg_type) {
@@ -1904,6 +1906,8 @@ static bool blow_message(struct monster *mon, struct monster *t_mon, struct temp
 	}
 
 	msg("%s %s.%s", mon_desc, message, crit_desc);
+
+	string_free(message);
 
 	return true;
 }
@@ -1953,30 +1957,50 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 
 	if (success) {
 		assert(which->atk);
-		assert(which->atk->ef);
+		assert(which->atk->ef);\
+
 		bool id = false;
 		struct effect tmp_ef = *which->atk->ef; // shallow copy
 		random_value rv = { 0, 0, 0, 0 };
 		dice_t *tmp_dice = dice_new();
+		int brand = 0, slay = 0;
+		char verb[80];
 
+		// get verb and brand / slay
+		my_strcpy(verb, which->atk->message, sizeof verb);
+		if (which->atk->obj) {
+			improve_attack_modifier(mon, which->atk->obj, t_mon, &brand, &slay, verb, false);
+		}
+		improve_attack_modifier(mon, NULL, t_mon, &brand, &slay, verb, false);
+
+		// pull the random value out
 		dice_random_value(tmp_ef.dice, &rv);
 
+		// modify the random_value
 		rv.sides = MAX(rv.sides - which->penalty * 2, 1);
-
 		mon_critical_melee(mon, which, &rv, &msg_type);
 
-		blow_message(mon, t_mon, which, true, msg_type);
+		if (slay) {
+			rv.dice *= slays[slay].multiplier;
+		} else if (brand) {
+			rv.dice *= get_monster_brand_multiplier(mon, &brands[brand], false);
+		}
 
+		// put the random value back in
 		dice_parse_random_value(tmp_dice, rv);
 
 		tmp_ef.dice = tmp_dice;
+
+		blow_message(mon, t_mon, which, verb, msg_type);
 
 		effect_do(&tmp_ef, source_monster(mon->midx), source_none(), NULL, &id, true, dir, 0, 0, NULL);
 
 		dice_free(tmp_dice);
 	}
 	else {
-		blow_message(mon, t_mon, which, false, MSG_MISS);
+		const char *verb = ap ? "miss" : "misses";
+
+		blow_message(mon, t_mon, which, verb, MSG_MISS);
 	}
 }
 
