@@ -1217,6 +1217,7 @@ void adjust_skill_scale(int *v, int num, int den, int minv)
 }
 
 
+#if 0
 /**
  * Calculate the effect of a shapechange on player state
  */
@@ -1276,6 +1277,7 @@ static void calc_shapechange(struct player_state *state, bool vuln[ELEM_MAX],
 		}
 	}
 }
+#endif
 
 static int power_by_element(int elem)
 {
@@ -1448,6 +1450,7 @@ void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX])
 	skills[SKILL_HEALTH] += mod;
 }
 
+#if 0
 /**
  * L: calculate the effects of being a monster on player state
  */
@@ -1493,6 +1496,7 @@ static void calc_monster(struct player *p, struct player_state *state,
 	pf_union(state->pflags, mrace->base->pflags);
 	of_union(state->flags, mrace->base->oflags);
 }
+#endif
 
 /**
  * L: bonuses from the UNLIGHT power
@@ -1560,12 +1564,10 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	int extra_shots = 0;
 	int extra_might = 0;
 	int extra_moves = 0;
-	int armwgt = 0;
 	int attacknum;
 	struct object *launcher = NULL;
 	struct object *weapons[PY_MAX_ATTACKS] = { 0 };
 	int num_weapons = 0;
-	bitflag f[OF_SIZE];
 	bitflag collect_f[OF_SIZE];
 	struct monster_race *mrace = mon->race;
 	int avail_hands, attack_div;
@@ -1787,7 +1789,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	}*/
 
 	/* Calculate light */
-	calc_light(p, state, update);
+	//calc_light(p, state, update);
 
 	/* Evil */
 	if (pf_has(state->pflags, PF_EVIL) && character_dungeon) {

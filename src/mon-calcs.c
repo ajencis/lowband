@@ -7,6 +7,7 @@
 #include "init.h"
 #include "mon-calcs.h"
 #include "mon-util.h"
+#include "obj-properties.h"
 #include "obj-tval.h"
 #include "object.h"
 #include "obj-curse.h"
@@ -18,6 +19,7 @@
 #include "mon-spell.h"
 #include "player-attack.h"
 #include "player-calcs.h"
+#include "player-enum.h"
 #include "player-properties.h"
 #include "player-spell.h"
 #include "player-util.h"
@@ -363,7 +365,8 @@ static void get_mon_ac(struct monster *mon, struct player_state *state)
 void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 {
 	int i, j;
-	int extra_blows = 0, extra_shots = 0, extra_might = 0, extra_moves = 0;;
+	int extra_blows = 0, extra_shots = 0, extra_might = 0, extra_moves = 0;
+	int curr_light = 0;
 	int arm_wgt = 0;
 	//struct element_info race_elem_info[ELEM_MAX] = { 0 };
 	struct monster_race *mrace = mon->race;
@@ -429,7 +432,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 
 	for (i = 0; i < mon->body.count; ++i) {
 		struct object *obj = slot_object(mon, i);
-		int dig, index = 0;
+		int dig, index = 0, light_amt;
 		struct curse_data *curse;
 
 		if (!obj) continue;
@@ -469,6 +472,25 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 			extra_might += obj->modifiers[OBJ_MOD_MIGHT];
 			extra_moves += obj->modifiers[OBJ_MOD_MOVES];
 
+
+			if (of_has(obj->flags, OF_LIGHT_3)) {
+				light_amt = 3;
+			} else if (of_has(obj->flags, OF_LIGHT_2)) {
+				light_amt = 2;
+			} else {
+				light_amt = 0;
+			}
+
+			light_amt += obj->modifiers[OBJ_MOD_LIGHT];
+
+			if (tval_is_light(obj) && !of_has(obj->flags, OF_NO_FUEL) &&
+					obj->timeout == 0) {
+				light_amt = 0;
+			}
+
+			curr_light += light_amt;
+
+
 			for (j = 0; j < ELEM_MAX; ++j) {
 				state->el_info[j].res_level += obj->el_info[j].res_level;
 			}
@@ -506,6 +528,10 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	unarmoured_ac_bonus(mon, state, arm_wgt);
 	unarmoured_speed_bonus(mon, state, arm_wgt);
 
+	curr_light -= get_power_scale_state(state, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2, mon_lev(mon));
+	curr_light += get_power_scale_state(state, PP_GLOW, UNLIGHT_MAX_POWER * 2, mon_lev(mon));
+
+	state->cur_light = curr_light;
 
 	if (mon->m_timed[TMD_INVULN]) {
 		state->to_a += 100;
