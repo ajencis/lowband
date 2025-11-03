@@ -20,9 +20,7 @@
 #include "cave.h"
 #include "cmds.h"
 #include "init.h"
-#include "game-world.h"
 #include "monster.h"
-#include "mon-util.h"
 #include "player-calcs.h"
 #include "player-timed.h"
 #include "player-util.h"
@@ -742,7 +740,8 @@ static void calc_lighting_aux(struct chunk *c, struct player *p, bool dark)
 		if (monster_is_camouflaged(mon)) continue;
 
 		/* Get light info for this monster */
-		light = monster_light(mon);
+		light = mon->state.cur_light;
+		//light = monster_light(mon);
 		//radius = ABS(light) - 1;
 
 		/* Skip monsters not affecting light */
