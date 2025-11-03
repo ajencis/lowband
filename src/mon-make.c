@@ -20,6 +20,8 @@
 #include "alloc.h"
 #include "game-world.h"
 #include "init.h"
+#include "message.h"
+#include "monster.h"
 #include "obj-gear.h"
 #include "mon-calcs.h"
 #include "mon-group.h"
@@ -30,6 +32,7 @@
 #include "obj-knowledge.h"
 #include "obj-make.h"
 #include "obj-pile.h"
+#include "obj-properties.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
@@ -1042,13 +1045,12 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 
 	verify_cave_items(c);
 
-	// L: give them gear
 	if (rf_has(effective_race->flags, RF_GEAR) && effective_race->body && effective_race->body->count) {
 		const struct equip_slot *slot;
 		for (j = 0; j < mon->body.count; ++j) {
+			int tvals[3] = { -1, -1, -1 };
 			slot = &mon->body.slots[j];
 			assert(slot);
-			int tvals[3] = { -1, -1, -1 };
 			switch (slot->type)
 			{
 				case EQUIP_BOW: tvals[0] = TV_BOW; break;
@@ -1059,6 +1061,13 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 				case EQUIP_HAT: tvals[0] = TV_HELM; break;
 				case EQUIP_SHIELD: tvals[0] = TV_SHIELD; break;
 				case EQUIP_WEAPON: tvals[0] = TV_POLEARM; tvals[1] = TV_HAFTED; tvals[2] = TV_SWORD; break;
+				case EQUIP_LIGHT: {
+					if (!rf_has(effective_race->flags, RF_SEE_IN_DARK)) {
+						tvals[0] = TV_LIGHT;
+						tvals[1] = TV_LIGHT;
+						tvals[2] = TV_LIGHT;
+					}
+				}
 			}
 			int choice = tvals[randint0(3)];
 			if (choice != -1) {
@@ -1075,11 +1084,17 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 
 					inven_wield(c, mon, obj, j, false);
 
+					if (choice == TV_LIGHT) {
+						bool wielded = mon->body.slots[j].obj == obj;
+					}
+
 					verify_item(obj, c);
 					verify_mon_ownership(mon);
 					assert(obj->oidx == 0 || c->objects[obj->oidx] == obj);
 
 					any = true;
+
+					mflag_on(mon->mflag, MFLAG_UPDATE_STATE);
 				}
 			}
 		}
