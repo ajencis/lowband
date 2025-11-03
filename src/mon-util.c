@@ -895,6 +895,9 @@ void monster_wake(struct monster *mon, bool notify, int aware_chance)
  */
 bool monster_can_see(struct chunk *c, struct monster *mon, struct loc grid)
 {
+	if (!rf_has(mon->race->flags, RF_SEE_IN_DARK) && !square_isglow(c, grid)) {
+		return false;
+	}
 	return los(c, mon->grid, grid);
 }
 

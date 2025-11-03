@@ -31,7 +31,7 @@ bool monster_is_nonliving(const struct monster *mon);
 bool monster_is_living(const struct monster *mon);
 bool monster_is_destroyed(const struct monster *mon);
 bool monster_passes_walls(const struct monster *mon);
-bool monster_is_invisible(const struct monster *mon);
+//bool monster_is_invisible(const struct monster *mon);
 bool monster_is_not_invisible(const struct monster *mon);
 bool monster_is_unique(const struct monster *mon);
 bool monster_is_shape_unique(const struct monster *mon);
@@ -50,6 +50,7 @@ bool monster_loves_archery(const struct monster *mon);
 
 bool monster_is_in_view(const struct monster *mon);
 bool monster_is_visible(const struct monster *mon);
+bool monster_is_invisible(const struct monster *mon);
 bool monster_is_camouflaged(const struct monster *mon);
 bool monster_is_obvious(const struct monster *mon);
 bool monster_is_mimicking(const struct monster *mon);

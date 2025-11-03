@@ -18,10 +18,13 @@
  */
 
 #include "angband.h"
+#include "mon-predicate.h"
 #include "cave.h"
 #include "mon-group.h"
 #include "mon-spell.h"
 #include "mon-util.h"
+#include "obj-properties.h"
+#include "player-timed.h"
 
 /**
  * ------------------------------------------------------------------------
@@ -69,6 +72,7 @@ bool monster_passes_walls(const struct monster *mon)
 					  RF_SMASH_WALL, FLAG_END);
 }
 
+#if 0
 /**
  * Monster is invisible
  */
@@ -76,6 +80,7 @@ bool monster_is_invisible(const struct monster *mon)
 {
 	return rf_has(mon->race->flags, RF_INVISIBLE) && !mflag_has(mon->mflag, MFLAG_SPOTTED);
 }
+#endif
 
 /**
  * Monster is visible, in principle
@@ -317,3 +322,12 @@ bool monster_is_decoyed(const struct monster *mon)
 
 	return true;
 }
+
+bool monster_is_invisible(const struct monster *mon)
+{
+	if (of_has(mon->state.flags, OF_INVISIBILITY)) return true;
+	if (mon->m_timed[TMD_INVIS]) return true;
+
+	return false;
+}
+

@@ -107,11 +107,23 @@ static bool monster_near_permwall(const struct monster *mon)
 	return false;
 }
 
+bool monster_can_see_monster(struct monster *looker, struct monster *lookee)
+{
+	if (looker->m_timed[TMD_ASLEEP] > 0) return false;
+	if (!monster_can_see(cave, looker, lookee->grid)) return false;
+	if (monster_is_invisible(lookee) && !of_has(looker->state.flags, OF_SEE_INVIS)) return false;
+
+	return true;
+}
+
 /**
  * Check if the monster can see the player
  */
 bool monster_can_see_player(struct monster *mon)
 {
+	return monster_can_see_monster(mon, &player->mon);
+
+	/*
 	int p_sq_light = square_light(cave, player->mon.grid);
 
 	if (mon->m_timed[TMD_ASLEEP]) {
@@ -131,6 +143,7 @@ bool monster_can_see_player(struct monster *mon)
 		return false;
 	}
 	return true;
+	*/
 }
 
 static bool monster_cannot_target_player(struct monster *mon)

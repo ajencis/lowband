@@ -3885,10 +3885,7 @@ void player_start_turn(struct player *p)
 
 bool player_is_invisible(struct player *p)
 {
-	if (of_has(p->mon.state.flags, OF_INVISIBILITY)) return true;
-	if (p->mon.m_timed[TMD_INVIS]) return true;
-
-	return false;
+	return monster_is_invisible(&p->mon);
 }
 
 

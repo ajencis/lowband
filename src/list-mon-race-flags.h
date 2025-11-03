@@ -102,5 +102,6 @@ RF(INNATE_MAGIC,	RFT_OBV,		0,		"")
 RF(PHOENIX_RESURRECT,RFT_OBV,		-5,		"")
 RF(DARK_AURA,		RFT_OBV,		-2,		"")
 RF(LIGHT_AURA,		RFT_OBV,		0,		"")
+RF(SEE_IN_DARK,     RFT_BEHAV,      -1,     "sees in the dark")
 RF(PLAYABLE,		RFT_OBV,		0,		"")
 /* end flags */

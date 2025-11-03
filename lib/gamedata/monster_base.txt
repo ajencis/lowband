@@ -36,7 +36,7 @@ pain:1
 flags:DRAGON | EVIL | POWERFUL | SMART | SPIRIT
 flags:DROP_4
 flags:MOVE_BODY | CLEAR_WEB
-flags:NO_CONF | NO_SLEEP | NO_HOLD
+flags:NO_CONF | NO_SLEEP | NO_HOLD | SEE_IN_DARK
 flags:FORCE_SLEEP
 flags:RES_SLASHING
 flags:SAPIENT
@@ -82,7 +82,7 @@ name:ant
 glyph:a
 pain:7
 flags:ANIMAL | WEIRD_MIND
-flags:BASH_DOOR
+flags:BASH_DOOR | SEE_IN_DARK
 desc:Ant
 attr:HP:-2
 attr:AC:1
@@ -92,7 +92,7 @@ attr:DAMAGE:2
 name:bat
 glyph:b
 pain:4
-flags:ANIMAL
+flags:ANIMAL | SEE_IN_DARK
 desc:Bat
 body:Bat
 attr:HP:-1
@@ -129,7 +129,7 @@ body:Dog
 name:centipede
 glyph:c
 pain:5
-flags:ANIMAL | WEIRD_MIND
+flags:ANIMAL | WEIRD_MIND | SEE_IN_DARK
 desc:Centipede
 attr:SPEED:1
 attr:DAMAGE:-1
@@ -143,7 +143,7 @@ flags:COLD_BLOOD | METAL | UNAWARE | EMPTY_MIND
 flags:ONLY_GOLD
 flags:BASH_DOOR | CLEAR_WEB
 flags:IM_ELEC | NO_CONF | NO_SLEEP
-flags:MIMIC_INV
+flags:MIMIC_INV | SEE_IN_DARK
 desc:Creeping Coins
 
 # Dragons are the most important breathing monsters in Angband, and their
@@ -152,7 +152,7 @@ name:dragon
 glyph:d
 pain:1
 flags:DRAGON | EVIL | SPIRIT
-flags:FORCE_SLEEP | CLEAR_WEB
+flags:FORCE_SLEEP | CLEAR_WEB | SEE_IN_DARK
 desc:Dragon
 body:Dragon
 attr:AC:2
@@ -169,7 +169,7 @@ glyph:F
 pain:7
 flags:ANIMAL | WEIRD_MIND
 flags:RAND_50 | BASH_DOOR
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | SEE_IN_DARK
 desc:Dragon Fly
 attr:SPEED:1
 attr:HP:-1
@@ -182,7 +182,7 @@ name:eye
 glyph:e
 pain:1
 flags:CLEAR_WEB
-flags:SAPIENT
+flags:SAPIENT | SEE_IN_DARK
 desc:Floating Eye
 body:Beholder
 attr:MAGIC:2
@@ -200,7 +200,7 @@ glyph:E
 pain:1
 flags:EMPTY_MIND | CLEAR_WEB
 flags:IM_POIS | NO_FEAR | NO_CONF | NO_SLEEP
-flags:NONLIVING
+flags:NONLIVING | SEE_IN_DARK
 desc:Elemental
 attr:MAGIC:1
 attr:HP:-1
@@ -210,7 +210,7 @@ stats:0:0:0:0:0
 name:feline
 glyph:f
 pain:6
-flags:ANIMAL | CLEAR_WEB
+flags:ANIMAL | CLEAR_WEB | SEE_IN_DARK
 desc:Feline (Cat)
 attr:SPEED:1
 attr:DAMAGE:2
@@ -224,7 +224,7 @@ pain:1
 flags:UNDEAD | EVIL | INVISIBLE | COLD_BLOOD | SPIRIT
 flags:PASS_WALL
 flags:IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
-flags:RES_PIERCING | RES_SLASHING | RES_BLUDGEONING
+flags:RES_PIERCING | RES_SLASHING | RES_BLUDGEONING | SEE_IN_DARK
 desc:Ghost
 attr:AC:1
 attr:HP:-2
@@ -254,7 +254,7 @@ glyph:g
 pain:1
 flags:EMPTY_MIND | CLEAR_WEB | IM_POIS
 flags:IM_ELEC | NO_FEAR | NO_CONF | NO_SLEEP
-flags:NONLIVING | INNATE_MAGIC
+flags:NONLIVING | INNATE_MAGIC | SEE_IN_DARK
 desc:Golem
 body:Humanoid
 attr:SPEED:-4
@@ -282,7 +282,7 @@ desc:Hybrid
 name:hydra
 glyph:M
 pain:4
-flags:ANIMAL
+flags:ANIMAL | SEE_IN_DARK
 flags:ONLY_GOLD | HI_REGEN
 flags:BASH_DOOR | CLEAR_WEB
 flags:FORCE_SLEEP | HURT_COLD | INNATE_MAGIC
@@ -299,7 +299,7 @@ power:REGENERATION:50
 name:icky thing
 glyph:i
 pain:2
-flags:RAND_50
+flags:RAND_50 | SEE_IN_DARK
 desc:Icky Thing
 attr:SPEED:-1
 
@@ -308,7 +308,7 @@ name:insect
 glyph:I
 pain:7
 flags:ANIMAL | WEIRD_MIND | MULTIPLY
-flags:RAND_50 | RAND_25
+flags:RAND_50 | RAND_25 | SEE_IN_DARK
 desc:Insect
 attr:SPEED:1
 attr:HP:-1
@@ -318,7 +318,7 @@ name:jelly
 glyph:j
 pain:2
 flags:EMPTY_MIND | STUPID | CLEAR_WEB
-flags:NO_FEAR
+flags:NO_FEAR | SEE_IN_DARK
 desc:Jelly
 
 # Giant beetles with high armor class and fairly powerful bites, frequently
@@ -327,7 +327,7 @@ name:killer beetle
 glyph:K
 pain:7
 flags:ANIMAL | WEIRD_MIND
-flags:BASH_DOOR
+flags:BASH_DOOR | SEE_IN_DARK
 desc:Killer Beetle
 attr:HP:-3
 attr:AC:2
@@ -339,7 +339,7 @@ glyph:k
 pain:1
 flags:EVIL
 flags:OPEN_DOOR | BASH_DOOR | SPIRIT | CLEAR_WEB
-flags:SAPIENT
+flags:SAPIENT | SEE_IN_DARK
 desc:Kobold
 body:Humanoid
 stats:-2:1:-2:2:1
@@ -351,7 +351,7 @@ pain:1
 flags:UNDEAD | EVIL | COLD_BLOOD | SMART | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
-flags:FORCE_SLEEP
+flags:FORCE_SLEEP | SEE_IN_DARK
 flags:RES_PIERCING | RES_SLASHING
 flags:SAPIENT | SPELLCASTER
 desc:Lich
@@ -370,7 +370,7 @@ name:lurker
 glyph:x
 pain:1
 flags:COLD_BLOOD | EMPTY_MIND | INVISIBLE | UNAWARE
-flags:NEVER_MOVE
+flags:NEVER_MOVE | SEE_IN_DARK
 flags:NO_FEAR | NO_CONF | NO_SLEEP
 desc:Lurker
 
@@ -380,7 +380,7 @@ name:major demon
 glyph:U
 pain:1
 flags:DEMON | EVIL | SPIRIT
-flags:ONLY_ITEM
+flags:ONLY_ITEM | SEE_IN_DARK
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP | SPELLCASTER
@@ -407,7 +407,7 @@ name:mimic
 glyph:?
 pain:1
 flags:COLD_BLOOD | EMPTY_MIND | UNAWARE
-flags:NEVER_MOVE
+flags:NEVER_MOVE | SEE_IN_DARK
 flags:NO_FEAR | NO_CONF | NO_SLEEP
 flags:FORCE_SLEEP | ATTR_CLEAR
 desc:Mimic
@@ -418,7 +418,7 @@ name:minor demon
 glyph:u
 pain:1
 flags:DEMON | EVIL | SPIRIT
-flags:CLEAR_WEB
+flags:CLEAR_WEB | SEE_IN_DARK
 flags:IM_FIRE
 flags:SAPIENT
 desc:Minor Demon
@@ -435,7 +435,7 @@ power:HOLY_MAGIC:-25
 name:mold
 glyph:m
 pain:2
-flags:NEVER_MOVE
+flags:NEVER_MOVE | SEE_IN_DARK
 flags:IM_POIS | HURT_FIRE | NO_FEAR | NO_CONF | NO_SLEEP
 desc:Mold
 attr:SPEED:-1
@@ -445,7 +445,7 @@ attr:HP:1
 name:mushroom
 glyph:,
 pain:2
-flags:EMPTY_MIND | STUPID
+flags:EMPTY_MIND | STUPID | SEE_IN_DARK
 flags:HURT_FIRE | NO_FEAR | NO_CONF | NO_SLEEP
 desc:Mushroom
 attr:DAMAGE:-2
@@ -457,7 +457,7 @@ glyph:n
 pain:1
 flags:FEMALE | EVIL | HURT_COLD | SPIRIT
 flags:BASH_DOOR | CLEAR_WEB
-flags:SAPIENT
+flags:SAPIENT | SEE_IN_DARK
 desc:Naga
 attr:AC:3
 attr:HP:-1
@@ -470,7 +470,7 @@ glyph:O
 pain:1
 flags:GIANT | EVIL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
-flags:SAPIENT
+flags:SAPIENT | SEE_IN_DARK
 desc:Ogre
 body:Humanoid
 attr:HP:1
@@ -484,7 +484,7 @@ glyph:o
 pain:1
 flags:MALE | ORC | EVIL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
-flags:SAPIENT
+flags:SAPIENT | SEE_IN_DARK
 flags:GEAR
 desc:Orc
 body:Humanoid
@@ -510,7 +510,7 @@ desc:Quadruped
 name:quylthulg
 glyph:Q
 pain:2
-flags:EMPTY_MIND | INVISIBLE
+flags:EMPTY_MIND | INVISIBLE | SEE_IN_DARK
 flags:NEVER_BLOW | NEVER_MOVE
 flags:NO_FEAR | NO_CONF | NO_SLEEP | NO_HOLD
 flags:FORCE_SLEEP | INNATE_MAGIC | SPELLCASTER
@@ -526,7 +526,7 @@ power:TELEPORTATION_MAGIC
 name:reptile
 glyph:R
 pain:5
-flags:ANIMAL | HURT_COLD | CLEAR_WEB
+flags:ANIMAL | HURT_COLD | CLEAR_WEB | SEE_IN_DARK
 desc:Reptile/Amphibian
 attr:SPEED:-2
 attr:AC:1
@@ -536,7 +536,7 @@ attr:HP:1
 name:rodent
 glyph:r
 pain:4
-flags:ANIMAL | CLEAR_WEB
+flags:ANIMAL | CLEAR_WEB | SEE_IN_DARK
 desc:Rodent
 attr:SPEED:1
 attr:DAMAGE:-2
@@ -550,7 +550,7 @@ glyph:s
 pain:9
 flags:UNDEAD | EVIL | COLD_BLOOD | CLEAR_WEB
 flags:IM_COLD | IM_POIS | NO_FEAR | NO_CONF | NO_SLEEP | NO_STUN
-flags:RES_PIERCING | RES_SLASHING
+flags:RES_PIERCING | RES_SLASHING | SEE_IN_DARK
 desc:Skeleton
 body:Humanoid
 attr:AC:3
@@ -563,7 +563,7 @@ stats:-1:1:-1:2:-1
 name:snake
 glyph:J
 pain:5
-flags:ANIMAL | HURT_COLD
+flags:ANIMAL | HURT_COLD | SEE_IN_DARK
 flags:BASH_DOOR | CLEAR_WEB
 desc:Snake
 attr:SPEED:-2
@@ -576,7 +576,7 @@ attr:HP:-2
 name:spider
 glyph:S
 pain:7
-flags:BASH_DOOR | PASS_WEB
+flags:BASH_DOOR | PASS_WEB | SEE_IN_DARK
 desc:Spider/Scorpion/Tick
 body:Spider
 attr:HP:-1
@@ -603,7 +603,7 @@ body:Humanoid
 name:tree
 glyph:l
 pain:9
-flags:CLEAR_WEB | COLD_BLOOD | REGENERATE
+flags:CLEAR_WEB | COLD_BLOOD | REGENERATE | SEE_IN_DARK
 flags:NO_FEAR | NO_CONF | HURT_FIRE | IM_WATER
 flags:RES_BLUDGEONING | RES_PIERCING | PASS_TREE
 desc:Tree/Ent
@@ -621,7 +621,7 @@ pain:1
 flags:TROLL | EVIL | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:RES_PIERCING | HI_REGEN
-flags:SAPIENT
+flags:SAPIENT | SEE_IN_DARK
 desc:Troll
 body:Humanoid
 attr:SPEED:-1
@@ -638,7 +638,7 @@ pain:1
 flags:UNDEAD | EVIL | COLD_BLOOD | REGENERATE | SPIRIT
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:HURT_LIGHT | HURT_FIRE | IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN
-flags:FORCE_SLEEP | SPELLCASTER
+flags:FORCE_SLEEP | SPELLCASTER | SEE_IN_DARK
 flags:RES_BLUDGEONING | RES_SLASHING
 flags:SAPIENT
 flags:DARK_AURA
@@ -661,7 +661,7 @@ skill-stealth:10
 name:vortex
 glyph:v
 pain:11
-flags:EMPTY_MIND | POWERFUL
+flags:EMPTY_MIND | POWERFUL | SEE_IN_DARK
 flags:RAND_50 | BASH_DOOR | CLEAR_WEB
 flags:NO_FEAR | NO_CONF | NO_SLEEP | NO_HOLD | IM_POIS
 flags:FORCE_SLEEP
@@ -674,7 +674,7 @@ attr:HP:-1
 name:worm
 glyph:w
 pain:1
-flags:ANIMAL
+flags:ANIMAL | SEE_IN_DARK
 desc:Worm/Worm Mass
 attr:SPEED:-3
 attr:DAMAGE:2
@@ -686,7 +686,7 @@ attr:HP:1
 name:wraith
 glyph:W
 pain:1
-flags:UNDEAD | EVIL | COLD_BLOOD | SPIRIT | CLEAR_WEB
+flags:UNDEAD | EVIL | COLD_BLOOD | SPIRIT | CLEAR_WEB | SEE_IN_DARK
 flags:HURT_LIGHT | IM_COLD | IM_POIS | NO_CONF | NO_SLEEP | NO_STUN | NO_HOLD
 desc:Wight/Wraith
 body:Humanoid
@@ -698,7 +698,7 @@ attr:MAGIC:1
 name:xorn
 glyph:X
 pain:4
-flags:COLD_BLOOD | EMPTY_MIND | CLEAR_WEB
+flags:COLD_BLOOD | EMPTY_MIND | CLEAR_WEB | SEE_IN_DARK
 flags:HURT_ROCK | IM_POIS | NO_CONF | NO_SLEEP
 desc:Xorn/Xaren
 attr:AC:2
@@ -739,7 +739,7 @@ attr:AC:-2
 name:zephyr hound
 glyph:Z
 pain:3
-flags:ANIMAL | GROUP_AI | CLEAR_WEB
+flags:ANIMAL | GROUP_AI | CLEAR_WEB | SEE_IN_DARK
 desc:Zephyr Hound
 body:Dog
 attr:SPEED:1
@@ -752,7 +752,7 @@ attr:AC:-1
 name:zombie
 glyph:z
 pain:10
-flags:UNDEAD | EVIL | COLD_BLOOD
+flags:UNDEAD | EVIL | COLD_BLOOD | SEE_IN_DARK
 flags:OPEN_DOOR | BASH_DOOR | CLEAR_WEB
 flags:IM_COLD | IM_POIS | HURT_FIRE | NO_CONF | NO_SLEEP | NO_STUN
 desc:Zombie/Mummy
