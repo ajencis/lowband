@@ -142,7 +142,7 @@ void look_mon_desc(char *buf, size_t max, int m_idx)
 		for (i = 0; i < mon->body.count; ++i) {
 			struct object *obj = mon->body.slots[i].obj;
 
-			if (obj) {
+			if (obj && obj->known) {
 				if (!has_eq) {
 					my_strcat(buf, "; wearing ", max);
 				} else {
@@ -152,6 +152,8 @@ void look_mon_desc(char *buf, size_t max, int m_idx)
 				my_strcat(buf, odesc, max);
 
 				assert(obj->held_m_idx == mon->midx);
+
+				has_eq = true;
 			}
 		}
 	}

@@ -1084,10 +1084,6 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 
 					inven_wield(c, mon, obj, j, false);
 
-					if (choice == TV_LIGHT) {
-						bool wielded = mon->body.slots[j].obj == obj;
-					}
-
 					verify_item(obj, c);
 					verify_mon_ownership(mon);
 					assert(obj->oidx == 0 || c->objects[obj->oidx] == obj);

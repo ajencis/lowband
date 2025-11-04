@@ -107,7 +107,7 @@ static bool monster_near_permwall(const struct monster *mon)
 	return false;
 }
 
-bool monster_can_see_monster(struct monster *looker, struct monster *lookee)
+static bool monster_can_see_monster(struct monster *looker, struct monster *lookee)
 {
 	if (looker->m_timed[TMD_ASLEEP] > 0) return false;
 	if (!monster_can_see(cave, looker, lookee->grid)) return false;
