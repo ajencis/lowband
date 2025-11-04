@@ -6,6 +6,7 @@
 #include "effects.h"
 #include "init.h"
 #include "mon-calcs.h"
+#include "mon-timed.h"
 #include "mon-util.h"
 #include "obj-properties.h"
 #include "obj-tval.h"
@@ -22,7 +23,9 @@
 #include "player-enum.h"
 #include "player-properties.h"
 #include "player-spell.h"
+#include "player-timed.h"
 #include "player-util.h"
+#include "player.h"
 #include "project.h"
 
 
@@ -540,6 +543,23 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	calc_glow(mon, state);
 	calc_unlight(mon, state);
 
+	calc_running(mon, state);
+
+	for (i = 0; i < TMD_MAX; ++i) {
+		if (mon->m_timed[i] && timed_effects[i].oflag_dup != OF_NONE
+				&& i != TMD_TRAPSAFE) {
+			of_on(f, timed_effects[i].oflag_dup);
+		}
+	}
+
+	if (mon->m_timed[TMD_STUN]) {
+		int penalty = monster_effect_level(mon, TMD_STUN);
+
+		state->to_h -= penalty * 5;
+		state->to_d -= penalty * 5;
+		adjust_skill_scale(&state->skills[SKILL_DEVICE], -penalty, 10, 0);
+	}
+
 	if (mon->m_timed[TMD_INVULN]) {
 		state->to_a += 100;
 	}
@@ -620,6 +640,15 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	if (state->skills[SKILL_DIGGING] < 1) state->skills[SKILL_DIGGING] = 1;
 	if (state->skills[SKILL_STEALTH] > 150) state->skills[SKILL_STEALTH] = 150;
 	if (state->skills[SKILL_HEALTH] < 3) state->skills[SKILL_HEALTH] = 3;
+
+
+	/* Analyze flags - check for fear */
+	if (of_has(state->flags, OF_AFRAID)) {
+		state->to_h -= 20;
+		state->to_a += 8;
+		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 20, 0);
+	}
+
 
 	mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
 
@@ -1190,7 +1219,7 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 
 	main = mem_zalloc(sizeof *main);
 
-	rv.base = emb->to_d;
+	rv.base = emb->to_d + mon->state.to_d;
 	rv.dice = emb->dice;
 	rv.sides = emb->sides;
 	rv.m_bonus = 0;
@@ -1212,6 +1241,8 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 	result->num = emb->num;
 	result->auto_freq = emb->auto_freq;
 	result->crit_chance = emb->crit_chance;
+
+	result->to_hit += mon->state.to_h;
 
 	if (emb->skill >= 0 && emb->skill < SKILL_MAX) {
 		result->to_hit += mon->state.skills[emb->skill];

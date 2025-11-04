@@ -492,4 +492,9 @@ void calc_glow(struct monster *mon, struct player_state *s)
 	s->to_a += power * ABS(power);
 }
 
+void calc_running(struct monster *mon, struct player_state *s)
+{
+	s->num_moves += get_power_scale_state(s, PP_RUNNING, 10, mon_lev(mon));
+}
+
 

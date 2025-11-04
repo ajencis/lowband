@@ -1921,7 +1921,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	/* Other timed effects */
 	player_flags_timed(p, state->flags);
 
-	if (player_timed_grade_eq(p, TMD_STUN, "Heavy Stun")) {
+	/*if (player_timed_grade_eq(p, TMD_STUN, "Heavy Stun")) {
 		state->to_h -= 20;
 		state->to_d -= 20;
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 5, 0);
@@ -1936,7 +1936,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 			p->mon.m_timed[TMD_FASTCAST] = 0;
 		}
 	}
-	/*if (p->mon.m_timed[TMD_INVULN]) {
+	if (p->mon.m_timed[TMD_INVULN]) {
 		state->to_a += 100;
 	}
 	if (p->mon.m_timed[TMD_BLESSED]) {
@@ -2118,7 +2118,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	}
 
 	/* L: get melee attacks */
-	avail_hands = 0;
+	/*avail_hands = 0;
 	attacknum = 0;
 	attack_div = 0;
 	bool hand_in_use = false;
@@ -2185,7 +2185,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 		state->ranged_attack.obj = NULL;
 	}
 
-	/* L: give attacks blows */
+	// L: give attacks blows
 	for (i = 0; i < attacknum; i++) {
 		if (state->heavy_wield) {
 			state->attacks[i].blows = 100;
@@ -2195,15 +2195,15 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 			int wgt = obj ? object_weight_one(obj) : 0;
 			calc_blows(p, wgt, &state->attacks[i], state, extra_blows);
 		}
-	}
+	}*/
 
 	/* Mana */
-	calc_mana(p, state, update);
+	/*calc_mana(p, state, update);
 	if (!p->msp) {
 		pf_on(state->pflags, PF_NO_MANA);
-	}
+	}*/
 
-	extra_moves += get_power_scale_state(state, PP_RUNNING, 10, p->lev);
+	//extra_moves += get_power_scale_state(state, PP_RUNNING, 10, p->lev);
 
 	/* Movement speed */
 	state->num_moves = extra_moves;
