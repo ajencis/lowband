@@ -1615,7 +1615,7 @@ int player_grid_visibility(struct loc grid, struct player *p, struct chunk *c)
 
 	if (p_is_unlight && dist <= unl_rad && light <= 0) return PY_SEE_VISIBLE;
 	if (light == 0) return PY_SEE_TOO_DARK;
-	if (light > brightest) return PY_SEE_TOO_BRIGHT;
+	//if (light > brightest) return PY_SEE_TOO_BRIGHT;
 	if (light < darkest) return PY_SEE_TOO_DARK;
 
 	return PY_SEE_VISIBLE;

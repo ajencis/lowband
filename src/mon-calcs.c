@@ -525,8 +525,12 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 		extra_moves -= 25;
 	}
 
-	curr_light -= get_power_scale_state(state, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2, mon_lev(mon));
-	curr_light += get_power_scale_state(state, PP_GLOW, UNLIGHT_MAX_POWER * 2, mon_lev(mon));
+	curr_light -= get_power_scale_state(state, PP_UNLIGHT, UNLIGHT_MAX_POWER, mon_lev(mon));
+	curr_light += get_power_scale_state(state, PP_GLOW, UNLIGHT_MAX_POWER, mon_lev(mon));
+
+	if (mon->state.cur_light != curr_light) {
+		player->upkeep->update |= PU_UPDATE_VIEW;
+	}
 
 	state->cur_light = curr_light;
 
