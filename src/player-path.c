@@ -28,10 +28,9 @@
 #include "obj-util.h"
 #include "player-calcs.h"
 #include "player-path.h"
+#include "player-properties.h"
 #include "player-spell.h"
-#include "player-timed.h"
 #include "player-util.h"
-#include "trap.h"
 #include "z-queue.h"
 
 /**
@@ -178,7 +177,7 @@ static int compute_unlocked_penalty(struct player *p)
 static int compute_locked_penalty(struct player *p)
 {
 	int chance = calc_unlocking_chance(p, 7, p->mon.state.cur_light < 1
-		&& unlight_power(p) < 1);
+		&& unlight_power(&p->mon) < 1);
 	int penalty;
 
 	if (chance <= 0) {

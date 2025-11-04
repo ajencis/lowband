@@ -1556,6 +1556,7 @@ int antimagic_radius(struct player *p)
 }
 
 
+#if 0
 /**
  * L: unlight players like to be in the dark
  * scales up to UNLIGHT_MAX_POWER
@@ -1588,6 +1589,7 @@ int glow_power(struct player *p)
 {
 	return glow_power_state(&p->mon.state, p);
 }
+#endif
 
 /**
  * L: radius of darkness from an unlight player, also the depth of darkness

@@ -25,8 +25,8 @@
 #include "obj-pile.h"
 #include "obj-util.h"
 #include "player-calcs.h"
+#include "player-properties.h"
 #include "player-timed.h"
-#include "player-util.h"
 #include "trap.h"
 
 /**
@@ -394,7 +394,7 @@ static void cave_unlight(struct point_set *ps)
 		}
 
 		/* ...but dark-loving characters remember them */
-		if (unlight_power(player) > 0) {
+		if (unlight_power(&player->mon) > 0) {
 			square_ensure_correct_memorization_by_pred(player, cave, grid, feat_gets_mapped);
 		}
 

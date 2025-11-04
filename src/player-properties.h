@@ -64,5 +64,9 @@ bool ability_satisfies_all_prereqs(const struct player_ability *abil, const stru
 
 int unarmoured_speed_bonus(struct monster *mon, struct player_state *s, int wgt);
 int unarmoured_ac_bonus(struct monster *mon, struct player_state *s, int wgt);
+int unlight_power(struct monster *mon);
+int glow_power(struct monster *mon);
+void calc_glow(struct monster *mon, struct player_state *s);
+void calc_unlight(struct monster *mon, struct player_state *s);
 
 #endif /* !PLAYER_PROPS_H */

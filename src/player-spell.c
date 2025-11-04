@@ -22,10 +22,7 @@
 #include "effects.h"
 #include "init.h"
 #include "monster.h"
-#include "mon-calcs.h"
 #include "mon-spell.h"
-#include "mon-util.h"
-#include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
 #include "player-calcs.h"
@@ -34,8 +31,6 @@
 #include "player-timed.h"
 #include "player-util.h"
 #include "player.h"
-#include "project.h"
-#include "target.h"
 
 #define NO_FAIL_LEVEL 25 // caster level for which spells get no fail
 #define NO_MANA_LEVEL 60 // caster level for which spells are free
@@ -221,10 +216,11 @@ const struct class_book *object_kind_to_book(const struct object_kind *kind)
 	while (class) {
 		int i;
 
-		for (i = 0; i < class->magic.num_books; i++)
-		if ((kind->tval == class->magic.books[i].tval) &&
-				(kind->sval == class->magic.books[i].sval)) {
-			return &class->magic.books[i];
+		for (i = 0; i < class->magic.num_books; i++) {
+			if ((kind->tval == class->magic.books[i].tval) &&
+					(kind->sval == class->magic.books[i].sval)) {
+				return &class->magic.books[i];
+			}
 		}
 		class = class->next;
 	}
@@ -414,7 +410,7 @@ int16_t spell_chance(int spell_index)
 	int chance = 100, minfail;
 
 	int curr_unlight = player->mon.state.powers[PP_UNLIGHT] ?
-			unlight_power(player) - get_power_scale(player, PP_UNLIGHT, 5) :
+			unlight_power(&player->mon) :
 			0;
 
 	const struct class_spell *spell;

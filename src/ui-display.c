@@ -33,6 +33,7 @@
 #include "obj-pile.h"
 #include "obj-util.h"
 #include "player-calcs.h"
+#include "player-properties.h"
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
@@ -1350,7 +1351,7 @@ static size_t prt_learn(int row, int col)
 static size_t prt_unlight(int row, int col)
 {
 	if (player->mon.state.powers[PP_GLOW] > 0) {
-		int power = glow_power(player);
+		int power = glow_power(&player->mon);
 		char buf[80];
 
 		strnfmt(buf, sizeof buf, "Glow %i", power);
@@ -1361,7 +1362,7 @@ static size_t prt_unlight(int row, int col)
 	}
 	
 	if (player->mon.state.powers[PP_UNLIGHT] > 0) {
-		int power = unlight_power(player);
+		int power = unlight_power(&player->mon);
 		char buf[80];
 
 		strnfmt(buf, sizeof buf, "Unlight %i", power);

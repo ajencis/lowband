@@ -121,10 +121,10 @@ const struct player_ability *player_ability_by_learn_index(int learn_index);
 int antimagic_fail_increase(struct player *p);
 int antimagic_radius(struct player *p);
 
-int unlight_power_state(struct player_state *ps, struct player *p);
-int unlight_power(struct player *p);
-int glow_power_state(struct player_state *ps, struct player *p);
-int glow_power(struct player *p);
+//int unlight_power_state(struct player_state *ps, struct player *p);
+//int unlight_power(struct player *p);
+//int glow_power_state(struct player_state *ps, struct player *p);
+//int glow_power(struct player *p);
 int player_grid_visibility(struct loc grid, struct player *p, struct chunk *c);
 int unlight_radius(struct player *p);
 

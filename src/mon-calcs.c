@@ -525,13 +525,16 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 		extra_moves -= 25;
 	}
 
-	unarmoured_ac_bonus(mon, state, arm_wgt);
-	unarmoured_speed_bonus(mon, state, arm_wgt);
-
 	curr_light -= get_power_scale_state(state, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2, mon_lev(mon));
 	curr_light += get_power_scale_state(state, PP_GLOW, UNLIGHT_MAX_POWER * 2, mon_lev(mon));
 
 	state->cur_light = curr_light;
+
+	unarmoured_ac_bonus(mon, state, arm_wgt);
+	unarmoured_speed_bonus(mon, state, arm_wgt);
+
+	calc_glow(mon, state);
+	calc_unlight(mon, state);
 
 	if (mon->m_timed[TMD_INVULN]) {
 		state->to_a += 100;

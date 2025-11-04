@@ -1498,6 +1498,7 @@ static void calc_monster(struct player *p, struct player_state *state,
 }
 #endif
 
+#if 0
 /**
  * L: bonuses from the UNLIGHT power
  */
@@ -1533,6 +1534,7 @@ static void calc_glow(struct player_state *ps, struct player *p)
 	adjust_skill_scale(&ps->skills[SKILL_SAVE], power, 30, 10);
 	ps->to_a += SGN(power) * my_int_sqrt(ABS(power) * power * power);
 }
+#endif
 
 /**
  * Calculate the players current "state", taking into account
@@ -1573,7 +1575,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	int avail_hands, attack_div;
 	//int race_skills[SKILL_MAX] = { 0 }, race_x_skills[SKILL_MAX] = { 0 };
 	bool has_feet = false;
-	bool vuln[ELEM_MAX] = { false };
+	//bool vuln[ELEM_MAX] = { false };
 
 	/* Hack to allow calculating hypothetical blows for extra STR, DEX - NRM */
 	int str_ind = state->stat_ind[STAT_STR];
@@ -1792,17 +1794,17 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	//calc_light(p, state, update);
 
 	/* Evil */
-	if (pf_has(state->pflags, PF_EVIL) && character_dungeon) {
+	/*if (pf_has(state->pflags, PF_EVIL) && character_dungeon) {
 		state->el_info[ELEM_NETHER].res_level = 1;
 		vuln[ELEM_HOLY_ORB] = true;
-	}
+	}*/
 
 	/* Now deal with vulnerabilities */
-	for (i = 0; i < ELEM_MAX; i++) {
+	/*for (i = 0; i < ELEM_MAX; i++) {
 		if (vuln[i] && (state->el_info[i].res_level < 3)) {
 			state->el_info[i].res_level--;
 		}
-	}
+	}*/
 
 	/* Calculate the various stat values */
 	for (i = 0; i < STAT_MAX; i++) {
@@ -1869,8 +1871,8 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 		state->skills[i] = MAX(state->skills[i], 0);
 	}*/
 
-	calc_unlight(state, p);
-	calc_glow(state, p);
+	//calc_unlight(state, p);
+	//calc_glow(state, p);
 
 	/* Effects of food outside the "Fed" range */
 	if (!player_timed_grade_eq(p, TMD_FOOD, "Fed")) {

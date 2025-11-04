@@ -18,13 +18,15 @@
  */
 
 #include "angband.h"
+#include "cave.h"
 #include "game-world.h"
 #include "init.h"
-#include "mon-attack.h"
 #include "mon-calcs.h"
 #include "mon-spell.h"
+#include "object.h"
 #include "player-calcs.h"
 #include "player-properties.h"
+#include "player-enum.h"
 #include "player-spell.h"
 #include "player-util.h"
 #include "ui-player-properties.h"
@@ -431,6 +433,63 @@ int unarmoured_ac_bonus(struct monster *mon, struct player_state *s, int wgt)
 
     s->to_a += bonus;
 	return bonus;
+}
+
+static int unlight_power_state(struct player_state *s, struct monster *mon)
+{
+	if (!cave) return 0;
+	if (s->powers[PP_UNLIGHT] <= 0) return 0; 
+
+	return -square_light(cave, mon->grid);
+}
+
+static int glow_power_state(struct player_state *s, struct monster *mon)
+{
+	if (!cave) return 0;
+	if (s->powers[PP_GLOW] <= 0) return 0;
+
+	return square_light(cave, mon->grid);
+}
+
+int unlight_power(struct monster *mon)
+{
+	return unlight_power_state(&mon->state, mon);
+}
+
+int glow_power(struct monster *mon)
+{
+	return glow_power_state(&mon->state, mon);
+}
+
+void calc_unlight(struct monster *mon, struct player_state *s)
+{
+	int power;
+
+	if (!cave) return;
+	if (s->powers[PP_UNLIGHT] < 0) return;
+	power = -square_light(cave, mon->grid);
+
+	s->el_info[ELEM_DARK].res_level += get_power_scale_state(s, PP_UNLIGHT, 3, mon_lev(mon));
+
+	adjust_skill_scale(&s->skills[SKILL_STEALTH], power, 25, 25);
+	adjust_skill_scale(&s->skills[SKILL_SAVE], power, 25, 25);
+
+	s->to_a += power * ABS(power);
+}
+
+void calc_glow(struct monster *mon, struct player_state *s)
+{
+	int power;
+
+	if (!cave) return;
+	if (s->powers[PP_GLOW] < 0) return;
+	power = square_light(cave, mon->grid);
+
+	s->el_info[ELEM_LIGHT].res_level += get_power_scale_state(s, PP_GLOW, 3, mon_lev(mon));
+
+	adjust_skill_scale(&s->skills[SKILL_SAVE], power, 15, 25);
+
+	s->to_a += power * ABS(power);
 }
 
 
