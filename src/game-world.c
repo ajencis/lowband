@@ -17,6 +17,7 @@
  */
 
 #include "angband.h"
+#include "cave.h"
 #include "cmds.h"
 #include "effects.h"
 #include "game-world.h"
@@ -992,6 +993,8 @@ void process_world(struct chunk *c)
 	struct follower *curr, *prev = NULL;
 	for (curr = player->upkeep->follow; curr; curr = curr->next) {
 		bool placed = false;
+		struct object *obj;
+
 		if (curr->delay > 0) {
 			--curr->delay;
 		}
@@ -999,13 +1002,27 @@ void process_world(struct chunk *c)
 		if (curr->delay <= 0) {
 			struct loc egrid = player->upkeep->entered;
 
-			if (!square(c, egrid)->mon && !loc_eq(egrid, player->mon.grid)) {
+			if (square_isempty(c, egrid)) {
 				int new_midx;
 				struct monster *new_mon;
 
 				curr->mon->group_info[PRIMARY_GROUP].index = monster_group_index_new(c);
 				new_midx = place_monster(c, egrid, curr->mon, 0);
 				new_mon = cave_monster(c, new_midx);
+
+				for (obj = new_mon->gear; obj; obj = obj->next) {
+					list_object(c, obj);
+					obj->held_m_idx = new_midx;
+				}
+
+				for (i = 0; i < new_mon->body.count; ++i) {
+					obj = new_mon->body.slots[i].obj;
+
+					if (obj) {
+						list_object(c, obj);
+						obj->held_m_idx = new_midx;
+					}
+				}
 
 				if (monster_is_visible(new_mon)) {
 					const char *act = square_isdownstairs(c, egrid) ? "comes up the stairs" :
@@ -1034,7 +1051,10 @@ void process_world(struct chunk *c)
 				curr->delay = randint1(5) + randint1(5);
 			}
 		}
-		if (!placed) {
+
+		if (placed) {
+			break;
+		} else {
 			prev = curr;
 		}
 	}
@@ -1310,18 +1330,21 @@ static void increase_follower_delay(struct player *p)
 
 static void monsters_to_followers(struct chunk *c)
 {
-	int i, cmm = cave_monster_max(c);
+	int i, j, cmm = cave_monster_max(c);
+	struct object *obj;
 
 	for (i = 1; i < cmm; i++) {
-		struct monster *mon = cave_monster(c, i);
+		struct monster *mon = cave_monster(c, i), *fmon;
+		struct follower *follow;
 
 		if (!mon) continue;
 		if (!mon->race) continue;
 		if (rf_has(mon->race->flags, RF_NEVER_MOVE)) continue;
 		if (mon->faction != '@') continue;
+		if (mon->mimicked_obj) continue;
 
-		struct follower *follow = mem_zalloc(sizeof(*follow));
-		struct monster *fmon = mem_zalloc(sizeof(*fmon));
+		follow = mem_zalloc(sizeof(*follow));
+		fmon = mem_zalloc(sizeof(*fmon));
 
 		memcpy(fmon, mon, sizeof(*fmon));
 
@@ -1333,6 +1356,27 @@ static void monsters_to_followers(struct chunk *c)
 		fmon->gear = NULL;
 		fmon->midx = 0;
 		fmon->energy = 0;
+
+		duplicate_body(&mon->body, &fmon->body);
+
+		for (j = 0; j < fmon->body.count; ++j) {
+			obj = fmon->body.slots[j].obj;
+
+			if (obj) {
+				if (obj->known) delist_object(player->cave, obj->known);
+				delist_object(c, obj);
+				mon->body.slots[j].obj = NULL;
+
+				assert(obj->oidx == 0);
+			}
+		}
+		for (obj = fmon->gear; obj; obj = obj->next) {
+			if (obj->known) delist_object(player->cave, obj->known);
+			delist_object(c, obj);
+
+			assert(obj->oidx == 0);
+		}
+		mon->gear = NULL;
 
 		follow->mon = fmon;
 		follow->next = player->upkeep->follow;

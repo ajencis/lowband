@@ -66,7 +66,11 @@ static bool mon_can_enter_town(struct monster_race *mr)
 /**
  * L: some body utils
  */
-static void duplicate_body(const struct player_body *source, struct player_body *new)
+
+/**
+ * L: duplicates a body without items
+ */
+void duplicate_body(const struct player_body *source, struct player_body *new)
 {
 	int i;
 	size_t size;
@@ -86,6 +90,7 @@ static void duplicate_body(const struct player_body *source, struct player_body 
 
 	for (i = 0; i < new->count; ++i) {
 		new->slots[i].name = string_make(source->slots[i].name);
+		new->slots[i].obj = NULL;
 	}
 }
 
@@ -122,7 +127,7 @@ static void mon_embody(struct monster *mon)
 	duplicate_body(base, &mon->body);
 }
 
-static void mon_disembody(struct monster *mon)
+void mon_disembody(struct monster *mon)
 {
 	assert(mon);
 	free_body(&mon->body);

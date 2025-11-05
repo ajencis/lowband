@@ -21,6 +21,8 @@
 
 #include "monster.h"
 
+void duplicate_body(const struct player_body *source, struct player_body *new);
+void mon_disembody(struct monster *mon);
 void delete_monster_idx(struct chunk *c, int m_idx);
 void delete_monster(struct chunk *c, struct loc grid);
 void monster_index_move(struct chunk *c, int i1, int i2);
