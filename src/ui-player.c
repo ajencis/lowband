@@ -777,12 +777,14 @@ static struct panel *get_panel_combat(void) {
 		int blows = atk->blows / 100, blow_frac = (atk->blows / 10) % 10, attr;
 		int num_choice = 0;
 
-		if (atk->obj) {
+		/*if (atk->obj) {
 			object_desc(atk_title, sizeof atk_title, atk->obj, ODESC_CAPITAL | ODESC_TERSE, player);
 		} else {
 			my_strcpy(atk_title, atk->title, sizeof atk_title);
-			my_strcap_full(atk_title);
-		}
+			//my_strcap_full(atk_title);
+		}*/
+
+		my_strcpy(atk_title, atk->title, sizeof atk_title);
 
 		my_strcat(atk_title, format(": %+i (%i.%i)", bth, blows, blow_frac), sizeof atk_title);
 

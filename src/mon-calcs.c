@@ -27,6 +27,7 @@
 #include "player-util.h"
 #include "player.h"
 #include "project.h"
+#include "z-util.h"
 
 
 
@@ -58,16 +59,17 @@ enum attack_special_type_ind {
 struct attack_special_type {
 	int index;
 	int dam_stat;
+	const char *title;
 	const char *msg;
 	const char *fmsg;
 	int dice;
 	int eq_slot;
 } atk_spcl_types[] = {
-	{ ATK_SPCL_TYP_NONE, STAT_NONE, NULL, NULL, 0, EQUIP_NONE },
-	{ ATK_SPCL_TYP_PUNCH, STAT_STR, "punches {target}", "punch {target}", 2, EQUIP_WEAPON },
-	{ ATK_SPCL_TYP_KICK, STAT_STR, "kicks {target}", "kick {target}", 2, EQUIP_BOOTS },
-	{ ATK_SPCL_TYP_TOUCH, STAT_STR, "touches {target}", "touch {target}", 1, EQUIP_WEAPON },
-	{ ATK_SPCL_TYP_CHAIN, STAT_DEX, "enchains {target}", "enchain {target}", 1, EQUIP_BODY_ARMOR }
+	{ ATK_SPCL_TYP_NONE, STAT_NONE, NULL, NULL, NULL, 0, EQUIP_NONE },
+	{ ATK_SPCL_TYP_PUNCH, STAT_STR, "punch", "punches {target}", "punch {target}", 2, EQUIP_WEAPON },
+	{ ATK_SPCL_TYP_KICK, STAT_STR, "kick", "kicks {target}", "kick {target}", 2, EQUIP_BOOTS },
+	{ ATK_SPCL_TYP_TOUCH, STAT_STR, "touch", "touches {target}", "touch {target}", 1, EQUIP_WEAPON },
+	{ ATK_SPCL_TYP_CHAIN, STAT_DEX, "enchain", "enchains {target}", "enchain {target}", 1, EQUIP_BODY_ARMOR }
 };
 
 
@@ -1018,7 +1020,7 @@ static struct embryo_attack *get_special_attack(const struct monster *mon, int s
 	emb->sides = 1;
 	
 	emb->msg = p ? data->fmsg : data->msg;
-	strnfmt(emb->title, sizeof emb->title, "%s", data->msg);
+	strnfmt(emb->title, sizeof emb->title, "%s", data->title);
 
 	emb->extra = NULL;
 
