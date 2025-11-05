@@ -19,6 +19,7 @@
 #include "effects.h"
 #include "init.h"
 #include "mon-calcs.h"
+#include "mon-make.h"
 #include "obj-pile.h"
 #include "obj-util.h"
 #include "player-birth.h"
@@ -592,11 +593,35 @@ void player_safe_name(char *safe, size_t safelen, const char *name, bool strip_s
 }
 
 
+static void cleanup_follower(struct follower *follow)
+{
+	struct object *obj;
+	int i;
+	struct monster *mon = follow->mon;
+
+	for (obj = mon->gear; obj; obj = obj->next) {
+		object_free(obj);
+	}
+	for (i = 0; i < mon->body.count; ++i) {
+		obj = mon->body.slots[i].obj;
+		if (obj) object_free(obj);
+	}
+
+	mon_disembody(mon);
+	free_mon_attacks(mon);
+
+	mem_free(mon);
+	mem_free(follow);
+}
+
+
 /**
  * Release resources allocated for fields in the player structure.
  */
 void player_cleanup_members(struct player *p)
 {
+	struct follower *curr, *next;
+
 	/* Free the history */
 	history_clear(p);
 
@@ -605,15 +630,14 @@ void player_cleanup_members(struct player *p)
 		object_free(p->obj_k);
 	}
 	if (p->upkeep) {
-		if (p->upkeep->follow) {
-			struct follower *curr = p->upkeep->follow;
-			while (curr) {
-				struct follower *next = curr->next;
-				mem_free(curr->mon);
-				mem_free(curr);
-				curr = next;
-			}
+
+		curr = p->upkeep->follow;
+		while (curr) {
+			next = curr->next;
+			cleanup_follower(curr);
+			curr = next;
 		}
+
 		mem_free(p->upkeep->quiver);
 		mem_free(p->upkeep->inven);
 		mem_free(p->upkeep->steps);
