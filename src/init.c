@@ -1374,8 +1374,6 @@ static enum parser_error parse_player_prop_code(struct parser *p) {
 		return PARSE_ERROR_INVALID_PLAY_PROP_CODE;
 	}
 
-	dbg_log_fmt("prop", "property %s has code %i", code, index);
-
 	return PARSE_ERROR_NONE;
 }
 
@@ -1686,10 +1684,6 @@ static errr finish_parse_player_prop(struct parser *p) {
 		//target = embryo;
 		embryo = embryo->next;
 		//mem_free(target);
-	}
-
-	for (new = player_abilities; new; new = new->next) {
-		dbg_log_fmt("prop", "ability %s has type %i and index %i", new->name, new->type, new->index);
 	}
 
 	// L: find parents
