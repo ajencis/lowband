@@ -1422,7 +1422,7 @@ bool square_isbeside_corridor(struct chunk *c, struct loc grid)
 				continue;
 			}
 
-			if (!square_in_bounds(c, grid)) {
+			if (!square_in_bounds(c, ogrid)) {
 				continue;
 			}
 
