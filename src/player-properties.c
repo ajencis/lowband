@@ -21,7 +21,6 @@
 #include "cave.h"
 #include "game-world.h"
 #include "init.h"
-#include "mon-calcs.h"
 #include "mon-spell.h"
 #include "object.h"
 #include "player-calcs.h"
@@ -290,14 +289,14 @@ bool mon_power_minimum(const struct monster *mon, int power, int min)
 	return mon->state.powers[power] >= min;
 }
 
-int get_mon_power_scale(const struct monster *mon, int power, int scaleto)
+/*int get_mon_power_scale(const struct monster *mon, int power, int scaleto)
 {
 	int lev = mon_lev(mon), result;
 
 	result =  get_power_scale_state(&mon->state, power, scaleto, lev);
 
 	return result;
-}
+}*/
 
 bool mon_has_power(const struct monster *mon, int power)
 {
@@ -371,23 +370,23 @@ int attack_specialization_power(const struct monster *mon, const struct object *
 {
 	if (obj) {
 		if (obj->tval == TV_HAFTED) {
-			return get_mon_power_scale(mon, PP_HAFTED_SPECIALIZATION, 100);
+			return get_power_scale(mon, PP_HAFTED_SPECIALIZATION, 100);
 		}
 		if (obj->tval == TV_POLEARM) {
-			return get_mon_power_scale(mon, PP_POLEARM_SPECIALIZATION, 100);
+			return get_power_scale(mon, PP_POLEARM_SPECIALIZATION, 100);
 		}
 		if (obj->tval == TV_SWORD) {
-			return get_mon_power_scale(mon, PP_SWORD_SPECIALIZATION, 100);
+			return get_power_scale(mon, PP_SWORD_SPECIALIZATION, 100);
 		}
 		if (obj->tval == TV_BOW) {
 			if (my_stristr(obj->kind->name, "sling")) {
-				return get_mon_power_scale(mon, PP_SLING_SPECIALIZATION, 100);
+				return get_power_scale(mon, PP_SLING_SPECIALIZATION, 100);
 			}
 			if (my_stristr(obj->kind->name, "crossbow")) {
-				return get_mon_power_scale(mon, PP_CROSSBOW_SPECIALIZATION, 100);
+				return get_power_scale(mon, PP_CROSSBOW_SPECIALIZATION, 100);
 			}
 			if (my_stristr(obj->kind->name, "bow")) {
-				return get_mon_power_scale(mon, PP_BOW_SPECIALIZATION, 100);
+				return get_power_scale(mon, PP_BOW_SPECIALIZATION, 100);
 			}
 		}
 
@@ -395,10 +394,46 @@ int attack_specialization_power(const struct monster *mon, const struct object *
 	}
 
 	if (blow) {
-		return get_mon_power_scale(mon, PP_NATURAL_COMBAT, 100);
+		return get_power_scale(mon, PP_NATURAL_COMBAT, 100);
 	}
 
-	return get_mon_power_scale(mon, PP_UNARMED_STRIKE, 100);
+	return get_power_scale(mon, PP_UNARMED_STRIKE, 100);
+}
+
+
+
+/**
+ * L: utilities for powers in general
+ */
+
+int get_skill_scale_state(const struct player_state *state, int skill, int scaleto)
+{
+	int base = state->skills[skill];
+
+	assert(skill >= 0 && skill < SKILL_MAX);
+	if (base <= 0) return 0;
+
+	return (base * scaleto + 100 * 2 / 3) / 100;
+}
+
+int get_power_scale_state(const struct player_state *state, int power, int scaleto)
+{
+	int base = state->powers[power];
+
+	assert(power < PP_MAX && power > PP_NONE);
+	if (base <= 0) return 0;
+
+	return (base * scaleto + 50 * 2 / 3) / 50;
+}
+
+int get_skill_scale(const struct monster *mon, int skill, int scaleto)
+{
+	return get_skill_scale_state(&mon->state, skill, scaleto);
+}
+
+int get_power_scale(const struct monster *mon, int power, int scaleto)
+{
+	return get_power_scale_state(&mon->state, power, scaleto);
 }
 
 
@@ -406,16 +441,15 @@ int attack_specialization_power(const struct monster *mon, const struct object *
  * L: utilities for specific powers
  */
 
-
 // agility power
 int unarmoured_speed_bonus(struct monster *mon, struct player_state *s, int wgt)
 {
 	int wpen, bonus;
 
-	wpen = wgt / 5 - get_power_scale_state(s, PP_AGILITY, 10, mon_lev(mon));
+	wpen = wgt / 5 - get_power_scale_state(s, PP_AGILITY, 10);
 	wpen = MAX(0, wpen);
 
-	bonus = get_power_scale_state(s, PP_AGILITY, 10, mon_lev(mon));
+	bonus = get_power_scale_state(s, PP_AGILITY, 10);
 	bonus = MAX(0, bonus - wpen);
 
     s->speed += bonus;
@@ -426,9 +460,9 @@ int unarmoured_ac_bonus(struct monster *mon, struct player_state *s, int wgt)
 {
 	int wpen, bonus;
 
-	wpen = wgt - get_power_scale_state(s, PP_AGILITY, 250, mon_lev(mon));
+	wpen = wgt - get_power_scale_state(s, PP_AGILITY, 250);
 	wpen = MAX(0, wpen);
-    bonus = get_power_scale_state(s, PP_AGILITY, 50, mon_lev(mon));
+    bonus = get_power_scale_state(s, PP_AGILITY, 50);
 	bonus = MAX(bonus / 2, bonus - wpen);
 
     s->to_a += bonus;
@@ -469,7 +503,7 @@ void calc_unlight(struct monster *mon, struct player_state *s)
 	if (s->powers[PP_UNLIGHT] < 0) return;
 	power = -square_light(cave, mon->grid);
 
-	s->el_info[ELEM_DARK].res_level += get_power_scale_state(s, PP_UNLIGHT, 3, mon_lev(mon));
+	s->el_info[ELEM_DARK].res_level += get_power_scale_state(s, PP_UNLIGHT, 3);
 
 	adjust_skill_scale(&s->skills[SKILL_STEALTH], power, 25, 25);
 	adjust_skill_scale(&s->skills[SKILL_SAVE], power, 25, 25);
@@ -485,7 +519,7 @@ void calc_glow(struct monster *mon, struct player_state *s)
 	if (s->powers[PP_GLOW] < 0) return;
 	power = square_light(cave, mon->grid);
 
-	s->el_info[ELEM_LIGHT].res_level += get_power_scale_state(s, PP_GLOW, 3, mon_lev(mon));
+	s->el_info[ELEM_LIGHT].res_level += get_power_scale_state(s, PP_GLOW, 3);
 
 	adjust_skill_scale(&s->skills[SKILL_SAVE], power, 15, 25);
 
@@ -494,7 +528,7 @@ void calc_glow(struct monster *mon, struct player_state *s)
 
 void calc_running(struct monster *mon, struct player_state *s)
 {
-	s->num_moves += get_power_scale_state(s, PP_RUNNING, 10, mon_lev(mon));
+	s->num_moves += get_power_scale_state(s, PP_RUNNING, 10);
 }
 
 

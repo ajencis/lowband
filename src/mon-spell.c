@@ -20,13 +20,12 @@
 #include "init.h"
 #include "mon-attack.h"
 #include "mon-desc.h"
-#include "mon-lore.h"
-#include "mon-make.h"
 #include "mon-predicate.h"
 #include "mon-spell.h"
 #include "mon-timed.h"
 #include "mon-util.h"
 #include "obj-knowledge.h"
+#include "player-properties.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
@@ -371,7 +370,7 @@ void do_mon_spell(int index, struct monster *mon, bool seen)
 		struct monster_spell_level *level = spell->level;
 
 		if (!mon_spell_is_innate(index)) {
-			save += get_power_scale(player, PP_ANTIMAGIC, 50);
+			save += get_power_scale(&player->mon, PP_ANTIMAGIC, 50);
 		}
 
 		/* Get the right level of save message */

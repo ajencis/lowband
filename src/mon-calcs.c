@@ -528,8 +528,8 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 		extra_moves -= 25;
 	}
 
-	curr_light -= get_power_scale_state(state, PP_UNLIGHT, UNLIGHT_MAX_POWER, mon_lev(mon));
-	curr_light += get_power_scale_state(state, PP_GLOW, UNLIGHT_MAX_POWER, mon_lev(mon));
+	curr_light -= get_power_scale_state(state, PP_UNLIGHT, UNLIGHT_MAX_POWER);
+	curr_light += get_power_scale_state(state, PP_GLOW, UNLIGHT_MAX_POWER);
 
 	if (mon->state.cur_light != curr_light) {
 		player->upkeep->update |= PU_UPDATE_VIEW;
@@ -616,7 +616,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 5, 0);
 	}
 	if (mon->m_timed[TMD_BLOODLUST]) {
-		int p_berserk = get_power_scale_state(state, PP_BERSERK, 150, mon->race->level);
+		int p_berserk = get_power_scale_state(state, PP_BERSERK, 150);
 		int bonus = mon->m_timed[TMD_BLOODLUST] * (100 + p_berserk) / 100;
 
 		state->to_d += bonus / 5 + 1;
@@ -682,7 +682,7 @@ static void emb_atk_mod_death_touch(const struct monster *mon, struct embryo_att
 	if (emb->obj) return;
 
 	div = emb->mon_blow ? 2 : 1;
-	rv.sides = get_mon_power_scale(mon, PP_DEATH_TOUCH, 50 / div);
+	rv.sides = get_power_scale(mon, PP_DEATH_TOUCH, 50 / div);
 	rv.dice = 1;
 
 	ef = mem_zalloc(sizeof *ef);
@@ -701,7 +701,7 @@ static struct effect *breath_bite_ef(int innate, const struct monster *mon)
 	struct effect *ef_new;
 	const struct effect *ef_src;
 	random_value rv;
-	int power_mod = 10 + get_mon_power_scale(mon, PP_BREATH_BITE, 40);
+	int power_mod = 10 + get_power_scale(mon, PP_BREATH_BITE, 40);
 	int prev_cmc;
 
 	ef_src = spell->effect;
@@ -800,7 +800,7 @@ static void calc_emb_crit(const struct monster *mon, struct embryo_attack *emb)
 
 	chance += z_info->m_crit_chance_toh_skill_scl * mon->state.skills[emb->skill] / 100;
 
-	chance += get_mon_power_scale(mon, PP_CRITICAL_HITS, 15);
+	chance += get_power_scale(mon, PP_CRITICAL_HITS, 15);
 
 	emb->crit_chance = chance;
 }
@@ -858,7 +858,7 @@ static void modify_unarmed_attack(struct embryo_attack *emb, const struct monste
 	int factor = MIN(125 - (emb->dice * emb->sides * 2), 100);
 	int dexmin = 75 - factor / 2;
 
-	emb->sides += get_mon_power_scale(mon, PP_UNARMED_STRIKE, 10) * factor / 100;
+	emb->sides += get_power_scale(mon, PP_UNARMED_STRIKE, 10) * factor / 100;
 	
 	if (emb->acc_stat == PP_UNARMED_STRIKE && mon_power_minimum(mon, PP_UNARMED_STRIKE, dexmin)) {
 		emb->acc_stat = STAT_DEX;
@@ -988,17 +988,17 @@ static void get_chain_attack(const struct monster *mon, struct embryo_attack *em
 	emb->dam_stat = STAT_DEX;
 
 	emb->dice = 1;
-	emb->sides = get_mon_power_scale(mon, PP_ANIMATE_CHAINS, 5) + 5;
+	emb->sides = get_power_scale(mon, PP_ANIMATE_CHAINS, 5) + 5;
 
 	emb->msg = mon_is_player(mon) ? "enchain {target}" : "enchains {target}";
 	strnfmt(emb->title, sizeof emb->title, "enchain");
 
-	emb->num = get_mon_power_scale(mon, PP_ANIMATE_CHAINS, 5);
+	emb->num = get_power_scale(mon, PP_ANIMATE_CHAINS, 5);
 	emb->dam_type = PROJ_PIERCING;
 
-	emb->range = get_mon_power_scale(mon, PP_ANIMATE_CHAINS, 3) + 1;
+	emb->range = get_power_scale(mon, PP_ANIMATE_CHAINS, 3) + 1;
 
-	emb->auto_freq = get_mon_power_scale(mon, PP_ANIMATE_CHAINS, 30) + 20;
+	emb->auto_freq = get_power_scale(mon, PP_ANIMATE_CHAINS, 30) + 20;
 }
 
 static struct embryo_attack *get_special_attack(const struct monster *mon, int special)
@@ -1105,10 +1105,10 @@ static struct embryo_attack *add_unarmed(const struct monster *mon, int source, 
 
 static struct embryo_attack *get_unarmed(const struct monster *mon, int remaining_slots[EQUIP_MAX], bool has_attacks)
 {
-	int num_punches = get_mon_power_scale(mon, PP_UNARMED_STRIKE, 3);
-	int num_kicks = get_mon_power_scale(mon, PP_UNARMED_STRIKE, 1);
+	int num_punches = get_power_scale(mon, PP_UNARMED_STRIKE, 3);
+	int num_kicks = get_power_scale(mon, PP_UNARMED_STRIKE, 1);
 	int num_touches = mon_has_power(mon, PP_DEATH_TOUCH) && num_punches <= 0 ? 1 : 0;
-	int num_chains = get_mon_power_scale(mon, PP_ANIMATE_CHAINS, 5) > 0 ? 1 : 0;
+	int num_chains = get_power_scale(mon, PP_ANIMATE_CHAINS, 5) > 0 ? 1 : 0;
 	bool has_new_attacks = num_punches > 0 || num_kicks > 0 || num_touches > 0;
 	struct embryo_attack *new, *result = NULL;
 
@@ -1207,6 +1207,7 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 	struct attack *result;
 	random_value rv = { 0, 0, 0, 0 };
 	size_t siz;
+	bool has_skill = emb->skill >= 0 && emb->skill < SKILL_MAX;
 
 	if (emb->acc_stat >= 0 && emb->acc_stat < STAT_MAX) {
 		int ind = mon->state.stat_ind[emb->acc_stat];
@@ -1223,6 +1224,10 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 	rv.dice = emb->dice;
 	rv.sides = emb->sides;
 	rv.m_bonus = 0;
+
+	if (has_skill) {
+		rv.dice += get_skill_scale(mon, emb->skill, rv.dice * 3) / 2;
+	}
 
 	main->index = EF_HIT;
 	main->subtype = emb->dam_type;

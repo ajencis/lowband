@@ -437,7 +437,7 @@ static int critical_melee(const struct player *p, const struct monster *monster,
 		const struct py_attack_roll *aroll, int dam, uint32_t *msg_type, int *crit_power)
 {
 	int chance = aroll->crit_chance, new_dam;
-	int powerbonus = chance + get_power_scale(p, PP_CRITICAL_HITS, 20);
+	int powerbonus = chance;// + get_power_scale(&p->mon, PP_CRITICAL_HITS, 20);
 	int power = 0;
 	chance = my_int_sqrt(chance * 5);
 
@@ -885,7 +885,7 @@ static int melee_crit_chance(struct py_attack_roll *aroll, const struct player *
 
 	chance += z_info->m_crit_chance_toh_skill_scl * ps->skills[aroll->attack_skill] / 100;
 
-	chance += get_power_scale_state(ps, PP_CRITICAL_HITS, 15, p->lev);
+	chance += get_power_scale_state(ps, PP_CRITICAL_HITS, 15);
 
 	aroll->crit_chance = chance;
 
@@ -895,9 +895,9 @@ static int melee_crit_chance(struct py_attack_roll *aroll, const struct player *
 static void unarmed_mod_attack(struct py_attack_roll *aroll, const struct player *p, const struct player_state *ps)
 {
 	//aroll->to_hit += get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev);
-	int ddicemod = get_power_scale_state(ps, PP_UNARMED_STRIKE, 1, p->lev);
+	int ddicemod = get_power_scale_state(ps, PP_UNARMED_STRIKE, 1);
 	aroll->ddice += ddicemod;
-	aroll->dsides += get_power_scale_state(ps, PP_UNARMED_STRIKE, 30 / (ddicemod * 2 + 1), p->lev);
+	aroll->dsides += get_power_scale_state(ps, PP_UNARMED_STRIKE, 30 / (ddicemod * 2 + 1));
 
 	if (ps->powers[PP_DEATH_TOUCH] > 0) {
 		aroll->special[ATK_SPCL_DEATH_TOUCH] += ps->powers[PP_DEATH_TOUCH] * 5 / 2;
@@ -913,11 +913,11 @@ static void unarmed_mod_attack(struct py_attack_roll *aroll, const struct player
 static void unarmed_get_punch(struct py_attack_roll *aroll, const struct player *p, const struct player_state *ps)
 {
 	aroll->ddice = 1;
-	aroll->dsides = get_power_scale_state(ps, PP_UNARMED_STRIKE, 5, p->lev);
-	aroll->to_hit = get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev) - 25;
+	aroll->dsides = get_power_scale_state(ps, PP_UNARMED_STRIKE, 5);
+	aroll->to_hit = get_power_scale_state(ps, PP_UNARMED_STRIKE, 25) - 25;
 	aroll->to_hit = MIN(aroll->to_hit, -5);
 
-	aroll->special[ATK_SPCL_TMD_STUN] = get_power_scale_state(ps, PP_UNARMED_STRIKE, 100, p->lev);
+	aroll->special[ATK_SPCL_TMD_STUN] = get_power_scale_state(ps, PP_UNARMED_STRIKE, 100);
 
 	aroll->accuracy_stat = STAT_NONE;
 	aroll->damage_stat = STAT_STR;
@@ -932,11 +932,11 @@ static void unarmed_get_punch(struct py_attack_roll *aroll, const struct player 
 static void unarmed_get_kick(struct py_attack_roll *aroll, const struct player *p, const struct player_state *ps)
 {
 	aroll->ddice = 1;
-	aroll->dsides = get_power_scale_state(ps, PP_UNARMED_STRIKE, 15, p->lev);
-	aroll->to_hit = get_power_scale_state(ps, PP_UNARMED_STRIKE, 25, p->lev) - 15;
+	aroll->dsides = get_power_scale_state(ps, PP_UNARMED_STRIKE, 15);
+	aroll->to_hit = get_power_scale_state(ps, PP_UNARMED_STRIKE, 25) - 15;
 	aroll->to_hit = MIN(aroll->to_hit, 0);
 
-	aroll->special[ATK_SPCL_TMD_SLOW] = get_power_scale_state(ps, PP_UNARMED_STRIKE, 100, p->lev);
+	aroll->special[ATK_SPCL_TMD_SLOW] = get_power_scale_state(ps, PP_UNARMED_STRIKE, 100);
 
 	aroll->accuracy_stat = STAT_NONE;
 	aroll->damage_stat = STAT_STR;
@@ -960,9 +960,9 @@ static void specialization_mod_attack(struct py_attack_roll *aroll, struct objec
 	else if (kf_has(obj->kind->kind_flags, KF_SHOOTS_SHOTS)) spec = PP_SLING_SPECIALIZATION;
 	else return;
 	
-	aroll->to_hit += get_power_scale(player, spec, 20);
-	aroll->to_dam += get_power_scale(player, spec, 10);
-	aroll->dsides += get_power_scale(player, spec, 10);
+	aroll->to_hit += get_power_scale(&player->mon, spec, 20);
+	aroll->to_dam += get_power_scale(&player->mon, spec, 10);
+	aroll->dsides += get_power_scale(&player->mon, spec, 10);
 }
 
 static bool backstab_mod_attack(struct py_attack_roll *aroll, int power)
@@ -973,7 +973,7 @@ static bool backstab_mod_attack(struct py_attack_roll *aroll, int power)
 	if (aroll->attack_skill != SKILL_TO_HIT_MELEE) return false;
 	if (aroll_is_harmless_base(aroll)) return false;
 
-	scale = (get_power_scale(player, PP_BACKSTAB, 60) + 40) * power - 25;
+	scale = (get_power_scale(&player->mon, PP_BACKSTAB, 60) + 40) * power - 25;
 	if (scale < 25) return false;
 
 	aroll->to_hit += scale / 4;
@@ -988,11 +988,11 @@ static void get_melee_attack(struct py_attack_roll *aroll, struct player_state *
 	int mult, div;
 	int dsides_min = aroll->dsides ? 1 : 0, ddice_min = aroll->ddice ? 1 : 0;
 
-	mult = get_power_scale_state(ps, PP_DUAL_WIELD, 10, p->lev) + 10;
+	mult = get_power_scale_state(ps, PP_DUAL_WIELD, 10) + 10;
 	mult = MAX(mult, 1);
 	div = attack_div * 5;
 	if (div > 20) {
-		div = (div - 20) * 100 / (get_power_scale_state(ps, PP_DUAL_WIELD, 250, p->lev) + 50) + 20;
+		div = (div - 20) * 100 / (get_power_scale_state(ps, PP_DUAL_WIELD, 250) + 50) + 20;
 	}
 	div = MAX(div, mult);
 
@@ -1485,7 +1485,7 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 	struct loc end;
 	int rad = aroll->range;
 	int norm_maxspin = rad * 2 + 1;
-	int maxspin = norm_maxspin + get_power_scale(p, PP_WHIRLWIND, rad * 3);
+	int maxspin = norm_maxspin + get_power_scale(&p->mon, PP_WHIRLWIND, rad * 3);
 
 	for (i = 0, end = grid; i < maxspin; ++i, end = clockwise_orbit(p->mon.grid, end, rad)) {
 		struct monster *mon = monster_in_direction(p->mon.grid, end, rad);
@@ -1833,7 +1833,7 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 static void mon_critical_melee(struct monster *mon, struct temp_attack_data *which, random_value *rv, uint32_t *msg_type) {
 	const struct attack *atk = which->atk;
 	int chance = which->atk->crit_chance;
-	int powerbonus = chance + get_mon_power_scale(mon, PP_CRITICAL_HITS, 20);
+	int powerbonus = chance + get_power_scale(mon, PP_CRITICAL_HITS, 20);
 	int power = 0, wgt;
 	const struct critical_level *this_l;
 	chance = my_int_sqrt(chance * 5);
@@ -2216,7 +2216,7 @@ void py_attack(struct player *p, struct loc grid)
 	char buf[128] = { '\0' };
 	int which;
 	int totalblows = 0, numblows = 0;
-	int cleavediscount = 35 + get_power_scale(p, PP_WHIRLWIND, 25);
+	int cleavediscount = 35 + get_power_scale(&p->mon, PP_WHIRLWIND, 25);
 	bool doingcleave = false;
 
 	if (!mon) {
@@ -2315,7 +2315,7 @@ void py_attack(struct player *p, struct loc grid)
 		slain = py_attack_real(p, tgrid, &fear, &aroll);
 
 		if (slain) cleavechance += 25;
-		cleavechance += get_power_scale(player, PP_WHIRLWIND, 50);
+		cleavechance += get_power_scale(&player->mon, PP_WHIRLWIND, 50);
 		if (aroll.obj && aroll.obj->tval == TV_HAFTED) cleavechance *= 2;
 		
 		if (doingcleave) p->upkeep->energy_use += cleaveblowenergy;

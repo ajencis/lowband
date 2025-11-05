@@ -945,9 +945,9 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 	int numschools = 0, sumschools = 0;
 	int schoolbonus = 0, realmbonus = 0;
 	int skill = p->mon.state.skills[SKILL_MAGIC];
-	int antim = get_power_scale(p, PP_ANTIMAGIC, 25);
-	int power = get_power_scale(p, PP_SPELL_POWER, 50);
-	int ease = get_power_scale(p, PP_SPELL_EASE, 25);
+	int antim = get_power_scale(&p->mon, PP_ANTIMAGIC, 25);
+	int power = get_power_scale(&p->mon, PP_SPELL_POWER, 50);
+	int ease = get_power_scale(&p->mon, PP_SPELL_EASE, 25);
 	int i;
 	int result, stepdown;
 	const struct magic_realm *r = get_player_realm(p);
@@ -1033,7 +1033,7 @@ int player_spell_mana(const struct player_spell *ps) {
 int player_spell_fail(const struct player_spell *ps) {
 	int base = ps->sfail;
 	int power = gener_spell_power(player, ps);
-	int ease = get_power_scale(player, PP_SPELL_EASE, 25);
+	int ease = get_power_scale(&player->mon, PP_SPELL_EASE, 25);
 	int result;
 
 	int sqrt_pwr = my_int_sqrt(25 * (power + ease));

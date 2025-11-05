@@ -81,8 +81,8 @@ bool select_evolution(struct player *p);
 int expected_monster_evol_level(const struct monster_race *mr);
 int expected_max_evol_level(const struct player *p);
 
-int get_power_scale_state(const struct player_state *ps, int power, int scaleto, int level);
-int get_power_scale(const struct player *p, int power, int scaleto);
+//int get_power_scale_state(const struct player_state *ps, int power, int scaleto, int level);
+//int get_power_scale(const struct player *p, int power, int scaleto);
 uint16_t calc_extra_points_array(struct player *p, uint16_t *extra_abil);
 void calc_extra_points(struct player *p, struct player_state *ps);
 bool check_learn_powers(struct player *p, int xpgain);

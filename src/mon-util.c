@@ -2021,8 +2021,8 @@ static void stench(struct chunk *c, struct monster *mon)
 
 	curr_feat = square_feat_by_type(c, mon->grid, FEAT_NOXIOUS_GAS);
 	curr = curr_feat ? curr_feat->size : 0;
-	max = get_mon_power_scale(mon, PP_STENCH, 30) + 20;
-	perc = get_mon_power_scale(mon, PP_STENCH, 15) + 10;
+	max = get_power_scale(mon, PP_STENCH, 30) + 20;
+	perc = get_power_scale(mon, PP_STENCH, 15) + 10;
 	inc = (max - curr) * perc / 100;
 
 	if (inc > 0) {

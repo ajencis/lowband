@@ -548,6 +548,7 @@ int expected_max_evol_level(const struct player *p)
 }
 
 
+#if 0
 int get_power_scale_state(const struct player_state *ps, int power, int scaleto, int level)
 {
 	assert(power > 0 && power < PP_MAX);
@@ -575,6 +576,7 @@ int get_power_scale(const struct player *p, int power, int scaleto)
 {
 	return get_power_scale_state(&p->mon.state, power, scaleto, p->lev);
 }
+#endif
 
 
 const char *lookup_power_name(int power)
@@ -1546,13 +1548,13 @@ bool player_learn_spell_xp(struct player *p, bool initial, int xp)
 
 int antimagic_fail_increase(struct player *p)
 {
-	return get_power_scale(p, PP_ANTIMAGIC, 75);
+	return get_power_scale(&p->mon, PP_ANTIMAGIC, 75);
 }
 
 int antimagic_radius(struct player *p)
 {
 	if (p->mon.state.powers[PP_ANTIMAGIC] <= 0) return 0;
-	return get_power_scale(p, PP_ANTIMAGIC, 3) + 2;
+	return get_power_scale(&p->mon, PP_ANTIMAGIC, 3) + 2;
 }
 
 
@@ -1597,7 +1599,7 @@ int glow_power(struct player *p)
  */
 int unlight_radius(struct player *p)
 {
-	return get_power_scale(p, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2);
+	return get_power_scale(&p->mon, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2);
 }
 
 
@@ -1610,8 +1612,8 @@ int player_grid_visibility(struct loc grid, struct player *p, struct chunk *c)
 	int dist = distance(p->mon.grid, grid);
 	bool p_is_unlight = p->mon.state.powers[PP_UNLIGHT] ? true : false;
 
-	darkest -= get_power_scale(p, PP_UNLIGHT, UNLIGHT_MAX_POWER * 4);
-	brightest -= get_power_scale(p, PP_UNLIGHT, 10);
+	darkest -= get_power_scale(&p->mon, PP_UNLIGHT, UNLIGHT_MAX_POWER * 4);
+	brightest -= get_power_scale(&p->mon, PP_UNLIGHT, 10);
 
 	if (p_is_unlight && dist <= unl_rad && light <= 0) return PY_SEE_VISIBLE;
 	if (light == 0) return PY_SEE_TOO_DARK;
@@ -1878,7 +1880,7 @@ bool take_hit(struct player *p, int dam, const char *kb_str)
 
 bool check_berserk(struct monster *mon, struct monster *o_mon)
 {
-	int berserk = get_mon_power_scale(mon, PP_BERSERK, 25);
+	int berserk = get_power_scale(mon, PP_BERSERK, 25);
 
 	if (!mon || !mon->race) {
 		return false;
@@ -3281,7 +3283,7 @@ void player_set_resting_repeat_count(struct player *p, int16_t count)
 static int mon_non_rest_penalty(struct monster *mon)
 {
 	int base = 90;
-	int regen = get_mon_power_scale(mon, PP_REGENERATION, 90);
+	int regen = get_power_scale(mon, PP_REGENERATION, 90);
 
 	return MAX(0, base - regen);
 }
@@ -3315,7 +3317,7 @@ void regen_hp(struct monster *mon)
 	}
 
 	/* Various things speed up regeneration */
-	percent *= (100 + get_mon_power_scale(mon, PP_REGENERATION, 200));
+	percent *= (100 + get_power_scale(mon, PP_REGENERATION, 200));
 	percent /= 100;
 
 	/*if (p && !player_resting_can_regenerate(p)) {

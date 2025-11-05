@@ -21,14 +21,11 @@
 #include "game-input.h"
 #include "init.h"
 #include "mon-calcs.h"
-#include "mon-desc.h"
 #include "mon-util.h"
 #include "player-calcs.h"
 #include "player-properties.h"
-#include "player-spell.h"
 #include "player-util.h"
 #include "ui-input.h"
-#include "ui-knowledge.h"
 #include "ui-menu.h"
 #include "ui-player-properties.h"
 #include "ui-target.h"
@@ -862,7 +859,7 @@ static void ability_learn_browse(int oid, void *db, const region *loc)
 	++row;
 
 	Term_gotoxy(loc->col, row);
-	text_out_c(COLOUR_WHITE, pts_str);
+	text_out_c(COLOUR_WHITE, "%s", pts_str);
 	text_out_c(curr_points_attr, "%2i", points_left);
 	if (more_points_used > 0) {
 		Term_gotoxy(loc->col + ALMC_COST_DIFF + 4, row);
@@ -1264,7 +1261,7 @@ static void evolution_choice_display(struct menu *menu, int oid, bool cursor,
 		curr = curr->next;
 	}
 
-	strnfmt(desc, sizeof desc, curr->race->name);
+	strnfmt(desc, sizeof desc, "%s", curr->race->name);
 
 	my_strcap_full(desc);
 

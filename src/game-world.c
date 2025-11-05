@@ -34,6 +34,7 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
+#include "player-properties.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
@@ -676,7 +677,7 @@ void process_world(struct chunk *c)
 	}
 
 	if (player->mon.state.powers[PP_ANTIMAGIC] > 0) {
-		int power = get_power_scale(player, PP_ANTIMAGIC, 1500); // chance in 1000 to drain mana
+		int power = get_power_scale(&player->mon, PP_ANTIMAGIC, 1500); // chance in 1000 to drain mana
 		int rad = MAX(MIN((power + 99) / 100, power / 75 - 3), 0);
 		int dist, quantity;
 		int totaldrained = 0;

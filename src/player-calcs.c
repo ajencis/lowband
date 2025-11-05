@@ -1032,8 +1032,8 @@ static void calc_light(struct player *p, struct player_state *state,
 					   bool update)
 {
 	int i;
-	int glow = get_power_scale_state(state, PP_GLOW, UNLIGHT_MAX_POWER * 2, p->lev);
-	int unlight = get_power_scale_state(state, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2, p->lev);
+	int glow = get_power_scale_state(state, PP_GLOW, UNLIGHT_MAX_POWER * 2);
+	int unlight = get_power_scale_state(state, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2);
 	//int unlight = get_power_scale_state(state, PP_UNLIGHT, UNLIGHT_MAX_POWER * 2, p->lev);
 
 	/* Assume no light */
@@ -1562,19 +1562,19 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 				  bool update)
 {
 	int i, j, hold;
-	int extra_blows = 0;
+	//int extra_blows = 0;
 	int extra_shots = 0;
 	int extra_might = 0;
 	int extra_moves = 0;
-	int attacknum;
+	//int attacknum;
 	struct object *launcher = NULL;
 	struct object *weapons[PY_MAX_ATTACKS] = { 0 };
 	int num_weapons = 0;
 	bitflag collect_f[OF_SIZE];
 	struct monster_race *mrace = mon->race;
-	int avail_hands, attack_div;
+	//int avail_hands, attack_div;
 	//int race_skills[SKILL_MAX] = { 0 }, race_x_skills[SKILL_MAX] = { 0 };
-	bool has_feet = false;
+	//bool has_feet = false;
 	//bool vuln[ELEM_MAX] = { false };
 
 	/* Hack to allow calculating hypothetical blows for extra STR, DEX - NRM */
