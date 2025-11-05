@@ -36,9 +36,9 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
-#include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "player.h"
 #include "project.h"
 #include "target.h"
 #include "trap.h"
@@ -435,6 +435,10 @@ void do_cmd_wiz_advance(struct command *cmd)
 		//check_player_monster(player, false);
 		player_exp_gain(player, PY_MAX_EXP, 0);
 	}
+
+	do {
+		player->monster_xp = UINT32_MAX;
+	} while (check_player_monster(player, false));
 
 	/* Heal the player */
 	player->mon.hp = player->mon.maxhp;
