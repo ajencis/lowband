@@ -1327,7 +1327,7 @@ static bool get_move(struct monster *mon, int *dir, bool *good)
 			/* Check grid around the player for room interior (room walls count)
 			 * or other empty space */
 			struct loc test = loc_sum(mon->target.grid, ddgrid_ddd[i]);
-			if (monster_passes_grid(mon, cave, test) || square_isroom(cave, grid)) {
+			if (square_in_bounds(cave, grid) && (monster_passes_grid(mon, cave, test) ||  square_isroom(cave, grid))) {
 			//if (square_ispassable(cave, test) || square_isroom(cave, test)) {
 				/* One more open grid */
 				open++;

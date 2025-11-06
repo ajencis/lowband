@@ -416,6 +416,8 @@ static void cave_unlight(struct point_set *ps)
  */
 static void cave_room_aux(struct point_set *seen, struct loc grid)
 {
+	assert(square_in_bounds(cave, grid));
+
 	if (point_set_contains(seen, grid))
 		return;
 

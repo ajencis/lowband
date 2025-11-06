@@ -452,16 +452,6 @@ static void place_rubble(struct chunk *c, struct loc grid)
 
 static void place_fume_pit(struct chunk *c, struct loc grid)
 {
-	/*struct loc roomlocs[256] = { 0 }, curr;
-	int i, rl_amt;
-
-	rl_amt = all_contiguous_locs(c, grid, roomlocs, sizeof roomlocs, square_isroom, NULL);
-
-	for (i = 0; i < rl_amt; ++i) {
-		curr = roomlocs[i];
-		c->squares[curr.y][curr.x].required_rf = RF_IM_POIS;
-	}*/
-
 	square_force_set_feat(c, grid, FEAT_FUME_PIT, 100);
 }
 
@@ -848,7 +838,6 @@ static bool can_alloc_in_grid(struct chunk *c, struct loc grid, bitflag restrict
 		}
 	}
 
-
 	if (ar_set_has(restrictions, AR_SET_CORR)) {
 		if (square_isroom(c, grid)) {
 			return false;
@@ -980,6 +969,8 @@ bool alloc_object(struct chunk *c, int set, int typ, int depth, uint8_t origin)
 		 * If we're ok with a corridor and we're in one, we're done.
 		 * If we are ok with a room and we're in one, we're done
 		 */
+		assert(square_in_bounds(c, grid));
+
 		bool matched = ((set & SET_CORR) && !square_isroom(c, grid))
 			|| ((set & SET_ROOM) && square_isroom(c, grid));
 		
