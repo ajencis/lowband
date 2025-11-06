@@ -18,31 +18,23 @@
 
 #include "angband.h"
 #include "cave.h"
-#include "effects.h"
 #include "game-world.h"
 #include "generate.h"
 #include "init.h"
-#include "mon-group.h"
 #include "mon-lore.h"
 #include "mon-make.h"
-#include "mon-spell.h"
 #include "mon-util.h"
 #include "monster.h"
-#include "obj-curse.h"
-#include "obj-gear.h"
 #include "obj-ignore.h"
 #include "obj-init.h"
 #include "obj-knowledge.h"
-#include "obj-make.h"
 #include "obj-pile.h"
 #include "obj-randart.h"
-#include "obj-slays.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
 #include "player-calcs.h"
 #include "player-history.h"
-#include "player-properties.h"
 #include "player-quest.h"
 #include "player-spell.h"
 #include "player-timed.h"
@@ -258,7 +250,6 @@ static void rd_body(struct monster *mon, struct chunk *c)
 {
 	char body_name[80], slot_name[80];
 	uint16_t tmp16u, i;
-	uint8_t tmp8u;
 
 	rd_string(body_name, sizeof body_name);
 	mon->body.name = string_make(body_name);
@@ -274,22 +265,6 @@ static void rd_body(struct monster *mon, struct chunk *c)
 
 		rd_string(slot_name, sizeof slot_name);
 		mon->body.slots[i].name = string_make(slot_name);
-
-		rd_byte(&tmp8u);
-		if (tmp8u) {
-			struct object *eq = rd_item();
-			describe_object_saveload(eq, "rd_body", false);
-			mon->body.slots[i].obj = eq;
-
-			assert(eq);
-			assert(eq->held_m_idx == mon->midx);
-			assert(eq->oidx);
-			assert(c->objects[eq->oidx] == NULL);
-			c->objects[eq->oidx] = eq;
-		}
-		else {
-			mon->body.slots[i].obj = NULL;
-		}
 	}
 }
 
@@ -369,6 +344,8 @@ static bool rd_monster(struct chunk *c, struct monster *mon)
 		}
 	}
 
+	rd_body(mon, c);
+
 	/* Read all the held objects (order is unimportant) */
 	while (true) {
 		struct object *obj = rd_item();
@@ -377,13 +354,18 @@ static bool rd_monster(struct chunk *c, struct monster *mon)
 			break;
 		}
 
+		rd_byte(&tmp8u);
+
 		pile_insert(&mon->gear, obj);
+
+		if (tmp8u < mon->body.count) {
+			mon->body.slots[tmp8u].obj = obj;
+		}
+
 		assert(obj->oidx);
 		assert(c->objects[obj->oidx] == NULL);
 		c->objects[obj->oidx] = obj;
 	}
-
-	rd_body(mon, c);
 
 	/* Read group info */
 	rd_u16b(&tmp16u);

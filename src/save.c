@@ -20,7 +20,6 @@
 #include "cave.h"
 #include "game-world.h"
 #include "init.h"
-#include "mon-group.h"
 #include "mon-lore.h"
 #include "mon-make.h"
 #include "monster.h"
@@ -33,8 +32,8 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "option.h"
+#include "player-calcs.h"
 #include "player.h"
-#include "player-properties.h"
 #include "player-util.h"
 #include "savefile.h"
 #include "store.h"
@@ -211,18 +210,8 @@ static void wr_body(const struct player_body *body)
 	wr_u16b(count);
 
 	for (i = 0; i < count; ++i) {
-		struct object *obj = body->slots[i].obj;
-		
 		wr_u16b(body->slots->type);
 		wr_string(body->slots->name);
-		if (obj) {
-			wr_byte(true);
-			wr_item(obj);
-			describe_object_saveload(obj, "wr_body", true);
-		}
-		else {
-			wr_byte(false);
-		}
 	}
 }
 
@@ -233,7 +222,7 @@ static void wr_body(const struct player_body *body)
 static void wr_monster(const struct monster *mon)
 {
 	size_t j;
-	int i;
+	int i, slot;
 	struct object *obj = mon->gear; 
 	struct object *dummy = object_new();
 
@@ -276,22 +265,22 @@ static void wr_monster(const struct monster *mon)
 		wr_u16b(0);
 	}
 
+	// L: write equipped objects
+	wr_body(&mon->body);
+
 	/* Write all held objects, followed by a dummy as a marker */
 	while (obj) {
 		wr_item(obj);
+
+		// write slot, or mon->body.count if no slot
+		slot = equipped_item_slot(mon->body, obj);
+		wr_byte((uint8_t)slot);
+
 		describe_object_saveload(obj, "wr_monster", true);
 		obj = obj->next;
 	}
-	wr_item(dummy);
 
-	// L: write equipped objects
-	wr_body(&mon->body);
-	/*obj = mon->equipped_obj;
-	while (obj) {
-		wr_item(obj);
-		obj = obj->next;
-	}
-	wr_item(dummy);*/
+	wr_item(dummy);
 	object_delete(NULL, NULL, &dummy);
 
 	/* Write group info */
