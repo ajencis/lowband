@@ -1214,6 +1214,8 @@ static int next_to_corr(struct chunk *c, struct loc grid)
 		/* Extract the location */
 		struct loc grid1 = loc_sum(grid, ddgrid_ddd[i]);
 
+		if (!square_in_bounds(c, grid)) continue;
+
 		/* Count only floors which aren't part of rooms */
 		if (square_isfloor(c, grid1) && !square_isroom(c, grid1)) k++;
 	}
@@ -1257,6 +1259,7 @@ static void try_door(struct chunk *c, struct loc grid)
 {
 	assert(square_in_bounds(c, grid));
 
+	if (!square_in_bounds(c, grid)) return;
 	if (square_isstrongwall(c, grid)) return;
 	if (square_isroom(c, grid)) return;
 	if (square_isplayertrap(c, grid)) return;
