@@ -31,6 +31,7 @@ int monster_light(struct monster *mon);
 const char *describe_race_flag(int flag);
 void create_mon_flag_mask(bitflag *f, ...);
 struct monster_race *lookup_monster(const char *name);
+struct monster_race *lookup_monster_idx(int idx);
 struct monster_base *lookup_monster_base(const char *name);
 bool match_monster_bases(const struct monster_base *base, ...);
 void update_mon(struct monster *mon, struct chunk *c, bool full);

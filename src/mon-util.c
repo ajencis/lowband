@@ -285,6 +285,19 @@ struct monster_race *lookup_monster(const char *name)
 	return closest;
 }
 
+struct monster_race *lookup_monster_idx(int idx)
+{
+	struct monster_race *mr;
+
+	if (idx >= z_info->r_max) return NULL;
+
+	mr = &r_info[idx];
+
+	if (!mr->name) return NULL;
+
+	return mr;
+}
+
 /**
  * Return the monster base matching the given name.
  */
