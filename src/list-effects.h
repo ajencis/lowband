@@ -116,6 +116,8 @@ EFFECT(CREATE_ARROWS,				false,	NULL,		0,		EFINFO_NONE,	"uses a staff to create 
 EFFECT(TAP_DEVICE,					false,	NULL,		0,		EFINFO_NONE,	"drains magical energy from a staff or wand",	"tap device")
 EFFECT(TAP_UNLIFE,					false,	"dam",		1,		EFINFO_DICE,	"drains %s mana from the closest undead monster, damaging it",	"tap unlife")
 EFFECT(SHAPECHANGE,					false,	NULL,		0,		EFINFO_NONE,	"changes the player's shape",	"change shape")
+EFFECT(POLY_SELF,                   false,  "dur",      0,      EFINFO_RACE,    "polymorph self into a %s", "poly self")
+EFFECT(UNPOLY_SELF,                 false,  NULL,       0,      EFINFO_NONE,    "return self to original race", "unpoly self")
 EFFECT(CURSE,						true,	"dam",		0,		EFINFO_NONE,	"damages a monster directly",	"curse")
 EFFECT(COMMAND,						true,	NULL,		0,		EFINFO_NONE,	"takes control of a monster",	"command")
 EFFECT(JUMP_AND_BITE,				false,	NULL,		0,		EFINFO_NONE,	"jumps the player to the closest living monster and bites it",	"jump and bite")

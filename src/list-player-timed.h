@@ -142,3 +142,5 @@ TMD(SUFFOCATE,	PR_STATUS,							PU_BONUS,
     true,	MAX,	RF_NONLIVING,	50,		MON_MSG_SUFFOCATE,		MON_MSG_NOT_SUFFOCATE,	0)
 TMD(SUMMONED,	PR_STATUS,							PU_BONUS,
     false,	NO,		0,				50,		0,						0,						0)
+TMD(POLYMORPHED,PR_STATUS,                          PU_BONUS,
+    true,   MAX,    0,              250,    0,                      0,                      0)

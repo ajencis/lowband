@@ -637,3 +637,9 @@ name:SUMMONED
 desc:summoned
 grade:G:10000:Summoned:You are whisked elsewhere.
 on-end:You return.
+
+name:POLYMORPHED
+desc:POLYMORPHED
+grade:v:10000:Poly:You transform.
+on-end:You revert to your original form.
+on-end-effect:UNPOLY_SELF

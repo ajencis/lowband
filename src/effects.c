@@ -21,10 +21,10 @@
 #include "effect-handler.h"
 #include "game-input.h"
 #include "init.h"
-#include "mon-calcs.h"
+#include "message.h"
 #include "mon-summon.h"
+#include "mon-util.h"
 #include "obj-gear.h"
-#include "player-history.h"
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
@@ -276,6 +276,12 @@ int effect_subtype(int index, const char *type)
 		case EF_TERRAIN_FEAT:
 		case EF_FEAT_GROW:
 			return lookup_feat_code(type);
+
+		case EF_POLY_SELF: {
+			struct monster_race *mr = lookup_monster(type);
+			if (!mr) return -1;
+			return mr->ridx;
+		}
 
 		/* Some effects only want a radius, so this is a dummy */
 		default:

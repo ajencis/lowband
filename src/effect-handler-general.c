@@ -21,13 +21,13 @@
 #include "effect-handler.h"
 #include "game-input.h"
 #include "game-world.h"
-#include "generate.h"
 #include "init.h"
 #include "mon-desc.h"
 #include "mon-lore.h"
 #include "mon-make.h"
 #include "mon-predicate.h"
 #include "mon-summon.h"
+#include "mon-timed.h"
 #include "mon-util.h"
 #include "obj-chest.h"
 #include "obj-curse.h"
@@ -42,7 +42,6 @@
 #include "player-calcs.h"
 #include "player-history.h"
 #include "player-quest.h"
-#include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
@@ -486,6 +485,44 @@ static void brand_object(struct object *obj, const char *name)
 		event_signal(EVENT_INPUT_FLUSH);
 		msg("The branding failed.");
 	}
+}
+
+static void unpolymorph(struct monster *mon, bool save)
+{
+	if (save && saving_throw(mon, TMD_POLYMORPHED, 50, 0)) return;
+
+	if (!mon->original_race) return;
+
+	mon->race = mon->original_race;
+}
+
+static void polymorph(struct monster *mon, struct monster_race *mr, int dur, bool save)
+{
+	int tmd_flg = MON_TMD_FLG_NOTIFY;
+	bool success = true;
+
+	if (mon->original_race && mon->original_race->ridx == mr->ridx) {
+		unpolymorph(mon, save);
+		return;
+	}
+
+	if (!save) {
+		tmd_flg |= MON_TMD_FLG_NOFAIL | MON_TMD_FLG_NORES;
+	}
+
+	if (dur > 0) {
+		success = mon_inc_timed(mon, TMD_POLYMORPHED, dur, tmd_flg);
+	}
+
+	if (!success) {
+		return;
+	}
+
+	if (!mon->original_race) {
+		mon->original_race = mon->race;
+	}
+
+	mon->race = mr;
 }
 
 /**
@@ -4130,6 +4167,52 @@ bool effect_handler_ECHOLOCATE(effect_handler_context_t *context)
 			}
 		}
 	}
+
+	return true;
+}
+
+bool effect_handler_POLY_SELF(effect_handler_context_t *context)
+{
+	int dur = effect_calculate_value(context, true);
+	int mrace_id = context->subtype, midx;
+	struct monster_race *mr = lookup_monster_idx(mrace_id);
+	struct monster *caster = NULL;
+
+	if (context->origin.what == SRC_MONSTER) {
+		midx = context->origin.which.monster;
+		caster = cave_monster(cave, midx);
+	}
+	else if (context->origin.what == SRC_PLAYER) {
+		caster = &player->mon;
+	}
+
+	if (!caster || !caster->race || !mr) {
+		return false;
+	}
+
+	polymorph(caster, mr, dur, false);
+
+	return true;
+}
+
+bool effect_handler_UNPOLY_SELF(effect_handler_context_t *context)
+{
+	struct monster *caster = NULL;
+	int midx;
+
+	if (context->origin.what == SRC_MONSTER) {
+		midx = context->origin.which.monster;
+		caster = cave_monster(cave, midx);
+	}
+	else if (context->origin.what == SRC_PLAYER) {
+		caster = &player->mon;
+	}
+
+	if (!caster || !caster->race) {
+		return false;
+	}
+
+	unpolymorph(caster, false);
 
 	return true;
 }
