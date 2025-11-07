@@ -717,7 +717,6 @@ static struct effect *breath_bite_ef(int innate, const struct monster *mon)
 	ef_new = mem_zalloc(sizeof *ef_new);
 	memcpy(ef_new, ef_src, sizeof *ef_new);
 	ef_new->msg = ef_src->msg ? string_make(ef_src->msg) : NULL;
-	ef_new->monster = NULL;
 	ef_new->next = NULL;
 	ef_new->dice = NULL;
 

@@ -4128,29 +4128,6 @@ static enum parser_error parse_spell_effect_yx(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
-static enum parser_error parse_spell_effect_monster(struct parser *p) {
-	struct player_spell *s = parser_priv(p);
-	struct effect *effect;
-	const char *mon_name;
-
-	/* If there is no effect, assume that this is human and not parser error. */
-	effect = s->effect;
-	if (effect == NULL) {
-		return PARSE_ERROR_NONE;
-	}
-	while (effect->next) effect = effect->next;
-
-	mon_name = parser_getstr(p, "mon-name");
-
-	if (!mon_name) {
-		return PARSE_ERROR_GENERIC;
-	}
-
-	effect->monster = string_make(mon_name);
-
-	return PARSE_ERROR_NONE;
-}
-
 static enum parser_error parse_spell_dice(struct parser *p) {
 	struct player_spell *s = parser_priv(p);
 	struct effect *effect;
@@ -4283,7 +4260,6 @@ static struct parser *init_parse_spell(void) {
 	parser_reg(p, "spell sym name int level ?int mana ?int fail", parse_spell_name);
 	parser_reg(p, "effect sym eff ?sym type ?int radius ?int other", parse_spell_effect);
 	parser_reg(p, "effect-yx int y int x", parse_spell_effect_yx);
-	parser_reg(p, "monster str mon-name", parse_spell_effect_monster);
 	parser_reg(p, "dice str dice", parse_spell_dice);
 	parser_reg(p, "expr sym name sym base str expr", parse_spell_expr);
 	parser_reg(p, "effect-msg str text", parse_spell_effect_msg);

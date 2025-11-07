@@ -62,7 +62,6 @@ struct effect {
 	int radius;		/**< Radius of the effect (if it has one) */
 	int other;		/**< Extra parameter to be passed to the handler */
 	char *msg;		/**< Message for death or whatever */
-	char *monster;	/**< L: monster name for effect */
 	char *subtype_temp;	/**< L: temporary subtype */
 };
 

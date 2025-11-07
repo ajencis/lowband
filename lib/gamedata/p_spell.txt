@@ -151,7 +151,6 @@ school:TELEPORTATION
 
 spell:Descension:80
 effect:LICH_TRANSFORM
-monster:lich
 desc:Transforms you into a lich.
 school:NECROMANCY
 
@@ -506,8 +505,7 @@ school:HOLY
 school:DIVINATION
 
 spell:Ascension:75
-effect:TRANSFORM
-monster:cherub
+effect:TRANSFORM:cherub
 desc:Transforms you into an angel.
 school:HOLY
 

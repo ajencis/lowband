@@ -23,18 +23,14 @@
 #include "init.h"
 #include "mon-init.h"
 #include "mon-lore.h"
-#include "mon-msg.h"
 #include "mon-spell.h"
 #include "mon-util.h"
 #include "mon-blows.h"
 #include "monster.h"
-#include "obj-gear.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
-#include "player-calcs.h"
 #include "player-properties.h"
-#include "player-spell.h"
 #include "player-timed.h"
 #include "project.h"
 #include "ui-visuals.h"
@@ -2582,7 +2578,6 @@ static errr finish_parse_monster(struct parser *p) {
 	struct monster_race *r, *n;
 	size_t i;
 	int ridx;
-	struct player_spell *ps;
 
 	/* Scan the list for the max id and max blows */
 	z_info->r_max = 0;
@@ -2704,20 +2699,6 @@ static errr finish_parse_monster(struct parser *p) {
 				else {
 					race->stat_mod[j] = (race->level * base + 33) / 50;
 				}
-			}
-		}
-	}
-
-	// L: turn spell effect monster names into ids
-	for (ps = spells; ps; ps = ps->next) {
-		struct effect *e;
-		for (e = ps->effect; e; e = e->next) {
-			if (e->monster) {
-				struct monster_race *mr = lookup_monster(e->monster);
-				assert(mr);
-				e->other = mr->ridx;
-				string_free(e->monster);
-				e->monster = NULL;
 			}
 		}
 	}

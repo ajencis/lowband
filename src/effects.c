@@ -76,8 +76,8 @@ void free_effect(struct effect *source)
 		if (e->msg) {
 			string_free(e->msg);
 		}
-		if (e->monster) {
-			string_free(e->monster);
+		if (e->subtype_temp) {
+			string_free(e->subtype_temp);
 		}
 		mem_free(e);
 		e = e_next;
@@ -277,7 +277,8 @@ int effect_subtype(int index, const char *type)
 		case EF_FEAT_GROW:
 			return lookup_feat_code(type);
 
-		case EF_POLY_SELF: {
+		case EF_POLY_SELF:
+		case EF_TRANSFORM: {
 			struct monster_race *mr = lookup_monster(type);
 			if (!mr) return -1;
 			return mr->ridx;

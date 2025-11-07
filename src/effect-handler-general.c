@@ -3772,7 +3772,7 @@ bool effect_handler_COMMAND(effect_handler_context_t *context)
 
 bool effect_handler_TRANSFORM(effect_handler_context_t *context)
 {
-	int ridx = context->other;
+	int ridx = context->subtype;
 	assert(ridx >= 0 && ridx < z_info->r_max);
 	struct monster_race *monr = &r_info[ridx];
 
