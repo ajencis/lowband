@@ -23,7 +23,7 @@
 #include "init.h"
 #include "message.h"
 #include "mon-summon.h"
-#include "obj-info.h"
+#include "mon-util.h"
 #include "player-timed.h"
 #include "project.h"
 #include "z-color.h"
@@ -539,6 +539,10 @@ textblock *effect_describe(const struct effect *e, const char *prefix,
 
 		case EFINFO_FEAT:
 			strnfmt(desc, sizeof(desc), edesc, f_info[e->subtype].name);
+			break;
+
+		case EFINFO_RACE:
+			strnfmt(desc, sizeof desc, edesc, lookup_monster_idx(e->subtype));
 			break;
 
 		case EFINFO_NONE:

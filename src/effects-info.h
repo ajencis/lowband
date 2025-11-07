@@ -35,7 +35,8 @@ enum {
 	EFINFO_BOLT,
 	EFINFO_BOLTD,
 	EFINFO_TOUCH,
-	EFINFO_FEAT
+	EFINFO_FEAT,
+	EFINFO_RACE
 };
 
 enum effect_object_property_kind {
