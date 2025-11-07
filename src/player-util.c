@@ -1511,8 +1511,6 @@ bool player_learn_spell_xp(struct player *p, bool initial, int xp)
 		for (ps = spells; ps; ps = ps->next) {
 			int power = gener_spell_power(p, ps);
 
-			if (ps->smana > p->msp) continue;
-
 			// learn only spells we can cast at a reasonable level
 			if (power > 5 || (initial && power > 0)) {
 				power += ps->slevel / 2;
