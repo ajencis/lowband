@@ -260,10 +260,13 @@ errr grab_effect_data(struct parser *p, struct effect *effect)
 
 		/* Check for a value */
 		val = effect_subtype(effect->index, type);
-		if (val < 0)
-			return PARSE_ERROR_INVALID_VALUE;
-		else
+
+		if (val < 0) {
+			effect->subtype_temp = string_make(type);
+			effect->subtype = -1;
+		} else {
 			effect->subtype = val;
+		}
 	}
 
 	if (parser_hasval(p, "radius"))
@@ -3366,8 +3369,6 @@ static enum parser_error parse_p_race_monster(struct parser *p) {
 
 	r->mon_race = mon;
 
-	dbg_log_fmt("race", "setting %s race to %s", r->name, r->mon_race->name);
-
 	return PARSE_ERROR_NONE;
 }
 
@@ -3448,8 +3449,6 @@ static errr finish_parse_p_race(struct parser *p) {
 			my_struncap_full(r_name);
 
 			r->mon_race = lookup_monster(r_name);
-
-			dbg_log_fmt("race", "%s has no race, setting to %s", r->name, r->mon_race->name);
 
 			assert(r->mon_race);
 		}
@@ -5529,6 +5528,39 @@ struct file_parser hints_parser = {
  * Game data initialization
  * ------------------------------------------------------------------------ */
 
+
+/*
+ * L: parse effects later in case they're getting initialized before their subtypes
+ * are
+ */
+static void fill_in_effect_subtype(struct effect *ef, const char *source_type, const char *source_name)
+{
+	struct effect *temp;
+
+	for (temp = ef; temp; temp = temp->next) {
+		if (!temp->subtype_temp) continue;
+
+		temp->subtype = effect_subtype(temp->index, temp->subtype_temp);
+
+		if (temp->subtype < 0) {
+			quit_fmt("Error: unrecognized effect subtype %s (%s %s)!", temp->subtype_temp, source_type, source_name);
+		}
+
+		string_free(temp->subtype_temp);
+		temp->subtype_temp = NULL;
+	}
+}
+
+static void fill_all_effect_subtypes(void)
+{
+	struct player_spell *ps;
+
+	for (ps = spells; ps; ps = ps->next) {
+		fill_in_effect_subtype(ps->effect, "spell", ps->name);
+	}
+}
+
+
 /**
  * A list of all the above parsers, plus those found in mon-init.c and
  * obj-init.c
@@ -5592,9 +5624,12 @@ void init_arrays(void)
 		char *msg = string_make(format("Initializing %s...", pl[i].name));
 		event_signal_message(EVENT_INITSTATUS, 0, msg);
 		string_free(msg);
-		if (run_parser(pl[i].parser))
+		if (run_parser(pl[i].parser)) {
 			quit_fmt("Cannot initialize %s.", pl[i].name);
+		}
 	}
+
+	fill_all_effect_subtypes();
 }
 
 /**
