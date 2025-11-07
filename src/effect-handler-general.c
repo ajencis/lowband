@@ -494,6 +494,12 @@ static void unpolymorph(struct monster *mon, bool save)
 	if (!mon->original_race) return;
 
 	mon->race = mon->original_race;
+	mon->original_race = NULL;
+
+	if (mon->player) {
+		mon->player->upkeep->update |= PU_BONUS;
+		mon->player->upkeep->redraw |= PR_MISC;
+	}
 }
 
 static void polymorph(struct monster *mon, struct monster_race *mr, int dur, bool save)
@@ -523,6 +529,11 @@ static void polymorph(struct monster *mon, struct monster_race *mr, int dur, boo
 	}
 
 	mon->race = mr;
+
+	if (mon->player) {
+		mon->player->upkeep->update |= PU_BONUS;
+		mon->player->upkeep->redraw |= PR_MISC;
+	}
 }
 
 /**
@@ -4173,10 +4184,28 @@ bool effect_handler_ECHOLOCATE(effect_handler_context_t *context)
 
 bool effect_handler_POLY_SELF(effect_handler_context_t *context)
 {
-	int dur = effect_calculate_value(context, true);
-	int mrace_id = context->subtype, midx;
-	struct monster_race *mr = lookup_monster_idx(mrace_id);
+	int pwr = effect_calculate_value(context, true);
+	int mrace_id = context->subtype, midx, evo_num;
+	struct monster_race *mr = lookup_monster_idx(mrace_id), *next_mr;
 	struct monster *caster = NULL;
+	struct evolution *evo;
+
+	// select random evolutions
+	next_mr = mr;
+
+	while (next_mr) {
+		evo_num = 1;
+		mr = next_mr;
+		next_mr = NULL;
+
+		for (evo = mr->evol; evo; evo = evo->next) {
+			if (evo->race->level > pwr) continue;
+			evo_num++;
+			if (!one_in_(evo_num)) continue;
+
+			next_mr = evo->race;
+		}
+	}
 
 	if (context->origin.what == SRC_MONSTER) {
 		midx = context->origin.which.monster;
@@ -4190,7 +4219,7 @@ bool effect_handler_POLY_SELF(effect_handler_context_t *context)
 		return false;
 	}
 
-	polymorph(caster, mr, dur, false);
+	polymorph(caster, mr, pwr + 50, false);
 
 	return true;
 }
