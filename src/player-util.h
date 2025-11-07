@@ -92,7 +92,7 @@ bool learn_realm(struct player *p, const struct magic_realm *realm);
 
 int player_class_power_array(const struct player_class *c, int extra_power, int power);
 int player_class_power(struct player *p, int power);
-int player_race_power_array(const struct player_race *r, int extra_power, int power);
+int player_race_power_array(const struct monster_race *r, int extra_power, int power);
 int player_race_power(struct player *p, int power);
 int class_x_skill(const struct player_class *c, int extra, int skill);
 int player_class_x_skill(struct player *p, int skill);
@@ -100,7 +100,7 @@ int class_c_skill(const struct player_class *c, int extra, int skill);
 int player_class_c_skill(struct player *p, int skill);
 void player_race_r_skill(const struct monster_race *r, bool evolved, int skills[SKILL_MAX]);
 void player_race_x_skill(const struct monster_race *r, bool evolved, int skills[SKILL_MAX]);
-void player_race_elem_info(const struct player_race *r, bool evolved, struct element_info el_info[ELEM_MAX]);
+//void player_race_elem_info(const struct player_race *r, bool evolved, struct element_info el_info[ELEM_MAX]);
 
 int player_skill_stat_ind(const struct player *p, const struct player_state *ps, int skill);
 void player_skill_stats(struct player *p, struct player_state *ps, int skill, int *stat1, int *stat2);

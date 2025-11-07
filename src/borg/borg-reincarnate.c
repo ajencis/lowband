@@ -379,6 +379,7 @@ static void borg_outfit_player(struct player *p)
  */
 static void borg_roll_hp(void)
 {
+#if 0
     int i, j, min_value, max_value;
 
     /* Minimum hitpoints at highest level */
@@ -408,6 +409,7 @@ static void borg_roll_hp(void)
         /* Acceptable */
         break;
     }
+#endif
 }
 
 /*
@@ -490,13 +492,15 @@ void reincarnate_borg(void)
     seed_flavor = randint0(0x10000000);
 
     /* Embody */
-    memcpy(&p->mon.body, p->race->body, sizeof(p->mon.body));
-    my_strcpy(buf, p->race->body->name, sizeof(buf));
+    give_player_race(p);
+    assert(p->mon.race && p->mon.race->body);;
+    memcpy(&p->mon.body, p->mon.race->body, sizeof(p->mon.body));
+    my_strcpy(buf, p->mon.race->body->name, sizeof(buf));
     p->mon.body.name  = string_make(buf);
     p->mon.body.slots = mem_zalloc(p->mon.body.count * sizeof(struct equip_slot));
     for (i = 0; i < p->mon.body.count; i++) {
-        p->mon.body.slots[i].type = p->race->body->slots[i].type;
-        my_strcpy(buf, p->race->body->slots[i].name, sizeof(buf));
+        p->mon.body.slots[i].type = p->mon.race->body->slots[i].type;
+        my_strcpy(buf, p->mon.race->body->slots[i].name, sizeof(buf));
         p->mon.body.slots[i].name = string_make(buf);
     }
 

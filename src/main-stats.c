@@ -216,7 +216,7 @@ static void generate_player_for_stats(void)
 	player->expfact = player->race->r_exp + player->class->c_exp;
 
 	/* Hitdice */
-	player->hitdie = player->race->r_mhp + player->class->c_mhp;
+	//player->hitdie = player->race->r_mhp + player->class->c_mhp;
 
 	/* Initial hitpoints -- high just to be safe */
 	player->mon.maxhp = player->mon.hp = 2000;

@@ -289,7 +289,7 @@ sleepiness:40
 depth:0
 rarity:10
 experience:0
-flags:PLAYABLE
+flags:PLAYABLE | RES_LIGHT
 stats:0:1:-1:1:-1
 skill:DISARM_PHYS:4
 skill:DISARM_MAGIC:4

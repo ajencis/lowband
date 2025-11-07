@@ -110,10 +110,10 @@ static bool unlock_races(struct player *p)
 			continue;
 		}
 
-		if (!r->evol) {
+		/*if (!r->evol) {
 			p->unlocked_races[r->ridx] = true;
 			didunlock = true;
-		}
+		}*/
 	}
 
 	return didunlock;
@@ -217,13 +217,16 @@ bool player_can_metaprogress(struct player *p)
  */
 struct monster_race *race_to_monster(const struct player_race *r)
 {
-	char name[80];
+	assert(r->mon_race);
+	return (struct monster_race *)r->mon_race;
+
+	/*char name[80];
 	struct monster_race *result;
 	my_strcpy(name, r->name, sizeof name);
 	my_struncap_full(name);
 	result = lookup_monster(name);
 	assert(result);
-	return result;
+	return result;*/
 }
 
 struct monster_race *lookup_player_monster(const struct player *p)
@@ -1246,20 +1249,20 @@ int player_class_power(struct player *p, int power)
 	return player_class_power_array(p->class, p->extra_powers[power], power);
 }
 
-int player_race_power_array(const struct player_race *r, int extra_power, int power)
+int player_race_power_array(const struct monster_race *r, int extra_power, int power)
 {
 	assert(power >= 0 && power < PP_MAX);
-	int base = r->r_powers[power];
+	int base = r->powers[power];
 	// extra-learning makes race reflect learned powers
-	if (pf_has(r->pflags, PF_EXTRA_LEARNING)) {
+	/*if (pf_has(r->pflags, PF_EXTRA_LEARNING)) {
 		base = MAX(base, extra_power / 2);
-	}
+	}*/
 	return base;
 }
 
 int player_race_power(struct player *p, int power)
 {
-	return player_race_power_array(p->race, p->extra_powers[power], power);
+	return player_race_power_array(p->mon.race, p->extra_powers[power], power);
 }
 
 int class_x_skill(const struct player_class *c, int extra, int skill)
@@ -1319,6 +1322,7 @@ void player_race_x_skill(const struct monster_race *r, bool evolved, int skills[
 	player_race_r_skill(r, evolved, skills);
 }
 
+#if 0
 void player_race_elem_info(const struct player_race *r, bool evolved, struct element_info el_info[ELEM_MAX])
 {
 	int i;
@@ -1348,6 +1352,7 @@ void player_race_elem_info(const struct player_race *r, bool evolved, struct ele
 		}
 	}
 }
+#endif
 
 void skill_stat(const struct magic_realm *realm, const int indices[STAT_MAX], int skill, int *stat1, int *stat2)
 {
@@ -2025,6 +2030,7 @@ bool tomes_unlock(struct player *p)
 	return did_unlock;
 }
 
+#if 0
 static bool race_is_evolution(struct monster_race *or, struct monster_race *mr)
 {
 	struct evolution *evol;
@@ -2036,9 +2042,11 @@ static bool race_is_evolution(struct monster_race *or, struct monster_race *mr)
 	}
 	return false;
 }
+#endif
 
 static bool unlock_by_race(struct player *p, struct monster_race *mr, bool first)
 {
+#if 0
 	struct player_race *pr;
 	bool unlockedany = false;
 	bool addspace = first;
@@ -2077,6 +2085,8 @@ static bool unlock_by_race(struct player *p, struct monster_race *mr, bool first
 	}
 
 	return unlockedany;
+#endif
+	return false;
 }
 
 bool races_unlock(struct player *p)

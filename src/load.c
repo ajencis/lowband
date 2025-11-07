@@ -796,7 +796,7 @@ int rd_player(void)
 	rd_byte(&player->opts.name_suffix);
 
 	/* Special Race/Class info */
-	rd_byte(&player->hitdie);
+	//rd_byte(&player->hitdie);
 
 	/* Age/Height/Weight */
 	rd_s16b(&player->age);
@@ -1215,6 +1215,7 @@ int rd_artifacts(void)
 
 int rd_player_hp(void)
 {
+#if 0
 	int i;
 	uint16_t tmp16u;
 
@@ -1229,6 +1230,7 @@ int rd_player_hp(void)
 	for (i = 0; i < tmp16u; i++) {
 		rd_s16b(&player->player_hp[i]);
 	}
+#endif
 
 	return 0;
 }

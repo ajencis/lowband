@@ -69,9 +69,11 @@ struct player_race {
 	struct player_race *next;
 	const char *name;
 
+	struct monster_race *mon_race;
+
 	unsigned int ridx;
 
-	int r_mhp;		/**< Hit-dice modifier */
+	//int r_mhp;		/**< Hit-dice modifier */
 	int r_exp;		/**< Experience factor */
 
 	int b_age;		/**< Base age */
@@ -84,15 +86,15 @@ struct player_race {
 
 	int infra;		/**< Infra-vision range */
 
-	struct player_body *body;		/**< Race body */
+	//struct player_body *body;		/**< Race body */
 
-	struct evolution *evol;		/**< L: evolutions */
+	//struct evolution *evol;		/**< L: evolutions */
 
-	int r_adj[STAT_MAX];		/**< Stat bonuses */
+	//int r_adj[STAT_MAX];		/**< Stat bonuses */
 
-	int r_skills[SKILL_MAX];	/**< Skills */
+	//int r_skills[SKILL_MAX];	/**< Skills */
 
-	int r_powers[PP_MAX];		/**< L: powers */
+	//int r_powers[PP_MAX];		/**< L: powers */
 
 	bitflag flags[OF_SIZE];		/**< Racial (object) flags */
 	bitflag pflags[PF_SIZE];	/**< Racial (player) flags */
@@ -415,7 +417,7 @@ struct player {
 	//struct loc grid;	/* Player location */
 	struct loc old_grid;/* Player location before leaving for an arena */
 
-	uint8_t hitdie;		/* Hit dice (sides) */
+	//uint8_t hitdie;		/* Hit dice (sides) */
 
 	int16_t age;		/* Characters age */
 	int16_t ht;		/* Height */
@@ -482,7 +484,7 @@ struct player {
 
 	bool wizard;						/* Player is in wizard mode */
 
-	int16_t player_hp[PY_MAX_LEVEL];	/* HP gained per level */
+	//int16_t player_hp[PY_MAX_LEVEL];	/* HP gained per level */
 
 	/* Saved values for quickstart */
 	int32_t au_birth;					/* Birth gold when option birth_money is false */

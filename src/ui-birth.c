@@ -316,7 +316,7 @@ void reset_birthmenu_filters(void)
  */
 static const menu_iter birth_iter = { NULL, birthmenu_valid, birthmenu_display, NULL, NULL, NULL };
 
-static void skill_help(const int r_skills[], const int c_skills[], int mhp, int exp, int infra)
+static void skill_help(const int r_skills[], const int c_skills[], int exp, int infra)
 {
 	int16_t skills[SKILL_MAX];
 	unsigned i;
@@ -410,7 +410,7 @@ static void race_help(int i, void *db, const region *l)
 	}
 	
 	text_out_e("\n");
-	skill_help(race_skills, NULL, r->r_mhp, r->r_exp, r->infra);
+	skill_help(race_skills, NULL, r->r_exp, r->infra);
 	text_out_e("\n");
 
 	for (ability = player_abilities; ability; ability = ability->next) {
@@ -427,7 +427,7 @@ static void race_help(int i, void *db, const region *l)
 		} else if ((ability->type == PY_ABIL_POWER) &&
 		           (!race_powers[ability->index])) {
             continue;
-		} else if ((ability->type == PY_ABIL_SKILL)) {
+		} else if (ability->type == PY_ABIL_SKILL) {
 			continue;
 		}
 
@@ -468,7 +468,7 @@ static void class_help(int i, void *db, const region *l)
 	text_out_indent = CLASS_AUX_COL;
 	Term_gotoxy(CLASS_AUX_COL, TABLE_ROW);
 	
-	skill_help(mr->skills, c->c_skills, r->r_mhp + c->c_mhp,
+	skill_help(mr->skills, c->c_skills,
 			   r->r_exp + c->c_exp, -1);
 
 	if (c->magic.total_spells) {

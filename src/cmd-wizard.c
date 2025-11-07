@@ -2250,6 +2250,7 @@ void do_cmd_wiz_recall_monster(struct command *cmd)
  */
 void do_cmd_wiz_rerate(struct command *cmd)
 {
+#if 0
 	int min_value, max_value, percent;
 
 	min_value = (PY_MAX_LEVEL * 3 * (player->hitdie - 1)) / 8;
@@ -2283,6 +2284,7 @@ void do_cmd_wiz_rerate(struct command *cmd)
 	player->upkeep->redraw |= PR_HP;
 
 	msg("Current Life Rating is %d/100.", percent);
+#endif
 }
 
 

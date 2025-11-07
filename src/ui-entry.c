@@ -1022,8 +1022,9 @@ void compute_ui_entry_values_for_player(const struct ui_entry *entry,
 			modifier_to_skill(ind, &skill_ind, &skill_cnv_num,
 				&skill_cnv_den);
 			if (skill_ind >= 0) {
-				v = (p->race->r_skills[skill_ind] *
-					skill_cnv_num) / skill_cnv_den;
+				//v = (p->race->r_skills[skill_ind] *
+				//	skill_cnv_num) / skill_cnv_den;
+				v = p->mon.race->skills[skill_ind] * skill_cnv_num / skill_cnv_den;
 				a = 0;
 				if (entry->obj_props[i].isaux) {
 					int t = v;

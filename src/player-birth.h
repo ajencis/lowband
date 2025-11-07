@@ -30,6 +30,7 @@ extern bool player_make_simple(const char *nrace, const char *nclass,
 	const char *nplayer);
 extern void get_bonuses(void);
 extern void demonster_player(struct player *p);
+void give_player_race(struct player *p);
 
 void do_cmd_birth_init(struct command *cmd);
 void do_cmd_birth_reset(struct command *cmd);

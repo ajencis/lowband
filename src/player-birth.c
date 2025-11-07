@@ -373,6 +373,7 @@ static void get_stats(int stat_use[STAT_MAX])
 /* L: now give average */
 static void roll_hp(void)
 {
+#if 0
 	int i, j, min_value, max_value;
 
 	/* Minimum hitpoints at highest level */
@@ -401,6 +402,7 @@ static void roll_hp(void)
 		/* Acceptable */
 		break;
 	}
+#endif
 }
 
 
@@ -475,11 +477,16 @@ static void player_embody(struct player *p)
 	struct player_body *body;
 	struct monster_race *mr = lookup_player_monster(p);
 
-	if (mr && mr->body) {
+	assert(mr);
+	assert(mr->body);
+
+	body = mr->body;
+
+	/*if (mr && mr->body) {
 		body = mr->body;
 	} else {
 		body = p->race->body;
-	}
+	}*/
 
 	assert(p->race);
 
@@ -506,7 +513,7 @@ static void get_money(struct player *p)
 	p->au = p->au_birth;
 }
 
-static void give_player_race(struct player *p)
+void give_player_race(struct player *p)
 {
 	const struct player_race *r = p->race;
 	struct monster_race *mr;
@@ -850,7 +857,7 @@ static void recalculate_stats(int *stats_local_local, int points_left_local)
 
 	/* L: Variable stat maxes */
 	for (i = 0; i < STAT_MAX; i++) {
-		player->stat_max_max[i] = MAX(stats_local_local[i], 3);// player->race->r_adj[i], 3);
+		player->stat_max_max[i] = MAX(stats_local_local[i], 3);
 		if (player->stat_max_max[i] > 18) player->stat_max_max[i] = (player->stat_max_max[i] - 18) * 10 + 18;
 		player->stat_cur[i] = player->stat_max[i] =	player->stat_birth[i]
 		                    = birth_stat(player, i);
@@ -1152,7 +1159,6 @@ void player_generate(struct player *p, const struct player_race *r,
 {
 	int i;
 	struct monster_race *mr;
-	char mon_name[80];
 
 	if (!c) {
 		c = p->class;
@@ -1164,38 +1170,36 @@ void player_generate(struct player *p, const struct player_race *r,
 	p->class = c;
 	p->race = r;
 
-	strncpy(mon_name, p->race->name, sizeof mon_name);
-	my_struncap_full(mon_name);
+	mr = race_to_monster(r);
 
-	mr = lookup_monster(mon_name);
-	if (!mr) mr = lookup_monster("human");
 	assert(mr);
+
 	change_player_monster(p, mr, true);
 
 	/* Level 1 */
 	p->max_lev = p->lev = 1;
 
 	/* Hitdice */
-	p->hitdie = p->race->r_mhp + p->class->c_mhp;
+	//p->hitdie = p->race->r_mhp + p->class->c_mhp;
 
 	/* Pre-calculate level 1 hitdice */
-	p->player_hp[0] = p->hitdie;
+	//p->player_hp[0] = p->hitdie;
 
 	/*
 	 * Fill in overestimates of hitpoints for additional levels.  Do not
 	 * do the actual rolls so the player can not reset the birth screen
 	 * to get a desirable set of initial rolls.
 	 */
-	for (i = 1; i < p->lev; i++) {
+	/*for (i = 1; i < p->lev; i++) {
 		p->player_hp[i] = p->player_hp[i - 1] + p->hitdie;
-	}
+	}*/
 
 	for (i = 0; i < z_info->realm_max; ++i) {
 		p->extra_choice[i] = -1;
 	}
 
 	/* Initial hitpoints */
-	p->mon.maxhp = p->player_hp[p->lev - 1];
+	//p->mon.maxhp = p->player_hp[p->lev - 1];
 
 	/* L: copy realm over */
 	p->realm = c->realm;

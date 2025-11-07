@@ -1168,54 +1168,6 @@ void move_player(int dir, bool disarm)
 
 		msgt(MSG_HITWALL, "%s %s%s blocking your way.", prefix, article, issue);
 
-		/* Notice unknown obstacles, mention known obstacles */
-		/*if (!square_isknown(cave, grid)) {
-			square_memorize(cave, grid);
-			issue = square_impassable_name(player->cave, grid);
-
-			if (issue) msgt(MSG_HITWALL, "You feel a %s blocking your way.", issue);
-			else msgt(MSG_HITWALL, "You feel something blocking your way.");
-
-			if (square_isrubble(cave, grid)) {
-				msgt(MSG_HITWALL,
-					 "You feel a pile of rubble blocking your way.");
-				square_memorize(cave, grid);
-				square_light_spot(cave, grid);
-			} else if (square_iscloseddoor(cave, grid)) {
-				msgt(MSG_HITWALL, "You feel a door blocking your way.");
-				square_memorize(cave, grid);
-				square_light_spot(cave, grid);
-			} else {
-				msgt(MSG_HITWALL, "You feel a wall blocking your way.");
-				square_memorize(cave, grid);
-				square_light_spot(cave, grid);
-			}
-		} else {
-			issue = square_impassable_name(player->cave, grid);
-
-			if (square_isrubble(cave, grid)) {
-				msgt(MSG_HITWALL,
-					 "There is a pile of rubble blocking your way.");
-				if (!square_isrubble(player->cave, grid)) {
-					square_memorize(cave, grid);
-					square_light_spot(cave, grid);
-				}
-			} else if (square_iscloseddoor(cave, grid)) {
-				msgt(MSG_HITWALL, "There is a door blocking your way.");
-				if (!square_iscloseddoor(player->cave, grid)) {
-					square_memorize(cave, grid);
-					square_light_spot(cave, grid);
-				}
-			} else {
-				msgt(MSG_HITWALL, "There is a wall blocking your way.");
-				if (square_ispassable(player->cave, grid)
-						|| square_isrubble(player->cave, grid)
-						|| square_iscloseddoor(player->cave, grid)) {
-					square_forget(cave, grid);
-					square_light_spot(cave, grid);
-				}
-			}
-		}*/
 		/*
 		 * No move but do not refund energy:  primarily so that
 		 * confused moves while blind or without light take energy.

@@ -588,6 +588,7 @@ static const int borg_adj_str_wgt[STAT_RANGE] = {
     30	/* 18/220+ */
 };
 
+#if 0
 static const int borg_adj_con_mhp[STAT_RANGE] = {
     -250	/* 3 */,
     -150	/* 4 */,
@@ -628,6 +629,7 @@ static const int borg_adj_con_mhp[STAT_RANGE] = {
     1250	/* 18/210-18/219 */,
     1250	/* 18/220+ */
 };
+#endif
 
 /**
  * Stat Table (INT/WIS) -- Minimum failure rate (percentage)
@@ -1210,6 +1212,7 @@ static void borg_notice_equipment(void)
     int                        i, hold;
     const struct player_race  *rb_ptr = player->race;
     const struct player_class *cb_ptr = player->class;
+    const struct monster_race *mr_ptr = player->mon.race;
 
     int extra_shots                   = 0;
     int extra_might                   = 0;
@@ -1239,42 +1242,42 @@ static void borg_notice_equipment(void)
     borg.trait[BI_INFRA] = rb_ptr->infra;
 
     /* Base skill -- disarming */
-    borg.trait[BI_DISP] = rb_ptr->r_skills[SKILL_DISARM_PHYS]
+    borg.trait[BI_DISP] = mr_ptr->skills[SKILL_DISARM_PHYS]
                           + cb_ptr->c_skills[SKILL_DISARM_PHYS];
-    borg.trait[BI_DISM] = rb_ptr->r_skills[SKILL_DISARM_MAGIC]
+    borg.trait[BI_DISM] = mr_ptr->skills[SKILL_DISARM_MAGIC]
                           + cb_ptr->c_skills[SKILL_DISARM_MAGIC];
 
     /* Base skill -- magic devices */
     borg.trait[BI_DEV]
-        = rb_ptr->r_skills[SKILL_DEVICE] + cb_ptr->c_skills[SKILL_DEVICE];
+        = mr_ptr->skills[SKILL_DEVICE] + cb_ptr->c_skills[SKILL_DEVICE];
 
     /* Base skill -- saving throw */
     borg.trait[BI_SAV]
-        = rb_ptr->r_skills[SKILL_SAVE] + cb_ptr->c_skills[SKILL_SAVE];
+        = mr_ptr->skills[SKILL_SAVE] + cb_ptr->c_skills[SKILL_SAVE];
 
     /* Base skill -- stealth */
     borg.trait[BI_STL]
-        = rb_ptr->r_skills[SKILL_STEALTH] + cb_ptr->c_skills[SKILL_STEALTH];
+        = mr_ptr->skills[SKILL_STEALTH] + cb_ptr->c_skills[SKILL_STEALTH];
 
     /* Base skill -- searching ability */
     borg.trait[BI_SRCH]
-        = rb_ptr->r_skills[SKILL_SEARCH] + cb_ptr->c_skills[SKILL_SEARCH];
+        = mr_ptr->skills[SKILL_SEARCH] + cb_ptr->c_skills[SKILL_SEARCH];
 
     /* Base skill -- combat (normal) */
-    borg.trait[BI_THN] = rb_ptr->r_skills[SKILL_TO_HIT_MELEE]
+    borg.trait[BI_THN] = mr_ptr->skills[SKILL_TO_HIT_MELEE]
                          + cb_ptr->c_skills[SKILL_TO_HIT_MELEE];
 
     /* Base skill -- combat (shooting) */
-    borg.trait[BI_THB] = rb_ptr->r_skills[SKILL_TO_HIT_BOW]
+    borg.trait[BI_THB] = mr_ptr->skills[SKILL_TO_HIT_BOW]
                          + cb_ptr->c_skills[SKILL_TO_HIT_BOW];
 
     /* Base skill -- combat (throwing) */
-    borg.trait[BI_THT] = rb_ptr->r_skills[SKILL_TO_HIT_THROW]
+    borg.trait[BI_THT] = mr_ptr->skills[SKILL_TO_HIT_THROW]
                          + cb_ptr->c_skills[SKILL_TO_HIT_THROW];
 
     /* Affect Skill -- digging (STR) */
     borg.trait[BI_DIG]
-        = rb_ptr->r_skills[SKILL_DIGGING] + cb_ptr->c_skills[SKILL_DIGGING];
+        = mr_ptr->skills[SKILL_DIGGING] + cb_ptr->c_skills[SKILL_DIGGING];
 
     /** Racial Skills **/
 
@@ -1765,7 +1768,7 @@ static void borg_notice_equipment(void)
         add = borg.trait[BI_ASTR + i];
 
         /* Modify the stats for race/class */
-        add += (player->race->r_adj[i] + player->class->c_adj[i]);
+        //add += (player->race->r_adj[i] + player->class->c_adj[i]);
 
         /* Extract the new "use_stat" value for the stat */
         use = modify_stat_value(borg.stat_cur[i], add);
@@ -1791,9 +1794,10 @@ static void borg_notice_equipment(void)
         borg.trait[BI_CSTR + i] = borg.stat_cur[i];
     }
 
-    borg.trait[BI_HP_ADJ] = player->player_hp[player->lev - 1]
+    borg.trait[BI_HP_ADJ] = player->mon.state.skills[SKILL_HEALTH];
+    /*borg.trait[BI_HP_ADJ] = player->player_hp[player->lev - 1]
                             + borg_adj_con_mhp[borg.stat_ind[STAT_CON]]
-                                  * borg.trait[BI_CLEVEL] / 100;
+                                  * borg.trait[BI_CLEVEL] / 100;*/
 
     /* 'Mana' is actually the 'mana adjustment' */
     int spell_stat = borg_spell_stat();

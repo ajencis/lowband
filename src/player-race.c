@@ -18,6 +18,7 @@
 
 #include "angband.h"
 #include "monster.h"
+#include "player-util.h"
 #include "player.h"
 
 struct player_race *player_id2race(guid id)
@@ -48,8 +49,9 @@ int max_race_evol_lev(struct player_race *r)
 {
 	const struct evolution *curr;
 	int maxlev = 0;
+	struct monster_race *mr = race_to_monster(r);
 
-	for (curr = r->evol; curr; curr = curr->next) {
+	for (curr = mr->evol; curr; curr = curr->next) {
 		int currlev = max_evol_lev(curr->race);
 		maxlev = MAX(maxlev, currlev);
 	}

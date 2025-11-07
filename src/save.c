@@ -502,7 +502,7 @@ void wr_player(void)
 	wr_string(player->class->name);
 	wr_byte(player->opts.name_suffix);
 
-	wr_byte(player->hitdie);
+	//wr_byte(player->hitdie);
 
 	wr_s16b(player->age);
 	wr_s16b(player->ht);
@@ -813,11 +813,13 @@ void wr_artifacts(void)
 
 void wr_player_hp(void)
 {
+#if 0
 	int i;
 
 	wr_u16b(PY_MAX_LEVEL);
 	for (i = 0; i < PY_MAX_LEVEL; i++)
 		wr_s16b(player->player_hp[i]);
+#endif
 }
 
 

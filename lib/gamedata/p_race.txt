@@ -65,20 +65,20 @@
 
 
 name:Human
-stats:0:0:0:0:0
-skill-disarm-phys:0
-skill-disarm-magic:0
-skill-device:0
-skill-save:0
-skill-stealth:0
-skill-search:0
-skill-melee:0
-skill-shoot:0
-skill-throw:0
-skill-dig:0
-skill-magic:0
-skill-health:0
-hitdie:5
+#stats:0:0:0:0:0
+#skill-disarm-phys:0
+#skill-disarm-magic:0
+#skill-device:0
+#skill-save:0
+#skill-stealth:0
+#skill-search:0
+#skill-melee:0
+#skill-shoot:0
+#skill-throw:0
+#skill-dig:0
+#skill-magic:0
+#skill-health:0
+#hitdie:5
 exp:100
 infravision:0
 history:1
@@ -86,23 +86,22 @@ age:14:6
 height:69:10
 weight:165:35
 player-flags:EXTRA_LEARNING
-body:Humanoid
+#body:Humanoid
 
 name:Half-Elf
-stats:0:0:-1:1:0
-skill-disarm-phys:2
-skill-disarm-magic:2
-skill-device:3
-skill-save:3
-skill-stealth:4
-skill-search:3
-skill-melee:-1
-skill-shoot:4
-skill-throw:4
-skill-dig:0
-skill-magic:0
-skill-health:-1
-hitdie:5
+#stats:0:0:-1:1:0
+#skill-disarm-phys:2
+#skill-disarm-magic:2
+#skill-device:3
+#skill-save:3
+#skill-stealth:4
+#skill-search:3
+#skill-melee:-1
+#skill-shoot:4
+#skill-dig:0
+#skill-magic:0
+#skill-health:-1
+#hitdie:5
 exp:120
 infravision:2
 history:4
@@ -110,24 +109,22 @@ age:24:16
 height:71:8
 weight:115:25
 obj-flags:SUST_DEX
-body:Humanoid
+#body:Humanoid
 
 name:Elf
-stats:0:1:-1:1:-1
-skill-disarm-phys:4
-skill-disarm-magic:4
-skill-device:5
-skill-save:5
-skill-stealth:6
-skill-search:5
-skill-melee:-5
-skill-shoot:10
-skill-throw:10
-skill-dig:0
-skill-magic:0
-skill-health:-2
-power:BOW_SPECIALIZATION:20
-hitdie:4
+#stats:0:1:-1:1:-1
+#skill-disarm-phys:4
+#skill-disarm-magic:4
+#skill-device:5
+#skill-save:5
+#skill-stealth:6
+###kill-shoot:10
+#skill-throw:10
+#skill-dig:0
+#skill-magic:0
+#skill-health:-2
+#power:BOW_SPECIALIZATION:20
+#hitdie:4
 exp:120
 infravision:3
 history:5
@@ -136,23 +133,22 @@ height:73:7
 weight:90:10
 obj-flags:SUST_DEX
 values:RES_LIGHT[1]
-body:Humanoid
+#body:Humanoid
 
 name:Hobbit
-stats:-2:0:0:1:1
-skill-disarm-phys:10
-skill-disarm-magic:10
-skill-device:12
-skill-save:12
-skill-stealth:15
-skill-search:6
-skill-melee:-10
-skill-shoot:15
-skill-throw:15
-skill-dig:0
-skill-magic:0
-skill-health:-2
-hitdie:2
+#stats:-2:0:0:1:1
+#skill-disarm-phys:10
+#skill-disarm-magic:10
+#skill-device:12
+##skill-stealth:15
+#s#kill-search:6
+#skill-melee:-10
+#skill-shoot:15
+#skill-throw:15
+#skill-dig:0
+#skill-magic:0
+#skill-health:-2
+#hitdie:2
 exp:120
 infravision:4
 history:10
@@ -161,24 +157,11 @@ height:34:4
 weight:55:5
 obj-flags:HOLD_LIFE
 player-flags:KNOW_MUSHROOM
-body:Humanoid
+#body:Humanoid
 
 name:Gnome
-stats:-1:1:-2:1:1
-skill-disarm-phys:7
-skill-disarm-magic:7
-skill-device:16
-skill-save:8
-skill-stealth:10
-skill-search:3
-skill-melee:-8
-skill-shoot:8
-skill-throw:8
-skill-dig:0
-skill-magic:0
-skill-health:-2
-power:ILLUSION_MAGIC:20
-hitdie:3
+#power:ILLUSION_MAGIC:20
+#hitdie:3
 exp:120
 infravision:4
 history:13
@@ -187,23 +170,10 @@ height:40:5
 weight:80:5
 obj-flags:FREE_ACT
 player-flags:KNOW_ZAPPER
-body:Humanoid
+#body:Humanoid
 
 name:Dwarf
-stats:0:-1:0:-2:2
-skill-disarm-phys:2
-skill-disarm-magic:2
-skill-device:7
-skill-save:7
-skill-stealth:-5
-skill-search:2
-skill-melee:10
-skill-shoot:0
-skill-throw:0
-skill-dig:30
-skill-magic:-5
-skill-health:3
-hitdie:6
+#hitdie:6
 exp:120
 infravision:5
 history:16
@@ -212,23 +182,10 @@ height:47:4
 weight:135:20
 obj-flags:PROT_BLIND
 player-flags:SEE_ORE
-body:Humanoid
+#body:Humanoid
 
 name:Half-Orc
-stats:1:-1:-1:0:1
-skill-disarm-phys:-3
-skill-disarm-magic:-3
-skill-device:-3
-skill-save:-3
-skill-stealth:-5
-skill-search:-3
-skill-melee:9
-skill-shoot:-5
-skill-throw:-5
-skill-dig:0
-skill-magic:0
-skill-health:2
-hitdie:5
+#hitdie:5
 exp:120
 infravision:3
 history:19
@@ -236,23 +193,10 @@ age:11:4
 height:64:2
 weight:135:15
 values:RES_DARK[1]
-body:Humanoid
+#body:Humanoid
 
 name:Half-Troll
-stats:2:-1:-1:-1:1
-skill-disarm-phys:-5
-skill-disarm-magic:-5
-skill-device:-8
-skill-save:-8
-skill-stealth:-10
-skill-search:-9
-skill-melee:14
-skill-shoot:-10
-skill-throw:-10
-skill-dig:0
-skill-magic:0
-skill-health:4
-hitdie:7
+#hitdie:7
 exp:120
 infravision:3
 history:21
@@ -260,53 +204,27 @@ age:20:10
 height:90:16
 weight:240:60
 obj-flags:SUST_STR | REGEN
-body:Humanoid
-monster:forest troll
-monster:hill troll
-monster:cave troll
-monster:stone troll
-monster:mountain troll
-monster:etten
+#body:Humanoid
+#monster:forest troll
+#monster:hill troll
+#monster:cave troll
+#monster:stone troll
+#monster:mountain troll
+#monster:etten
 
 name:Half-Ghoul
-stats:1:-1:-1:1:0
-skill-disarm-phys:0
-skill-disarm-magic:0
-skill-device:0
-skill-save:0
-skill-stealth:5
-skill-search:-5
-skill-melee:3
-skill-shoot:-3
-skill-throw:-3
-skill-dig:10
-skill-magic:0
-skill-health:0
-hitdie:7
+#hitdie:7
 exp:120
 infravision:3
 history:21
 age:20:10
 height:90:16
 weight:240:60
-body:Humanoid
-monster:ghoul
+#body:Humanoid
+#monster:ghoul
 
 name:Dunadan
-stats:0:0:0:0:0
-skill-disarm-phys:3
-skill-disarm-magic:3
-skill-device:4
-skill-save:4
-skill-stealth:4
-skill-search:3
-skill-melee:10
-skill-shoot:7
-skill-throw:7
-skill-dig:0
-skill-magic:0
-skill-health:2
-hitdie:6
+#hitdie:6
 exp:120
 infravision:0
 history:1
@@ -314,24 +232,11 @@ age:50:20
 height:80:6
 weight:190:20
 obj-flags:SUST_CON
-body:Humanoid
+#body:Humanoid
 
 name:High-Elf
-stats:-1:2:-1:1:-1
-skill-disarm-phys:4
-skill-disarm-magic:4
-skill-device:14
-skill-save:14
-skill-stealth:7
-skill-search:7
-skill-melee:7
-skill-shoot:16
-skill-throw:16
-skill-dig:0
-skill-magic:0
-skill-health:-1
-power:SWORD_SPECIALIZATION:20
-hitdie:5
+#power:SWORD_SPECIALIZATION:20
+#hitdie:5
 exp:145
 infravision:4
 history:7
@@ -340,25 +245,12 @@ height:77:6
 weight:190:20
 obj-flags:SEE_INVIS
 values:RES_LIGHT[1]
-body:Humanoid
+#body:Humanoid
 
 name:Kobold
-stats:-2:1:-2:2:1
-skill-disarm-phys:7
-skill-disarm-magic:7
-skill-device:5
-skill-save:0
-skill-stealth:10
-skill-search:7
-skill-melee:-5
-skill-shoot:7
-skill-throw:7
-skill-dig:7
-skill-magic:0
-skill-health:-1
-power:BACKSTAB:20
-power:POISON_MAGIC:20
-hitdie:3
+#power:BACKSTAB:20
+#power:POISON_MAGIC:20
+#hitdie:3
 exp:120
 infravision:5
 history:23
@@ -366,24 +258,11 @@ age:15:10
 height:37:4
 weight:65:5
 values:RES_POIS[1]
-body:Humanoid
+#body:Humanoid
 
 name:Tallfolk
-stats:-1:0:1:2:-2
-skill-disarm-phys:-5
-skill-disarm-magic:-5
-skill-device:4
-skill-save:4
-skill-stealth:10
-skill-search:7
-skill-melee:-5
-skill-shoot:0
-skill-throw:0
-skill-dig:0
-skill-magic:0
-skill-health:2
-power:POLEARM_SPECIALIZATION:40
-hitdie:5
+#power:POLEARM_SPECIALIZATION:40
+#hitdie:5
 exp:120
 infravision:0
 history:1
@@ -391,45 +270,32 @@ age:25:20
 height:99:10
 weight:155:35
 player-flags:LONG_LIMBS
-body:Humanoid
+#body:Humanoid
 
 name:Misshapen
-stats:0:1:1:-1:1
-skill-disarm-phys:4
-skill-disarm-magic:4
-skill-device:7
-skill-save:7
-skill-stealth:0
-skill-search:4
-skill-melee:0
-skill-shoot:4
-skill-throw:4
-skill-dig:4
-skill-magic:4
-skill-health:4
-hitdie:8
+#hitdie:8
 exp:100
 infravision:0
 history:1
 age:14:6
 height:69:10
 weight:185:40
-body:Misshapen
+#body:Misshapen
 
 name:Dhampir
-monster:vampire
+#monster:vampire
 
 name:Eyestalk
 monster:floating eye
 
 name:Draconian
-monster:baby red dragon
-monster:baby blue dragon
-monster:baby white dragon
-monster:baby green dragon
-monster:baby black dragon
-monster:baby gold dragon
-monster:baby multi-hued dragon
+#monster:baby red dragon
+#monster:baby blue dragon
+#monster:baby white dragon
+#monster:baby green dragon
+#monster:baby black dragon
+#monster:baby gold dragon
+#monster:baby multi-hued dragon
 #monster:shadow drake
 #monster:chaos drake
 #monster:law drake
@@ -439,38 +305,33 @@ monster:baby multi-hued dragon
 #monster:life drake
 
 name:Tiefling
-monster:bodak
-monster:quasit
-monster:imp
+#monster:bodak
+#monster:quasit
+#monster:imp
 
 name:Reptilian
-monster:2-headed hydra
+#monster:2-headed hydra
 
 name:Aasimar
-monster:ophan
+#monster:ophan
 
 name:Sling
 monster:cave spider
 
 name:Quyling
-monster:quylthulg
+#monster:quylthulg
 
 name:Genasi
-monster:air spirit
-monster:earth spirit
-monster:fire spirit
-monster:water spirit
+#monster:air spirit
+#monster:earth spirit
+#monster:fire spirit
+#monster:water spirit
 
 name:Mourner
-skill-melee:-1
-skill-shoot:-1
-skill-throw:-1
-skill-magic:-1
-skill-health:-3
-monster:banshee
+#monster:banshee
 
 name:Resurrected
-monster:phoenix
+#monster:phoenix
 
 name:Batling
 monster:fruit bat
