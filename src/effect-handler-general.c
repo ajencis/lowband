@@ -502,6 +502,8 @@ static void unpolymorph(struct monster *mon, bool save)
 		mon->player->upkeep->update |= PU_BONUS;
 		mon->player->upkeep->redraw |= PR_MISC;
 	}
+
+	mon_reembody(mon);
 }
 
 static void polymorph(struct monster *mon, struct monster_race *mr, int dur, bool save)
@@ -536,6 +538,8 @@ static void polymorph(struct monster *mon, struct monster_race *mr, int dur, boo
 		mon->player->upkeep->update |= PU_BONUS;
 		mon->player->upkeep->redraw |= PR_MISC;
 	}
+
+	mon_reembody(mon);
 }
 
 /**
