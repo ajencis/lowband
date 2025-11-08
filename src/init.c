@@ -60,6 +60,7 @@
 #include "ui-visuals.h"
 #include "z-file.h"
 #include "z-util.h"
+#include <string.h>
 
 bool play_again = false;
 
@@ -3086,132 +3087,10 @@ static enum parser_error parse_p_race_name(struct parser *p) {
 
 	r->next = h;
 	r->name = string_make(parser_getstr(p, "name"));
-	/* Default body is humanoid */
-	/*r->body = bodies;
-	while (r->body->next) {
-		r->body = r->body->next;
-	}*/
+	
 	parser_setpriv(p, r);
 	return PARSE_ERROR_NONE;
 }
-
-/*static enum parser_error parse_p_race_stats(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	r->r_adj[STAT_STR] = parser_getint(p, "str");
-	r->r_adj[STAT_DEX] = parser_getint(p, "dex");
-	r->r_adj[STAT_CON] = parser_getint(p, "con");
-	r->r_adj[STAT_INT] = parser_getint(p, "int");
-	r->r_adj[STAT_WIS] = parser_getint(p, "wis");
-	return PARSE_ERROR_NONE;
-}*/
-
-/*static enum parser_error parse_p_race_skill_disarm_phys(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	r->r_skills[SKILL_DISARM_PHYS] = parser_getint(p, "disarm");
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_p_race_skill_disarm_magic(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	r->r_skills[SKILL_DISARM_MAGIC] = parser_getint(p, "disarm");
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_p_race_skill_device(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	r->r_skills[SKILL_DEVICE] = parser_getint(p, "device");
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_p_race_skill_save(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	r->r_skills[SKILL_SAVE] = parser_getint(p, "save");
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_p_race_skill_stealth(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	r->r_skills[SKILL_STEALTH] = parser_getint(p, "stealth");
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_p_race_skill_search(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	r->r_skills[SKILL_SEARCH] = parser_getint(p, "search");
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_p_race_skill_melee(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	r->r_skills[SKILL_TO_HIT_MELEE] = parser_getint(p, "melee");
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_p_race_skill_shoot(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	r->r_skills[SKILL_TO_HIT_BOW] = parser_getint(p, "shoot");
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_p_race_skill_throw(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	r->r_skills[SKILL_TO_HIT_THROW] = parser_getint(p, "throw");
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_p_race_skill_dig(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	r->r_skills[SKILL_DIGGING] = parser_getint(p, "dig");
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_p_race_skill_magic(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	r->r_skills[SKILL_MAGIC] = parser_getint(p, "magic");
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_p_race_skill_health(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	r->r_skills[SKILL_HEALTH] = parser_getint(p, "health");
-	return PARSE_ERROR_NONE;
-}*/
-
-/*static enum parser_error parse_p_race_hitdie(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	r->r_mhp = parser_getint(p, "mhp");
-	return PARSE_ERROR_NONE;
-}*/
 
 static enum parser_error parse_p_race_exp(struct parser *p) {
 	struct player_race *r = parser_priv(p);
@@ -3332,26 +3211,6 @@ static enum parser_error parse_p_race_values(struct parser *p) {
 	return t ? PARSE_ERROR_INVALID_VALUE : PARSE_ERROR_NONE;
 }
 
-/* L: parse abilities */
-/*static enum parser_error parse_p_race_power(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	int i = 0;
-	const char *s = parser_getsym(p, "name");
-	int v = parser_getint(p, "value");
-
-	while (list_player_powers_names[i] && !streq(list_player_powers_names[i], s))
-	    i++;
-
-	if (!list_player_powers_names[i])
-        return PARSE_ERROR_GENERIC;
-
-	r->r_powers[i] = v;
-
-	return PARSE_ERROR_NONE;
-}*/
-
 /* L: parse monster source */
 static enum parser_error parse_p_race_monster(struct parser *p) {
 	struct player_race *r = parser_priv(p);
@@ -3372,46 +3231,10 @@ static enum parser_error parse_p_race_monster(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
-/*static enum parser_error parse_p_race_body(struct parser *p) {
-	struct player_race *r = parser_priv(p);
-	if (!r)
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-
-	const char *bname = parser_getstr(p, "name");
-	if (!bname)
-		return PARSE_ERROR_GENERIC;
-
-	struct player_body *pbody;
-	for (pbody = bodies; ; pbody = pbody->next) {
-		if (!pbody)
-			return PARSE_ERROR_GENERIC;
-		if (streq(bname, pbody->name)) {
-			r->body = pbody;
-			break;
-		}
-	}
-	
-	return PARSE_ERROR_NONE;
-}*/
-
 static struct parser *init_parse_p_race(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
 	parser_reg(p, "name str name", parse_p_race_name);
-	//parser_reg(p, "stats int str int int int wis int dex int con", parse_p_race_stats);
-	/*parser_reg(p, "skill-disarm-phys int disarm", parse_p_race_skill_disarm_phys);
-	parser_reg(p, "skill-disarm-magic int disarm", parse_p_race_skill_disarm_magic);
-	parser_reg(p, "skill-device int device", parse_p_race_skill_device);
-	parser_reg(p, "skill-save int save", parse_p_race_skill_save);
-	parser_reg(p, "skill-stealth int stealth", parse_p_race_skill_stealth);
-	parser_reg(p, "skill-search int search", parse_p_race_skill_search);
-	parser_reg(p, "skill-melee int melee", parse_p_race_skill_melee);
-	parser_reg(p, "skill-shoot int shoot", parse_p_race_skill_shoot);
-	parser_reg(p, "skill-throw int throw", parse_p_race_skill_throw);
-	parser_reg(p, "skill-dig int dig", parse_p_race_skill_dig);
-	parser_reg(p, "skill-magic int magic", parse_p_race_skill_magic);
-	parser_reg(p, "skill-health int health", parse_p_race_skill_health);*/
-	//parser_reg(p, "hitdie int mhp", parse_p_race_hitdie);
 	parser_reg(p, "exp int exp", parse_p_race_exp);
 	parser_reg(p, "infravision int infra", parse_p_race_infravision);
 	parser_reg(p, "history uint hist", parse_p_race_history);
@@ -3421,9 +3244,7 @@ static struct parser *init_parse_p_race(void) {
 	parser_reg(p, "obj-flags ?str flags", parse_p_race_obj_flags);
 	parser_reg(p, "player-flags ?str flags", parse_p_race_play_flags);
 	parser_reg(p, "values str values", parse_p_race_values);
-	//parser_reg(p, "power sym name int value", parse_p_race_power);
 	parser_reg(p, "monster sym monster", parse_p_race_monster);
-	//parser_reg(p, "body str name", parse_p_race_body);
 	return p;
 }
 
@@ -3431,19 +3252,23 @@ static errr run_parse_p_race(struct parser *p) {
 	return parse_file_quit_not_found(p, "p_race");
 }
 
+static int p_race_compare(const void *r1, const void *r2)
+{
+	struct player_race *pr1 = *(struct player_race **)r1, *pr2 = *(struct player_race **)r2;
+	int result = max_race_evol_lev(pr1) - max_race_evol_lev(pr2);
+
+	if (result) return SGN(result);
+
+	return strcmp(pr1->name, pr2->name);
+}
+
 static errr finish_parse_p_race(struct parser *p) {
 	struct player_race *r;
-	int num = 0;
+	size_t num = 0, curr;
 	char r_name[80];
-	races = parser_priv(p);
-	for (r = races; r; r = r->next) num++;
+	struct player_race **array;
 
-	z_info->pr_max = num;
-
-	for (r = races; r; r = r->next, num--) {
-		assert(num);
-		r->ridx = num - 1;
-
+	for (r = parser_priv(p); r; r = r->next) {
 		if (!r->mon_race) {
 			strnfmt(r_name, sizeof r_name, "%s", r->name);
 			my_struncap_full(r_name);
@@ -3452,10 +3277,38 @@ static errr finish_parse_p_race(struct parser *p) {
 
 			assert(r->mon_race);
 		}
-		/*if (r->evol) {
-			r->r_exp = 100 + max_race_evol_lev(r) * 3 / 10 * 5;
-		}*/
+
+		num++;
 	}
+
+	array = mem_zalloc(sizeof *array * num);
+
+	for (r = parser_priv(p), curr = 0; r; r = r->next, curr++) {
+		assert(curr < num);
+		array[curr] = r;
+	}
+
+	assert(curr == num);
+
+	sort(array, num, sizeof *array, p_race_compare);
+
+	races = array[0];
+
+	for (r = races, curr = 0; curr < num; r = r->next, curr++) {
+		if (curr + 1 == num) {
+			r->next = NULL;
+		}
+		else {
+			r->next = array[curr + 1];
+		}
+
+		r->ridx = curr;
+	}
+
+	mem_free(array);
+
+	z_info->pr_max = num;
+
 	parser_destroy(p);
 	return 0;
 }
