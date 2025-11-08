@@ -695,6 +695,9 @@ void player_cleanup_members(struct player *p)
 		free_mon_attacks(&p->mon);
 	}
 	mem_free(p->mon.race);
+	if (p->mon.original_race) {
+		mem_free(p->mon.original_race);
+	}
 }
 
 
