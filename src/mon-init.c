@@ -1697,6 +1697,32 @@ static enum parser_error parse_mon_base_play_flags(struct parser *p) {
 	return s ? PARSE_ERROR_INVALID_FLAG : PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_mon_base_spells(struct parser *p) {
+	struct monster_base *mb = parser_priv(p);
+	char *flags;
+	char *s;
+	int ret = PARSE_ERROR_NONE;
+
+	if (!mb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	flags = string_make(parser_getstr(p, "spells"));
+	s = strtok(flags, " |");
+
+	while (s) {
+		if (grab_flag(mb->spell_flags, RSF_SIZE, r_info_spell_flags, s)) {
+			plog(format("bad monster spell flag: %s", s));
+			ret = PARSE_ERROR_INVALID_FLAG;
+			break;
+		}
+		s = strtok(NULL, " |");
+	}
+
+	string_free(flags);
+	return ret;
+}
+
 
 static struct parser *init_parse_mon_base(void) {
 	struct parser *p = parser_new();
@@ -1724,6 +1750,7 @@ static struct parser *init_parse_mon_base(void) {
 	parser_reg(p, "skill-magic int magic", parse_mon_base_skill_magic);
 	parser_reg(p, "obj-flags ?str flags", parse_mon_base_obj_flags);
 	parser_reg(p, "player-flags ?str flags", parse_mon_base_play_flags);
+	parser_reg(p, "spells str spells", parse_mon_base_spells);
 	return p;
 }
 
@@ -1775,6 +1802,8 @@ static enum parser_error parse_monster_name(struct parser *p) {
 	// L: hack: flags stats as having not been determined yet
 	r->stat_mod[STAT_STR] = INT_MIN;
 
+	r->freq_innate = 10;
+
 	parser_setpriv(p, r);
 	return PARSE_ERROR_NONE;
 }
@@ -1802,6 +1831,8 @@ static enum parser_error parse_monster_base(struct parser *p) {
 
 	/* Give the monster its default flags */
 	rf_union(r->flags, r->base->flags);
+
+	rsf_union(r->spell_flags, r->base->spell_flags);
 
 	return PARSE_ERROR_NONE;
 }

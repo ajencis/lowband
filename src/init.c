@@ -5530,9 +5530,14 @@ static void fill_in_effect_subtype(struct effect *ef, const char *source_type, c
 static void fill_all_effect_subtypes(void)
 {
 	struct player_spell *ps;
+	struct monster_spell *ms;
 
 	for (ps = spells; ps; ps = ps->next) {
 		fill_in_effect_subtype(ps->effect, "spell", ps->name);
+	}
+
+	for (ms = monster_spells; ms; ms = ms->next) {
+		fill_in_effect_subtype(ms->effect, "monster spell", format("idx %i", ms->index));
 	}
 }
 
@@ -5556,8 +5561,6 @@ static struct {
 	{ "brands", &brand_parser },
 	{ "monster pain messages", &pain_parser },
 	{ "bodies", &body_parser },
-	{ "monster bases", &mon_base_parser }, // L: must be after bodies
-	{ "summons", &summon_parser },
 	{ "curses", &curse_parser },
 	{ "player shapes", &shape_parser },
 	{ "objects", &object_parser }, // L: must be after player shapes
@@ -5573,6 +5576,8 @@ static struct {
 	{ "blow methods", &meth_parser },
 	{ "blow effects", &eff_parser },
 	{ "monster spells", &mon_spell_parser },
+	{ "monster bases", &mon_base_parser }, // L: must be after bodies
+	{ "summons", &summon_parser }, // L: must be after monster bases
 	{ "monsters", &monster_parser }, // L: must be after player spells
 	{ "player races", &p_race_parser }, // L: must be after monsters
 	{ "monster pits" , &pit_parser },
