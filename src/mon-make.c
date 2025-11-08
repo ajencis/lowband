@@ -114,7 +114,7 @@ static void free_body(struct player_body *to_free)
 	}
 }
 
-static void mon_embody(struct monster *mon)
+void mon_embody(struct monster *mon)
 {
 	const struct player_body *base = mon->race->body;
 	if (!base) base = mon->race->base->body;

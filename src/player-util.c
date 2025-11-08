@@ -235,74 +235,6 @@ struct monster_race *lookup_player_monster(const struct player *p)
 	return p->mon.race;
 }
 
-static void change_player_body(struct player *p, struct player_body *new)
-{
-	char buf[80];
-	int i;
-	struct object *equipped_pile = NULL;
-	struct object *equipped;
-
-	// unequip all items, store them in equipped_pile
-	if (p->mon.body.slots) {
-		for (i = 0; i < p->mon.body.count; i++) {
-			struct object *obj = p->mon.body.slots[i].obj;
-			if (!obj) continue;
-
-			bool anyleft;
-			p->mon.body.slots[i].obj = NULL;
-			p->upkeep->equip_cnt--;
-
-			p->upkeep->update |= (PU_BONUS | PU_INVEN | PU_UPDATE_VIEW);
-			p->upkeep->notice |= (PN_IGNORE);
-
-			obj = gear_object_for_use(&p->mon, obj, obj->number, false, &anyleft);
-
-			pile_insert(&equipped_pile, obj);
-		}
-	}
-
-	assert(!p->upkeep->equip_cnt);
-
-	// delete the player's body
-	if (p->mon.body.slots) {
-		for (i = 0; i < p->mon.body.count; i++) {
-			string_free(p->mon.body.slots[i].name);
-		}
-		mem_free(p->mon.body.slots);
-		p->mon.body.slots = NULL;
-	}
-	
-	// remake the player's new body
-	memcpy(&p->mon.body, new, sizeof(p->mon.body));
-	my_strcpy(buf, new->name, sizeof(buf));
-	p->mon.body.name = string_make(buf);
-	p->mon.body.slots = mem_zalloc(p->mon.body.count * sizeof(struct equip_slot));
-	for (i = 0; i < p->mon.body.count; i++) {
-		p->mon.body.slots[i].type = new->slots[i].type;
-		my_strcpy(buf, new->slots[i].name, sizeof(buf));
-		p->mon.body.slots[i].name = string_make(buf);
-	}
-
-	// reequip the items or if we can't just put them in the inventory
-	equipped = pile_last_item(equipped_pile);
-	while (equipped) {
-		pile_excise(&equipped_pile, equipped);
-		int slot = wield_slot(&p->mon, equipped);
-		if (slot >= 0 && !slot_object(&p->mon, slot)) {
-			inven_carry(cave, &p->mon, equipped, false, false);
-			inven_wield(cave, &p->mon, equipped, slot, false);
-		}
-		else {
-			inven_carry(cave, &p->mon, equipped, true, false);
-			combine_pack(&p->mon);
-			pack_overflow(&p->mon, equipped);
-		}
-		equipped = pile_last_item(equipped_pile);
-	}
-
-	assert(!equipped_pile);
-}
-
 bool add_evolution(struct player *p, const struct monster_race *mr)
 {
 	++p->num_evol_choices;
@@ -372,16 +304,16 @@ void change_player_monster(struct player *p, const struct monster_race *mon, boo
 		msg("You transform into a%s %s.", is_a_vowel(mon->name[0]) ? "n" : "", mon->name);
 	}
 
-	if (!init && mon->body && !streq(mon->body->name, p->mon.body.name)) {
-		change_player_body(p, mon->body);
-	}
-
 	if (!p->mon.race) {
 		p->mon.race = mem_zalloc(sizeof *p->mon.race);
 	}
 
 	memcpy(p->mon.race, mon, sizeof *p->mon.race);
 	rearrange_monster(p->mon.race, true);
+
+	if (!init && mon->body && !streq(mon->body->name, p->mon.body.name)) {
+		mon_reembody(&p->mon);
+	}
 
 	for (i = STAT_NONE + 1; i < STAT_MAX; ++i) {
 		p->stat_max[i] = MIN(p->stat_max[i], stat_max_max(p, i));
@@ -396,10 +328,13 @@ bool check_player_monster(struct player *p, bool init)
 {
 	const struct monster_race *selected = NULL;
 	int numevols = 0;
-	//struct evolution *e = curr ? curr->evol : p->race->evol;
 	bool do_change = false;
 	uint32_t xpneed;
 	uint32_t currxp = init ? 0 : p->monster_xp;
+
+	if (p->mon.original_race && p->mon.race && p->mon.original_race->ridx == p->mon.race->ridx) {
+		return false;
+	}
 
 	if (p->num_evol_choices <= 0 && !init) {
 		select_evolution(p);

@@ -189,6 +189,66 @@ int monster_light(struct monster *mon)
 	return base;
 }
 
+/**
+ * L: change a monster's body while it's still in existence; this involves moving
+ * equipped objects around
+ */
+void mon_reembody(struct monster *mon)
+{
+	int i;
+	struct object *equipped_pile = NULL;
+	struct object *equipped;
+	struct player *py = mon->player;
+
+	// unequip all items, store them in equipped_pile
+	if (mon->body.slots) {
+		for (i = 0; i < mon->body.count; i++) {
+			struct object *obj = mon->body.slots[i].obj;
+			bool anyleft;
+
+			if (!obj) continue;
+
+			mon->body.slots[i].obj = NULL;
+
+			if (py) {
+				py->upkeep->equip_cnt--;
+
+				py->upkeep->update |= (PU_BONUS | PU_INVEN | PU_UPDATE_VIEW);
+				py->upkeep->notice |= (PN_IGNORE);
+			}
+
+			obj = gear_object_for_use(mon, obj, obj->number, false, &anyleft);
+
+			pile_insert(&equipped_pile, obj);
+		}
+	}
+
+	if (py) assert(!py->upkeep->equip_cnt);
+
+	mon_disembody(mon);
+
+	mon_embody(mon);
+
+	// reequip the items or if we can't just put them in the inventory
+	equipped = pile_last_item(equipped_pile);
+	while (equipped) {
+		pile_excise(&equipped_pile, equipped);
+		int slot = wield_slot(mon, equipped);
+		if (slot >= 0 && !slot_object(mon, slot)) {
+			inven_carry(cave, mon, equipped, false, false);
+			inven_wield(cave, mon, equipped, slot, false);
+		}
+		else {
+			inven_carry(cave, mon, equipped, true, false);
+			combine_pack(mon);
+			pack_overflow(mon, equipped);
+		}
+		equipped = pile_last_item(equipped_pile);
+	}
+
+	assert(!equipped_pile);
+}
+
 
 /**
  * ------------------------------------------------------------------------
