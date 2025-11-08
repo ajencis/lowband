@@ -1104,7 +1104,7 @@ static void project_monster_handler_BANSHEE(project_monster_handler_context_t *c
 
 	if (mon_inc_timed(context->mon, TMD_STUN, power * 2, flg)) {
 		if (mon_inc_timed(context->mon, TMD_PARALYZED, power, flg)) {
-			if (!saving_throw(context->mon, TMD_SUFFOCATE, power / 2, 0)) {
+			if (!saving_throw(context->mon, power / 2)) {
 				kill = true;
 				add_monster_message(context->mon, MON_MSG_COLLAPSE, true);
 			}

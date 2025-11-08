@@ -17,11 +17,9 @@
  */
 
 #include "angband.h"
-#include "mon-desc.h"
 #include "mon-lore.h"
 #include "mon-msg.h"
 #include "mon-predicate.h"
-#include "mon-spell.h"
 #include "mon-timed.h"
 #include "mon-util.h"
 #include "player-calcs.h"
@@ -79,24 +77,6 @@ static int effect_level_by_amount(int amount, int effect_type)
 }
 
 /**
- * Roll the saving throw for monsters resisting a timed effect.
- */
-bool saving_throw(const struct monster *mon, int effect_type, int timer, int flag)
-{
-	int resist_chance = MIN(
-								75,
-								mon->race->level / 4 + MAX(0, 25 - timer) + 25
-						   );
-
-	/* Give unique monsters a double check */
-	/*if (monster_is_unique(mon) && (randint0(100) < resist_chance)) {
-		return true;
-	}*/
-
-	return randint0(100) < resist_chance;
-}
-
-/**
  * Determines whether the given monster successfully resists the given effect.
  */
 static bool does_resist(const struct monster *mon, int effect_type, int timer, int flag)
@@ -121,7 +101,7 @@ static bool does_resist(const struct monster *mon, int effect_type, int timer, i
 
 	/* Some effects get a saving throw; others don't */
 	if (effect->gets_save == true || (flag & MON_TMD_FLG_GETS_SAVE)) {
-		return saving_throw(mon, effect_type, timer, flag);
+		return saving_throw(mon, timer);
 	} else {
 		return false;
 	}

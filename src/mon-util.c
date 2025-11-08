@@ -45,6 +45,7 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
+#include "player-enum.h"
 #include "player-history.h"
 #include "player-properties.h"
 #include "player-quest.h"
@@ -54,6 +55,7 @@
 #include "project.h"
 #include "trap.h"
 #include "z-form.h"
+#include "z-rand.h"
 #include "z-type.h"
 
 
@@ -247,6 +249,32 @@ void mon_reembody(struct monster *mon)
 	}
 
 	assert(!equipped_pile);
+}
+
+
+random_chance saving_throw_chance(const struct monster *mon, int difficulty)
+{
+	random_chance ret;
+
+	ret.denominator = difficulty + 100;
+	ret.numerator = mon->state.skills[SKILL_SAVE];
+
+	if (ret.denominator < 1) {
+		ret.denominator = 1;
+	}
+
+	if (ret.numerator > ret.denominator) {
+		ret.numerator = ret.denominator - 1;
+	}
+
+	return ret;
+}
+
+bool saving_throw(const struct monster *mon, int difficulty)
+{
+	random_chance rc = saving_throw_chance(mon, difficulty);
+
+	return random_chance_check(rc);
 }
 
 

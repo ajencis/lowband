@@ -48,7 +48,6 @@
 
 /** Functions **/
 int mon_timed_name_to_idx(const char *name);
-bool saving_throw(const struct monster *mon, int effect_type, int timer, int flag);
 bool add_mon_timed_message(struct monster *mon, int effect_type, bool delay, int before, int after);
 bool mon_inc_timed(struct monster *mon, int effect_type, int timer, int flag);
 bool mon_dec_timed(struct monster *mon, int effect_type, int timer, int flag);

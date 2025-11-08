@@ -1022,7 +1022,7 @@ bool player_inc_check(struct player *p, int idx, bool lore)
 			break;
 		
 		case TMD_FAIL_SAVE:
-			if (randint0(100) < p->mon.state.skills[SKILL_SAVE]) {
+			if (saving_throw(&p->mon, 100)) {
 				return false;
 			}
 			break;

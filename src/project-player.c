@@ -48,12 +48,13 @@ int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 			   int resist, bool actual)
 {
 	int i, denom = 0;
-	uint32_t sav;
+	random_chance rc = saving_throw_chance(&p->mon, dam);
 
-	/* L: saving throw reduces damage */
-	sav = (uint32_t)MAX(p->mon.state.skills[SKILL_SAVE], 0);
+	// if we have a good save reduce damsge somewhat
+	if (rc.numerator > rc.denominator / 2) {
+		dam = dam * rc.denominator / rc.numerator / 2;
+	}
 
-	dam = dam * (100 - sav / 4 - randint0(sav / 2)) / 100;
 	dam = MAX(dam, 0);
 
 	/* If an actual player exists, get their actual resist */
@@ -366,7 +367,7 @@ static int project_player_handler_NEXUS(project_player_handler_context_t *contex
 	}
 
 	/* Stat swap */
-	if (randint0(100) < player->mon.state.skills[SKILL_SAVE]) {
+	if (saving_throw(&player->mon, context->dam / 3)) {
 		msg("You avoid the effect!");
 	} else {
 		player_inc_timed(player, TMD_SCRAMBLE, randint0(20) + 20, true,
@@ -377,7 +378,7 @@ static int project_player_handler_NEXUS(project_player_handler_context_t *contex
 		effect_simple(EF_TELEPORT_TO, context->origin, "0", 0, 0, 0,
 					  mon->grid.y, mon->grid.x, NULL);
 	} else if (one_in_(4)) { /* Teleport level */
-		if (randint0(100) < player->mon.state.skills[SKILL_SAVE]) {
+		if (saving_throw(&player->mon, context->dam / 3)) {
 			msg("You avoid the effect!");
 			return 0;
 		}
@@ -825,15 +826,14 @@ static int project_player_handler_HELLFIRE(project_player_handler_context_t *con
 static int project_player_handler_BANSHEE(project_player_handler_context_t *context)
 {
 	bool und = pf_has(player->mon.state.flags, PF_UNDEAD);
-	int save = player->mon.state.skills[SKILL_SAVE];
 	int power = context->dam;
 	if (und) power /= 2;
 
-	if (randint0(100) >= save) {
+	if (saving_throw(&player->mon, context->dam)) {
 		player->mon.m_timed[TMD_STUN] += power * 2;
-		if (randint0(100) >= save) {
+		if (saving_throw(&player->mon, context->dam)) {
 			player->mon.m_timed[TMD_PARALYZED] += power;
-			if (randint0(100) >= save) {
+			if (saving_throw(&player->mon, context->dam)) {
 				return player->mon.hp + 1;
 			}
 		}

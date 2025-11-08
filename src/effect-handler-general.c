@@ -487,9 +487,9 @@ static void brand_object(struct object *obj, const char *name)
 	}
 }
 
-static void unpolymorph(struct monster *mon, bool save)
+static void unpolymorph(struct monster *mon, bool save, int power)
 {
-	if (save && saving_throw(mon, TMD_POLYMORPHED, 50, 0)) return;
+	if (save && saving_throw(mon, power)) return;
 
 	if (!mon->original_race) {
 		return;
@@ -506,13 +506,13 @@ static void unpolymorph(struct monster *mon, bool save)
 	mon_reembody(mon);
 }
 
-static void polymorph(struct monster *mon, struct monster_race *mr, int dur, bool save)
+static void polymorph(struct monster *mon, struct monster_race *mr, int dur, bool save, int power)
 {
 	int tmd_flg = MON_TMD_FLG_NOTIFY;
 	bool success = false;
 
 	if (mon->original_race && mon->original_race->ridx == mr->ridx) {
-		unpolymorph(mon, save);
+		unpolymorph(mon, save, power);
 		return;
 	}
 
@@ -4225,7 +4225,7 @@ bool effect_handler_POLY_SELF(effect_handler_context_t *context)
 		return false;
 	}
 
-	polymorph(caster, mr, pwr + 50, false);
+	polymorph(caster, mr, pwr + 50, false, 0);
 
 	return true;
 }
@@ -4247,7 +4247,7 @@ bool effect_handler_UNPOLY_SELF(effect_handler_context_t *context)
 		return false;
 	}
 
-	unpolymorph(caster, false);
+	unpolymorph(caster, false, 0);
 
 	return true;
 }

@@ -79,7 +79,7 @@ static int spell_color(struct player *p, const struct monster_race *race,
 	/* Spells with a save */
 	if (level->save_message) {
 		/* Mixed results if the save may fail, perfect result if it can't */
-		if (p->known_state.skills[SKILL_SAVE] < 100) {
+		if (p->known_state.skills[SKILL_SAVE] < 100 || true) {
 			if (eff->index == EF_TELEPORT_LEVEL) {
 				/* Special case - teleport level */
 				if (p->known_state.el_info[ELEM_NEXUS].res_level > 0) {

@@ -635,12 +635,12 @@ static void melee_effect_timed(melee_effect_handler_context_t *context,
 			mon_inc_timed(context->t_mon, mon_tmd_effect, amount, 0);
 			context->obvious = true;
 		}
-	} else if (save && randint0(100) < context->p->mon.state.skills[SKILL_SAVE]) {
-		/* Attempt a saving throw if desired. */
+	/*} else if (save && saving_throw(&context->p->mon, 50)) {
+		// Attempt a saving throw if desired.
 		if (save_msg != NULL) {
 			msg("%s", save_msg);
 		}
-		context->obvious = true;
+		context->obvious = true;*/
 	} else {
 		/* Increase timer for type. */
 		if (player_inc_timed(context->p, type, amount, true, true,
@@ -789,7 +789,7 @@ static void melee_effect_handler_POISON(melee_effect_handler_context_t *context)
 		return;
 	}
 
-	if (randint0(100) < player->mon.state.skills[SKILL_SAVE]) {
+	if (saving_throw(&player->mon, context->rlev)) {
 		msg("You are nauseous for a moment, but the feeling passes");
 	}
 
@@ -1294,7 +1294,7 @@ static void melee_effect_handler_BLACK_BREATH(melee_effect_handler_context_t *co
 	if (!one_in_(5)) {
 		return;
 	}
-	else if (randint0(250) < player->mon.state.skills[SKILL_SAVE]) {
+	else if (saving_throw(&context->p->mon, context->rlev * 3 / 2)) {
 		// L: difficult save
 		msg("You feel a shadow pass over you  -  then leave.");
 	}
