@@ -656,6 +656,7 @@ power:NECROMANCY_MAGIC:75
 power:DARKNESS_MAGIC
 power:UNLIGHT
 skill-stealth:10
+spells:POLYMORPH_WOLF | POLYMORPH_BAT
 
 # Always awake, elemental objects which engulf and breathe their element(s)
 name:vortex

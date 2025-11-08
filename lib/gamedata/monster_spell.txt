@@ -544,7 +544,6 @@ name:WEAVE
 knowable:0
 msgt:CREATE_TRAP
 hit:100
-#effect:WEB
 effect:FEAT_GROW:WEB
 dice:2d$S
 expr:S:MONSTER_LEVEL:+ 5
@@ -1438,3 +1437,23 @@ lore-color-base:Light Red
 message-vis:{name} summons {pronoun} servants.
 message-invis:You hear powerful things appear nearby!
 power:SUMMONING_MAGIC:60
+
+name:POLYMORPH_WOLF
+knowable:0
+hit:100
+effect:POLY_SELF:wolf
+dice:2d$S
+expr:S:SPELL_POWER:* 4 / 3
+lore:transform into wolf
+lore-color-base:Tan
+message-vis:{name} transforms.
+
+name:POLYMORPH_BAT
+knowable:0
+hit:100
+effect:POLY_SELF:fruit bat
+dice:2d$S
+expr:S:SPELL_POWER:* 4 / 3
+lore:transform into bat
+lore-color-base:Black
+message-vis:{name} transforms.

@@ -142,6 +142,8 @@ enum
 
 #define RSF_SIZE               FLAG_SIZE(RSF_MAX)
 
+#define rsf_union(f1, f2)      flag_union(f1, f2, RSF_SIZE)
+
 
 /**
  * L: monster strengths and weaknesses
@@ -279,6 +281,8 @@ struct monster_base {
 	int skills[SKILL_MAX];		/* L: skill bonuses for players */
 	bitflag oflags[OF_SIZE];	/* L: object flags for players */
 	bitflag pflags[PF_SIZE];	/* L: player flags for players */
+
+	bitflag spell_flags[RSF_SIZE];	// L: spells that the monsters by default have
 };
 
 
