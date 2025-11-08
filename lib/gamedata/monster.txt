@@ -3679,6 +3679,8 @@ mimic:gold:gold
 name:wolf
 plural:wolves
 base:canine
+evolution:white wolf
+evolution:warg
 color:u
 speed:120
 hit-points:21
@@ -4467,6 +4469,7 @@ desc:A shambling humanoid monster with long scars.
 
 name:warg
 base:canine
+evolution:wolf chieftain
 color:s
 speed:120
 hit-points:36
