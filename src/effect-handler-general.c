@@ -491,7 +491,9 @@ static void unpolymorph(struct monster *mon, bool save)
 {
 	if (save && saving_throw(mon, TMD_POLYMORPHED, 50, 0)) return;
 
-	if (!mon->original_race) return;
+	if (!mon->original_race) {
+		return;
+	}
 
 	mon->race = mon->original_race;
 	mon->original_race = NULL;
@@ -505,7 +507,7 @@ static void unpolymorph(struct monster *mon, bool save)
 static void polymorph(struct monster *mon, struct monster_race *mr, int dur, bool save)
 {
 	int tmd_flg = MON_TMD_FLG_NOTIFY;
-	bool success = true;
+	bool success = false;
 
 	if (mon->original_race && mon->original_race->ridx == mr->ridx) {
 		unpolymorph(mon, save);
@@ -4233,7 +4235,7 @@ bool effect_handler_UNPOLY_SELF(effect_handler_context_t *context)
 		midx = context->origin.which.monster;
 		caster = cave_monster(cave, midx);
 	}
-	else if (context->origin.what == SRC_PLAYER) {
+	else if (context->origin.what == SRC_PLAYER || context->origin.what == SRC_NONE) {
 		caster = &player->mon;
 	}
 
