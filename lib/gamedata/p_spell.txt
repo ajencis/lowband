@@ -213,9 +213,9 @@ desc:Fires a bolt of plasma.
 school:FIRE
 
 spell:Polymorph Fire Elemental:45
-effect:POLY_SELF:fire elemental
-dice:50+2d$S
-expr:S:SPELL_POWER:+ 1 / 2
+effect:POLY_SELF:fire spirit
+dice:2d$S
+expr:S:SPELL_POWER:+ 5
 desc:Polymorphs you into a fire elemental.
 school:FIRE
 
@@ -287,10 +287,10 @@ school:AIR
 school:NECROMANCY
 
 spell:Polymorph Air Elemental:45
-effect:POLY_SELF:air elemental
-dice:50+2d$S
-expr:S:SPELL_POWER:+ 1 / 2
-desc:Polymorphs you into a fire elemental.
+effect:POLY_SELF:air spirit
+dice:2d$S
+expr:S:SPELL_POWER:+ 5
+desc:Polymorphs you into an air elemental.
 school:AIR
 
 
@@ -332,10 +332,10 @@ desc:Creates a wall.
 school:EARTH
 
 spell:Polymorph Earth Elemental:45
-effect:POLY_SELF:earth elemental
-dice:50+2d$S
-expr:S:SPELL_POWER:+ 1 / 2
-desc:Polymorphs you into a fire elemental.
+effect:POLY_SELF:earth spirit
+dice:2d$S
+expr:S:SPELL_POWER:+ 5
+desc:Polymorphs you into an earth elemental.
 school:EARTH
 
 
@@ -380,10 +380,10 @@ school:DARKNESS
 school:DIVINATION
 
 spell:Polymorph Water Elemental:45
-effect:POLY_SELF:water elemental
-dice:50+2d$S
-expr:S:SPELL_POWER:+ 1 / 2
-desc:Polymorphs you into a fire elemental.
+effect:POLY_SELF:water spirit
+dice:2d$S
+expr:S:SPELL_POWER:+ 5
+desc:Polymorphs you into a water elemental.
 school:WATER
 
 
