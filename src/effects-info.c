@@ -542,7 +542,7 @@ textblock *effect_describe(const struct effect *e, const char *prefix,
 			break;
 
 		case EFINFO_RACE:
-			strnfmt(desc, sizeof desc, edesc, lookup_monster_idx(e->subtype));
+			strnfmt(desc, sizeof desc, edesc, lookup_monster_idx(e->subtype)->name);
 			break;
 
 		case EFINFO_NONE:
@@ -603,6 +603,7 @@ size_t effect_get_menu_name(char *buf, size_t max, const struct effect *e)
 	case EFINFO_HEAL:
 	case EFINFO_CONST:
 	case EFINFO_QUAKE:
+	case EFINFO_RACE:
 	case EFINFO_NONE:
 		len = strnfmt(buf, max, "%s", fmt);
 		break;
