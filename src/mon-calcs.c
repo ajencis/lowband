@@ -130,12 +130,39 @@ static int skill_stepdown(const struct monster *mon, int skill)
 	return lev + diff;
 }
 
+static int evolving_race_skill(const struct monster_race *mr, int which)
+{
+	int worst;
+	bool first = true;
+	struct evolution *evol;
+
+	if (mr->level > 0) return 0;
+	if (!mr->evol) return 0;
+
+	for (evol = mr->evol; evol; evol = evol->next) {
+		if (first) {
+			worst = evol->race->skills[which];
+		}
+		else {
+			worst = MIN(worst, evol->race->skills[which]);
+		}
+
+		first = false;
+	}
+
+	return worst;
+}
+
 void race_skill(const struct monster_race *mr, int which, int *base, int *xtra)
 {
-	int base_bonus = (mr->skills[which] + 3) / 4;
+	int base_skill = mr->skills[which], base_bonus;
+
+	if (!base_skill) base_skill = evolving_race_skill(mr, which);
+
+	base_bonus = (base_skill + 3) / 4;
 
 	*base += base_bonus;
-	*xtra += mr->skills[which] - base_bonus;
+	*xtra += base_skill - base_bonus;
 }
 
 void mon_race_skill(const struct monster *mon, int which, int *base, int *xtra)
