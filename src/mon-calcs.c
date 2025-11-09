@@ -130,11 +130,17 @@ static int skill_stepdown(const struct monster *mon, int skill)
 	return lev + diff;
 }
 
-void race_skill(const struct monster *mon, int which, int *base, int *xtra)
+void race_skill(const struct monster_race *mr, int which, int *base, int *xtra)
 {
-	const struct monster_race *mr = mon->race;
-	*base += mr->skills[which] / 10;
-	*xtra += mr->skills[which];
+	int base_bonus = (mr->skills[which] + 3) / 4;
+
+	*base += base_bonus;
+	*xtra += mr->skills[which] - base_bonus;
+}
+
+void mon_race_skill(const struct monster *mon, int which, int *base, int *xtra)
+{
+	race_skill(mon->race, which, base, xtra);
 }
 
 void class_skill(const struct monster *mon, int which, int *base, int *xtra)
@@ -223,7 +229,7 @@ static int mon_skill(const struct monster *mon, const struct player_state *state
 {
 	int base = 0, xtra = 0, result;
 
-	race_skill(mon, skill, &base, &xtra);
+	mon_race_skill(mon, skill, &base, &xtra);
 	class_skill(mon, skill, &base, &xtra);
 	tome_skill(mon, skill, &base, &xtra);
 

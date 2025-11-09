@@ -1233,62 +1233,6 @@ int player_class_c_skill(struct player *p, int skill)
 	return class_c_skill(p->class, p->extra_skills[skill], skill);
 }
 
-void player_race_r_skill(const struct monster_race *r, bool evolved, int skills[SKILL_MAX])
-{
-	int i;
-	for (i = 0; i < SKILL_MAX; i++) {
-		skills[i] = r->skills[i];
-	}
-	// juvenile monsters get the bonuses of their evolved forms
-	if (r->level == 0 && r->evol) {
-		for (i = 0; i < SKILL_MAX; i++) {
-			int bonus = 25;
-			struct evolution *evol;
-			for (evol = r->evol; evol; evol = evol->next) {
-				bonus = MIN(evol->race->skills[i], bonus);
-			}
-			skills[i] += bonus;
-		}
-	}
-}
-
-void player_race_x_skill(const struct monster_race *r, bool evolved, int skills[SKILL_MAX])
-{
-	player_race_r_skill(r, evolved, skills);
-}
-
-#if 0
-void player_race_elem_info(const struct player_race *r, bool evolved, struct element_info el_info[ELEM_MAX])
-{
-	int i;
-	//struct monster_race *mr = race_to_monster(r);
-
-	for (i = 0; i < ELEM_MAX; i++) {
-		el_info[i].res_level = r->el_info[i].res_level;
-	}
-
-	if (!evolved && r->evol) {
-		bool evol_does_resist[ELEM_MAX] = { false };
-		for (i = 0; i < ELEM_MAX; i++) {
-			struct evolution *e;
-			int evol_resist = 1;
-			evol_does_resist[i] = true;
-			for (e = r->evol; e; e = e->next) {
-				evol_resist = MIN(evol_resist, e->race->el_info[i].res_level);
-				/*if (!rf_has(e->race->flags, elem_matches[i].mval)) {
-					evol_does_resist[elem] = false;
-				}*/
-			}
-		}
-		for (i = 0; i < ELEM_MAX; ++i) {
-			if (evol_does_resist[i]) {
-				el_info[i].res_level = MAX(el_info[i].res_level, 1);
-			}
-		}
-	}
-}
-#endif
-
 void skill_stat(const struct magic_realm *realm, const int indices[STAT_MAX], int skill, int *stat1, int *stat2)
 {
 	int primary_stat, secondary_stat, primary_index, secondary_index;

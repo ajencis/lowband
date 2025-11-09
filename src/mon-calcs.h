@@ -6,7 +6,8 @@
 int calc_mon_race_power(const struct monster_race *mr, int power);
 int mon_lev(const struct monster *mon);
 
-void race_skill(const struct monster *mon, int which, int *base, int *xtra);
+void race_skill(const struct monster_race *mr, int which, int *base, int *xtra);
+void mon_race_skill(const struct monster *mon, int which, int *base, int *xtra);
 void class_skill(const struct monster *mon, int which, int *base, int *xtra);
 void tome_skill(const struct monster *mon, int which, int *base, int *xtra);
 int stat_skill_bonus(const struct monster *mon, const struct player_state *state, int which, int curr, char *buf, size_t bufsize);

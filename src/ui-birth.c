@@ -20,6 +20,7 @@
 #include "cmd-core.h"
 #include "game-event.h"
 #include "game-input.h"
+#include "mon-calcs.h"
 #include "monster.h"
 #include "player.h"
 #include "player-birth.h"
@@ -316,11 +317,10 @@ void reset_birthmenu_filters(void)
  */
 static const menu_iter birth_iter = { NULL, birthmenu_valid, birthmenu_display, NULL, NULL, NULL };
 
-static void skill_help(const int r_skills[SKILL_MAX], const int r_skills_x[SKILL_MAX],
-	const int c_skills[SKILL_MAX], const int c_skills_x[SKILL_MAX],
+static void skill_help(const int skills_b[SKILL_MAX], const int skills_x[SKILL_MAX],
 	int exp, int infra)
 {
-	int i, base, xtra;
+	int i;
 	int xtra_returns = 0;
 	size_t maxlen = 0, currlen;
 	struct player_ability *abil;
@@ -336,9 +336,6 @@ static void skill_help(const int r_skills[SKILL_MAX], const int r_skills_x[SKILL
 	for (i = 0; i < SKILL_MAX; ++i) {
 		abil = lookup_player_ability(i, PY_ABIL_SKILL);
 
-		base = r_skills[i] + (c_skills ? c_skills[i] : 0);
-		xtra = r_skills_x[i] + (c_skills_x ? c_skills_x[i] : 0);
-
 		currlen = strnfmt(mssg, sizeof mssg, "%s:", abil->name);
 
 		while (currlen < maxlen) {
@@ -347,7 +344,7 @@ static void skill_help(const int r_skills[SKILL_MAX], const int r_skills_x[SKILL
 		}
 		mssg[currlen] = '\0';
 
-		text_out_e("%s %3d (%+4d)\n", mssg, base, xtra);
+		text_out_e("%s %3d (%+4d)\n", mssg, skills_b[i], skills_x[i]);
 	}
 
 	if (infra > 0) {
@@ -372,15 +369,16 @@ static void race_help(int i, void *db, const region *l)
 	struct player_ability *ability;
 	int n_flags = 0;
 	int flag_space = 5;
-	int race_skills[SKILL_MAX];
-	int race_skills_x[SKILL_MAX];
+	int race_skills[SKILL_MAX] = { 0 };
+	int race_skills_x[SKILL_MAX] = { 0 };
 	int race_powers[PP_MAX];
 	struct element_info race_elem_info[ELEM_MAX] = { 0 };
 
 	assert(mon);
 
-	player_race_r_skill(mon, false, race_skills);
-	player_race_x_skill(mon, false, race_skills_x);
+	for (j = 0; j < SKILL_MAX; ++j) {
+		race_skill(mon, j, &race_skills[j], &race_skills_x[j]);
+	}
 
 	memcpy(race_powers, mon->powers, sizeof race_powers);
 
@@ -388,7 +386,7 @@ static void race_help(int i, void *db, const region *l)
 
 	/* Output to the screen */
 	text_out_hook = text_out_to_screen;
-	
+
 	/* Indent output */
 	text_out_indent = RACE_AUX_COL;
 	Term_gotoxy(RACE_AUX_COL, TABLE_ROW);
@@ -423,7 +421,7 @@ static void race_help(int i, void *db, const region *l)
 	}
 
 	text_out_e("\n");
-	skill_help(race_skills, race_skills_x, NULL, NULL, r->r_exp, r->infra);
+	skill_help(race_skills, race_skills_x, r->r_exp, r->infra);
 	text_out_e("\n");
 
 	for (ability = player_abilities; ability; ability = ability->next) {
@@ -468,8 +466,7 @@ static void class_help(int i, void *db, const region *l)
 	const struct player_race *r = player->race;
 	const struct monster_race *mr = race_to_monster(r);
 
-	int r_skills[SKILL_MAX], r_skills_x[SKILL_MAX];
-	int c_skills[SKILL_MAX], c_skills_x[SKILL_MAX];
+	int skills_b[SKILL_MAX] = { 0 }, skills_x[SKILL_MAX] = { 0 };
 
 	struct player_ability *ability;
 	int n_flags = 0;
@@ -478,12 +475,11 @@ static void class_help(int i, void *db, const region *l)
 
 	if (!c) return;
 
-	player_race_r_skill(mr, false, r_skills);
-	player_race_x_skill(mr, false, r_skills_x);
-
 	for (j = 0; j < SKILL_MAX; ++j) {
-		c_skills[j] = class_c_skill(c, 0, j);
-		c_skills_x[j] = class_x_skill(c, 0, j);
+		skills_b[j] += class_c_skill(c, 0, j);
+		skills_x[j] += class_x_skill(c, 0, j);
+
+		race_skill(mr, j, &skills_b[j], &skills_x[j]);
 	}
 
 	/* Output to the screen */
@@ -493,8 +489,7 @@ static void class_help(int i, void *db, const region *l)
 	text_out_indent = CLASS_AUX_COL;
 	Term_gotoxy(CLASS_AUX_COL, TABLE_ROW);
 	
-	skill_help(r_skills, r_skills_x, c_skills, c_skills_x,
-			   r->r_exp + c->c_exp, -1);
+	skill_help(skills_b, skills_x, r->r_exp + c->c_exp, -1);
 
 	if (c->magic.total_spells) {
 		int count;

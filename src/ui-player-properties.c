@@ -61,8 +61,6 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 {
 	int monster_powers[PP_MAX] = { 0 };
 	int monster_skills[SKILL_MAX] = { 0 };
-	//int race_skills[SKILL_MAX] = { 0 };
-	//int race_x_skills[SKILL_MAX] = { 0 };
 	struct monster_race *mrace = lookup_player_monster(p);
 
 	// L: hack for hypothetical players
@@ -70,9 +68,6 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 	const char *verb = hypothetical ? "would gain" : "gain";
 
 	assert(bufsize > 0);
-
-	//player_race_r_skill(p->race, mrace ? true : false, race_skills);
-	//player_race_x_skill(p->race, mrace ? true : false, race_x_skills);
 
 	memset(buf, '\0', bufsize * sizeof *buf);
 
@@ -100,7 +95,7 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 		}
 		else {
 			int result;
-			race_skill(&p->mon, ability->index, &rbase, &rxtra);
+			mon_race_skill(&p->mon, ability->index, &rbase, &rxtra);
 			class_skill(&p->mon, ability->index, &cbase, &cxtra);
 			tome_skill(&p->mon, ability->index, &tbase, &txtra);
 
