@@ -1647,7 +1647,16 @@ static enum parser_error parse_mon_base_skill_magic(struct parser *p) {
 	if (!rb) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
-	rb->skills[SKILL_DIGGING] = parser_getint(p, "magic");
+	rb->skills[SKILL_MAGIC] = parser_getint(p, "magic");
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_mon_base_skill_health(struct parser *p) {
+	struct monster_base *rb = parser_priv(p);
+	if (!rb) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	rb->skills[SKILL_HEALTH] = parser_getint(p, "health");
 	return PARSE_ERROR_NONE;
 }
 
@@ -1748,6 +1757,7 @@ static struct parser *init_parse_mon_base(void) {
 	parser_reg(p, "skill-throw int throw", parse_mon_base_skill_throw);
 	parser_reg(p, "skill-dig int dig", parse_mon_base_skill_dig);
 	parser_reg(p, "skill-magic int magic", parse_mon_base_skill_magic);
+	parser_reg(p, "skill-health int health", parse_mon_base_skill_health);
 	parser_reg(p, "obj-flags ?str flags", parse_mon_base_obj_flags);
 	parser_reg(p, "player-flags ?str flags", parse_mon_base_play_flags);
 	parser_reg(p, "spells str spells", parse_mon_base_spells);

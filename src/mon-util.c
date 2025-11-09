@@ -57,6 +57,7 @@
 #include "z-form.h"
 #include "z-rand.h"
 #include "z-type.h"
+#include "z-util.h"
 
 
 void mark_mon_as_playable(struct monster_race *mr)
@@ -2435,7 +2436,7 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 
 	magic = mr->base->skills[SKILL_MAGIC] + mr->spell_power;
 
-	magic_mod = my_int_sqrt(magic);
+	magic_mod = magic > 0 ? my_int_sqrt(magic) : -my_int_sqrt(-magic);
 
 	for (i = RSF_NONE + 1; i < RSF_MAX; ++i) {
 		bool on = false;
@@ -2487,7 +2488,8 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 
 static int level_to_hp(int level)
 {
-	return (int)(MAX(level + 25.0, level * 2.5) * (my_sqrt(level) + 1.0) / 11.0);
+	assert(level >= 0);
+	return (int)(MAX(level + 25.0, level * 2.5) * (my_sqrt((double)level) + 1.0) / 11.0);
 }
 
 static void normal_monster(struct monster_race *mr)

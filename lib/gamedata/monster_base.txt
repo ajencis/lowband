@@ -46,7 +46,18 @@ attr:AC:3
 attr:HP:2
 attr:SPEED:-2
 stats:1:1:-1:-1:1
-skill-melee:5
+skill-melee:10
+skill-shoot:-5
+skill-throw:-5
+skill-dig:5
+skill-disarm-phys:-10
+skill-disarm-magic:-5
+skill-device:5
+skill-save:0
+skill-search:15
+skill-stealth:-10
+skill-magic:0
+skill-health:5
 obj-flags:SEE_INVIS
 power:BREATH
 power:FRIGHTENING_PRESENCE:50
@@ -74,7 +85,18 @@ stats:0:0:1:0:0
 power:HOLY_MAGIC
 power:LIGHT_MAGIC
 power:GLOW
-skill-save:10
+skill-melee:5
+skill-shoot:0
+skill-throw:-5
+skill-dig:-5
+skill-disarm-phys:0
+skill-disarm-magic:5
+skill-device:5
+skill-save:15
+skill-search:15
+skill-stealth:-10
+skill-magic:5
+skill-health:0
 
 # Ants have lowish HP but highish armor class, and powerful melee for their
 # depth
@@ -105,6 +127,18 @@ player-flags:ECHOLOCATE
 obj-flags:BAD_VISION
 power:DARKNESS_MAGIC:50
 power:BREATH:25
+skill-melee:-5
+skill-shoot:-10
+skill-throw:-15
+skill-dig:-10
+skill-disarm-phys:0
+skill-disarm-magic:0
+skill-device:5
+skill-save:5
+skill-search:15
+skill-stealth:15
+skill-magic:0
+skill-health:-5
 
 # Quickish monsters usually with some effect beyond melee
 name:bird
@@ -123,6 +157,18 @@ pain:3
 flags:ANIMAL | CLEAR_WEB
 desc:Canine (Dog)
 body:Dog
+skill-melee:5
+skill-shoot:-5
+skill-throw:-5
+skill-dig:5
+skill-disarm-phys:-5
+skill-disarm-magic:-5
+skill-device:0
+skill-save:5
+skill-search:10
+skill-stealth:5
+skill-magic:0
+skill-health:5
 
 # Centipedes are mostly weak, sometimes quick, and their melee attacks are often
 # early examples of different blow effects
@@ -162,6 +208,18 @@ attr:SPEED:-1
 stats:1:0:-1:0:1
 skill-melee:5
 power:BREATH:80
+skill-melee:5
+skill-shoot:-5
+skill-throw:-5
+skill-dig:5
+skill-disarm-phys:-10
+skill-disarm-magic:-5
+skill-device:0
+skill-save:0
+skill-search:5
+skill-stealth:0
+skill-magic:0
+skill-health:0
 
 # Early, weak breathers which move quickly and erratically
 name:dragon fly
@@ -190,8 +248,18 @@ attr:DAMAGE:-1
 attr:SPEED:-1
 stats:-2:1:1:1:0
 power:DIVINATION_MAGIC
+skill-melee:-10
+skill-shoot:-5
+skill-throw:-5
+skill-dig:-10
+skill-disarm-phys:5
+skill-disarm-magic:10
+skill-device:10
+skill-save:0
+skill-search:20
+skill-stealth:5
 skill-magic:5
-skill-search:5
+skill-health:5
 obj-flags:SEE_INVIS
 
 # Creatures (mostly) embodying a single element, mostly with lowish HP
@@ -205,6 +273,18 @@ desc:Elemental
 attr:MAGIC:1
 attr:HP:-1
 stats:0:0:0:0:0
+skill-melee:10
+skill-shoot:-5
+skill-throw:-5
+skill-dig:-5
+skill-disarm-phys:-10
+skill-disarm-magic:-5
+skill-device:10
+skill-save:5
+skill-search:-5
+skill-stealth:-5
+skill-magic:0
+skill-health:5
 
 # Fast moving, bash doors, hit hard in melee
 name:feline
@@ -231,6 +311,18 @@ attr:HP:-2
 attr:SPEED:1
 player-flags:NO_FOOD
 stats:-2:0:-1:2:1
+skill-melee:-5
+skill-shoot:-5
+skill-throw:-5
+skill-dig:-10
+skill-disarm-phys:5
+skill-disarm-magic:10
+skill-device:5
+skill-save:5
+skill-search:5
+skill-stealth:15
+skill-magic:0
+skill-health:-10
 
 # Giants are big, strong humanoids which hit hard and throw boulders.  They
 # may be associated with an element and have some spells, but their focus is
@@ -247,6 +339,18 @@ attr:MAGIC:-1
 attr:HP:1
 attr:SPEED:-2
 attr:AC:-1
+skill-melee:15
+skill-shoot:-5
+skill-throw:15
+skill-dig:5
+skill-disarm-phys:-5
+skill-disarm-magic:0
+skill-device:-5
+skill-save:-5
+skill-search:0
+skill-stealth:-10
+skill-magic:-5
+skill-health:10
 
 # Mostly slow with lots of hitpoints and armor
 name:golem
@@ -261,6 +365,18 @@ attr:SPEED:-4
 attr:HP:2
 attr:AC:1
 attr:DAMAGE:1
+skill-melee:10
+skill-shoot:0
+skill-throw:0
+skill-dig:0
+skill-disarm-phys:-10
+skill-disarm-magic:-15
+skill-device:5
+skill-save:20
+skill-search:5
+skill-stealth:-10
+skill-magic:-5
+skill-health:15
 
 name:humanoid
 glyph:h
@@ -292,7 +408,18 @@ attr:DAMAGE:1
 attr:HP:-1
 attr:AC:-1
 stats:1:-1:-1:1:1
-skill-melee:5
+skill-melee:10
+skill-shoot:0
+skill-throw:0
+skill-dig:-5
+skill-disarm-phys:5
+skill-disarm-magic:0
+skill-device:-5
+skill-save:5
+skill-search:5
+skill-stealth:-10
+skill-magic:0
+skill-health:5
 power:REGENERATION:50
 
 # Non-descript early monsters that demonstrate some stuff but are mostly filler
@@ -343,6 +470,18 @@ flags:SAPIENT | SEE_IN_DARK
 desc:Kobold
 body:Humanoid
 stats:-2:1:-2:2:1
+skill-melee:-5
+skill-shoot:5
+skill-throw:5
+skill-dig:5
+skill-disarm-phys:10
+skill-disarm-magic:10
+skill-device:10
+skill-save:5
+skill-search:0
+skill-stealth:10
+skill-magic:0
+skill-health:-5
 
 # Powerful undead spellcasters, tending to drain dexterity and charges in melee
 name:lich
@@ -362,7 +501,18 @@ attr:HP:-3
 stats:-2:2:1:1:-1
 power:NECROMANCY_MAGIC:20
 power:DEATH_TOUCH:100
-skill-magic:5
+skill-melee:-5
+skill-shoot:-5
+skill-throw:-5
+skill-dig:-5
+skill-disarm-phys:-5
+skill-disarm-magic:5
+skill-device:5
+skill-save:5
+skill-search:-5
+skill-stealth:10
+skill-magic:10
+skill-health:-5
 player-flags:NO_FOOD
 
 # Weird monsters tha look like floor.
@@ -392,7 +542,18 @@ attr:MAGIC:2
 attr:HP:-1
 attr:AC:-3
 stats:2:1:-3:0:1
-skill-melee:5
+skill-melee:10
+skill-shoot:10
+skill-throw:10
+skill-dig:5
+skill-disarm-phys:-10
+skill-disarm-magic:-5
+skill-device:15
+skill-save:-5
+skill-search:-10
+skill-stealth:5
+skill-magic:5
+skill-health:5
 power:BREATH:50
 power:DEMONOLOGY_MAGIC
 power:SUMMONING_MAGIC:50
@@ -427,6 +588,18 @@ attr:DAMAGE:1
 attr:HP:-1
 attr:AC:-3
 stats:2:0:-3:1:1
+skill-melee:5
+skill-shoot:5
+skill-throw:5
+skill-dig:5
+skill-disarm-phys:0
+skill-disarm-magic:5
+skill-device:10
+skill-save:-5
+skill-search:-10
+skill-stealth:10
+skill-magic:5
+skill-health:0
 power:DEMONOLOGY_MAGIC
 power:SPELL_EASE:-10
 power:HOLY_MAGIC:-25
@@ -476,6 +649,18 @@ body:Humanoid
 attr:HP:1
 attr:AC:-2
 attr:DAMAGE:1
+skill-melee:10
+skill-shoot:0
+skill-throw:5
+skill-dig:-5
+skill-disarm-phys:-10
+skill-disarm-magic:-15
+skill-device:-5
+skill-save:5
+skill-search:-10
+skill-stealth:0
+skill-magic:-5
+skill-health:5
 
 # Orcs are the foot-soldiers of Morgoth.  They melee and use archery, but 
 # mostly don't use magic.  They tend to appear in groups.
@@ -489,6 +674,18 @@ flags:GEAR
 desc:Orc
 body:Humanoid
 stats:0:-1:1:-2:2
+skill-melee:5
+skill-shoot:10
+skill-throw:0
+skill-dig:5
+skill-disarm-phys:10
+skill-disarm-magic:5
+skill-device:5
+skill-save:-5
+skill-search:5
+skill-stealth:5
+skill-magic:-5
+skill-health:5
 
 
 name:person
@@ -521,6 +718,18 @@ attr:MAGIC:2
 stats:-3:2:1:0:1
 power:SUMMONING_MAGIC
 power:TELEPORTATION_MAGIC
+skill-melee:-10
+skill-shoot:-10
+skill-throw:-10
+skill-dig:-15
+skill-disarm-phys:-10
+skill-disarm-magic:-5
+skill-device:5
+skill-save:-5
+skill-search:-15
+skill-stealth:5
+skill-magic:10
+skill-health:5
 
 # Mostly early monsters, but later ones are dangerous.  Not fast for depth
 name:reptile
@@ -558,6 +767,18 @@ attr:HP:-4
 attr:MAGIC:1
 player-flags:NO_FOOD
 stats:-1:1:-1:2:-1
+skill-melee:0
+skill-shoot:10
+skill-throw:10
+skill-dig:5
+skill-disarm-phys:5
+skill-disarm-magic:5
+skill-device:5
+skill-save:5
+skill-search:0
+skill-stealth:10
+skill-magic:5
+skill-health:-5
 
 # Snakes are typically slow, but have high armor class
 name:snake
@@ -587,7 +808,18 @@ power:BACKSTAB
 power:POISON_MAGIC:50
 power:DARKNESS_MAGIC:50
 power:BREATH:25
-skill-stealth:5
+skill-melee:5
+skill-shoot:0
+skill-throw:0
+skill-dig:-5
+skill-disarm-phys:5
+skill-disarm-magic:0
+skill-device:15
+skill-save:5
+skill-search:10
+skill-stealth:20
+skill-magic:5
+skill-health:-5
 
 # Weak, except the odd one to surprise the unwary newcomer.  Always native to
 # level 0, never give experience
@@ -611,6 +843,18 @@ attr:HP:2
 attr:AC:2
 attr:SPEED:-3
 stats:1:-1:1:-3:2
+skill-melee:10
+skill-shoot:0
+skill-throw:0
+skill-dig:5
+skill-disarm-phys:-10
+skill-disarm-magic:-10
+skill-device:0
+skill-save:10
+skill-search:5
+skill-stealth:5
+skill-magic:0
+skill-health:10
 
 # Trolls are evil, larger than human-size humanoids. They have strong melee
 # combat, and many are hurt by light.  They fall roughly between ogres and
@@ -630,6 +874,18 @@ attr:DAMAGE:1
 attr:AC:-1
 stats:2:-1:-2:-1:2
 power:REGENERATION
+skill-melee:5
+skill-shoot:5
+skill-throw:5
+skill-dig:10
+skill-disarm-phys:-10
+skill-disarm-magic:-5
+skill-device:15
+skill-save:-5
+skill-search:-10
+skill-stealth:5
+skill-magic:0
+skill-health:10
 
 # Powerful undead which drain experience
 name:vampire
@@ -655,7 +911,18 @@ power:BACKSTAB
 power:NECROMANCY_MAGIC:75
 power:DARKNESS_MAGIC
 power:UNLIGHT
-skill-stealth:10
+skill-melee:0
+skill-shoot:0
+skill-throw:0
+skill-dig:-5
+skill-disarm-phys:5
+skill-disarm-magic:5
+skill-device:-5
+skill-save:5
+skill-search:5
+skill-stealth:15
+skill-magic:5
+skill-health:5
 spells:POLYMORPH_WOLF | POLYMORPH_BAT
 
 # Always awake, elemental objects which engulf and breathe their element(s)
@@ -704,6 +971,18 @@ flags:HURT_ROCK | IM_POIS | NO_CONF | NO_SLEEP
 desc:Xorn/Xaren
 attr:AC:2
 attr:SPEED:-2
+skill-melee:10
+skill-shoot:5
+skill-throw:5
+skill-dig:25
+skill-disarm-phys:0
+skill-disarm-magic:0
+skill-device:-5
+skill-save:10
+skill-search:0
+skill-stealth:-5
+skill-magic:0
+skill-health:5
 
 # Small, weak, comical humanoids
 name:yeek
