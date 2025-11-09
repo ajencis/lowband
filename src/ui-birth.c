@@ -17,12 +17,10 @@
  */
 
 #include "angband.h"
-#include "cmds.h"
 #include "cmd-core.h"
 #include "game-event.h"
 #include "game-input.h"
 #include "monster.h"
-#include "obj-tval.h"
 #include "player.h"
 #include "player-birth.h"
 #include "player-properties.h"
@@ -39,6 +37,8 @@
 #include "ui-player-properties.h"
 #include "ui-prefs.h"
 #include "ui-target.h"
+#include "z-form.h"
+#include "z-util.h"
 
 /**
  * Overview
@@ -316,34 +316,48 @@ void reset_birthmenu_filters(void)
  */
 static const menu_iter birth_iter = { NULL, birthmenu_valid, birthmenu_display, NULL, NULL, NULL };
 
-static void skill_help(const int r_skills[], const int c_skills[], int exp, int infra)
+static void skill_help(const int r_skills[SKILL_MAX], const int r_skills_x[SKILL_MAX],
+	const int c_skills[SKILL_MAX], const int c_skills_x[SKILL_MAX],
+	int exp, int infra)
 {
-	int16_t skills[SKILL_MAX];
-	unsigned i;
+	int i, base, xtra;
+	int xtra_returns = 0;
+	size_t maxlen = 0, currlen;
+	struct player_ability *abil;
+	char mssg[512];
 
-	for (i = 0; i < SKILL_MAX ; ++i) {
-		skills[i] = (r_skills ? r_skills[i] : 0 ) + (c_skills ? c_skills[i] : 0);
+	for (i = 0; i < SKILL_MAX; ++i) {
+		abil = lookup_player_ability(i, PY_ABIL_SKILL);
+		assert(abil);
+		currlen = strlen(abil->name) + 1U;
+		maxlen = MAX(maxlen, currlen);
 	}
 
-	text_out_e("Hit/Shoot/Throw: %+d/%+d/%+d     \n", skills[SKILL_TO_HIT_MELEE],
-			   skills[SKILL_TO_HIT_BOW], skills[SKILL_TO_HIT_THROW]);
-	if (skills[SKILL_MAGIC] > 0) {
-		text_out_e("Magic:  %+3d\n", skills[SKILL_MAGIC]);
+	for (i = 0; i < SKILL_MAX; ++i) {
+		abil = lookup_player_ability(i, PY_ABIL_SKILL);
+
+		base = r_skills[i] + (c_skills ? c_skills[i] : 0);
+		xtra = r_skills_x[i] + (c_skills_x ? c_skills_x[i] : 0);
+
+		currlen = strnfmt(mssg, sizeof mssg, "%s:", abil->name);
+
+		while (currlen < maxlen) {
+			mssg[currlen] = ' ';
+			currlen++;
+		}
+		mssg[currlen] = '\0';
+
+		text_out_e("%s %3d (%+4d)\n", mssg, base, xtra);
 	}
-	text_out_e("Health: %+3d   XP mod: %d%%\n", skills[SKILL_HEALTH], exp);
-	text_out_e("Disarm: %+3d/%+3d   Devices: %+3d\n", skills[SKILL_DISARM_PHYS],
-			   skills[SKILL_DISARM_MAGIC], skills[SKILL_DEVICE]);
-	text_out_e("Save:   %+3d   Stealth: %+3d\n", skills[SKILL_SAVE],
-			   skills[SKILL_STEALTH]);
+
 	if (infra > 0) {
 		text_out_e("Infravision:  %d ft\n", infra * 10);
 	}
-	text_out_e("Digging:      %+d\n", skills[SKILL_DIGGING]);
-	text_out_e("Search:       %+d", skills[SKILL_SEARCH]);
-	if (infra <= 0) {
-		text_out_e("\n");
+	else {
+		xtra_returns++;
 	}
-	if (skills[SKILL_MAGIC] <= 0) {
+
+	for (i = 0; i < xtra_returns; ++i) {
 		text_out_e("\n");
 	}
 }
@@ -359,16 +373,15 @@ static void race_help(int i, void *db, const region *l)
 	int n_flags = 0;
 	int flag_space = 5;
 	int race_skills[SKILL_MAX];
+	int race_skills_x[SKILL_MAX];
 	int race_powers[PP_MAX];
 	struct element_info race_elem_info[ELEM_MAX] = { 0 };
 
 	assert(mon);
 
-	//player_race_r_skill(r, false, race_skills);
-	memcpy(race_elem_info, r->el_info, sizeof *race_elem_info * ELEM_MAX);
-	//player_race_elem_info(r, false, race_elem_info);
+	player_race_r_skill(mon, false, race_skills);
+	player_race_x_skill(mon, false, race_skills_x);
 
-	memcpy(race_skills, mon->skills, sizeof race_skills);
 	memcpy(race_powers, mon->powers, sizeof race_powers);
 
 	if (!r) return;
@@ -408,9 +421,9 @@ static void race_help(int i, void *db, const region *l)
 			text_out("  ");
 		}
 	}
-	
+
 	text_out_e("\n");
-	skill_help(race_skills, NULL, r->r_exp, r->infra);
+	skill_help(race_skills, race_skills_x, NULL, NULL, r->r_exp, r->infra);
 	text_out_e("\n");
 
 	for (ability = player_abilities; ability; ability = ability->next) {
@@ -455,11 +468,23 @@ static void class_help(int i, void *db, const region *l)
 	const struct player_race *r = player->race;
 	const struct monster_race *mr = race_to_monster(r);
 
+	int r_skills[SKILL_MAX], r_skills_x[SKILL_MAX];
+	int c_skills[SKILL_MAX], c_skills_x[SKILL_MAX];
+
 	struct player_ability *ability;
 	int n_flags = 0;
 	int flag_space = 5 + 1 + 4;
+	int j;
 
 	if (!c) return;
+
+	player_race_r_skill(mr, false, r_skills);
+	player_race_x_skill(mr, false, r_skills_x);
+
+	for (j = 0; j < SKILL_MAX; ++j) {
+		c_skills[j] = class_c_skill(c, 0, j);
+		c_skills_x[j] = class_x_skill(c, 0, j);
+	}
 
 	/* Output to the screen */
 	text_out_hook = text_out_to_screen;
@@ -468,7 +493,7 @@ static void class_help(int i, void *db, const region *l)
 	text_out_indent = CLASS_AUX_COL;
 	Term_gotoxy(CLASS_AUX_COL, TABLE_ROW);
 	
-	skill_help(mr->skills, c->c_skills,
+	skill_help(r_skills, r_skills_x, c_skills, c_skills_x,
 			   r->r_exp + c->c_exp, -1);
 
 	if (c->magic.total_spells) {
