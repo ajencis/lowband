@@ -969,6 +969,7 @@ pain:4
 flags:COLD_BLOOD | EMPTY_MIND | CLEAR_WEB | SEE_IN_DARK
 flags:HURT_ROCK | IM_POIS | NO_CONF | NO_SLEEP
 desc:Xorn/Xaren
+body:Xorn
 attr:AC:2
 attr:SPEED:-2
 skill-melee:10

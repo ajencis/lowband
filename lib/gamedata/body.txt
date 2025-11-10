@@ -331,3 +331,19 @@ slot:HAT:eagle head
 slot:GLOVES:human hands
 slot:BOOTS:feet
 slot:BOOTS:feet
+
+body:Xorn
+slot:WEAPON:right upper hand
+slot:WEAPON:left upper hand
+slot:WEAPON:right lower hand
+slot:WEAPON:left lower hand
+slot:BOW:shooting
+slot:RING:right hand
+slot:RING:left hand
+slot:AMULET:neck
+slot:LIGHT:light
+slot:BODY_ARMOR:body
+slot:CLOAK:back
+slot:HAT:head
+slot:GLOVES:hands
+slot:BOOTS:feet
