@@ -1015,6 +1015,13 @@ power:10
 mult:5
 desc:Lets you walk through trees
 
+name:rock passing
+type:flag
+code:PASS_ROCK
+power:25
+mult:5
+desc:Lets you walk through rock
+
 name:invisibility
 type:flag
 subtype:misc ability

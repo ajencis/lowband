@@ -114,6 +114,14 @@ bool feat_is_rubble(int feat)
 }
 
 /**
+ * L: true is feat is rock (has flag TF_ROCK)
+ */
+bool feat_is_rock(int feat)
+{
+	return tf_has(f_info[feat].flags, TF_ROCK);
+}
+
+/**
  * L: True if the feature is an open door
  */
 bool feat_is_open_door(int feat)

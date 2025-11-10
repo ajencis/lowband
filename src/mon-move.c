@@ -263,6 +263,7 @@ bool monster_passes_grid(struct monster *mon, struct chunk *c, struct loc grid)
 	for (feat = square_feat(c, grid); feat; feat = feat->next) {
 		if (feat_is_passable(feat->kind->fidx)) continue;
 		if (feat_is_tree(feat->kind->fidx) && of_has(mon->state.flags, OF_PASS_TREE)) continue;
+		if (feat_is_rock(feat->kind->fidx) && of_has(mon->state.flags, OF_PASS_ROCK)) continue;
 		if (!feat_is_permanent(feat->kind->fidx) && monster_passes_walls(mon)) continue;
 
 		return false;

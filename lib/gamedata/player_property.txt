@@ -296,6 +296,11 @@ code:PASS_TREE
 name:Tree-Walking
 desc:You can walk through trees.
 
+type:object
+code:PASS_ROCK
+name:Rock-Phasing
+desc:You can walk through stone.
+
 ## Element flags
 
 type:element
