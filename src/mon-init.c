@@ -34,6 +34,7 @@
 #include "player-timed.h"
 #include "project.h"
 #include "ui-visuals.h"
+#include "z-form.h"
 
 struct blow_method *blow_methods;
 struct blow_effect *blow_effects;
@@ -2541,6 +2542,25 @@ static enum parser_error parse_monster_skills(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_monster_skills_plus(struct parser *p)
+{
+	struct monster_race *r = parser_priv(p);
+	int skill = code_index_in_array(skill_names, parser_getsym(p, "which"));
+	int amt = parser_getint(p, "amt");
+
+	if (!r) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	if (skill < 0 || skill >= SKILL_MAX) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	r->skills[skill] += amt;
+
+	return PARSE_ERROR_NONE;
+}
+
 static enum parser_error parse_monster_stats(struct parser *p)
 {
 	struct monster_race *r = parser_priv(p);
@@ -2607,6 +2627,7 @@ struct parser *init_parse_monster(void) {
 	parser_reg(p, "body str body", parse_monster_body);
 	parser_reg(p, "power sym name ?int amt", parse_monster_powers);
 	parser_reg(p, "skill sym which int amt", parse_monster_skills);
+	parser_reg(p, "skill-add sym which int amt", parse_monster_skills_plus);
 	parser_reg(p, "stats int str int int int wis int dex int con", parse_monster_stats);
 	return p;
 }
@@ -2644,6 +2665,10 @@ static errr finish_parse_monster(struct parser *p) {
 		struct monster_blow *b_new;
 
 		assert(ridx >= 0);
+
+		if (!r->base) {
+			quit_fmt("Error: race %s has no base!", r->name);
+		}
 
 		/* Main record */
 		memcpy(&r_info[ridx], r, sizeof(*r));
@@ -2687,7 +2712,6 @@ static errr finish_parse_monster(struct parser *p) {
 
 		mem_free(r);
 	}
-	z_info->r_max += 1;
 
 	/* Convert friend and shape names into race pointers */
 	for (i = 0; i < z_info->r_max; i++) {
@@ -2753,6 +2777,7 @@ static errr finish_parse_monster(struct parser *p) {
 	}
 
 	parser_destroy(p);
+
 	return 0;
 }
 

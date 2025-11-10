@@ -372,7 +372,7 @@ skill-dig:0
 skill-disarm-phys:-10
 skill-disarm-magic:-15
 skill-device:5
-skill-save:20
+skill-save:25
 skill-search:5
 skill-stealth:-10
 skill-magic:-5

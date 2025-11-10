@@ -776,6 +776,24 @@ experience:0
 flags:PLAYABLE
 desc:A treefolk.
 
+name:unformed
+evolution:flesh golem
+evolution:clay golem
+evolution:stone golem
+evolution:iron golem
+base:person
+color:b
+speed:110
+hit-points:5
+hearing:4
+armor-class:-25
+sleepiness:40
+depth:0
+rarity:15
+experience:0
+flags:PLAYABLE
+desc:An unformed.
+
 
 
 ##### Monster races proper #####
@@ -4453,6 +4471,7 @@ desc: evil cunning.  It hungers for food, and you look tasty.
 
 name:flesh golem
 base:golem
+evolution:bone golem
 color:R
 speed:110
 hit-points:54
@@ -5469,6 +5488,7 @@ desc: Morgul.
 
 name:stone golem
 base:golem
+evolution:colossus
 color:W
 speed:100
 hit-points:126
@@ -6105,6 +6125,9 @@ desc:It is a giant beetle with vicious claws.
 
 name:iron golem
 base:golem
+evolution:mithril golem
+evolution:eog golem
+evolution:bronze golem
 color:s
 speed:110
 hit-points:520
@@ -8931,6 +8954,7 @@ flags:COLD_BLOOD
 flags:DROP_2 | ONLY_GOLD
 flags:BASH_DOOR
 flags:IM_COLD
+skill-add:SAVE:10
 desc:It is a massive deep brown statue, striding towards you with an
 desc: all-too-familiar purpose.  Your magic surprisingly feels much less
 desc: powerful now.
@@ -13529,6 +13553,7 @@ flags:UNDEAD | COLD_BLOOD
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_COLD | NO_STUN
 flags:FORCE_SLEEP
+power:NECROMANCY_MAGIC
 spell-freq:8
 spells:BRAIN_SMASH | WOUND | DRAIN_MANA | TELE_TO
 spells:BA_NETH
@@ -14226,6 +14251,8 @@ flags:DEMON | COLD_BLOOD
 flags:OPEN_DOOR | BASH_DOOR
 flags:IM_ACID | IM_FIRE | IM_POIS
 flags:FORCE_SLEEP
+power:DEMONOLOGY_MAGIC
+power:FIRE_MAGIC
 innate-freq:40
 spell-freq:9
 spells:TELE_TO
