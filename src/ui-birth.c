@@ -324,7 +324,7 @@ static void skill_help(const int skills_b[SKILL_MAX], const int skills_x[SKILL_M
 	int xtra_returns = 0;
 	size_t maxlen = 0, currlen;
 	struct player_ability *abil;
-	char mssg[512];
+	char mssg[512], xtra_msg[80];
 
 	for (i = 0; i < SKILL_MAX; ++i) {
 		abil = lookup_player_ability(i, PY_ABIL_SKILL);
@@ -344,7 +344,13 @@ static void skill_help(const int skills_b[SKILL_MAX], const int skills_x[SKILL_M
 		}
 		mssg[currlen] = '\0';
 
-		text_out_e("%s %3d (%+4d)\n", mssg, skills_b[i], skills_x[i]);
+		if (skills_x) {
+			strnfmt(xtra_msg, sizeof xtra_msg, " %+d%%", skills_x[i]);
+		} else {
+			xtra_msg[0] = '\0';
+		}
+
+		text_out_e("%s %3d%s\n", mssg, skills_b[i], xtra_msg);
 	}
 
 	if (infra > 0) {
@@ -361,28 +367,35 @@ static void skill_help(const int skills_b[SKILL_MAX], const int skills_x[SKILL_M
 
 static void race_help(int i, void *db, const region *l)
 {
-	int j;
+	int j, base, xtra;
 	struct player_race *r = player_id2race(i);
 	struct monster_race *mon = race_to_monster(r);
 	//int len = (STAT_MAX + 1) / 2;
 
-	struct player_ability *ability;
+	const struct player_ability *ability;
 	int n_flags = 0;
 	int flag_space = 5;
 	int race_skills[SKILL_MAX] = { 0 };
-	int race_skills_x[SKILL_MAX] = { 0 };
+	int race_x_skills[SKILL_MAX] = { 0 };
 	int race_powers[PP_MAX];
 	struct element_info race_elem_info[ELEM_MAX] = { 0 };
 
+	struct scaling_data sdata;
+
 	assert(mon);
 
+	if (!r) return;
+
 	for (j = 0; j < SKILL_MAX; ++j) {
-		race_skill(mon, j, &race_skills[j], &race_skills_x[j]);
+		sdata = race_skill(mon, j);
+
+		race_skills[j] = scaling_data_calc_r_xtra(mon, sdata);
+		race_skills[j] += sdata.base;
+
+		race_x_skills[j] = sdata.p_xtra;
 	}
 
 	memcpy(race_powers, mon->powers, sizeof race_powers);
-
-	if (!r) return;
 
 	/* Output to the screen */
 	text_out_hook = text_out_to_screen;
@@ -421,7 +434,7 @@ static void race_help(int i, void *db, const region *l)
 	}
 
 	text_out_e("\n");
-	skill_help(race_skills, race_skills_x, r->r_exp, r->infra);
+	skill_help(race_skills, race_x_skills,  r->r_exp, r->infra);
 	text_out_e("\n");
 
 	for (ability = player_abilities; ability; ability = ability->next) {
@@ -435,20 +448,38 @@ static void race_help(int i, void *db, const region *l)
 		} else if ((ability->type == PY_ABIL_ELEMENT) &&
 				   (race_elem_info[ability->index].res_level != ability->value)) {
 			continue;
-		} else if ((ability->type == PY_ABIL_POWER) &&
+		/*} else if ((ability->type == PY_ABIL_POWER) &&
 		           (!race_powers[ability->index])) {
-            continue;
+            continue;*/
 		} else if (ability->type == PY_ABIL_SKILL) {
 			continue;
 		}
 
 		if (ability->type == PY_ABIL_POWER) {
-		    text_out_e("\n%s [%i%%]", ability->name, race_powers[ability->index]);
+			char base_str[80] = "", xtra_str[80] = "";
+
+			sdata = race_power(mon, ability->index);
+
+			base = scaling_data_calc_r_xtra(mon, sdata) + sdata.base;
+			xtra = sdata.p_xtra;
+
+			if (base) {
+				strnfmt(base_str, sizeof base_str, "%i", base);
+				if (xtra) {
+					strnfmt(xtra_str, sizeof xtra_str, " %+i%%", xtra);
+				}
+			} else if (xtra) {
+				strnfmt(xtra_str, sizeof xtra_str, "%i%%", xtra);
+			}
+
+			if (base || xtra) {
+		    	text_out_e("\n%s: %s%s", ability->name, base_str, xtra_str);
+				n_flags++;
+			}
 		} else {
 			text_out_e("\n%s", ability->name);
+			n_flags++;
 		}
-
-		n_flags++;
 	}
 
 	while (n_flags < flag_space) {
@@ -465,6 +496,7 @@ static void class_help(int i, void *db, const region *l)
 	struct player_class *c = player_id2class(i);
 	const struct player_race *r = player->race;
 	const struct monster_race *mr = race_to_monster(r);
+	struct scaling_data sdata = { 0 };
 
 	int skills_b[SKILL_MAX] = { 0 }, skills_x[SKILL_MAX] = { 0 };
 
@@ -476,10 +508,14 @@ static void class_help(int i, void *db, const region *l)
 	if (!c) return;
 
 	for (j = 0; j < SKILL_MAX; ++j) {
+		sdata = race_skill(mr, j);
+
+		skills_b[j] += scaling_data_calc_r_xtra(mr, sdata);
+		skills_b[j] += sdata.base;
+		skills_x[j] += sdata.p_xtra;
+
 		skills_b[j] += class_c_skill(c, 0, j);
 		skills_x[j] += class_x_skill(c, 0, j);
-
-		race_skill(mr, j, &skills_b[j], &skills_x[j]);
 	}
 
 	/* Output to the screen */
@@ -535,7 +571,7 @@ static void class_help(int i, void *db, const region *l)
 		}
 
 		if (ability->type == PY_ABIL_POWER) {
-			text_out_e("\n%s [%i%%]", ability->name, c->c_powers[ability->index]);
+			text_out_e("\n%s: %i%%", ability->name, c->c_powers[ability->index]);
 		} else {
             text_out_e("\n%s", ability->name);
 		}

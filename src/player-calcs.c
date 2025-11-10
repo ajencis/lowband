@@ -38,44 +38,14 @@
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
+#include "player-enum.h"
 #include "player-properties.h"
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "player.h"
 #include "project.h"
 
-
-/* L: matching monster resists to player_resists */
-/*struct mon_player_match elem_matches[] = {
-	{ RF_IM_ACID, ELEM_ACID },
-	{ RF_IM_ELEC, ELEM_ELEC },
-	{ RF_IM_FIRE, ELEM_FIRE },
-	{ RF_IM_COLD, ELEM_COLD },
-	{ RF_IM_POIS, ELEM_POIS },
-	{ RF_IM_NETHER, ELEM_NETHER },
-	{ RF_IM_WATER, ELEM_WATER },
-	{ RF_IM_PLASMA, ELEM_PLASMA },
-	{ RF_IM_NEXUS, ELEM_NEXUS },
-	{ RF_IM_DISEN, ELEM_DISEN },
-	{ RF_NONE, -1 }
-};*/
- 
-#if 0
-struct mon_player_match of_matches[] = {
-	{ RF_PASS_WEB, OF_PASS_WEB },
-	{ RF_INVISIBLE, OF_INVISIBILITY },
-	{ RF_HI_REGEN, OF_HI_REGEN },
-	{ RF_NONE, -1 }
-};
-
-struct mon_player_match pf_matches[] = {
-	{ RF_UNDEAD, PF_UNDEAD },
-	{ RF_EVIL, PF_EVIL },
-	{ RF_PASS_WALL, PF_PASS_WALL },
-	{ RF_PHOENIX_RESURRECT, PF_PHOENIX_RESURRECT },
-	{ RF_NONE, -1 }
-};
-#endif
 
 struct mon_player_match elem_pp_matches[] = {
 	{ ELEM_ACID, PP_EARTH_MAGIC },
@@ -118,13 +88,6 @@ struct skill_stat_info skill_stats[] = {
 	{ -1, STAT_NONE, STAT_NONE }
 };
 
-/*struct mon_player_match flag_matches[] = {
-	{ RF_NO_FEAR, OF_PROT_FEAR },
-	{ RF_NO_STUN, OF_PROT_STUN },
-	{ RF_NO_CONF, OF_PROT_CONF },
-	{ -1, -1 }
-};*/
-
 
 
 /* L: rewriting the stat stuff entirely */
@@ -157,21 +120,6 @@ static int stat_scale(int index, int scaleto, bool minzero) {
 }
 
 
-/*static int adj_int_dev(int index) {
-	return stat_scale(index, 15, false);
-}
-
-static int adj_wis_sav(int index) {
-	return stat_scale(index, 50, false);
-}
-
-static int adj_dex_dis(int index) {
-	return stat_scale(index, 20, false);
-}
-
-static int adj_int_dis(int index) {
-	return stat_scale(index, 20, false);
-}*/
 
 int adj_dex_ta(int index) {
 	return stat_scale(index, 15, false);
@@ -185,10 +133,6 @@ int adj_dex_th(int index) {
 	return (index - 7) * 35 / 8;
 }
 
-/*static int adj_str_th(int index) {
-	return stat_scale(index, 15, false);
-}*/
-
 static int adj_str_wgt(int index) {
 	return stat_scale(index, 250, true) + 25;
 }
@@ -197,17 +141,10 @@ int adj_str_hold(int index) {
 	return stat_scale(index, 250, true) + 100;
 }
 
-/*static int adj_str_dig(int index) {
-	return stat_scale(index, 100, false);
-}*/
-
 int adj_str_blow(int index) {
 	return stat_scale(index, 240, true);
 }
 
-/*static int adj_dex_blow(int index) {
-	return stat_scale(index, 10, true);
-}*/
 
 int adj_stat_blow(int index) {
 	if (index < AVG_STAT_IND) {
@@ -224,17 +161,9 @@ int adj_con_fix(int index) {
 	return stat_scale(index, 10, true);
 }
 
-/*static int adj_con_mhp(int index) {
-	return stat_scale(index, 250, false);
-}*/
-
 static int adj_mag_study(int index) {
 	return (index + 5) * 10 / 20;
 }
-
-/*static int adj_mag_mana(int index) {
-	return (index + 5) * 200 / 20;
-}*/
 
 int adj_int_xp(int index) {
 	return -stat_scale(index, 50, false);
@@ -278,121 +207,6 @@ int adj_stat_skill_percent(int index, int skill) {
 	}
 	return ret;
 }
-
-
-/**
- * L: monk agility bonuses
- */
-
-/*
-static int unarmoured_speed_bonus(struct player_state *s, int wgt)
-{
-	int wpen = wgt / 5 - get_power_scale_state(s, PP_AGILITY, 10, player->lev);
-	wpen = MAX(0, wpen);
-	int bonus = get_power_scale_state(s, PP_AGILITY, 10, player->lev);
-	bonus = MAX(0, bonus - wpen);
-
-    s->speed += bonus;
-	return bonus;
-}
-
-static int unarmoured_ac_bonus(struct player_state *s, int wgt)
-{
-	int wpen = wgt - get_power_scale_state(s, PP_AGILITY, 250, player->lev);
-	wpen = MAX(0, wpen);
-    int bonus = get_power_scale_state(s, PP_AGILITY, 50, player->lev);
-	bonus = MAX(bonus / 2, bonus - wpen);
-
-    s->to_a += bonus;
-	return bonus;
-}
-*/
-
-#if 0
-static int monster_modify_stat(int which, struct monster_race *mr)
-{
-	return mr->stat_mod[which];
-	int curr = mr->base->stats[which];
-	int actual = (mr->level * curr + 33) / 50;
-	if (actual < 0) actual = MAX(actual, curr);
-	return actual;
-}
-#endif
-
-
-#if 0
-/**
- * This table is used to help calculate the number of blows the player can
- * make in a single round of attacks (one player turn) with a normal weapon.
- *
- * This number ranges from a single blow/round for weak players to up to six
- * blows/round for powerful warriors.
- *
- * Note that certain artifacts and ego-items give "bonus" blows/round.
- *
- * First, from the player class, we extract some values:
- *
- *    Warrior --> num = 6; mul = 5; div = MAX(30, weapon_weight);
- *    Mage    --> num = 4; mul = 2; div = MAX(40, weapon_weight);
- *    Priest  --> num = 4; mul = 3; div = MAX(35, weapon_weight);
- *    Rogue   --> num = 5; mul = 4; div = MAX(30, weapon_weight);
- *    Ranger  --> num = 5; mul = 4; div = MAX(35, weapon_weight);
- *    Paladin --> num = 5; mul = 5; div = MAX(30, weapon_weight);
- * (all specified in class.txt now)
- *
- * To get "P", we look up the relevant "adj_str_blow[]" (see above),
- * multiply it by "mul", and then divide it by "div", rounding down.
- *
- * To get "D", we look up the relevant "adj_dex_blow[]" (see above).
- *
- * Then we look up the energy cost of each blow using "blows_table[P][D]".
- * The player gets blows/round equal to 100/this number, up to a maximum of
- * "num" blows/round, plus any "bonus" blows/round.
- */
-static const int blows_table[12][12] =
-{
-	/* P */
-   /* D:   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11+ */
-   /* DEX: 3,   10,  17,  /20, /40, /60, /80, /100,/120,/150,/180,/200 */
-
-	/* 0  */
-	{  100, 100, 95,  85,  75,  60,  50,  42,  35,  30,  25,  23 },
-
-	/* 1  */
-	{  100, 95,  85,  75,  60,  50,  42,  35,  30,  25,  23,  21 },
-
-	/* 2  */
-	{  95,  85,  75,  60,  50,  42,  35,  30,  26,  23,  21,  20 },
-
-	/* 3  */
-	{  85,  75,  60,  50,  42,  36,  32,  28,  25,  22,  20,  19 },
-
-	/* 4  */
-	{  75,  60,  50,  42,  36,  33,  28,  25,  23,  21,  19,  18 },
-
-	/* 5  */
-	{  60,  50,  42,  36,  33,  30,  27,  24,  22,  21,  19,  17 },
-
-	/* 6  */
-	{  50,  42,  36,  33,  30,  27,  25,  23,  21,  20,  18,  17 },
-
-	/* 7  */
-	{  42,  36,  33,  30,  28,  26,  24,  22,  20,  19,  18,  17 },
-
-	/* 8  */
-	{  36,  33,  30,  28,  26,  24,  22,  21,  20,  19,  17,  16 },
-
-	/* 9  */
-	{  35,  32,  29,  26,  24,  22,  21,  20,  19,  18,  17,  16 },
-
-	/* 10 */
-	{  34,  30,  27,  25,  23,  22,  21,  20,  19,  18,  17,  16 },
-
-	/* 11+ */
-	{  33,  29,  26,  24,  22,  21,  20,  19,  18,  17,  16,  15 },
-   /* DEX: 3,   10,  17,  /20, /40, /60, /80, /100,/120,/150,/180,/200 */
-};
-#endif
 
 /**
  * Decide which object comes earlier in the standard inventory listing,
@@ -1536,6 +1350,31 @@ static void calc_glow(struct player_state *ps, struct player *p)
 }
 #endif
 
+
+
+
+void mon_class_skill(const struct monster *mon, int skill, int *base, int *xtra)
+{
+	struct player *p = mon->player;
+	int tome, b_amt, x_amt;
+
+	if (!p) return;
+	if (skill < 0 || skill >= SKILL_MAX) return;
+
+	tome = p->extra_skills[skill];
+	b_amt = p->class->c_skills[skill];
+	x_amt = p->class->x_skills[skill];
+
+	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
+		b_amt = MAX(b_amt, tome * 1 / 4);
+		x_amt = MAX(x_amt, tome * 3 / 4);
+	}
+
+	*base += b_amt;
+	*xtra += x_amt;
+}
+
+
 /**
  * Calculate the players current "state", taking into account
  * not only race/class intrinsics, but also objects being worn
@@ -1562,6 +1401,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 				  bool update)
 {
 	int i, j, hold;
+	int base, xtra;
 	//int extra_blows = 0;
 	int extra_shots = 0;
 	int extra_might = 0;
@@ -1598,6 +1438,16 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 
 	/* Extract the player flags */
 	player_flags(p, collect_f);
+
+	for (i = 0; i < SKILL_MAX; ++i) {
+		base = 0;
+		xtra = 0;
+
+		mon_class_skill(mon, i, &base, &xtra);
+
+		state->skills[i] += base;
+		state->skills[i] += xtra * p->lev / 50;
+	}
 
 	/* L: get powers */
 	/*for (i = PP_NONE + 1; i < PP_MAX; ++i) {

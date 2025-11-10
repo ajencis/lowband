@@ -66,6 +66,10 @@ extern void (*quit_aux)(const char *);
  */
 #define VERB_AGREEMENT(count, singular, plural)    (((count) == 1) ? (singular) : (plural))
 
+/**
+ * L: round  x  to nearest multiple of  y
+ */
+#define RND_TO_MULT(x, y) (((((ABS(x)) + (y) / 2) / (y)) * (y)) * SGN(x))
 
 /**
  * Count the number of characters in a UTF-8 encoded string

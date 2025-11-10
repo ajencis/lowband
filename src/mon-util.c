@@ -2452,14 +2452,15 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 
 		for (j = 0; j < PP_MAX; ++j) {
 			int min = ms->powers[j];
-			int race_power = calc_mon_race_power(mr, j);// mr->powers[j] * mr->level / 100;
 			int mod;
+			struct scaling_data sdata = race_power(mr, j);
+			int r_power = scaling_data_calc_r_xtra(mr, sdata) + sdata.base;
 			if (min <= 0) continue;
 
-			mod = race_power - min;
+			mod = r_power - min;
 
 			// mages without any specialty at all in the subject are unlikely to know stronger spells
-			if (race_power <= 0) mod *= (ABS(mod) / 3 + 10);
+			if (r_power <= 0) mod *= (ABS(mod) / 3 + 10);
 			
 			// good mages in their specialty are likely to know a spell
 			if (mod > 0) mod += magic_mod;
@@ -2817,9 +2818,7 @@ void verify_cave_items_file(struct chunk *c, const char *file, int line)
 
 		verify_item_file(obj, c, file, line);
 
-		/*dbg_log_fmt("obj", "checking a %s", obj->kind->name);
-
-		if (obj->oidx != i) {
+		/*if (obj->oidx != i) {
 			plog_fmt("Error: %s objects[%i] is object %s (oidx %i).\n(%s line %i)",
 				cave_desc,
 				i,

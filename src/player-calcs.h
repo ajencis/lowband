@@ -169,6 +169,7 @@ void track_object_cancel(struct player_upkeep *upkeep);
 bool tracked_object_is(struct player_upkeep *upkeep, struct object *obj);
 
 void adjust_skill_scale(int *v, int num, int den, int minv);
+void mon_class_skill(const struct monster *mon, int skill, int *base, int *xtra);
 
 void notice_stuff(struct player *p);
 void update_stuff(struct player *p);

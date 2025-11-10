@@ -88,18 +88,35 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 	if (group == PLAYER_FLAG_POWER || group == PLAYER_FLAG_SKILL) {
 		int cbase = 0, cxtra = 0, rbase = 0, rxtra = 0, tbase = 0, txtra = 0, stat = 0;
 		char stat_name[80];
+		struct scaling_data sdata, tsdata = { 0 };
+
 		if (group == PLAYER_FLAG_POWER) {
+			sdata = mon_race_power(&p->mon, ability->index);
+			rbase = scaling_data_calc_r_xtra(p->mon.race, sdata) + sdata.base;
+			rxtra = sdata.p_xtra;
+
+			sdata = mon_tome_power(&p->mon, ability->index);
+			tbase = scaling_data_calc_r_xtra(p->mon.race, sdata) + sdata.base;
+			txtra = sdata.p_xtra;
+
 			cxtra = mon_class_power(&p->mon, ability->index);
-			rxtra = mon_race_power(&p->mon, ability->index);
-			tbase = mon_tome_power(&p->mon, ability->index);
 		}
 		else {
 			int result;
-			mon_race_skill(&p->mon, ability->index, &rbase, &rxtra);
-			class_skill(&p->mon, ability->index, &cbase, &cxtra);
-			tome_skill(&p->mon, ability->index, &tbase, &txtra);
 
-			result = (rxtra + cxtra + txtra) * mon_lev(&p->mon) / 50 + rbase + cbase + tbase;
+			sdata = mon_race_skill(&p->mon, ability->index);
+			rbase = scaling_data_calc_r_xtra(p->mon.race, sdata) + sdata.base;
+			rxtra = sdata.p_xtra;
+			tsdata = scaling_data_sum(tsdata, sdata);
+
+			sdata = mon_tome_skill(&p->mon, ability->index);
+			tbase = scaling_data_calc_r_xtra(p->mon.race, sdata) + sdata.base;
+			txtra = sdata.p_xtra;
+			tsdata = scaling_data_sum(tsdata, sdata);
+
+			mon_class_skill(&p->mon, ability->index, &cbase, &cxtra);
+
+			result = scaling_data_calc_mon(&p->mon, sdata);
 			stat = stat_skill_bonus(&p->mon, &p->mon.state, ability->index, result, stat_name, sizeof stat_name);
 		}
 
