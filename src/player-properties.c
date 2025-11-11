@@ -455,9 +455,8 @@ int get_power_scale_state(const struct player_state *state, int power, int scale
 	int base = state->powers[power];
 
 	assert(power < PP_MAX && power > PP_NONE);
-	if (base <= 0) return 0;
 
-	return (base * scaleto + 50 * 2 / 3) / 50;
+	return (ABS(base) * scaleto + 50 * 2 / 3) / 50 * SGN(base);
 }
 
 int get_skill_scale(const struct monster *mon, int skill, int scaleto)
