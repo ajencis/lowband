@@ -62,6 +62,7 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 	int monster_powers[PP_MAX] = { 0 };
 	int monster_skills[SKILL_MAX] = { 0 };
 	struct monster_race *mrace = lookup_player_monster(p);
+	bool positive = true;
 
 	// L: hack for hypothetical players
 	bool hypothetical = p != player;
@@ -69,16 +70,12 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 
 	assert(bufsize > 0);
 
-	memset(buf, '\0', bufsize * sizeof *buf);
-
-	if (group == PLAYER_FLAG_POWER || group == PLAYER_FLAG_SKILL) {
-		if (player_has) {
-			my_strcat(buf, "You", bufsize);
-		} else {
-			my_strcat(buf, "User", bufsize);
-		}
+	if (ability->type == PY_ABIL_POWER) {
+		positive = p->mon.state.powers[ability->index] >= 0;
 	}
-	my_strcat(buf, ability->desc, bufsize);
+
+	ability_desc_base(buf, bufsize, ability, player_has, positive);
+
 	my_strcat(buf, "\n", bufsize);
 
 	if (mrace) {

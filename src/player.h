@@ -279,6 +279,13 @@ struct player_ability {
 	int group;			/* Ability group (set locally when viewing) */
 	int value;			/* Resistance value for elements */
 
+	// L: description data for powers
+	char *second_verb;
+	char *third_verb;
+	char *pos_adjective;
+	char *neg_adjective;
+	char *comment;
+
 	// L: learning data
 	int cost;						// L: how much it costs to max out
 	int rarity;						// L: how likely it is to be found

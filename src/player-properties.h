@@ -20,6 +20,7 @@
 #ifndef PLAYER_PROPS_H
 #define PLAYER_PROPS_H
 
+#include "angband.h"
 
 typedef bool (*abil_predicate)(const struct player_ability *abil, const struct player *p);
 
@@ -59,6 +60,7 @@ const char *ability_subchoice_title(const struct player_ability *parent);
 int ability_subchoice_choices(struct player_ability *parent);
 const char *ability_subchoice_name(int id, const struct player_ability *parent);
 bool make_ability_subchoice(struct player *p);
+void ability_desc_base(char *buf, size_t bufsize, const struct player_ability *abil, bool second, bool positive);
 
 bool ability_satisfies_all_prereqs(const struct player_ability *abil, const struct player *p);
 

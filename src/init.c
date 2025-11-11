@@ -1551,6 +1551,86 @@ static enum parser_error parse_player_prop_prereq(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_player_prop_verb_second(struct parser *p)
+{
+	struct embryo_player_ability *embryo = parser_priv(p);
+	const char *verb_second_name = parser_getstr(p, "verb");
+
+	if (!embryo) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	string_free(embryo->ability.second_verb);
+
+	embryo->ability.second_verb = string_make(verb_second_name);
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_player_prop_verb_third(struct parser *p)
+{
+	struct embryo_player_ability *embryo = parser_priv(p);
+	const char *verb_third_name = parser_getstr(p, "verb");
+
+	if (!embryo) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	string_free(embryo->ability.third_verb);
+
+	embryo->ability.third_verb = string_make(verb_third_name);
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_player_prop_adj_pos(struct parser *p)
+{
+	struct embryo_player_ability *embryo = parser_priv(p);
+	const char *adj_pos_name = parser_getstr(p, "adj");
+
+	if (!embryo) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	string_free(embryo->ability.pos_adjective);
+
+	embryo->ability.pos_adjective = string_make(adj_pos_name);
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_player_prop_adj_neg(struct parser *p)
+{
+	struct embryo_player_ability *embryo = parser_priv(p);
+	const char *adj_neg_name = parser_getstr(p, "adj");
+
+	if (!embryo) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	string_free(embryo->ability.neg_adjective);
+
+	embryo->ability.neg_adjective = string_make(adj_neg_name);
+
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_player_prop_comment(struct parser *p)
+{
+	struct embryo_player_ability *embryo = parser_priv(p);
+	const char *comment = parser_getstr(p, "comment");
+
+	if (!embryo) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	string_free(embryo->ability.comment);
+
+	embryo->ability.comment = string_make(comment);
+
+	return PARSE_ERROR_NONE;
+}
+
 
 static struct parser *init_parse_player_prop(void) {
 	struct parser *p = parser_new();
@@ -1566,6 +1646,11 @@ static struct parser *init_parse_player_prop(void) {
 	parser_reg(p, "scale int scale", parse_player_prop_scale);
 	parser_reg(p, "parent sym parent-type sym parent-code", parse_player_prop_parent);
 	parser_reg(p, "prereq sym id", parse_player_prop_prereq);
+	parser_reg(p, "verb-second str verb", parse_player_prop_verb_second);
+	parser_reg(p, "verb-third str verb", parse_player_prop_verb_third);
+	parser_reg(p, "adj-positive str adj", parse_player_prop_adj_pos);
+	parser_reg(p, "adj-negative str adj", parse_player_prop_adj_neg);
+	parser_reg(p, "comment str comment", parse_player_prop_comment);
 	return p;
 }
 
@@ -1619,6 +1704,7 @@ static errr finish_parse_player_prop(struct parser *p) {
 	struct embryo_player_ability *embryo = embryo_player_abilities, *next;
 	struct player_bound_ui *boundui_cursor;
 	struct player_ability *new, *previous = NULL;
+	int err = 0;
 
 	//embryo_player_abilities = NULL;
 	/* Copy abilities over, making multiple copies for element types */
@@ -1670,6 +1756,17 @@ static errr finish_parse_player_prop(struct parser *p) {
 			new->rarity = embryo->ability.rarity;
 			new->scale = embryo->ability.scale;
 
+			new->pos_adjective = embryo->ability.pos_adjective;
+			new->neg_adjective = embryo->ability.neg_adjective;
+			new->second_verb = embryo->ability.second_verb;
+			new->third_verb = embryo->ability.third_verb;
+			new->comment = embryo->ability.comment;
+
+			if (!new->desc && (!new->second_verb || !new->third_verb)) {
+				plog_fmt("Error: property %s does not have an acceptable description!", new->name);
+				err = -1;
+			}
+
 			memcpy(new->prereqs, embryo->ability.prereqs, sizeof *new->prereqs * ABIL_PRED_MAX);
 
 			while (embryo->boundui) {
@@ -1716,7 +1813,7 @@ static errr finish_parse_player_prop(struct parser *p) {
 		mem_free(embryo);
 	}
 
-	if (looping_power_parents()) return -1;
+	if (looping_power_parents()) err = -1;
 
 	embryo_player_abilities = NULL;
 
@@ -1732,7 +1829,7 @@ static errr finish_parse_player_prop(struct parser *p) {
 	}
 
 	parser_destroy(p);
-	return 0;
+	return err;
 }
 
 static void cleanup_player_prop(void)
@@ -1741,8 +1838,16 @@ static void cleanup_player_prop(void)
 	while (ability) {
 		struct player_ability *totrash = ability;
 		ability = ability->next;
+
 		string_free(totrash->desc);
 		string_free(totrash->name);
+
+		string_free(totrash->pos_adjective);
+		string_free(totrash->neg_adjective);
+		string_free(totrash->second_verb);
+		string_free(totrash->third_verb);
+		string_free(totrash->comment);
+
 		mem_free(totrash);
 	}
 }

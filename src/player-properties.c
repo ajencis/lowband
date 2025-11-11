@@ -28,8 +28,11 @@
 #include "player-enum.h"
 #include "player-spell.h"
 #include "player-util.h"
+#include "player.h"
 #include "ui-player-properties.h"
 #include "game-input.h"
+#include "z-form.h"
+#include "z-util.h"
 
 
 
@@ -210,6 +213,37 @@ bool race_has_ability(const struct player_race *race,
 	}
 
 	return false;
+}
+
+void ability_desc_base(char *buf, size_t bufsize, const struct player_ability *abil, bool second, bool positive)
+{
+	char verb[80] = "", adj[80] = "", comment[80]= "";
+	const char *pronoun = second ? "you" : "user";
+
+	if (abil->desc) {
+		strnfmt(buf, bufsize, "%s%s", pronoun, abil->desc);
+	}
+	else {
+		if (second) {
+			strnfmt(verb, sizeof verb, "%s", abil->second_verb);
+		} else {
+			strnfmt(verb, sizeof verb, "%s", abil->third_verb);
+		}
+
+		if (positive && abil->pos_adjective) {
+			strnfmt(adj, sizeof adj, " %s", abil->pos_adjective);
+		} else if (!positive && abil->neg_adjective) {
+			strnfmt(adj, sizeof adj, " %s", abil->neg_adjective);
+		}
+
+		if (abil->comment) {
+			strnfmt(comment, sizeof comment, ", %s", abil->comment);
+		}
+
+		strnfmt(buf, bufsize, "%s %s%s%s.", pronoun, verb, adj, comment);
+	}
+
+	my_strcap(buf);
 }
 
 #define MAX_ABILITIES 32

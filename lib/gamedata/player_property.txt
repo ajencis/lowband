@@ -326,7 +326,10 @@ value:-1
 type:power
 code:AIR_MAGIC
 name:Air Magic Specialization
-desc: can particularly effectively use at air magic.
+verb-second:use air magic
+verb-third:uses air magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -335,7 +338,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:FIRE_MAGIC
 name:Fire Magic Specialization
-desc: can particularly effectively use fire magic.
+verb-second:use fire magic
+verb-third:uses fire magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -344,7 +350,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:EARTH_MAGIC
 name:Earth Magic Specialization
-desc: can particularly effectively use earth magic.
+verb-second:use earth magic
+verb-third:uses earth magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -353,7 +362,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:ACID_MAGIC
 name:Acid Magic Specialization
-desc: can particularly effectively use acid magic.
+verb-second:use acid magic
+verb-third:uses acid magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:5
 rarity:10
 parent:power:EARTH_MAGIC
@@ -362,7 +374,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:WATER_MAGIC
 name:Water Magic Specialization
-desc: can particularly effectively use water magic.
+verb-second:use water magic
+verb-third:uses water magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -371,7 +386,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:COLD_MAGIC
 name:Cold Magic Specialization
-desc: can particularly effectively use cold magic.
+verb-second:use cold magic
+verb-third:uses cold magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:5
 rarity:10
 parent:power:WATER_MAGIC
@@ -380,7 +398,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:POISON_MAGIC
 name:Poison Magic Specialization
-desc: can particularly effectively use poison magic.
+verb-second:use poison magic
+verb-third:uses poison magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -389,7 +410,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:DIVINATION_MAGIC
 name:Divination Specialization
-desc: can particularly effectively use divination.
+verb-second:use divination magic
+verb-third:uses divination magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -398,7 +422,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:TELEPORTATION_MAGIC
 name:Teleportation Specialization
-desc: can particularly effectively use teleportation magic.
+verb-second:use teleportation magic
+verb-third:uses teleportation magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -407,7 +434,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:NECROMANCY_MAGIC
 name:Necromancy Specialization
-desc: can particularly effectively use necromancy.
+verb-second:use necromancy magic
+verb-third:uses necromancy magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -416,7 +446,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:HOLY_MAGIC
 name:Holy Magic Specialization
-desc: can particularly effectively use holy magic.
+verb-second:use holy magic
+verb-third:uses holy magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -425,7 +458,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:NATURE_MAGIC
 name:Nature Magic Specialization
-desc: can particularly effectively use nature magic.
+verb-second:use nature magic
+verb-third:uses nature magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -434,7 +470,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:SUMMONING_MAGIC
 name:Summoning Magic Specialization
-desc: can particularly effectively use summoning magic.
+verb-second:use summoning magic
+verb-third:uses summoning magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -443,7 +482,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:TRANSMUTATION_MAGIC
 name:Transmutation Magic Specialization
-desc: can particularly effectively use transmutation magic.
+verb-second:use transmutation magic
+verb-third:uses transmutation magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -452,7 +494,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:ENCHANTMENT_MAGIC
 name:Enchantment Specialization
-desc: can particularly effectively use enchantment magic.
+verb-second:use enchantment magic
+verb-third:uses enchantment magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -461,7 +506,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:ILLUSION_MAGIC
 name:Illusion Specialization
-desc: can particularly effectively use illusion magic.
+verb-second:use illusion magic
+verb-third:uses illusion magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:MAGIC
@@ -470,7 +518,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:DARKNESS_MAGIC
 name:Darkness Magic Specialization
-desc: can particularly effectively use dark magic.
+verb-second:use darkness magic
+verb-third:uses darkness magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:7
 parent:power:NECROMANCY_MAGIC
@@ -480,7 +531,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:LIGHT_MAGIC
 name:Light Magic Specialization
-desc: can particularly effectively use light magic.
+verb-second:use light magic
+verb-third:uses light magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:7
 parent:power:HOLY_MAGIC
@@ -490,7 +544,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:DEMONOLOGY_MAGIC
 name:Demonology
-desc: can particularly effectively use demonic magic.
+verb-second:use demonology magic
+verb-third:uses demonology magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:15
 rarity:5
 parent:power:SUMMONING_MAGIC
@@ -500,7 +557,10 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:SOUND_MAGIC
 name:Sound Magic
-desc: can particularly effectively use sonic magic.
+verb-second:use sonic magic
+verb-third:uses sonic magic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:15
 rarity:5
 parent:skill:MAGIC
@@ -509,26 +569,39 @@ prereq:HAS_MATCHING_SPELL
 type:power
 code:LAW_MAGIC
 name:Law Magic
-desc: can particularly effectively use law magic.
+verb-second:use law magic
+verb-third:uses law magic
+adj-positive:more effectively
+adj-negative:less effectively
 
 type:power
 code:CHAOS_MAGIC
 name:Chaos Magic
-desc: can particularly effectively use chaos magic.
+verb-second:use chaos magic
+verb-third:uses chaos magic
+adj-positive:more effectively
+adj-negative:less effectively
 
 type:power
 code:META_MAGIC
 name:Metamagic
-desc: can particularly effectively use metamagic.
+verb-second:use metamagic
+verb-third:uses metamagic
+adj-positive:more effectively
+adj-negative:less effectively
 cost:15
 rarity:5
 parent:skill:MAGIC
 prereq:HAS_MATCHING_SPELL
 
+# You create a shroud of darkness that hides and protects
+# User creates a shroud of darkness that hides and protects
 type:power
 code:UNLIGHT
 name:Unlight
-desc: can create a shroud of darkness that hides and protects.
+verb-second:create a shroud of darkness
+verb-third:creates a shroud of darkness
+comment:that hides and protects
 cost:10
 rarity:5
 parent:power:DARKNESS_MAGIC
@@ -536,15 +609,21 @@ parent:power:DARKNESS_MAGIC
 type:power
 code:GLOW
 name:Glow
-desc: can emit light that protects.
+verb-second:emit light
+verb-third:emits light
+comment:that protects
 cost:10
 rarity:5
 parent:power:LIGHT_MAGIC
 
+# You use swords particularly effectively.
 type:power
 code:SWORD_SPECIALIZATION
 name:Swordmastery
-desc: can particularly effectively use swords.
+verb-second:use swords
+verb-third:uses swords
+adj-positive:more effectively
+adj-negative:less effectively
 cost:15
 rarity:15
 parent:skill:TO_HIT_MELEE
@@ -552,7 +631,10 @@ parent:skill:TO_HIT_MELEE
 type:power
 code:HAFTED_SPECIALIZATION
 name:Haftedmastery
-desc: can particularly effectively use hafted weapons.
+verb-second:use hafted weapons
+verb-third:uses hafted weapons
+adj-positive:more effectively
+adj-negative:less effectively
 cost:15
 rarity:10
 parent:skill:TO_HIT_MELEE
@@ -560,7 +642,10 @@ parent:skill:TO_HIT_MELEE
 type:power
 code:POLEARM_SPECIALIZATION
 name:Polearm-mastery
-desc: can particularly effectively use polearms.
+verb-second:use polearms
+verb-third:uses polearms
+adj-positive:more effectively
+adj-negative:less effectively
 cost:15
 rarity:10
 parent:skill:TO_HIT_MELEE
@@ -568,7 +653,10 @@ parent:skill:TO_HIT_MELEE
 type:power
 code:BOW_SPECIALIZATION
 name:Bowmastery
-desc: can particularly effectively use bows.
+verb-second:use bows
+verb-third:uses bows
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:TO_HIT_BOW
@@ -576,7 +664,10 @@ parent:skill:TO_HIT_BOW
 type:power
 code:CROSSBOW_SPECIALIZATION
 name:Crossbowmastery
-desc: can particularly effectively use crossbows.
+verb-second:use crossbows
+verb-third:uses crossbows
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:7
 parent:skill:TO_HIT_BOW
@@ -584,7 +675,10 @@ parent:skill:TO_HIT_BOW
 type:power
 code:SLING_SPECIALIZATION
 name:Slingmastery
-desc: can particularly effectively use slings.
+verb-second:use slings
+verb-third:uses slings
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:7
 parent:skill:TO_HIT_BOW
@@ -592,7 +686,10 @@ parent:skill:TO_HIT_BOW
 type:power
 code:DUAL_WIELD
 name:Dual-Wielding
-desc: can effectively use multiple weapons at once.
+verb-second:use multiple weapons at once
+verb-third:uses multiple weapons at once
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:10
 parent:skill:TO_HIT_MELEE
@@ -600,7 +697,10 @@ parent:skill:TO_HIT_MELEE
 type:power
 code:UNARMED_STRIKE
 name:Unarmed Strike
-desc: can attack unarmed effectively.
+verb-second:attack unarmed
+verb-third:attacks unarmed
+adj-positive:more effectively
+adj-negative:less effectively
 cost:15
 rarity:5
 scale:1
@@ -609,7 +709,10 @@ parent:skill:TO_HIT_MELEE
 type:power
 code:NATURAL_COMBAT
 name:Natural Combat
-desc: can attack with natural weapons effectively.
+verb-second:attack with natural weapons
+verb-third:attacks with natural weapons
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:5
 scale:1
@@ -617,10 +720,15 @@ parent:power:UNARMED_STRIKE
 parent:skill:TO_HIT_MELEE
 prereq:HAS_NATURAL_ATTACK
 
+# You dodge attacks particularly effectively
 type:power
 code:AGILITY
 name:Agility
-desc: can effectively dodge attacks, especially if when not weighed down.
+verb-second:dodge attacks
+verb-third:dodges attacks
+adj-positive:more effectively
+adj-negative:less effectively
+comment:especially when not weighed down
 cost:15
 rarity:5
 scale:-1
@@ -629,7 +737,10 @@ parent:skill:STEALTH
 type:power
 code:RUNNING
 name:Running
-desc: can move very quickly.
+verb-second:move across the dungeon
+verb-third:moves across the dungeon
+adj-positive:particularly quickly
+adj-negative:particularly slowly
 cost:10
 rarity:5
 scale:-1
@@ -638,7 +749,11 @@ parent:power:AGILITY
 type:power
 code:BACKSTAB
 name:Backstabbing
-desc: can hit where it hurts if the target is distracted.
+verb-second:do
+verb-third:does
+adj-positive:extra damage
+adj-negative:less damage
+comment:when the target is distracted
 cost:10
 rarity:5
 scale:-1
@@ -647,7 +762,8 @@ parent:power:SWORD_SPECIALIZATION
 type:power
 code:ANTIMAGIC
 name:Antimagic
-desc: can consume nearby mana.
+verb-second:consume nearby mana
+verb-third:consumes nearby mana
 cost:20
 rarity:3
 scale:-1
@@ -656,7 +772,10 @@ parent:skill:SAVE
 type:power
 code:SPELL_POWER
 name:Spellpower
-desc: can cast stronger spells.
+verb-second:cast
+verb-third:casts
+adj-positive:more powerful spells
+adj-negative:less powerful spells
 cost:10
 rarity:5
 parent:skill:MAGIC
@@ -664,7 +783,10 @@ parent:skill:MAGIC
 type:power
 code:SPELL_EASE
 name:Spell Ease
-desc: can more easily learn and use spells.
+verb-second:cast spells
+verb-third:casts spells
+adj-positive:more easily
+adj-negative:less easily
 cost:10
 rarity:5
 parent:skill:MAGIC
@@ -672,7 +794,10 @@ parent:skill:MAGIC
 type:power
 code:WHIRLWIND
 name:Whirlwind
-desc: can attack multiple nearby monsters.
+verb-second:attack multiple foes at once
+verb-third:attacks multiple foes at once
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:5
 parent:power:AIR_MAGIC
@@ -680,7 +805,10 @@ parent:power:AIR_MAGIC
 type:power
 code:CRITICAL_HITS
 name:Critical Hits
-desc: can more easily critically hit monsters.
+verb-second:hit critically
+verb-third:hits critically
+adj-positive:more effectively
+adj-negative:less effectively
 cost:10
 rarity:5
 parent:power:SWORD_SPECIALIZATION
@@ -688,7 +816,8 @@ parent:power:SWORD_SPECIALIZATION
 type:power
 code:DEATH_TOUCH
 name:Touch of Death
-desc: can slay at a touch.
+verb-second:slay at a touch
+verb-third:slays at a touch
 cost:10
 rarity:3
 parent:power:NECROMANCY_MAGIC
@@ -696,12 +825,14 @@ parent:power:NECROMANCY_MAGIC
 type:power
 code:BREATH
 name:Breathing
-desc: can breathe.
+verb-second:breathe
+verb-third:breathes
 
 type:power
 code:BREATH_BITE
 name:Exhaling Bite
-desc: can breathe while biting.
+verb-second:breathe while biting
+verb-third:breathes while biting
 cost:15
 rarity:3
 parent:skill:HEALTH
@@ -711,7 +842,8 @@ prereq:HAS_BITE
 type:power
 code:BERSERK
 name:Berserking
-desc: can enter a berserker rage.
+verb-second:enter a berserk rage
+verb-third:enters a berserk rage
 cost:10
 rarity:4
 parent:skill:TO_HIT_MELEE
@@ -719,7 +851,8 @@ parent:skill:TO_HIT_MELEE
 type:power
 code:FRIGHTENING_PRESENCE
 name:Frightening Presence
-desc: will terrify nearby enemies.
+verb-second:terrify nearby enemies
+verb-third:terrifies nearby enemies
 cost:10
 rarity:4
 parent:skill:HEALTH
@@ -728,7 +861,8 @@ prereq:RACE_OR_CLASS_HAS_POWER
 type:power
 code:ANIMATE_CHAINS
 name:Animate Chains
-desc: can control chains to attack.
+verb-second:control chains to attack
+verb-third:controls chains to attack
 cost:10
 rarity:4
 parent:skill:TO_HIT_MELEE
@@ -737,7 +871,8 @@ prereq:RACE_OR_CLASS_HAS_POWER
 type:power
 code:STENCH
 name:Stench
-desc: can harm enemies by smell alone.
+verb-second:smell very bad
+verb-third:smells very bad
 cost:10
 rarity:4
 parent:skill:HEALTH
@@ -746,7 +881,10 @@ prereq:RACE_OR_CLASS_HAS_POWER
 type:power
 code:REGENERATION
 name:Regeneration
-desc: can regenerate at accelerated speed.
+verb-second:regenerate
+verb-third:regenerates
+adj-positive:more quickly
+adj-negative:less quickly
 cost:15
 rarity:5
 parent:skill:HEALTH
