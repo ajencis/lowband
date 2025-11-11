@@ -30,6 +30,7 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
+#include "parser.h"
 #include "player-properties.h"
 #include "player-timed.h"
 #include "project.h"
@@ -1393,9 +1394,31 @@ struct file_parser mon_spell_parser = {
 
 static enum parser_error parse_mon_base_name(struct parser *p) {
 	struct monster_base *h = parser_priv(p);
-	struct monster_base *rb = mem_zalloc(sizeof *rb);
+	struct monster_base *rb = mem_zalloc(sizeof *rb), *parent;
+
+	if (parser_hasval(p, "parent")) {
+		char *parent_name = string_make(parser_getsym(p, "parent"));
+
+		for (parent = h; parent; parent = parent->next) {
+			if (streq(parent->name, parent_name)) {
+				break;
+			}
+		}
+
+		if (!parent) {
+			return PARSE_ERROR_GENERIC;
+		}
+
+		memcpy(rb, parent, sizeof *rb);
+
+		rb->name = NULL;
+		rb->text = NULL;
+
+		string_free(parent_name);
+	}
+
 	rb->next = h;
-	rb->name = string_make(parser_getstr(p, "name"));
+	rb->name = string_make(parser_getsym(p, "name"));
 
 	parser_setpriv(p, rb);
 	return PARSE_ERROR_NONE;
@@ -1738,7 +1761,7 @@ static struct parser *init_parse_mon_base(void) {
 	struct parser *p = parser_new();
 	parser_setpriv(p, NULL);
 
-	parser_reg(p, "name str name", parse_mon_base_name);
+	parser_reg(p, "name sym name ?sym parent", parse_mon_base_name);
 	parser_reg(p, "glyph char glyph", parse_mon_base_glyph);
 	parser_reg(p, "pain uint pain", parse_mon_base_pain);
 	parser_reg(p, "flags ?str flags", parse_mon_base_flags);
