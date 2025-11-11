@@ -172,25 +172,20 @@ static int skill_stepdown(const struct monster *mon, int skill)
 
 static int evolving_race_skill(const struct monster_race *mr, int which)
 {
-	int worst;
-	bool first = true;
+	int sum = 0, div = 0;
 	struct evolution *evol;
 
 	if (mr->level > 0) return 0;
 	if (!mr->evol) return 0;
 
 	for (evol = mr->evol; evol; evol = evol->next) {
-		if (first) {
-			worst = evol->race->skills[which];
-		}
-		else {
-			worst = MIN(worst, evol->race->skills[which]);
-		}
-
-		first = false;
+		sum += evol->race->skills[which];
+		div++;
 	}
 
-	return worst;
+	assert(div > 0);
+
+	return ABS(sum) / div * SGN(sum);
 }
 
 struct scaling_data race_skill(const struct monster_race *mr, int which)
@@ -348,25 +343,20 @@ static void mon_stat_calc(const struct monster *mon, struct player_state *state)
 
 static int evolving_race_power(const struct monster_race *mr, int which)
 {
-	int worst;
-	bool first = true;
+	int sum = 0, div = 0;
 	struct evolution *evol;
 
 	if (mr->level > 0) return 0;
 	if (!mr->evol) return 0;
 
 	for (evol = mr->evol; evol; evol = evol->next) {
-		if (first) {
-			worst = evol->race->powers[which];
-		}
-		else {
-			worst = MIN(worst, evol->race->powers[which]);
-		}
-
-		first = false;
+		sum += evol->race->powers[which];
+		div++;
 	}
 
-	return worst;
+	assert(div > 0);
+
+	return ABS(sum) / div * SGN(sum);
 }
 
 int mon_class_power(const struct monster *mon, int power)
