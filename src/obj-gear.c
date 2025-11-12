@@ -913,12 +913,19 @@ void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool 
 			}
 
 			/* Combine the items, and their known versions */
-			object_absorb(combine_item->known, obj->known);
-			obj->known = NULL;
+			if (combine_item->known && obj->known) {
+				object_absorb(combine_item->known, obj->known);
+				obj->known = NULL;
+			} else if (obj->known) {
+				combine_item->known = obj->known;
+				obj->known = NULL;
+			}
 			object_absorb(combine_item, obj);
 
 			/* Ensure numbers are aligned (should not be necessary, but safe) */
-			combine_item->known->number = combine_item->number;
+			if (combine_item->known) {
+				combine_item->known->number = combine_item->number;
+			}
 
 			obj = combine_item;
 			combining = true;
@@ -937,7 +944,6 @@ void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool 
 		verify_cave_items(c);
 
 		gear_insert_end(mon, obj);
-		obj->held_m_idx = mon->midx;
 
 		verify_cave_items(c);
 

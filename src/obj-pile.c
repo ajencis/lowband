@@ -908,7 +908,9 @@ struct object *floor_object_for_use(struct player *p, struct object *obj,
 	}
 
 	/* Object no longer has a location */
-	usable->known->grid = loc(0, 0);
+	if (usable->known) {
+		usable->known->grid = loc(0, 0);
+	}
 	usable->grid = loc(0, 0);
 
 	/* Print a message if requested and there is anything left */
