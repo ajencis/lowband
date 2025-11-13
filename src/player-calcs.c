@@ -1401,21 +1401,14 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 				  bool update)
 {
 	int i, j, hold;
-	int base, xtra;
-	//int extra_blows = 0;
 	int extra_shots = 0;
 	int extra_might = 0;
 	int extra_moves = 0;
-	//int attacknum;
 	struct object *launcher = NULL;
 	struct object *weapons[PY_MAX_ATTACKS] = { 0 };
 	int num_weapons = 0;
 	bitflag collect_f[OF_SIZE];
 	struct monster_race *mrace = mon->race;
-	//int avail_hands, attack_div;
-	//int race_skills[SKILL_MAX] = { 0 }, race_x_skills[SKILL_MAX] = { 0 };
-	//bool has_feet = false;
-	//bool vuln[ELEM_MAX] = { false };
 
 	/* Hack to allow calculating hypothetical blows for extra STR, DEX - NRM */
 	int str_ind = state->stat_ind[STAT_STR];
@@ -1439,222 +1432,6 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	/* Extract the player flags */
 	player_flags(p, collect_f);
 
-	for (i = 0; i < SKILL_MAX; ++i) {
-		base = 0;
-		xtra = 0;
-
-		mon_class_skill(mon, i, &base, &xtra);
-
-		state->skills[i] += base;
-		state->skills[i] += xtra * p->lev / 50;
-	}
-
-	/* L: get powers */
-	/*for (i = PP_NONE + 1; i < PP_MAX; ++i) {
-		state->powers[i] /= 2;
-
-		struct player_ability *abil = lookup_player_ability(i, PY_ABIL_POWER);
-		assert(abil);
-
-		int scale = player_class_power(p, i);// + player_race_power(p, i);
-		int minlev = 5 - (scale + 5) / 7;
-		int efflev = minlev < 0 ? MAX((p->lev + 1) / 2 - minlev    , p->lev) :
-								  MIN((p->lev + 1) * 2 - minlev * 2, p->lev);
-
-		double fact = 1.0, div = 1.0;
-		int scaling = abil->scale;
-
-		while (scaling >= 2) {
-			fact *= (float)p->lev;
-			div *= 50.0;
-			scaling -= 2;
-		}
-		while (scaling >= 1) {
-			fact *= my_sqrt((double)p->lev);
-			div *= my_sqrt(50.0);
-			--scaling;
-		}
-		while (scaling <= -2) {
-			fact *= 50.0;
-			div *= (double)p->lev;
-			scaling += 2;
-		}
-		while (scaling <= -1) {
-			fact *= my_sqrt(50.0);
-			div *= my_sqrt((double)p->lev);
-			++scaling;
-		}
-
-		if ((scale <= 0) || (efflev <= 0)) {
-			state->powers[i] += 0;
-		}
-
-		else if (p->lev >= PY_MAX_LEVEL) {
-			state->powers[i] += (p->lev * scale + 99) / 100;
-		}
-
-		else {
-			state->powers[i] += (int)((efflev * scale * fact + div * 100 - 1) / (div * 100));
-		}
-
-		state->powers[i] += MIN((p->extra_powers[i] + 1) / 2, p->lev * 3);
-	}*/
-
-#if 0
-	/* Analyze equipment */
-	for (i = 0; i < p->mon.body.count; i++) {
-		int index = 0;
-		struct object *obj = slot_object(&p->mon, i);
-		struct curse_data *curse = obj ? obj->curses : NULL;
-		
-		if (slot_type_is(&p->mon, i, EQUIP_WEAPON) && num_weapons < PY_MAX_ATTACKS) {
-			weapons[num_weapons] = obj;
-			++num_weapons;
-		}
-
-		if (slot_type_is(&p->mon, i, EQUIP_BOOTS)) {
-			has_feet = true;
-		}
-
-		while (obj) {
-			int dig = 0;
-			int owgt = object_weight_one(obj);
-
-			/* L: track armour weight */
-			if (slot_type_is(&p->mon, i, EQUIP_BODY_ARMOR)) {
-			    armwgt = MAX(armwgt, owgt);
-			}
-
-			if (!launcher && slot_type_is(&p->mon, i, EQUIP_BOW)) {
-				launcher = obj;
-			}
-
-			/* Extract the item flags */
-			if (known_only) {
-				object_flags_known(obj, f);
-			} else {
-				object_flags(obj, f);
-			}
-			of_union(collect_f, f);
-
-			/* Apply modifiers */
-			state->stat_add[STAT_STR] += obj->modifiers[OBJ_MOD_STR]
-				* p->obj_k->modifiers[OBJ_MOD_STR];
-			state->stat_add[STAT_INT] += obj->modifiers[OBJ_MOD_INT]
-				* p->obj_k->modifiers[OBJ_MOD_INT];
-			state->stat_add[STAT_WIS] += obj->modifiers[OBJ_MOD_WIS]
-				* p->obj_k->modifiers[OBJ_MOD_WIS];
-			state->stat_add[STAT_DEX] += obj->modifiers[OBJ_MOD_DEX]
-				* p->obj_k->modifiers[OBJ_MOD_DEX];
-			state->stat_add[STAT_CON] += obj->modifiers[OBJ_MOD_CON]
-				* p->obj_k->modifiers[OBJ_MOD_CON];
-			state->skills[SKILL_STEALTH] += obj->modifiers[OBJ_MOD_STEALTH]
-				* p->obj_k->modifiers[OBJ_MOD_STEALTH];
-			state->skills[SKILL_SEARCH] += (obj->modifiers[OBJ_MOD_SEARCH] * 5)
-				* p->obj_k->modifiers[OBJ_MOD_SEARCH];
-
-			state->see_infra += obj->modifiers[OBJ_MOD_INFRA]
-				* p->obj_k->modifiers[OBJ_MOD_INFRA];
-			if (tval_is_digger(obj)) {
-				if (of_has(obj->flags, OF_DIG_1))
-					dig = 1;
-				else if (of_has(obj->flags, OF_DIG_2))
-					dig = 2;
-				else if (of_has(obj->flags, OF_DIG_3))
-					dig = 3;
-			}
-			dig += obj->modifiers[OBJ_MOD_TUNNEL]
-				* p->obj_k->modifiers[OBJ_MOD_TUNNEL];
-			state->skills[SKILL_DIGGING] += (dig * 20);
-			state->speed += obj->modifiers[OBJ_MOD_SPEED]
-				* p->obj_k->modifiers[OBJ_MOD_SPEED];
-			state->dam_red += obj->modifiers[OBJ_MOD_DAM_RED]
-				* p->obj_k->modifiers[OBJ_MOD_DAM_RED];
-			extra_blows += obj->modifiers[OBJ_MOD_BLOWS] * 100
-				* p->obj_k->modifiers[OBJ_MOD_BLOWS];
-			extra_shots += obj->modifiers[OBJ_MOD_SHOTS]
-				* p->obj_k->modifiers[OBJ_MOD_SHOTS];
-			extra_might += obj->modifiers[OBJ_MOD_MIGHT]
-				* p->obj_k->modifiers[OBJ_MOD_MIGHT];
-			extra_moves += obj->modifiers[OBJ_MOD_MOVES]
-				* p->obj_k->modifiers[OBJ_MOD_MOVES];
-
-			/* Apply element info, noting vulnerabilites for later processing */
-			for (j = 0; j < ELEM_MAX; j++) {
-				if (!known_only || obj->known->el_info[j].res_level) {
-					if (obj->el_info[j].res_level == -1) {
-						--state->el_info[j].res_level;
-						//vuln[j] = true;
-					}
-
-					/* OK because res_level hasn't included vulnerability yet */
-					if (obj->el_info[j].res_level > state->el_info[j].res_level) {
-						state->el_info[j].res_level = obj->el_info[j].res_level;
-					}
-				}
-			}
-
-			/* Apply combat bonuses */
-			/*state->ac += obj->ac;
-			if (!known_only || obj->known->to_a) {
-				state->to_a += obj->to_a;
-			}*/
-			if (!slot_type_is(&p->mon, i, EQUIP_WEAPON)
-					&& !slot_type_is(&p->mon, i, EQUIP_BOW)) {
-				if (!known_only || obj->known->to_h) {
-					state->to_h += obj->to_h;
-				}
-				if (!known_only || obj->known->to_d) {
-					state->to_d += obj->to_d;
-				}
-			}
-
-			/* Move to any unprocessed curse object */
-			if (curse) {
-				index++;
-				obj = NULL;
-				while (index < z_info->curse_max) {
-					if (curse[index].power) {
-						obj = curses[index].obj;
-						break;
-					} else {
-						index++;
-					}
-				}
-			} else {
-				obj = NULL;
-			}
-		}
-	}
-#endif
-
-	/* Apply the collected flags */
-	//of_union(state->flags, collect_f);
-
-	/* Add shapechange info */
-	/*calc_shapechange(state, vuln, p->shape, &extra_blows, &extra_shots,
-		&extra_might, &extra_moves);*/
-
-	/* L: add monster info */
-	/*if (mrace) {
-		calc_monster(p, state, vuln, &extra_moves);
-	}*/
-
-	/* Calculate light */
-	//calc_light(p, state, update);
-
-	/* Evil */
-	/*if (pf_has(state->pflags, PF_EVIL) && character_dungeon) {
-		state->el_info[ELEM_NETHER].res_level = 1;
-		vuln[ELEM_HOLY_ORB] = true;
-	}*/
-
-	/* Now deal with vulnerabilities */
-	/*for (i = 0; i < ELEM_MAX; i++) {
-		if (vuln[i] && (state->el_info[i].res_level < 3)) {
-			state->el_info[i].res_level--;
-		}
-	}*/
 
 	/* Calculate the various stat values */
 	for (i = 0; i < STAT_MAX; i++) {
@@ -1703,27 +1480,6 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	// L: calc extra points
 	calc_extra_points(p, state);
 
-	// L: calculate skills
-	//player_race_r_skill(p->race, mrace ? true : false, race_skills);
-	//player_race_x_skill(p->race, mrace ? true : false, race_x_skills);
-	/*for (i = 0; i < SKILL_MAX; i++) {
-		int stat_ind = player_skill_stat_ind(p, state, i);
-		int base = player_class_c_skill(p, i);
-		int xtra = player_class_x_skill(p, i) * p->lev / PY_MAX_LEVEL;
-		int tome = p->extra_skills[i];
-		// += because monster skills have already been calcd
-		state->skills[i] += base + xtra + tome;
-		if (stat_ind > -1) {
-			state->skills[i] += MAX(state->skills[i], 0) * adj_stat_skill_percent(stat_ind, i) / 100;
-			state->skills[i] += adj_stat_skill_flat(stat_ind, i);
-		}
-
-		state->skills[i] = MAX(state->skills[i], 0);
-	}*/
-
-	//calc_unlight(state, p);
-	//calc_glow(state, p);
-
 	/* Effects of food outside the "Fed" range */
 	if (!player_timed_grade_eq(p, TMD_FOOD, "Fed")) {
 		int excess = p->mon.m_timed[TMD_FOOD] - PY_FOOD_FULL;
@@ -1764,98 +1520,8 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 		}
 	}
 
-	/* L: monk bonuses */
-	//unarmoured_speed_bonus(state, armwgt);
-	//unarmoured_ac_bonus(state, armwgt);
-
 	/* Other timed effects */
 	player_flags_timed(p, state->flags);
-
-	/*if (player_timed_grade_eq(p, TMD_STUN, "Heavy Stun")) {
-		state->to_h -= 20;
-		state->to_d -= 20;
-		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 5, 0);
-		if (update) {
-			p->mon.m_timed[TMD_FASTCAST] = 0;
-		}
-	} else if (player_timed_grade_eq(p, TMD_STUN, "Stun")) {
-		state->to_h -= 5;
-		state->to_d -= 5;
-		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 10, 0);
-		if (update) {
-			p->mon.m_timed[TMD_FASTCAST] = 0;
-		}
-	}
-	if (p->mon.m_timed[TMD_INVULN]) {
-		state->to_a += 100;
-	}
-	if (p->mon.m_timed[TMD_BLESSED]) {
-		state->to_a += 5;
-		state->to_h += 10;
-		adjust_skill_scale(&state->skills[SKILL_DEVICE], 1, 20, 0);
-	}
-	if (p->mon.m_timed[TMD_SHIELD]) {
-		state->to_a += 50;
-	}
-	if (p->mon.m_timed[TMD_STONESKIN]) {
-		state->to_a += 40;
-		state->speed -= 5;
-	}
-	if (p->mon.m_timed[TMD_HERO]) {
-		state->to_h += 12;
-		adjust_skill_scale(&state->skills[SKILL_DEVICE], 1, 20, 0);
-	}
-	if (p->mon.m_timed[TMD_SHERO]) {
-		state->skills[SKILL_TO_HIT_MELEE] += 75;
-		state->to_a -= 10;
-		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 10, 0);
-	}
-	if (p->mon.m_timed[TMD_FAST] || p->mon.m_timed[TMD_SPRINT]) {
-		state->speed += 10;
-	}
-	if (p->mon.m_timed[TMD_SLOW]) {
-		state->speed -= 10;
-	}
-	if (p->mon.m_timed[TMD_SINFRA]) {
-		state->see_infra += 5;
-	}
-	if (p->mon.m_timed[TMD_TERROR]) {
-		state->speed += 10;
-	}
-	for (i = 0; i < TMD_MAX; ++i) {
-		if (p->mon.m_timed[i] && timed_effects[i].temp_resist != -1
-				&& state->el_info[timed_effects[i].temp_resist].res_level
-				< 2) {
-			state->el_info[timed_effects[i].temp_resist].res_level++;
-		}
-	}
-	if (p->mon.m_timed[TMD_CONFUSED]) {
-		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 4, 0);
-	}
-	if (p->mon.m_timed[TMD_AMNESIA]) {
-		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 5, 0);
-	}
-	if (p->mon.m_timed[TMD_POISONED]) {
-		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 20, 0);
-	}
-	if (p->mon.m_timed[TMD_IMAGE]) {
-		adjust_skill_scale(&state->skills[SKILL_DEVICE], -1, 5, 0);
-	}
-	if (p->mon.m_timed[TMD_BLOODLUST]) {
-		int p_berserk = get_power_scale_state(state, PP_BERSERK, 150, p->lev);
-		int bonus = p->mon.m_timed[TMD_BLOODLUST] * (100 + p_berserk) / 100;
-
-		state->to_d += bonus / 5 + 1;
-		state->to_h += bonus * 2 / 3;
-		extra_blows += bonus * 4;
-		state->speed += bonus / 5 - 3;
-		state->dam_red += bonus * (p->mon.maxhp + 100) / 1000;
-		adjust_skill_scale(&state->skills[SKILL_STEALTH], -bonus, 5, 10);
-		adjust_skill_scale(&state->skills[SKILL_SAVE], bonus, 20, 10);
-	}
-	if (p->mon.m_timed[TMD_STEALTH]) {
-		state->skills[SKILL_STEALTH] += 10;
-	}*/
 
 	/* Analyze flags - check for fear */
 	if (of_has(state->flags, OF_AFRAID)) {
@@ -1876,9 +1542,6 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	if (state->speed > 199) {
 		state->speed = 199;
 	}
-
-	/* Apply modifier bonuses (Un-inflate stat bonuses) */
-	//state->to_a += adj_dex_ta(state->stat_ind[STAT_DEX]);
 
 	/* L: change expfact based on int */
 	state->expfact = p->race->r_exp + p->class->c_exp + adj_int_xp(state->stat_ind[STAT_INT]);

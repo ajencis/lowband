@@ -767,128 +767,6 @@ bool obj_can_learn_extra_from(const struct object *obj)
 	return true;
 }
 
-#if 0
-static bool check_learn_skill(struct player *p, int skill, int xpgain)
-{
-	assert(skill < SKILL_MAX);
-	uint32_t chance = p->state.skills[skill];
-
-	chance *= chance;
-	chance *= p->extra_skills[skill];
-
-	if (pf_has(p->state.flags, PF_EXTRA_LEARNING)) chance /= 5;
-	chance /= xpgain;
-	chance = MIN(chance, 0x10000000U);
-
-	if (one_in_(chance)) {
-		return learn_extra(p, skill + PP_MAX);
-	}
-
-	return false;
-}
-
-static bool check_learn_power(struct player *p, int power, int xpgain)
-{
-	assert(power < PP_MAX);
-	uint32_t chance;
-
-	chance = p->state.powers[power] + 10;
-
-	chance *= chance;
-	chance *= p->extra_powers[power];
-
-	if (pf_has(p->state.flags, PF_EXTRA_LEARNING)) chance /= 2;
-	chance /= xpgain;
-	chance = MIN(chance, 0x10000000U);
-
-	if (one_in_(chance)) {
-		return learn_extra(p, power);
-	}
-
-	return false;
-}
-#endif
-
-#if 0
-static bool learn_from_tome(struct player *p, struct object *obj, int xpgain)
-{
-	if (!obj) return false;
-	if (obj->number < 1) return false;
-	if (!obj_can_learn_extra_from(obj)) return false;
-	if (xpgain <= 0) return false;
-
-	int power = obj->pval, currcost, nextcost;
-	uint16_t currlearned;
-	bool learned = false;
-	uint32_t chance; // one_in_(chance) to learn
-	int mx = tome_max_skill(obj);
-	const struct magic_realm *realm;
-
-	if (of_has(obj->flags, OF_REALM_LEARN)) {
-		realm = realm_by_index(obj->pval);
-		assert(realm);
-		if (!p->checked_tome_this_expedition && one_in_(p->depth + 5)) {
-			p->checked_tome_this_expedition = true;
-			return learn_realm(p, realm);
-		}
-		return false;
-	}
-	
-	if (power < PP_MAX) {
-		if (!check_learn_power(p, power, xpgain)) return false;
-
-		if (player_bonus_to_cost(p->extra_powers[power], power, p) >= mx) {
-			char buf[80];
-			object_desc(buf, sizeof(buf), obj, ODESC_EXTRA, p);
-			// after learning we're at the max
-			msg("You feel you've learned everything you can from your %s.", buf);
-		}
-		return true;
-	}
-	else if (power < PP_MAX + SKILL_MAX) {
-		int skill_ind = power - PP_MAX;
-		if (!check_learn_skill(p, skill_ind, xpgain)) return false;
-		
-		if (player_bonus_to_cost(p->extra_skills[skill_ind], power, p) >= mx) {
-			char buf[80];
-			object_desc(buf, sizeof(buf), obj, ODESC_EXTRA, p);
-			// after learning we're at the max
-			msg("You feel you've learned everything you can from your %s.", buf);
-		}
-		return true;
-	}
-
-	return false;
-
-	currcost = player_bonus_to_cost(currlearned, power, p);
-	nextcost = player_bonus_to_cost(currlearned + 1, power, p);
-
-	// higher-level tomes are more complicated
-	chance *= mx;
-	// harder to learn the more you know
-	chance *= (currlearned + 10);
-	chance /= xpgain;
-	// easier to learn if you have more info
-	chance /= obj->number * obj->number * 100;
-	// bonus for skillmasters
-	if (pf_has(p->state.pflags, PF_EXTRA_LEARNING)) chance /= 5;
-	// paranoia
-	chance = MIN(chance, 0x10000000U);
-
-	if (one_in_(chance) && (!p->checked_tome_this_expedition || nextcost <= currcost)) {
-		learned = learn_extra(p, power);
-		if (learned && nextcost >= mx) {
-			char buf[80];
-			object_desc(buf, sizeof(buf), obj, ODESC_EXTRA, p);
-			// after learning we're at the max
-			msg("You feel you've learned everything you can from your %s.", buf);
-		}
-	}
-
-	return learned;
-}
-#endif
-
 static int tome_max_learnable_parents_array(const struct player_ability *abil, int *powers_array, int *skills_array)
 {
 	int div = 0, sum = 0;
@@ -926,10 +804,24 @@ static int tome_max_learnable_parents(const struct player_ability *abil, struct 
 
 static int player_extra_target(struct player *p, const struct player_ability *abil)
 {
-	int base = p->extra_target[abil->learn_index];
-	int max = tome_max_learnable_parents(abil, p);
+	int base, max, result;
 
-	return MIN(base, max);
+	if (abil->learn_index < 0) return 0;
+	assert(abil->learn_index < z_info->learn_max);
+
+	base = p->extra_target[abil->learn_index];
+	max = tome_max_learnable_parents(abil, p);
+	result = MIN(base, max);
+
+	if (p->class) {
+		if (abil->type == PY_ABIL_POWER) {
+			result += p->class->c_powers[abil->index];
+		} else if (abil->type == PY_ABIL_SKILL) {
+			result += player_class_x_skill(p, abil->index);
+		}
+	}
+
+	return result;
 }
 
 bool check_learn_powers(struct player *p, int xpgain)
@@ -975,58 +867,6 @@ bool check_learn_powers(struct player *p, int xpgain)
 
 	return learned;
 }
-#if 0
-	int i;
-	struct object *obj;
-	bool learned = false;
-	if (xpgain <= 0) return false;
-
-	for (i = 0; i < SKILL_MAX; ++i) {
-		int currcost = player_bonus_to_cost(p->extra_skills[i], i + PP_MAX, p);
-		int nextcost = player_bonus_to_cost(p->extra_skills[i] + 1, i + PP_MAX, p);
-
-		if (currcost >= nextcost && check_learn_skill(p, i, xpgain)) return true;
-	}
-
-	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
-
-		int currcost = player_bonus_to_cost(p->extra_powers[i], i, p);
-		int nextcost = player_bonus_to_cost(p->extra_powers[i] + 1, i, p);
-
-		if (currcost >= nextcost && check_learn_power(p, i, xpgain)) return true;
-	}
-
-	int maxtomes = p->mon.body.count + z_info->pack_size;
-	struct object **tomes = mem_zalloc((maxtomes) * sizeof(*tomes));
-	int tind = 0;
-
-	// collect tomes from inventory
-	for (obj = p->mon.gear; obj && (tind < maxtomes); obj = obj->next) {
-		if (obj_can_learn_extra_from(obj)) {
-			tomes[tind] = obj;
-			++tind;
-		}
-	}
-
-	// collect tomes from equipment
-	for (i = 0; (i < p->mon.body.count) && (tind < maxtomes); i++) {
-		obj = p->mon.body.slots[i].obj;
-		if (obj && obj_can_learn_extra_from(obj)) {
-			tomes[tind] = obj;
-			++tind;
-		}
-	}
-
-	if (tind > 0) {
-		// if we've found something try to learn a couple times
-		int choice = randint0(tind);
-		learned = learn_from_tome(p, tomes[choice], xpgain);
-	}
-
-	mem_free(tomes);
-
-	return learned;
-#endif
 
 /**
  * returns  NONE  if there is none
@@ -1113,11 +953,6 @@ bool tome_max_learnable_extra_array(bool metaprog, int *learn_array, int *extra_
 				learn_array[abil->learn_index] = tome_parent_max;
 			}
 		}*/
-	}
-
-	{
-		abil = lookup_player_ability(PP_DIVINATION_MAGIC, PY_ABIL_POWER);
-		assert(abil);
 	}
 
 	return extra;

@@ -127,6 +127,7 @@ int scaling_data_calc_r_xtra(const struct monster_race *mr, struct scaling_data 
 
 int scaling_data_calc_p_xtra(const struct player *p, struct scaling_data sdata)
 {
+	return 0;
 	if (!p) return 0;
 	return RND_TO_MULT(sdata.p_xtra * p->lev / 50, 5);
 }
@@ -197,7 +198,7 @@ struct scaling_data race_skill(const struct monster_race *mr, int which)
 
 	result.base = RND_TO_MULT((base_skill + 3 * SGN(base_skill)) / 4, 5);
 	result.r_xtra = base_skill - result.base;
-	result.p_xtra = MAX(0, ABS(base_skill) - mr->level) * SGN(base_skill);
+	result.p_xtra = MAX(0, ABS(base_skill) - mr->level * 4) / 2 * SGN(base_skill);
 	result.p_xtra = RND_TO_MULT(result.p_xtra, 5);
 
 	return result;
@@ -287,7 +288,7 @@ int stat_skill_bonus(const struct monster *mon, const struct player_state *state
 
 static int mon_skill(const struct monster *mon, const struct player_state *state, int skill)
 {
-	int result;
+	int result, cscale = 0;
 
 	struct scaling_data sdata = { 0 };
 
@@ -295,6 +296,10 @@ static int mon_skill(const struct monster *mon, const struct player_state *state
 	sdata = scaling_data_sum(sdata, mon_tome_skill(mon, skill));
 
 	result = scaling_data_calc_mon(mon, sdata);
+
+	if (mon->player && mon->player->class) {
+		mon_class_skill(mon, skill, &result, &cscale);
+	}
 
 	result += stat_skill_bonus(mon, state, skill, result, NULL, 0);
 
@@ -359,24 +364,15 @@ static int evolving_race_power(const struct monster_race *mr, int which)
 	return ABS(sum) / div * SGN(sum);
 }
 
-int mon_class_power(const struct monster *mon, int power)
+struct scaling_data mon_class_power(const struct monster *mon, int power)
 {
-	if (!mon->player) return 0;
+	struct scaling_data result = { 0 };
 
-	int base = player_class_power(mon->player, power);
-	int lev = mon_lev(mon);
-	int missing_base = 100 - base;
-	int stepdown;
+	if (!mon->player || !mon->player->class) return result;
 
-	if (base < 0) return base;
+	result.p_xtra += mon->player->class->c_powers[power];
 
-	missing_base *= 25 - lev;
-
-	stepdown = 100 - missing_base;
-	return MAX(0, MIN(base, stepdown));
-
-	if (mon->player) return player_class_power(mon->player, power);
-	return 0;
+	return result;
 }
 
 struct scaling_data race_power(const struct monster_race *mr, int power)
@@ -419,6 +415,7 @@ struct scaling_data mon_tome_power(const struct monster *mon, int power)
 	return result;
 }
 
+#if 0
 static int mon_power(const struct monster *mon, int power)
 {
 	if (power <= PP_NONE || power >= PP_MAX) return 0;
@@ -430,10 +427,11 @@ static int mon_power(const struct monster *mon, int power)
 
 	sdata = scaling_data_sum(sdata, mon_race_power(mon, power));
 	sdata = scaling_data_sum(sdata, mon_tome_power(mon, power));
-	sdata.base += mon_class_power(mon, power);
+	sdata = scaling_data_sum(sdata, mon_class_power(mon, power));
 
 	return scaling_data_calc_mon(mon, sdata);
 }
+#endif
 
 static void get_mon_ac(struct monster *mon, struct player_state *state)
 {
@@ -468,6 +466,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	//struct element_info race_elem_info[ELEM_MAX] = { 0 };
 	struct monster_race *mrace = mon->race;
 	bitflag f[OF_SIZE];
+	struct scaling_data sdata;
 
 	verify_mon_ownership(mon);
 
@@ -486,28 +485,21 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 
 	mon_stat_calc(mon, state);
 
-
 	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
-		state->powers[i] = mon_power(mon, i);
+		sdata = mon_race_power(mon, i);
+		sdata = scaling_data_sum(sdata, mon_tome_power(mon, i));
+		sdata = scaling_data_sum(sdata, mon_class_power(mon, i));
+
+		state->powers[i] = scaling_data_calc_mon(mon, sdata);
 	}
 
 	for (i = 0; i < SKILL_MAX; i++) {
 		state->skills[i] = mon_skill(mon, state, i);
-		/*int stat_ind = mon_skill_stat_ind(mon, state, i);
-
-		if (i == SKILL_HEALTH) state->skills[i] = mrace->avg_hp;
-		else state->skills[i] = (mrace->skills[i] + 66) * mrace->level / 66;
-		state->skills[i] = mon_lev(mon) + 10;*/
 	}
 
 	for (i = 0; i < ELEM_MAX; ++i) {
 		state->el_info[i].res_level = mrace->el_info[i].res_level;
 	}
-	//memcpy(state->el_info, mrace->el_info, sizeof *race_elem_info * ELEM_MAX);
-
-	/*for (i = 0; i < ELEM_MAX; i++) {
-		state->el_info[i].res_level = race_elem_info[i].res_level;
-	}*/
 
 
 	state->el_info[ELEM_HOLY_FIRE].res_level = state->el_info[ELEM_HOLY_ORB].res_level * 2 + state->el_info[ELEM_FIRE].res_level;

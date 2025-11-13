@@ -96,7 +96,9 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 			tbase = scaling_data_calc_r_xtra(p->mon.race, sdata) + sdata.base;
 			txtra = sdata.p_xtra;
 
-			cxtra = mon_class_power(&p->mon, ability->index);
+			sdata = mon_class_power(&p->mon, ability->index);
+			cbase = scaling_data_calc_r_xtra(p->mon.race, sdata) + sdata.base;
+			//cxtra = sdata.p_xtra;
 		}
 		else {
 			int result;

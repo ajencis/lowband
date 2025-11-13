@@ -3,6 +3,8 @@
 #ifndef INCLUDED_MON_CALCS_H
 #define INCLUDED_MON_CALCS_H
 
+#include "angband.h"
+
 struct scaling_data {
     int base;       // basic amount;
     int r_xtra;     // amount modified by monster race
@@ -24,13 +26,9 @@ struct scaling_data mon_tome_skill(const struct monster *mon, int which);
 struct scaling_data race_power(const struct monster_race *mr, int power);
 struct scaling_data mon_race_power(const struct monster *mon, int power);
 struct scaling_data mon_tome_power(const struct monster *mon, int power);
+struct scaling_data mon_class_power(const struct monster *mon, int power);
 
 int stat_skill_bonus(const struct monster *mon, const struct player_state *state, int which, int curr, char *buf, size_t bufsize);
-
-struct scaling_data race_power(const struct monster_race *mr, int power);
-
-struct scaling_data mon_race_power(const struct monster *mon, int power);
-int mon_class_power(const struct monster *mon, int power);
 
 void calc_mon_bonuses(struct monster *mon, struct player_state *state);
 void update_mon_state(struct monster *mon);
