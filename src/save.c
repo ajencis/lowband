@@ -210,8 +210,8 @@ static void wr_body(const struct player_body *body)
 	wr_u16b(count);
 
 	for (i = 0; i < count; ++i) {
-		wr_u16b(body->slots->type);
-		wr_string(body->slots->name);
+		wr_u16b(body->slots[i].type);
+		wr_string(body->slots[i].name);
 	}
 }
 
