@@ -527,7 +527,7 @@ static int item_score(struct monster *mon, struct object *obj)
 
 static bool monster_turn_equip_item(struct monster *mon)
 {
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, cave);
 
 	if (!mflag_has(mon->mflag, MFLAG_CHECK_EQ)) {
 		return false;
@@ -581,7 +581,7 @@ static bool monster_turn_equip_item(struct monster *mon)
 		if (body->slots[i].obj) assert(body->slots[i].obj->held_m_idx == mon->midx);
 	}
 
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, cave);
 
 	monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG | MDESC_CAPITAL);
 
@@ -598,7 +598,7 @@ static bool monster_turn_equip_item(struct monster *mon)
 		did_something = true;
 	}
 
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, cave);
 
 	// looked through everything and no changes to make, so we can stop rechecking
 	if (did_something) {
@@ -609,7 +609,7 @@ static bool monster_turn_equip_item(struct monster *mon)
 		mflag_off(mon->mflag, MFLAG_CHECK_EQ);
 	}
 
-	verify_mon_ownership(mon); 
+	verify_mon_ownership(mon, cave); 
 
 	return did_something;
 }
@@ -1873,7 +1873,7 @@ static void monster_turn_grab_objects(struct monster *mon, const char *m_name,
 			/* Try to carry */
 			obj = floor_object_for_use(player, obj, obj->number, true, NULL);
 			inven_carry(cave, mon, obj, true, false);
-			verify_mon_ownership(mon);
+			verify_mon_ownership(mon, cave);
 
 			/* Describe observable situations */
 			/*if (square_isseen(cave, new) && !ignore_item_ok(player, obj)) {

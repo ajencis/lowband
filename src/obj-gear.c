@@ -882,7 +882,7 @@ void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool 
 
 	assert(c || is_p);
 
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, c);
 	verify_cave_items(c);
 
 	assert(obj->oidx == 0 || c->objects[obj->oidx] == obj);
@@ -932,7 +932,7 @@ void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool 
 		}
 	}
 
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, c);
 	verify_cave_items(c);
 
 	/* We didn't manage the find an object to combine with */
@@ -940,7 +940,7 @@ void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool 
 		/* Paranoia */
 		assert(pack_slots_used(mon) <= z_info->pack_size);
 
-		verify_mon_ownership(mon);
+		verify_mon_ownership(mon, c);
 		verify_cave_items(c);
 
 		gear_insert_end(mon, obj);
@@ -972,7 +972,7 @@ void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool 
 			obj->known->grid = loc(0, 0);
 		}
 
-		verify_mon_ownership(mon);
+		verify_mon_ownership(mon, c);
 
 		if (p) {
 			/* Update the inventory */
@@ -990,7 +990,7 @@ void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool 
 		}
 	}
 
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, c);
 
 	if (p) {
 		p->upkeep->update |= (PU_BONUS | PU_INVEN);
@@ -998,7 +998,7 @@ void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool 
 		update_stuff(p);
 	}
 
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, c);
 
 	if (message && is_p) {
 		char o_name[80];
@@ -1034,7 +1034,7 @@ void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool 
 		sound(MSG_QUIVER);
 	}
 
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, c);
 }
 
 

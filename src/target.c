@@ -158,7 +158,7 @@ void look_mon_desc(char *buf, size_t max, int m_idx)
 		}
 	}
 
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, cave);
 
 	/*
 	// L: equipment

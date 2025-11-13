@@ -1704,7 +1704,7 @@ void square_know_equipped_object(struct chunk *c, struct loc grid, bool (*pred)(
 		return;
 	}
 
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, c);
 
 	assert(mon->body.slots);
 

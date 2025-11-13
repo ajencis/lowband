@@ -2118,8 +2118,8 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 	assert(t_mon);
 	assert(t_mon->race);
 
-	verify_mon_ownership(mon);
-	verify_mon_ownership(t_mon);
+	verify_mon_ownership(mon, cave);
+	verify_mon_ownership(t_mon, cave);
 
 	update_mon_attacks(mon);
 

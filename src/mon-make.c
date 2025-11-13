@@ -604,7 +604,7 @@ void monster_index_move(struct chunk *c, int i1, int i2)
 	/* Wipe hole */
 	memset(cave_monster(c, i1), 0, sizeof(struct monster));
 
-	verify_mon_ownership(cave_monster(c, i2));
+	verify_mon_ownership(cave_monster(c, i2), c);
 }
 
 
@@ -1090,7 +1090,7 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 					inven_wield(c, mon, obj, j, false);
 
 					verify_item(obj, c);
-					verify_mon_ownership(mon);
+					verify_mon_ownership(mon, c);
 					assert(obj->oidx == 0 || c->objects[obj->oidx] == obj);
 
 					any = true;
@@ -1102,7 +1102,7 @@ static bool mon_create_drop(struct chunk *c, struct monster *mon,
 	}
 
 	verify_cave_items(c);
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, c);
 
 	return any;
 }
@@ -1276,12 +1276,12 @@ int16_t place_monster(struct chunk *c, struct loc grid, struct monster *mon,
 	mflag_on(new_mon->mflag, MFLAG_UPDATE_STATE);
 	mflag_on(new_mon->mflag, MFLAG_UPDATE_ATTACKS);
 
-	verify_mon_ownership(new_mon);
+	verify_mon_ownership(new_mon, c);
 
 	update_mon_state(new_mon);
 	//update_mon_attacks(new_mon);
 
-	verify_mon_ownership(new_mon);
+	verify_mon_ownership(new_mon, c);
 	verify_cave_items(c);
 
 	/* Result */

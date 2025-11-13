@@ -82,14 +82,14 @@ bool give_monster_powers(struct monster *mon);
 bool player_can_learn_from_monster(struct player *p, struct monster *mon);
 
 #ifdef DBG_MON_OWNER
-void verify_mon_items_ownership(const struct monster *mon, const char *file, int line);
+void verify_mon_items_ownership(const struct monster *mon, const struct chunk *c, const char *file, int line);
 void verify_cave_items_file(struct chunk *c, const char *file, int line);
 void verify_item_file(struct object *obj, struct chunk *c, const char *file, int line);
-#define verify_mon_ownership(mon) verify_mon_items_ownership(mon, __FILE__, __LINE__)
+#define verify_mon_ownership(mon, c) verify_mon_items_ownership(mon, c, __FILE__, __LINE__)
 #define verify_cave_items(c) verify_cave_items_file(c, __FILE__, __LINE__)
 #define verify_item(obj, c) verify_item_file(obj, c, __FILE__, __LINE__)
 #else
-#define verify_mon_ownership(mon) NULL
+#define verify_mon_ownership(mon, c) NULL
 #define verify_cave_items(c) NULL
 #define verify_item(obj, c) NULL
 #endif

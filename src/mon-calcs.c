@@ -468,7 +468,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	bitflag f[OF_SIZE];
 	struct scaling_data sdata;
 
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, cave);
 
 	memset(state, 0, sizeof *state);
 
@@ -742,7 +742,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 
 	mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
 
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, cave);
 }
 
 
@@ -1433,12 +1433,12 @@ static void refresh_mon_attacks(struct monster *mon)
 
 void update_mon_attacks(struct monster *mon)
 {
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, cave);
 	if (mflag_has(mon->mflag, MFLAG_UPDATE_ATTACKS)) {
 		refresh_mon_attacks(mon);
 		mflag_off(mon->mflag, MFLAG_UPDATE_ATTACKS);
 	}
-	verify_mon_ownership(mon);
+	verify_mon_ownership(mon, cave);
 }
 
 
