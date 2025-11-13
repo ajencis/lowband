@@ -370,7 +370,7 @@ static void mon_find_target(struct chunk *c, struct monster *mon)
 		// check if the monster exists and is an enemy and is visible
 		if (!other || !other->race) continue;
 		if (!mon_will_attack_mon(mon, other)) continue;
-		if (!los(c, mon->grid, other->grid)) continue;
+		if (!monster_can_see_monster(mon, other)) continue;
 
 		// better target if it's closer or more threatening
 		int dist = distance(mon->grid, other->grid) + 1;

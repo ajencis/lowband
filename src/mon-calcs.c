@@ -736,6 +736,10 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	}
 
 
+	state->extra_blows = extra_blows;
+	state->extra_shots = extra_shots;
+
+
 	mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
 
 	verify_mon_ownership(mon);
@@ -917,11 +921,9 @@ static void calc_emb_blows(const struct monster *mon, struct embryo_attack *emb,
 
 	skill = mon->state.skills[emb->skill];
 
-	blows = skill * base /* * emb->num */ / div;
+	blows = skill * base / div + mon->state.extra_blows / numblows;
 
 	emb->blows = MAX(blows / 2 + 100, blows);
-
-	//emb->blows = MAX(blows + 50 * emb->num, blows / 2 + 100 * emb->num);
 }
 
 static int num_embryos(const struct embryo_attack *emb)

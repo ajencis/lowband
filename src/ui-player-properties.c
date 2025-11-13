@@ -59,8 +59,6 @@ static void add_scaling_desc(char *buf, const char *name, int base, int scale, i
 
 static void ability_desc(struct player *p, const struct player_ability *ability, char *buf, size_t bufsize, bool player_has, int group)
 {
-	int monster_powers[PP_MAX] = { 0 };
-	int monster_skills[SKILL_MAX] = { 0 };
 	struct monster_race *mrace = lookup_player_monster(p);
 	bool positive = true;
 
@@ -78,10 +76,6 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 
 	my_strcat(buf, "\n", bufsize);
 
-	if (mrace) {
-		calc_monster_powers(mrace, monster_powers, player->mon.state.powers);
-		calc_monster_skills(mrace, monster_skills);
-	}
 	if (group == PLAYER_FLAG_POWER || group == PLAYER_FLAG_SKILL) {
 		int cbase = 0, cxtra = 0, rbase = 0, rxtra = 0, tbase = 0, txtra = 0, stat = 0;
 		char stat_name[80];

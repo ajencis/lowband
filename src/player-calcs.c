@@ -1242,6 +1242,7 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int cur
 	}
 }
 
+#if 0
 void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX])
 {
 	int i, norm_hp, mod;
@@ -1263,92 +1264,8 @@ void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX])
 	}
 	skills[SKILL_HEALTH] += mod;
 }
-
-#if 0
-/**
- * L: calculate the effects of being a monster on player state
- */
-static void calc_monster(struct player *p, struct player_state *state,
-						 bool vuln[ELEM_MAX], int *moves)
-{
-	struct monster_race *mrace = lookup_player_monster(p);
-
-	if (rf_has(mrace->flags, RF_NEVER_MOVE)) *moves -= 25;
-	return;
-
-	int i;
-	int powers[PP_MAX] = { 0 };
-	int skills[SKILL_MAX] = { 0 };
-
-	if (!mrace) {
-		return;
-	}
-
-	/*for (i = 0; i < ELEM_MAX; ++i) {
-		int mon_res = mrace->el_info[i].res_level;
-		int new_res = state->el_info[i].res_level + mon_res;
-		state->el_info[i].res_level = MAX(MIN(new_res, 3), -1);
-	}*/
-
-	state->speed += mrace->speed / 2 - 55;
-	state->to_a = MAX(state->to_a, mrace->ac) + MIN(state->to_a, mrace->ac) / 2;
-
-	if (rf_has(mrace->flags, RF_NEVER_MOVE)) *moves -= 25;
-
-	calc_monster_powers(mrace, powers, state->powers);
-
-	for (i = 0; i < PP_MAX; ++i) {
-		state->powers[i] += powers[i];
-	}
-
-	calc_monster_skills(mrace, skills);
-
-	for (i = 0; i < SKILL_MAX; i++) {
-		state->skills[i] += skills[i];
-	}
-
-	pf_union(state->pflags, mrace->base->pflags);
-	of_union(state->flags, mrace->base->oflags);
-}
 #endif
 
-#if 0
-/**
- * L: bonuses from the UNLIGHT power
- */
-static void calc_unlight(struct player_state *ps, struct player *p)
-{
-	if (ps->powers[PP_UNLIGHT] < 0) return;
-
-	int power = unlight_power_state(ps, p);
-
-	if (power > 5) {
-		ps->el_info[ELEM_DARK].res_level++;
-	}
-
-	adjust_skill_scale(&ps->skills[SKILL_STEALTH], power, 25, 25);
-	adjust_skill_scale(&ps->skills[SKILL_SAVE], power, 25, 25);
-
-	ps->ac += power * ABS(power);
-}
-
-/** 
- * L: bonuses from the GLOW power
- */
-static void calc_glow(struct player_state *ps, struct player *p)
-{
-	if (ps->powers[PP_GLOW] < 0) return;
-
-	int power = glow_power_state(ps, p);
-
-	if (power > 5) {
-		ps->el_info[ELEM_LIGHT].res_level++;
-	}
-
-	adjust_skill_scale(&ps->skills[SKILL_SAVE], power, 30, 10);
-	ps->to_a += SGN(power) * my_int_sqrt(ABS(power) * power * power);
-}
-#endif
 
 
 

@@ -36,20 +36,6 @@ struct skill_stat_info {
 	int secondary_stat;
 };
 
-/*struct mon_player_match elem_matches[] = {
-	{ RF_IM_ACID, ELEM_ACID },
-	{ RF_IM_ELEC, ELEM_ELEC },
-	{ RF_IM_FIRE, ELEM_FIRE },
-	{ RF_IM_COLD, ELEM_COLD },
-	{ RF_IM_POIS, ELEM_POIS },
-	{ RF_IM_NETHER, ELEM_NETHER },
-	{ RF_IM_WATER, ELEM_WATER },
-	{ RF_IM_PLASMA, ELEM_PLASMA },
-	{ RF_IM_NEXUS, ELEM_NEXUS },
-	{ RF_IM_DISEN, ELEM_DISEN },
-	{ RF_NONE, -1 }
-};*/
-
 //extern struct mon_player_match elem_matches[];
 
 extern struct skill_stat_info skill_stats[];
@@ -150,7 +136,6 @@ int adj_dex_ta(int index);
 bool earlier_object(struct object *orig, struct object *new, bool store);
 int equipped_item_slot(struct player_body body, struct object *obj);
 void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int curr_powers[PP_MAX]);
-void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX]);
 void calc_inventory(struct player *p);
 void calc_bonuses(struct player *p, struct monster *mon, struct player_state *state, bool known_only,
 				  bool update);
