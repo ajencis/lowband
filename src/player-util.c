@@ -3072,7 +3072,7 @@ void regen_hp(struct monster *mon)
 	} else {
 		int amt = hp_gain >> 16;
 		int amt_frac = hp_gain - amt;
-		if (amt_frac < randint0(1 << 15)) {
+		if (amt_frac > randint0(1 << 16)) {
 			++amt;
 		}
 		mon->hp += amt;
