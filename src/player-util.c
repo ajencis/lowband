@@ -3489,29 +3489,15 @@ void search(struct player *p)
 			currpower = detectpower - dist * 10;
 
 			for (feat = square_feat(cave, grid); feat; feat = feat->next) {
-				if (feat_is_hidden(p, grid, feat->kind->fidx) && randint0(currpower < cave->depth)) {
+				if (feat_is_hidden(p, grid, feat->kind->fidx) && randint0(currpower) > cave->depth) {
 					square_memorize_feat_real(p, cave, grid, feat->kind->fidx);
 
 					name = feat->kind->name;
 					pref = feat->kind->look_prefix;
 
-					msg("You have discovered %s%s.", name, pref);
+					msg("You have discovered %s%s.", pref, name);
 				}
 			}
-
-			// L: reveal anything hidden
-			/*if (tf_has(featr->flags, TF_HIDDEN) && square_ismemorybad(cave, grid) &&
-					randint0(currpower) > cave->depth) {
-				square_true_memorize(cave, grid);
-				msg("You have discovered %s%s",
-					square_apparent_look_prefix(p->cave, grid),
-					square_apparent_name(p->cave, grid));
-
-				if (OPT(p, disturb_secret)) {
-					disturb(p);
-				}
-			}
-			}*/
 
 			/* L: find invisible monsters
 			   invisible monsters percieved will get spotted and will be visible until
