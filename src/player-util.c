@@ -43,6 +43,7 @@
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "player.h"
 #include "project.h"
 #include "score.h"
 #include "store.h"
@@ -645,41 +646,6 @@ void calc_extra_points(struct player *p, struct player_state *ps)
 	ps->extra_points_used = sum;
 }
 
-#if 0
-static bool player_can_learn_from_tome(struct player *p, int index)
-{
-	int cpwr;
-	char name[80];
-	assert(index > TOME_NONE && index < TOME_MAX);
-
-	if (index < PP_MAX) {
-		cpwr = p->extra_powers[index];
-		my_strcpy(name, player_powers[index].name, sizeof(name));
-	}
-	else if (index < PP_MAX + SKILL_MAX) {
-		cpwr = p->extra_skills[index - PP_MAX];
-		my_strcpy(name, skill_index_to_name(index - PP_MAX), sizeof(name));
-		my_strcap_full(name);
-	}
-	
-	int currcost = player_bonus_to_cost(cpwr, index, p);
-	int nextcost = player_bonus_to_cost(cpwr + 1, index, p);
-
-	// if we're not spending any points to learn then learn
-	if (nextcost <= currcost) return true;
-	// if we don't have any points left then we can't
-	if (p->state.extra_points_max <= p->state.extra_points_used) return false;
-
-	// ask the player if they're willing to spend points
-	if (!get_forced_check(format("Learn %s? ", name))) {
-		p->checked_tome_this_expedition = true;
-		return false;
-	}
-
-	return true;
-}
-#endif
-
 bool learn_realm(struct player *p, const struct magic_realm *realm)
 {
 	if (p->realm) return false;
@@ -703,20 +669,18 @@ bool learn_extra(struct player *p, const struct player_ability *abil)
 {
 	//if (!player_can_learn_from_tome(p, index)) return false;
 
+	if (!abil || abil->learn_index < 0) return false;
+
+	p->extra_learned[abil->learn_index]++;
+
 	if (abil->type == PY_ABIL_POWER) {
-		p->extra_powers[abil->index]++;
-			
 		// tell the player when they've learned something
 		msg("You feel a bit more familiar with %s.", abil->name);
-		
-		//p->upkeep->update |= player_powers[abil->index].update;
 	}
 	else if (abil->type == PY_ABIL_SKILL) {
-		p->extra_skills[abil->index]++;
-
 		// tell the player when they've learned something
 		char buf[80];
-		my_strcpy(buf, abil->name,/*skill_index_to_name(abil->index),*/ sizeof(buf));
+		my_strcpy(buf, abil->name, sizeof(buf));
 		my_strcap_full(buf);
 		msg("You feel a bit more familiar with %s.", buf);
 	}
@@ -745,7 +709,6 @@ bool obj_can_learn_extra_from(const struct object *obj)
 {
 	int maxs = tome_max_skill(obj);
 	int power = obj->pval;
-	const struct player_ability *abil;
 
 	if (of_has(obj->flags, OF_REALM_LEARN)) {
 		return false;
@@ -753,17 +716,8 @@ bool obj_can_learn_extra_from(const struct object *obj)
 
 	if (maxs <= 0) return false;
 
-	abil = player_ability_by_learn_index(power);
-
-	//if (maxs <= 0) return false;
-	//if (power <= TOME_NONE || power >= TOME_MAX) return false;
-
-	if (abil->type == PY_ABIL_POWER) {
-		if (player->extra_powers[abil->index] >= maxs) return false;
-	}
-	else {
-		if (player->extra_skills[abil->index] >= maxs) return false;
-	}
+	if (player->extra_learned[power] >= maxs) return false;
+	
 	return true;
 }
 
@@ -839,13 +793,13 @@ bool check_learn_powers(struct player *p, int xpgain)
 			target = (target * p->lev + PY_MAX_LEVEL - 1) / PY_MAX_LEVEL;
 		}
 
+		curr_lrnd = p->extra_learned[abil->learn_index];
+
 		if (abil->type == PY_ABIL_POWER) {
 			curr_total = p->mon.state.powers[abil->index];
-			curr_lrnd = p->extra_powers[abil->index];
 		}
 		else {
 			curr_total = p->mon.state.skills[abil->index];
-			curr_lrnd = p->extra_skills[abil->index];
 		}
 
 		if (target <= curr_lrnd) continue;
@@ -1016,7 +970,11 @@ int player_class_power_array(const struct player_class *c, int extra_power, int 
 
 int player_class_power(struct player *p, int power)
 {
-	return player_class_power_array(p->class, p->extra_powers[power], power);
+	struct player_ability *abil = lookup_player_ability(power, PY_ABIL_POWER);
+
+	if (!abil || abil->learn_index < 0) return 0;
+
+	return player_class_power_array(p->class, p->extra_learned[abil->learn_index], power);
 }
 
 int player_race_power_array(const struct monster_race *r, int extra_power, int power)
@@ -1032,7 +990,11 @@ int player_race_power_array(const struct monster_race *r, int extra_power, int p
 
 int player_race_power(struct player *p, int power)
 {
-	return player_race_power_array(p->mon.race, p->extra_powers[power], power);
+	struct player_ability *abil = lookup_player_ability(power, PY_ABIL_POWER);
+
+	if (!abil || abil->learn_index < 0) return 0;
+
+	return player_race_power_array(p->mon.race, p->extra_learned[abil->learn_index], power);
 }
 
 int class_x_skill(const struct player_class *c, int extra, int skill)
@@ -1048,7 +1010,14 @@ int class_x_skill(const struct player_class *c, int extra, int skill)
 
 int player_class_x_skill(struct player *p, int skill)
 {
-	return class_x_skill(p->class, p->extra_skills[skill], skill);
+	struct player_ability *abil = lookup_player_ability(skill, PY_ABIL_SKILL);
+	int lrnd = 0;
+
+	if (abil && abil->learn_index >= 0) {
+		lrnd = p->extra_learned[abil->learn_index];
+	}
+
+	return class_x_skill(p->class, lrnd, skill);
 }
 
 
@@ -1065,7 +1034,14 @@ int class_c_skill(const struct player_class *c, int extra, int skill)
 
 int player_class_c_skill(struct player *p, int skill)
 {
-	return class_c_skill(p->class, p->extra_skills[skill], skill);
+	struct player_ability *abil = lookup_player_ability(skill, PY_ABIL_SKILL);
+	int lrnd = 0;
+
+	if (abil && abil->learn_index >= 0) {
+		lrnd = p->extra_learned[abil->learn_index];
+	}
+
+	return class_c_skill(p->class, lrnd, skill);
 }
 
 void skill_stat(const struct magic_realm *realm, const int indices[STAT_MAX], int skill, int *stat1, int *stat2)
@@ -1689,6 +1665,9 @@ void death_knowledge(struct player *p)
  */
 bool tomes_unlock(struct player *p)
 {
+	return false;
+
+#if 0
 	bool can_unlock = false;
 	const char *prevent_unlock = NULL;
 	bool add_space = true;
@@ -1740,6 +1719,7 @@ bool tomes_unlock(struct player *p)
 	if (did_unlock) message_add(" ", MSG_GENERIC);
 
 	return did_unlock;
+#endif
 }
 
 #if 0

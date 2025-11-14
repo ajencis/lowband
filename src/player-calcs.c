@@ -1274,11 +1274,13 @@ void mon_class_skill(const struct monster *mon, int skill, int *base, int *xtra)
 {
 	struct player *p = mon->player;
 	int tome, b_amt, x_amt;
+	struct player_ability *abil = lookup_player_ability(skill, PY_ABIL_SKILL);
 
 	if (!p) return;
 	if (skill < 0 || skill >= SKILL_MAX) return;
+	if (!abil || abil->learn_index < 0) return;
 
-	tome = p->extra_skills[skill];
+	tome = p->extra_learned[abil->learn_index];
 	b_amt = p->class->c_skills[skill];
 	x_amt = p->class->x_skills[skill];
 

@@ -531,11 +531,8 @@ void wr_player(void)
 
 	wr_u16b(z_info->learn_max);
 	// L: extra powers
-	for (i = 0; i < PP_MAX; i++) {
-		wr_u16b(player->extra_powers[i]);
-	}
-	for (i = 0; i < SKILL_MAX; i++) {
-		wr_u16b(player->extra_skills[i]);
+	for (i = 0; i < z_info->learn_max; i++) {
+		wr_s16b(player->extra_learned[i]);
 	}
 	for (i = 0; i < z_info->learn_max; ++i) {
 		wr_u16b(player->extra_target[i]);

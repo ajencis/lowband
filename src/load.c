@@ -842,11 +842,8 @@ int rd_player(void)
 	if (tmp16u != z_info->learn_max) return -1;
 
 	// L: extra powers and extra skills
-	for (i = 0; i < PP_MAX; i++) {
-		rd_u16b(&player->extra_powers[i]);
-	}
-	for (i = 0; i < SKILL_MAX; i++) {
-		rd_u16b(&player->extra_skills[i]);
+	for (i = 0; i < z_info->learn_max; i++) {
+		rd_s16b(&player->extra_learned[i]);
 	}
 	for (i = 0; i < z_info->learn_max; ++i) {
 		rd_u16b(&player->extra_target[i]);

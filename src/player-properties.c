@@ -374,9 +374,9 @@ static bool ability_needs_subchoice(struct player_ability *abil, struct player *
 {
 	int curr = 0;
 
+	if (abil->learn_index < 0) return false;
 	if (p->extra_choice[abil->learn_index] >= 0) return false;
-	if (abil->type == PY_ABIL_POWER) curr = p->extra_powers[abil->index];
-	else if (abil->type == PY_ABIL_SKILL) curr = p->extra_skills[abil->index];
+	curr = p->extra_learned[abil->learn_index];
 
 	if (curr <= 0 && p->extra_target[abil->learn_index] <= 0) return false;
 	if (ability_subchoice_choices(abil) <= 0) return false;

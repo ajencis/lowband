@@ -59,7 +59,6 @@ static void add_scaling_desc(char *buf, const char *name, int base, int scale, i
 
 static void ability_desc(struct player *p, const struct player_ability *ability, char *buf, size_t bufsize, bool player_has, int group)
 {
-	struct monster_race *mrace = lookup_player_monster(p);
 	bool positive = true;
 
 	// L: hack for hypothetical players
@@ -471,7 +470,7 @@ static void ability_learn_valid_refresh(struct menu *menu)
 		}
 
 		if (data->valid[oid] == MN_ROW_SKIP &&
-				(data->p->extra_powers[abil->index] > 0 || data->p->mon.state.powers[abil->index] > 0)) {
+				(data->p->extra_learned[abil->learn_index] > 0 || data->p->mon.state.powers[abil->index] > 0)) {
 			data->valid[oid] = MN_ROW_INVALID;
 		}
 	}
@@ -534,7 +533,7 @@ static int ability_learn_valid_mode(struct menu *menu, int oid, int mode)
 	}
 
 	if (abil->type == PY_ABIL_POWER) {
-		if (data->p->extra_powers[abil->index] <= 0 &&
+		if (data->p->extra_learned[abil->learn_index] <= 0 &&
 				data->p->mon.state.powers[abil->index] <= 0) {
 			// if it's the full menu show all powers
 			// if it's the partial menu only show learned powers
@@ -574,13 +573,13 @@ static void ability_learn_display(struct menu *m, int oid, bool cursor,
 
 	if (oid < 0 || oid >= z_info->learn_max) return;
 
+	learn_level = data->p->extra_learned[abil->learn_index];
+
 	if (power) {
 		total_level = data->p->mon.state.powers[abil->index];
-		learn_level = data->p->extra_powers[abil->index];
 	}
 	else {
 		total_level = data->p->mon.state.skills[abil->index];
-		learn_level = data->p->extra_skills[abil->index];
 	}
 	strcpy(name, abil->name);
 
@@ -697,12 +696,8 @@ static void refresh_hypothetical_player(struct menu *m)
 
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->learn_index < 0) continue;
-		else if (abil->type == PY_ABIL_SKILL) {
-			hypo->extra_skills[abil->index] = data->temp_target[abil->learn_index];
-		}
-		else if (abil->type == PY_ABIL_POWER) {
-			hypo->extra_powers[abil->index] = data->temp_target[abil->learn_index];
-		}
+
+		hypo->extra_learned[abil->learn_index] = data->temp_target[abil->learn_index];
 	}
 
 	calc_bonuses(hypo, &hypo->mon, &hypo->mon.state, false, false);
@@ -1020,6 +1015,9 @@ static struct player *hypothetical_player(const struct player *p)
 	hypo->max_lev = PY_MAX_LEVEL;
 	hypo->lev = PY_MAX_LEVEL;
 	hypo->mon.player = hypo;
+	hypo->extra_learned = mem_zalloc(sizeof *hypo->extra_learned * z_info->learn_max);
+
+	strnfmt(hypo->full_name, sizeof hypo->full_name, "HYPOTHETICAL");
 
 	return hypo;
 }
@@ -1029,6 +1027,7 @@ static void free_hypothetical_player(struct player *hypo)
 	if (hypo) {
 		mem_free(hypo->mon.race);
 		mem_free(hypo);
+		mem_free(hypo->extra_learned);
 	}
 }
 

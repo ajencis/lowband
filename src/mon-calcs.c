@@ -213,9 +213,11 @@ struct scaling_data mon_tome_skill(const struct monster *mon, int which)
 {
 	struct player *p = mon->player;
 	struct scaling_data result = { 0 };
+	struct player_ability *abil = lookup_player_ability(which, PY_ABIL_SKILL);
 
-	if (p) {
-		result.base = p->extra_skills[which];
+	if (p && abil && abil->learn_index >= 0) {
+		assert(p->extra_learned);
+		result.base = p->extra_learned[abil->learn_index];
 	}
 
 	return result;
@@ -408,9 +410,11 @@ struct scaling_data mon_race_power(const struct monster *mon, int power)
 struct scaling_data mon_tome_power(const struct monster *mon, int power)
 {
 	struct scaling_data result = { 0 };
+	struct player_ability *abil = lookup_player_ability(power, PY_ABIL_POWER);
 
-	if (mon->player) {
-		result.base = mon->player->extra_powers[power];
+	if (abil && abil->learn_index >= 0 && mon->player) {
+		assert(mon->player->extra_learned);
+		result.base = mon->player->extra_learned[abil->learn_index];
 	}
 	return result;
 }
