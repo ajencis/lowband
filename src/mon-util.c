@@ -271,11 +271,16 @@ random_chance saving_throw_chance(const struct monster *mon, int difficulty)
 	return ret;
 }
 
-bool saving_throw(const struct monster *mon, int difficulty)
+bool saving_throw(struct monster *mon, int difficulty)
 {
 	random_chance rc = saving_throw_chance(mon, difficulty);
+	bool success = random_chance_check(rc);
 
-	return random_chance_check(rc);
+	if (success) {
+		exercise_ability(mon, lookup_player_ability(SKILL_SAVE, PY_ABIL_SKILL), difficulty);
+	}
+
+	return success;
 }
 
 

@@ -37,6 +37,7 @@
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
+#include "player-enum.h"
 #include "player-history.h"
 #include "player-properties.h"
 #include "player-quest.h"
@@ -667,9 +668,9 @@ bool learn_realm(struct player *p, const struct magic_realm *realm)
 
 bool learn_extra(struct player *p, const struct player_ability *abil)
 {
-	//if (!player_can_learn_from_tome(p, index)) return false;
-
 	if (!abil || abil->learn_index < 0) return false;
+
+	if (abil->type == PY_ABIL_SKILL) return false;
 
 	p->extra_learned[abil->learn_index]++;
 
@@ -1470,7 +1471,7 @@ static bool phoenix_resurrect(struct player *p)
  * \param kb_str is the null-terminated string describing the cause of the
  * damage.
  * 
- * L: now returns whether the calling function should stop (either the) player
+ * L: now returns whether the calling function should stop: either the player
  * is dead or is cheating death and thus changing levels
  *
  * Hack -- this function allows the user to save (or quit) the game
@@ -1567,6 +1568,8 @@ bool take_hit(struct player *p, int dam, const char *kb_str)
 		msgt(MSG_HITPOINT_WARN, "*** LOW HITPOINT WARNING! ***");
 		event_signal(EVENT_MESSAGE_FLUSH);
 	}
+
+	exercise_ability(&p->mon, lookup_player_ability(SKILL_HEALTH, PY_ABIL_SKILL), dam * 3 / 2 + 5);
 
 	return p->is_dead;
 }
@@ -3496,6 +3499,8 @@ void search(struct player *p)
 					pref = feat->kind->look_prefix;
 
 					msg("You have discovered %s%s.", pref, name);
+
+					exercise_ability(&p->mon, lookup_player_ability(SKILL_SEARCH, PY_ABIL_SKILL), cave->depth);
 				}
 			}
 

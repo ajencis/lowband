@@ -79,7 +79,7 @@ static int effect_level_by_amount(int amount, int effect_type)
 /**
  * Determines whether the given monster successfully resists the given effect.
  */
-static bool does_resist(const struct monster *mon, int effect_type, int timer, int flag)
+static bool does_resist(struct monster *mon, int effect_type, int timer, int flag)
 {
 	assert(mon != NULL);
 	assert(effect_type >= 0);

@@ -892,6 +892,8 @@ static bool do_cmd_disarm_aux(struct loc grid)
 		if (!square_remove_trap(cave, grid, trap, true)) {
 			assert(0);
 		}
+
+		exercise_ability(&player->mon, lookup_player_ability(which_skill, PY_ABIL_SKILL), cave->depth);
 	} else if (randint0(100) < chance) {
 		event_signal(EVENT_INPUT_FLUSH);
 		msg("You failed to disarm the %s.", trap->kind->name);

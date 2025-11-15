@@ -48,6 +48,7 @@
 #include "obj-slays.h"
 #include "obj-util.h"
 #include "player-calcs.h"
+#include "player-properties.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
@@ -2351,6 +2352,10 @@ static void monster_reduce_sleep(struct monster *mon)
 		        (curr - sred <= 64) &&
 				monster_is_obvious(mon)) {
 			msg("%s stirs.", m_name);
+
+			exercise_ability(&player->mon,
+				lookup_player_ability(SKILL_STEALTH, PY_ABIL_SKILL),
+				mon->race->level);
 		}
 
 		/* Monster wakes up a bit */

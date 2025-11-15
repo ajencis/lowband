@@ -47,6 +47,7 @@
 #include "player-properties.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "player.h"
 #include "project.h"
 #include "target.h"
 #include "z-util.h"
@@ -1929,7 +1930,7 @@ static bool blow_message(struct monster *mon, struct monster *t_mon, struct temp
 	return !attack_error(attacker, defender, atk, c);
 }*/
 
-static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct temp_attack_data *which)
+static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct temp_attack_data *which)
 {
 	struct player *ap = mon_is_player(mon) ? mon->player : NULL;
 	struct player *tp = mon_is_player(t_mon) ? t_mon->player : NULL;
@@ -1963,7 +1964,7 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 		equip_learn_flag(ap, OF_AFRAID);
 
 		msgt(MSG_AFRAID, "You are too afraid to attack %s!", target);
-		return;
+		return false;
 	}
 
 	if (success) {
@@ -2009,6 +2010,11 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 		effect_do(&tmp_ef, source_monster(mon->midx), source_none(), NULL, &id, true, dir, 0, 0, NULL);
 
 		dice_free(tmp_dice);
+
+		if (which->atk->skill >= 0 && which->atk->skill < SKILL_MAX) {
+			struct player_ability *abil = lookup_player_ability(which->atk->skill, PY_ABIL_SKILL);
+			exercise_ability(mon, abil, mon_ac(t_mon));
+		}
 	}
 	else {
 		const char *verb = ap ? "miss" : "misses";
@@ -2017,6 +2023,8 @@ static void mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 	}
 
 	check_berserk(mon, t_mon);
+
+	return success;
 }
 
 
@@ -2528,13 +2536,6 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 						else {
 							msgt(msg_type, "You %s %s%s.%s", o_name, m_name, dmg_text, hit_type_text);
 						}
-						/*if (hit_types[j].text) {
-							msgt(msg_type, "Your %s %s %s%s. %s", o_name, 
-								 hit_verb, m_name, dmg_text, hit_types[j].text);
-						} else {
-							msgt(msg_type, "Your %s %s %s%s.", o_name, hit_verb,
-								 m_name, dmg_text);
-						}*/
 					}
 
 					/* Track this monster */

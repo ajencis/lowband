@@ -21,6 +21,7 @@
 #include "cave.h"
 #include "game-world.h"
 #include "init.h"
+#include "message.h"
 #include "mon-spell.h"
 #include "object.h"
 #include "player-calcs.h"
@@ -467,6 +468,90 @@ int get_skill_scale(const struct monster *mon, int skill, int scaleto)
 int get_power_scale(const struct monster *mon, int power, int scaleto)
 {
 	return get_power_scale_state(&mon->state, power, scaleto);
+}
+
+static int py_extra_target(const struct player *p, const struct player_ability *abil)
+{
+	int base, xtra = 0;
+
+	if (abil->learn_index < 0) return 0;
+	assert(abil->learn_index < z_info->learn_max);
+
+	base = p->extra_target[abil->learn_index];
+
+	if (abil->type == PY_ABIL_POWER && p->class) {
+		xtra = p->class->c_powers[abil->index];
+	} else if (abil->type == PY_ABIL_SKILL && p->class) {
+		xtra = p->class->x_skills[abil->index];
+	}
+
+	if (p->class && pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
+		xtra = MAX(xtra, base);
+	}
+
+	return base + xtra;
+}
+
+/**
+ * L: tries to improve a power that is practised
+ */
+static bool increase_ability(struct monster *mon, const struct player_ability *abil)
+{
+	struct player *p = mon->player;
+	char name[80];
+
+	if (!p) return false;
+	if (abil->learn_index < 0) return false;
+	assert(abil->learn_index < z_info->learn_max);
+
+	p->extra_learned[abil->learn_index]++;
+
+	strnfmt(name, sizeof name, "%s", abil->name);
+
+	msg("You feel more familiar with %s.", name);
+
+	p->upkeep->update |= PU_BONUS;
+
+	return true;
+}
+
+bool exercise_ability(struct monster *mon, const struct player_ability *abil, int efficacy)
+{
+	int learn_i = abil->learn_index, target, curr, total, chance;
+
+	if (!abil || !mon) return false;
+	if (learn_i < 0) return false;
+	if (!mon->player) return false;
+	if (efficacy <= 0) return false;
+
+	target = py_extra_target(mon->player, abil);
+	curr = mon->player->extra_learned[abil->learn_index];
+
+	if (abil->type == PY_ABIL_POWER) {
+		total = mon->state.powers[abil->index];
+	} else if (abil->type == PY_ABIL_SKILL) {
+		total = mon->state.skills[abil->index];
+	} else {
+		total = 0;
+	}
+
+	if (curr >= target) return false;
+	if (curr >= efficacy) return false;
+	if (total >= mon->player->lev) return false;
+
+	chance = 100; // base 1 in 100
+
+	chance *= MAX(1, total);
+	chance *= MAX(1, curr);
+
+	chance /= efficacy - curr;
+	chance /= mon->player->lev * 2 - total;
+	
+	if (one_in_(chance)) {
+		return increase_ability(mon, abil);
+	}
+
+	return false;
 }
 
 

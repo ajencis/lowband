@@ -34,6 +34,7 @@
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
+#include "player-properties.h"
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
@@ -433,7 +434,7 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 	bool was_aware;
 	bool known_aim = false;
 	bool none_left = false;
-	int dir = 5;
+	int dir = 5, base_chance;
 	struct trap_kind *rune = lookup_trap("glyph of warding");
 
 	/* Get arguments */
@@ -728,6 +729,12 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 		if (work_obj->known)
 			object_delete(player->cave, NULL, &work_obj->known);
 		object_delete(cave, player->cave, &work_obj);
+
+		base_chance = obj->artifact ? obj->artifact->level : obj->kind->level;
+
+		if ((use == USE_CHARGE) || (use == USE_TIMEOUT)) {
+			exercise_ability(&player->mon, lookup_player_ability(SKILL_DEVICE, PY_ABIL_SKILL), base_chance);
+		}
 	}
 
 	/* Use the turn */
@@ -1063,145 +1070,6 @@ void do_cmd_refill(struct command *cmd)
  * ------------------------------------------------------------------------
  */
 
-#if 0
-/**
- * Cast a spell from a book
- */
-void do_cmd_cast(struct command *cmd)
-{
-	int spell_index, dir = 0;
-	const struct class_spell *spell;
-
-	if (!player_get_resume_normal_shape(player, cmd)) {
-		return;
-	}
-
-	/* Check the player can cast spells at all */
-	if (player->state.skills[SKILL_MAGIC] > 0) {
-		do_cmd_cast_gener_spell(cmd);
-		return;
-	}
-	if (!player_can_cast(player, true)) {
-		return;
-	}
-
-	/* Get arguments */
-	if (cmd_get_spell(cmd, "spell", player, &spell_index,
-			/* Verb */ "cast",
-			/* Book */ obj_can_cast_from,
-			/* Book error */ "There are no spells you can cast.",
-			/* Filter */ spell_okay_to_cast,
-			/* Spell error */ "That book has no spells that you can cast.") != CMD_OK) {
-		return;
-	}
-
-	/* Get the spell */
-	spell = spell_by_index(player, spell_index);
-
-	/* Verify "dangerous" spells */
-	if (spell->smana > player->csp) {
-		const char *verb = spell->realm->verb;
-		const char *noun = spell->realm->spell_noun;
-
-		/* Warning */
-		msg("You do not have enough mana to %s this %s.", verb, noun);
-
-		/* Flush input */
-		event_signal(EVENT_INPUT_FLUSH);
-
-		/* Verify */
-		if (!get_check("Attempt it anyway? ")) return;
-	}
-
-	if (spell_needs_aim(spell_index)) {
-		if (cmd_get_target(cmd, "target", &dir) == CMD_OK)
-			player_confuse_dir(player, &dir, false);
-		else
-			return;
-	}
-
-	/* Cast a spell */
-	target_fix();
-	if (spell_cast(spell_index, dir, cmd)) {
-		if (player->timed[TMD_FASTCAST]) {
-			player->upkeep->energy_use = (z_info->move_energy * 3) / 4;
-		} else {
-			player->upkeep->energy_use = z_info->move_energy;
-		}
-	}
-	target_release();
-}
-#endif
-
-#if 0
-/**
- * Gain a specific spell, specified by spell number (for mages).
- */
-void do_cmd_study_spell(struct command *cmd)
-{
-	int spell_index;
-
-	/* Check the player can study at all atm */
-	if (!player_can_study(player, true)) {
-		return;
-	}
-
-	if (cmd_get_spell(cmd, "spell", player, &spell_index,
-			/* Verb */ "study",
-			/* Book */ obj_can_study,
-			/* Book error */ "You cannot learn any new spells from the books you have.",
-			/* Filter */ spell_okay_to_study,
-			/* Spell error */ "That book has no spells that you can learn.") != CMD_OK)
-		return;
-
-	spell_learn(spell_index);
-	player->upkeep->energy_use = z_info->move_energy;
-}
-
-/**
- * Gain a random spell from the given book (for priests)
- */
-void do_cmd_study_book(struct command *cmd)
-{
-	struct object *book_obj;
-	const struct class_book *book;
-	int spell_index = -1;
-	struct class_spell *spell;
-	int i, k = 0;
-
-	/* Check the player can study at all atm */
-	if (!player_can_study(player, true))
-		return;
-
-	if (cmd_get_item(cmd, "item", &book_obj,
-			/* Prompt */ "Study which book? ",
-			/* Error  */ "You cannot learn any new spells from the books you have.",
-			/* Filter */ obj_can_study,
-			/* Choice */ USE_INVEN | USE_FLOOR) != CMD_OK)
-		return;
-
-	book = player_object_to_book(player, book_obj);
-	track_object(player->upkeep, book_obj);
-	handle_stuff(player);
-
-	for (i = 0; i < book->num_spells; i++) {
-		spell = &book->spells[i];
-		if (!spell_okay_to_study(player, spell->sidx))
-			continue;
-		if ((++k > 1) && (randint0(k) != 0))
-			continue;
-		spell_index = spell->sidx;
-	}
-
-	if (spell_index < 0) {
-		msg("You cannot learn any %ss in that book.", book->realm->spell_noun);
-	} else {
-		spell_learn(spell_index);
-		player->upkeep->energy_use = z_info->move_energy;
-	}
-}
-#endif
-
 void do_cmd_study(struct command *cmd)
 {
 	if (!player_get_resume_normal_shape(player, cmd)) {
@@ -1226,29 +1094,6 @@ void do_cmd_study(struct command *cmd)
 
 	gener_spell_learn(player, spell, true);
 }
-
-#if 0
-/**
- * Choose the way to study.  Choose life.  Choose a career.  Choose family.
- * Choose a fucking big monster, choose orc shamans, kobolds, dark elven
- * druids, and Mim, Betrayer of Turin.
- * L: can no longer choose kobolds
- */
-void do_cmd_study(struct command *cmd)
-{
-	if (!player_get_resume_normal_shape(player, cmd)) {
-		return;
-	}
-
-	if (player->state.skills[SKILL_MAGIC] > 0)
-		do_cmd_learn_gener_spell(cmd);
-	else if (player_has(player, PF_CHOOSE_SPELLS))
-		do_cmd_study_spell(cmd);
-	else
-		do_cmd_study_book(cmd);
-
-}
-#endif
 
 static bool dummy_innate(const struct player *p, int innate)
 {
@@ -1376,6 +1221,10 @@ void do_cmd_cast(struct command *cmd)
 
 	if (gener_spell_cast(spell_index, dir, cmd)) {
 		player->upkeep->energy_use = z_info->move_energy;
+
+		exercise_ability(&player->mon,
+			lookup_player_ability(SKILL_MAGIC, PY_ABIL_SKILL),
+			player_spell_fail(ps));
 	}
 }
 

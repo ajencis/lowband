@@ -69,6 +69,8 @@ int get_power_scale_state(const struct player_state *state, int power, int scale
 int get_skill_scale(const struct monster *mon, int skill, int scaleto);
 int get_power_scale(const struct monster *mon, int power, int scaleto);
 
+bool exercise_ability(struct monster *mon, const struct player_ability *abil, int efficacy);
+
 int unarmoured_speed_bonus(struct monster *mon, struct player_state *s, int wgt);
 int unarmoured_ac_bonus(struct monster *mon, struct player_state *s, int wgt);
 int unlight_power(struct monster *mon);
