@@ -8955,6 +8955,7 @@ flags:DROP_2 | ONLY_GOLD
 flags:BASH_DOOR
 flags:IM_COLD
 skill-add:SAVE:10
+power:ANTIMAGIC:50
 desc:It is a massive deep brown statue, striding towards you with an
 desc: all-too-familiar purpose.  Your magic surprisingly feels much less
 desc: powerful now.
