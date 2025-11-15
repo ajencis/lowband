@@ -45,7 +45,9 @@
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
+#include "player-enum.h"
 #include "player-path.h"
+#include "player-properties.h"
 #include "player-quest.h"
 #include "player-spell.h"
 #include "player-timed.h"
@@ -578,7 +580,7 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 	struct object *best_digger = NULL;
 	struct player_state local_state;
 	struct player_state *used_state = &player->mon.state;
-	int oldn = 1, dig_idx;
+	int oldn = 1, dig_idx, fidx;
 	const char *with_clause = current_weapon == NULL ? "with your hands" : "with your weapon";
 	struct feature *feat;
 
@@ -631,11 +633,13 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 		calc_bonuses(player, &player->mon, &local_state, false, true);
 	}
 
+	fidx = feat->kind->fidx;
+
 	/* Success */
-	if (okay && twall(grid, feat->kind->fidx)) {
+	if (okay && twall(grid, fidx)) {
 		/* Rubble is a special case - could be handled more generally NRM */
 
-		if (feat_is_rubble(feat->kind->fidx)) {
+		if (feat_is_rubble(fidx)) {
 			/* Message */
 			msg("You have removed the rubble %s.", with_clause);
 
@@ -653,7 +657,7 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 					msg("You have found something!");
 				}
 			}
-		} else if (feat_is_treasure(feat->kind->fidx)) {
+		} else if (feat_is_treasure(fidx)) {
 			/* Found treasure */
 			place_gold(cave, grid, player->depth, ORIGIN_FLOOR);
 			msg("You have found something digging %s!", with_clause);
@@ -668,19 +672,21 @@ static bool do_cmd_tunnel_aux(struct loc grid)
 		square_memorize_feats(player, cave, grid);
 		square_light_spot(cave, grid);
 		player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
+
+		exercise_ability(&player->mon, lookup_player_ability(SKILL_DIGGING, PY_ABIL_SKILL), dig_idx * 100 / DIGGING_MAX);
 	} else if (chance > 0) {
 		/* Failure, continue digging */
-		if (feat_is_rubble(feat->kind->fidx)) {
+		if (feat_is_rubble(fidx)) {
 			msg("You dig in the rubble %s.", with_clause);
 		} else {
 			msg("You tunnel into the %s %s.",
-				feat->kind->name,
+				f_info[fidx].name,
 				with_clause);
 		}
 		more = true;
 	} else {
 		/* Don't automatically repeat if there's no hope. */
-		if (feat_is_rubble(feat->kind->fidx)) {
+		if (feat_is_rubble(fidx)) {
 			msg("You dig in the rubble %s with little effect.", with_clause);
 		} else {
 			msg("You chip away futilely %s at the %s.", with_clause,
@@ -837,7 +843,7 @@ static bool do_cmd_lock_door(struct loc grid)
  */
 static bool do_cmd_disarm_aux(struct loc grid)
 {
-	int skill, power, chance;
+	int which_skill, skill, power, chance;
     struct trap *trap = square(cave, grid)->trap;
 	bool more = false;
 
@@ -854,10 +860,12 @@ static bool do_cmd_disarm_aux(struct loc grid)
 		return false;
 
 	/* Get the base disarming skill */
-	if (trf_has(trap->flags, TRF_MAGICAL))
-		skill = player->mon.state.skills[SKILL_DISARM_MAGIC];
-	else
-		skill = player->mon.state.skills[SKILL_DISARM_PHYS];
+	if (trf_has(trap->flags, TRF_MAGICAL)) {
+		which_skill = SKILL_DISARM_MAGIC;
+	} else {
+		which_skill = SKILL_DISARM_PHYS;
+	}
+	skill = player->mon.state.skills[which_skill];
 
 	/* Penalize some conditions */
 	if (player->mon.m_timed[TMD_BLIND] ||
@@ -1137,10 +1145,6 @@ void move_player(int dir, bool disarm)
 		/* No move made so no energy spent. */
 		player->upkeep->energy_use = 0;
 	} else if (!monster_passes_grid(&player->mon, cave, grid)) {
-	//} else if (!square_ispassable(cave, grid) &&
-	//		(!pf_has(player->mon.state.pflags, PF_PASS_WALL) || square_isperm(cave, grid))) {
-
-		//int prev_feat_k = square(player->cave, grid)->feat->kind->fidx;
 		const char *issue, *prefix, *article;
 		struct feature *feat;
 		int prev_k, new_k;
