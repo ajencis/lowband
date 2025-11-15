@@ -221,14 +221,6 @@ struct monster_race *race_to_monster(const struct player_race *r)
 {
 	assert(r->mon_race);
 	return (struct monster_race *)r->mon_race;
-
-	/*char name[80];
-	struct monster_race *result;
-	my_strcpy(name, r->name, sizeof name);
-	my_struncap_full(name);
-	result = lookup_monster(name);
-	assert(result);
-	return result;*/
 }
 
 struct monster_race *lookup_player_monster(const struct player *p)
@@ -545,7 +537,7 @@ static int bonus_to_cost_base(int bonus, int factor)
 	static double scalefrom = -1;
 	if (scalefrom == -1) scalefrom = btc_scale(50);
 	int result = (int)((btc_scale(bonus) * scaleto * factor + 10 * scalefrom - 1)  / 10 / scalefrom);
-	
+
 	return result;
 }
 
@@ -670,7 +662,7 @@ bool learn_extra(struct player *p, const struct player_ability *abil)
 {
 	if (!abil || abil->learn_index < 0) return false;
 
-	if (abil->type == PY_ABIL_SKILL) return false;
+	return false;
 
 	p->extra_learned[abil->learn_index]++;
 
@@ -783,6 +775,8 @@ bool check_learn_powers(struct player *p, int xpgain)
 {
 	bool learned = false;
 	const struct player_ability *abil;
+
+	return false;
 
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->learn_index < 0) continue;
@@ -1604,7 +1598,6 @@ bool check_berserk(struct monster *mon, struct monster *o_mon)
 		increase -= mon->m_timed[TMD_BLOODLUST] / 3 - 5;
 
 		return mon_inc_timed(mon, TMD_BLOODLUST, MAX(increase, 0), MON_TMD_FLG_NOTIFY | MON_TMD_FLG_NOFAIL);
-		//return player_inc_timed(p, TMD_BLOODLUST, MAX(increase, 0), true, true, false);
 	}
 	return false;
 }
@@ -2232,13 +2225,15 @@ bool bloodlust_override(struct player *p, struct chunk *c)
 	if (p->mon.m_timed[TMD_PARALYZED] || p->mon.m_timed[TMD_COMMAND]) return false;
 
 	if (p->skip_cmd_coercion) return false;
-	//if (currtmd <= (randint0(30) + 5)) return false;
 	if (!currtmd) return false;
 
 	target = player_nearest_monster(p, c);
 
 	if (target) {
-		if (player_bloodlust_attack_monster(p, target)) return true;
+		if (player_bloodlust_attack_monster(p, target)) {
+			exercise_ability(&p->mon, lookup_player_ability(PP_BERSERK, PY_ABIL_POWER), target->race->level);
+			return true;
+		}
 		if (player_bloodlust_charge_monster(p, target, c)) return true;
 	}
 
@@ -3022,22 +3017,7 @@ void regen_hp(struct monster *mon)
 	}
 
 	/* Various things speed up regeneration */
-	percent *= (100 + get_power_scale(mon, PP_REGENERATION, 200));
-	percent /= 100;
-
-	/*if (p && !player_resting_can_regenerate(p)) {
-		percent *= 100 - mon_non_rest_penalty(mon);
-		percent /= 100;
-	}*/
-	/*if (of_has(mon->state.flags, OF_HI_REGEN)) {
-		percent *= 25;
-	}
-	else if (of_has(mon->state.flags, OF_REGEN) || mon->m_timed[TMD_REGEN]) {
-		percent *= 3;
-	}*/
-	/*if (player_resting_can_regenerate(p)) {
-		percent *= 2;
-	}*/
+	percent += get_power_scale(mon, PP_REGENERATION, percent * 4);
 
 	/* Some things slow it down */
 	if (of_has(mon->state.flags, OF_IMPAIR_HP)) {
@@ -3080,6 +3060,8 @@ void regen_hp(struct monster *mon)
 		}
 		mon->hp += amt;
 	}
+
+	exercise_ability(mon, lookup_player_ability(PP_REGENERATION, PY_ABIL_POWER), hp_gain >> 15);
 
 	mon->hp = MIN(mon->hp, mon->maxhp);
 }

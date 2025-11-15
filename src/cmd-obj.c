@@ -34,10 +34,12 @@
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
+#include "player-enum.h"
 #include "player-properties.h"
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "player.h"
 #include "target.h"
 #include "trap.h"
 #include "ui-object.h"
@@ -1175,9 +1177,10 @@ static int gener_spell_is_castable(const struct player *p, int spell) {
 void do_cmd_cast(struct command *cmd)
 {
 	int spell_index, mana, availmana = available_mana(cave, player->mon.grid);
-	int dir;
+	int dir, i;
+	int fail, power;
 	const struct player_spell *ps;
-	const char *fail = "You don't know any spells.";
+	const char *fail_desc = "You don't know any spells.";
 
 	if (!player_can_cast(player, true)) {
 		return;
@@ -1188,7 +1191,7 @@ void do_cmd_cast(struct command *cmd)
 				player,
 				&spell_index,
 				gener_spell_is_castable,
-				fail) != CMD_OK) {
+				fail_desc) != CMD_OK) {
 		return;
 	}
 
@@ -1222,9 +1225,28 @@ void do_cmd_cast(struct command *cmd)
 	if (gener_spell_cast(spell_index, dir, cmd)) {
 		player->upkeep->energy_use = z_info->move_energy;
 
+		fail = player_spell_fail(ps);
+		power = gener_spell_power(player, ps);
+
 		exercise_ability(&player->mon,
 			lookup_player_ability(SKILL_MAGIC, PY_ABIL_SKILL),
-			player_spell_fail(ps));
+			fail);
+
+		exercise_ability(&player->mon,
+			lookup_player_ability(PP_SPELL_POWER, PY_ABIL_POWER),
+			power);
+
+		exercise_ability(&player->mon,
+			lookup_player_ability(PP_SPELL_EASE, PY_ABIL_POWER),
+			fail);
+
+		for (i = 0; i < MAX_SPELL_SCHOOLS; ++i) {
+			if (ps->school[i] > MS_NONE) {
+				exercise_ability(&player->mon,
+					lookup_player_ability(ps->school[i], PY_ABIL_POWER),
+					fail);
+			}
+		}
 	}
 }
 

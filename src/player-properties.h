@@ -54,6 +54,7 @@ void do_cmd_abilities(void);
 
 bool mon_power_minimum(const struct monster *mon, int power, int min);
 bool mon_has_power(const struct monster *mon, int power);
+struct player_ability *attack_spec_type(const struct object *obj, const struct monster_blow *blow);
 int attack_specialization_power(const struct monster *mon, const struct object *obj, const struct monster_blow *blow);
 
 const char *ability_subchoice_title(const struct player_ability *parent);

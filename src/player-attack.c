@@ -1836,11 +1836,16 @@ static void mon_critical_melee(struct monster *mon, struct temp_attack_data *whi
 	int chance = which->atk->crit_chance;
 	int powerbonus = chance + get_power_scale(mon, PP_CRITICAL_HITS, 20);
 	int power = 0, wgt;
-	const struct critical_level *this_l;
+	const struct critical_level *this_l, *max_l;
 	chance = my_int_sqrt(chance * 5);
 
 	if (is_debuffed(mon)) {
 		chance += z_info->m_crit_debuff_toh;
+	}
+
+	max_l = z_info->m_crit_level_head;
+	while (max_l->next) {
+		max_l = max_l->next;
 	}
 
 	if (randint1(100) > chance) {
@@ -1863,6 +1868,8 @@ static void mon_critical_melee(struct monster *mon, struct temp_attack_data *whi
 
 		rv->dice += this_l->dice;
 		rv->m_bonus += this_l->add;
+
+		exercise_ability(mon, lookup_player_ability(PP_CRITICAL_HITS, PY_ABIL_POWER), power * 100 / max_l->cutoff);
 	}
 }
 
@@ -1935,6 +1942,7 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 	struct player *ap = mon_is_player(mon) ? mon->player : NULL;
 	struct player *tp = mon_is_player(t_mon) ? t_mon->player : NULL;
 	uint32_t msg_type;
+	struct player_ability *abil;
 
 	bool success;
 
@@ -2012,14 +2020,23 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 		dice_free(tmp_dice);
 
 		if (which->atk->skill >= 0 && which->atk->skill < SKILL_MAX) {
-			struct player_ability *abil = lookup_player_ability(which->atk->skill, PY_ABIL_SKILL);
+			abil = lookup_player_ability(which->atk->skill, PY_ABIL_SKILL);
 			exercise_ability(mon, abil, mon_ac(t_mon));
+
+			abil = attack_spec_type(which->atk->obj, which->atk->mb);
+			if (abil) {
+				exercise_ability(mon, abil, mon_ac(t_mon));
+			}
 		}
 	}
 	else {
 		const char *verb = ap ? "miss" : "misses";
 
 		blow_message(mon, t_mon, which, verb, MSG_MISS);
+
+		exercise_ability(t_mon, lookup_player_ability(PP_GLOW, PY_ABIL_POWER), which->atk->to_hit);
+		exercise_ability(t_mon, lookup_player_ability(PP_UNLIGHT, PY_ABIL_POWER), which->atk->to_hit);
+		exercise_ability(t_mon, lookup_player_ability(PP_AGILITY, PY_ABIL_POWER), which->atk->to_hit);
 	}
 
 	check_berserk(mon, t_mon);
@@ -2119,6 +2136,7 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 	struct player *ap = mon->player;
 	const char *err_msg;
 	int16_t pretimed[TMD_MAX];
+	int t_mon_hp = t_mon->state.skills[SKILL_HEALTH];
 
 	memcpy(pretimed, t_mon->m_timed, sizeof pretimed);
 
@@ -2158,7 +2176,7 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 
 	energy = 0;
 
-	while (energy * 4 <= z_info->move_energy * 3 && mon_valid(t_midx, t_grid)) {
+	while (energy * 4 <= z_info->move_energy * 3) {
 		curr = random_attack(tmp_data);
 		if (!curr) break;
 		assert(curr->atk);
@@ -2170,6 +2188,14 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 		mon_test_blow(mon, t_mon, curr);
 
 		curr->penalty += 1;
+
+		if (!mon_valid(t_midx, t_grid)) {
+			if (!curr->atk->obj) {
+				exercise_ability(mon, lookup_player_ability(PP_DEATH_TOUCH, PY_ABIL_POWER), t_mon_hp);
+			}
+
+			break;
+		}
 	}
 
 	if (mon->player) {

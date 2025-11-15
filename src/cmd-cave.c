@@ -1365,6 +1365,8 @@ void do_cmd_walk(struct command *cmd)
 
 	/* Attempt to disarm unless it's a trap and we're trapsafe */
 	move_player(dir, !(square_isdisarmabletrap(cave, grid) && trapsafe));
+
+	exercise_ability(&player->mon, lookup_player_ability(PP_RUNNING, PY_ABIL_POWER), cave->depth);
 }
 
 

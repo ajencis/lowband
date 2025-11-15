@@ -23,6 +23,7 @@
 #include "init.h"
 #include "message.h"
 #include "mon-spell.h"
+#include "obj-properties.h"
 #include "object.h"
 #include "player-calcs.h"
 #include "player-properties.h"
@@ -400,39 +401,46 @@ bool make_ability_subchoice(struct player *p)
 }
 
 
+struct player_ability *attack_spec_type(const struct object *obj, const struct monster_blow *blow)
+{
+	if (!obj && !blow) {
+		return lookup_player_ability(PP_UNARMED_STRIKE, PY_ABIL_POWER);
+	}
+	else if (!obj) {
+		return lookup_player_ability(PP_NATURAL_COMBAT, PY_ABIL_POWER);
+	}
+
+	switch (obj->tval) {
+	case TV_SWORD:
+		return lookup_player_ability(PP_SWORD_SPECIALIZATION, PY_ABIL_POWER);
+	case TV_HAFTED:
+		return lookup_player_ability(PP_HAFTED_SPECIALIZATION, PY_ABIL_POWER);
+	case TV_POLEARM:
+		return lookup_player_ability(PP_POLEARM_SPECIALIZATION, PY_ABIL_POWER);
+	case TV_BOW:
+		if (my_stristr(obj->kind->name, "sling")) {
+			return lookup_player_ability(PP_SLING_SPECIALIZATION, PY_ABIL_POWER);
+		}
+		if (my_stristr(obj->kind->name, "crossbow")) {
+			return lookup_player_ability(PP_CROSSBOW_SPECIALIZATION, PY_ABIL_POWER);
+		}
+		if (my_stristr(obj->kind->name, "bow")) {
+			return lookup_player_ability(PP_BOW_SPECIALIZATION, PY_ABIL_POWER);
+		}
+		return NULL;
+	default:
+		return NULL;
+	}
+}
 
 int attack_specialization_power(const struct monster *mon, const struct object *obj, const struct monster_blow *blow)
 {
-	if (obj) {
-		if (obj->tval == TV_HAFTED) {
-			return get_power_scale(mon, PP_HAFTED_SPECIALIZATION, 100);
-		}
-		if (obj->tval == TV_POLEARM) {
-			return get_power_scale(mon, PP_POLEARM_SPECIALIZATION, 100);
-		}
-		if (obj->tval == TV_SWORD) {
-			return get_power_scale(mon, PP_SWORD_SPECIALIZATION, 100);
-		}
-		if (obj->tval == TV_BOW) {
-			if (my_stristr(obj->kind->name, "sling")) {
-				return get_power_scale(mon, PP_SLING_SPECIALIZATION, 100);
-			}
-			if (my_stristr(obj->kind->name, "crossbow")) {
-				return get_power_scale(mon, PP_CROSSBOW_SPECIALIZATION, 100);
-			}
-			if (my_stristr(obj->kind->name, "bow")) {
-				return get_power_scale(mon, PP_BOW_SPECIALIZATION, 100);
-			}
-		}
+	struct player_ability *abil = attack_spec_type(obj, blow);
 
-		return 0;
+	if (abil && abil->type == PY_ABIL_POWER) {
+		return get_power_scale(mon, abil->index, 100);
 	}
-
-	if (blow) {
-		return get_power_scale(mon, PP_NATURAL_COMBAT, 100);
-	}
-
-	return get_power_scale(mon, PP_UNARMED_STRIKE, 100);
+	return 0;
 }
 
 
@@ -470,6 +478,10 @@ int get_power_scale(const struct monster *mon, int power, int scaleto)
 	return get_power_scale_state(&mon->state, power, scaleto);
 }
 
+
+/**
+ * L: tries to improve a power that is practised
+ */
 static int py_extra_target(const struct player *p, const struct player_ability *abil)
 {
 	int base, xtra = 0;
@@ -492,9 +504,6 @@ static int py_extra_target(const struct player *p, const struct player_ability *
 	return base + xtra;
 }
 
-/**
- * L: tries to improve a power that is practised
- */
 static bool increase_ability(struct monster *mon, const struct player_ability *abil)
 {
 	struct player *p = mon->player;

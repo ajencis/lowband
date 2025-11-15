@@ -2100,6 +2100,10 @@ static void frightening_presence_one(struct chunk *c, struct monster *viewer, st
 	}
 
 	msg("%s %s%s", viewer_msg, scary_msg, result_msg);
+
+	if (success) {
+		exercise_ability(scary, lookup_player_ability(PP_FRIGHTENING_PRESENCE, PY_ABIL_POWER), mon_lev(viewer));
+	}
 }
 
 
@@ -2136,6 +2140,11 @@ static void stench(struct chunk *c, struct monster *mon)
 
 	if (inc > 0) {
 		square_increase_feat_size(c, mon->grid, FEAT_NOXIOUS_GAS, inc);
+	}
+
+	curr_feat = square_feat_by_type(c, mon->grid, FEAT_NOXIOUS_GAS);
+	if (curr_feat) {
+		exercise_ability(mon, lookup_player_ability(PP_STENCH, PY_ABIL_POWER), curr_feat->size);
 	}
 }
 
@@ -2192,6 +2201,8 @@ static void antimagic(struct chunk *c, struct monster *mon)
 		}
 		mon->hp = MIN(mon->hp, mon->maxhp);
 	}
+
+	exercise_ability(mon, lookup_player_ability(PP_ANTIMAGIC, PY_ABIL_POWER), totaldrained * 5);
 }
 
 
