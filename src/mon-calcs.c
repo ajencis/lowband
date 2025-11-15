@@ -1312,8 +1312,8 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 	main = mem_zalloc(sizeof *main);
 
 	rv.base = emb->to_d + mon->state.to_d;
-	rv.dice = emb->dice;
-	rv.sides = emb->sides;
+	rv.dice = MAX(emb->dice, 1);
+	rv.sides = MAX(emb->sides, 1);
 	rv.m_bonus = 0;
 
 	if (has_skill) {
@@ -1339,6 +1339,7 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 	result->crit_chance = emb->crit_chance;
 
 	result->to_hit += mon->state.to_h;
+	result->skill = emb->skill;
 
 	if (emb->skill >= 0 && emb->skill < SKILL_MAX) {
 		result->to_hit += mon->state.skills[emb->skill];
