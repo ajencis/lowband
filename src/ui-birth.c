@@ -350,7 +350,7 @@ static void skill_help(const int skills_b[SKILL_MAX], const int skills_x[SKILL_M
 			xtra_msg[0] = '\0';
 		}
 
-		text_out_e("%s %3d%s\n", mssg, skills_b[i], xtra_msg);
+		text_out_e("%s %3d%s   \n", mssg, skills_b[i], xtra_msg);
 	}
 
 	if (infra > 0) {
