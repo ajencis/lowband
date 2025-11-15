@@ -35,7 +35,6 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
-#include "player-properties.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
@@ -675,39 +674,6 @@ void process_world(struct chunk *c)
 		}
 
 		assert(square(c, loc(x, y))->mana >= 0);
-	}
-
-	if (player->mon.state.powers[PP_ANTIMAGIC] > 0) {
-		int power = get_power_scale(&player->mon, PP_ANTIMAGIC, 1500); // chance in 1000 to drain mana
-		int rad = MAX(MIN((power + 99) / 100, power / 75 - 3), 0);
-		int dist, quantity;
-		int totaldrained = 0;
-		struct square *sq;
-		for (x = player->mon.grid.x - rad; x <= player->mon.grid.x + rad; ++x) {
-			for (y = player->mon.grid.y - rad; y <= player->mon.grid.y + rad; ++y) {
-				if (!square_in_bounds_fully(cave, loc(x, y))) continue;
-				if (square_isperm(c, loc(x, y))) continue;
-
-				sq = &cave->squares[y][x];
-				dist = distance(player->mon.grid, loc(x, y));
-
-				if (dist > rad) continue;
-				if (!los(c, player->mon.grid, loc(x, y))) continue;
-
-				quantity = (power - dist * 100 + randint0(1000)) / 1000;
-				quantity = MIN(quantity, sq->mana);
-				quantity = MAX(quantity, 0);
-
-				sq->mana -= quantity;
-				totaldrained += quantity;
-
-				if (quantity > 0) player->upkeep->redraw |= PR_MANA;
-
-				assert(sq->mana >= 0);
-
-				player_adjust_hp_precise(player, (int32_t)((double)INT16_MAX * quantity * my_sqrt(player->mon.maxhp) / 10.0));
-			}
-		}
 	}
 
 	process_monster_timed(&player->mon);

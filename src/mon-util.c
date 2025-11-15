@@ -58,6 +58,7 @@
 #include "z-rand.h"
 #include "z-type.h"
 #include "z-util.h"
+#include <stdint.h>
 
 
 void mark_mon_as_playable(struct monster_race *mr)
@@ -2120,7 +2121,6 @@ static void frightening_presence(struct chunk *c, struct monster *mon)
 }
 
 
-
 static void stench(struct chunk *c, struct monster *mon)
 {
 	struct feature *curr_feat;
@@ -2140,9 +2140,66 @@ static void stench(struct chunk *c, struct monster *mon)
 }
 
 
+static void antimagic(struct chunk *c, struct monster *mon)
+{
+	int power, rad, dist, quantity, totaldrained;
+	int32_t heal;
+	struct square *sq;
+	struct loc grid;
+
+	if (!mon_has_power(mon, PP_ANTIMAGIC)) return;
+
+	power = get_power_scale(&player->mon, PP_ANTIMAGIC, 1500); // chance in 1000 to drain mana
+	rad = MAX(MIN((power + 99) / 100, power / 75 - 3), 0);
+	totaldrained = 0;
+
+
+	for (grid.x = mon->grid.x - rad; grid.x <= mon->grid.x + rad; ++grid.x) {
+		for (grid.y = mon->grid.y - rad; grid.y <= mon->grid.y + rad; ++grid.y) {
+			if (!square_in_bounds_fully(cave, grid)) continue;
+			if (square_isperm(c, grid)) continue;
+
+			sq = &cave->squares[grid.y][grid.x];
+			dist = distance(mon->grid, grid);
+
+			if (dist > rad) continue;
+			if (!los(c, mon->grid, grid)) continue;
+
+			quantity = (power - dist * 100 + randint0(1000)) / 1000;
+			quantity = MIN(quantity, sq->mana);
+			quantity = MAX(quantity, 0);
+
+			sq->mana -= quantity;
+			totaldrained += quantity;
+
+			if (quantity > 0) player->upkeep->redraw |= PR_MANA;
+
+			assert(sq->mana >= 0);
+
+			player_adjust_hp_precise(player, (int32_t)((double)INT16_MAX * quantity * my_sqrt(player->mon.maxhp) / 10.0));
+		}
+	}
+
+	heal = (int32_t)((double)INT16_MAX * totaldrained * my_sqrt((double)mon->maxhp) / 10.0);
+
+	if (mon->player) {
+		player_adjust_hp_precise(mon->player, heal);
+	}
+	else {
+		mon->hp += heal / INT16_MAX;
+		if (randint0(heal - (heal / INT16_MAX) * INT16_MAX) > INT16_MAX) {
+			mon->hp++;
+		}
+		mon->hp = MIN(mon->hp, mon->maxhp);
+	}
+}
+
+
+
 power_effect power_effects[] = {
 	frightening_presence,
-	stench
+	stench,
+	antimagic
 };
 
 
