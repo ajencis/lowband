@@ -27,6 +27,7 @@
 #include "object.h"
 #include "player-quest.h"
 #include "player-timed.h"
+#include "player.h"
 #include "project.h"
 #include "trap.h"
 #include "z-type.h"
@@ -1897,6 +1898,8 @@ void square_open_door(struct chunk *c, struct loc grid)
 
 	square_change_feat(c, grid, FEAT_SECRET, FEAT_OPEN_SECRET);
 	square_change_feat(c, grid, FEAT_CLOSED, FEAT_OPEN);
+
+	square_ensure_correct_memorization_by_pred(player, c, grid, feat_is_door);
 }
 
 void square_close_door(struct chunk *c, struct loc grid)
@@ -1905,6 +1908,8 @@ void square_close_door(struct chunk *c, struct loc grid)
 
 	square_change_feat(c, grid, FEAT_OPEN_SECRET, FEAT_SECRET);
 	square_change_feat(c, grid, FEAT_OPEN, FEAT_CLOSED);
+
+	square_ensure_correct_memorization_by_pred(player, c, grid, feat_is_door);
 }
 
 void square_smash_door(struct chunk *c, struct loc grid)
