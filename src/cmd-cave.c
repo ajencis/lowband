@@ -1122,7 +1122,7 @@ void move_player(int dir, bool disarm)
 	int m_idx = square(cave, grid)->mon;
 	struct monster *mon = cave_monster(cave, m_idx);
 	bool trapsafe = player_is_trapsafe(player);
-	bool trap = square_isdisarmabletrap(cave, grid);
+	bool trap = square_isdisarmabletrap(player->cave, grid);
 	bool door = square_iscloseddoor(cave, grid);
 	bool step = false;
 
@@ -1138,8 +1138,9 @@ void move_player(int dir, bool disarm)
 		}
 	} else if (((trap && disarm) || door) && square_isknown(cave, grid)) {
 		/* Auto-repeat if not already repeating */
-		if (cmd_get_nrepeats() == 0)
+		if (cmd_get_nrepeats() == 0) {
 			cmd_set_repeat(99);
+		}
 		do_cmd_alter_aux(dir);
 	} else if (trap && player->upkeep->running && !trapsafe) {
 		/* Stop running before known traps */
