@@ -3360,7 +3360,14 @@ static errr run_parse_p_race(struct parser *p) {
 static int p_race_compare(const void *r1, const void *r2)
 {
 	struct player_race *pr1 = *(struct player_race **)r1, *pr2 = *(struct player_race **)r2;
-	int result = max_race_evol_lev(pr1) - max_race_evol_lev(pr2);
+	int result = max_race_evol_lev(pr1) - max_race_evol_lev(pr2), i;
+
+	if (result) return SGN(result);
+
+	for (i = 0; i < SKILL_MAX; ++i) {
+		result += ABS(pr1->mon_race->skills[i]);
+		result -= ABS(pr2->mon_race->skills[i]);
+	}
 
 	if (result) return SGN(result);
 
