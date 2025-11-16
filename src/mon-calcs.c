@@ -1345,6 +1345,10 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 		result->to_hit += mon->state.skills[emb->skill];
 	}
 
+	if (pf_has(mon->state.pflags, PF_LONG_LIMBS)) {
+		emb->range = MAX(emb->range, 2);
+	}
+
 	siz = strlen(emb->msg) + 1U;
 	result->message = mem_zalloc(siz);
 	strnfmt(result->message, siz, "%s", emb->msg);
