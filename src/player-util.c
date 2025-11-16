@@ -3560,6 +3560,12 @@ void player_start_turn(struct player *p)
 	if (player_can_search(p)) {
 		search(p);
 	}
+
+	if (!(turn % 100) && cave->depth) {
+		for (i = 0; i < z_info->learn_max; ++i) {
+			p->learned_when[i] += cave->depth;
+		}
+	}
 }
 
 bool player_is_invisible(struct player *p)

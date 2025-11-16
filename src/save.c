@@ -533,12 +533,9 @@ void wr_player(void)
 	// L: extra powers
 	for (i = 0; i < z_info->learn_max; i++) {
 		wr_s16b(player->extra_learned[i]);
-	}
-	for (i = 0; i < z_info->learn_max; ++i) {
 		wr_u16b(player->extra_target[i]);
-	}
-	for (i = 0; i < z_info->learn_max; ++i) {
 		wr_s16b(player->extra_choice[i]);
+		wr_s16b(player->learned_when[i]);
 	}
 
 	/* Padding */

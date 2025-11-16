@@ -526,7 +526,7 @@ static bool increase_ability(struct monster *mon, const struct player_ability *a
 
 bool exercise_ability(struct monster *mon, const struct player_ability *abil, int efficacy)
 {
-	int learn_i = abil->learn_index, target, curr, total, chance;
+	int learn_i = abil->learn_index, target, curr, total, chance, bonus;
 
 	if (!abil || !mon) return false;
 	if (learn_i < 0) return false;
@@ -544,6 +544,16 @@ bool exercise_ability(struct monster *mon, const struct player_ability *abil, in
 		total = 0;
 	}
 
+	bonus = mon->player->learned_when[learn_i];
+	bonus -= total * curr * 100;
+
+	if (bonus > 0) {
+		total -= my_int_sqrt(bonus);
+	}
+	else {
+		curr += my_int_sqrt(-bonus);
+	}
+
 	if (curr >= target) return false;
 	if (curr >= efficacy) return false;
 	if (total >= mon->player->lev) return false;
@@ -558,6 +568,7 @@ bool exercise_ability(struct monster *mon, const struct player_ability *abil, in
 	
 	if (one_in_(chance)) {
 		return increase_ability(mon, abil);
+		mon->player->learned_when[learn_i] = 0;
 	}
 
 	return false;

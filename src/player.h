@@ -521,6 +521,7 @@ struct player {
 	int16_t *extra_learned;				// L: what the player has learned
 	uint16_t *extra_target;				// L: what the player wants to learn
 	int16_t *extra_choice;				// L: choices made regarding abilities, eg magic realm
+	int16_t *learned_when;				// L: timeout for when the given ability was learned
 	int sp_burn;						/* L: temporary reduction of max mp */
 
 	uint8_t *player_spell_flags;		/* L: for nonclass spells */

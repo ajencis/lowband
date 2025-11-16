@@ -691,6 +691,10 @@ void player_cleanup_members(struct player *p)
 		mem_free(p->extra_learned);
 		p->extra_learned = NULL;
 	}
+	if (p->learned_when) {
+		mem_free(p->learned_when);
+		p->learned_when = NULL;
+	}
 	if (p->evol_choices) {
 		mem_free(p->evol_choices);
 		p->evol_choices = NULL;
@@ -730,6 +734,7 @@ static void init_player(void) {
 	player->extra_target = mem_zalloc(z_info->learn_max * sizeof *player->extra_target);
 	player->extra_choice = mem_zalloc(z_info->learn_max * sizeof *player->extra_choice);
 	player->extra_learned = mem_zalloc(z_info->learn_max * sizeof *player->extra_learned);
+	player->learned_when = mem_zalloc(z_info->learn_max * sizeof *player->learned_when);
 
 	assert(player->extra_learned);
 

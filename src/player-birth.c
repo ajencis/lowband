@@ -590,6 +590,7 @@ void player_init(struct player *p)
 	p->extra_target = mem_zalloc(z_info->learn_max * sizeof *player->extra_target);
 	p->extra_choice = mem_zalloc(z_info->learn_max * sizeof *player->extra_choice);
 	p->extra_learned = mem_zalloc(z_info->learn_max * sizeof *player->extra_learned);
+	p->learned_when = mem_zalloc(z_info->learn_max * sizeof *player->learned_when);
 
 	// L: initialize extra_choice
 	for (i = 0; i < z_info->learn_max; ++i) {

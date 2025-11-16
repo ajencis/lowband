@@ -844,12 +844,9 @@ int rd_player(void)
 	// L: extra powers and extra skills
 	for (i = 0; i < z_info->learn_max; i++) {
 		rd_s16b(&player->extra_learned[i]);
-	}
-	for (i = 0; i < z_info->learn_max; ++i) {
 		rd_u16b(&player->extra_target[i]);
-	}
-	for (i = 0; i < z_info->learn_max; ++i) {
 		rd_s16b(&player->extra_choice[i]);
+		rd_s16b(&player->learned_when[i]);
 	}
 
 	strip_bytes(4);
