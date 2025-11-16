@@ -23,7 +23,6 @@
 #include "init.h"
 #include "mon-attack.h"
 #include "mon-calcs.h"
-#include "obj-curse.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-info.h"
@@ -34,7 +33,6 @@
 #include "player-calcs.h"
 #include "player-timed.h"
 #include "player-util.h"
-#include "project.h"
 #include "store.h"
 #include "ui-birth.h"
 #include "ui-display.h"
@@ -42,9 +40,9 @@
 #include "ui-entry-renderers.h"
 #include "ui-history.h"
 #include "ui-input.h"
-#include "ui-menu.h"
 #include "ui-object.h"
 #include "ui-output.h"
+#include "z-form.h"
 #include "ui-player.h"
 
 
@@ -773,7 +771,7 @@ static struct panel *get_panel_combat(void) {
 	for (atk = player->mon.atk; atk; atk = atk->next) {
 		bth = atk->to_hit;
 		struct effect *ef;
-		char atk_title[80];
+		char atk_title[80], range[80] = "";
 		int blows = atk->blows / 100, blow_frac = (atk->blows / 10) % 10, attr;
 		int num_choice = 0;
 
@@ -784,9 +782,13 @@ static struct panel *get_panel_combat(void) {
 			//my_strcap_full(atk_title);
 		}*/
 
+		if (atk->range > 1) {
+			strnfmt(range, sizeof range, " (rng %i)", atk->range);
+		}
+
 		my_strcpy(atk_title, atk->title, sizeof atk_title);
 
-		my_strcat(atk_title, format(": %+i (%i.%i)", bth, blows, blow_frac), sizeof atk_title);
+		my_strcat(atk_title, format(": %+i (%i.%i)%s", bth, blows, blow_frac, range), sizeof atk_title);
 
 		panel_line(p, COLOUR_WHITE, atk_title, "");
 		++hgt;
