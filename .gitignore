@@ -76,3 +76,4 @@ build/*
 .vscode/*
 lib/user/*.log
 lib/user/*.lok
+lib/user/pile_error.txt
