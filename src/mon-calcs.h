@@ -4,12 +4,17 @@
 #define INCLUDED_MON_CALCS_H
 
 #include "angband.h"
+#include "player-calcs.h"
 
 struct scaling_data {
     int base;       // basic amount;
     int r_xtra;     // amount modified by monster race
     int p_xtra;     // amount modified by player level
 };
+
+extern struct mon_player_match of_matches[];
+extern struct mon_player_match pf_matches[];
+
 
 int mon_lev(const struct monster *mon);
 

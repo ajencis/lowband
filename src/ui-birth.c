@@ -20,8 +20,10 @@
 #include "cmd-core.h"
 #include "game-event.h"
 #include "game-input.h"
+#include "h-basic.h"
 #include "mon-calcs.h"
 #include "monster.h"
+#include "player-calcs.h"
 #include "player.h"
 #include "player-birth.h"
 #include "player-properties.h"
@@ -365,6 +367,32 @@ static void skill_help(const int skills_b[SKILL_MAX], const int skills_x[SKILL_M
 	}
 }
 
+static bool race_pf_has(struct monster_race *mr, int pflag)
+{
+	int i;
+
+	for (i = 0; pf_matches[i].mval != RF_NONE; ++i) {
+		if (pf_matches[i].pval == pflag && rf_has(mr->flags, pf_matches[i].mval)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static bool race_of_has(struct monster_race *mr, int oflag)
+{
+	int i;
+
+	for (i = 0; of_matches[i].mval != RF_NONE; ++i) {
+		if (of_matches[i].pval == oflag && rf_has(mr->flags, of_matches[i].mval)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static void race_help(int i, void *db, const region *l)
 {
 	int j, base, xtra;
@@ -378,7 +406,6 @@ static void race_help(int i, void *db, const region *l)
 	int race_skills[SKILL_MAX] = { 0 };
 	int race_x_skills[SKILL_MAX] = { 0 };
 	int race_powers[PP_MAX];
-	struct element_info race_elem_info[ELEM_MAX] = { 0 };
 
 	struct scaling_data sdata;
 
@@ -439,18 +466,13 @@ static void race_help(int i, void *db, const region *l)
 
 	for (ability = player_abilities; ability; ability = ability->next) {
 		if (n_flags >= flag_space) break;
-		if ((ability->type == PY_ABIL_OBJECT) &&
-			!of_has(r->flags, ability->index)) {
+		if ((ability->type == PY_ABIL_OBJECT) && !race_of_has(mon, ability->index)) {
 			continue;
-		} else if ((ability->type == PY_ABIL_PLAYER) &&
-				   !pf_has(r->pflags, ability->index)) {
+		} else if ((ability->type == PY_ABIL_PLAYER) && !race_pf_has(mon, ability->index)) {
 			continue;
 		} else if ((ability->type == PY_ABIL_ELEMENT) &&
-				   (race_elem_info[ability->index].res_level != ability->value)) {
+				(mon->el_info[ability->index].res_level != ability->value)) {
 			continue;
-		/*} else if ((ability->type == PY_ABIL_POWER) &&
-		           (!race_powers[ability->index])) {
-            continue;*/
 		} else if (ability->type == PY_ABIL_SKILL) {
 			continue;
 		}
