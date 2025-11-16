@@ -198,7 +198,7 @@ struct scaling_data race_skill(const struct monster_race *mr, int which)
 
 	result.base = RND_TO_MULT((base_skill + 3 * SGN(base_skill)) / 4, 5);
 	result.r_xtra = base_skill - result.base;
-	result.p_xtra = MAX(0, ABS(base_skill) - mr->level * 4) / 2 * SGN(base_skill);
+	result.p_xtra = MAX(0, ABS(base_skill) - mr->level * 4) * SGN(base_skill);
 	result.p_xtra = RND_TO_MULT(result.p_xtra, 5);
 
 	return result;
