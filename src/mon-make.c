@@ -129,7 +129,13 @@ void mon_embody(struct monster *mon)
 
 void mon_disembody(struct monster *mon)
 {
+	int i;
 	assert(mon);
+
+	for (i = 0; i < mon->body.count; ++i) {
+		assert(!mon->body.slots[i].obj);
+	}
+
 	free_body(&mon->body);
 	mon->body.count = 0;
 }
