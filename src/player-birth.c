@@ -22,6 +22,7 @@
 #include "game-world.h"
 #include "init.h"
 #include "mon-lore.h"
+#include "mon-make.h"
 #include "mon-util.h"
 #include "monster.h"
 #include "obj-gear.h"
@@ -410,6 +411,8 @@ void get_bonuses(void)
 {
 	/* Calculate the bonuses and hitpoints */
 	player->upkeep->update |= (PU_BONUS | PU_HP);
+	// L: and attacks!
+	mflag_on(player->mon.mflag, MFLAG_UPDATE_ATTACKS);
 
 	/* Update stuff */
 	update_stuff(player);
@@ -468,11 +471,176 @@ static void get_ahw(struct player *p)
 
 
 /**
+ * Init players with some belongings
+ *
+ * Having an item identifies it and makes the player "aware" of its purpose.
+ */
+
+/**
+ * Try to wield everything wieldable in the inventory.
+ */
+void wield_all(struct player *p)
+{
+	struct object *obj, *new_pile = NULL, *new_known_pile = NULL;
+	int slot;
+
+	/* Scan through the slots */
+	for (obj = p->mon.gear; obj; obj = obj->next) {
+		struct object *obj_temp;
+
+		/* Skip non-objects */
+		assert(obj);
+
+		/* Make sure we can wield it */
+		slot = wield_slot(&p->mon, obj);
+		if (slot < 0 || slot >= p->mon.body.count) {
+			continue;
+		}
+
+		obj_temp = slot_object(&p->mon, slot);
+		if (obj_temp) {
+			continue;
+		}
+
+		/* Split if necessary */
+		if (obj->number > 1) {
+			/* All but one go to the new object */
+			struct object *new = object_split(obj, obj->number - 1);
+
+			/* Add to the pile of new objects to carry */
+			pile_insert(&new_pile, new);
+			pile_insert(&new_known_pile, new->known);
+		}
+
+		/* Wear the new stuff */
+		p->mon.body.slots[slot].obj = obj;
+		//object_learn_on_wield(p, obj);
+
+		/* Increment the equip counter by hand */
+		p->upkeep->equip_cnt++;
+	}
+
+	/* Now add the unwielded split objects to the gear */
+	if (new_pile) {
+		pile_insert_end(&p->mon.gear, new_pile);
+		pile_insert_end(&p->gear_k, new_known_pile);
+	}
+	return;
+}
+
+static void player_birth_unequip(struct player *p)
+{
+	struct object *obj;
+	bool dummy;
+
+	assert(p->upkeep);
+
+	while (p->mon.gear) {
+		obj = p->mon.gear;
+
+		obj = gear_object_for_use(&p->mon, obj, obj->number, false, &dummy);
+
+		if (obj->known) {
+			object_free(obj->known);
+			obj->known = NULL;
+		}
+		object_free(obj);
+	}
+
+	for (int i = 0; p->mon.body.slots && i < p->mon.body.count; ++i) {
+		assert(!p->mon.body.slots[i].obj);
+	}
+
+	assert(!p->gear_k);
+}
+
+static void player_birth_equip(struct player *p)
+{
+	const struct start_item *si;
+	struct object *obj, *known_obj;
+
+	if (!p->class) return;
+
+	player_birth_unequip(p);
+
+	/* Give the player starting equipment */
+	for (si = p->class->start_items; si; si = si->next) {
+		int num = rand_range(si->min, si->max);
+		struct object_kind *kind = lookup_kind(si->tval, si->sval);
+		assert(kind);
+
+		/* Without start_kit, only start with 1 food and 1 light */
+		if (!OPT(p, birth_start_kit)) {
+			if (!tval_is_food_k(kind) && !tval_is_light_k(kind))
+				continue;
+
+			num = 1;
+		}
+
+		if (tval_is_wearable_k(kind) && !obj_can_wear_k(kind)) {
+			continue;
+		}
+
+		/* Exclude if configured to do so based on birth options. */
+		if (si->eopts) {
+			bool included = true;
+			int eind = 0;
+
+			while (si->eopts[eind] && included) {
+				if (si->eopts[eind] > 0) {
+					if (p->opts.opt[si->eopts[eind]]) {
+						included = false;
+					}
+				} else {
+					if (!p->opts.opt[-si->eopts[eind]]) {
+						included = false;
+					}
+				}
+				++eind;
+			}
+			if (!included) continue;
+		}
+
+		/* Prepare a new item */
+		obj = object_new();
+		object_prep(obj, kind, 0, MINIMISE);
+		obj->number = num;
+		obj->origin = ORIGIN_BIRTH;
+
+		known_obj = object_new();
+		obj->known = known_obj;
+		object_set_base_known(p, obj);
+		object_flavor_aware(p, obj);
+		obj->known->pval = obj->pval;
+		obj->known->effect = obj->effect;
+		obj->known->notice |= OBJ_NOTICE_ASSESSED;
+
+		/* Deduct the cost of the item from starting cash */
+		p->au -= object_value_real(obj, obj->number);
+
+		/* Carry the item */
+		inven_carry(cave, &p->mon, obj, true, false);
+		kind->everseen = true;
+	}
+
+	wield_all(p);
+}
+
+
+/**
  * Creates the player's body
  */
 static void player_embody(struct player *p)
 {
-	char buf[80];
+	if (!p->mon.race) return;
+
+	player_birth_unequip(p);
+
+	mon_embody(&p->mon);
+
+	player_birth_equip(p);
+
+	/*char buf[80];
 	int i;
 	struct player_body *body;
 	struct monster_race *mr = lookup_player_monster(p);
@@ -481,12 +649,6 @@ static void player_embody(struct player *p)
 	assert(mr->body);
 
 	body = mr->body;
-
-	/*if (mr && mr->body) {
-		body = mr->body;
-	} else {
-		body = p->race->body;
-	}*/
 
 	assert(p->race);
 
@@ -498,7 +660,7 @@ static void player_embody(struct player *p)
 		p->mon.body.slots[i].type = body->slots[i].type;
 		my_strcpy(buf, body->slots[i].name, sizeof(buf));
 		p->mon.body.slots[i].name = string_make(buf);
-	}
+	}*/
 }
 
 /**
@@ -625,58 +787,6 @@ void player_init(struct player *p)
 	init_monsters();
 }
 
-/**
- * Try to wield everything wieldable in the inventory.
- */
-void wield_all(struct player *p)
-{
-	struct object *obj, *new_pile = NULL, *new_known_pile = NULL;
-	int slot;
-
-	/* Scan through the slots */
-	for (obj = p->mon.gear; obj; obj = obj->next) {
-		struct object *obj_temp;
-
-		/* Skip non-objects */
-		assert(obj);
-
-		/* Make sure we can wield it */
-		slot = wield_slot(&p->mon, obj);
-		if (slot < 0 || slot >= p->mon.body.count) {
-			continue;
-		}
-
-		obj_temp = slot_object(&p->mon, slot);
-		if (obj_temp) {
-			continue;
-		}
-
-		/* Split if necessary */
-		if (obj->number > 1) {
-			/* All but one go to the new object */
-			struct object *new = object_split(obj, obj->number - 1);
-
-			/* Add to the pile of new objects to carry */
-			pile_insert(&new_pile, new);
-			pile_insert(&new_known_pile, new->known);
-		}
-
-		/* Wear the new stuff */
-		p->mon.body.slots[slot].obj = obj;
-		object_learn_on_wield(p, obj);
-
-		/* Increment the equip counter by hand */
-		p->upkeep->equip_cnt++;
-	}
-
-	/* Now add the unwielded split objects to the gear */
-	if (new_pile) {
-		pile_insert_end(&p->mon.gear, new_pile);
-		pile_insert_end(&p->gear_k, new_known_pile);
-	}
-	return;
-}
-
 
 /**
  * Initialize the global player as if the full birth process happened.
@@ -746,17 +856,10 @@ bool player_make_simple(const char *nrace, const char *nclass,
 	return true;
 }
 
-
-/**
- * Init players with some belongings
- *
- * Having an item identifies it and makes the player "aware" of its purpose.
- */
 static void player_outfit(struct player *p)
 {
 	int i;
-	const struct start_item *si;
-	struct object *obj, *known_obj;
+	struct object *obj;
 
 	/* Currently carrying nothing */
 	p->upkeep->total_weight = 0;
@@ -773,64 +876,19 @@ static void player_outfit(struct player *p)
 		if (prop->subtype == OFT_CURSE_ONLY) of_on(p->obj_k->flags, i);
 	}
 
-	/* Give the player starting equipment */
-	for (si = p->class->start_items; si; si = si->next) {
-		int num = rand_range(si->min, si->max);
-		struct object_kind *kind = lookup_kind(si->tval, si->sval);
-		assert(kind);
+	player_birth_equip(p);
 
-		/* Without start_kit, only start with 1 food and 1 light */
-		if (!OPT(p, birth_start_kit)) {
-			if (!tval_is_food_k(kind) && !tval_is_light_k(kind))
-				continue;
-
-			num = 1;
-		}
-
-		if (tval_is_wearable_k(kind) && !obj_can_wear_k(kind))
-			continue;
-
-		/* Exclude if configured to do so based on birth options. */
-		if (si->eopts) {
-			bool included = true;
-			int eind = 0;
-
-			while (si->eopts[eind] && included) {
-				if (si->eopts[eind] > 0) {
-					if (p->opts.opt[si->eopts[eind]]) {
-						included = false;
-					}
-				} else {
-					if (!p->opts.opt[-si->eopts[eind]]) {
-						included = false;
-					}
-				}
-				++eind;
-			}
-			if (!included) continue;
-		}
-
-		/* Prepare a new item */
-		obj = object_new();
-		object_prep(obj, kind, 0, MINIMISE);
-		obj->number = num;
-		obj->origin = ORIGIN_BIRTH;
-
-		known_obj = object_new();
-		obj->known = known_obj;
-		object_set_base_known(p, obj);
-		object_flavor_aware(p, obj);
-		obj->known->pval = obj->pval;
-		obj->known->effect = obj->effect;
-		obj->known->notice |= OBJ_NOTICE_ASSESSED;
-
-		/* Deduct the cost of the item from starting cash */
+	for (obj = p->mon.gear; obj; obj = obj->next) {
 		p->au -= object_value_real(obj, obj->number);
+		obj->kind->everseen = true;
 
-		/* Carry the item */
-		inven_carry(cave, &p->mon, obj, true, false);
-		kind->everseen = true;
+		if (object_is_equipped(p->mon.body, obj)) {
+			object_learn_on_wield(p, obj);
+		}
 	}
+
+	/* Update knowledge */
+	update_player_object_knowledge(p);
 
 	/* Sanity check */
 	if (p->au < 0) {
@@ -838,10 +896,7 @@ static void player_outfit(struct player *p)
 	}
 
 	/* Now try wielding everything */
-	wield_all(p);
-
-	/* Update knowledge */
-	update_player_object_knowledge(p);
+	//wield_all(p);
 }
 
 
@@ -1161,6 +1216,7 @@ void player_generate(struct player *p, const struct player_race *r,
 {
 	int i;
 	struct monster_race *mr;
+	bool reembody;
 
 	if (!c) {
 		c = p->class;
@@ -1176,32 +1232,20 @@ void player_generate(struct player *p, const struct player_race *r,
 
 	assert(mr);
 
+	reembody = mr != p->mon.race;
+
 	change_player_monster(p, mr, true);
+
+	if (reembody) {
+		player_embody(p);
+	}
 
 	/* Level 1 */
 	p->max_lev = p->lev = 1;
 
-	/* Hitdice */
-	//p->hitdie = p->race->r_mhp + p->class->c_mhp;
-
-	/* Pre-calculate level 1 hitdice */
-	//p->player_hp[0] = p->hitdie;
-
-	/*
-	 * Fill in overestimates of hitpoints for additional levels.  Do not
-	 * do the actual rolls so the player can not reset the birth screen
-	 * to get a desirable set of initial rolls.
-	 */
-	/*for (i = 1; i < p->lev; i++) {
-		p->player_hp[i] = p->player_hp[i - 1] + p->hitdie;
-	}*/
-
 	for (i = 0; i < z_info->realm_max; ++i) {
 		p->extra_choice[i] = -1;
 	}
-
-	/* Initial hitpoints */
-	//p->mon.maxhp = p->player_hp[p->lev - 1];
 
 	/* L: copy realm over */
 	p->realm = c->realm;
@@ -1222,6 +1266,8 @@ void player_generate(struct player *p, const struct player_race *r,
 		}
 		p->history = get_history(p->race->history);
 	}
+
+	player_birth_equip(p);
 }
 
 
