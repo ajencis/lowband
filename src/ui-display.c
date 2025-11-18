@@ -1841,7 +1841,7 @@ static void update_inven_subwindow(game_event_type type, game_event_data *data,
 	Term_activate(inv_term);
 
 	if (!flip_inven)
-		show_inven(OLIST_WINDOW | OLIST_WEIGHT | OLIST_QUIVER, NULL);
+		show_inven(OLIST_WINDOW | OLIST_WEIGHT | OLIST_QUIVER | OLIST_GOLD, NULL);
 	else
 		show_equip(OLIST_WINDOW | OLIST_WEIGHT, NULL);
 
@@ -1863,7 +1863,7 @@ static void update_equip_subwindow(game_event_type type, game_event_data *data,
 	if (!flip_inven)
 		show_equip(OLIST_WINDOW | OLIST_WEIGHT, NULL);
 	else
-		show_inven(OLIST_WINDOW | OLIST_WEIGHT | OLIST_QUIVER, NULL);
+		show_inven(OLIST_WINDOW | OLIST_WEIGHT | OLIST_QUIVER | OLIST_GOLD, NULL);
 
 	Term_fresh();
 	
@@ -2744,7 +2744,7 @@ static void see_floor_items(game_event_type type, game_event_data *data,
 
 		/* Display objects on the floor */
 		screen_save();
-		show_floor(floor_list, floor_num, OLIST_WEIGHT, NULL);
+		show_floor(floor_list, floor_num, OLIST_WEIGHT | OLIST_GOLD, NULL);
 		prt(format("You %s: ", p), 0, 0);
 
 		/* Wait for it.  Use key as next command. */

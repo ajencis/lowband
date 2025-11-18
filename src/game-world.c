@@ -1283,6 +1283,8 @@ void on_new_level(void)
 	if (player->energy < z_info->move_energy) {
 		player->energy = z_info->move_energy;
 	}
+
+	player_store_gold(player);
 }
 
 static void increase_follower_delay(struct player *p)

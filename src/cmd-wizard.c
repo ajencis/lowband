@@ -570,14 +570,12 @@ void do_cmd_wiz_change_item_quantity(struct command *cmd)
 				 * Remove the weight of the old number of
 				 * objects.
 				 */
-				player->upkeep->total_weight -=
-					obj->number * object_weight_one(obj);
+				player->upkeep->total_weight -= object_weight(obj);
 
 				/*
 				 * Add the weight of the new number of objects.
 				 */
-				player->upkeep->total_weight +=
-					n * object_weight_one(obj);
+				player->upkeep->total_weight += object_weight_num(obj, n);
 			}
 			wiz_play_item_standard_upkeep(player, obj);
 		} else {
@@ -1741,17 +1739,13 @@ void do_cmd_wiz_play_item(struct command *cmd)
 						 * Remove the weight of the old
 						 * version.
 						 */
-						player->upkeep->total_weight -=
-							orig_obj->number
-							* object_weight_one(orig_obj);
+						player->upkeep->total_weight -= object_weight(orig_obj);
 
 						/*
 						 * Add the weight of the new
 						 * version.
 						 */
-						player->upkeep->total_weight +=
-							obj->number
-							* object_weight_one(obj);
+						player->upkeep->total_weight += object_weight(obj);
 					}
 					wiz_play_item_standard_upkeep(player,
 						obj);

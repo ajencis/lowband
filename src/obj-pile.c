@@ -479,7 +479,7 @@ bool object_similar(const struct object *obj1, const struct object *obj2,
 		/* Food, potions, scrolls and rods all stack nicely,
 		   since the kinds are identical, either both will be
 		   aware or both will be unaware */
-	} else if (tval_can_have_charges(obj1) || tval_is_money(obj1)) {
+	} else if (tval_can_have_charges(obj1)) { // || tval_is_money(obj1)) {
 		/* Gold, staves and wands stack most of the time */
 		/* Too much gold or too many charges */
 		if (obj1->pval + obj2->pval > MAX_PVAL) {
@@ -638,7 +638,7 @@ static void object_absorb_merge(struct object *obj1, const struct object *obj2)
 		obj1->timeout += obj2->timeout;
 
 	/* Combine pvals for wands and staves */
-	if (tval_can_have_charges(obj1) || tval_is_money(obj1)) {
+	if (tval_can_have_charges(obj1)) { // || tval_is_money(obj1)) {
 		total = obj1->pval + obj2->pval;
 		obj1->pval = total >= MAX_PVAL ? MAX_PVAL : total;
 	}

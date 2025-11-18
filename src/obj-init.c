@@ -24,24 +24,18 @@
 
 
 #include "angband.h"
-#include "buildid.h"
 #include "datafile.h"
 #include "effects.h"
 #include "init.h"
 #include "mon-util.h"
 #include "obj-curse.h"
-#include "obj-ignore.h"
-#include "obj-list.h"
 #include "obj-make.h"
 #include "obj-pile.h"
-#include "obj-power.h"
-#include "obj-randart.h"
 #include "obj-slays.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
-#include "option.h"
-#include "player-spell.h"
+#include "parser.h"
 #include "project.h"
 #include "ui-entry.h"
 
@@ -1887,6 +1881,17 @@ static enum parser_error parse_object_weight(struct parser *p) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
 	k->weight = parser_getint(p, "weight");
+
+	if (parser_hasval(p, "div")) {
+		k->weight_div = parser_getint(p, "div");
+	} else {
+		k->weight_div = 1;
+	}
+	
+	if (k->weight_div <= 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
 	return PARSE_ERROR_NONE;
 }
 

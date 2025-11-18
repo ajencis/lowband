@@ -185,7 +185,7 @@ static bool item_tester_uncursable(const struct object *obj)
 static bool uncurse_object(struct object *obj, int strength, char *dice_string)
 {
 	int index = 0;
-	int old_weight = obj->number * object_weight_one(obj);
+	int old_weight = object_weight(obj);
 	int new_weight = old_weight;
 
 	if (get_curse(&index, obj, dice_string)) {
@@ -199,7 +199,7 @@ static bool uncurse_object(struct object *obj, int strength, char *dice_string)
 			/* Successfully removed this curse */
 			remove_object_curse(obj->known, index, false);
 			remove_object_curse(obj, index, true);
-			new_weight = obj->number * object_weight_one(obj);
+			new_weight = object_weight(obj);
 		} else if (!of_has(obj->flags, OF_FRAGILE)) {
 			/* Failure to remove, object is now fragile */
 			object_desc(o_name, sizeof(o_name), obj, ODESC_FULL,
@@ -3400,7 +3400,7 @@ bool effect_handler_CURSE_ARMOR(effect_handler_context_t *context)
 	} else {
 		int num = randint1(3);
 		int max_tries = 20;
-		int old_weight = obj->number * object_weight_one(obj);
+		int old_weight = object_weight(obj);// obj->number * object_weight_one(obj);
 
 		msg("A terrible black aura blasts your %s!", o_name);
 
@@ -3420,8 +3420,8 @@ bool effect_handler_CURSE_ARMOR(effect_handler_context_t *context)
 		}
 
 		/* Account for a weight change, if any */
-		player->upkeep->total_weight +=
-			(obj->number * object_weight_one(obj)) - old_weight;
+		player->upkeep->total_weight += object_weight(obj) - old_weight;
+			//(obj->number * object_weight_one(obj)) - old_weight;
 
 		/* Recalculate bonuses */
 		player->upkeep->update |= (PU_BONUS);
@@ -3464,7 +3464,7 @@ bool effect_handler_CURSE_WEAPON(effect_handler_context_t *context)
 	} else {
 		int num = randint1(3);
 		int max_tries = 20;
-		int old_weight = obj->number * object_weight_one(obj);
+		int old_weight = object_weight(obj);// obj->number * object_weight_one(obj);
 
 		msg("A terrible black aura blasts your %s!", o_name);
 
@@ -3485,8 +3485,8 @@ bool effect_handler_CURSE_WEAPON(effect_handler_context_t *context)
 		}
 
 		/* Account for a weight change, if any */
-		player->upkeep->total_weight +=
-			(obj->number * object_weight_one(obj)) - old_weight;
+		player->upkeep->total_weight += object_weight(obj) - old_weight;
+			//(obj->number * object_weight_one(obj)) - old_weight;
 
 		/* Recalculate bonuses */
 		player->upkeep->update |= (PU_BONUS);

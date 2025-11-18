@@ -20,14 +20,12 @@
 #include "cmd-core.h"
 #include "obj-chest.h"
 #include "obj-desc.h"
-#include "obj-gear.h"
 #include "obj-ignore.h"
 #include "obj-knowledge.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-spell.h"
 #include "player-util.h"
-#include "ui-knowledge.h"
 
 
 /**
@@ -740,7 +738,7 @@ size_t object_desc(char *buf, size_t max, const struct object *obj,
 
 	if (tval_is_money(obj)) {
 		return strnfmt(buf, max, "%d gold pieces worth of %s%s",
-				obj->pval, obj->kind->name,
+				obj->number, obj->kind->name,
 				ignore_item_ok(p, obj) ? " {ignore}" : "");
 	}
 

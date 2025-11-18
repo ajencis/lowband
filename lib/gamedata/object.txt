@@ -11,7 +11,7 @@
 # graphics: symbol : color
 # type: tval 
 # level: level
-# weight : weight
+# weight : weight : ?div
 # cost : cost
 # attack : base damage : plus to-hit : plus to-dam
 # armor: base armor class : plus to-armor class
@@ -80,7 +80,8 @@
 # backfiring.  For a chest, the level affects the types of traps the chest
 # may have.
 
-# 'weight' is in tenth-pounds.
+# 'weight' is in tenth-pounds. optionally, div can be provided to divide that
+# weight
 
 # 'cost' is the item's base value.
 
@@ -5452,46 +5453,57 @@ power:0
 
 name:copper
 type:gold
+weight:1:10
 graphics:$:u
 
 name:silver
 type:gold
+weight:1:10
 graphics:$:s
 
 name:garnets
 type:gold
+weight:1:10
 graphics:$:r
 
 name:gold
 type:gold
+weight:1:10
 graphics:$:y
 
 name:opals
 type:gold
+weight:1:10
 graphics:$:W
 
 name:sapphires
 type:gold
+weight:1:10
 graphics:$:b
 
 name:rubies
 type:gold
+weight:1:10
 graphics:$:r
 
 name:diamonds
 type:gold
+weight:1:10
 graphics:$:w
 
 name:emeralds
 type:gold
+weight:1:10
 graphics:$:g
 
 name:mithril
 type:gold
+weight:1:10
 graphics:$:B
 
 name:adamantite
 type:gold
+weight:1:10
 graphics:$:G
 
 

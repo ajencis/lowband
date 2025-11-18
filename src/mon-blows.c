@@ -935,7 +935,8 @@ static void melee_effect_handler_EAT_GOLD(melee_effect_handler_context_t *contex
 
             /* Amount of gold to put in this object */
             amt = gold > MAX_PVAL ? MAX_PVAL : gold;
-            obj->pval = amt;
+			obj->number = amt;
+            //obj->pval = amt;
             gold -= amt;
 
             /* Set origin to stolen, so it is not confused with

@@ -17,12 +17,10 @@
  */
 
 #include "angband.h"
-#include "cmds.h"
 #include "game-input.h"
 #include "init.h"
 #include "obj-desc.h"
 #include "obj-info.h"
-#include "savefile.h"
 #include "store.h"
 #include "ui-death.h"
 #include "ui-history.h"
@@ -219,7 +217,7 @@ static void death_info(const char *title, int row)
 	/* Inventory -- if any */
 	if (player->upkeep->inven_cnt) {
 		Term_clear();
-		show_inven(OLIST_WEIGHT | OLIST_DEATH, NULL);
+		show_inven(OLIST_WEIGHT | OLIST_DEATH | OLIST_GOLD, NULL);
 		prt("You are carrying: -more-", 0, 0);
 		(void)anykey();
 	}

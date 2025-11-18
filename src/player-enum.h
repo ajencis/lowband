@@ -253,6 +253,7 @@ struct player_state {
 	bool bless_wield;	/**< Blessed (or blunt) weapon */
 
 	bool cumber_armor;	/**< Mana draining armor */
+	int armour_wgt;		/**< L: heaviest piece of equipped armour */
 
 	uint32_t expfact;        /**< L: now changes based on int */
 

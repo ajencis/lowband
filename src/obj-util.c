@@ -280,6 +280,32 @@ int16_t object_weight_one(const struct object *obj)
 	return result;
 }
 
+int16_t object_weight_num(const struct object *obj, int num)
+{
+	int16_t result = MAX(obj->weight, 0);
+
+	result *= num;
+	result += obj->kind->weight_div / 2;
+	result /= obj->kind->weight_div;
+
+	if (obj->curses) {
+		int i;
+
+		for (i = 1; i < z_info->curse_max; ++i) {
+			if (obj->curses[i].power) {
+				result = modify_weight_for_curse(i, result);
+			}
+		}
+	}
+
+	return result;
+}
+
+int16_t object_weight(const struct object *obj)
+{
+	return object_weight_num(obj, obj->number);
+}
+
 /**
  * Return the hit bonus for an object, including any of its curses.
  */
@@ -973,7 +999,7 @@ bool obj_can_fail(const struct object *o)
 bool obj_is_unvisited(const struct object *o)
 {
 	if (o->notice & OBJ_NOTICE_IGNORE) return false;
-	if (tval_is_money(o)) return true;
+	//if (tval_is_money(o)) return true;
 	if (!(o->notice & OBJ_NOTICE_ASSESSED)) return true;
 
 	return false;

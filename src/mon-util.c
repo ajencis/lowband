@@ -58,7 +58,6 @@
 #include "z-rand.h"
 #include "z-type.h"
 #include "z-util.h"
-#include <stdint.h>
 
 
 void mark_mon_as_playable(struct monster_race *mr)
@@ -1945,7 +1944,8 @@ void steal_monster_item(struct monster *mon, int midx)
 
 		/* Monster base reaction, plus allowance for item weight */
 		monster_reaction = guard / 2 + randint1(MAX(guard, 1));
-		monster_reaction += (obj->number * object_weight_one(obj)) / 20;
+		monster_reaction += object_weight(obj) / 20;
+		//monster_reaction += (obj->number * object_weight_one(obj)) / 20;
 
 		/* Try and steal */
 		if (monster_reaction < steal_skill) {
@@ -1954,29 +1954,29 @@ void steal_monster_item(struct monster *mon, int midx)
 			/* Success! */
 			obj->held_m_idx = 0;
 			pile_excise(&mon->gear, obj);
-			if (tval_is_money(obj)) {
-				msg("You steal %d gold pieces worth of treasure.", obj->pval);
-				player->au += obj->pval;
+			/*if (tval_is_money(obj)) {
+				msg("You steal %d gold pieces worth of treasure.", obj->number);
+				player->au += obj->number;
 				player->upkeep->redraw |= (PR_GOLD);
 				delist_object(cave, obj);
 				object_delete(cave, player->cave, &obj);
+			} else {*/
+			object_grab(player, obj);
+			delist_object(player->cave, obj->known);
+			delist_object(cave, obj);
+			/* Drop immediately if ignored,
+			   or if inventory already full to prevent pack overflow */
+			if (ignore_item_ok(player, obj) || !inven_carry_okay(&player->mon, obj)) {
+				char o_name[80];
+				object_desc(o_name, sizeof(o_name), obj,
+					ODESC_PREFIX | ODESC_FULL,
+					player);
+				drop_near(cave, &obj, 0, player->mon.grid, true, true);
+				msg("You drop %s.", o_name);
 			} else {
-				object_grab(player, obj);
-				delist_object(player->cave, obj->known);
-				delist_object(cave, obj);
-				/* Drop immediately if ignored,
-				   or if inventory already full to prevent pack overflow */
-				if (ignore_item_ok(player, obj) || !inven_carry_okay(&player->mon, obj)) {
-					char o_name[80];
-					object_desc(o_name, sizeof(o_name), obj,
-						ODESC_PREFIX | ODESC_FULL,
-						player);
-					drop_near(cave, &obj, 0, player->mon.grid, true, true);
-					msg("You drop %s.", o_name);
-				} else {
-					inven_carry(cave, &player->mon, obj, true, true);
-				}
+				inven_carry(cave, &player->mon, obj, true, true);
 			}
+			//}
 
 			/* Track thefts */
 			lore->thefts++;

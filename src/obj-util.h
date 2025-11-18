@@ -19,6 +19,8 @@
 #ifndef OBJECT_UTIL_H
 #define OBJECT_UTIL_H
 
+#include "angband.h"
+
 /* Maximum number of scroll titles generated */
 #define MAX_TITLES	 50
 
@@ -31,6 +33,8 @@ void spell_to_obj(const struct player_spell *ps, struct object_kind *k);
 void flavor_init(void);
 void flavor_set_all_aware(void);
 int16_t object_weight_one(const struct object *obj);
+int16_t object_weight_num(const struct object *obj, int num);
+int16_t object_weight(const struct object *obj);
 int object_to_hit(const struct object *obj);
 int object_to_dam(const struct object *obj);
 int object_to_ac(const struct object *obj);

@@ -26,12 +26,12 @@
 #include "obj-gear.h"
 #include "obj-ignore.h"
 #include "obj-pile.h"
-#include "obj-tval.h"
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
 #include "player-util.h"
 
+#if 0
 /**
  * Pick up all gold at the player's current location.
  */
@@ -113,6 +113,7 @@ static void player_pickup_gold(struct player *p)
 		p->upkeep->redraw |= (PR_GOLD);
 	}
 }
+#endif
 
 
 /**
@@ -314,7 +315,7 @@ static uint8_t player_pickup_item(struct player *p, struct object *obj, bool men
 	square_know_pile(cave, p->mon.grid, object_not_in_container_predicate);
 
 	/* Always pickup gold, effortlessly */
-	player_pickup_gold(p);
+	//player_pickup_gold(p);
 
 	/* Nothing else to pick up -- return */
 	if (!square_object(cave, p->mon.grid)) {
@@ -407,7 +408,7 @@ int do_autopickup(struct player *p)
 		return 0;
 
 	/* Always pickup gold, effortlessly */
-	player_pickup_gold(p);
+	//player_pickup_gold(p);
 
 	/* Scan the remaining objects */
 	obj = square_object(cave, p->mon.grid);

@@ -19,11 +19,9 @@
 #include "angband.h"
 #include "alloc.h"
 #include "cave.h"
-#include "effects.h"
 #include "init.h"
 #include "obj-chest.h"
 #include "obj-curse.h"
-#include "obj-gear.h"
 #include "obj-knowledge.h"
 #include "obj-make.h"
 #include "obj-pile.h"
@@ -1395,7 +1393,8 @@ struct object *make_gold(int lev, const char *coin_type)
 		value = SHRT_MAX - randint0(200);
 	}
 
-	new_gold->pval = value;
+	new_gold->number = value;
+	//new_gold->pval = value;
 
 	return new_gold;
 }

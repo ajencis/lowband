@@ -218,3 +218,4 @@ flags:EASY_KNOW
 
 name:gold
 graphics:light yellow
+max-stack:400

@@ -514,7 +514,7 @@ static bool gear_excise_object(struct monster *mon, struct object *obj)
 	/* Change the weight */
 	if (p) {
 		pile_excise(&p->gear_k, obj->known);
-		p->upkeep->total_weight -= obj->number * object_weight_one(obj);
+		p->upkeep->total_weight -= object_weight(obj);// obj->number * object_weight_one(obj);
 	}
 
 	/* Make sure it isn't still equipped */
@@ -577,7 +577,7 @@ struct object *gear_object_for_use(struct monster *mon, struct object *obj,
 
 		if (p) {
 			/* Change the weight */
-			p->upkeep->total_weight -= num * object_weight_one(obj);
+			p->upkeep->total_weight -= object_weight(obj);// num * object_weight_one(obj);
 		}
 
 		if (message) {
@@ -802,9 +802,9 @@ int inven_carry_num(const struct monster *mon, const struct object *obj)
 	struct player *p = mon->player;
 
 	/* Treasure can always be picked up. */
-	if (tval_is_money(obj) && lookup_kind(obj->tval, obj->sval)) {
+	/*if (tval_is_money(obj) && lookup_kind(obj->tval, obj->sval)) {
 		return obj->number;
-	}
+	}*/
 
 	if (p) {
 		/* Absorb as many as we can in the quiver. */
@@ -908,8 +908,8 @@ void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool 
 		if (combine_item) {
 			if (p) {
 				/* Increase the weight */
-				p->upkeep->total_weight +=
-					obj->number * object_weight_one(obj);
+				p->upkeep->total_weight += object_weight(obj);
+					//obj->number * object_weight_one(obj);
 			}
 
 			/* Combine the items, and their known versions */
@@ -976,7 +976,7 @@ void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool 
 
 		if (p) {
 			/* Update the inventory */
-			p->upkeep->total_weight += obj->number * object_weight_one(obj);
+			p->upkeep->total_weight += object_weight(obj);// obj->number * object_weight_one(obj);
 			p->upkeep->notice |= (PN_COMBINE);
 		}
 
@@ -1032,6 +1032,10 @@ void inven_carry(struct chunk *c, struct monster *mon, struct object *obj, bool 
 
 	if (is_p && object_is_in_quiver(p, obj)) {
 		sound(MSG_QUIVER);
+	}
+
+	if (p) {
+		player_store_gold(p);
 	}
 
 	verify_mon_ownership(mon, c);

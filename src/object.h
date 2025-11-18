@@ -207,6 +207,7 @@ struct object_kind {
 	int dd;					/**< Damage dice */
 	int ds;					/**< Damage sides */
 	int weight;				/**< Weight, in 1/10lbs */
+	int weight_div;			/**< L: divisor for the weight */
 
 	int cost;					/**< Object base cost */
 

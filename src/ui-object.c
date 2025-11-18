@@ -21,7 +21,6 @@
 #include "angband.h"
 #include "cave.h"
 #include "cmd-core.h"
-#include "cmds.h"
 #include "effects.h"
 #include "game-input.h"
 #include "init.h"
@@ -37,8 +36,6 @@
 #include "player-attack.h"
 #include "player-calcs.h"
 #include "player-spell.h"
-#include "player-timed.h"
-#include "player-util.h"
 #include "store.h"
 #include "ui-command.h"
 #include "ui-display.h"
@@ -236,7 +233,7 @@ static void show_obj(int obj_num, int row, int col, bool cursor,
 
 	/* Weight */
 	if (mode & OLIST_WEIGHT) {
-		int weight = obj->number * object_weight_one(obj);
+		int weight = object_weight(obj);// obj->number * object_weight_one(obj);
 		strnfmt(buf, sizeof(buf), "%4d.%1d lb", weight / 10, weight % 10);
 		put_str(buf, row + obj_num, col + ex_offset_ctr);
 	}
@@ -1270,7 +1267,7 @@ bool textui_get_item(struct object **choice, const char *pmt, const char *str,
 
 	floor_list = mem_zalloc(floor_max * sizeof(*floor_list));
 	throwing_list = mem_zalloc(throwing_max * sizeof(*throwing_list));
-	olist_mode = 0;
+	olist_mode = OLIST_GOLD;
 	item_mode = mode;
 	item_cmd = cmd;
 	tester_m = tester;

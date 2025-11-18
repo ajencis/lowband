@@ -3525,6 +3525,37 @@ void search(struct player *p)
 }
 
 /**
+ * L: transform gold objects into au only on return to town
+ */
+void player_store_gold(struct player *p)
+{
+	struct object *obj, *next;
+	bool dummy;
+
+	if (!cave || cave->depth != 0) return;
+
+	for (obj = p->mon.gear; obj; obj = next) {
+		next = obj->next;
+
+		if (!tval_is_money(obj)) {
+			continue;
+		}
+
+		obj = gear_object_for_use(&p->mon, obj, obj->number, false, &dummy);
+
+		if (p->au < INT32_MAX - obj->number) {
+			p->au += obj->number;
+		} else {
+			p->au = INT32_MAX;
+		}
+
+		object_delete(cave, p->cave, &obj);
+
+		p->upkeep->redraw |= PR_GOLD;
+	}
+}
+
+/**
  * L: upkeep at start of player's turn
  * is done then rather than when xp is gained to avoid, say,
  * messages while the map is being drawn

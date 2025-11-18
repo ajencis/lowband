@@ -189,6 +189,7 @@ void player_handle_post_move(struct player *p, bool eval_trap,
 		bool is_involuntary);
 void disturb(struct player *p);
 void search(struct player *p);
+void player_store_gold(struct player *p);
 void player_start_turn(struct player *p);
 
 void init_obj_log_file(bool save);
