@@ -1322,7 +1322,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	int i, j, hold;
 	int extra_shots = 0;
 	int extra_might = 0;
-	int extra_moves = 0;
+	//int extra_moves = 0;
 	struct object *launcher = NULL;
 	struct object *weapons[PY_MAX_ATTACKS] = { 0 };
 	int num_weapons = 0;
@@ -1638,7 +1638,7 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	//extra_moves += get_power_scale_state(state, PP_RUNNING, 10, p->lev);
 
 	/* Movement speed */
-	state->num_moves = extra_moves;
+	//state->num_moves = extra_moves;
 
 	return;
 }

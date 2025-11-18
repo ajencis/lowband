@@ -742,6 +742,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 
 	state->extra_blows = extra_blows;
 	state->extra_shots = extra_shots;
+	state->num_moves = extra_moves;
 
 
 	mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
