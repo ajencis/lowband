@@ -79,5 +79,6 @@ int glow_power(struct monster *mon);
 void calc_glow(struct monster *mon, struct player_state *s);
 void calc_unlight(struct monster *mon, struct player_state *s);
 void calc_running(struct monster *mon, struct player_state *s);
+void calc_power_effects_state(struct monster *mon, struct player_state *state);
 
 #endif /* !PLAYER_PROPS_H */

@@ -20,6 +20,7 @@
 #include "angband.h"
 #include "cave.h"
 #include "game-world.h"
+#include "h-basic.h"
 #include "init.h"
 #include "message.h"
 #include "mon-spell.h"
@@ -579,6 +580,8 @@ bool exercise_ability(struct monster *mon, const struct player_ability *abil, in
  * L: utilities for specific powers
  */
 
+typedef void (power_mod_fn)(struct monster *, struct player_state *);
+
 // agility power
 int unarmoured_speed_bonus(struct monster *mon, struct player_state *s, int wgt)
 {
@@ -605,6 +608,12 @@ int unarmoured_ac_bonus(struct monster *mon, struct player_state *s, int wgt)
 
     s->to_a += bonus;
 	return bonus;
+}
+
+static void calc_agility(struct monster *mon, struct player_state *s)
+{
+	unarmoured_speed_bonus(mon, s, s->armour_wgt);
+	unarmoured_ac_bonus(mon, s, s->armour_wgt);
 }
 
 static int unlight_power_state(struct player_state *s, struct monster *mon)
@@ -669,4 +678,23 @@ void calc_running(struct monster *mon, struct player_state *s)
 	s->num_moves += get_power_scale_state(s, PP_RUNNING, 10);
 }
 
+struct power_mod_datum {
+	int power;
+	power_mod_fn *func;
+} power_mod_data[] = {
+	{ PP_AGILITY, calc_agility },
+	{ PP_UNLIGHT, calc_unlight },
+	{ PP_GLOW, calc_glow },
+	{ PP_RUNNING, calc_running }
+};
 
+void calc_power_effects_state(struct monster *mon, struct player_state *state)
+{
+	unsigned int i;
+
+	for (i = 0; i < N_ELEMENTS(power_mod_data); ++i) {
+		if (state->powers[power_mod_data[i].power]) {
+			power_mod_data[i].func(mon, state);
+		}
+	}
+}

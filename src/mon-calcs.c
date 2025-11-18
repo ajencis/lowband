@@ -466,7 +466,6 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	int i, j;
 	int extra_blows = 0, extra_shots = 0, extra_might = 0, extra_moves = 0;
 	int curr_light = 0;
-	int arm_wgt = 0;
 	//struct element_info race_elem_info[ELEM_MAX] = { 0 };
 	struct monster_race *mrace = mon->race;
 	bitflag f[OF_SIZE];
@@ -525,13 +524,14 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 
 	for (i = 0; i < mon->body.count; ++i) {
 		struct object *obj = slot_object(mon, i);
-		int dig, index = 0, light_amt;
+		int dig, index = 0, light_amt, arm_wgt;
 		struct curse_data *curse;
 
 		if (!obj) continue;
 
 		if (tval_is_armor(obj)) {
-			arm_wgt = MAX(object_weight_one(obj), arm_wgt);
+			arm_wgt = object_weight_one(obj);
+			state->armour_wgt = MAX(state->armour_wgt, arm_wgt);
 		}
 
 		while (obj) {
@@ -627,14 +627,9 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 
 	state->cur_light = curr_light;
 
-	unarmoured_ac_bonus(mon, state, arm_wgt);
-	unarmoured_speed_bonus(mon, state, arm_wgt);
+	calc_power_effects_state(mon, state);
 
-	calc_glow(mon, state);
-	calc_unlight(mon, state);
-
-	calc_running(mon, state);
-
+	
 	for (i = 0; i < TMD_MAX; ++i) {
 		if (mon->m_timed[i] && timed_effects[i].oflag_dup != OF_NONE
 				&& i != TMD_TRAPSAFE) {
