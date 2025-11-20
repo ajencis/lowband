@@ -27,7 +27,9 @@
 #include "player-timed.h"
 #include "project.h"
 #include "z-color.h"
+#include "z-dice.h"
 #include "z-form.h"
+#include "z-rand.h"
 #include "z-util.h"
 
 
@@ -588,8 +590,155 @@ textblock *effect_describe(const struct effect *e, const char *prefix,
  * \return the number of characters written to the buffer; will be zero if
  * the effect is invalid
  */
+size_t effect_get_menu_name_base(char *buf, size_t max, int ef_type, int ef_subtype, random_value rv)
+{
+	const char *fmt;
+	size_t len;
+
+	if (ef_type <= EF_NONE || ef_type >= EF_MAX) {
+		return 0;
+	}
+
+	fmt = base_descs[ef_type].menu_name;
+	switch (base_descs[ef_type].efinfo_flag) {
+	case EFINFO_DICE:
+	case EFINFO_HEAL:
+	case EFINFO_CONST:
+	case EFINFO_QUAKE:
+	case EFINFO_RACE:
+	case EFINFO_NONE:
+		len = strnfmt(buf, max, "%s", fmt);
+		break;
+
+	case EFINFO_FOOD:
+		{
+			const char *actstr;
+			const char *actarg;
+			int avg;
+
+			switch (ef_subtype) {
+			case 0: /* INC_BY */
+				actstr = "feed";
+				actarg = "yourself";
+				break;
+			case 1: /* DEC_BY */
+				actstr = "increase";
+				actarg = "hunger";
+				break;
+			case 2: /* SET_TO */
+				avg = randcalc(rv, 1, AVERAGE);
+				actstr = "become";
+				if (avg > PY_FOOD_FULL) {
+					actarg = "bloated";
+				} else if (avg > PY_FOOD_HUNGRY) {
+					actarg = "satisfied";
+				} else {
+					actarg = "hungry";
+				}
+				break;
+			case 3: /* INC_TO */
+				avg = randcalc(rv, 1, AVERAGE);
+				actstr = "leave";
+				if (avg > PY_FOOD_FULL) {
+					actarg = "bloated";
+				} else if (avg > PY_FOOD_HUNGRY) {
+					actarg = "nourished";
+				} else {
+					actarg = "hungry";
+				}
+				break;
+			default:
+				actstr = NULL;
+				actarg = NULL;
+				break;
+			}
+			if (actstr && actarg) {
+				len = strnfmt(buf, max, fmt, actstr, actarg);
+			} else {
+				len = strnfmt(buf, max, "%s", "");
+			}
+		}
+		break;
+
+	case EFINFO_CURE:
+	case EFINFO_TIMED:
+		len = strnfmt(buf, max, fmt, timed_effects[ef_subtype].desc);
+		break;
+
+	case EFINFO_STAT:
+		len = strnfmt(buf, max, fmt,
+			lookup_obj_property(OBJ_PROPERTY_STAT,
+			ef_subtype)->name);
+		break;
+
+	case EFINFO_SEEN:
+	case EFINFO_BOLT:
+	case EFINFO_BOLTD:
+	case EFINFO_TOUCH:
+		len = strnfmt(buf, max, fmt, projections[ef_subtype].desc);
+		break;
+
+	case EFINFO_SUMM:
+		len = strnfmt(buf, max, fmt, summon_desc(ef_subtype));
+		break;
+
+	case EFINFO_TELE:
+		{
+			random_value value = { 0, 0, 0, 0 };
+			char dist[32];
+			int avg = 0;
+
+			avg = randcalc(rv, 1, AVERAGE);
+
+			if (value.m_bonus) {
+				strnfmt(dist, sizeof(dist), "some distance");
+			} else {
+				strnfmt(dist, sizeof(dist), "%d grids", avg);
+			}
+			len = strnfmt(buf, max, fmt,
+				(ef_subtype) ? "other" : "you", dist);
+		}
+		break;
+
+	case EFINFO_BALL:
+	case EFINFO_SPOT:
+	case EFINFO_BREATH:
+	case EFINFO_SHORT:
+		len = strnfmt(buf, max, fmt,
+			projections[ef_subtype].player_desc);
+		break;
+
+	case EFINFO_LASH:
+		len = strnfmt(buf, max, fmt, projections[ef_subtype].lash_desc);
+		break;
+
+	case EFINFO_FEAT:
+		len = strnfmt(buf, max, fmt, f_info[ef_subtype].name);
+		break;
+
+	default:
+		len = strnfmt(buf, max, "%s", "");
+		msg("Bad effect description passed to effect_get_menu_name().  Please report this bug.");
+		break;
+	}
+
+	return len;
+}
+
+
 size_t effect_get_menu_name(char *buf, size_t max, const struct effect *e)
 {
+	random_value rv = { 0 };
+
+	assert(e);
+
+	if (e->dice) {
+		dice_random_value(e->dice, &rv);
+	}
+
+	return effect_get_menu_name_base(buf, max, e->index, e->subtype, rv);
+
+#if 0
 	const char *fmt;
 	size_t len;
 
@@ -725,11 +874,12 @@ size_t effect_get_menu_name(char *buf, size_t max, const struct effect *e)
 	}
 
 	return len;
+#endif
 }
 
-int ef_attr(const struct effect *e)
+int ef_attr_base(int type, int subtype)
 {
-	switch (base_descs[e->index].efinfo_flag) {
+	switch (base_descs[type].efinfo_flag) {
 	case EFINFO_SEEN:
 	case EFINFO_BOLT:
 	case EFINFO_BOLTD:
@@ -739,16 +889,18 @@ int ef_attr(const struct effect *e)
 	case EFINFO_BREATH:
 	case EFINFO_SHORT:
 	case EFINFO_LASH:
-		return projections[e->subtype].color;
+		return projections[subtype].color;
 
-	case EFINFO_FEAT: {
-			int proj = f_info[e->subtype].proj;
-			if (proj >= 0) return projections[proj].color;
-			break;
-		}
+	case EFINFO_FEAT:
+		return (int)f_info[subtype].d_attr;
 	}
 
 	return COLOUR_WHITE;
+}
+
+int ef_attr(const struct effect *e)
+{
+	return ef_attr_base(e->index, e->subtype);
 }
 
 /**

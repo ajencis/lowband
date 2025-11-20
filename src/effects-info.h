@@ -74,6 +74,7 @@ struct effect_object_property {
 
 textblock *effect_describe(const struct effect *e, const char *prefix,
 	int dev_skill_boost, bool only_first);
+size_t effect_get_menu_name_base(char *buf, size_t max, int ef_type, int ef_subtype, random_value rv);
 size_t effect_get_menu_name(char *buf, size_t max, const struct effect *e);
 struct effect *effect_next(struct effect *effect);
 bool effect_damages(const struct effect *effect);
@@ -81,6 +82,7 @@ int effect_avg_damage(const struct effect *effect, const dice_t *shared_dice);
 const char *effect_projection(const struct effect *effect);
 struct effect_object_property *effect_summarize_properties(
 	const struct effect *ef, int *unsummarized_count);
+int ef_attr_base(int type, int subtype);
 int ef_attr(const struct effect *e);
 
 #endif /* !EFFECTS_INFO_H */
