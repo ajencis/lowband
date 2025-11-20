@@ -352,6 +352,24 @@ static enum parser_error parse_meth_unarmed(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_meth_ranged(struct parser *p) {
+	struct blow_method *meth = parser_priv(p);
+	int val;
+	assert(meth);
+
+	val = parser_getuint(p, "ranged");
+	meth->ranged = val ? true : false;
+
+	if (meth->skill == SKILL_TO_HIT_MELEE) {
+		meth->skill = SKILL_TO_HIT_BOW;
+	}
+	if (meth->range == 1) {
+		meth->range = 0;
+	}
+
+	return PARSE_ERROR_NONE;
+}
+
 static enum parser_error parse_meth_message_type(struct parser *p)
 {
 	int msg_index;
@@ -499,7 +517,7 @@ static enum parser_error parse_meth_player_usable(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
-static enum parser_error parse_meth_ranged(struct parser *p)
+static enum parser_error parse_meth_range(struct parser *p)
 {
 	struct blow_method *meth = parser_priv(p);
 	int val;
@@ -508,7 +526,7 @@ static enum parser_error parse_meth_ranged(struct parser *p)
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
 
-	val = parser_getuint(p, "ranged");
+	val = parser_getuint(p, "range");
 	meth->range = val;
 	return PARSE_ERROR_NONE;
 }
@@ -522,6 +540,7 @@ static struct parser *init_parse_meth(void) {
 	parser_reg(p, "miss uint miss", parse_meth_miss);
 	parser_reg(p, "phys uint phys", parse_meth_phys);
 	parser_reg(p, "unarmed uint unarmed", parse_meth_unarmed);
+	parser_reg(p, "ranged uint ranged", parse_meth_ranged);
 	parser_reg(p, "msg ?str msg", parse_meth_message_type);
 	parser_reg(p, "act str act", parse_meth_act_msg);
 	parser_reg(p, "fact str fact", parse_meth_fact_msg);
@@ -531,7 +550,7 @@ static struct parser *init_parse_meth(void) {
 	parser_reg(p, "lash-type sym type", parse_meth_lash_type);
 	parser_reg(p, "power int power", parse_meth_power);
 	parser_reg(p, "player-usable uint usable", parse_meth_player_usable);
-	parser_reg(p, "ranged uint ranged", parse_meth_ranged);
+	parser_reg(p, "range uint range", parse_meth_range);
 	return p;
 }
 

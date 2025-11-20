@@ -4,8 +4,10 @@
 
 #include "angband.h"
 #include "effects.h"
+#include "game-world.h"
 #include "init.h"
 #include "mon-calcs.h"
+#include "message.h"
 #include "mon-timed.h"
 #include "mon-util.h"
 #include "obj-properties.h"
@@ -1160,6 +1162,8 @@ static void num_natural_attacks(const struct monster *mon, int array[EQUIP_MAX])
 		const struct monster_blow *mb = &mon->race->blow[i];
 		int eq_slot = mb->method->equip_slot;
 
+		if (mb->method->ranged) continue;
+
 		if (eq_slot != EQUIP_NONE) {
 			array[eq_slot] += mb->num;
 		}
@@ -1261,6 +1265,8 @@ static struct embryo_attack *init_mon_attacks(const struct monster *mon)
 		const struct monster_blow *blow = &blows[i];
 		int slot = blow->method->equip_slot;
 		int num = blow->num;
+
+		if (blow->method->ranged) continue;
 
 		if (slot != EQUIP_NONE) {
 			if (remaining_slots[slot] <= 0) {
@@ -1496,6 +1502,53 @@ static struct embryo_attack *get_ranged_weapon_attack(const struct monster *mon,
 	return emb;
 }
 
+static struct embryo_attack *get_ranged_natural_attack(const struct monster *mon, const struct monster_blow *blow)
+{
+	struct embryo_attack *emb;
+	bool p = mon_is_player(mon);
+	uint32_t od_mode;
+
+	if (!blow) return NULL;
+	if (!blow->method->ranged) return NULL;
+
+	emb = mem_zalloc(sizeof *emb);
+
+	emb->atk.ammo_tval = TV_NULL;
+	emb->atk.mb = blow;
+
+	if (blow->effect->lash_type == -1) {
+		emb->atk.dam_type = blow->method->lash_type;
+	}
+	else {
+		emb->atk.dam_type = blow->effect->lash_type;
+	}
+
+	emb->atk.skill = blow->method->skill;
+
+	emb->acc_stat = STAT_NONE;
+	emb->atk.dam_stat = STAT_DEX;
+
+	emb->atk.rv = blow->dice;
+	emb->atk.rv.dice = MAX(emb->atk.rv.dice, 1);
+	emb->atk.rv.sides = MAX(emb->atk.rv.sides, 0);
+
+	emb->atk.message = string_make(p ? blow->method->fmessage : blow->method->messages->act_msg);
+	emb->atk.title = string_make(blow->method->name);
+
+	emb->atk.num = 1;
+
+	emb->atk.range = blow->method->range ? blow->method->range : z_info->max_range;
+
+	if (blow->effect->mtimed >= 0) {
+		struct effect *ef = get_timed_effect(mon->race->level, blow->effect->mtimed);
+		emb->atk.ef = ef;
+	}
+
+	calc_ranged_emb_blows(mon, emb);
+
+	return emb;
+}
+
 static struct attack *hatch_ranged_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 {
 	struct attack *atk = mem_zalloc(sizeof *atk);
@@ -1526,6 +1579,14 @@ static void get_mon_ranged_attacks(struct monster *mon)
 	for (i = 0; i < mon->body.count; ++i) {
 		if (mon->body.slots[i].type == EQUIP_BOW && mon->body.slots[i].obj) {
 			new = get_ranged_weapon_attack(mon, mon->body.slots[i].obj);
+			new->next = curr;
+			curr = new;
+		}
+	}
+
+	for (i = 0; i < z_info->mon_blows_max && mon->race->blow[i].method; ++i) {
+		new = get_ranged_natural_attack(mon, &mon->race->blow[i]);
+		if (new) {
 			new->next = curr;
 			curr = new;
 		}

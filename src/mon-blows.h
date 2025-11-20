@@ -33,6 +33,7 @@ struct blow_method {
 	bool stun;
 	bool miss;
 	bool phys;
+	bool ranged;			// L: is it a ranged attack
 	int msgt;
 	struct blow_message *messages;
 	char *fmessage;
