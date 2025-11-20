@@ -27,6 +27,7 @@
 #include "obj-gear.h"
 #include "obj-info.h"
 #include "obj-knowledge.h"
+#include "obj-properties.h"
 #include "obj-util.h"
 #include "player.h"
 #include "player-attack.h"
@@ -42,8 +43,11 @@
 #include "ui-input.h"
 #include "ui-object.h"
 #include "ui-output.h"
+#include "z-color.h"
+#include "z-dice.h"
 #include "z-file.h"
 #include "z-form.h"
+#include <stdbool.h>
 #include "ui-player.h"
 
 
@@ -746,7 +750,7 @@ static int combat_panel_min_size(struct player *p)
 {
 	struct attack *atk;
 	struct effect *ef;
-	int size = 6;
+	int size = 7;
 
 	for (atk = p->mon.atk; atk; atk = atk->next) {
 		size++;
@@ -755,7 +759,92 @@ static int combat_panel_min_size(struct player *p)
 		}
 	}
 
+	for (atk = p->mon.rng_atk; atk; atk = atk->next) {
+		size += 2;
+		for (ef = atk->ef; ef; ef = ef->next) {
+			size++;
+		}
+	}
+
 	return size;
+}
+
+
+static void random_value_description(random_value rv, bool ignore_sides, char *buf, size_t bufsize)
+{
+	if (ignore_sides) {
+		if (rv.dice <= 0) {
+			strnfmt(buf, bufsize, "%i", rv.base);
+		}
+		else if (rv.base <= 0) {
+			strnfmt(buf, bufsize, "%id", rv.dice);
+		}
+		else {
+			strnfmt(buf, bufsize, "%id %+i", rv.dice, rv.base);
+		}
+	}
+	else if (rv.dice <= 0 || rv.sides <= 0) {
+		strnfmt(buf, bufsize, "%i", rv.base);
+	}
+	else if (rv.sides == 1) {
+		strnfmt(buf, bufsize, "%i", MAX(rv.base, 0) + MAX(rv.dice, 0));
+	}
+	else if (rv.base <= 0) {
+		strnfmt(buf, bufsize, "%id%i", rv.dice, rv.sides);
+	}
+	else {
+		strnfmt(buf, bufsize, "%id%i%+i", rv.dice, rv.sides, rv.base);
+	}
+}
+
+static int get_panel_attack_one(struct attack *atk, bool ranged, struct panel *p)
+{
+	int bth = atk->to_hit;
+	struct effect *ef;
+	random_value rv;
+	char atk_title[80], range[80] = "", rv_desc[80], ef_name[80];
+	const char *title;
+	int blows = atk->blows / 100, blow_frac = (atk->blows / 10) % 10;
+	int attr;
+	int num_choice = 0;
+	int hgt = 0;
+
+	if (ranged ? atk->range < z_info->max_range : atk->range != 1) {
+		strnfmt(range, sizeof range, " (rng %i)", atk->range);
+	}
+
+	strnfmt(atk_title, sizeof atk_title, "%s: %+i (%i.%i)%s", atk->title, bth, blows, blow_frac, range);
+
+	panel_line(p, COLOUR_WHITE, atk_title, "");
+	hgt++;
+
+	if (ranged) {
+		effect_get_menu_name_base(ef_name, sizeof ef_name, EF_HIT, atk->dam_type, atk->rv);
+		random_value_description(atk->rv, atk->ammo_tval != TV_NULL, rv_desc, sizeof rv_desc);
+		attr = ef_attr_base(EF_HIT, atk->dam_type);
+
+		panel_line(p, (uint8_t)attr, " ", "%s: %s", ef_name, rv_desc);
+		hgt++;
+	}
+
+	for (ef = atk->ef; ef; ef = ef->next) {
+		effect_get_menu_name(ef_name, sizeof ef_name, ef);
+		dice_random_value(ef->dice, &rv);
+		random_value_description(rv, false, rv_desc, sizeof rv_desc);
+		attr = ef_attr(ef);
+
+		title = num_choice > 0 ? "   - " : " ";
+		num_choice--;
+
+		if (ef->index == EF_RANDOM) {
+			num_choice = dice_roll(ef->dice, &rv);
+		}
+
+		panel_line(p, (uint8_t)attr, title, "%s: %s", ef_name, rv_desc);
+		hgt++;
+	}
+
+	return hgt;
 }
 
 static struct panel *get_panel_combat(void) {
@@ -780,6 +869,9 @@ static struct panel *get_panel_combat(void) {
 	++hgt;
 
 	for (atk = player->mon.atk; atk; atk = atk->next) {
+		hgt += get_panel_attack_one(atk, false, p);
+
+#if 0
 		bth = atk->to_hit;
 		struct effect *ef;
 		char atk_title[80], range[80] = "";
@@ -831,10 +923,20 @@ static struct panel *get_panel_combat(void) {
 
 			++hgt;
 		}
+#endif
+	}
+
+	if (player->mon.atk && player->mon.rng_atk) {
+		panel_space(p);
+		hgt++;
+	}
+
+	for (atk = player->mon.rng_atk; atk; atk = atk->next) {
+		hgt = get_panel_attack_one(atk, true, p);
 	}
 
 	/* Ranged */
-	aroll = &player->mon.state.ranged_attack;
+	/*aroll = &player->mon.state.ranged_attack;
 	if (aroll->obj) {
 		char title[80];
 		int mode = ODESC_BASE | ODESC_CAPITAL | ODESC_NOEGO | ODESC_SINGULAR | ODESC_TERSE;
@@ -849,7 +951,7 @@ static struct panel *get_panel_combat(void) {
 				   aroll->blows / 100, (aroll->blows / 10) % 10);
 		
 		hgt += 3;
-	}
+	}*/
 
 	panel_height = MAX(hgt, panel_height);
 

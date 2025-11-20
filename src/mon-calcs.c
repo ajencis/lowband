@@ -4,10 +4,8 @@
 
 #include "angband.h"
 #include "effects.h"
-#include "game-world.h"
 #include "init.h"
 #include "mon-calcs.h"
-#include "message.h"
 #include "mon-timed.h"
 #include "mon-util.h"
 #include "obj-properties.h"
@@ -1356,15 +1354,9 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 	}
 
 	result->message = string_make(emb->msg);
-	/*siz = strlen(emb->msg) + 1U;
-	result->message = mem_zalloc(siz);
-	strnfmt(result->message, siz, "%s", emb->msg);*/
 	my_struncap_full(result->message);
 
 	result->title = string_make(emb->title);
-	/*siz = strlen(emb->title) + 1U;
-	result->title = mem_zalloc(siz);
-	strnfmt(result->title, siz, "%s", emb->title);*/
 	my_struncap_full(result->title);
 
 	for (struct effect *ef = result->ef; ef; ef = ef->next) {
@@ -1506,7 +1498,6 @@ static struct embryo_attack *get_ranged_natural_attack(const struct monster *mon
 {
 	struct embryo_attack *emb;
 	bool p = mon_is_player(mon);
-	uint32_t od_mode;
 
 	if (!blow) return NULL;
 	if (!blow->method->ranged) return NULL;
@@ -1533,7 +1524,10 @@ static struct embryo_attack *get_ranged_natural_attack(const struct monster *mon
 	emb->atk.rv.sides = MAX(emb->atk.rv.sides, 0);
 
 	emb->atk.message = string_make(p ? blow->method->fmessage : blow->method->messages->act_msg);
+	my_struncap_full(emb->atk.message);
+
 	emb->atk.title = string_make(blow->method->name);
+	my_struncap_full(emb->atk.title);
 
 	emb->atk.num = 1;
 
