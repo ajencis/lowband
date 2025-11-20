@@ -2495,7 +2495,6 @@ static bool attack_project(struct monster *mon, struct attack *atk, struct objec
 		}
 
 		if (missile) {
-			msg_add_fmt("esm: grid = (%i,%i), see = %s", curr.x, curr.y, see ? "true" : "false");
 			event_signal_missile(EVENT_MISSILE, missile, see, curr.y, curr.x);
 		}
 	}
@@ -2540,8 +2539,10 @@ void do_cmd_fire(struct command *cmd) {
 	atk = player->mon.rng_atk;
 	range = atk->range;
 
-	if (!atk) return;
-	if (atk->blows <= 0) return;
+	if (!atk || atk->blows <= 0) {
+		msg("You have no ranged attacks!");
+		return;
+	}
 
 	if (atk->ammo_tval != TV_NULL) {
 		int err = cmd_get_item(cmd, "item", &ammo,
