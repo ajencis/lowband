@@ -28,6 +28,7 @@
 #include "player.h"
 #include "project.h"
 #include "z-util.h"
+#include "z-virt.h"
 
 
 
@@ -76,6 +77,8 @@ struct attack_special_type {
 
 struct embryo_attack {
 	struct embryo_attack *next;
+
+	struct attack atk;
 
 	int num;
 
@@ -1293,7 +1296,6 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 	struct effect *main;
 	struct attack *result;
 	random_value rv = { 0, 0, 0, 0 };
-	size_t siz;
 	bool has_skill = emb->skill >= 0 && emb->skill < SKILL_MAX;
 
 	if (emb->acc_stat >= 0 && emb->acc_stat < STAT_MAX) {
@@ -1337,6 +1339,8 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 	result->to_hit += mon->state.to_h;
 	result->skill = emb->skill;
 
+	result->ammo_tval = TV_NULL;
+
 	if (emb->skill >= 0 && emb->skill < SKILL_MAX) {
 		result->to_hit += mon->state.skills[emb->skill];
 	}
@@ -1345,14 +1349,16 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 		emb->range = MAX(emb->range, 2);
 	}
 
-	siz = strlen(emb->msg) + 1U;
+	result->message = string_make(emb->msg);
+	/*siz = strlen(emb->msg) + 1U;
 	result->message = mem_zalloc(siz);
-	strnfmt(result->message, siz, "%s", emb->msg);
+	strnfmt(result->message, siz, "%s", emb->msg);*/
 	my_struncap_full(result->message);
 
-	siz = strlen(emb->title) + 1U;
+	result->title = string_make(emb->title);
+	/*siz = strlen(emb->title) + 1U;
 	result->title = mem_zalloc(siz);
-	strnfmt(result->title, siz, "%s", emb->title);
+	strnfmt(result->title, siz, "%s", emb->title);*/
 	my_struncap_full(result->title);
 
 	for (struct effect *ef = result->ef; ef; ef = ef->next) {
@@ -1405,6 +1411,136 @@ static void get_mon_attacks(struct monster *mon)
 
 
 
+static int calc_ranged_emb_blows(const struct monster *mon, struct embryo_attack *emb)
+{
+	int wgt = emb->obj ? object_weight_one(emb->obj) : 0;
+	int div = wgt * 2 + 100;
+	bool has_acc = emb->acc_stat != STAT_NONE, has_dam = emb->atk.dam_stat != STAT_NONE;
+
+	int sdiv = 0, sind = 0;
+	int base, skill, blows;
+
+	if (has_dam) {
+		sind += mon->state.stat_ind[emb->dam_stat];
+		++sdiv;
+	}
+	if (has_acc) {
+		sind += mon->state.stat_ind[emb->acc_stat];
+		++sdiv;
+	}
+
+	if (sdiv > 0) {
+		base = adj_stat_blow(sind / sdiv);
+	}
+	else {
+		base = adj_stat_blow(AVG_STAT_IND);
+	}
+
+	skill = mon->state.skills[emb->skill];
+
+	blows = skill * base / div + mon->state.extra_shots;
+
+	emb->atk.blows = MAX(blows / 3 + 100, blows / 2);
+
+	return emb->atk.blows;
+}
+
+static struct embryo_attack *get_ranged_weapon_attack(const struct monster *mon, const struct object *weap)
+{
+	struct embryo_attack *emb = mem_zalloc(sizeof *emb);
+	bool p = mon_is_player(mon);
+	uint32_t od_mode;
+	char title[128];
+
+	assert(weap);
+	assert(weap->kind);
+	assert(weap->kind->base);
+
+	if (kf_has(weap->kind->kind_flags, KF_SHOOTS_SHOTS)) {
+		emb->atk.ammo_tval = TV_SHOT;
+	} else if (kf_has(weap->kind->kind_flags, KF_SHOOTS_ARROWS)) {
+		emb->atk.ammo_tval = TV_ARROW;
+	} else if (kf_has(weap->kind->kind_flags, KF_SHOOTS_BOLTS)) {
+		emb->atk.ammo_tval = TV_BOLT;
+	} else {
+		emb->atk.ammo_tval = TV_NULL;
+		emb->atk.dam_type = weap->kind->base->proj_type;
+	}
+
+	emb->atk.obj = weap;
+
+	emb->atk.skill = SKILL_TO_HIT_BOW;
+
+	emb->acc_stat = STAT_NONE;
+	emb->atk.dam_stat = STAT_NONE;
+
+	emb->atk.rv.dice = weap->dd;
+	emb->atk.rv.sides = weap->ds;
+
+	emb->atk.to_hit = object_to_hit(weap) * BTH_PLUS_ADJ;
+	emb->atk.rv.sides += object_to_dam(weap);
+	emb->atk.rv.base = 0;
+
+	emb->atk.message = string_make(p ? "hit {target}" : "hits {target}");
+
+	od_mode = ODESC_SINGULAR | ODESC_TERSE | ODESC_LOWERCASE;
+	object_desc(title, sizeof title, weap, od_mode, player);
+	my_strcap_full(title);
+	emb->atk.title = string_make(title);
+
+	emb->atk.num = 1;
+	emb->atk.range = z_info->max_range;
+
+	calc_ranged_emb_blows(mon, emb);
+
+	return emb;
+}
+
+static struct attack *hatch_ranged_attack_embryo(struct embryo_attack *emb, struct monster *mon)
+{
+	struct attack *atk = mem_zalloc(sizeof *atk);
+	int ind;
+
+	memcpy(atk, &emb->atk, sizeof *atk);
+
+	if (emb->acc_stat >= 0 && emb->acc_stat < STAT_MAX) {
+		ind = mon->state.stat_ind[emb->acc_stat];
+		emb->to_h += adj_dex_th(ind);
+	}
+	if (emb->dam_stat >= 0 && emb->dam_stat < STAT_MAX) {
+		ind = mon->state.stat_ind[emb->dam_stat];
+		emb->sides += adj_str_td(ind);
+	}
+
+	atk->next = mon->rng_atk;
+	mon->rng_atk = atk;
+
+	return atk;
+}
+
+static void get_mon_ranged_attacks(struct monster *mon)
+{
+	int i;
+	struct embryo_attack *new, *curr = NULL, *next;
+
+	for (i = 0; i < mon->body.count; ++i) {
+		if (mon->body.slots[i].type == EQUIP_BOW && mon->body.slots[i].obj) {
+			new = get_ranged_weapon_attack(mon, mon->body.slots[i].obj);
+			new->next = curr;
+			curr = new;
+		}
+	}
+
+	for (new = curr; new; new = next) {
+		next = new->next;
+		hatch_ranged_attack_embryo(new, mon);
+		free_atk_embryo(new);
+	}
+}
+
+
+
+
 static void free_attack(struct attack *atk)
 {
 	free_effect(atk->ef);
@@ -1416,7 +1552,6 @@ static void free_attack(struct attack *atk)
 void free_mon_attacks(struct monster *mon)
 {
 	struct attack *atk, *nxt;
-
 	assert(mon);
 	atk = mon->atk;
 	while (atk) {
@@ -1424,8 +1559,15 @@ void free_mon_attacks(struct monster *mon)
 		free_attack(atk);
 		atk = nxt;
 	}
-
 	mon->atk = NULL;
+
+	atk = mon->rng_atk;
+	while (atk) {
+		nxt = atk->next;
+		free_attack(atk);
+		atk = nxt;
+	}
+	mon->rng_atk = NULL;
 }
 
 
@@ -1433,6 +1575,7 @@ static void refresh_mon_attacks(struct monster *mon)
 {
 	free_mon_attacks(mon);
 	get_mon_attacks(mon);
+	get_mon_ranged_attacks(mon);
 }
 
 

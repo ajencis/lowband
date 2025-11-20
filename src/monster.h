@@ -498,9 +498,10 @@ struct monster {
 	wchar_t faction;					/* L: general group of monsters */
 	int16_t reaction;					/* L: how much it likes the player */
 
-	bool powers[PP_MAX];					// L: any powers it knows
+	bool powers[PP_MAX];				// L: any powers it knows
 
 	struct attack *atk;					// L: its attacks
+	struct attack *rng_atk;				// L: its ranged attacks
 };
 
 /** Variables **/

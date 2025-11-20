@@ -30,6 +30,9 @@ struct attack {
 	int blows;			// number of blows per round the user gets with it
 	int num;			// number of the same attacks the user has
 
+	random_value rv;	// basic damage random value
+	int dam_type;		// basic damage type
+
 	int hit_stat;		// which stat affects accuracy
 	int dam_stat;		// which stat affects dam
 	int skill;			// which skill
@@ -42,6 +45,8 @@ struct attack {
 	const struct monster_blow *mb;	// what blow it mimics
 	int range;			/* how far it can go (eg for a gaze) */
 	int crit_chance;	/* % chance of a critical hit */
+
+	int ammo_tval;		// L: which tval of ammo it uses, if any
 
 	int auto_freq;		// L: if it automatically attacks
 };

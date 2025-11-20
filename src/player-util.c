@@ -2628,8 +2628,11 @@ bool player_can_read(const struct player *p, bool show_msg)
  */
 bool player_can_fire(struct player *p, bool show_msg)
 {
+	update_mon_attacks(&p->mon);
+
 	// L: keep track of this when calcing bonuses
-	if (!p->mon.state.has_ranged_attack) {
+	if (!p->mon.rng_atk) {
+	//if (!p->mon.state.has_ranged_attack) {
 		if (show_msg) {
 			msg("You have nothing to fire with.");
 		}
