@@ -184,7 +184,7 @@ stun:0
 miss:0
 phys:0
 player-usable:1
-ranged:3
+range:3
 msg:MON_SPIT
 act:spits on {target}
 fact:spit on {target}
@@ -199,7 +199,7 @@ stun:0
 miss:0
 phys:0
 player-usable:1
-ranged:5
+range:5
 msg:MON_GAZE
 act:gazes at {target}
 fact:gaze at {target}
@@ -214,7 +214,7 @@ stun:0
 miss:0
 phys:0
 player-usable:1
-ranged:3
+range:3
 msg:MON_WAIL
 act:wails at {target}
 fact:wail at {target}
@@ -228,7 +228,7 @@ stun:0
 miss:0
 phys:0
 player-usable:1
-ranged:2
+range:2
 msg:MON_SPORE
 act:releases spores at {target}
 fact:release spores at {target}
@@ -256,7 +256,7 @@ stun:0
 miss:0
 phys:0
 player-usable:1
-ranged:5
+range:5
 msg:MON_INSULT
 act:insults {target}!
 act:insults {oftarget} mother!
@@ -278,7 +278,7 @@ stun:0
 miss:0
 phys:0
 player-usable:1
-ranged:5
+range:5
 msg:MON_MOAN
 act:wants his mushrooms back
 act:tells {target} to get off his land
@@ -307,4 +307,16 @@ desc:sing
 slot:HAT
 lash-type:SOUND
 power:1
+
+name:SPINE
+cut:0
+stun:0
+miss:0
+phys:1
+ranged:1
+act:shoots a spine at {target}
+fact:shoot a spine at {target}
+desc:shoot spines
+slot:CLOAK
+lash-type:PIERCING
 

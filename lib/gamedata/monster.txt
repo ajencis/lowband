@@ -530,6 +530,8 @@ desc:A tallfolk.
 
 name:misshapen
 base:person
+body:Misshapen
+evolution:manticore
 color:w
 speed:110
 hit-points:5
@@ -7834,9 +7836,7 @@ depth:30
 rarity:2
 experience:300
 blow:HIT:HURT:3d4
-blow:HIT:HURT:3d4
-blow:HIT:HURT:3d4
-blow:HIT:HURT:3d4
+blow:SPINE:PIERCE:3d4
 flags:EVIL
 flags:BASH_DOOR
 flags:FORCE_SLEEP
