@@ -480,12 +480,19 @@ void delete_monster_idx(struct chunk *c, int m_idx)
 	struct object *obj = mon->gear;
 	while (obj) {
 		struct object *next = obj->next;
+		int slot = equipped_item_slot(mon->body, obj);
+
+		assert(obj && obj->kind);
 
 		/* Preserve unseen artifacts (we assume they were created as this
 		 * monster's drop) - this will cause unintended behaviour in preserve
 		 * off mode if monsters can pick up artifacts */
 		if (obj->artifact && !obj_is_known_artifact(obj)) {
 			mark_artifact_created(obj->artifact, false);
+		}
+
+		if (mon->body.slots && slot >= 0 && slot < mon->body.count) {
+			mon->body.slots[slot].obj = NULL;
 		}
 
 		/* Delete the object.  Since it's in the cave's list do

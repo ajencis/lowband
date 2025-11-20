@@ -1269,7 +1269,7 @@ void monster_death(struct monster *mon, struct player *p, bool stats)
 {
 	int dump_item = 0;
 	int dump_gold = 0;
-	bool visible = monster_is_visible(mon) || monster_is_unique(mon);
+	bool visible = monster_is_visible(mon) || monster_is_unique(mon), dummy;
 
 	/* Delete any mimicked objects */
 	if (mon->mimicked_obj) {
@@ -1279,8 +1279,12 @@ void monster_death(struct monster *mon, struct player *p, bool stats)
 
 	/* Drop objects being carried */
 	while (true) {
-		struct object *obj;
-		int slot = first_slot_with_object_equipped(&mon->body);
+		struct object *obj = mon->gear;
+		if (!obj) break;
+
+		obj = gear_object_for_use(mon, obj, obj->number, false, &dummy);
+		//int slot = first_slot_with_object_equipped(&mon->body);
+		/*
 		if (mon->gear) {
 			obj = mon->gear;
 			pile_excise(&mon->gear, obj);
@@ -1291,10 +1295,10 @@ void monster_death(struct monster *mon, struct player *p, bool stats)
 		}
 		else {
 			break;
-		}
+		}*/
 
 		/* Object no longer held */
-		obj->held_m_idx = 0;
+		//obj->held_m_idx = 0;
 
 		/* Count it and drop it - refactor once origin is a bitflag */
 		if (!stats) {

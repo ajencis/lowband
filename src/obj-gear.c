@@ -518,7 +518,7 @@ static bool gear_excise_object(struct monster *mon, struct object *obj)
 	}
 
 	/* Make sure it isn't still equipped */
-	for (i = 0; i < p->mon.body.count; i++) {
+	for (i = 0; i < mon->body.count; i++) {
 		if (slot_object(mon, i) == obj) {
 			mon->body.slots[i].obj = NULL;
 			if (p) p->upkeep->equip_cnt--;
