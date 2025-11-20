@@ -24,7 +24,7 @@ fixed:1:Ring of Power:Yellow:Plain Gold
 fixed:28:Ring of Fire:Red:Ruby
 
 # The Ring of Adamant 'Nenya'
-fixed:40:Ring of Adamant:Light Blue:Mithril
+fixed:40:Ring of Adamant:White:Diamond
 
 # The Ring of Firmament 'Vilya'
 fixed:29:Ring of Firmament:Blue:Sapphire
