@@ -512,7 +512,9 @@ bool effect_do(struct effect *effect,
 				 * Since a choice is presented, allow
 				 * identification, even if no choice is made.
 				 */
-				*ident = true;
+				if (ident) {
+					*ident = true;
+				}
 				if (cmd) {
 					if (cmd_get_effect_from_list(cmd,
 							"list_index",
@@ -578,12 +580,14 @@ bool effect_do(struct effect *effect,
 				effect->y,
 				effect->x,
 				effect->msg,
-				*ident,
+				ident ? *ident : true,
 				cmd
 			};
 
 			completed = handler(&context) || completed;
-			*ident = context.ident;
+			if (ident) {
+				*ident = context.ident;
+			}
 		}
 
 		if (target.what == SRC_MONSTER) {
