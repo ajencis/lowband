@@ -1614,7 +1614,7 @@ void dbg_file_log(const char *filename, const char *dir, const char *msg)
 
 	len = strlen(dbg_file_prefixes[i]);
 	
-	if (len > 0 && my_stristr(msg, "done")) {
+	if (len > 0 && my_stristr(msg, "leaving")) {
 		dbg_file_prefixes[i][len - 1] = '\0';
 	}
 
