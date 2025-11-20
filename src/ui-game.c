@@ -270,6 +270,7 @@ struct cmd_info cmd_debug_player[] =
 	{ "Recall monster", { 'r' }, CMD_WIZ_RECALL_MONSTER, NULL, player_can_debug_prereq, 0, NULL, NULL, NULL, 0 },
 	{ "Erase monster recall", { 'W' }, CMD_WIZ_WIPE_RECALL, NULL, player_can_debug_prereq, 0, NULL, NULL, NULL, 0 },
 	{ "Learn from a tome", { 'k' }, CMD_WIZ_LEARN_TOME, NULL, player_can_debug_prereq, 0, NULL, NULL, NULL, 0 },
+	{ "Transform into a differnt monster", { 'R' }, CMD_WIZ_TRANSFORM, NULL, player_can_debug_prereq, 0, NULL, NULL, NULL, 0 },
 };
 
 struct cmd_info cmd_debug_tele[] =

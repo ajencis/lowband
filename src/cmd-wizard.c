@@ -2990,3 +2990,38 @@ void do_cmd_wiz_learn_tomes(struct command *cmd)
 	}*/
 }
 
+void do_cmd_wiz_transform(struct command *cmd)
+{
+	int r_idx;
+	struct monster_race *r = NULL;
+
+	if (cmd_get_arg_number(cmd, "index", &r_idx) == CMD_OK) {
+		if (r_idx > 0 && r_idx < z_info->r_max) {
+			r = &r_info[r_idx];
+		}
+	} else {
+		char s[80] = "";
+
+		if (!get_string("Transform into which monster? ", s, sizeof(s))) return;
+		/* See if an index was entered */
+		if (get_int_from_string(s, &r_idx)) {
+			if (r_idx > 0 && r_idx < z_info->r_max) {
+				r = &r_info[r_idx];
+			}
+		} else {
+			/* If not, find by name */
+			r = lookup_monster(s);
+		}
+		if (r != NULL) {
+			cmd_set_arg_number(cmd, "index", r->ridx);
+		}
+	}
+
+	if (r == NULL) {
+		msg("No monster found.");
+		return;
+	}
+
+	change_player_monster(player, r, false);
+}
+
