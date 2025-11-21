@@ -486,7 +486,9 @@ void target_get(struct loc *grid)
  */
 struct monster *target_get_monster(void)
 {
-	return cave_monster(cave, target.midx);
+	struct monster *result = cave_monster(cave, target.midx);
+
+	return result && result->race ? result : NULL;
 }
 
 

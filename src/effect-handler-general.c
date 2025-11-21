@@ -19,6 +19,7 @@
 
 #include "cave.h"
 #include "effect-handler.h"
+#include "effects.h"
 #include "game-input.h"
 #include "game-world.h"
 #include "init.h"
@@ -751,9 +752,11 @@ bool effect_handler_OTHER_TIMED_INC(effect_handler_context_t *context)
 {
 	int amount = effect_calculate_value(context, true);
 	struct monster *t_mon = NULL;
+	bool src_p = false;
 
 	if (context->origin.what == SRC_PLAYER) {
-		t_mon = target_get_monster();
+		src_p = true;
+		t_mon = smite_target_get(context->dir, context->cmd);
 	}
 	else if (context->origin.what == SRC_MONSTER) {
 		t_mon = monster_target_monster(context);
@@ -765,6 +768,10 @@ bool effect_handler_OTHER_TIMED_INC(effect_handler_context_t *context)
 		player_inc_timed(t_mon->player, context->subtype, amount, true, true, true);
 	}
 	else {
+		int flg = 0;
+
+		if (src_p || monster_is_in_view(t_mon)) flg |= MON_TMD_FLG_NOTIFY;
+		
 		mon_inc_timed(t_mon, context->subtype, amount, 0);
 	}
 

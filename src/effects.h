@@ -65,6 +65,6 @@ void effect_simple(int index,
 	int x,
 	bool *ident);
 int recharge_failure_chance(const struct object *obj, int strength);
-struct monster *smite_target_get(int dir);
+struct monster *smite_target_get(int dir, struct command *cmd);
 
 #endif /* INCLUDED_EFFECTS_H */

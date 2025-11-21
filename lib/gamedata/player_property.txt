@@ -595,6 +595,19 @@ rarity:5
 parent:skill:MAGIC
 prereq:HAS_MATCHING_SPELL
 
+type:power
+code:CURSE_MAGIC
+name:Cursing
+verb-second:curse
+verb-third:curses
+adj-positive:more effectively
+adj-negative:less effectively
+cost:10
+rarity:5
+parent:skill:MAGIC
+parent:power:NECROMANCY_MAGIC
+prereq:HAS_MATCHING_SPELL
+
 # You create a shroud of darkness that hides and protects
 # User creates a shroud of darkness that hides and protects
 type:power

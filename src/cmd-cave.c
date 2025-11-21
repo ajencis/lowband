@@ -55,6 +55,7 @@
 #include "project.h"
 #include "ui-mon-list.h"
 #include "trap.h"
+#include "z-type.h"
 
 
 static bool check_can_take_stairs(struct player *p, int time)
@@ -2204,7 +2205,7 @@ void do_cmd_diplomacy(struct command *cmd)
 		return;
 	}
 
-	mon = smite_target_get(dir);
+	mon = smite_target_get(dir, cmd);
 
 	if (!mon || !mon->race) {
 		return;
@@ -2392,10 +2393,11 @@ void do_cmd_dip_learn(struct command *cmd)
 	cmdq_push(CMD_DIPLOMACY);
 	cmd_set_arg_target(cmdq_peek(), "target", dir);
 
-	mon = smite_target_get(dir);
-	cost = teaching_price(mon, player);
+	mon = smite_target_get(dir, cmd);
 
 	if (!mon || !mon->race) return;
+
+	cost = teaching_price(mon, player);
 
 	if (!player_can_learn_from_monster(player, mon)) return;
 

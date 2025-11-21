@@ -940,6 +940,10 @@ static int realm_school_modifier(const struct player *p, const struct magic_real
 	return base - 5;
 }
 
+/**
+ * L: calculation of the level at which a spell is cast
+ * 
+ */
 int gener_spell_power(const struct player *p, const struct player_spell *s)
 {
 	int numschools = 0, sumschools = 0;
@@ -949,10 +953,10 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 	int power = get_power_scale(&p->mon, PP_SPELL_POWER, 50);
 	int ease = get_power_scale(&p->mon, PP_SPELL_EASE, 25);
 	int i;
-	int result, stepdown;
+	int result, stepdown, zero_result;
 	const struct magic_realm *r = get_player_realm(p);
 	bool is_continuous = spell_is_continuous(s);
-	int level = s->slevel;
+	int level = s->slevel, lev_pen;
 
 	if (!r) return -s->slevel;
 
@@ -970,25 +974,30 @@ int gener_spell_power(const struct player *p, const struct player_spell *s)
 		schoolbonus = 3 * sumschools / (2 + numschools);
 	}
 
-	schoolbonus = MIN(schoolbonus, skill * 2);
-
 	if (is_continuous) {
-		level -= level * r->realm_special[RLM_SPCL_CONTINUOUS] * level / 100;
+		level -= level * r->realm_special[RLM_SPCL_CONTINUOUS] / 100;
 	}
 	else {
-		level -= level * r->realm_special[RLM_SPCL_INSTANT] * level / 100;
+		level -= level * r->realm_special[RLM_SPCL_INSTANT] / 100;
 	}
 
-	result = skill + schoolbonus + realmbonus - level - antim + 1;
+	zero_result = skill / 2 + schoolbonus + realmbonus - antim + 1;
+
+	lev_pen = MAX(level - 50, (level * (100 - zero_result) + 99) / 100);
+	// higher-level spells get to level 100 at the same time as lower-level ones
+	result = zero_result - MAX(lev_pen, 0);
 
 	if (result > 10 && power > 0) {
+		// SPELL_POWER boosts stronger spells only
 		result = (result - 10) * (100 + power) / 100 + 10;
 	}
 	if (result < 10 && ease > 0) {
+		// SPELL_EASE boosts all spells (?)
 		result = MAX(result, MIN(result / 2, result) + ease - 10);
 	}
 
-	for (stepdown = 20; result > stepdown; stepdown += 10) {
+	// if skill's not high enough impose a penalty
+	for (stepdown = skill; result > stepdown; stepdown += 10) {
 		result = (result - stepdown) / 2 + stepdown;
 	}
 
@@ -1009,6 +1018,15 @@ void gener_spell_learn(struct player *p, const struct player_spell *s, bool verb
 	p->upkeep->update |= PU_SPELLS;
 
 	return;
+}
+
+struct player_spell *player_spell_by_name(const char *name)
+{
+	struct player_spell *ps;
+	for (ps = spells; ps; ps = ps->next) {
+		if (streq(name, ps->name)) return ps;
+	}
+	return NULL;
 }
 
 struct player_spell *player_spell_lookup(int index) {

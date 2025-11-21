@@ -14,7 +14,7 @@
 /* name 							aim		info		args	info flags		description		menu_name */
 EFFECT(RANDOM,						false,	NULL,		0,		EFINFO_NONE,	"randomly ",	"randomly")
 EFFECT(HIT,							false,	NULL,		0,		EFINFO_BOLTD,	"does %s %s damage", "%s")
-EFFECT(DAMAGE,						false,	"hurt",		1,		EFINFO_DICE,	"does %s damage to the player",	"damage")
+EFFECT(DAMAGE,						true,	"hurt",		1,		EFINFO_DICE,	"does %s damage to the player",	"damage")
 EFFECT(HEAL_HP,						false,	"heal",		2,		EFINFO_HEAL,	"heals %s hitpoints%s",	"heal self")
 EFFECT(MON_HEAL_HP,					false,	NULL,		0,		EFINFO_NONE,	"heals monster hitpoints",	"heal")
 EFFECT(MON_HEAL_KIN,				false,	NULL,		0,		EFINFO_NONE,	"heals fellow monster hitpoints",	"heal")
@@ -26,7 +26,7 @@ EFFECT(TIMED_INC,					true,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s turns",
 EFFECT(TIMED_INC_NO_RES,			false,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s turns (unresistable)",	"extend %s")
 EFFECT(MON_TIMED_INC,				true,	"dur",		2,		EFINFO_TIMED,	"increases monster %s by %s turns",	"")
 EFFECT(SELF_TIMED_INC,				false,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s turns to user", "extend %s")
-EFFECT(OTHER_TIMED_INC,				false,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s turns to target", "impose %s")
+EFFECT(OTHER_TIMED_INC,				true,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s turns to target", "impose %s")
 EFFECT(TIMED_DEC,					false,	NULL,		2,		EFINFO_TIMED,	"reduces length of %s by %s turns",	"reduce %s")
 EFFECT(GLYPH,						false,	NULL,		1,		EFINFO_NONE,	"inscribes a glyph beneath you",	"inscribe a glyph")
 EFFECT(RESTORE_STAT,				false,	NULL,		1,		EFINFO_STAT,	"restores your %s",	"restore %s")

@@ -18,6 +18,8 @@
  */
 
 #include "effects.h"
+#include "cave.h"
+#include "cmd-core.h"
 #include "effect-handler.h"
 #include "game-input.h"
 #include "init.h"
@@ -29,7 +31,9 @@
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
+#include "target.h"
 #include "trap.h"
+#include "z-type.h"
 
 
 /**
@@ -193,6 +197,8 @@ int effect_subtype(int index, const char *type)
 		case EF_TIMED_INC:
 		case EF_TIMED_INC_NO_RES:
 		case EF_TIMED_DEC:
+		case EF_OTHER_TIMED_INC:
+		case EF_SELF_TIMED_INC:
 			return timed_name_to_idx(type);
 
 		/* Nourishment types */
@@ -662,27 +668,47 @@ int recharge_failure_chance(const struct object *obj, int strength) {
 	return raw_chance > 1 ? raw_chance : 1;
 }
 
-struct monster *smite_target_get(int dir)
+/**
+ * L: returns a smite-targeted monster; if there is a monster already selected
+ * it will return that if it still exists or NULL otherwise
+ */
+struct monster *smite_target_get(int dir, struct command *cmd)
 {
-	if (dir == DIR_TARGET) {
+	struct monster *mon = NULL;
+	int midx;
+
+	if (cmd && !cmd_get_arg_number(cmd, "midx", &midx)) {
+		mon = cave_monster(cave, midx);
+		mon = mon && mon->race ? mon : NULL;
+	}
+	else if (dir == DIR_TARGET) {
 		if (target_okay()) {
-			return target_get_monster();
+			mon = target_get_monster();
 		}
-	} else if (dir != DIR_UNKNOWN) {
+	}
+	else if (dir != DIR_UNKNOWN) {
 		int i, range = z_info->max_sight;
 		struct loc direction = loc_sum(player->mon.grid, loc(range * ddx[dir], range * ddy[dir]));
 		int path_n;
 		struct loc path_g[256], target;
+
 		path_n = project_path(cave, path_g, range, player->mon.grid, direction, 0);
-		for (i = 0; i < path_n; i++) {
+
+		for (i = 0; i < path_n && !mon; i++) {
 			target = path_g[i];
-			struct monster *mon = square_monster(cave, target);
+			mon = square_monster(cave, target);
 			if (mon) {
-				return mon;
+				break;
 			}
 		}
 	}
 
-	return NULL;
+	if (!target_able(mon)) {
+		return NULL;
+	}
+
+	cmd_set_arg_number(cmd, "target", mon->midx);
+
+	return mon;
 }
 

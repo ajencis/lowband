@@ -505,20 +505,23 @@ static int py_extra_target(const struct player *p, const struct player_ability *
 	return base + xtra;
 }
 
-static bool increase_ability(struct monster *mon, const struct player_ability *abil)
+bool increase_ability(struct monster *mon, const struct player_ability *abil, bool verbose)
 {
 	struct player *p = mon->player;
-	char name[80];
+	//char name[80];
 
 	if (!p) return false;
 	if (abil->learn_index < 0) return false;
+	if (p->extra_learned[abil->learn_index] >= py_extra_target(p, abil)) return false;
 	assert(abil->learn_index < z_info->learn_max);
 
 	p->extra_learned[abil->learn_index]++;
 
-	strnfmt(name, sizeof name, "%s", abil->name);
+	if (verbose) {
+		//strnfmt(name, sizeof name, "%s", abil->name);
 
-	msg("You feel more familiar with %s.", name);
+		msg("You feel more familiar with %s.", abil->name);
+	}
 
 	p->upkeep->update |= PU_BONUS;
 
@@ -568,7 +571,7 @@ bool exercise_ability(struct monster *mon, const struct player_ability *abil, in
 	chance /= mon->player->lev * 2 - total;
 	
 	if (one_in_(chance)) {
-		return increase_ability(mon, abil);
+		return increase_ability(mon, abil, true);
 		mon->player->learned_when[learn_i] = 0;
 	}
 

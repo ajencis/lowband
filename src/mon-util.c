@@ -1240,18 +1240,6 @@ struct monster *choose_nearby_injured_kin(struct chunk *c,
  * Monster damage and death utilities
  * ------------------------------------------------------------------------ */
 
-static int first_slot_with_object_equipped(struct player_body *body)
-{
-	uint16_t i;
-
-	for (i = 0; i < body->count; ++i) {
-		const struct object *obj = body->slots[i].obj;
-
-		if (obj) return i;
-	}
-
-	return 0;
-}
 
 /**
  * Handles the "death" of a monster.

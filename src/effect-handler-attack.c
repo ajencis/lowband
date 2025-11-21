@@ -17,16 +17,17 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#include "cave.h"
+#include "cmd-core.h"
 #include "effect-handler.h"
+#include "effects.h"
 #include "game-input.h"
 #include "init.h"
 #include "mon-desc.h"
 #include "mon-make.h"
 #include "mon-move.h"
-#include "mon-spell.h"
 #include "mon-util.h"
 #include "obj-desc.h"
-#include "obj-gear.h"
 #include "obj-knowledge.h"
 #include "obj-util.h"
 #include "player-calcs.h"
@@ -639,12 +640,30 @@ bool effect_handler_DAMAGE(effect_handler_context_t *context)
 		}
 
 		case SRC_PLAYER: {
-			if (context->msg) {
+			struct monster *t_mon = smite_target_get(context->dir, context->cmd);
+			bool fear = false;
+			char mon_desc[80];
+
+			if (!t_mon) {
+				msg("You see nobody there.");
+				return false;
+			}
+
+			monster_desc(mon_desc, sizeof mon_desc, t_mon, MDESC_STANDARD);
+			msg("%s is wounded.", mon_desc);
+			mon_take_hit(t_mon, player, dam, &fear, NULL);
+
+			if (fear) {
+				add_monster_message(t_mon, MON_MSG_FLEE_IN_TERROR, true);
+			}
+
+			return true;
+			/*if (context->msg) {
 				my_strcpy(killer, context->msg, sizeof(killer));
 			} else {
 				my_strcpy(killer, "yourself", sizeof(killer));
 			}
-			break;
+			break;*/
 		}
 
 		case SRC_GRID:

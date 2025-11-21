@@ -101,7 +101,8 @@ static bool does_resist(struct monster *mon, int effect_type, int timer, int fla
 
 	/* Some effects get a saving throw; others don't */
 	if (effect->gets_save == true || (flag & MON_TMD_FLG_GETS_SAVE)) {
-		return saving_throw(mon, timer);
+		bool ret = saving_throw(mon, timer);
+		return ret;
 	} else {
 		return false;
 	}
@@ -202,8 +203,8 @@ static bool mon_set_timed(struct monster *mon,
 	if (m_note &&
 			!(flag & MON_TMD_FLG_NOMESSAGE) &&
 			(flag & MON_TMD_FLG_NOTIFY)
-		&& monster_is_obvious(mon)) {
-			add_monster_message(mon, m_note, true);
+			&& monster_is_obvious(mon)) {
+		add_monster_message(mon, m_note, true);
 	}
 
 	/* Update the visuals, as appropriate. */

@@ -1,3 +1,11 @@
+# Default values for spells are:
+# dice: SPELL_POWER * (spell-level / 10 + 5) / 100
+# sides: (SPELL_POWER + 4) / 5
+# max = 5d20 (~50) for a level 1 spell
+# max = 10d20 (~100) for a level 50 spell
+# spells above level 50 are to be considered exceptional
+
+
 spell:Magic Missile:1
 effect:BOLT:MISSILE
 dice:$Dd$S
@@ -122,8 +130,8 @@ spell:Summon Demon:50:10
 effect:SUMMON:DEMON
 dice:1d$N
 expr:N:SPELL_POWER:+ 4 / 5
-desc:Summons foul necromantic minions.
-school:NECROMANCY
+desc:Summons foul demonic minions.
+school:SUMMONING
 school:DEMONOLOGY
 
 spell:Control Undead:10:0
@@ -152,6 +160,20 @@ school:TELEPORTATION
 spell:Descension:80
 effect:LICH_TRANSFORM
 desc:Transforms you into a lich.
+school:NECROMANCY
+
+
+spell:Wound:10
+effect:DAMAGE
+dice:$Dd$S
+expr:D:SPELL_POWER:* 6 + 99 / 100
+expr:S:SPELL_POWER:+ 4 / 5
+effect:OTHER_TIMED_INC:CUT
+dice:$Dd$S
+expr:D:SPELL_POWER:* 6 + 99 / 100
+expr:S:SPELL_POWER:+ 4 / 5
+desc:Wounds a monster, injuring it and causing bleeding.
+school:CURSE
 school:NECROMANCY
 
 
