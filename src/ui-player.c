@@ -849,8 +849,6 @@ static int get_panel_attack_one(struct attack *atk, bool ranged, struct panel *p
 
 static struct panel *get_panel_combat(void) {
 	struct panel *p;
-	int bth, dam;//, blws = 0;
-	struct py_attack_roll *aroll;
 	struct attack *atk;
 	int hgt = 0, panel_size;
 

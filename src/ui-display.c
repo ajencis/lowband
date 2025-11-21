@@ -57,6 +57,7 @@
 #include "ui-term.h"
 #include "ui-visuals.h"
 #include "wizard.h"
+#include "z-color.h"
 
 /**
  * There are a few functions installed to be triggered by several 
@@ -431,6 +432,9 @@ uint8_t monster_health_attr(void)
 
 		/* L: Poisoned */
 		if (mon->m_timed[TMD_POISONED]) attr = COLOUR_GREEN;
+
+		/* L: Cut */
+		if (mon->m_timed[TMD_CUT]) attr = COLOUR_RED;
 
 		/* Confused */
 		if (mon->m_timed[TMD_CONFUSED]) attr = COLOUR_UMBER;

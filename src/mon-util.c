@@ -257,15 +257,17 @@ random_chance saving_throw_chance(const struct monster *mon, int difficulty)
 {
 	random_chance ret;
 
-	ret.denominator = difficulty + 100;
+	ret.denominator = difficulty * 3 / 2 + 50;
 	ret.numerator = mon->state.skills[SKILL_SAVE];
 
 	if (ret.denominator < 1) {
 		ret.denominator = 1;
 	}
 
+	// best save chance is !one_in_(save)
 	if (ret.numerator > ret.denominator) {
-		ret.numerator = ret.denominator - 1;
+		ret.denominator = ret.numerator;
+		ret.numerator -= 1;
 	}
 
 	return ret;
@@ -1692,20 +1694,31 @@ void monster_take_terrain_damage(struct monster *mon)
 
 void monster_take_timed_damage(struct monster *mon, int energy)
 {
+	int dam = 0;
+
+	if (mon->m_timed[TMD_CUT]) {
+		int cut1 = (mon->m_timed[TMD_CUT] + 3) / 4;
+		int cut2 = (mon->m_timed[TMD_CUT] + 5) / 4;
+		dam += (cut1 * cut2 + energy - 1) / energy;
+	}
 	if (mon->m_timed[TMD_POISONED] > 0) {
 		int pois1 = (mon->m_timed[TMD_POISONED] + 3) / 4;
 		int pois2 = (mon->m_timed[TMD_POISONED] + 5) / 4;
-		int pdam = (pois1 * pois2 + energy - 1) / energy;
-		if (pdam > 0) {
+		dam += (pois1 * pois2 + energy - 1) / energy;
+		/*if (pdam > 0) {
 			mon_take_nonplayer_hit(pdam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true);
-		}
+		}*/
 	}
 	if (mon->m_timed[TMD_SUFFOCATE] > 0) {
 		int suff = mon->m_timed[TMD_SUFFOCATE] * 2;
-		int sdam = (suff + 50 + energy - 1) / energy;
-		if (sdam > 0) {
+		dam += (suff + 50 + energy - 1) / energy;
+		/*if (sdam > 0) {
 			mon_take_nonplayer_hit(sdam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true);
-		}
+		}*/
+	}
+
+	if (dam > 0) {
+		mon_take_nonplayer_hit(dam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true);
 	}
 }
 

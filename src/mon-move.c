@@ -2421,6 +2421,10 @@ bool process_monster_timed(struct monster *mon)
 		mon_dec_timed(mon, TMD_AFRAID, d, MON_TMD_FLG_NOTIFY);
 	}
 
+	if (mon->m_timed[TMD_CUT]) {
+		mon_dec_timed(mon, TMD_CUT, 1, 0);
+	}
+
 	if (mon->m_timed[TMD_TOXIC]) {
 		mon_dec_timed(mon, TMD_TOXIC, 1, 0);
 		mon_inc_timed(mon, TMD_POISONED, 5, 0);
