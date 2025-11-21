@@ -31,6 +31,7 @@
 #include "player-timed.h"
 #include "player-util.h"
 #include "player.h"
+#include "z-util.h"
 
 #define NO_FAIL_LEVEL 25 // caster level for which spells get no fail
 #define NO_MANA_LEVEL 60 // caster level for which spells are free
@@ -1024,7 +1025,7 @@ struct player_spell *player_spell_by_name(const char *name)
 {
 	struct player_spell *ps;
 	for (ps = spells; ps; ps = ps->next) {
-		if (streq(name, ps->name)) return ps;
+		if (!my_stricmp(name, ps->name)) return ps;
 	}
 	return NULL;
 }

@@ -2640,7 +2640,7 @@ void process_monsters(int minimum_energy)
 				 * terrain damage after its turn.
 				 */
 				monster_take_terrain_damage(mon);
-				monster_take_timed_damage(mon, turn_energy(mspeed));
+				//monster_take_timed_damage(mon);
 
 				/* Monster is no longer current */
 				cave->mon_current = -1;

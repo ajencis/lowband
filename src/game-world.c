@@ -584,6 +584,7 @@ void process_world(struct chunk *c)
 {
 	int i, y, x;
 	bool p_berserker = player->mon.state.powers[PP_BERSERK] > 0;// pf_has(player->state.pflags, PF_BERSERKER);
+	struct monster *mon;
 
 	/* Compact the monster list if we're approaching the limit */
 	if (cave_monster_count(c) + 32 > z_info->level_monster_max) {
@@ -639,7 +640,7 @@ void process_world(struct chunk *c)
 	}
 
 	for (i = 0; i < cave_monster_max(c); ++i) {
-		struct monster *mon = i == 0 ? &player->mon : cave_monster(c, i);
+		mon = i == 0 ? &player->mon : cave_monster(c, i);
 		uint16_t j;
 		const struct object *obj;
 
@@ -681,6 +682,15 @@ void process_world(struct chunk *c)
 	cave_feat_upkeep(c);
 
 	/*** Damage (or healing) over Time ***/
+	for (i = 0; i < cave_monster_max(c); ++i) {
+		mon = cave_monster(c, i);
+		if (mon && mon->race) {
+			monster_take_timed_damage(mon);
+		}
+	}
+	if (monster_take_timed_damage(&player->mon)) {
+		return;
+	}
 
 	/* Take damage from poison */
 	if (player->mon.m_timed[TMD_POISONED]) {

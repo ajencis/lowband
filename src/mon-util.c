@@ -1680,34 +1680,43 @@ void monster_take_terrain_damage(struct monster *mon)
 	}
 }
 
-void monster_take_timed_damage(struct monster *mon, int energy)
+
+/**
+ * L: gives about SCALETO damage when TIMED_AMT = 100
+ * monsters with more hp take more damage, and the scaling is less than linear
+ * with timed_amt
+ */
+static int basic_timed_damage(const struct monster *mon, int timed_amt, int scaleto)
+{
+	int turn_mod = turn / turns_per_process_world;
+	int base_amt = 50 + mon->maxhp, timed_factor = my_int_sqrt(timed_amt) + 5;
+	int result = (base_amt * timed_factor * scaleto + (turn_mod % 100)) / 100 / 15;
+
+	return result;
+}
+
+bool monster_take_timed_damage(struct monster *mon)
 {
 	int dam = 0;
+	struct player *p = mon->player;
 
 	if (mon->m_timed[TMD_CUT]) {
-		int cut1 = (mon->m_timed[TMD_CUT] + 3) / 4;
-		int cut2 = (mon->m_timed[TMD_CUT] + 5) / 4;
-		dam += (cut1 * cut2 + energy - 1) / energy;
+		dam = basic_timed_damage(mon, mon->m_timed[TMD_CUT], 10);
+		if (p && take_hit(p, dam, "a mortal wound")) return true;
+		if (!p && mon_take_nonplayer_hit(dam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true)) return true;
 	}
 	if (mon->m_timed[TMD_POISONED] > 0) {
-		int pois1 = (mon->m_timed[TMD_POISONED] + 3) / 4;
-		int pois2 = (mon->m_timed[TMD_POISONED] + 5) / 4;
-		dam += (pois1 * pois2 + energy - 1) / energy;
-		/*if (pdam > 0) {
-			mon_take_nonplayer_hit(pdam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true);
-		}*/
+		dam = basic_timed_damage(mon, mon->m_timed[TMD_POISONED], 10);
+		if (p && take_hit(p, dam, "a mortal wound")) return true;
+		if (!p && mon_take_nonplayer_hit(dam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true)) return true;
 	}
 	if (mon->m_timed[TMD_SUFFOCATE] > 0) {
-		int suff = mon->m_timed[TMD_SUFFOCATE] * 2;
-		dam += (suff + 50 + energy - 1) / energy;
-		/*if (sdam > 0) {
-			mon_take_nonplayer_hit(sdam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true);
-		}*/
+		dam = basic_timed_damage(mon, mon->m_timed[TMD_POISONED], 25);
+		if (p && take_hit(p, dam, "a mortal wound")) return true;
+		if (!p && mon_take_nonplayer_hit(dam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true)) return true;
 	}
-
-	if (dam > 0) {
-		mon_take_nonplayer_hit(dam, mon, MON_MSG_NONE, MON_MSG_COLLAPSE, true);
-	}
+	
+	return false;
 }
 
 /**
