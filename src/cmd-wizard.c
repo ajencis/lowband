@@ -2967,6 +2967,7 @@ void do_cmd_wiz_learn_tomes(struct command *cmd)
 			didmsg = false;
 			while (increase_ability(&player->mon, abil, !didmsg)) {
 				didmsg = true;
+				didlearn = true;
 			}
 		}
 	}
@@ -2976,37 +2977,12 @@ void do_cmd_wiz_learn_tomes(struct command *cmd)
 	}*/
 
 	if (!didlearn) msg("You have nothing to learn!");
-
-	/*struct object *tome;
-	
-	if (cmd_get_arg_item(cmd, "item", &tome) != CMD_OK) {
-		if (!get_item(&tome, "Learn from which item? ",
-				"You have nothing to learn from.", cmd->code,
-				obj_can_learn_extra_from, (USE_EQUIP | USE_INVEN | USE_QUIVER |
-				USE_FLOOR))) {
-			return;
-		}
-		cmd_set_arg_item(cmd, "item", tome);
-	}
-
-	if (of_has(tome->flags, OF_REALM_LEARN)) {
-		const struct magic_realm *mr = realm_by_index(tome->pval);
-		learn_realm(player, mr);
-	}
-	else {
-		while (obj_can_learn_extra_from(tome)) {
-			if (!learn_extra(player, tome->pval)) {
-				break;
-			}
-			calc_extra_points(player, &player->state);
-		}
-	}*/
 }
 
 void do_cmd_wiz_learn_spell(struct command *cmd)
 {
 	int spell_idx;
-	char string[80];
+	char string[80] = "";
 	struct player_spell *spell;
 
 	if (!get_string("Learn which spell? ", string, sizeof string)) {
@@ -3022,6 +2998,7 @@ void do_cmd_wiz_learn_spell(struct command *cmd)
 
 	if (!spell) {
 		msg("No spell found.");
+		return;
 	}
 
 	gener_spell_learn(player, spell, true);
