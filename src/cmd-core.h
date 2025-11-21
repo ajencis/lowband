@@ -171,6 +171,7 @@ typedef enum cmd_code {
 	CMD_WIZ_WIZARD_LIGHT,
 	CMD_WIZ_LEARN_TOME,
 	CMD_WIZ_TRANSFORM,
+	CMD_WIZ_LEARN_SPELL,
 
 	/* Hors categorie Commands */
 	CMD_RETIRE,

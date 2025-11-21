@@ -36,6 +36,8 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
+#include "player-properties.h"
+#include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "player.h"
@@ -2957,10 +2959,21 @@ void do_cmd_wiz_wizard_light(struct command *cmd)
 
 void do_cmd_wiz_learn_tomes(struct command *cmd)
 {
-	bool didlearn = false;
-	while (check_learn_powers(player, INT_MAX)) {
-		didlearn = true;
+	bool didlearn = false, didmsg;
+	struct player_ability *abil;
+
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (abil->learn_index > -1) {
+			didmsg = false;
+			while (increase_ability(&player->mon, abil, !didmsg)) {
+				didmsg = true;
+			}
+		}
 	}
+
+	/*while (check_learn_powers(player, INT_MAX)) {
+		didlearn = true;
+	}*/
 
 	if (!didlearn) msg("You have nothing to learn!");
 
@@ -2988,6 +3001,30 @@ void do_cmd_wiz_learn_tomes(struct command *cmd)
 			calc_extra_points(player, &player->state);
 		}
 	}*/
+}
+
+void do_cmd_wiz_learn_spell(struct command *cmd)
+{
+	int spell_idx;
+	char string[80];
+	struct player_spell *spell;
+
+	if (!get_string("Learn which spell? ", string, sizeof string)) {
+		return;
+	}
+
+	if (get_int_from_string(string, &spell_idx)) {
+		spell = player_spell_lookup(spell_idx);
+	}
+	else {
+		spell = player_spell_by_name(string);
+	}
+
+	if (!spell) {
+		msg("No spell found.");
+	}
+
+	gener_spell_learn(player, spell, true);
 }
 
 void do_cmd_wiz_transform(struct command *cmd)
