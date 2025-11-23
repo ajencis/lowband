@@ -707,7 +707,9 @@ struct monster *smite_target_get(int dir, struct command *cmd)
 		return NULL;
 	}
 
-	cmd_set_arg_number(cmd, "target", mon->midx);
+	if (cmd) {
+		cmd_set_arg_number(cmd, "target", mon->midx);
+	}
 
 	return mon;
 }

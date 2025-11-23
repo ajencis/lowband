@@ -762,7 +762,7 @@ bool effect_handler_OTHER_TIMED_INC(effect_handler_context_t *context)
 		t_mon = monster_target_monster(context);
 	}
 
-	if (!t_mon) return false;
+	if (!t_mon || !t_mon->race) return false;
 
 	if (t_mon->player) {
 		player_inc_timed(t_mon->player, context->subtype, amount, true, true, true);
