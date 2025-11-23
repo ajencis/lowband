@@ -1524,6 +1524,12 @@ static const char *attack_error(const struct monster *attacker, const struct mon
 	return NULL;
 }
 
+static const bool attack_valid(const struct monster *attacker, const struct monster *defender,
+		const struct attack *atk, const struct chunk *c)
+{
+	return !attack_error(attacker, defender, atk, c);
+}
+
 static bool blow_message(struct monster *mon, struct monster *t_mon, const char *verb, uint32_t msg_type)
 {
 	char mon_desc[80], crit_desc[80] = "", real_verb[80];
@@ -1569,10 +1575,16 @@ static bool blow_message(struct monster *mon, struct monster *t_mon, const char 
 
 static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct temp_attack_data *which)
 {
+	assert(mon && mon->race);
+	assert(t_mon);
+	assert(which);
+
 	struct player *ap = mon_is_player(mon) ? mon->player : NULL;
 	struct player *tp = mon_is_player(t_mon) ? t_mon->player : NULL;
 	uint32_t msg_type;
 	struct player_ability *abil;
+
+	int ac = mon_ac(t_mon);
 
 	bool success;
 
@@ -1583,9 +1595,6 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 		monster_wake(t_mon, false, 100);
 		mon_clear_timed(t_mon, TMD_PARALYZED, MON_TMD_FLG_NOMESSAGE);
 	}
-
-	/* See if the player hit */
-	success = test_hit(which->atk->to_hit, mon_ac(t_mon));
 
 	/* Auto-Recall and track if possible and visible */
 	if (monster_is_visible(t_mon) && ap) {
@@ -1604,6 +1613,9 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 		msgt(MSG_AFRAID, "You are too afraid to attack %s!", target);
 		return false;
 	}
+
+	/* See if the player hit */
+	success = test_hit(which->atk->to_hit, ac);
 
 	if (success) {
 		assert(which->atk);
@@ -1645,13 +1657,13 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 
 		blow_message(mon, t_mon, verb, msg_type);
 
-		effect_do(&tmp_ef, source_monster(mon->midx), source_none(), NULL, &id, true, dir, 0, 0, NULL);
+		effect_do(&tmp_ef, source_monster(mon->midx), source_monster(t_mon->midx), NULL, &id, true, dir, 0, 0, NULL);
 
 		dice_free(tmp_dice);
 
 		if (which->atk->skill >= 0 && which->atk->skill < SKILL_MAX) {
 			abil = lookup_player_ability(which->atk->skill, PY_ABIL_SKILL);
-			exercise_ability(mon, abil, mon_ac(t_mon));
+			exercise_ability(mon, abil, ac);
 
 			abil = attack_spec_type(which->atk->obj, which->atk->mb);
 			if (abil) {
@@ -1767,6 +1779,8 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 	const char *err_msg;
 	int16_t pretimed[TMD_MAX];
 	int t_mon_hp = t_mon->state.skills[SKILL_HEALTH];
+	int n_attacks = 0;
+	bool has_valid = false;
 
 	memcpy(pretimed, t_mon->m_timed, sizeof pretimed);
 
@@ -1782,23 +1796,33 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 	if (mon_is_player(mon)) {
 		for (atk = mon->atk; atk; atk = atk->next) {
 			err_msg = attack_error(mon, t_mon, atk, cave);
-			if (err_msg) msg(err_msg);
+			if (err_msg) {
+				msg(err_msg);
+			}
 		}
 
 		if (!mon->atk) {
-			msg("You don't have any attacks!");
 		}
 	}
+
+	for (atk = mon->atk; atk; atk = atk->next) {
+		n_attacks += atk->num;
+		if (attack_valid(mon, t_mon, atk, cave)) {
+			has_valid = true;
+		}
+	}
+
+	if (!has_valid) return false;
 
 	if (ap) {
 		disturb(ap);
 	}
 
-	tmp_data = get_temp_attack_data(mon, t_mon, cave);
+	//tmp_data = get_temp_attack_data(mon, t_mon, cave);
 
-	assert(tmp_data || distance(mon->grid, t_mon->grid) > 1);
+	//assert(tmp_data || distance(mon->grid, t_mon->grid) > 1);
 
-	if (!tmp_data) return false;
+	//if (!tmp_data) return false;
 
 	if (mon_is_player(mon)) {
 		target_set_monster(t_mon);
@@ -1806,7 +1830,23 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 
 	energy = 0;
 
-	while (energy * 4 <= z_info->move_energy * 3) {
+	for (atk = mon->atk; mon_valid(t_midx, t_grid) && atk; atk = atk->next) {
+		if (!attack_valid(mon, t_mon, atk, cave)) continue;
+
+		assert(atk->blows > 0);
+
+		struct temp_attack_data data = { NULL, 0, atk };
+
+		int blow_num = atk->blows / 100;
+		energy += z_info->move_energy * blow_num * 100 / atk->blows;
+
+		for (i = 0; mon_valid(t_midx, t_grid) && i < blow_num; ++i) {
+			mon_test_blow(mon, t_mon, &data);
+			did_attack = true;
+		}
+	}
+
+	/*while (energy * 4 <= z_info->move_energy * 3) {
 		curr = random_attack(tmp_data);
 		if (!curr) break;
 		assert(curr->atk);
@@ -1826,13 +1866,13 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 
 			break;
 		}
+	}*/
+
+	if (ap) {
+		ap->upkeep->energy_use = energy / n_attacks;
 	}
 
-	if (mon->player) {
-		mon->player->upkeep->energy_use = energy;
-	}
-
-	free_temp_attack_data(tmp_data);
+	//free_temp_attack_data(tmp_data);
 
 	t_mon = cave_monster(cave, t_midx);
 	if (t_mon && t_mon->race) {
@@ -2239,86 +2279,6 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 	}
 }
 
-#if 0
-/**
- * Helper function used with ranged_helper by do_cmd_fire.
- */
-struct attack_result make_ranged_shot(struct player *p,
-		struct object *ammo, struct loc grid)
-{
-	char *hit_verb = mem_alloc(20 * sizeof(char));
-	struct attack_result result = {false, 0, 0, hit_verb};
-	struct object *bow = slot_object(&p->mon, slot_by_type(&p->mon, EQUIP_BOW, true));
-	struct monster *mon = square_monster(cave, grid);
-	int b = 0, s = 0;
-
-	my_strcpy(hit_verb, "hits", 20);
-
-	/* Did we hit it */
-	if (!test_hit(chance_of_missile_hit(p, ammo, bow, mon), mon->race->ac))
-		return result;
-
-	result.success = true;
-
-	improve_attack_modifier(p, ammo, mon, &b, &s, result.hit_verb, true);
-	improve_attack_modifier(p, bow, mon, &b, &s, result.hit_verb, true);
-
-	if (!OPT(p, birth_percent_damage)) {
-		result.dmg = ranged_damage(p, mon, ammo, bow, b, s);
-		result.dmg = critical_shot(p, mon, object_weight_one(ammo),
-			object_to_hit(ammo), result.dmg, true,
-			&result.msg_type);
-	} else {
-		result.dmg = o_ranged_damage(p, mon, ammo, bow, b, s, &result.msg_type);
-	}
-
-	missile_learn_on_ranged_attack(p, bow);
-	learn_brand_slay_from_launch(p, ammo, bow, mon);
-
-	return result;
-}
-
-
-/**
- * Helper function used with ranged_helper by do_cmd_throw.
- */
-struct attack_result make_ranged_throw(struct player *p,
-	struct object *obj, struct loc grid)
-{
-	char *hit_verb = mem_alloc(20 * sizeof(char));
-	struct attack_result result = {false, 0, 0, hit_verb};
-	struct monster *mon = square_monster(cave, grid);
-	int b = 0, s = 0;
-
-	my_strcpy(hit_verb, "hits", 20);
-
-	/* If we missed then we're done */
-	if (!test_hit(chance_of_missile_hit(p, obj, NULL, mon), mon->race->ac))
-		return result;
-
-	result.success = true;
-
-	improve_attack_modifier(p, obj, mon, &b, &s, result.hit_verb, true);
-
-	if (!OPT(p, birth_percent_damage)) {
-		result.dmg = ranged_damage(p, mon, obj, NULL, b, s);
-		result.dmg = critical_shot(p, mon, object_weight_one(obj),
-			object_to_hit(obj), result.dmg, false,
-			&result.msg_type);
-	} else {
-		result.dmg = o_ranged_damage(p, mon, obj, NULL, b, s, &result.msg_type);
-	}
-
-	/* Direct adjustment for exploding things (flasks of oil) */
-	if (of_has(obj->flags, OF_EXPLODE))
-		result.dmg *= 3;
-
-	learn_brand_slay_from_throw(p, obj, mon);
-
-	return result;
-}
-#endif
-
 void do_cmd_melee(struct command *cmd)
 {
 	int dir, range = 1;//, i;
@@ -2580,63 +2540,6 @@ void do_cmd_fire(struct command *cmd) {
 	player->upkeep->energy_use = (z_info->move_energy * 100 + atk->blows - 1) / atk->blows;
 
 	attack_project(&player->mon, atk, ammo, target);
-
-#if 0
-	int dir;
-	int range = MIN(6 + 2 * player->mon.state.ammo_mult, z_info->max_range);
-	int shots = player->mon.state.num_shots;
-
-	struct py_attack_roll aroll = player->mon.state.ranged_attack;
-
-	struct object *bow = aroll.obj;// slot_object(&player->mon, slot_by_type(&player->mon, EQUIP_BOW, true));
-	struct object *obj = NULL;
-
-	if (!player_get_resume_normal_shape(player, cmd)) {
-		return;
-	}
-
-	/* Get arguments */
-	if (cmd_get_item(cmd, "item", &obj,
-				/* Prompt */ "Fire which ammunition?",
-				/* Error  */ "You have no suitable ammunition to fire.",
-				/* Filter */ obj_can_fire,
-				/* Choice */ USE_INVEN | USE_QUIVER | USE_FLOOR | QUIVER_TAGS)
-			!= CMD_OK) {
-		return;
-	}
-
-	if (!get_shooter_ranged_attack(player, obj, &aroll)) {
-		msg("Error: can't get ranged attack.");
-		return;
-	}
-
-	/* Require a usable launcher */
-	if (!bow || !player->mon.state.ammo_tval) {
-		msg("You have nothing to fire with.");
-		return;
-	}
-
-	/* Check the item being fired is usable by the player. */
-	if (!item_is_available(obj)) {
-		msg("That item is not within your reach.");
-		return;
-	}
-
-	/* Check the ammo can be used with the launcher */
-	if (obj->tval != player->mon.state.ammo_tval) {
-		msg("That ammo cannot be fired by your current weapon.");
-		return;
-	}
-
-	if (cmd_get_target(cmd, "target", &dir) == CMD_OK) {
-		player_confuse_dir(player, &dir, false);
-	} else {
-		return;
-	}
-
-	ranged_helper(player, obj, dir, range, shots, &aroll, ranged_hit_types,
-				  (int) N_ELEMENTS(ranged_hit_types));
-#endif
 }
 
 

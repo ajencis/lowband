@@ -924,9 +924,9 @@ static void calc_emb_blows(const struct monster *mon, struct embryo_attack *emb,
 
 	skill = mon->state.skills[emb->skill];
 
-	blows = skill * base / div + mon->state.extra_blows / numblows;
+	blows = (skill * base / div + mon->state.extra_blows) * emb->num / numblows;
 
-	emb->blows = MAX(blows / 2 + 100, blows);
+	emb->blows = MAX(blows + 50 * emb->num, blows / 2 + 100 * emb->num);
 }
 
 static int num_embryos(const struct embryo_attack *emb)
