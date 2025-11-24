@@ -1524,7 +1524,7 @@ static const char *attack_error(const struct monster *attacker, const struct mon
 	return NULL;
 }
 
-static const bool attack_valid(const struct monster *attacker, const struct monster *defender,
+static bool attack_valid(const struct monster *attacker, const struct monster *defender,
 		const struct attack *atk, const struct chunk *c)
 {
 	return !attack_error(attacker, defender, atk, c);
@@ -1687,6 +1687,7 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 }
 
 
+#if 0
 static int attack_select_chance(const struct temp_attack_data *data)
 {
 	assert(data->penalty >= 0);
@@ -1765,20 +1766,21 @@ static void free_temp_attack_data(struct temp_attack_data *data)
 		data = next;
 	}
 }
+#endif
 
 bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 {
 	struct loc t_grid = t_mon->grid;
 	int t_midx = t_mon->midx, i;
 	//const struct attack *atk;
-	struct temp_attack_data *tmp_data, *curr;
+	//struct temp_attack_data *tmp_data, *curr;
 	struct attack *atk;
 	int energy;
 	bool did_attack = false;
 	struct player *ap = mon->player;
 	const char *err_msg;
 	int16_t pretimed[TMD_MAX];
-	int t_mon_hp = t_mon->state.skills[SKILL_HEALTH];
+	//int t_mon_hp = t_mon->state.skills[SKILL_HEALTH];
 	int n_attacks = 0;
 	bool has_valid = false;
 
