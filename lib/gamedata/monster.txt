@@ -235,6 +235,76 @@ base:player
 color:w
 
 
+##### Shapeshifting shapes #####
+
+name:small mist
+evolution:mist
+base:ghost
+body:Empty
+color:W
+speed:125
+glyph:~
+hearing:0
+armor-class:50
+sleepiness:0
+depth:25
+rarity:0
+experience:0
+flags:IM_BLUDGEONING | IM_PIERCING | IM_SLASHING
+flags:IM_POIS | IM_COLD
+desc:A small cloud of mist.
+
+name:mist
+evolution:large mist
+base:ghost
+body:Empty
+color:W
+speed:125
+glyph:~
+hearing:0
+armor-class:50
+sleepiness:0
+depth:50
+rarity:0
+experience:0
+flags:IM_BLUDGEONING | IM_PIERCING | IM_SLASHING
+flags:IM_POIS | IM_COLD
+desc:A cloud of mist.
+
+name:large mist
+evolution:massive mist
+base:ghost
+body:Empty
+color:W
+speed:125
+glyph:~
+hearing:0
+armor-class:50
+sleepiness:0
+depth:75
+rarity:0
+experience:0
+flags:IM_BLUDGEONING | IM_PIERCING | IM_SLASHING
+flags:IM_POIS | IM_COLD
+desc:A large cloud of mist.
+
+name:massive mist
+base:ghost
+body:Empty
+color:W
+speed:125
+glyph:~
+hearing:0
+armor-class:50
+sleepiness:0
+depth:100
+rarity:0
+experience:0
+flags:IM_BLUDGEONING | IM_PIERCING | IM_SLASHING
+flags:IM_POIS | IM_COLD
+desc:A massive cloud of mist.
+
+
 ##### Playable #####
 
 name:human

@@ -30,6 +30,7 @@
 #include "mon-summon.h"
 #include "mon-timed.h"
 #include "mon-util.h"
+#include "monster.h"
 #include "obj-chest.h"
 #include "obj-curse.h"
 #include "obj-desc.h"
@@ -538,6 +539,9 @@ static void polymorph(struct monster *mon, struct monster_race *mr, int dur, boo
 	if (mon->player) {
 		mon->player->upkeep->update |= PU_BONUS;
 		mon->player->upkeep->redraw |= PR_MISC;
+	} else {
+		mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
+		mflag_on(mon->mflag, MFLAG_UPDATE_STATE);
 	}
 
 	mon_reembody(mon);

@@ -1457,3 +1457,13 @@ expr:S:SPELL_POWER:* 4 / 3
 lore:transform into bat
 lore-color-base:Black
 message-vis:{name} transforms.
+
+name:POLYMORPH_MIST
+knowable:0
+hit:100
+effect:POLY_SELF:small mist
+dice:2d$S
+expr:S:SPELL_POWER:* 4 / 3
+lore:transform into mist
+lore-color-base:Light Slate
+message-vis:{name} discorporates.

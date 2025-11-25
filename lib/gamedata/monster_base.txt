@@ -931,7 +931,7 @@ skill-search:5
 skill-stealth:15
 skill-magic:5
 skill-health:5
-spells:POLYMORPH_WOLF | POLYMORPH_BAT
+spells:POLYMORPH_WOLF | POLYMORPH_BAT | POLYMORPH_MIST
 
 # Always awake, elemental objects which engulf and breathe their element(s)
 name:vortex
