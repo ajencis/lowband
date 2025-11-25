@@ -1121,7 +1121,6 @@ static int power_by_projection(int proj)
 
 int skill_by_effect(int effect_ind, int effect_subtype)
 {
-	
 	switch (effect_ind)
 	{
 		case EF_BALL:
@@ -1143,6 +1142,8 @@ int skill_by_effect(int effect_ind, int effect_subtype)
 			return PP_HOLY_MAGIC;
 		case EF_LASH:
 			return PP_HAFTED_SPECIALIZATION;
+		case EF_POLY_SELF:
+			return PP_TRANSMUTATION_MAGIC;
 	}
 
 	return PP_NONE;
