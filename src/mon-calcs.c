@@ -930,12 +930,52 @@ static void calc_emb_blows(const struct monster *mon, struct embryo_attack *emb,
 	emb->blows = MAX(blows + 50 * emb->num, blows / 2 + 100 * emb->num);
 }
 
+static void calc_emb_dual_wield(const struct monster *mon, struct embryo_attack *emb, int numweaps)
+{
+	int wgt;
+
+	if (!emb->obj) return;
+	if (numweaps <= 1) return;
+
+	// longsword has 130 wgt
+	wgt = object_weight_one(emb->obj);
+
+	wgt -= get_power_scale(mon, PP_DUAL_WIELD, 25);
+
+	wgt *= 100 - get_power_scale(mon, PP_DUAL_WIELD, 60);
+	wgt /= 100;
+
+	// using two longswords, wgt at 0 power = 130; wgt at full power = 42
+
+	if (wgt <= 0) return;
+
+	wgt *= (numweaps - 1);
+
+	emb->to_h *= 100 - wgt;
+	emb->to_h -= 100;
+	emb->to_h -= wgt / 2;
+
+	// using two longswords to-h for each is 58% normal - 21
+}
+
 static int num_embryos(const struct embryo_attack *emb)
 {
 	int count = 0;
 	const struct embryo_attack *curr;
 	for (curr = emb; curr; curr = curr->next) {
 		count += emb->num;
+	}
+	return count;
+}
+
+static int num_weap_embryos(const struct embryo_attack *emb)
+{
+	int count = 0;
+	const struct embryo_attack *curr;
+	for (curr = emb; curr; curr = curr->next) {
+		if (curr->obj) {
+			count += emb->num;
+		}
 	}
 	return count;
 }
@@ -1381,7 +1421,7 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 static void get_mon_attacks(struct monster *mon)
 {
 	struct embryo_attack *emb = init_mon_attacks(mon), *curr, *next;
-	int count = num_embryos(emb), i;
+	int count = num_embryos(emb), weapcount = num_weap_embryos(emb), i;
 
 	curr = emb;
 	while (curr) {
@@ -1390,6 +1430,8 @@ static void get_mon_attacks(struct monster *mon)
 		modify_unarmed_attack(curr, mon);
 
 		calc_emb_blows(mon, curr, count);
+
+		calc_emb_dual_wield(mon, curr, weapcount);
 
 		calc_emb_crit(mon, curr);
 

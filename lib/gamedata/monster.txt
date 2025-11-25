@@ -11580,6 +11580,7 @@ desc:A foul wind chills your bones as this ghastly figure approaches.
 
 name:marilith
 base:major demon
+body:Marilith
 color:y
 speed:120
 hit-points:1232
@@ -11598,6 +11599,7 @@ flags:DROP_1
 spell-freq:9
 spells:BLIND | WOUND
 spells:S_DEMON
+power:DUAL_WIELD:50
 desc:She is a demon of female form with many arms, each bearing deadly weapons.
 
 name:death mold
