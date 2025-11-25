@@ -543,9 +543,11 @@ textblock *effect_describe(const struct effect *e, const char *prefix,
 			strnfmt(desc, sizeof(desc), edesc, f_info[e->subtype].name);
 			break;
 
-		case EFINFO_RACE:
-			strnfmt(desc, sizeof desc, edesc, lookup_monster_idx(e->subtype)->name);
+		case EFINFO_RACE: {
+			const char *m_name = lookup_monster_idx(e->subtype)->name;
+			strnfmt(desc, sizeof desc, edesc, is_a_vowel(m_name[0]) ? "an" : "a", m_name);
 			break;
+		}
 
 		case EFINFO_NONE:
 			strnfmt(desc, sizeof(desc), "%s", edesc);
