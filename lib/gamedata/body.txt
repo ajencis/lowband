@@ -347,3 +347,11 @@ slot:CLOAK:back
 slot:HAT:head
 slot:GLOVES:hands
 slot:BOOTS:feet
+
+body:Head
+slot:HAT:head
+slot:CLOAK:trailing
+
+body:Hand
+slot:WEAPON:hand
+slot:RING:finger

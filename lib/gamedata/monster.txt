@@ -12415,6 +12415,7 @@ desc: little intelligence, but it has been instructed to destroy all it meets.
 name:demilich
 plural:demiliches
 base:lich
+body:Head
 evolution:archlich
 color:U
 speed:120
@@ -12696,6 +12697,7 @@ desc: with disdainful ease.
 
 name:hand druj
 base:skeleton
+body:Hand
 color:y
 speed:130
 hit-points:528
@@ -13207,8 +13209,6 @@ sleepiness:80
 depth:85
 rarity:10
 experience:18000
-blow:CLAW:HURT:6d12
-blow:CLAW:HURT:6d12
 blow:BITE:EXP_80:7d14
 flags:UNDEAD | COLD_BLOOD
 flags:ONLY_ITEM
@@ -13339,6 +13339,7 @@ desc: Silmarils, he attacks you with agility, power and cruelty.
 
 name:eye druj
 base:skeleton
+body:Empty
 color:r
 speed:130
 hit-points:1080
@@ -14058,6 +14059,7 @@ desc: history steeped in forgotten evils, his atrocities numerous and sickening.
 
 name:skull druj
 base:skeleton
+body:Head
 color:o
 speed:130
 hit-points:1540
