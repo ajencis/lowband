@@ -2589,6 +2589,27 @@ static void normal_monster(struct monster_race *mr)
 	mr->avg_hp = level_to_hp(mr->level);
 }
 
+static int body_power_modifier(struct player_body *body)
+{
+	struct player_body *human;
+
+	for (human = bodies; human; human = human->next) {
+		if (!my_stricmp(human->name, "Humanoid")) {
+			break;
+		}
+	}
+
+	assert(human);
+	assert(body);
+
+	if (human->count > body->count) {
+		return exponentiate((human->count - body->count) * 25, 2, 3);
+	}
+	else {
+		return 10 * human->count / body->count;
+	}
+}
+
 void rearrange_monster(struct monster_race *mr, bool is_player)
 {
 	if (is_player && rf_has(mr->flags, RF_PLAYABLE)) {
@@ -2617,7 +2638,9 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 		}
 	}
 
-	power += (power + 25) * powermod / 100;
+	powermod += body_power_modifier(mr->body);
+
+	power += (power * 75 / 100 + 25) * powermod / 100;
 
 	power = MAX(power, 0);
 	mintotal = power * 5 - 2;
@@ -2699,6 +2722,8 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 	mr->freq_spell = MIN(75, mr->freq_spell);
 	mr->mexp = rf_has(mr->flags, RF_UNIQUE) ? power * power * 10 : 0;
 
+	mr->skills[SKILL_HEALTH] = mr->avg_hp;
+
 	// spread damage over its damaging blows
 	quo = 0;
 	for (i = 0; i < z_info->mon_blows_max && mr->blow[i].method; i++) {
@@ -2744,11 +2769,12 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 
 void rearrange_monsters(struct monster_race *mraces, uint32_t seed)
 {
+	struct monster_base *pbase = lookup_monster_base("player");
+	struct monster_race *curr;
+
 	Rand_quick = true;
 	Rand_value = seed;
 	
-	struct monster_base *pbase = lookup_monster_base("player");
-	struct monster_race *curr;
 	for (curr = mraces; curr; curr = curr->next) {
 		if (curr->base == pbase) continue;
 		if (curr->level <= 0) continue;
