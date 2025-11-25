@@ -316,6 +316,7 @@ static void mon_stat_calc(const struct monster *mon, struct player_state *state)
 {
 	int i;
 	struct player *p = mon->player;
+	struct monster_race *mr = mon->original_race ? mon->original_race : mon->race;
 
 	for (i = 0; i < STAT_MAX; ++i) {
 		int add = state->stat_add[i];
@@ -328,7 +329,7 @@ static void mon_stat_calc(const struct monster *mon, struct player_state *state)
 		else {
 			int base = 10;
 			//int base = mon->race->level * 8 / 100 + 8;
-			add += mon->race->stat_mod[i];
+			add += mr->stat_mod[i];
 
 			top = modify_stat_value(base, add);
 			use = modify_stat_value(base, add);
