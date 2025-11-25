@@ -106,6 +106,7 @@ static void free_body(struct player_body *to_free)
 
 	if (to_free->slots) {
 		for (i = 0; i < to_free->count; ++i) {
+			assert(!to_free->slots[i].obj);
 			string_free(to_free->slots[i].name);
 		}
 
@@ -117,6 +118,8 @@ static void free_body(struct player_body *to_free)
 void mon_embody(struct monster *mon)
 {
 	const struct player_body *base = mon->race->body;
+
+	assert(base);
 	if (!base) base = mon->race->base->body;
 	//assert(base);
 	if (!base) base = bodies;

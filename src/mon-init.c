@@ -31,8 +31,10 @@
 #include "obj-util.h"
 #include "object.h"
 #include "parser.h"
+#include "player-enum.h"
 #include "player-properties.h"
 #include "player-timed.h"
+#include "player.h"
 #include "project.h"
 #include "ui-visuals.h"
 #include "z-form.h"
@@ -1414,6 +1416,7 @@ struct file_parser mon_spell_parser = {
 static enum parser_error parse_mon_base_name(struct parser *p) {
 	struct monster_base *h = parser_priv(p);
 	struct monster_base *rb = mem_zalloc(sizeof *rb), *parent;
+	int i;
 
 	if (parser_hasval(p, "parent")) {
 		char *parent_name = string_make(parser_getsym(p, "parent"));
@@ -1438,6 +1441,11 @@ static enum parser_error parse_mon_base_name(struct parser *p) {
 
 	rb->next = h;
 	rb->name = string_make(parser_getsym(p, "name"));
+	rb->body = bodies;
+
+	for (i = 0; i < SKILL_MAX; ++i) {
+		rb->skills[i] = 100;
+	}
 
 	parser_setpriv(p, rb);
 	return PARSE_ERROR_NONE;
