@@ -4199,14 +4199,34 @@ bool effect_handler_ECHOLOCATE(effect_handler_context_t *context)
 	return true;
 }
 
+static struct monster_race *highest_level_evol_level_less_than(struct monster_race *base, int level)
+{
+	struct monster_race *best = NULL, *temp;
+	struct evolution *evol;
+
+	if (base->level <= level) {
+		best = base;
+	}
+
+	for (evol = base->evol; evol; evol = evol->next) {
+		temp = highest_level_evol_level_less_than(evol->race, level);
+
+		if (temp && temp->level <= level && temp->level > best->level) {
+			best = temp;
+		}
+	}
+
+	return best;
+}
+
 bool effect_handler_POLY_SELF(effect_handler_context_t *context)
 {
 	int pwr = effect_calculate_value(context, true);
-	int mrace_id = context->subtype, midx, evo_num;
-	struct monster_race *mr = lookup_monster_idx(mrace_id), *next_mr;
+	int mrace_id = context->subtype, midx;
+	struct monster_race *mr = lookup_monster_idx(mrace_id);//, *next_mr;
 	struct monster *caster = NULL;
-	struct evolution *evo;
 
+	/*
 	// select random evolutions
 	next_mr = mr;
 
@@ -4222,7 +4242,9 @@ bool effect_handler_POLY_SELF(effect_handler_context_t *context)
 
 			next_mr = evo->race;
 		}
-	}
+	}*/
+
+	mr = highest_level_evol_level_less_than(mr, pwr);
 
 	if (context->origin.what == SRC_MONSTER) {
 		midx = context->origin.which.monster;
