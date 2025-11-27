@@ -172,7 +172,7 @@ const uint32_t player_exp[PY_MAX_LEVEL] =
 };
 
 
-uint64_t player_exp_new(int level_num, int level_denom)
+static uint64_t player_exp_new_calc(int level_num, int level_denom)
 {
 	int num, div;
 	int lev_remain = level_num / level_denom, ten_exp = 0, ten_exp_need;
@@ -217,6 +217,36 @@ uint64_t player_exp_new(int level_num, int level_denom)
 	}
 
 	result = (result / mod) * mod;
+
+	return result;
+}
+
+
+uint64_t player_exp_new(int level_num, int level_denom)
+{
+	static uint64_t whole_results[PY_MAX_LEVEL] = { 0 };
+	static uint64_t prev_result = 0;
+	static int prev_num = 0, prev_denom = 0;
+	uint64_t result;
+
+	if (level_denom == 1 && level_num <= PY_MAX_LEVEL && whole_results[level_num - 1] != 0) {
+		return whole_results[level_num - 1];
+	}
+
+	if (prev_num == level_num && prev_denom == level_denom) {
+		return prev_result;
+	}
+
+	result = player_exp_new_calc(level_num, level_denom);
+
+	if (level_denom == 1 && level_num <= PY_MAX_LEVEL) {
+		whole_results[level_num - 1] = result;
+	}
+	else {
+		prev_num = level_num;
+		prev_denom = level_denom;
+		prev_result = result;
+	}
 
 	return result;
 }
@@ -483,7 +513,7 @@ void player_exp_gain(struct player *p, uint64_t amount, uint32_t fract)
 
 int player_min_xp_depth(struct player *p)
 {
-	int64_t eff_xp = p->max_exp * p->mon.state.expfact / 100;
+	int64_t eff_xp = p->max_exp;// * p->mon.state.expfact / 100;
 	int i;
 
 	for (i = 1; i < PY_MAX_LEVEL; ++i) {
