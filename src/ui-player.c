@@ -655,7 +655,7 @@ static const char *show_adv_exp(void)
 {
 	if (!player_at_max_level(player)) {
 		static char buffer[30];
-		int32_t advance = player_exp[player->lev - 1];
+		int64_t advance = player_exp_needed(player, player->lev);// player_exp[player->lev - 1];
 		strnfmt(buffer, sizeof(buffer), "%ld", (long)advance);
 		return buffer;
 	}
@@ -731,7 +731,7 @@ static struct panel *get_panel_midleft(void) {
 	panel_line(p, max_color(player->lev, player->max_lev),
 			"Level", "%d", player->lev);
 	panel_line(p, max_color(player->exp, player->max_exp),
-			"Cur Exp", "%d", player->exp);
+			"Cur Exp", "%ld", player->exp);
 	panel_line(p, COLOUR_L_GREEN, "Max Exp", "%d", player->max_exp);
 	panel_line(p, COLOUR_L_GREEN, "Adv Exp", "%s", show_adv_exp());
 	panel_space(p);

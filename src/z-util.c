@@ -20,7 +20,7 @@
 #include <float.h>
 
 #include "z-util.h"
-#include "z-file.h"
+#include "z-form.h"
 
 /**
  * Convenient storage of the program name
@@ -2119,12 +2119,16 @@ uint32_t djb2_hash(const char *str)
 }
 
 
+/**
+ * L: will fail if  low+high > DBL_MAX || f((low+high)/2) > DBL_MAX
+ */
 static double inverse_binary_search(double num, double (*f)(double), 
 		double lowbound, double highbound, double offby)
 {
 	double low = lowbound, high = highbound, mid, result;
 	int tries;
 	assert(offby >= 0.0);
+	assert(high < DBL_MAX - low);
 
 	for (tries = 0; tries < 1024; tries++) {
 		mid = (low + high) / 2;
@@ -2139,7 +2143,6 @@ static double inverse_binary_search(double num, double (*f)(double),
 
 	return (low + high) / 2;
 }
-
 
 static double exponentiate_base(double num, int exponent)
 {
@@ -2159,6 +2162,26 @@ static double exponentiate_base(double num, int exponent)
 	return result;
 }
 
+static bool can_exponentiate(double num, int exponent)
+{
+	int i;
+	double result;
+
+	if (num == 1.0 || num == 0.0) return num;
+	assert(exponent >= 0);
+	if (exponent < 0) return can_exponentiate(1.0 / num, -exponent);
+
+	result = 1.0;
+	for (i = 0; i < exponent; ++i) {
+		if (result >= DBL_MAX / num) {
+			return false;
+		}
+		result *= num;
+	}
+
+	return true;
+}
+
 static double inverse_binary_exponent_search(double num, int exponent, bool intify)
 {
 	assert(num > 0.0);
@@ -2168,7 +2191,14 @@ static double inverse_binary_exponent_search(double num, int exponent, bool inti
 
 	for (tries = 0; tries < 1024; ++tries) {
 		mid = (low + high) / 2;
-		result = exponentiate_base(mid, exponent);
+
+		if (can_exponentiate(mid, exponent)) {
+			result = exponentiate_base(mid, exponent);
+		}
+		else {
+			result = DBL_MAX;
+		}
+		//result = exponentiate_base(mid, exponent);
 
 		if (intify && ((int)result) == ((int)num)) return mid;
 		else if (result > num) high = mid;
@@ -2185,11 +2215,25 @@ static bool divisible(int num, int denom)
 	return !(num % denom);
 }
 
+static int lowest_prime_factor(int num)
+{
+	int max = my_int_sqrt(num), i;
+
+	for (i = 2; i <= max; ++i) {
+		if (divisible(num, i)) {
+			return i;
+		}
+	}
+
+	return num;
+}
+
 static double exponentiate_dbl_base(double base, int exp_num, int exp_denom, bool intify)
 {
-	int i;
-	assert(exp_denom != 0);
+	int i, num, denom, lpf;
+	assert(exp_denom != 0.0);
 	double result;
+	bool can_exp;
 
 	if (exp_num * exp_denom < 0) {
 		assert(base != 0);
@@ -2197,7 +2241,7 @@ static double exponentiate_dbl_base(double base, int exp_num, int exp_denom, boo
 	}
 
 	if (exp_num == 0) {
-		return 1;
+		return 1.0;
 	}
 
 	exp_num = ABS(exp_num);
@@ -2210,8 +2254,28 @@ static double exponentiate_dbl_base(double base, int exp_num, int exp_denom, boo
 		}
 	}
 
-	result = exponentiate_base(base, exp_num);
-	result = inverse_binary_exponent_search(result, exp_denom, intify);
+	num = exp_num;
+	denom = exp_denom;
+
+	result = base;
+
+	while (num > 1 || denom > 1) {
+		lpf = lowest_prime_factor(num);
+		can_exp = can_exponentiate(result, lpf);
+
+		if (!can_exp || (lpf <= 1)) {
+			lpf = lowest_prime_factor(denom);
+			if (lpf <= 1 && !can_exp) {
+				plog_fmt("Error: result of %f^(%i/%i) is too high to calculate!", base, exp_num, exp_denom);
+			}
+			result = inverse_binary_exponent_search(result, lpf, intify && (num <= 1));
+			denom /= lpf;
+		}
+		else {
+			result = exponentiate_base(result, lpf);
+			num /= lpf;
+		}
+	}
 
 	return result;
 }

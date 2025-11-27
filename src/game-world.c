@@ -876,7 +876,7 @@ void process_world(struct chunk *c)
 	/* Handle experience draining */
 	if (player_of_has(player, OF_DRAIN_EXP)) {
 		if ((player->exp > 0) && one_in_(10)) {
-			int32_t d = damroll(10, 6) +
+			int64_t d = damroll(10, 6) +
 				(player->exp / 100) * z_info->life_drain_percent;
 			player_exp_lose(player, d / 10, false);
 		}

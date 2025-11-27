@@ -18,6 +18,8 @@
 #ifndef INCLUDED_SAVEFILE_H
 #define INCLUDED_SAVEFILE_H
 
+#include "angband.h"
+
 #define FINISHED_CODE 255
 #define ITEM_VERSION	5
 #define EGO_ART_KNOWN 0xffffffff
@@ -68,6 +70,7 @@ void wr_u16b(uint16_t v);
 void wr_s16b(int16_t v);
 void wr_u32b(uint32_t v);
 void wr_s32b(int32_t v);
+void wr_u64b(uint64_t v);
 void wr_string(const char *str);
 void pad_bytes(int n);
 
@@ -77,6 +80,7 @@ void rd_u16b(uint16_t *ip);
 void rd_s16b(int16_t *ip);
 void rd_u32b(uint32_t *ip);
 void rd_s32b(int32_t *ip);
+void rd_u64b(uint64_t *ip);
 void rd_string(char *str, int max);
 void strip_bytes(int n);
 

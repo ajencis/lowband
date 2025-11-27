@@ -24,6 +24,7 @@
 #include "obj-util.h"
 #include "player-birth.h"
 #include "player-calcs.h"
+#include "player-enum.h"
 #include "player-history.h"
 #include "player-quest.h"
 #include "player-spell.h"
@@ -171,6 +172,56 @@ const uint32_t player_exp[PY_MAX_LEVEL] =
 };
 
 
+uint64_t player_exp_new(int level_num, int level_denom)
+{
+	int num, div;
+	int lev_remain = level_num / level_denom, ten_exp = 0, ten_exp_need;
+	uint64_t result = 1, mod;
+	double temp_result;
+	bool two;
+
+	for (ten_exp_need = 3; ; ten_exp_need++) {
+		if (ten_exp_need > lev_remain) {
+			div = ten_exp_need;
+			num = ten_exp * div + lev_remain;
+
+			div *= level_denom;
+			num *= level_denom;
+
+			num += level_num % level_denom;
+
+			temp_result = exponentiate_dbl(10.0, num, div);
+
+			if (temp_result > (double)UINT64_MAX) {
+				plog_fmt("level %f too high to calculate", (float)level_num / (float)level_denom);
+			}
+
+			result = (uint64_t)(temp_result + 0.3);
+			break;
+		}
+		
+		ten_exp += 1;
+		lev_remain -= ten_exp_need;
+	}
+
+	mod = 1U;
+	two = false;
+	while (mod * 50U < result) {
+		if (two) {
+			mod *= 2U;
+		}
+		else {
+			mod *= 5U;
+		}
+		two = !two;
+	}
+
+	result = (result / mod) * mod;
+
+	return result;
+}
+
+
 static const char *stat_name_list[] = {
 	#define STAT(a) #a,
 	#include "list-stats.h"
@@ -280,13 +331,21 @@ bool player_stat_dec(struct player *p, int stat, bool permanent)
 	return res;
 }
 
+uint64_t player_exp_needed(struct player *p, int level)
+{
+	int num = level * p->mon.state.expfact;
+	int denom = 100;
+
+	return player_exp_new(num, denom);
+}
+
 bool player_at_max_level(struct player *p)
 {
 	if (p->lev >= PY_MAX_LEVEL) return true;
 	
     if (p->lev >= (50 + adj_int_lev(p->mon.state.stat_ind[STAT_INT]))) return true;
 
-	if (player_exp[p->lev-1] > PY_MAX_EXP) return true;
+	//if (player_exp[p->lev-1] > PY_MAX_EXP) return true;
 
 	return false;
 }
@@ -295,7 +354,11 @@ bool player_can_level_up(struct player *p)
 {
 	if (player_at_max_level(p)) return false;
 
-    if (p->exp < (player_exp[p->lev-1])) return false;
+	if (player_exp_needed(p, p->lev) > p->exp) {
+		return false;
+	}
+
+    //if (p->exp < (player_exp[p->lev-1])) return false;
 
 	return true;
 }
@@ -320,10 +383,10 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 
 	if (levelup) handle_stuff(p);
 
-	while ((p->lev > 1) &&
+	/*while ((p->lev > 1) &&
 		   (p->exp < player_exp[p->lev-2])) {
 		p->lev--;
-	}
+	}*/
 
 	while (((levelup && !doneone) || p->lev < p->max_lev) && player_can_level_up(p)) {
 		char buf[80];
@@ -362,13 +425,13 @@ static void adjust_level(struct player *p, bool verbose, bool levelup)
 	if (levelup) handle_stuff(p);
 }
 
-void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract)
+void player_exp_gain(struct player *p, uint64_t amount, uint32_t fract)
 {
-	uint32_t tolev;
-	uint32_t new_fract, extra_fract, new_amt;
+	uint64_t tolev;
+	uint64_t new_fract, extra_fract, new_amt;
 
 	if (p->max_lev >= PY_MAX_LEVEL) tolev = PY_MAX_EXP;
-	else tolev = player_exp[p->max_lev - 1];
+	else tolev = player_exp_needed(p, p->max_lev);// player_exp[p->max_lev - 1];
 
 	new_amt = amount * 100;
 	new_amt /= p->mon.state.expfact;
@@ -399,10 +462,10 @@ void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract)
 	p->xp_this_turn += new_amt;
 
 	if (p->lev >= 10 && p->num_evol_choices > 0) {
-		if (p->monster_xp < UINT32_MAX - new_amt) {
+		if (p->monster_xp < UINT64_MAX - new_amt) {
 			p->monster_xp += new_amt;
 		} else {
-			p->monster_xp = UINT32_MAX;
+			p->monster_xp = UINT64_MAX;
 		}
 	}
 
@@ -424,13 +487,13 @@ int player_min_xp_depth(struct player *p)
 	int i;
 
 	for (i = 1; i < PY_MAX_LEVEL; ++i) {
-		if (player_exp[i] > eff_xp) break;
+		if (player_exp_new(i, 1) > eff_xp) break;
 	}
 
 	return i * 3 / 2;
 }
 
-void player_exp_lose(struct player *p, int32_t amount, bool permanent)
+void player_exp_lose(struct player *p, int64_t amount, bool permanent)
 {
 	if (p->exp < (unsigned)amount) {
 		amount = p->exp;

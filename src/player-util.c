@@ -323,8 +323,8 @@ bool check_player_monster(struct player *p, bool init)
 	const struct monster_race *selected = NULL;
 	int numevols = 0;
 	bool do_change = false;
-	uint32_t xpneed;
-	uint32_t currxp = init ? 0 : p->monster_xp;
+	uint64_t xpneed;
+	uint64_t currxp = init ? 0 : p->monster_xp;
 
 	if (p->mon.original_race && p->mon.race && p->mon.original_race->ridx == p->mon.race->ridx) {
 		return false;
@@ -345,20 +345,22 @@ bool check_player_monster(struct player *p, bool init)
 
 		++numevols;
 
-		if (monlev < PY_MAX_LEVEL) {
+		xpneed = player_exp_new(monlev, 1);
+
+		/*if (monlev < PY_MAX_LEVEL) {
 			// monster is in the table
 			xpneed = player_exp[monlev];
 		}
 		else if (player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL < PY_MAX_EXP / (unsigned)monlev) {
-			/* monster is out of the table but linear scaling of the highest value
-			   in the table is less than the maximum possible */
+			// monster is out of the table but linear scaling of the highest value
+			// in the table is less than the maximum possible
 			xpneed = player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL * monlev;
 		}
 		else {
-			/* monster is out of the table and would need more than the max possible
-			   xp to choose */
+			// monster is out of the table and would need more than the max possible
+			// xp to choose
 			xpneed = PY_MAX_EXP;
-		}
+		}*/
 	}
 
 	if (currxp >= xpneed) do_change = true;
@@ -478,37 +480,6 @@ int expected_max_evol_level(const struct player *p)
 
 	return expected_monster_evol_level(curr);
 }
-
-
-#if 0
-int get_power_scale_state(const struct player_state *ps, int power, int scaleto, int level)
-{
-	assert(power > 0 && power < PP_MAX);
-
-	int powerlev = ps->powers[power], result;
-	bool negate = false;
-
-	if (powerlev <= 0) return 0;
-	if (powerlev > level) {
-		powerlev = (powerlev - level) / 2 + level;
-	}
-
-	powerlev = MAX(powerlev, 0);
-	if (scaleto < 0) {
-		scaleto = -scaleto;
-		negate = true;
-	}
-
-	result = (powerlev * scaleto + 50 * 2 / 3) / 50;
-
-	return negate ? -result : result;
-}
-
-int get_power_scale(const struct player *p, int power, int scaleto)
-{
-	return get_power_scale_state(&p->mon.state, power, scaleto, p->lev);
-}
-#endif
 
 
 const char *lookup_power_name(int power)

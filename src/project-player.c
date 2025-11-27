@@ -393,7 +393,7 @@ static int project_player_handler_NEXUS(project_player_handler_context_t *contex
 
 static int project_player_handler_NETHER(project_player_handler_context_t *context)
 {
-	int drain = 200 + (player->exp / 100) * z_info->life_drain_percent;
+	int64_t drain = 200 + (player->exp / 100) * z_info->life_drain_percent;
 
 	if (player_resists(player, ELEM_NETHER) ||
 			player_of_has(player, OF_HOLD_LIFE)) {
@@ -441,7 +441,7 @@ static int project_player_handler_CHAOS(project_player_handler_context_t *contex
 
 	/* Life draining */
 	if (!player_of_has(player, OF_HOLD_LIFE)) {
-		int drain = ((player->exp * 3)/ (100 * 2)) * z_info->life_drain_percent;
+		int64_t drain = ((player->exp * 3) / (100 * 2)) * z_info->life_drain_percent;
 		msg("You feel your life force draining away!");
 		player_exp_lose(player, drain, false);
 	} else {

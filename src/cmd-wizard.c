@@ -439,7 +439,7 @@ void do_cmd_wiz_advance(struct command *cmd)
 	}
 
 	do {
-		player->monster_xp = UINT32_MAX;
+		player->monster_xp = UINT64_MAX;
 	} while (check_player_monster(player, false));
 
 	/* Heal the player */

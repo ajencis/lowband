@@ -440,8 +440,8 @@ struct player {
 	int16_t max_lev;	/* Max level */
 	int16_t lev;		/* Cur level */
 
-	uint32_t max_exp;	/* Max experience */
-	uint32_t exp;		/* Cur experience */
+	uint64_t max_exp;	/* Max experience */
+	uint64_t exp;		/* Cur experience */
 	uint16_t exp_frac;	/* Cur exp frac (times 2^16) */
 
 	uint16_t chp_frac;	/* Cur hit frac (times 2^16) */
@@ -530,7 +530,7 @@ struct player {
 
 	int32_t xp_this_turn;				/* L: how much xp was gained between turns */
 	bool searched_this_turn;			// L: have we searched this turn?
-	uint32_t monster_xp;				/* L: XP progression towards evolution */
+	uint64_t monster_xp;				/* L: XP progression towards evolution */
 	bool checked_tome_this_expedition;	/* L: have we prompted for a tome this level? */
 
 	bool *unlocked_classes;				// L: which classes the player has unlocked
@@ -561,6 +561,8 @@ extern struct player *player;
 struct player_class *player_id2class(guid id);
 
 /* player.c */
+uint64_t player_exp_new(int level_num, int level_denom);
+uint64_t player_exp_needed(struct player *p, int level);
 int stat_name_to_idx(const char *name);
 const char *stat_idx_to_name(int type);
 const struct magic_realm *lookup_realm(const char *code);
@@ -568,8 +570,8 @@ bool player_stat_inc(struct player *p, int stat);
 bool player_stat_dec(struct player *p, int stat, bool permanent);
 bool player_at_max_level(struct player *p);
 bool player_can_level_up(struct player *p);
-void player_exp_gain(struct player *p, uint32_t amount, uint32_t fract);
-void player_exp_lose(struct player *p, int32_t amount, bool permanent);
+void player_exp_gain(struct player *p, uint64_t amount, uint32_t fract);
+void player_exp_lose(struct player *p, int64_t amount, bool permanent);
 void player_level_up_one(struct player *p, bool verbose);
 void check_level(struct player *p);
 void player_flags(struct player *p, bitflag f[OF_SIZE]);

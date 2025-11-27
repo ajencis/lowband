@@ -853,8 +853,8 @@ int rd_player(void)
 
 	rd_s32b(&player->au);
 
-	rd_u32b(&player->max_exp);
-	rd_u32b(&player->exp);
+	rd_u64b(&player->max_exp);
+	rd_u64b(&player->exp);
 	rd_u16b(&player->exp_frac);
 
 	rd_s16b(&player->lev);
@@ -1168,7 +1168,7 @@ int rd_misc(void)
 
 	rd_byte(&tmp8u);
 	player->checked_tome_this_expedition = tmp8u ? true : false;
-	rd_u32b(&player->monster_xp);
+	rd_u64b(&player->monster_xp);
 
 	rd_followers();
 

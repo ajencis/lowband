@@ -544,8 +544,8 @@ void wr_player(void)
 	wr_u32b(player->au);
 
 
-	wr_u32b(player->max_exp);
-	wr_u32b(player->exp);
+	wr_u64b(player->max_exp);
+	wr_u64b(player->exp);
 	wr_u16b(player->exp_frac);
 	wr_s16b(player->lev);
 
@@ -778,7 +778,7 @@ void wr_misc(void)
 	wr_byte(player->obj_k->ds);
 
 	wr_byte(player->checked_tome_this_expedition ? 1 : 0);
-	wr_u32b(player->monster_xp);
+	wr_u64b(player->monster_xp);
 
 	wr_followers();
 

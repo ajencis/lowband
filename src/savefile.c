@@ -15,15 +15,14 @@
  *    and not for profit purposes provided that this copyright and statement
  *    are included in all such copies.  Other copyrights may also apply.
  */
-#include <errno.h>
 #include "angband.h"
 #include "game-world.h"
 #include "init.h"
+#include "player-util.h"
 #include "savefile.h"
 #include "save-charoutput.h"
 #include "z-file.h"
 
-#include "player-util.h"//temp
 
 /**
  * The savefile code.
@@ -247,6 +246,18 @@ void wr_u32b(uint32_t v)
 	sf_put((uint8_t)((v >> 24) & 0xFF));
 }
 
+void wr_u64b(uint64_t v)
+{
+	sf_put((uint8_t)(v & 0xFF));
+	sf_put((uint8_t)((v >> 8) & 0xFF));
+	sf_put((uint8_t)((v >> 16) & 0xFF));
+	sf_put((uint8_t)((v >> 24) & 0xFF));
+	sf_put((uint8_t)((v >> 32) & 0xFF));
+	sf_put((uint8_t)((v >> 40) & 0xFF));
+	sf_put((uint8_t)((v >> 48) & 0xFF));
+	sf_put((uint8_t)((v >> 56) & 0xFF));
+}
+
 void wr_s32b(int32_t v)
 {
 	wr_u32b((uint32_t)v);
@@ -285,6 +296,18 @@ void rd_u32b(uint32_t *ip)
 	(*ip) |= ((uint32_t)(sf_get()) << 8);
 	(*ip) |= ((uint32_t)(sf_get()) << 16);
 	(*ip) |= ((uint32_t)(sf_get()) << 24);
+}
+
+void rd_u64b(uint64_t *ip)
+{
+	(*ip) = sf_get();
+	(*ip) |= ((uint64_t)(sf_get()) << 8);
+	(*ip) |= ((uint64_t)(sf_get()) << 16);
+	(*ip) |= ((uint64_t)(sf_get()) << 24);
+	(*ip) |= ((uint64_t)(sf_get()) << 32);
+	(*ip) |= ((uint64_t)(sf_get()) << 40);
+	(*ip) |= ((uint64_t)(sf_get()) << 48);
+	(*ip) |= ((uint64_t)(sf_get()) << 56);
 }
 
 void rd_s32b(int32_t *ip)
