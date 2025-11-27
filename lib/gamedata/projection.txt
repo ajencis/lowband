@@ -883,4 +883,11 @@ blind-desc:something
 obvious:0
 color:White
 
+code:HYPNOTIZE
+type:monster
+desc:hypnotizes
+blind-desc:something
+obvious:0
+color:Violet
+
 

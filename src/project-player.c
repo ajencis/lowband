@@ -871,6 +871,12 @@ static int project_player_handler_TERRAIN_FEAT(project_player_handler_context_t 
 	return 0;
 }
 
+static int project_player_handler_HYPNOTIZE(project_player_handler_context_t *context)
+{
+	context->dam = 0;
+	return 0;
+}
+
 
 static const project_player_handler_f player_handlers[] = {
 	#define ELEM(a) project_player_handler_##a,

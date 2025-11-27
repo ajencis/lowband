@@ -513,7 +513,7 @@ void player_exp_gain(struct player *p, uint64_t amount, uint32_t fract)
 
 int player_min_xp_depth(struct player *p)
 {
-	int64_t eff_xp = p->max_exp;// * p->mon.state.expfact / 100;
+	uint64_t eff_xp = p->max_exp;// * p->mon.state.expfact / 100;
 	int i;
 
 	for (i = 1; i < PY_MAX_LEVEL; ++i) {

@@ -322,6 +322,13 @@ desc:suck blood
 lore-color-base:Red
 lash-type:VAMPIRE
 
+name:HYPNOTIZE
+power:0
+eval:10
+desc:hypnotize
+lore-color-base:Violet
+lash-type:HYPNOTIZE
+
 name:SMITE_EVIL
 power:0
 eval:10

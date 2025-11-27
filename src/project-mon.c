@@ -20,6 +20,7 @@
 #include "cave.h"
 #include "effects.h"
 #include "generate.h"
+#include "init.h"
 #include "mon-desc.h"
 #include "mon-lore.h"
 #include "mon-make.h"
@@ -29,12 +30,14 @@
 #include "mon-spell.h"
 #include "mon-timed.h"
 #include "mon-util.h"
+#include "monster.h"
 #include "player-calcs.h"
 #include "player-properties.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
 #include "source.h"
+#include <stdint.h>
 
 
 /**
@@ -1145,6 +1148,46 @@ static void project_monster_handler_MEPHITIC(project_monster_handler_context_t *
 
 static void project_monster_handler_TERRAIN_FEAT(project_monster_handler_context_t *context)
 {
+}
+
+static void project_monster_handler_HYPNOTIZE(project_monster_handler_context_t *context)
+{
+	int flg = MON_TMD_FLG_GETS_SAVE, pwr = context->dam;
+	struct monster *mon = context->mon;
+	char mdesc[80];
+	int prev_react, new_react;
+
+	context->dam = 0;
+
+	mon_inc_timed(mon, TMD_SLOW, pwr, flg);
+
+	if (!mon->m_timed[TMD_SLOW]) return;
+
+	mon_inc_timed(mon, TMD_STUN, pwr, flg);
+
+	if (!mon->m_timed[TMD_STUN]) return;
+
+	mon_inc_timed(mon, TMD_PARALYZED, pwr, flg);
+
+	if (!mon->m_timed[TMD_PARALYZED]) return;
+
+	monster_desc(mdesc, sizeof mdesc, mon, MDESC_STANDARD);
+
+	prev_react = mon->reaction;
+	new_react = MIN(INT16_MAX, prev_react * (25 + pwr) / 25 + 3);
+
+	mon->reaction = new_react;
+
+	if (new_react <= prev_react && new_react < INT16_MAX) {
+		msg("%s is unaffected.");
+	}
+	else if (prev_react < MON_REACT_ALLY && new_react < MON_REACT_ALLY) {
+		msg("%s sways...", mdesc);
+	}
+	else if (prev_react < MON_REACT_ALLY) {
+		msg("%s is enthralled!", mdesc);
+		mon->reaction = MON_REACT_ALLY * 2;
+	}
 }
 
 static const project_monster_handler_f monster_handlers[] = {

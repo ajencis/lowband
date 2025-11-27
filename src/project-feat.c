@@ -782,6 +782,10 @@ static void project_feature_handler_TERRAIN_FEAT(project_feature_handler_context
 	}
 }
 
+static void project_feature_handler_HYPNOTIZE(project_feature_handler_context_t *context)
+{
+}
+
 static const project_feature_handler_f feature_handlers[] = {
 	#define ELEM(a) project_feature_handler_##a,
 	#include "list-elements.h"
