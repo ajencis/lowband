@@ -23,6 +23,7 @@
 #include "mon-calcs.h"
 #include "mon-util.h"
 #include "player-calcs.h"
+#include "player-enum.h"
 #include "player-properties.h"
 #include "player-util.h"
 #include "ui-input.h"
@@ -75,12 +76,16 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 
 	my_strcat(buf, "\n", bufsize);
 
-	if (group == PLAYER_FLAG_POWER || group == PLAYER_FLAG_SKILL) {
+	//if (group == PLAYER_FLAG_POWER || group == PLAYER_FLAG_SKILL) {
+	if (ability->type == PY_ABIL_POWER || ability->type == PY_ABIL_SKILL) {
 		int cbase = 0, cxtra = 0, rbase = 0, rxtra = 0, tbase = 0, txtra = 0, stat = 0;
+		int limit, numleft, result;
 		char stat_name[80];
 		struct scaling_data sdata, tsdata = { 0 };
 
-		if (group == PLAYER_FLAG_POWER) {
+		//if (group == PLAYER_FLAG_POWER) {
+		if (ability->type == PY_ABIL_POWER) {
+
 			sdata = mon_race_power(&p->mon, ability->index);
 			rbase = scaling_data_calc_r_xtra(p->mon.race, sdata) + sdata.base;
 			rxtra = sdata.p_xtra;
@@ -94,8 +99,6 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 			//cxtra = sdata.p_xtra;
 		}
 		else {
-			int result;
-
 			sdata = mon_race_skill(&p->mon, ability->index);
 			rbase = scaling_data_calc_r_xtra(p->mon.race, sdata) + sdata.base;
 			rxtra = sdata.p_xtra;
@@ -106,13 +109,16 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 			txtra = sdata.p_xtra;
 			tsdata = scaling_data_sum(tsdata, sdata);
 
-			mon_class_skill(&p->mon, ability->index, &cbase, &cxtra);
+			sdata = mon_class_skill(&p->mon, ability->index);
+			cbase = scaling_data_calc_r_xtra(p->mon.race, sdata) + sdata.base;
+			cxtra = sdata.p_xtra;
+			tsdata = scaling_data_sum(tsdata, sdata);
 
-			result = scaling_data_calc_mon(&p->mon, sdata);
+			result = scaling_data_calc_mon(&p->mon, tsdata);
 			stat = stat_skill_bonus(&p->mon, &p->mon.state, ability->index, result, stat_name, sizeof stat_name);
 		}
 
-		int numleft = ((rxtra || rbase) ? 1 : 0) +
+		numleft = ((rxtra || rbase) ? 1 : 0) +
 				((cxtra || cbase) ? 1 : 0) +
 				((txtra || tbase) ? 1 : 0) +
 				(stat ? 1 : 0);
@@ -135,6 +141,14 @@ static void ability_desc(struct player *p, const struct player_ability *ability,
 				add_scaling_desc(buf, stat_name, stat, 0, p->lev, numleft, bufsize);
 				--numleft;
 			}
+
+			if (ability->type == PY_ABIL_SKILL) {
+				limit = skill_stepdown(&p->mon, result + stat);
+				if (limit < result + stat) {
+					my_strcat(buf, format("\nYou are limited to %i because of your level.", limit), bufsize);
+				}
+			}
+
 			my_strcat(buf, "\n", bufsize);
 		}
 	}

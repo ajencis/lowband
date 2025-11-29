@@ -125,14 +125,13 @@ int mon_lev(const struct monster *mon)
 int scaling_data_calc_r_xtra(const struct monster_race *mr, struct scaling_data sdata)
 {
 	if (!mr) return 0;
-	return RND_TO_MULT(mr->level * sdata.r_xtra / 100, 5);
+	return mr->level * sdata.r_xtra / 100;
 }
 
 int scaling_data_calc_p_xtra(const struct player *p, struct scaling_data sdata)
 {
-	return 0;
 	if (!p) return 0;
-	return RND_TO_MULT(sdata.p_xtra * p->lev / 50, 5);
+	return sdata.p_xtra * p->lev / 50;
 }
 
 int scaling_data_calc_mon(const struct monster *mon, struct scaling_data sdata)
@@ -159,12 +158,12 @@ struct scaling_data scaling_data_sum(struct scaling_data sdata1, struct scaling_
 
 
 
-static int skill_stepdown(const struct monster *mon, int skill)
+int skill_stepdown(const struct monster *mon, int skill)
 {
 	int lev = mon_lev(mon);
 	int diff;
 
-	lev = MAX(lev / 2 + 25, lev);
+	lev = MAX(lev + 20, lev * 2);
 
 	if (skill <= lev) return skill;
 
@@ -189,7 +188,7 @@ static int evolving_race_skill(const struct monster_race *mr, int which)
 
 	assert(div > 0);
 
-	return ABS(sum) / div * SGN(sum);
+	return ABS(sum) / div * SGN(sum) - 75;
 }
 
 struct scaling_data race_skill(const struct monster_race *mr, int which)
@@ -209,7 +208,15 @@ struct scaling_data race_skill(const struct monster_race *mr, int which)
 
 struct scaling_data mon_race_skill(const struct monster *mon, int which)
 {
-	return race_skill(mon->race, which);
+	struct scaling_data result;
+	result = race_skill(mon->race, which);
+
+	if (mon->player && mon->player->class) {
+		result.r_xtra /= 2;
+		result.base /= 2;
+	}
+
+	return result;
 }
 
 struct scaling_data mon_tome_skill(const struct monster *mon, int which)
@@ -222,6 +229,31 @@ struct scaling_data mon_tome_skill(const struct monster *mon, int which)
 		assert(p->extra_learned);
 		result.base = p->extra_learned[abil->learn_index];
 	}
+
+	return result;
+}
+
+struct scaling_data mon_class_skill(const struct monster *mon, int which)
+{
+	struct player *p = mon->player;
+	int tome, b_amt, x_amt;
+	struct player_ability *abil = lookup_player_ability(which, PY_ABIL_SKILL);
+	struct scaling_data result = { 0 };
+
+	if (!p) return result;
+	if (!abil || abil->learn_index < 0) return result;
+
+	tome = p->extra_learned[abil->learn_index];
+	b_amt = p->class->c_skills[which];
+	x_amt = p->class->x_skills[which];
+
+	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
+		b_amt = MAX(b_amt, tome * 1 / 4);
+		x_amt = MAX(x_amt, tome * 3 / 4);
+	}
+
+	result.base = b_amt;
+	result.p_xtra = x_amt;
 
 	return result;
 }
@@ -293,20 +325,17 @@ int stat_skill_bonus(const struct monster *mon, const struct player_state *state
 
 static int mon_skill(const struct monster *mon, const struct player_state *state, int skill)
 {
-	int result, cscale = 0;
+	int result;
 
 	struct scaling_data sdata = { 0 };
 
 	sdata = scaling_data_sum(sdata, mon_race_skill(mon, skill));
+	sdata = scaling_data_sum(sdata, mon_class_skill(mon, skill));
 	sdata = scaling_data_sum(sdata, mon_tome_skill(mon, skill));
 
 	result = scaling_data_calc_mon(mon, sdata);
 
-	if (mon->player && mon->player->class) {
-		mon_class_skill(mon, skill, &result, &cscale);
-	}
-
-	result += stat_skill_bonus(mon, state, skill, result, NULL, 0);
+	//result += stat_skill_bonus(mon, state, skill, result, NULL, 0);
 
 	return skill_stepdown(mon, result);
 }
@@ -541,6 +570,8 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 		while (obj) {
 			object_flags(obj, f);
 			of_union(state->flags, f);
+
+			dig = 0;
 
 			state->stat_add[STAT_STR] += obj->modifiers[OBJ_MOD_STR];
 			state->stat_add[STAT_INT] += obj->modifiers[OBJ_MOD_INT];

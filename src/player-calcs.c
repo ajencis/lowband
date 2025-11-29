@@ -1243,35 +1243,11 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int cur
 	}
 }
 
-#if 0
-void calc_monster_skills(struct monster_race *mrace, int skills[SKILL_MAX])
-{
-	int i, norm_hp, mod;
-
-	memset(skills, 0, sizeof *skills * SKILL_MAX);
-
-	for (i = 0; i < SKILL_MAX; i++) {
-		skills[i] += mrace->skills[i] * (mrace->level + 66) / 66;
-	}
-
-	// assume the monster gets hp equal to half its level from its class
-	norm_hp = (int)(mrace->level * my_sqrt((double)mrace->level) / 10.0);
-	mod = mrace->avg_hp - norm_hp;
-	if (mod > 0) {
-		mod = my_int_cbrt(mod * mod);
-	}
-	else {
-		mod = -my_int_sqrt(-mod);
-	}
-	skills[SKILL_HEALTH] += mod;
-}
-#endif
 
 
 
 
-
-void mon_class_skill(const struct monster *mon, int skill, int *base, int *xtra)
+/*void mon_class_skill(const struct monster *mon, int skill, int *base, int *xtra)
 {
 	struct player *p = mon->player;
 	int tome, b_amt, x_amt;
@@ -1292,7 +1268,7 @@ void mon_class_skill(const struct monster *mon, int skill, int *base, int *xtra)
 
 	*base += b_amt;
 	*xtra += x_amt;
-}
+}*/
 
 
 /**
@@ -1395,6 +1371,11 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 
 		/* Save the new index */
 		state->stat_ind[i] = ind;
+	}
+
+	for (i = 0; i < SKILL_MAX; ++i) {
+		int add = stat_skill_bonus(&p->mon, state, i, state->skills[i], NULL, 0);
+		state->skills[i] += add;
 	}
 
 	// L: calc extra points
