@@ -1544,7 +1544,7 @@ void do_cmd_accept_character(struct command *cmd)
 
 	// L: remove evolution as necessary
 	if (player->evol_choices && player->mon.race) {
-		if (player->evol_choices[0]->ridx == player->mon.race->ridx) {
+		if (player->evol_choices[0] && player->evol_choices[0]->ridx == player->mon.race->ridx) {
 			remove_first_evolution(player);
 		}
 	}

@@ -495,7 +495,11 @@ void wr_player(void)
 	wr_s16b(player->num_evol_choices);
 	for (i = 0; i < player->num_evol_choices; ++i) {
 		const struct monster_race *tmp = player->evol_choices[i];
-		wr_u32b(tmp->ridx);
+		if (tmp) {
+			wr_u32b(tmp->ridx);
+		} else {
+			wr_u32b(UINT32_MAX);
+		}
 	}
 
 	wr_string(player->shape->name);

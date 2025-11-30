@@ -760,7 +760,11 @@ int rd_player(void)
 	if (tmp16s > 0) player->evol_choices = mem_zalloc(sizeof *player->evol_choices * player->num_evol_choices);
 	for (i = 0; i < player->num_evol_choices; ++i) {
 		rd_u32b(&tmp32u);
-		player->evol_choices[i] = &r_info[tmp32u];
+		if (tmp32u == UINT32_MAX) {
+			player->evol_choices[i] = NULL;
+		} else {
+			player->evol_choices[i] = &r_info[tmp32u];
+		}
 	}
 
 	/* Player shape */

@@ -288,6 +288,21 @@ void remove_last_evolution(struct player *p)
 	}
 }
 
+const struct monster_race *last_evolution(const struct player *p)
+{
+	int idx;
+
+	idx = p->num_evol_choices - 1;
+
+	while (idx >= 0 && !p->evol_choices[idx]) {
+		idx--;
+	}
+
+	if (idx < 0) return p->mon.race;
+
+	return p->evol_choices[idx];
+}
+
 void change_player_monster(struct player *p, const struct monster_race *mon, bool init)
 {
 	int i;
@@ -326,7 +341,11 @@ bool check_player_monster(struct player *p, bool init)
 	uint64_t xpneed;
 	uint64_t currxp = init ? 0 : p->monster_xp;
 
-	if (p->mon.original_race && p->mon.race && p->mon.original_race->ridx == p->mon.race->ridx) {
+	if (p->evol_choices && !p->evol_choices[0]) {
+		return false;
+	}
+
+	if (p->mon.original_race && p->mon.race && p->mon.original_race->ridx != p->mon.race->ridx) {
 		return false;
 	}
 
@@ -339,6 +358,8 @@ bool check_player_monster(struct player *p, bool init)
 	//assert(p->evol_choices);
 
 	selected = p->evol_choices[0];
+
+	if (!selected) return false;
 
 	if (selected) {
 		int monlev = selected->level;
@@ -422,7 +443,6 @@ bool player_increase_stat(struct player *p)
 bool select_evolution(struct player *p)
 {
 	struct evolution *choice_evol;
-	bool success;
 	int prev_num = p->num_evol_choices;
 
 	if (p->evol_choices) choice_evol = p->evol_choices[p->num_evol_choices - 1]->evol;
@@ -430,7 +450,7 @@ bool select_evolution(struct player *p)
 
 	if (!choice_evol) return false;
 
-	success = evolution_choice_menu_select(choice_evol, p, false);
+	evolution_choice_menu_select(choice_evol, p, false);
 
 	return p->num_evol_choices > prev_num;
 }
@@ -451,9 +471,7 @@ int expected_monster_evol_level(const struct monster_race *mr)
 
 int expected_max_evol_level(const struct player *p)
 {
-	const struct monster_race *curr;
-
-	curr = p->evol_choices ? p->evol_choices[0] : lookup_player_monster(p);
+	const struct monster_race *curr = last_evolution(p);
 
 	return expected_monster_evol_level(curr);
 }

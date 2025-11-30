@@ -33,7 +33,6 @@
 #include "ui-player-properties.h"
 #include "ui-target.h"
 #include "z-color.h"
-#include "z-file.h"
 #include "z-util.h"
 #include "z-virt.h"
 
@@ -919,11 +918,7 @@ static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode 
 	data->birth = birth;
 	data->p = p;
 
-	if (p->num_evol_choices > 0) {
-		data->end_monster = p->evol_choices[p->num_evol_choices - 1];
-	} else {
-		data->end_monster = NULL;
-	}
+	data->end_monster = last_evolution(p);
 
 	if (max_learn) {
 		memcpy(data->extra_max_learnable, max_learn, sizeof *data->max_learnable * z_info->learn_max);
@@ -1018,6 +1013,7 @@ static struct player *hypothetical_player(const struct player *p)
 {
 	struct player *hypo = mem_zalloc(sizeof *hypo);
 	struct monster_race *hypo_race = mem_zalloc(sizeof *hypo_race);
+	const struct monster_race *last_race;
 	int i;
 
 	memcpy(hypo, p, sizeof *hypo);
@@ -1026,11 +1022,11 @@ static struct player *hypothetical_player(const struct player *p)
 		hypo->stat_cur[i] = stat_max_max(hypo, i);
 	}
 
-	if (hypo->num_evol_choices > 0) {
-		memcpy(hypo_race, hypo->evol_choices[hypo->num_evol_choices - 1], sizeof *hypo_race);
-		rearrange_monster(hypo_race, true);
-		hypo->mon.race = hypo_race;
-	}
+	last_race = last_evolution(p);
+
+	memcpy(hypo_race, last_race, sizeof *hypo_race);
+	rearrange_monster(hypo_race, true);
+	hypo->mon.race = hypo_race;
 
 	hypo->max_lev = PY_MAX_LEVEL;
 	hypo->lev = PY_MAX_LEVEL;
@@ -1303,14 +1299,11 @@ static void evolution_choice_display(struct menu *menu, int oid, bool cursor,
 static bool evolution_choice_handler(struct menu *m, const ui_event *e, int oid)
 {
 	struct evolution_choice_menu_data *data = menu_priv(m);
-	int i;
 
 	if (e->type == EVT_SELECT) {
-		dbg_log_fmt("evol", "setting choice to %i", oid);
 		data->choice = oid;
 	}
 	else if (e->type == EVT_ESCAPE) {
-		dbg_log_fmt("evol", "setting choice to %i", -1);
 		data->choice = -1;
 	}
 	else if (data->birth) {
@@ -1385,7 +1378,6 @@ static struct menu *evolution_choice_menu_new(const struct evolution *curr, bool
 {
 	struct menu *m;
 	struct evolution_choice_menu_data *data;
-	const struct evolution *evol;
 	region loc = { 25, 1, 50, 30 };
 
 	m = menu_new(MN_SKIN_SCROLL, &evolution_choice_menu_iter);
@@ -1438,6 +1430,7 @@ bool evolution_choice_menu_select(const struct evolution *evol, struct player *p
 
 	else if (data->choice == 0) {
 		evolution_choice_menu_free(m);
+		add_evolution(p, NULL);
 		return true;
 	}
 
@@ -1446,7 +1439,6 @@ bool evolution_choice_menu_select(const struct evolution *evol, struct player *p
 	for (depth = 0; depth <= n_added; depth++) {
 		for (i = data->choice; i >= 0; i--) {
 			if (data->depths[i] == depth) {
-				dbg_log_fmt("evol", "adding evolution %s", data->choices[i]->name);
 				add_evolution(p, data->choices[i]);
 				break;
 			}

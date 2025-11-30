@@ -1524,12 +1524,6 @@ static enum birth_stage point_based_command(void)
 	return next;
 }
 
-static struct evolution *next_evol(struct player *p)
-{
-	if (p->evol_choices) return p->evol_choices[p->num_evol_choices - 1]->evol;
-	else return p->mon.race->evol;
-}
-
 static void check_player_birth_monster(struct player *p)
 {
 	check_player_monster(p, true);
@@ -1542,11 +1536,6 @@ static void check_player_birth_monster(struct player *p)
  */
 static enum birth_stage get_evol_command(bool going_back)
 {
-	bool onlyone = !OPT(player, birth_level_one_learn);
-
-	const struct evolution *choice_evol;
-	const struct monster_race *select = NULL;
-
 	bool success;
 
 	while (player->num_evol_choices > 0) {
