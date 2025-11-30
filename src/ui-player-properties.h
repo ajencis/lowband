@@ -29,4 +29,4 @@ void textui_view_ability_menu(struct player_ability *ability_list,
 bool textui_powers_learn(struct player *p, int *max_learn, bool birth);
 bool textui_ability_subchoice(struct player *p, struct player_ability *abil);
 
-const struct monster_race *evolution_choice_menu_select(const struct evolution *evol, bool birth);
+bool evolution_choice_menu_select(const struct evolution *evol, struct player *p, bool birth);

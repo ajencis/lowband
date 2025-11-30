@@ -346,21 +346,6 @@ bool check_player_monster(struct player *p, bool init)
 		++numevols;
 
 		xpneed = player_exp_new(monlev, 1);
-
-		/*if (monlev < PY_MAX_LEVEL) {
-			// monster is in the table
-			xpneed = player_exp[monlev];
-		}
-		else if (player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL < PY_MAX_EXP / (unsigned)monlev) {
-			// monster is out of the table but linear scaling of the highest value
-			// in the table is less than the maximum possible
-			xpneed = player_exp[PY_MAX_LEVEL - 1] / PY_MAX_LEVEL * monlev;
-		}
-		else {
-			// monster is out of the table and would need more than the max possible
-			// xp to choose
-			xpneed = PY_MAX_EXP;
-		}*/
 	}
 
 	if (currxp >= xpneed) do_change = true;
@@ -437,25 +422,17 @@ bool player_increase_stat(struct player *p)
 bool select_evolution(struct player *p)
 {
 	struct evolution *choice_evol;
-	const struct monster_race *select;
+	bool success;
+	int prev_num = p->num_evol_choices;
 
 	if (p->evol_choices) choice_evol = p->evol_choices[p->num_evol_choices - 1]->evol;
 	else choice_evol = p->mon.race->evol;
 
 	if (!choice_evol) return false;
 
-	if (!choice_evol->next) {
-		add_evolution(p, choice_evol->race);
-		return true;
-	}
+	success = evolution_choice_menu_select(choice_evol, p, false);
 
-	select = evolution_choice_menu_select(choice_evol, false);
-
-	if (!select) return false;
-
-	add_evolution(p, select);
-
-	return true;
+	return p->num_evol_choices > prev_num;
 }
 
 int expected_monster_evol_level(const struct monster_race *mr)

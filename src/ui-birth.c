@@ -1547,6 +1547,18 @@ static enum birth_stage get_evol_command(bool going_back)
 	const struct evolution *choice_evol;
 	const struct monster_race *select = NULL;
 
+	bool success;
+
+	while (player->num_evol_choices > 0) {
+		remove_last_evolution(player);
+	}
+
+	success = evolution_choice_menu_select(player->mon.race->evol, player, true);
+
+	check_player_birth_monster(player);
+	return success ? BIRTH_LEARN : BIRTH_BACK;
+
+#if 0
 	bool back = going_back;
 
 	if (going_back) {
@@ -1561,6 +1573,7 @@ static enum birth_stage get_evol_command(bool going_back)
 			else select = choice_evol->race;
 		}
 		else {
+
 			select = evolution_choice_menu_select(choice_evol, true);
 		}
 
@@ -1584,6 +1597,7 @@ static enum birth_stage get_evol_command(bool going_back)
 
 	check_player_birth_monster(player);
 	return back ? BIRTH_BACK : BIRTH_LEARN;
+#endif
 }
 
 static enum birth_stage get_learn_command(bool going_back)
