@@ -180,6 +180,7 @@ static int evolving_race_skill(const struct monster_race *mr, int which)
 
 	if (mr->level > 0) return 0;
 	if (!mr->evol) return 0;
+	if (which == SKILL_MONSTER) return 0;
 
 	for (evol = mr->evol; evol; evol = evol->next) {
 		sum += evol->race->skills[which];
@@ -334,6 +335,18 @@ static int mon_skill(const struct monster *mon, const struct player_state *state
 	sdata = scaling_data_sum(sdata, mon_tome_skill(mon, skill));
 
 	result = scaling_data_calc_mon(mon, sdata);
+
+	if (skill == SKILL_MONSTER) {
+		char mssg[256] = "";
+
+		sdata = mon_race_skill(mon, skill);
+		my_strcat(mssg, format("\n  race.base = %i, .r_xtra = %i, .p_xtra = %i", sdata.base, sdata.r_xtra, sdata.p_xtra), sizeof mssg);
+		sdata = mon_class_skill(mon, skill);
+		my_strcat(mssg, format("\n  class.base = %i, .r_xtra = %i, .p_xtra = %i", sdata.base, sdata.r_xtra, sdata.p_xtra), sizeof mssg);
+		sdata = mon_tome_skill(mon, skill);
+		my_strcat(mssg, format("\n  tome.base = %i, .r_xtra = %i, .p_xtra = %i", sdata.base, sdata.r_xtra, sdata.p_xtra), sizeof mssg);
+		dbg_log_fmt("mon", "monster skill calc: %s", mssg);
+	}
 
 	//result += stat_skill_bonus(mon, state, skill, result, NULL, 0);
 

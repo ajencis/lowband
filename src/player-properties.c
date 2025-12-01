@@ -24,6 +24,8 @@
 #include "init.h"
 #include "message.h"
 #include "mon-spell.h"
+#include "mon-util.h"
+#include "monster.h"
 #include "obj-properties.h"
 #include "object.h"
 #include "player-calcs.h"
@@ -508,7 +510,16 @@ static int py_extra_target(const struct player *p, const struct player_ability *
 bool increase_ability(struct monster *mon, const struct player_ability *abil, bool verbose)
 {
 	struct player *p = mon->player;
+	bool monster = abil->index == SKILL_MONSTER && abil->type == PY_ABIL_SKILL && !p;
 	//char name[80];
+
+	if (monster) {
+		mon->mon_lev++;
+
+		mflag_on(mon->mflag, MFLAG_UPDATE_STATE);
+
+		return true;
+	}
 
 	if (!p) return false;
 	if (abil->learn_index < 0) return false;
@@ -517,7 +528,7 @@ bool increase_ability(struct monster *mon, const struct player_ability *abil, bo
 
 	p->extra_learned[abil->learn_index]++;
 
-	if (verbose) {
+	if (verbose && mon_is_player(mon)) {
 		//strnfmt(name, sizeof name, "%s", abil->name);
 
 		msg("You feel more familiar with %s.", abil->name);
@@ -531,14 +542,26 @@ bool increase_ability(struct monster *mon, const struct player_ability *abil, bo
 bool exercise_ability(struct monster *mon, const struct player_ability *abil, int efficacy)
 {
 	int learn_i = abil->learn_index, target, curr, total, chance, bonus;
+	bool monster = abil->index == SKILL_MONSTER && abil->type == PY_ABIL_SKILL && !mon->player;
 
 	if (!abil || !mon) return false;
 	if (learn_i < 0) return false;
-	if (!mon->player) return false;
+	if (!mon->player && !monster) return false;
 	if (efficacy <= 0) return false;
 
-	target = py_extra_target(mon->player, abil);
-	curr = mon->player->extra_learned[abil->learn_index];
+	if (monster) {
+		struct evolution *evol;
+		target = mon->race->level;
+
+		for (evol = mon->race->evol; evol; evol = evol->next) {
+			target = MAX(evol->race->level, target);
+		}
+
+		curr = mon->mon_lev;
+	} else {
+		target = py_extra_target(mon->player, abil);
+		curr = mon->player->extra_learned[abil->learn_index];
+	}
 
 	if (abil->type == PY_ABIL_POWER) {
 		total = mon->state.powers[abil->index];
@@ -548,8 +571,12 @@ bool exercise_ability(struct monster *mon, const struct player_ability *abil, in
 		total = 0;
 	}
 
-	bonus = mon->player->learned_when[learn_i];
-	bonus -= total * curr * 100;
+	if (monster) {
+		bonus = 0;
+	} else {
+		bonus = mon->player->learned_when[learn_i];
+		bonus -= total * curr * 100;
+	}
 
 	if (bonus > 0) {
 		total -= my_int_sqrt(bonus);
@@ -560,7 +587,7 @@ bool exercise_ability(struct monster *mon, const struct player_ability *abil, in
 
 	if (curr >= target) return false;
 	if (curr >= efficacy) return false;
-	if (total >= mon->player->lev) return false;
+	if (!monster && total >= mon->player->lev) return false;
 
 	chance = 100; // base 1 in 100
 
@@ -568,11 +595,15 @@ bool exercise_ability(struct monster *mon, const struct player_ability *abil, in
 	chance *= MAX(1, curr);
 
 	chance /= efficacy - curr;
-	chance /= mon->player->lev * 2 - total;
-	
+	if (!monster) {
+		chance /= mon->player->lev * 2 - total;
+	}
+
 	if (one_in_(chance)) {
 		return increase_ability(mon, abil, true);
-		mon->player->learned_when[learn_i] = 0;
+		if (!monster) {
+			mon->player->learned_when[learn_i] = 0;
+		}
 	}
 
 	return false;

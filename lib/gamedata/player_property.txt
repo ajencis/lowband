@@ -989,3 +989,10 @@ name:Resilience
 desc: can endure attacks.
 cost:25
 rarity:20
+
+type:skill
+code:MONSTER
+name:Monstrosity
+desc: are a monster.
+cost:40
+rarity:5

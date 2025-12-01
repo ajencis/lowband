@@ -1427,6 +1427,8 @@ static bool place_new_monster_one(struct chunk *c, struct loc grid,
 	/* L: unset target */
 	mon->target.who = TARGET_WHO_NONE;
 
+	mon->mon_lev = mon->race->level;
+
 	/* L: give it a faction */
 	mon_give_faction(mon, c);
 

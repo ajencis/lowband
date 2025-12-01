@@ -1444,7 +1444,11 @@ static enum parser_error parse_mon_base_name(struct parser *p) {
 	rb->body = bodies;
 
 	for (i = 0; i < SKILL_MAX; ++i) {
-		rb->skills[i] = 100;
+		if (i != SKILL_MONSTER) {
+			rb->skills[i] = 100;
+		} else {
+			rb->skills[i] = 0;
+		}
 	}
 
 	parser_setpriv(p, rb);

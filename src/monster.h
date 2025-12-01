@@ -460,6 +460,7 @@ struct monster {
 	struct monster_race *race;			/* Monster's (current) race */
 	struct monster_race *original_race;	/* Changed monster's original race */
 	int midx;
+	int mon_lev;							// L: how close it is to leveling
 
 	struct player *player;				// L: its player if it is one
 	struct player_state state;			// L: state

@@ -335,6 +335,19 @@ void change_player_monster(struct player *p, const struct monster_race *mon, boo
 
 bool check_player_monster(struct player *p, bool init)
 {
+	bool success;
+
+	success = mon_check_evolution(&p->mon, !init);
+
+	if (success) {
+		remove_first_evolution(p);
+		if (!init) {
+			player_increase_stat(p);
+		}
+	}
+
+	return success;
+
 	const struct monster_race *selected = NULL;
 	int numevols = 0;
 	bool do_change = false;

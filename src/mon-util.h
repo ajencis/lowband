@@ -25,6 +25,7 @@
 typedef void (*power_effect)(struct chunk *c, struct monster *mon);
 
 void mon_reembody(struct monster *mon);
+bool mon_check_evolution(struct monster *mon, bool select);
 bool saving_throw(struct monster *mon, int difficulty);
 random_chance saving_throw_chance(const struct monster *mon, int difficulty);
 bool mon_is_player(const struct monster *mon);

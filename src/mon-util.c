@@ -58,6 +58,7 @@
 #include "z-rand.h"
 #include "z-type.h"
 #include "z-util.h"
+#include "z-virt.h"
 
 
 void mark_mon_as_playable(struct monster_race *mr)
@@ -147,10 +148,78 @@ bool give_monster_powers(struct monster *mon)
 		}*/
 	}
 
-
-	#endif
+#endif
 
 	return false;
+}
+
+static bool change_monster_race(struct monster *mon, const struct monster_race *mr)
+{
+	struct monster_race *result;
+
+	if (mon->player) {
+		result = mem_zalloc(sizeof *result);
+		memcpy(result, mr, sizeof *result);
+		rearrange_monster(result, true);
+
+		mem_free(mon->race);
+	}
+	else {
+		result = &r_info[mr->ridx];
+	}
+
+	mon->race = result;
+
+	mon_reembody(mon);
+
+	if (mon->player) {
+		int i;
+		struct player *p = mon->player;
+		for (i = STAT_NONE + 1; i < STAT_MAX; ++i) {
+			p->stat_max[i] = MIN(p->stat_max[i], stat_max_max(p, i));
+			p->stat_cur[i] = MIN(p->stat_cur[i], p->stat_max[i]);
+		}
+
+		player->upkeep->redraw |= (PR_MAP | PR_MISC);
+		player->upkeep->update |= (PU_BONUS | PU_HP);
+	}
+	else {
+		mflag_on(mon->mflag, MFLAG_UPDATE_ATTACKS);
+		mflag_on(mon->mflag, MFLAG_UPDATE_STATE);
+	}
+
+	return true;
+}
+
+bool mon_check_evolution(struct monster *mon, bool select)
+{
+	const struct monster_race *target = NULL;
+	int max_lev;
+
+	if (!mon->player) {
+		int tgts = 0;
+		struct evolution *evol;
+
+		max_lev = mon->mon_lev;
+
+		for (evol = mon->race->evol; evol; evol = evol->next) {
+			if (evol->race->level >= mon->mon_lev) {
+				tgts++;
+				if (one_in_(tgts)) {
+					target = evol->race;
+				}
+			}
+		}
+	} else if (mon->player->num_evol_choices > 0) {
+		target = mon->player->evol_choices[0];
+		max_lev = mon->state.skills[SKILL_MONSTER];
+	}
+
+	if (!target || target->level > max_lev) {
+		return false;
+	}
+
+	return change_monster_race(mon, target);
 }
 
 bool mon_is_player(const struct monster *mon)
