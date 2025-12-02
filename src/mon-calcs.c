@@ -212,7 +212,7 @@ struct scaling_data mon_race_skill(const struct monster *mon, int which)
 	struct scaling_data result;
 	result = race_skill(mon->race, which);
 
-	if (mon->player && mon->player->class) {
+	if (mon->player && mon->player->class && !pf_has(mon->player->class->pflags, PF_NO_SKILL)) {
 		result.r_xtra /= 2;
 		result.base /= 2;
 	}
@@ -237,24 +237,24 @@ struct scaling_data mon_tome_skill(const struct monster *mon, int which)
 struct scaling_data mon_class_skill(const struct monster *mon, int which)
 {
 	struct player *p = mon->player;
-	int tome, b_amt, x_amt;
+	int tome;
 	struct player_ability *abil = lookup_player_ability(which, PY_ABIL_SKILL);
 	struct scaling_data result = { 0 };
 
 	if (!p) return result;
+	if (pf_has(p->class->pflags, PF_NO_SKILL) && which != SKILL_MONSTER) return result;
+
+	result.base = p->class->c_skills[which];
+	result.p_xtra = p->class->x_skills[which];
+
 	if (!abil || abil->learn_index < 0) return result;
 
 	tome = p->extra_learned[abil->learn_index];
-	b_amt = p->class->c_skills[which];
-	x_amt = p->class->x_skills[which];
 
 	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
-		b_amt = MAX(b_amt, tome * 1 / 4);
-		x_amt = MAX(x_amt, tome * 3 / 4);
+		result.base = MAX(result.base, tome * 1 / 4);
+		result.p_xtra = MAX(result.p_xtra, tome * 3 / 4);
 	}
-
-	result.base = b_amt;
-	result.p_xtra = x_amt;
 
 	return result;
 }
@@ -335,18 +335,6 @@ static int mon_skill(const struct monster *mon, const struct player_state *state
 	sdata = scaling_data_sum(sdata, mon_tome_skill(mon, skill));
 
 	result = scaling_data_calc_mon(mon, sdata);
-
-	if (skill == SKILL_MONSTER) {
-		char mssg[256] = "";
-
-		sdata = mon_race_skill(mon, skill);
-		my_strcat(mssg, format("\n  race.base = %i, .r_xtra = %i, .p_xtra = %i", sdata.base, sdata.r_xtra, sdata.p_xtra), sizeof mssg);
-		sdata = mon_class_skill(mon, skill);
-		my_strcat(mssg, format("\n  class.base = %i, .r_xtra = %i, .p_xtra = %i", sdata.base, sdata.r_xtra, sdata.p_xtra), sizeof mssg);
-		sdata = mon_tome_skill(mon, skill);
-		my_strcat(mssg, format("\n  tome.base = %i, .r_xtra = %i, .p_xtra = %i", sdata.base, sdata.r_xtra, sdata.p_xtra), sizeof mssg);
-		dbg_log_fmt("mon", "monster skill calc: %s", mssg);
-	}
 
 	//result += stat_skill_bonus(mon, state, skill, result, NULL, 0);
 
@@ -443,7 +431,7 @@ struct scaling_data race_power(const struct monster_race *mr, int power)
 	result = MAX(0, MIN(scale, special));
 
 	ret.r_xtra = result;
-	ret.p_xtra = RND_TO_MULT(MAX(0, scale - mr->level), 5);
+	ret.p_xtra = RND_TO_MULT(MAX(0, scale - mr->level * 2), 5);
 
 	return ret;
 }

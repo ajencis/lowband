@@ -4420,6 +4420,16 @@ static enum parser_error parse_class_skill_health(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_class_skill_monster(struct parser *p) {
+	struct player_class *c = parser_priv(p);
+	if (!c)
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	c->c_skills[SKILL_MONSTER] = parser_getint(p, "base");
+	c->x_skills[SKILL_MONSTER] = parser_getint(p, "incr");
+	return PARSE_ERROR_NONE;
+}
+
+
 /* L: parse abilities */
 static enum parser_error parse_class_power(struct parser *p) {
 	struct player_class *c = parser_priv(p);
@@ -5162,6 +5172,7 @@ static struct parser *init_parse_class(void) {
 	parser_reg(p, "skill-dig int base int incr", parse_class_skill_dig);
 	parser_reg(p, "skill-magic int base int incr", parse_class_skill_magic);
 	parser_reg(p, "skill-health int base int incr", parse_class_skill_health);
+	parser_reg(p, "skill-monster int base int incr", parse_class_skill_monster);
 	parser_reg(p, "power sym name int value", parse_class_power);
 	parser_reg(p, "hitdie int mhp", parse_class_hitdie);
 	parser_reg(p, "exp int exp", parse_class_exp);
