@@ -32,6 +32,13 @@
 
 
 
+static int safe_div(int dividend, int divisor)
+{
+	int sgn = SGN(dividend) * SGN(divisor);
+	return (ABS(dividend) / ABS(divisor)) * sgn;
+}
+
+
 struct mon_player_match of_matches[] = {
 	{ RF_PASS_WEB, OF_PASS_WEB },
 	{ RF_INVISIBLE, OF_INVISIBILITY },
@@ -173,7 +180,7 @@ int skill_stepdown(const struct monster *mon, int skill)
 	return lev + diff;
 }
 
-static int evolving_race_skill(const struct monster_race *mr, int which)
+int evolving_race_skill(const struct monster_race *mr, int which)
 {
 	int sum = 0, div = 0;
 	struct evolution *evol;
@@ -196,12 +203,19 @@ struct scaling_data race_skill(const struct monster_race *mr, int which)
 {
 	int base_skill = mr->skills[which];
 	struct scaling_data result = { 0 };
+	int base;
 
+	if (which == SKILL_MONSTER) return result;
 	if (!base_skill) base_skill = evolving_race_skill(mr, which);
 
-	result.base = RND_TO_MULT((ABS(base_skill) + 3) / 4, 5) * SGN(base_skill);
+	base = base_skill - 75;
+
+	result.base = safe_div(base, 2);
+	result.base = RND_TO_MULT(result.base, 5);
+
 	result.r_xtra = base_skill - result.base;
-	result.p_xtra = MAX(0, ABS(base_skill) - mr->level * 4) * SGN(base_skill);
+
+	result.p_xtra = MAX(0, ABS(base) - mr->level * 4) * SGN(base);
 	result.p_xtra = RND_TO_MULT(result.p_xtra, 5);
 
 	return result;

@@ -17,6 +17,7 @@ extern struct mon_player_match pf_matches[];
 
 
 int mon_lev(const struct monster *mon);
+int evolving_race_skill(const struct monster_race *mr, int which);
 
 struct scaling_data scaling_data_sum(struct scaling_data sdata1, struct scaling_data sdata2);
 

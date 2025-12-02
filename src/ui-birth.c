@@ -24,6 +24,7 @@
 #include "mon-calcs.h"
 #include "monster.h"
 #include "player-calcs.h"
+#include "player-enum.h"
 #include "player.h"
 #include "player-birth.h"
 #include "player-properties.h"
@@ -336,6 +337,11 @@ static void skill_help(const int skills_b[SKILL_MAX], const int skills_x[SKILL_M
 	}
 
 	for (i = 0; i < SKILL_MAX; ++i) {
+		if (!skills_b[i] && !skills_x[i] && i == SKILL_MONSTER) {
+			xtra_returns++;
+			continue;
+		}
+
 		abil = lookup_player_ability(i, PY_ABIL_SKILL);
 
 		currlen = strnfmt(mssg, sizeof mssg, "%s:", abil->name);

@@ -22,6 +22,7 @@
 #include "generate.h"
 #include "init.h"
 #include "mon-init.h"
+#include "mon-calcs.h"
 #include "mon-lore.h"
 #include "mon-spell.h"
 #include "mon-util.h"
@@ -1444,10 +1445,10 @@ static enum parser_error parse_mon_base_name(struct parser *p) {
 	rb->body = bodies;
 
 	for (i = 0; i < SKILL_MAX; ++i) {
-		if (i != SKILL_MONSTER) {
-			rb->skills[i] = 100;
-		} else {
+		if (i == SKILL_MONSTER) {
 			rb->skills[i] = 0;
+		} else {
+			rb->skills[i] = 75;
 		}
 	}
 
@@ -2818,6 +2819,14 @@ static errr finish_parse_monster(struct parser *p) {
 				else {
 					race->stat_mod[j] = (race->level * base + 33) / 50;
 				}
+			}
+		}
+
+		// L: get extra skills for evolving player races
+		if (race->level == 0 && race->evol) {
+			dbg_log_fmt("rs", "getting evolving skills for a %s", race->name);
+			for (j = 0; j < SKILL_MAX; ++j) {
+				race->skills[j] += evolving_race_skill(race, j);
 			}
 		}
 	}

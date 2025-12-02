@@ -334,18 +334,18 @@ rarity:10
 experience:0
 flags:PLAYABLE
 stats:0:0:-1:1:0
-skill:DISARM_PHYS:2
-skill:DISARM_MAGIC:2
-skill:DEVICE:3
-skill:SAVE:3
-skill:STEALTH:4
-skill:SEARCH:3
-skill:TO_HIT_MELEE:-1
-skill:TO_HIT_BOW:4
-skill:TO_HIT_THROW:4
-skill:DIGGING:0
-skill:MAGIC:0
-skill:HEALTH:-1
+skill:DISARM_PHYS:80
+skill:DISARM_MAGIC:80
+skill:DEVICE:80
+skill:SAVE:80
+skill:STEALTH:85
+skill:SEARCH:80
+skill:TO_HIT_MELEE:70
+skill:TO_HIT_BOW:90
+skill:TO_HIT_THROW:90
+skill:DIGGING:75
+skill:MAGIC:75
+skill:HEALTH:70
 desc:A half-elf.
 
 name:elf
@@ -361,18 +361,18 @@ rarity:10
 experience:0
 flags:PLAYABLE | RES_LIGHT
 stats:0:1:-1:1:-1
-skill:DISARM_PHYS:4
-skill:DISARM_MAGIC:4
-skill:DEVICE:5
-skill:SAVE:5
-skill:STEALTH:6
-skill:SEARCH:5
-skill:TO_HIT_MELEE:-5
-skill:TO_HIT_BOW:10
-skill:TO_HIT_THROW:10
-skill:DIGGING:0
-skill:MAGIC:0
-skill:HEALTH:-2
+skill:DISARM_PHYS:85
+skill:DISARM_MAGIC:85
+skill:DEVICE:85
+skill:SAVE:85
+skill:STEALTH:90
+skill:SEARCH:85
+skill:TO_HIT_MELEE:65
+skill:TO_HIT_BOW:95
+skill:TO_HIT_THROW:95
+skill:DIGGING:75
+skill:MAGIC:75
+skill:HEALTH:65
 desc:An elf.
 
 name:hobbit
@@ -388,18 +388,18 @@ rarity:10
 experience:0
 flags:PLAYABLE
 stats:-2:0:0:1:1
-skill:DISARM_PHYS:10
-skill:DISARM_MAGIC:10
-skill:DEVICE:12
-skill:SAVE:12
-skill:STEALTH:15
-skill:SEARCH:6
-skill:TO_HIT_MELEE:-10
-skill:TO_HIT_BOW:15
-skill:TO_HIT_THROW:15
-skill:DIGGING:0
-skill:MAGIC:0
-skill:HEALTH:-2
+skill:DISARM_PHYS:90
+skill:DISARM_MAGIC:90
+skill:DEVICE:95
+skill:SAVE:95
+skill:STEALTH:100
+skill:SEARCH:85
+skill:TO_HIT_MELEE:65
+skill:TO_HIT_BOW:80
+skill:TO_HIT_THROW:90
+skill:DIGGING:75
+skill:MAGIC:75
+skill:HEALTH:65
 desc:A hobbit.
 
 name:gnome
@@ -415,18 +415,18 @@ rarity:10
 experience:0
 flags:PLAYABLE
 stats:-1:1:-2:1:1
-skill:DISARM_PHYS:7
-skill:DISARM_MAGIC:7
-skill:DEVICE:16
-skill:SAVE:8
-skill:STEALTH:10
-skill:SEARCH:3
-skill:TO_HIT_MELEE:-8
-skill:TO_HIT_BOW:8
-skill:TO_HIT_THROW:8
-skill:DIGGING:0
-skill:MAGIC:0
-skill:HEALTH:-2
+skill:DISARM_PHYS:85
+skill:DISARM_MAGIC:85
+skill:DEVICE:100
+skill:SAVE:80
+skill:STEALTH:90
+skill:SEARCH:80
+skill:TO_HIT_MELEE:75
+skill:TO_HIT_BOW:75
+skill:TO_HIT_THROW:75
+skill:DIGGING:75
+skill:MAGIC:75
+skill:HEALTH:70
 desc:A gnome.
 
 name:dwarf
@@ -442,18 +442,18 @@ rarity:10
 experience:0
 flags:PLAYABLE
 stats:0:-1:1:-2:2
-skill:DISARM_PHYS:2
-skill:DISARM_MAGIC:2
-skill:DEVICE:7
-skill:SAVE:7
-skill:STEALTH:-5
-skill:SEARCH:2
-skill:TO_HIT_MELEE:10
-skill:TO_HIT_BOW:0
-skill:TO_HIT_THROW:0
-skill:DIGGING:30
-skill:MAGIC:-5
-skill:HEALTH:3
+skill:DISARM_PHYS:80
+skill:DISARM_MAGIC:80
+skill:DEVICE:80
+skill:SAVE:85
+skill:STEALTH:65
+skill:SEARCH:80
+skill:TO_HIT_MELEE:75
+skill:TO_HIT_BOW:70
+skill:TO_HIT_THROW:75
+skill:DIGGING:105
+skill:MAGIC:70
+skill:HEALTH:80
 desc:A dwarf.
 
 name:half-troll
@@ -474,19 +474,6 @@ depth:0
 rarity:10
 experience:0
 flags:PLAYABLE
-stats:0:-1:1:-2:2
-skill:DISARM_PHYS:-5
-skill:DISARM_MAGIC:-5
-skill:DEVICE:-8
-skill:SAVE:-8
-skill:STEALTH:-10
-skill:SEARCH:-9
-skill:TO_HIT_MELEE:14
-skill:TO_HIT_BOW:-10
-skill:TO_HIT_THROW:-10
-skill:DIGGING:0
-skill:MAGIC:0
-skill:HEALTH:4
 desc:An half-troll.
 
 name:half-ghoul
@@ -502,19 +489,6 @@ depth:0
 rarity:10
 experience:0
 flags:PLAYABLE
-stats:0:-1:1:-2:2
-skill:DISARM_PHYS:0
-skill:DISARM_MAGIC:0
-skill:DEVICE:0
-skill:SAVE:0
-skill:STEALTH:5
-skill:SEARCH:-5
-skill:TO_HIT_MELEE:3
-skill:TO_HIT_BOW:-3
-skill:TO_HIT_THROW:-3
-skill:DIGGING:10
-skill:MAGIC:0
-skill:HEALTH:0
 desc:An half-ghoul.
 
 name:dunadan
@@ -530,18 +504,18 @@ rarity:10
 experience:0
 flags:PLAYABLE
 stats:0:0:0:0:0
-skill:DISARM_PHYS:3
-skill:DISARM_MAGIC:3
-skill:DEVICE:4
-skill:SAVE:4
-skill:STEALTH:4
-skill:SEARCH:3
-skill:TO_HIT_MELEE:10
-skill:TO_HIT_BOW:10
-skill:TO_HIT_THROW:7
-skill:DIGGING:0
-skill:MAGIC:0
-skill:HEALTH:2
+skill:DISARM_PHYS:75
+skill:DISARM_MAGIC:75
+skill:DEVICE:80
+skill:SAVE:80
+skill:STEALTH:80
+skill:SEARCH:80
+skill:TO_HIT_MELEE:80
+skill:TO_HIT_BOW:80
+skill:TO_HIT_THROW:75
+skill:DIGGING:75
+skill:MAGIC:75
+skill:HEALTH:80
 desc:A dunadan.
 
 name:high-elf
@@ -557,18 +531,18 @@ rarity:10
 experience:0
 flags:PLAYABLE
 stats:-1:2:-1:1:-1
-skill:DISARM_PHYS:4
-skill:DISARM_MAGIC:4
-skill:DEVICE:14
-skill:SAVE:14
-skill:STEALTH:7
-skill:SEARCH:7
-skill:TO_HIT_MELEE:7
-skill:TO_HIT_BOW:16
-skill:TO_HIT_THROW:8
-skill:DIGGING:0
-skill:MAGIC:0
-skill:HEALTH:-1
+skill:DISARM_PHYS:90
+skill:DISARM_MAGIC:90
+skill:DEVICE:90
+skill:SAVE:90
+skill:STEALTH:95
+skill:SEARCH:90
+skill:TO_HIT_MELEE:65
+skill:TO_HIT_BOW:100
+skill:TO_HIT_THROW:95
+skill:DIGGING:75
+skill:MAGIC:75
+skill:HEALTH:60
 desc:A high-elf.
 
 name:tallfolk
@@ -584,18 +558,18 @@ rarity:10
 experience:0
 flags:PLAYABLE
 stats:-1:0:1:2:-2
-skill:DISARM_PHYS:-5
-skill:DISARM_MAGIC:-5
-skill:DEVICE:4
-skill:SAVE:4
-skill:STEALTH:10
-skill:SEARCH:7
-skill:TO_HIT_MELEE:-5
-skill:TO_HIT_BOW:0
-skill:TO_HIT_THROW:0
-skill:DIGGING:0
-skill:MAGIC:0
-skill:HEALTH:2
+skill:DISARM_PHYS:70
+skill:DISARM_MAGIC:70
+skill:DEVICE:80
+skill:SAVE:80
+skill:STEALTH:90
+skill:SEARCH:85
+skill:TO_HIT_MELEE:70
+skill:TO_HIT_BOW:75
+skill:TO_HIT_THROW:75
+skill:DIGGING:75
+skill:MAGIC:75
+skill:HEALTH:80
 desc:A tallfolk.
 
 name:misshapen
@@ -613,18 +587,18 @@ rarity:10
 experience:0
 flags:PLAYABLE
 stats:0:1:1:-1:1
-skill:DISARM_PHYS:-5
-skill:DISARM_MAGIC:-5
-skill:DEVICE:7
-skill:SAVE:7
-skill:STEALTH:0
-skill:SEARCH:4
-skill:TO_HIT_MELEE:0
-skill:TO_HIT_BOW:4
-skill:TO_HIT_THROW:4
-skill:DIGGING:4
-skill:MAGIC:4
-skill:HEALTH:4
+skill:DISARM_PHYS:70
+skill:DISARM_MAGIC:70
+skill:DEVICE:85
+skill:SAVE:85
+skill:STEALTH:75
+skill:SEARCH:80
+skill:TO_HIT_MELEE:75
+skill:TO_HIT_BOW:80
+skill:TO_HIT_THROW:80
+skill:DIGGING:80
+skill:MAGIC:80
+skill:HEALTH:80
 desc:A misshapen.
 
 name:eyestalk
@@ -4746,19 +4720,6 @@ rarity:2
 experience:50
 blow:HIT:HURT:3d4
 blow:HIT:HURT:3d4
-stats:1:-1:1:-2:1
-skill:DISARM_PHYS:-3
-skill:DISARM_MAGIC:-3
-skill:DEVICE:-3
-skill:SAVE:-3
-skill:STEALTH:-5
-skill:SEARCH:-3
-skill:TO_HIT_MELEE:10
-skill:TO_HIT_BOW:-5
-skill:TO_HIT_THROW:-5
-skill:DIGGING:0
-skill:MAGIC:0
-skill:HEALTH:2
 flags:DROP_20
 innate-freq:10
 spells:ARROW

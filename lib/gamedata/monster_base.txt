@@ -684,7 +684,7 @@ flags:SAPIENT | SEE_IN_DARK
 flags:GEAR
 desc:Orc
 body:Humanoid
-stats:0:-1:1:-2:2
+stats:1:-1:1:-2:1
 skill-melee:90
 skill-shoot:100
 skill-throw:80
