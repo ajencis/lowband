@@ -2824,7 +2824,6 @@ static errr finish_parse_monster(struct parser *p) {
 
 		// L: get extra skills for evolving player races
 		if (race->level == 0 && race->evol) {
-			dbg_log_fmt("rs", "getting evolving skills for a %s", race->name);
 			for (j = 0; j < SKILL_MAX; ++j) {
 				race->skills[j] += evolving_race_skill(race, j);
 			}

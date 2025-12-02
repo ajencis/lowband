@@ -48,6 +48,7 @@
 #include "obj-util.h"
 #include "object.h"
 #include "option.h"
+#include "player-enum.h"
 #include "player.h"
 #include "player-properties.h"
 #include "player-quest.h"
@@ -3360,13 +3361,16 @@ static errr run_parse_p_race(struct parser *p) {
 static int p_race_compare(const void *r1, const void *r2)
 {
 	struct player_race *pr1 = *(struct player_race **)r1, *pr2 = *(struct player_race **)r2;
-	int result = max_race_evol_lev(pr1) - max_race_evol_lev(pr2), i;
-
-	if (result) return SGN(result);
+	int result = 0, i;
 
 	for (i = 0; i < SKILL_MAX; ++i) {
-		result += ABS(pr1->mon_race->skills[i]);
-		result -= ABS(pr2->mon_race->skills[i]);
+		result += ABS(pr1->mon_race->skills[i] - 75);
+		result -= ABS(pr2->mon_race->skills[i] - 75);
+	}
+
+	for (i = 0; i < STAT_MAX; ++i) {
+		result += ABS(pr1->mon_race->stat_mod[i]) * 10;
+		result -= ABS(pr2->mon_race->stat_mod[i]) * 10;
 	}
 
 	if (result) return SGN(result);
