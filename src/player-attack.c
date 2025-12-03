@@ -2180,6 +2180,8 @@ void do_cmd_melee(struct command *cmd)
 	struct loc target;
 	struct attack *atk;
 
+	update_mon_attacks(&player->mon);
+
 	if (cmd_get_target(cmd, "target", &dir) == CMD_OK) {
 		int dummy;
 		if (cmd_get_arg_number(cmd, "checked_conf", &dummy) != CMD_OK) {
