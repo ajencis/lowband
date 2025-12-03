@@ -86,26 +86,7 @@ struct embryo_attack {
 	struct embryo_attack *next;
 
 	struct attack atk;
-
-	int num;
-
-	int dice;
-	int sides;
-	int to_d;
-	int to_h;
-
-	int dam_type;
-
-	int range;
-
-	int skill;
-	int acc_stat;
-	int dam_stat;
-
-	int blows;
-
-	int crit_chance;
-
+	
 	int auto_freq;
 
 	const char *msg;
@@ -937,28 +918,28 @@ static void calc_emb_crit(const struct monster *mon, struct embryo_attack *emb)
 		chance += z_info->m_crit_chance_weight_scl * obj->weight / 100;
 	}
 
-	chance += z_info->m_crit_chance_toh_skill_scl * mon->state.skills[emb->skill] / 100;
+	chance += z_info->m_crit_chance_toh_skill_scl * mon->state.skills[emb->atk.skill] / 100;
 
 	chance += get_power_scale(mon, PP_CRITICAL_HITS, 15);
 
-	emb->crit_chance = chance;
+	emb->atk.crit_chance = chance;
 }
 
 static void calc_emb_blows(const struct monster *mon, struct embryo_attack *emb, int numblows)
 {
 	int wgt = emb->obj ? object_weight_one(emb->obj) : 0;
 	int div = wgt * 2 + 100;
-	bool has_acc = emb->acc_stat != STAT_NONE, has_dam = emb->dam_stat != STAT_NONE;
+	bool has_acc = emb->atk.hit_stat != STAT_NONE, has_dam = emb->atk.dam_stat != STAT_NONE;
 
 	int sdiv = 0, sind = 0;
 	int base, skill, blows;
 
 	if (has_dam) {
-		sind += mon->state.stat_ind[emb->dam_stat];
+		sind += mon->state.stat_ind[emb->atk.dam_stat];
 		++sdiv;
 	}
 	if (has_acc) {
-		sind += mon->state.stat_ind[emb->acc_stat];
+		sind += mon->state.stat_ind[emb->atk.hit_stat];
 		++sdiv;
 	}
 
@@ -969,11 +950,43 @@ static void calc_emb_blows(const struct monster *mon, struct embryo_attack *emb,
 		base = adj_stat_blow(AVG_STAT_IND);
 	}
 
-	skill = mon->state.skills[emb->skill];
+	skill = mon->state.skills[emb->atk.skill];
 
-	blows = (skill * base / div + mon->state.extra_blows) * emb->num / numblows;
+	blows = (skill * base / div + mon->state.extra_blows) * emb->atk.num / numblows;
 
-	emb->blows = MAX(blows + 50 * emb->num, blows / 2 + 100 * emb->num);
+	emb->atk.blows = MAX(blows + 50 * emb->atk.num, blows / 2 + 100 * emb->atk.num);
+}
+
+int attack_blows(const struct monster *mon, struct attack *atk, int total_attacks)
+{
+	int wgt = atk->obj ? object_weight_one(atk->obj) : 0;
+	int div = wgt * 2 + 100;
+	bool has_acc = atk->hit_stat != STAT_NONE, has_dam = atk->dam_stat != STAT_NONE;
+
+	int sdiv = 0, sind = 0;
+	int base, skill, blows;
+
+	if (has_dam) {
+		sind += mon->state.stat_ind[atk->dam_stat];
+		++sdiv;
+	}
+	if (has_acc) {
+		sind += mon->state.stat_ind[atk->hit_stat];
+		++sdiv;
+	}
+
+	if (sdiv > 0) {
+		base = adj_stat_blow(sind / sdiv);
+	}
+	else {
+		base = adj_stat_blow(AVG_STAT_IND);
+	}
+
+	skill = mon->state.skills[atk->skill];
+
+	blows = (skill * base / div + mon->state.extra_blows) * atk->num / total_attacks;
+
+	return MAX(blows + 50 * atk->num, blows / 2 + 100 * atk->num);
 }
 
 static void calc_emb_dual_wield(const struct monster *mon, struct embryo_attack *emb, int numweaps)
@@ -997,9 +1010,9 @@ static void calc_emb_dual_wield(const struct monster *mon, struct embryo_attack 
 
 	wgt *= (numweaps - 1);
 
-	emb->to_h *= 100 - wgt;
-	emb->to_h -= 100;
-	emb->to_h -= wgt / 2;
+	emb->atk.to_hit *= 100 - wgt;
+	emb->atk.to_hit -= 100;
+	emb->atk.to_hit -= wgt / 2;
 
 	// using two longswords to-h for each is 58% normal - 21
 }
@@ -1009,7 +1022,7 @@ static int num_embryos(const struct embryo_attack *emb)
 	int count = 0;
 	const struct embryo_attack *curr;
 	for (curr = emb; curr; curr = curr->next) {
-		count += emb->num;
+		count += emb->atk.num;
 	}
 	return count;
 }
@@ -1020,7 +1033,7 @@ static int num_weap_embryos(const struct embryo_attack *emb)
 	const struct embryo_attack *curr;
 	for (curr = emb; curr; curr = curr->next) {
 		if (curr->obj) {
-			count += emb->num;
+			count += emb->atk.num;
 		}
 	}
 	return count;
@@ -1032,13 +1045,13 @@ static void modify_unarmed_attack(struct embryo_attack *emb, const struct monste
 {
 	if (emb->obj) return;
 
-	int factor = MIN(125 - (emb->dice * emb->sides * 2), 100);
+	int factor = MIN(125 - (emb->atk.rv.dice * emb->atk.rv.sides * 2), 100);
 	int dexmin = 75 - factor / 2;
 
-	emb->sides += get_power_scale(mon, PP_UNARMED_STRIKE, 10) * factor / 100;
+	emb->atk.rv.sides += get_power_scale(mon, PP_UNARMED_STRIKE, 10) * factor / 100;
 	
-	if (emb->acc_stat == PP_UNARMED_STRIKE && mon_power_minimum(mon, PP_UNARMED_STRIKE, dexmin)) {
-		emb->acc_stat = STAT_DEX;
+	if (emb->atk.hit_stat == PP_UNARMED_STRIKE && mon_power_minimum(mon, PP_UNARMED_STRIKE, dexmin)) {
+		emb->atk.hit_stat = STAT_DEX;
 	}
 }
 
@@ -1058,20 +1071,20 @@ static struct embryo_attack *get_weapon_attack(const struct monster *mon, const 
 
 	uint16_t od_mode;
 
-	emb->obj = weap;
+	emb->atk.obj = weap;
 
-	emb->skill = SKILL_TO_HIT_MELEE;
+	emb->atk.skill = SKILL_TO_HIT_MELEE;
 
-	emb->acc_stat = STAT_NONE;
-	emb->dam_stat = STAT_STR;
+	emb->atk.hit_stat = STAT_NONE;
+	emb->atk.dam_stat = STAT_STR;
 
-	emb->dice = weap->dd;
-	emb->sides = weap->ds;
+	emb->atk.rv.dice = weap->dd;
+	emb->atk.rv.sides = weap->ds;
 
-	emb->to_h = object_to_hit(weap) * BTH_PLUS_ADJ;
-	emb->sides += object_to_dam(weap);
+	emb->atk.to_hit = object_to_hit(weap) * BTH_PLUS_ADJ;
+	emb->atk.rv.sides += object_to_dam(weap);
 
-	emb->to_d = 0;
+	emb->atk.rv.base = 0;
 
 	emb->msg = p ? "hit {target}" : "hits {target}";
 	od_mode = ODESC_SINGULAR | ODESC_TERSE | ODESC_LOWERCASE;
@@ -1079,11 +1092,11 @@ static struct embryo_attack *get_weapon_attack(const struct monster *mon, const 
 
 	emb->extra = NULL;
 
-	emb->num = 1;
+	emb->atk.num = 1;
 
-	emb->dam_type = weap->kind->base->proj_type;
+	emb->atk.dam_type = weap->kind->base->proj_type;
 
-	emb->range = weap->kind->base->tval == TV_POLEARM ? 2 : 1;
+	emb->atk.range = weap->kind->base->tval == TV_POLEARM ? 2 : 1;
 
 	return emb;
 }
@@ -1116,19 +1129,19 @@ static struct embryo_attack *get_natural_attack(const struct monster *mon, const
 
 	emb->mon_blow = blow;
 
-	emb->skill = blow->method->skill;
+	emb->atk.skill = blow->method->skill;
 
-	emb->acc_stat = STAT_NONE;
-	emb->dam_stat = emb->skill == SKILL_SEARCH ? STAT_WIS : STAT_STR;
+	emb->atk.hit_stat = STAT_NONE;
+	emb->atk.dam_stat = emb->atk.skill == SKILL_SEARCH ? STAT_WIS : STAT_STR;
 
-	emb->dice = blow->dice.dice;
-	emb->sides = blow->dice.sides;
-	emb->to_d = blow->dice.base;
+	emb->atk.rv.dice = blow->dice.dice;
+	emb->atk.rv.sides = blow->dice.sides;
+	emb->atk.rv.base = blow->dice.base;
 
 	// make sure there's at least one die so that players can do damage via stat bonus to sides
-	if (emb->dice * emb->sides == 0) {
-		emb->dice = MAX(emb->dice, 1);
-		emb->sides = 0;
+	if (emb->atk.rv.dice * emb->atk.rv.sides == 0) {
+		emb->atk.rv.dice = MAX(emb->atk.rv.dice, 1);
+		emb->atk.rv.sides = 0;
 	}
 
 	emb->msg = p ? blow->method->fmessage : blow->method->messages->act_msg;
@@ -1136,16 +1149,16 @@ static struct embryo_attack *get_natural_attack(const struct monster *mon, const
 
 	emb->extra = NULL;
 
-	emb->num = 1;
+	emb->atk.num = 1;
 
 	if (blow->effect->lash_type == -1) {
-		emb->dam_type = blow->method->lash_type;
+		emb->atk.dam_type = blow->method->lash_type;
 	}
 	else {
-		emb->dam_type = blow->effect->lash_type;
+		emb->atk.dam_type = blow->effect->lash_type;
 	}
 
-	emb->range = monster_melee_attack_range(mon->race->level, blow);
+	emb->atk.range = monster_melee_attack_range(mon->race->level, blow);
 
 	if (blow->effect->mtimed >= 0) {
 		struct effect *ef = get_timed_effect(mon->race->level, blow->effect->mtimed);
@@ -1159,21 +1172,21 @@ static void get_chain_attack(const struct monster *mon, struct embryo_attack *em
 {
 	emb->obj = NULL;
 
-	emb->skill = SKILL_TO_HIT_MELEE;
+	emb->atk.skill = SKILL_TO_HIT_MELEE;
 
-	emb->acc_stat = STAT_NONE;
-	emb->dam_stat = STAT_DEX;
+	emb->atk.hit_stat = STAT_NONE;
+	emb->atk.dam_stat = STAT_DEX;
 
-	emb->dice = 1;
-	emb->sides = get_power_scale(mon, PP_ANIMATE_CHAINS, 5) + 5;
+	emb->atk.rv.dice = 1;
+	emb->atk.rv.sides = get_power_scale(mon, PP_ANIMATE_CHAINS, 5) + 5;
 
 	emb->msg = mon_is_player(mon) ? "enchain {target}" : "enchains {target}";
 	strnfmt(emb->title, sizeof emb->title, "enchain");
 
-	emb->num = get_power_scale(mon, PP_ANIMATE_CHAINS, 5);
-	emb->dam_type = PROJ_PIERCING;
+	emb->atk.num = get_power_scale(mon, PP_ANIMATE_CHAINS, 5);
+	emb->atk.dam_type = PROJ_PIERCING;
 
-	emb->range = get_power_scale(mon, PP_ANIMATE_CHAINS, 3) + 1;
+	emb->atk.range = get_power_scale(mon, PP_ANIMATE_CHAINS, 3) + 1;
 
 	emb->auto_freq = get_power_scale(mon, PP_ANIMATE_CHAINS, 30) + 20;
 }
@@ -1186,24 +1199,24 @@ static struct embryo_attack *get_special_attack(const struct monster *mon, int s
 
 	emb->obj = NULL;
 
-	emb->skill = SKILL_TO_HIT_MELEE;
+	emb->atk.skill = SKILL_TO_HIT_MELEE;
 
-	emb->acc_stat = STAT_NONE;
-	emb->dam_stat = data->dam_stat;
+	emb->atk.hit_stat = STAT_NONE;
+	emb->atk.dam_stat = data->dam_stat;
 
-	emb->dice = data->dice;
-	emb->sides = 1;
+	emb->atk.rv.dice = data->dice;
+	emb->atk.rv.sides = 1;
 	
 	emb->msg = p ? data->fmsg : data->msg;
 	strnfmt(emb->title, sizeof emb->title, "%s", data->title);
 
 	emb->extra = NULL;
 
-	emb->num = 1;
+	emb->atk.num = 1;
 
-	emb->range = 1;
+	emb->atk.range = 1;
 
-	emb->dam_type = PROJ_BLUDGEONING;
+	emb->atk.dam_type = PROJ_BLUDGEONING;
 
 	if (special == ATK_SPCL_TYP_CHAIN) get_chain_attack(mon, emb);
 
@@ -1218,8 +1231,8 @@ static void calc_emb_expertise(const struct monster *mon, struct embryo_attack *
 
 	if (spec <= 0) return;
 
-	emb->blows += spec;
-	emb->to_d += spec / 15;
+	emb->atk.blows += spec;
+	emb->atk.rv.base += spec / 15;
 }
 
 
@@ -1276,7 +1289,7 @@ static struct embryo_attack *add_unarmed(const struct monster *mon, int source, 
 
 	if (num > 0) {
 		new = get_special_attack(mon, source);
-		if (new->num == 0) new->num = num;
+		if (new->atk.num == 0) new->atk.num = num;
 	}
 
 	return new;
@@ -1363,7 +1376,7 @@ static struct embryo_attack *init_mon_attacks(const struct monster *mon)
 
 		new = get_natural_attack(mon, blow);
 
-		new->num = num;
+		new->atk.num = num;
 
 		add_attack_to_end(&result, new);
 	}
@@ -1384,60 +1397,44 @@ static void free_atk_embryo(struct embryo_attack *emb)
 
 static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 {
-	struct effect *main;
 	struct attack *result;
 	random_value rv = { 0, 0, 0, 0 };
-	bool has_skill = emb->skill >= 0 && emb->skill < SKILL_MAX;
+	bool has_skill = emb->atk.skill >= 0 && emb->atk.skill < SKILL_MAX;
 
-	if (emb->acc_stat >= 0 && emb->acc_stat < STAT_MAX) {
-		int ind = mon->state.stat_ind[emb->acc_stat];
-		emb->to_h += adj_dex_th(ind);
+	if (emb->atk.hit_stat >= 0 && emb->atk.hit_stat < STAT_MAX) {
+		int ind = mon->state.stat_ind[emb->atk.hit_stat];
+		emb->atk.to_hit += adj_dex_th(ind);
 	}
-	if (emb->dam_stat >= 0 && emb->dam_stat < STAT_MAX) {
-		int ind = mon->state.stat_ind[emb->dam_stat];
-		emb->sides += adj_str_td(ind);
+	if (emb->atk.dam_stat >= 0 && emb->atk.dam_stat < STAT_MAX) {
+		int ind = mon->state.stat_ind[emb->atk.dam_stat];
+		emb->atk.rv.sides += adj_str_td(ind);
 	}
 
-	main = mem_zalloc(sizeof *main);
-
-	rv.base = emb->to_d + mon->state.to_d;
-	rv.dice = MAX(emb->dice, 1);
-	rv.sides = MAX(emb->sides, 1);
+	rv.base = emb->atk.rv.base + mon->state.to_d;
+	rv.dice = MAX(emb->atk.rv.dice, 1);
+	rv.sides = MAX(emb->atk.rv.sides, 1);
 	rv.m_bonus = 0;
 
 	if (has_skill) {
-		rv.dice += get_skill_scale(mon, emb->skill, rv.dice * 3) / 2;
+		rv.dice += get_skill_scale(mon, emb->atk.skill, rv.dice * 3) / 2;
 	}
-
-	main->index = EF_HIT;
-	main->subtype = emb->dam_type;
-	assert(main->subtype >= 0 && main->subtype < PROJ_MAX);
-	main->next = emb->extra;
-
-	effect_add_value(main, rv);
 
 	result = mem_zalloc(sizeof *result);
 
-	result->ef = main;
-	result->blows = emb->blows;
-	result->obj = emb->obj;
-	result->range = emb->range;
-	result->to_hit = emb->to_h;
-	result->num = emb->num;
-	result->auto_freq = emb->auto_freq;
-	result->crit_chance = emb->crit_chance;
+	memcpy(result, &emb->atk, sizeof *result);
+
+	result->ef = emb->extra;
 
 	result->to_hit += mon->state.to_h;
-	result->skill = emb->skill;
 
 	result->ammo_tval = TV_NULL;
 
-	if (emb->skill >= 0 && emb->skill < SKILL_MAX) {
-		result->to_hit += mon->state.skills[emb->skill];
+	if (emb->atk.skill >= 0 && emb->atk.skill < SKILL_MAX) {
+		result->to_hit += get_skill_scale(mon, emb->atk.skill, 50);
 	}
 
 	if (pf_has(mon->state.pflags, PF_LONG_LIMBS)) {
-		emb->range = MAX(emb->range, 2);
+		result->range = MAX(result->range, 2);
 	}
 
 	result->message = string_make(emb->msg);
@@ -1502,17 +1499,17 @@ static int calc_ranged_emb_blows(const struct monster *mon, struct embryo_attack
 {
 	int wgt = emb->obj ? object_weight_one(emb->obj) : 0;
 	int div = wgt * 2 + 100;
-	bool has_acc = emb->acc_stat != STAT_NONE, has_dam = emb->atk.dam_stat != STAT_NONE;
+	bool has_acc = emb->atk.hit_stat != STAT_NONE, has_dam = emb->atk.dam_stat != STAT_NONE;
 
 	int sdiv = 0, sind = 0;
 	int base, skill, blows;
 
 	if (has_dam) {
-		sind += mon->state.stat_ind[emb->dam_stat];
+		sind += mon->state.stat_ind[emb->atk.dam_stat];
 		++sdiv;
 	}
 	if (has_acc) {
-		sind += mon->state.stat_ind[emb->acc_stat];
+		sind += mon->state.stat_ind[emb->atk.hit_stat];
 		++sdiv;
 	}
 
@@ -1523,7 +1520,7 @@ static int calc_ranged_emb_blows(const struct monster *mon, struct embryo_attack
 		base = adj_stat_blow(AVG_STAT_IND);
 	}
 
-	skill = mon->state.skills[emb->skill];
+	skill = mon->state.skills[emb->atk.skill];
 
 	blows = skill * base / div + mon->state.extra_shots;
 
@@ -1558,7 +1555,7 @@ static struct embryo_attack *get_ranged_weapon_attack(const struct monster *mon,
 
 	emb->atk.skill = SKILL_TO_HIT_BOW;
 
-	emb->acc_stat = STAT_NONE;
+	emb->atk.hit_stat = STAT_NONE;
 	emb->atk.dam_stat = STAT_NONE;
 
 	emb->atk.rv.dice = weap->dd;
@@ -1605,7 +1602,7 @@ static struct embryo_attack *get_ranged_natural_attack(const struct monster *mon
 
 	emb->atk.skill = blow->method->skill;
 
-	emb->acc_stat = STAT_NONE;
+	emb->atk.hit_stat = STAT_NONE;
 	emb->atk.dam_stat = STAT_DEX;
 
 	emb->atk.rv = blow->dice;
@@ -1639,13 +1636,13 @@ static struct attack *hatch_ranged_attack_embryo(struct embryo_attack *emb, stru
 
 	memcpy(atk, &emb->atk, sizeof *atk);
 
-	if (emb->acc_stat >= 0 && emb->acc_stat < STAT_MAX) {
-		ind = mon->state.stat_ind[emb->acc_stat];
-		emb->to_h += adj_dex_th(ind);
+	if (emb->atk.hit_stat >= 0 && emb->atk.hit_stat < STAT_MAX) {
+		ind = mon->state.stat_ind[emb->atk.hit_stat];
+		emb->atk.to_hit += adj_dex_th(ind);
 	}
-	if (emb->dam_stat >= 0 && emb->dam_stat < STAT_MAX) {
-		ind = mon->state.stat_ind[emb->dam_stat];
-		emb->sides += adj_str_td(ind);
+	if (emb->atk.dam_stat >= 0 && emb->atk.dam_stat < STAT_MAX) {
+		ind = mon->state.stat_ind[emb->atk.dam_stat];
+		emb->atk.rv.sides += adj_str_td(ind);
 	}
 
 	atk->next = mon->rng_atk;

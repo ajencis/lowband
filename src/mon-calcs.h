@@ -39,6 +39,8 @@ int skill_stepdown(const struct monster *mon, int skill);
 
 int stat_skill_bonus(const struct monster *mon, const struct player_state *state, int which, int curr, char *buf, size_t bufsize);
 
+int attack_blows(const struct monster *mon, struct attack *atk, int total_attacks);
+
 void calc_mon_bonuses(struct monster *mon, struct player_state *state);
 void update_mon_state(struct monster *mon);
 void update_mon_attacks(struct monster *mon);

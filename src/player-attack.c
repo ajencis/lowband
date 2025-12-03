@@ -57,6 +57,7 @@
 #include "target.h"
 #include "z-dice.h"
 #include "z-util.h"
+#include "z-virt.h"
 
 
 
@@ -1461,9 +1462,8 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 
 
 
-static void mon_critical_melee(struct monster *mon, struct temp_attack_data *which, random_value *rv, uint32_t *msg_type) {
-	const struct attack *atk = which->atk;
-	int chance = which->atk->crit_chance;
+static void mon_critical_melee(struct monster *mon, struct attack *atk, random_value *rv, uint32_t *msg_type) {
+	int chance = atk->crit_chance;
 	int powerbonus = chance + get_power_scale(mon, PP_CRITICAL_HITS, 20);
 	int power = 0, wgt;
 	const struct critical_level *this_l, *max_l;
@@ -1573,11 +1573,11 @@ static bool blow_message(struct monster *mon, struct monster *t_mon, const char 
 	return !attack_error(attacker, defender, atk, c);
 }*/
 
-static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct temp_attack_data *which)
+static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct attack *atk)
 {
 	assert(mon && mon->race);
 	assert(t_mon);
-	assert(which);
+	assert(atk);
 
 	struct player *ap = mon_is_player(mon) ? mon->player : NULL;
 	struct player *tp = mon_is_player(t_mon) ? t_mon->player : NULL;
@@ -1615,15 +1615,12 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 	}
 
 	/* See if the player hit */
-	success = test_hit(which->atk->to_hit, ac);
+	success = test_hit(atk->to_hit, ac);
 
 	if (success) {
-		assert(which->atk);
-		assert(which->atk->ef);\
-
 		bool id = false;
-		struct effect tmp_ef = *which->atk->ef; // shallow copy
-		random_value rv = { 0, 0, 0, 0 };
+		struct effect tmp_ef;
+		random_value rv = atk->rv;
 		dice_t *tmp_dice = dice_new();
 		int brand = 0, slay = 0;
 		char verb[80];
@@ -1631,18 +1628,14 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 		mon_blow_side_effects(mon, t_mon);
 
 		// get verb and brand / slay
-		my_strcpy(verb, which->atk->message, sizeof verb);
-		if (which->atk->obj) {
-			improve_attack_modifier(mon, which->atk->obj, t_mon, &brand, &slay, verb, false);
+		my_strcpy(verb, atk->message, sizeof verb);
+		if (atk->obj) {
+			improve_attack_modifier(mon, atk->obj, t_mon, &brand, &slay, verb, false);
 		}
 		improve_attack_modifier(mon, NULL, t_mon, &brand, &slay, verb, false);
 
-		// pull the random value out
-		dice_random_value(tmp_ef.dice, &rv);
-
 		// modify the random_value
-		rv.sides = MAX(rv.sides - which->penalty * 2, 1);
-		mon_critical_melee(mon, which, &rv, &msg_type);
+		mon_critical_melee(mon, atk, &rv, &msg_type);
 
 		if (slay) {
 			rv.dice *= slays[slay].multiplier;
@@ -1653,7 +1646,10 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 		// put the random value back in
 		dice_parse_random_value(tmp_dice, rv);
 
+		tmp_ef.index = EF_HIT;
+		tmp_ef.subtype = atk->dam_type;
 		tmp_ef.dice = tmp_dice;
+		tmp_ef.next = atk->ef;
 
 		blow_message(mon, t_mon, verb, msg_type);
 
@@ -1661,11 +1657,11 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 
 		dice_free(tmp_dice);
 
-		if (which->atk->skill >= 0 && which->atk->skill < SKILL_MAX) {
-			abil = lookup_player_ability(which->atk->skill, PY_ABIL_SKILL);
+		if (atk->skill >= 0 && atk->skill < SKILL_MAX) {
+			abil = lookup_player_ability(atk->skill, PY_ABIL_SKILL);
 			exercise_ability(mon, abil, ac);
 
-			abil = attack_spec_type(which->atk->obj, which->atk->mb);
+			abil = attack_spec_type(atk->obj, atk->mb);
 			if (abil) {
 				exercise_ability(mon, abil, mon_ac(t_mon));
 			}
@@ -1676,9 +1672,9 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 
 		blow_message(mon, t_mon, verb, MSG_MISS);
 
-		exercise_ability(t_mon, lookup_player_ability(PP_GLOW, PY_ABIL_POWER), which->atk->to_hit);
-		exercise_ability(t_mon, lookup_player_ability(PP_UNLIGHT, PY_ABIL_POWER), which->atk->to_hit);
-		exercise_ability(t_mon, lookup_player_ability(PP_AGILITY, PY_ABIL_POWER), which->atk->to_hit);
+		exercise_ability(t_mon, lookup_player_ability(PP_GLOW, PY_ABIL_POWER), atk->to_hit);
+		exercise_ability(t_mon, lookup_player_ability(PP_UNLIGHT, PY_ABIL_POWER), atk->to_hit);
+		exercise_ability(t_mon, lookup_player_ability(PP_AGILITY, PY_ABIL_POWER), atk->to_hit);
 	}
 
 	check_berserk(mon, t_mon);
@@ -1687,91 +1683,10 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct tem
 }
 
 
-#if 0
-static int attack_select_chance(const struct temp_attack_data *data)
-{
-	assert(data->penalty >= 0);
-	return data->atk->blows / (data->penalty + 1);
-}
-
-static struct temp_attack_data *random_attack(struct temp_attack_data *data)
-{
-	int t_blows, choice;
-	struct temp_attack_data *curr;
-
-	if (!data) return NULL;
-
-	t_blows = 0;
-	for (curr = data; curr; curr = curr->next) {
-		t_blows += attack_select_chance(curr);
-	}
-
-	if (t_blows <= 0) return NULL;
-
-	choice = randint0(t_blows);
-
-	for (curr = data; curr; curr = curr->next) {
-		if (choice < attack_select_chance(curr)) return curr;
-		choice -= attack_select_chance(curr);
-	}
-
-	return NULL;
-}
-
-static struct temp_attack_data *get_temp_attack_data(const struct monster *mon, const struct monster *t_mon, const struct chunk *c)
-{
-	struct temp_attack_data *result = NULL;
-	const struct attack *atk;
-	const char *err;
-	int i;
-
-	for (atk = mon->atk; atk; atk = atk->next) {
-		err = attack_error(mon, t_mon, atk, c);
-
-		if (err) {
-			if (mon_is_player(mon)) msg(err);
-			continue;
-		}
-
-		assert(atk->num > 0);
-		for (i = 0; i < atk->num; ++i) {
-			struct temp_attack_data *new = mem_zalloc(sizeof *new);
-
-			assert(new);
-
-			new->atk = atk;
-			new->penalty = 0;
-			new->next = NULL;
-
-			if (result) {
-				struct temp_attack_data *last = result;
-				while (last->next) last = last->next;
-				last->next = new;
-			}
-			else {
-				result = new;
-			}
-		}
-	}
-
-	return result;
-}
-
-static void free_temp_attack_data(struct temp_attack_data *data)
-{
-	struct temp_attack_data *next;
-	while (data) {
-		next = data->next;
-		mem_free(data);
-		data = next;
-	}
-}
-#endif
-
 bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 {
 	struct loc t_grid = t_mon->grid;
-	int t_midx = t_mon->midx, i;
+	int t_midx = t_mon->midx, i, j;
 	//const struct attack *atk;
 	//struct temp_attack_data *tmp_data, *curr;
 	struct attack *atk;
@@ -1782,7 +1697,8 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 	int16_t pretimed[TMD_MAX];
 	//int t_mon_hp = t_mon->state.skills[SKILL_HEALTH];
 	int n_attacks = 0;
-	bool has_valid = false;
+	size_t n_diff_attacks;
+	int *atk_blows;
 
 	memcpy(pretimed, t_mon->m_timed, sizeof pretimed);
 
@@ -1802,29 +1718,28 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 				msg(err_msg);
 			}
 		}
-
-		if (!mon->atk) {
-		}
 	}
 
 	for (atk = mon->atk; atk; atk = atk->next) {
-		n_attacks += atk->num;
+		n_diff_attacks += 1;
 		if (attack_valid(mon, t_mon, atk, cave)) {
-			has_valid = true;
+			n_attacks += atk->num;
 		}
 	}
 
-	if (!has_valid) return false;
+	if (n_attacks < 1) return false;
 
 	if (ap) {
 		disturb(ap);
 	}
 
-	//tmp_data = get_temp_attack_data(mon, t_mon, cave);
+	atk_blows = mem_zalloc(n_diff_attacks * sizeof *atk_blows);
 
-	//assert(tmp_data || distance(mon->grid, t_mon->grid) > 1);
-
-	//if (!tmp_data) return false;
+	for (i = 0, atk = mon->atk; i < (int)n_diff_attacks && atk; i++, atk = atk->next) {
+		if (attack_valid(mon, t_mon, atk, cave)) {
+			atk_blows[i] = attack_blows(mon, atk, n_attacks);
+		}
+	}
 
 	if (mon_is_player(mon)) {
 		target_set_monster(t_mon);
@@ -1832,46 +1747,23 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 
 	energy = 0;
 
-	for (atk = mon->atk; mon_valid(t_midx, t_grid) && atk; atk = atk->next) {
+	for (atk = mon->atk, i = 0; mon_valid(t_midx, t_grid) && atk; i++, atk = atk->next) {
+		int blows = atk_blows[i], blow_num = blows / 100;
+
 		if (!attack_valid(mon, t_mon, atk, cave)) continue;
+		if (blow_num < 1) continue;
 
-		assert(atk->blows > 0);
-
-		struct temp_attack_data data = { NULL, 0, atk };
-
-		int blow_num = atk->blows / 100;
-		energy += z_info->move_energy * blow_num * 100 / atk->blows;
-
-		for (i = 0; mon_valid(t_midx, t_grid) && i < blow_num; ++i) {
-			mon_test_blow(mon, t_mon, &data);
+		for (j = 0; mon_valid(t_midx, t_grid) && j < blow_num; ++j) {
+			energy += z_info->move_energy * 100 / blows;
+			mon_test_blow(mon, t_mon, atk);
 			did_attack = true;
 		}
 	}
 
-	/*while (energy * 4 <= z_info->move_energy * 3) {
-		curr = random_attack(tmp_data);
-		if (!curr) break;
-		assert(curr->atk);
-
-		did_attack = true;
-
-		energy += z_info->move_energy * 100 / curr->atk->blows;
-
-		mon_test_blow(mon, t_mon, curr);
-
-		curr->penalty += 1;
-
-		if (!mon_valid(t_midx, t_grid)) {
-			if (!curr->atk->obj) {
-				exercise_ability(mon, lookup_player_ability(PP_DEATH_TOUCH, PY_ABIL_POWER), t_mon_hp);
-			}
-
-			break;
-		}
-	}*/
+	mem_free(atk_blows);
 
 	if (ap) {
-		ap->upkeep->energy_use = energy / n_attacks;
+		ap->upkeep->energy_use = energy;
 	}
 
 	//free_temp_attack_data(tmp_data);
@@ -2310,16 +2202,6 @@ void do_cmd_melee(struct command *cmd)
 	else if (dir != DIR_UNKNOWN) {
 		struct loc direction = loc_sum(player->mon.grid, loc(range * ddx[dir], range * ddy[dir]));
 		foe = monster_in_direction(player->mon.grid, direction, range);
-		/*int path_n;
-		struct loc path_g[256];
-		path_n = project_path(cave, path_g, range, player->mon.grid, direction, 0);
-		for (i = 0; i < path_n; i++) {
-			target = path_g[i];
-			foe = square_monster(cave, target);
-			if (foe) {
-				break;
-			}
-		}*/
 	}
 
 	if (!foe) {
