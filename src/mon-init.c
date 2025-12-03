@@ -39,6 +39,7 @@
 #include "project.h"
 #include "ui-visuals.h"
 #include "z-form.h"
+#include "z-util.h"
 
 struct blow_method *blow_methods;
 struct blow_effect *blow_effects;
@@ -272,6 +273,73 @@ static bool flag_to_elem_info(const char *flag, struct element_info el_info[ELEM
 	el_info[elem_num].res_level = res_lev;
 
 	return true;
+}
+
+
+static void race_stat_bonuses(struct monster_race *mr)
+{
+	int total_bonus = mr->level / 20;
+	int total_pos_stat = 0, rem_pos_stat = 0, i;
+
+	if (total_bonus <= 0) return;
+
+	for (i = 0; i < STAT_MAX; ++i) {
+		if (mr->stat_mod[i] >= 0) {
+			total_pos_stat += mr->stat_mod[i] + 1;
+		}
+	}
+
+	rem_pos_stat = total_pos_stat;
+
+	for (i = 0; i < STAT_MAX; ++i) {
+		if (mr->stat_mod[i] < 0) continue;
+
+		mr->stat_mod[i] += ((mr->stat_mod[i] + 1) * total_bonus + rem_pos_stat - 1) / total_pos_stat;
+		
+		rem_pos_stat -= mr->stat_mod[i] + 1;
+	}
+}
+
+static bool evolving_race_stat(struct monster_race *mr)
+{
+	int i, div = 0;
+	int stats[STAT_MAX] = { 0 };
+	struct evolution *evol;
+
+	if (mr->level > 0) return false;
+	if (!mr->evol) return false;
+
+	for (evol = mr->evol; evol; evol = evol->next) {
+		for (i = 0; i < STAT_MAX; ++i) {
+			stats[i] += evol->race->stat_mod[i];
+		}
+		div++;
+	}
+
+	for (i = 0; i < STAT_MAX; ++i) {
+		if (mr->stat_mod[i] != INT_MIN) continue;
+
+		mr->stat_mod[i] = (stats[i] + (div + 1) / 2) / div;
+	}
+
+	return true;
+}
+
+static void fill_race_stats(struct monster_race *mr)
+{
+	int i, result;
+
+	if (evolving_race_stat(mr)) return;
+
+	for (i = 0; i < STAT_MAX; ++i) {
+		if (mr->stat_mod[i] != INT_MIN) continue;
+
+		result = mr->base->stats[i];
+
+		mr->stat_mod[i] = result;
+	}
+
+	race_stat_bonuses(mr);
 }
 
 /**
@@ -2808,19 +2876,7 @@ static errr finish_parse_monster(struct parser *p) {
 			e->name = NULL;
 		}
 
-		// L: get default stats
-		if (race->stat_mod[STAT_STR] == INT_MIN) {
-			for (j = 0; j < STAT_MAX; ++j) {
-				int base = race->base->stats[j];
-
-				if (base <= 0 || race->level == 0) {
-					race->stat_mod[j] = base;
-				}
-				else {
-					race->stat_mod[j] = (race->level * base + 33) / 50;
-				}
-			}
-		}
+		fill_race_stats(race);
 
 		// L: get extra skills for evolving player races
 		if (race->level == 0 && race->evol) {
