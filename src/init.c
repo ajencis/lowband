@@ -61,7 +61,7 @@
 #include "ui-visuals.h"
 #include "z-file.h"
 #include "z-util.h"
-#include <string.h>
+#include "z-virt.h"
 
 bool play_again = false;
 
@@ -1672,17 +1672,38 @@ static struct player_ability *player_prop_lookup(int type, int id)
 	return NULL;
 }
 
-static bool power_parents_loop(const struct player_ability *curr, const struct player_ability *orig)
+static bool power_parents_loop(const struct player_ability *curr, int **array, size_t *array_len, size_t *first_free)
 {
-	if (!curr) return false;
+	uint16_t i;
+	const struct player_ability *parent;
 
-	int i;
+	// check whether we've looped so far
+	for (i = 0; i < *first_free; ++i) {
+		assert((*array)[i] > PP_NONE && (*array)[i] < PP_MAX);
+		if ((*array)[i] == curr->index) {
+			return true;
+		}
+	}
+
+	// if we're out of space extend the array
+	if (*first_free >= *array_len) {
+		*array_len += 8;
+		(*array) = mem_realloc(*array, (sizeof **array) * (*array_len));
+		// don't need to initialize cause first available is tracked
+	}
+
+	(*array)[*first_free] = curr->index;
+	(*first_free)++;
 
 	for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
-		const struct player_ability *parent = curr->parent[i];
-		if (parent == orig) return true;
-		if (power_parents_loop(parent, orig)) return true;
+		parent = curr->parent[i];
+
+		if (!parent) continue;
+		if (parent->type != PY_ABIL_POWER) continue;
+		if (power_parents_loop(parent, array, array_len, first_free)) return true;
 	}
+
+	(*first_free)--;
 
 	return false;
 }
@@ -1690,15 +1711,32 @@ static bool power_parents_loop(const struct player_ability *curr, const struct p
 static bool looping_power_parents(void)
 {
 	const struct player_ability *abil;
+	int *array = mem_zalloc(sizeof *array * 16U);
+	bool checked[PP_MAX] = { false };
+	size_t len = 16U, first = 0, i, j;
+	bool loop = false;
 
-	for (abil = player_abilities; abil; abil = abil->next) {
-		if (power_parents_loop(abil, abil)) {
-			plog_fmt("Power %s's parents loop!", abil->name);
-			return true;
+	for (i = 0; i < PP_MAX && !loop; ++i) {
+		abil = lookup_player_ability(i, PY_ABIL_POWER);
+
+		if (!abil) continue;
+		if (checked[i]) continue;
+
+		first = 0;
+
+		if (power_parents_loop(abil, &array, &len, &first)) {
+			loop = true;
+		}
+
+		for (j = 0; j < first; ++j) {
+			assert(array[j] < PP_MAX && array[j] >= 0);
+			checked[array[j]] = true;
 		}
 	}
 
-	return false;
+	mem_free(array);
+
+	return loop;
 }
 
 static errr finish_parse_player_prop(struct parser *p) {
