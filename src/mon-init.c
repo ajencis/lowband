@@ -311,7 +311,7 @@ static bool evolving_race_stat(struct monster_race *mr)
 
 	for (evol = mr->evol; evol; evol = evol->next) {
 		for (i = 0; i < STAT_MAX; ++i) {
-			stats[i] += evol->race->stat_mod[i];
+			stats[i] += evol->race->base->stats[i];
 		}
 		div++;
 	}
@@ -319,7 +319,7 @@ static bool evolving_race_stat(struct monster_race *mr)
 	for (i = 0; i < STAT_MAX; ++i) {
 		if (mr->stat_mod[i] != INT_MIN) continue;
 
-		mr->stat_mod[i] = (stats[i] + (div + 1) / 2) / div;
+		mr->stat_mod[i] = (ABS(stats[i]) + div / 2) / div * SGN(stats[i]);
 	}
 
 	return true;
@@ -1930,11 +1930,14 @@ struct file_parser mon_base_parser = {
 static enum parser_error parse_monster_name(struct parser *p) {
 	struct monster_race *h = parser_priv(p);
 	struct monster_race *r = mem_zalloc(sizeof *r);
+	int i;
 	r->next = h;
 	r->name = string_make(parser_getstr(p, "name"));
 
 	// L: hack: flags stats as having not been determined yet
-	r->stat_mod[STAT_STR] = INT_MIN;
+	for (i = 0; i < STAT_MAX; ++i) {
+		r->stat_mod[i] = INT_MIN;
+	}
 
 	r->freq_innate = 10;
 
