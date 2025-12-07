@@ -3513,6 +3513,7 @@ void player_store_gold(struct player *p)
 {
 	struct object *obj, *next;
 	bool dummy;
+	int cost_mille;
 
 	if (!cave || cave->depth != 0) return;
 
@@ -3525,10 +3526,15 @@ void player_store_gold(struct player *p)
 
 		obj = gear_object_for_use(&p->mon, obj, obj->number, false, &dummy);
 
-		if (p->au < INT32_MAX - obj->number) {
-			p->au += obj->number;
+		cost_mille = obj->number * obj->kind->cost * 1000 / obj->kind->cost_div;
+		cost_mille += p->au_permille;
+
+		if (p->au < INT32_MAX - cost_mille / 1000) {
+			p->au += cost_mille / 1000;
+			p->au_permille = cost_mille % 1000;
 		} else {
 			p->au = INT32_MAX;
+			p->au_permille = 999;
 		}
 
 		object_delete(cave, p->cave, &obj);
@@ -3545,6 +3551,8 @@ void player_store_gold(struct player *p)
 void player_start_turn(struct player *p)
 {
 	int i;
+
+	dbg_log("mem", "starting p turn");
 
 	for (i = 1; i < cave_monster_max(cave); ++i) {
 		struct monster *mon = cave_monster(cave, i);

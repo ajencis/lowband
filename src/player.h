@@ -431,6 +431,7 @@ struct player {
 	int16_t wt;		/* Weight */
 
 	int32_t au;		/* Current Gold */
+	int16_t au_permille;	/* L: Extra 1/1000 current gold */
 	int32_t expfact;
 
 	int16_t max_depth;	/* Max depth */

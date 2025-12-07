@@ -542,10 +542,8 @@ void wr_player(void)
 		wr_s16b(player->learned_when[i]);
 	}
 
-	/* Padding */
-	wr_u32b(0);
-
-	wr_u32b(player->au);
+	wr_s32b(player->au);
+	wr_s16b(player->au_permille);
 
 
 	wr_u64b(player->max_exp);

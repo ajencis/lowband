@@ -2216,7 +2216,7 @@ experience:9
 blow:HIT:HURT:1d4
 blow:TOUCH:POISON:2d4
 desc:It appears to be a pile of copper coins.
-mimic:gold:copper
+mimic:gold:copper pieces
 
 name:giant white rat
 base:rodent
@@ -2627,7 +2627,7 @@ experience:18
 blow:HIT:HURT:1d6
 blow:TOUCH:POISON:2d6
 desc:It appears to be a pile of silver coins.
-mimic:gold:silver
+mimic:gold:silver pieces
 
 name:snaga
 base:orc
@@ -3738,7 +3738,7 @@ blow:TOUCH:POISON:3d5
 flags:IM_ACID
 desc:It appears to be a pile of gold coins, until it starts crawling towards
 desc: you on tiny legs.
-mimic:gold:gold
+mimic:gold:gold pieces
 
 name:wolf
 plural:wolves
@@ -4371,7 +4371,7 @@ blow:TOUCH:POISON:3d5
 flags:IM_ACID
 desc:It appears to be a pile of sentient mithril coins that doesn't like being
 desc: picked up.
-mimic:gold:mithril
+mimic:gold:mithril pieces
 
 name:illusionist
 base:person
@@ -7045,7 +7045,7 @@ blow:HIT:HURT:1d12
 flags:IM_ACID
 desc:It appears to be a pile of coins made of precious adamant, slithering
 desc: toward you on lots of tiny legs.
-mimic:gold:adamantite
+mimic:gold:adamantite pieces
 
 name:troll scavenger
 base:troll

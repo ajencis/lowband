@@ -5451,59 +5451,70 @@ power:0
 
 ##### Gold/gems #####
 
-name:copper
+name:copper pieces
 type:gold
 weight:1:10
+cost:1:100
 graphics:$:u
 
-name:silver
+name:silver pieces
 type:gold
 weight:1:10
+cost:1:10
 graphics:$:s
 
 name:garnets
 type:gold
 weight:1:10
+cost:1:5
 graphics:$:r
 
-name:gold
+name:gold pieces
 type:gold
 weight:1:10
+cost:1
 graphics:$:y
 
 name:opals
 type:gold
 weight:1:10
+cost:2
 graphics:$:W
 
 name:sapphires
 type:gold
 weight:1:10
+cost:3
 graphics:$:b
 
 name:rubies
 type:gold
 weight:1:10
+cost:3
 graphics:$:r
 
 name:diamonds
 type:gold
 weight:1:10
+cost:4
 graphics:$:w
 
 name:emeralds
 type:gold
 weight:1:10
+cost:5
 graphics:$:g
 
-name:mithril
+name:mithril pieces
 type:gold
 weight:1:10
+cost:7
 graphics:$:B
 
-name:adamantite
+name:adamantite pieces
 type:gold
 weight:1:10
+cost:10
 graphics:$:G
 
 

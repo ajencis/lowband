@@ -58,6 +58,7 @@
 #include "ui-visuals.h"
 #include "wizard.h"
 #include "z-color.h"
+#include "z-util.h"
 
 /**
  * There are a few functions installed to be triggered by several 
@@ -234,12 +235,10 @@ static void prt_exp(int row, int col)
 
 	long xp = (long)player->exp;
 
-
 	/* Calculate XP for next level */
 	if (!lev50) {
 		xp = player_exp_needed(player, player->lev + 1);
 	}
-		//xp = (long)(player_exp[player->lev - 1]) - player->exp;
 	
 	/* L: can have xp to level without having leveled now */
 	if (xp <= 0)
@@ -268,9 +267,23 @@ static void prt_exp(int row, int col)
 static void prt_gold(int row, int col)
 {
 	char tmp[32];
+	int frac_digits = 3, i;
+	
+	for (i = 1; i < player->au; i *= 10) {
+		frac_digits--;
+		if (player->au_permille / exponentiate(10, 3 - frac_digits, 1) <= 0) {
+			break;
+		}
+	}
+
+	if (player->au_permille / exponentiate(10, 3 - frac_digits, 1) > 0) {
+		strnfmt(tmp, sizeof tmp, "%*ld.%*i", 8 - frac_digits, (long)player->au, frac_digits, player->au_permille);
+	}
+	else {
+		strnfmt(tmp, sizeof tmp, "%9ld", (long)player->au);
+	}
 
 	put_str("AU ", row, col);
-	strnfmt(tmp, sizeof(tmp), "%9ld", (long)player->au);
 	c_put_str(COLOUR_L_GREEN, tmp, row, col + 3);
 }
 

@@ -853,9 +853,8 @@ int rd_player(void)
 		rd_s16b(&player->learned_when[i]);
 	}
 
-	strip_bytes(4);
-
 	rd_s32b(&player->au);
+	rd_s16b(&player->au_permille);
 
 	rd_u64b(&player->max_exp);
 	rd_u64b(&player->exp);

@@ -441,7 +441,7 @@ static enum parser_error parse_projection_resist(struct parser *p) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
 
-	strnfmt(elem_name, sizeof elem_name, parser_getsym(p, "element"));
+	strnfmt(elem_name, sizeof elem_name, "%s", parser_getsym(p, "element"));
 	elem = code_index_in_array(list_element_names, elem_name);
 
 	if (elem < 0) {
@@ -449,7 +449,7 @@ static enum parser_error parse_projection_resist(struct parser *p) {
 	}
 
 	if (parser_hasval(p, "level")) {
-		strnfmt(level_name, sizeof level_name, parser_getsym(p, "level"));
+		strnfmt(level_name, sizeof level_name, "%s", parser_getsym(p, "level"));
 		resist_amount = code_index_in_array(res_type_names, level_name);
 	}
 	else {
@@ -1902,6 +1902,17 @@ static enum parser_error parse_object_cost(struct parser *p) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
 	k->cost = parser_getint(p, "cost");
+
+	if (parser_hasval(p, "div")) {
+		k->cost_div = parser_getint(p, "div");
+	} else {
+		k->cost_div = 1;
+	}
+	
+	if (k->cost_div <= 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
 	return PARSE_ERROR_NONE;
 }
 
@@ -2321,8 +2332,8 @@ struct parser *init_parse_object(void) {
 	parser_reg(p, "type sym tval", parse_object_type);
 	parser_reg(p, "graphics char glyph sym color", parse_object_graphics);
 	parser_reg(p, "level int level", parse_object_level);
-	parser_reg(p, "weight int weight", parse_object_weight);
-	parser_reg(p, "cost int cost", parse_object_cost);
+	parser_reg(p, "weight int weight ?int div", parse_object_weight);
+	parser_reg(p, "cost int cost ?int div", parse_object_cost);
 	parser_reg(p, "alloc int common str minmax", parse_object_alloc);
 	parser_reg(p, "attack rand hd rand to-h rand to-d", parse_object_attack);
 	parser_reg(p, "armor int ac rand to-a", parse_object_armor);

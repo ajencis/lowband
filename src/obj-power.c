@@ -1049,30 +1049,30 @@ int32_t object_power(const struct object* obj, bool verbose, ang_file *log_file)
  * Return the "value" of an "unknown" item
  * Make a guess at the value of non-aware items
  */
-static int object_value_base(const struct object *obj)
+static int object_value_base(const struct object *obj, int qty)
 {
 	/* Use template cost for aware objects */
 	if (object_flavor_is_aware(obj))
-		return obj->kind->cost;
+		return obj->kind->cost * qty / obj->kind->cost_div;
 
 	/* Analyze the type */
 	switch (obj->tval)
 	{
 		case TV_FOOD:
 		case TV_MUSHROOM:
-			return 5;
+			return 5 * qty;
 		case TV_POTION:
 		case TV_SCROLL:
-			return 20;
+			return 20 * qty;
 		case TV_RING:
 		case TV_AMULET:
-			return 45;
+			return 45 * qty;
 		case TV_WAND:
-			return 50;
+			return 50 * qty;
 		case TV_STAFF:
-			return 70;
+			return 70 * qty;
 		case TV_ROD:
-			return 90;
+			return 90 * qty;
 	}
 
 	return 0;
@@ -1211,7 +1211,7 @@ int object_value_real(const struct object *obj, int qty)
 		if (tval_can_have_charges(obj)) {
 			int charges;
 
-			total_value = value * qty;
+			total_value = value * qty / obj->kind->cost_div;
 
 			/* Calculate number of charges, rounded up */
 			charges = obj->pval * qty / obj->number;
@@ -1221,7 +1221,7 @@ int object_value_real(const struct object *obj, int qty)
 			/* Pay extra for charges, depending on standard number of charges */
 			total_value += value * charges / 20;
 		} else {
-			total_value = value * qty;
+			total_value = value * qty / obj->kind->cost_div;
 		}
 
 		/* No negative value */
@@ -1253,7 +1253,7 @@ int object_value(const struct object *obj, int qty)
 		value = object_value_real(obj, qty);
 	} else {
 		/* Unknown constant-price items just get a base value */
-		value = object_value_base(obj) * qty;
+		value = object_value_base(obj, qty);
 	}
 
 	/* Return the final value */

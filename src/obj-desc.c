@@ -737,7 +737,7 @@ size_t object_desc(char *buf, size_t max, const struct object *obj,
 	}
 
 	if (tval_is_money(obj)) {
-		return strnfmt(buf, max, "%d gold pieces worth of %s%s",
+		return strnfmt(buf, max, "%d %s%s",
 				obj->number, obj->kind->name,
 				ignore_item_ok(p, obj) ? " {ignore}" : "");
 	}
