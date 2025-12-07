@@ -444,19 +444,21 @@ static void race_help(int i, void *db, const region *l)
 		int adj = mon->stat_mod[sind];
 		char out[5];
 
+#if 0
 		if (mon->evol) {
 			const struct monster_race *mr = mon->evol->race;
 			while (mr->evol) {
 				mr = mr->evol->race;
 			}
 			int bonus = mr->base->stats[sind];
-			strnfmt(out, sizeof(out), "(%+1d)", bonus);
+			strnfmt(out, sizeof(out), " %+1d ", bonus);
 		}
 		else {
 			strnfmt(out, sizeof(out), " %+1d ", adj);
 		}
+#endif
 
-		text_out_e("%s %s", name, out);
+		text_out_e("%s %+1d", name, adj);
 
 		if (j & 1 || j + 1 == STAT_MAX) {
 			text_out("\n");
@@ -1546,6 +1548,10 @@ static enum birth_stage get_evol_command(bool going_back)
 
 	while (player->num_evol_choices > 0) {
 		remove_last_evolution(player);
+	}
+
+	if (!player->mon.race->evol) {
+		return going_back ? BIRTH_BACK : BIRTH_LEARN;
 	}
 
 	success = evolution_choice_menu_select(player->mon.race->evol, player, true);
