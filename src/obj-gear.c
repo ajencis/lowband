@@ -565,7 +565,7 @@ struct object *gear_object_for_use(struct monster *mon, struct object *obj,
 	char name[80];
 	struct player *p = mon->player;
 	char label = p ? gear_to_label(p, obj) : '\0';
-	bool artifact = (obj->known->artifact != NULL);
+	bool artifact = (obj->known && obj->known->artifact != NULL);
 	bool is_p = mon_is_player(mon);
 
 	/* Bounds check */
@@ -608,8 +608,8 @@ struct object *gear_object_for_use(struct monster *mon, struct object *obj,
 				(total << 16), player);
 		}
 	} else {
-		if (message) {
-			if (artifact && is_p) {
+		if (message && is_p) {
+			if (artifact) {
 				object_desc(name, sizeof(name), obj,
 					ODESC_FULL | ODESC_SINGULAR, p);
 			} else {
