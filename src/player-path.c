@@ -939,6 +939,8 @@ int path_nearest_unknown(struct player *p, struct loc start,
 			for (grid.x = 0; grid.x < p->cave->width; ++grid.x) {
 				struct loc test_grid;
 				int turns;
+				int test_diff_sum, diff_sum;
+				bool nearer;
 
 				if (loc_eq(grid, start)
 						|| !square_isknown(p->cave,
@@ -981,7 +983,14 @@ int path_nearest_unknown(struct player *p, struct loc start,
 				}
 				turns = pfdistances_to_turncount(distances,
 					test_grid);
-				if (turns > 0 && min_turns > turns) {
+
+				test_diff_sum = ABS(test_grid.x - start.x) + ABS(test_grid.y - start.y);
+				diff_sum = ABS(min_grid.x - start.x) + ABS(min_grid.y - start.y);
+
+				nearer = turns < min_turns;
+				nearer = nearer || (turns == min_turns && test_diff_sum < diff_sum);
+
+				if (turns > 0 && nearer) {
 					min_turns = turns;
 					min_grid = test_grid;
 				}
