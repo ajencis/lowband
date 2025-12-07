@@ -569,7 +569,9 @@ bool effect_handler_HIT(effect_handler_context_t *context)
 		if (!target) target = &player->mon;
 	}
 
-	if (!source || !target) return false;
+	if (!source || !target) {
+		return false;
+	}
 
 	assert(source);
 	assert(target);
@@ -598,7 +600,7 @@ bool effect_handler_DAMAGE(effect_handler_context_t *context)
 			struct loc decoy = cave_find_decoy(cave);
 
 			/* Damage another monster */
-			if (t_mon) {
+			if (t_mon && !mon_is_player(t_mon)) {
 				bool fear = false;
 
 				mon_take_nonplayer_hit(dam, t_mon, MON_MSG_NONE, MON_MSG_DIE, false);
