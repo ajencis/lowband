@@ -584,6 +584,7 @@ struct loc clockwise_next_diagonal_grid(struct loc grid);
 struct loc counterclockwise_next_grid(struct loc grid);
 struct loc counterclockwise_next_orthogonal_grid(struct loc grid);
 struct loc counterclockwise_next_diagonal_grid(struct loc grid);
+struct loc clockwise_orbit(struct loc origin, struct loc current);
 
 int motion_dir(struct loc source, struct loc target);
 struct loc next_grid(struct loc grid, int dir);

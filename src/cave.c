@@ -30,7 +30,9 @@
 #include "obj-util.h"
 #include "object.h"
 #include "trap.h"
+#include "z-rand.h"
 #include "z-type.h"
+#include "z-util.h"
 
 struct feature_kind *f_info;
 struct chunk *cave = NULL;
@@ -382,6 +384,73 @@ struct loc counterclockwise_next_diagonal_grid(struct loc grid)
 	}
 
 	return other;
+}
+
+struct loc clockwise_orbit(struct loc origin, struct loc current)
+{
+	int dirx, diry, dist = distance(origin, current);
+	struct loc diff = loc_diff(current, origin), new;
+
+	if (loc_is_zero(diff) || dist <= 0) {
+		return origin;
+	}
+
+	if (diff.x < 0) {
+		// west of origin so we go up
+		diry = 8;
+	}
+	else if (diff.x > 0) {
+		// east of origin so we go down
+		diry = 2;
+	}
+	else if (diff.y < 0) {
+		// directly north so go down
+		diry = 2;
+	} else {
+		// directly south so go up
+		diry = 8;
+	}
+
+	if (diff.y < 0) {
+		// north of origin so go east
+		dirx = 6;
+	}
+	else if (diff.y > 0) {
+		// south of origin so go west
+		dirx = 4;
+	}
+	else if (diff.x < 0) {
+		// directly west so go east
+		dirx = 6;
+	}
+	else {
+		// directly east so go west
+		dirx = 4;
+	}
+
+	// there should never be a situation where moving in both orthogonal directions works
+	assert(distance(loc_sum(ddgrid[dirx], diff), loc(0, 0)) !=
+		distance(loc_sum(ddgrid[diry], diff), loc(0, 0)));
+
+	// check less far movements first
+	new = loc_sum(ddgrid[dirx], current);
+
+	if (distance(new, origin) == dist) {
+		return new;
+	}
+
+	new = loc_sum(ddgrid[diry], current);
+
+	if (distance(new, origin) == dist) {
+		return new;
+	}
+
+	new = loc_sum(loc_sum(ddgrid[diry], ddgrid[dirx]), current);
+
+	// there should never be a situation where moving orthogonally and diagonally both don't work
+	assert(distance(new, origin) == dist);
+
+	return new;
 }
 
 /**
