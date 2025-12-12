@@ -30,6 +30,7 @@
 #include "obj-desc.h"
 #include "obj-knowledge.h"
 #include "obj-util.h"
+#include "player-attack.h"
 #include "player-calcs.h"
 #include "player-history.h"
 #include "player-timed.h"
@@ -1869,9 +1870,7 @@ bool effect_handler_MOVE_ATTACK(effect_handler_context_t *context)
 	int d, i;
 	struct loc target = player->mon.grid;
 	struct loc next_grid, grid_diff;
-	bool fear;
 	struct monster *mon;
-	struct py_attack_roll aroll = player->mon.state.attacks[0];
 
 	/* Ask for a target */
 	if (context->dir == DIR_TARGET) {
@@ -1926,7 +1925,9 @@ bool effect_handler_MOVE_ATTACK(effect_handler_context_t *context)
 
 	/* Should return some energy if monster dies early */
 	while (blows-- > 0) {
-		if (py_attack_real(player, target, &fear, &aroll)) break;
+		mon_test_blow(&player->mon, mon, player->mon.atk);
+		if (!mon->race || !loc_eq(target, mon->grid)) return true;
+		//if (py_attack_real(player, target, &fear, &aroll)) break;
 	}
 
 	return true;
@@ -1989,12 +1990,10 @@ bool effect_handler_MELEE_BLOWS(effect_handler_context_t *context)
 {
 	int blows = effect_calculate_value(context, false);
 	int dam = context->radius;
-	bool fear;
 	int taim;
 	struct loc target = loc(-1, -1);
 	struct loc grid = player->mon.grid;
 	struct monster *mon = NULL;
-	struct py_attack_roll aroll = player->mon.state.attacks[0];
 
 	/* players only for now */
 	if (context->origin.what != SRC_PLAYER)
@@ -2021,7 +2020,9 @@ bool effect_handler_MELEE_BLOWS(effect_handler_context_t *context)
 	while ((blows-- > 0) && mon) {
 		/* Test for damaging the monster */
 		int hp = mon->hp;
-		if (py_attack_real(player, target, &fear, &aroll)) return true;
+		mon_test_blow(&player->mon, mon, player->mon.atk);
+		if (!mon->race || !loc_eq(mon->grid, target)) return true;
+		//if (py_attack_real(player, target, &fear, &aroll)) return true;
 		/*mon = square_monster(cave, target); */
 		if (mon && (mon->hp == hp)) continue;
 
@@ -2037,10 +2038,9 @@ bool effect_handler_MELEE_BLOWS(effect_handler_context_t *context)
 bool effect_handler_SWEEP(effect_handler_context_t *context)
 {
 	int blows = effect_calculate_value(context, false);
-	bool fear;
 	int i;
 	struct loc target;
-	struct py_attack_roll aroll = player->mon.state.attacks[0];
+	struct monster *t_mon;
 
 	/* Players only for now */
 	if (context->origin.what != SRC_PLAYER)	return false;
@@ -2049,8 +2049,11 @@ bool effect_handler_SWEEP(effect_handler_context_t *context)
 	while (blows-- > 0) {
 		for (i = 0; i < 8; i++) {
 			target = loc_sum(player->mon.grid, clockwise_grid[i]);
-			if (square_monster(cave, target) != NULL)
-				py_attack_real(player, target, &fear, &aroll);
+			t_mon = square_monster(cave, target);
+			if (t_mon && t_mon->race) {
+				mon_test_blow(&player->mon, t_mon, player->mon.atk);
+				//py_attack_real(player, target, &fear, &aroll);
+			}
 		}
 	}
 

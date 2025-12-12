@@ -1084,8 +1084,8 @@ void lore_append_toughness(textblock *tb, const struct monster_race *race,
 
 		/* Player's base chance to hit */
 		random_chance c;
-		struct py_attack_roll aroll = player->mon.state.attacks[0];
-		hit_chance(&c, chance_of_melee_hit_base(player, &aroll), race->ac);
+		struct attack *atk = player->mon.atk;
+		hit_chance(&c, atk->to_hit, race->ac);
 		int percent = random_chance_scaled(c, 100);
 
 		textblock_append(tb, "You have a");

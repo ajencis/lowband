@@ -30,13 +30,10 @@
 #include "mon-calcs.h"
 #include "mon-desc.h"
 #include "mon-move.h"
-#include "mon-msg.h"
 #include "mon-predicate.h"
-#include "mon-spell.h"
 #include "mon-timed.h"
 #include "mon-util.h"
 #include "monster.h"
-#include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-knowledge.h"
 #include "obj-pile.h"
@@ -99,6 +96,7 @@ int breakage_chance(const struct object *obj, bool hit_target) {
 	return perc;
 }
 
+#if 0
 /**
  * Calculate the player's base melee to-hit value without regard to a specific
  * monster.
@@ -129,6 +127,7 @@ static int chance_of_melee_hit(const struct player *p,
 	/* Non-visible targets have a to-hit penalty of 50% */
 	return monster_is_visible(mon) ? chance : chance / 2;
 }
+#endif
 
 /**
  * Determine if a hit roll is successful against the target AC.
@@ -239,6 +238,7 @@ static bool is_debuffed(const struct monster *monster)
 			monster->m_timed[TMD_STUN] > 0;
 }
 
+#if 0
 /**
  * Determine damage for critical hits from shooting.
  *
@@ -337,11 +337,13 @@ static int player_damage_bonus(struct player_state *state)
 {
 	return state->to_d;
 }
+#endif
 
 /**
  * ------------------------------------------------------------------------
  * Non-damage melee blow effects
  * ------------------------------------------------------------------------ */
+#if 0
 /**
  * Apply blow side effects
  */
@@ -355,6 +357,7 @@ static void blow_side_effects(struct player *p, struct monster *mon)
 					  MON_TMD_FLG_NOTIFY);
 	}
 }
+#endif
 
 static bool mon_blow_side_effects(struct monster *mon, struct monster *t_mon)
 {
@@ -367,6 +370,7 @@ static bool mon_blow_side_effects(struct monster *mon, struct monster *t_mon)
 	return false;
 }
 
+#if 0
 static void do_breath_bite(struct player *p, struct loc grid)
 {
 	int i, sel, numsel;
@@ -788,7 +792,6 @@ struct py_attack_roll get_shooter_weapon_attack(struct player *p, struct player_
 	return aroll;
 }
 
-#if 0
 static bool get_shooter_ranged_attack(struct player *p, struct object *ammo, 
 								struct py_attack_roll *aroll)
 {
@@ -807,7 +810,6 @@ static bool get_shooter_ranged_attack(struct player *p, struct object *ammo,
 
 	return true;
 }
-#endif
 
 static void get_thrown_ranged_attack(struct player *p, struct object *thrown, struct py_attack_roll *aroll)
 {
@@ -1052,8 +1054,9 @@ static int backstab_power(struct monster *mon)
 
 	return power;
 }
+#endif
 
-static struct loc clockwise_orbit(struct loc center, struct loc grid, int radius)
+/*static struct loc clockwise_orbit(struct loc center, struct loc grid, int radius)
 {
 	// down, right are positive
 	struct loc newgrid, addgrid;
@@ -1091,7 +1094,7 @@ static struct loc clockwise_orbit(struct loc center, struct loc grid, int radius
 	}
 
 	return clockwise_orbit(center, newgrid, radius);
-}
+}*/
 
 static struct monster *monster_in_direction(struct loc center, struct loc end, int range)
 {
@@ -1109,7 +1112,7 @@ static struct monster *monster_in_direction(struct loc center, struct loc end, i
 }
 
 
-static struct monster *do_cleave(struct player *p, struct loc grid, const struct py_attack_roll *aroll)
+/*static struct monster *do_cleave(struct player *p, struct loc grid, const struct py_attack_roll *aroll)
 {
 	int i;
 	//bool clockwise = one_in_(2);
@@ -1147,6 +1150,105 @@ static struct monster *do_cleave(struct player *p, struct loc grid, const struct
 	}
 
 	return NULL;
+}*/
+
+static struct loc real_t_grid(struct chunk *c, const struct loc origin, const struct loc t_grid, const int dist)
+{
+	struct loc start_grid, diff_grid = loc_diff(t_grid, origin), add_grid;
+	int path_num, i;
+	struct loc path_g[256];
+	bool can_proj;
+
+	if (dist == distance(origin, t_grid)) {
+		return t_grid;
+	}
+
+	// ensure that we can actually project there at all generally
+	can_proj = false;
+	path_num = project_path(c, path_g, dist, origin, t_grid, 0);
+	for (i = 0; i < path_num && !can_proj; ++i) {
+		if (loc_eq(path_g[i], t_grid)) {
+			can_proj = true;
+		}
+	}
+	if (!can_proj) {
+		return t_grid;
+	}
+
+	if (diff_grid.x >= 0 && diff_grid.y > 0) {
+		// SE so go east
+		add_grid = loc(1, 0);
+	} else if (diff_grid.y >= 0 && diff_grid.x < 0) {
+		// SW so go south
+		add_grid = loc(0, 1); 
+	} else if (diff_grid.x <= 0 && diff_grid.y < 0) {
+		// NW so go west
+		add_grid = loc(-1, 0);
+	} else {
+		// NE so go north
+		add_grid = loc(0, -1);
+	}
+
+	start_grid = t_grid;
+	while (distance(loc_sum(start_grid, add_grid), origin) <= dist) {
+		start_grid = loc_sum(start_grid, add_grid);
+	}
+
+	while (true) {
+		path_num = project_path(c, path_g, dist, origin, start_grid, 0);
+		for (i = 0; i < path_num; ++i) {
+			if (loc_eq(path_g[i], t_grid)) {
+				return start_grid;
+			}
+		}
+
+		start_grid = clockwise_orbit(origin, start_grid);
+	}
+}
+
+static int rotations_per_90_degrees(int dist)
+{
+	struct loc loc1, loc2;
+	int result = 0;
+
+	loc1 = loc(dist, 0);
+
+	for (loc2 = loc1; loc2.x; loc2 = clockwise_orbit(loc(0, 0), loc2)) {
+		result++;
+	}
+
+	return result;
+}
+
+static bool cleave(struct chunk *c, struct monster *attacker, struct monster **target, int *cleaves, struct loc t_grid, const struct attack *atk)
+{
+	struct loc next_grid, ogrid = attacker->grid;
+	int n_rotations, max_rotations;
+	struct monster *result;
+
+	max_rotations = rotations_per_90_degrees(atk->range); // cleave 90 degrees
+	max_rotations += get_power_scale(attacker, PP_WHIRLWIND, max_rotations * 2); // cleave 90 to 270 degrees
+	max_rotations /= 2; // cleave 45 to 135 degrees
+
+	t_grid = real_t_grid(c, ogrid, t_grid, atk->range);
+	next_grid = t_grid;
+
+	for (n_rotations = *cleaves; n_rotations < max_rotations; ++n_rotations) {
+		next_grid = clockwise_orbit(ogrid, next_grid);
+
+		result = monster_in_direction(ogrid, next_grid, atk->range);
+
+		if (result && result != *target) break;
+	}
+
+	*cleaves = n_rotations;
+
+	if (result) {
+		*target = result;
+		return true;
+	}
+
+	return false;
 }
 
 
@@ -1166,6 +1268,7 @@ static const struct hit_types melee_hit_types[] = {
 	{ MSG_HIT_HI_SUPERB, "It was a *SUPERB* hit!",  },
 };
 
+#if 0
 /**
  * Attack the monster at the given location with a single blow.
  */
@@ -1362,8 +1465,10 @@ bool py_attack_real(struct player *p, struct loc grid, bool *fear, struct py_att
 
 	return stop;
 }
+#endif
 
 
+#if 0
 /**
  * Attempt a shield bash; return true if the monster dies
  */
@@ -1457,6 +1562,7 @@ static bool attempt_shield_bash(struct player *p, struct monster *mon, bool *fea
 
 	return false;
 }
+#endif
 
 
 
@@ -1513,7 +1619,7 @@ static bool mon_valid(int midx, struct loc grid)
  * L: returns the reason why an attack won't work, or NULL if the attack will work
  */
 static const char *attack_error(const struct monster *attacker, const struct monster *defender,
-		const struct attack *atk, const struct chunk *c)
+		const struct attack *atk, struct chunk *c)
 {
 	if (distance(attacker->grid, defender->grid) > atk->range) {
 		return "It's too far away!";
@@ -1521,16 +1627,32 @@ static const char *attack_error(const struct monster *attacker, const struct mon
 	if (attacker->m_timed[TMD_BLIND] && my_stristr(atk->message, "gaze")) {
 		return "You can't gaze while blind!";
 	}
+	if (!projectable(c, attacker->grid, defender->grid, 0)) {
+		return "There's something in the way!";
+	}
 	return NULL;
 }
 
 static bool attack_valid(const struct monster *attacker, const struct monster *defender,
-		const struct attack *atk, const struct chunk *c)
+		const struct attack *atk, struct chunk *c)
 {
 	return !attack_error(attacker, defender, atk, c);
 }
 
-static bool blow_message(struct monster *mon, struct monster *t_mon, const char *verb, uint32_t msg_type)
+bool can_attack(const struct monster *attacker, const struct monster *defender, struct chunk *c)
+{
+	struct attack *atk;
+
+	for (atk = attacker->atk; atk; atk = atk->next) {
+		if (attack_valid(attacker, defender, atk, c)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static bool blow_message(struct monster *mon, struct monster *t_mon, const char *verb, uint32_t msg_type, const struct hit_types *hit_types, size_t hit_types_size)
 {
 	char mon_desc[80], crit_desc[80] = "", real_verb[80];
 	struct player *ap = mon_is_player(mon) ? mon->player : NULL, *tp = mon_is_player(t_mon) ? t_mon->player : NULL;
@@ -1551,10 +1673,10 @@ static bool blow_message(struct monster *mon, struct monster *t_mon, const char 
 
 	message = monster_blow_method_desc(real_verb, t_mon->midx);
 
-	for (i = 0; i < N_ELEMENTS(melee_hit_types); i++) {
-		if (melee_hit_types[i].msg_type == msg_type) {
-			if (melee_hit_types[i].text) {
-				strnfmt(crit_desc, sizeof crit_desc, " %s", melee_hit_types[i].text);
+	for (i = 0; i < hit_types_size; i++) {
+		if (hit_types[i].msg_type == msg_type) {
+			if (hit_types[i].text) {
+				strnfmt(crit_desc, sizeof crit_desc, " %s", hit_types[i].text);
 			}
 			break;
 		}
@@ -1573,7 +1695,7 @@ static bool blow_message(struct monster *mon, struct monster *t_mon, const char 
 	return !attack_error(attacker, defender, atk, c);
 }*/
 
-static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct attack *atk)
+bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct attack *atk)
 {
 	assert(mon && mon->race);
 	assert(t_mon);
@@ -1651,7 +1773,7 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct att
 		tmp_ef.dice = tmp_dice;
 		tmp_ef.next = atk->ef;
 
-		blow_message(mon, t_mon, verb, msg_type);
+		blow_message(mon, t_mon, verb, msg_type, melee_hit_types, N_ELEMENTS(melee_hit_types));
 
 		effect_do(&tmp_ef, source_monster(mon->midx), source_monster(t_mon->midx), NULL, &id, true, dir, 0, 0, NULL);
 
@@ -1670,7 +1792,7 @@ static bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct att
 	else {
 		const char *verb = ap ? "miss" : "misses";
 
-		blow_message(mon, t_mon, verb, MSG_MISS);
+		blow_message(mon, t_mon, verb, MSG_MISS, melee_hit_types, N_ELEMENTS(melee_hit_types));
 
 		exercise_ability(t_mon, lookup_player_ability(PP_GLOW, PY_ABIL_POWER), atk->to_hit);
 		exercise_ability(t_mon, lookup_player_ability(PP_UNLIGHT, PY_ABIL_POWER), atk->to_hit);
@@ -1696,7 +1818,7 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 	const char *err_msg;
 	int16_t pretimed[TMD_MAX];
 	//int t_mon_hp = t_mon->state.skills[SKILL_HEALTH];
-	int n_attacks = 0;
+	int n_attacks = 0, n_cleaves;
 	size_t n_diff_attacks;
 	int *atk_blows;
 
@@ -1749,13 +1871,23 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 
 	for (atk = mon->atk, i = 0; mon_valid(t_midx, t_grid) && atk; i++, atk = atk->next) {
 		int blows = atk_blows[i], blow_num = blows / 100;
+		n_cleaves = 0;
 
 		if (!attack_valid(mon, t_mon, atk, cave)) continue;
 		if (blow_num < 1) continue;
 
 		for (j = 0; mon_valid(t_midx, t_grid) && j < blow_num; ++j) {
-			energy += z_info->move_energy * 100 / blows;
 			mon_test_blow(mon, t_mon, atk);
+
+			if (cleave(cave, mon, &t_mon, &n_cleaves, t_grid, atk)) {
+				j--;
+				t_midx = t_mon->midx;
+				t_grid = t_mon->grid;
+			} else {
+				n_cleaves = 0;
+				energy += z_info->move_energy * 100 / blows;
+			}
+
 			did_attack = true;
 		}
 	}
@@ -1800,6 +1932,7 @@ void py_attack(struct player *p, struct loc grid)
 	mon_test_attack(&p->mon, t_mon);
 	return;
 
+#if 0
 	int avail_energy = MIN(p->energy, z_info->move_energy);
 	int blow_energy;
 	bool slain = false, fear = false;
@@ -1945,6 +2078,7 @@ void py_attack(struct player *p, struct loc grid)
 			add_mon_timed_message(mon, i, true, pretimed[i], (int)mon->m_timed[i]);
 		}
 	}
+#endif
 }
 
 /**
@@ -1960,6 +2094,7 @@ static const struct hit_types ranged_hit_types[] = {
 	{ MSG_HIT_SUPERB, "It was a superb hit!" }
 };
 
+#if 0
 /**
  * This is a helper function used by do_cmd_throw and do_cmd_fire.
  *
@@ -2172,6 +2307,7 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 		drop_near(cave, &missile, breakage_chance(missile, hit_target), grid, true, false);
 	}
 }
+#endif
 
 void do_cmd_melee(struct command *cmd)
 {
@@ -2288,7 +2424,7 @@ static bool mon_test_ranged_blow(struct monster *mon, struct monster *t_mon, str
 		temp.dice = dice;
 		temp.next = atk->ef;
 
-		blow_message(mon, t_mon, verb, MSG_HIT);
+		blow_message(mon, t_mon, verb, MSG_HIT, ranged_hit_types, N_ELEMENTS(ranged_hit_types));
 
 		effect_do(&temp, source_monster(mon->midx), source_none(), NULL, NULL, true, dir, 0, 0, NULL);
 
@@ -2307,7 +2443,7 @@ static bool mon_test_ranged_blow(struct monster *mon, struct monster *t_mon, str
 	else {
 		const char *verb = ap ? "miss" : "misses";
 
-		blow_message(mon, t_mon, verb, MSG_MISS);
+		blow_message(mon, t_mon, verb, MSG_MISS, ranged_hit_types, N_ELEMENTS(ranged_hit_types));
 
 		exercise_ability(t_mon, lookup_player_ability(PP_GLOW, PY_ABIL_POWER), atk->to_hit);
 		exercise_ability(t_mon, lookup_player_ability(PP_UNLIGHT, PY_ABIL_POWER), atk->to_hit);
@@ -2434,6 +2570,7 @@ void do_cmd_fire(struct command *cmd) {
  * the equipment.
  */
 void do_cmd_throw(struct command *cmd) {
+#if 0
 	int dir;
 	int shots = 10;
 	int str = adj_str_blow(player->mon.state.stat_ind[STAT_STR]);
@@ -2481,6 +2618,7 @@ void do_cmd_throw(struct command *cmd) {
 
 	ranged_helper(player, obj, dir, range, shots, &aroll, ranged_hit_types,
 				  (int) N_ELEMENTS(ranged_hit_types));
+#endif
 }
 
 /**

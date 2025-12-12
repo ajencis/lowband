@@ -442,9 +442,9 @@ static void race_help(int i, void *db, const region *l)
 
 		const char *name = stat_names_reduced[sind];
 		int adj = mon->stat_mod[sind];
-		char out[5];
 
 #if 0
+		char out[5];
 		if (mon->evol) {
 			const struct monster_race *mr = mon->evol->race;
 			while (mr->evol) {

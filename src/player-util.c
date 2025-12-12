@@ -2114,28 +2114,27 @@ static struct monster *player_nearest_monster(struct player *p, struct chunk *c)
  */
 static bool player_bloodlust_attack_monster(struct player *p, struct monster *mon)
 {
-	if (player_can_attack_monster(p, mon) && target_set_monster(mon)) {
-		char mdesc[80];
+	char mdesc[80];
 
-		if (p->mon.m_timed[TMD_IMAGE]) {
-			my_strcpy(mdesc, "something", sizeof(mdesc));
-		} else {
-			monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG);
-		}
+	if (!can_attack(&p->mon, mon, cave)) return false;
+	if (!target_set_monster(mon)) return false;
 
-		disturb(p);
-
-		msg("You furiously lash out at %s!", mdesc);
-
-		cmdq_push(CMD_MELEE);
-		// we have to use DIR_TARGET in case we attack something not adjacent
-		cmd_set_arg_target(cmdq_peek(), "target", DIR_TARGET);
-		event_signal(EVENT_MESSAGE_FLUSH);
-
-		return true;
+	if (p->mon.m_timed[TMD_IMAGE]) {
+		my_strcpy(mdesc, "something", sizeof(mdesc));
+	} else {
+		monster_desc(mdesc, sizeof(mdesc), mon, MDESC_TARG);
 	}
 
-	return false;
+	disturb(p);
+
+	msg("You furiously lash out at %s!", mdesc);
+
+	cmdq_push(CMD_MELEE);
+	// we have to use DIR_TARGET in case we attack something not adjacent
+	cmd_set_arg_target(cmdq_peek(), "target", DIR_TARGET);
+	event_signal(EVENT_MESSAGE_FLUSH);
+
+	return true;
 }
 
 static bool player_bloodlust_charge_monster(struct player *p, struct monster *mon, struct chunk *c)
