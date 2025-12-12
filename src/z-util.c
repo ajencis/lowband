@@ -2228,6 +2228,18 @@ static int lowest_prime_factor(int num)
 	return num;
 }
 
+void reduce_mult(int *num1, int *num2)
+{
+	int i;
+
+	for (i = 2; i * i <= MIN(*num1, *num2); ++i) {
+		while (divisible(*num1, i) && divisible(*num2, i)) {
+			*num1 /= i;
+			*num2 /= i;
+		}
+	}
+}
+
 static double exponentiate_dbl_base(double base, int exp_num, int exp_denom, bool intify)
 {
 	int i, num, denom, lpf;
@@ -2247,12 +2259,7 @@ static double exponentiate_dbl_base(double base, int exp_num, int exp_denom, boo
 	exp_num = ABS(exp_num);
 	exp_denom = ABS(exp_denom);
 
-	for (i = 2; i <= exp_num && i <= exp_denom; ++i) {
-		while (divisible(exp_num, i) && divisible(exp_denom, i)) {
-			exp_num /= i;
-			exp_denom /= i;
-		}
-	}
+	reduce_mult(&exp_num, &exp_denom);
 
 	num = exp_num;
 	denom = exp_denom;

@@ -277,6 +277,8 @@ struct my_rational my_rational_sum(const struct my_rational *a,
 /**
  * L: more math
  */
+void reduce_mult(int *num1, int *num2);
+
 double my_sqrt(double num);
 double my_cbrt(double num);
 int my_int_sqrt(int num);
