@@ -818,14 +818,12 @@ static int get_panel_attack_one(struct attack *atk, bool ranged, struct panel *p
 	panel_line(p, COLOUR_WHITE, atk_title, "");
 	hgt++;
 
-	if (ranged) {
-		effect_get_menu_name_base(ef_name, sizeof ef_name, EF_HIT, atk->dam_type, atk->rv);
-		random_value_description(atk->rv, atk->ammo_tval != TV_NULL, rv_desc, sizeof rv_desc);
-		attr = ef_attr_base(EF_HIT, atk->dam_type);
+	effect_get_menu_name_base(ef_name, sizeof ef_name, EF_HIT, atk->dam_type, atk->rv);
+	random_value_description(atk->rv, ranged && atk->ammo_tval != TV_NULL, rv_desc, sizeof rv_desc);
+	attr = ef_attr_base(EF_HIT, atk->dam_type);
 
-		panel_line(p, (uint8_t)attr, " ", "%s: %s", ef_name, rv_desc);
-		hgt++;
-	}
+	panel_line(p, (uint8_t)attr, " ", "%s: %s", ef_name, rv_desc);
+	hgt++;
 
 	for (ef = atk->ef; ef; ef = ef->next) {
 		effect_get_menu_name(ef_name, sizeof ef_name, ef);
