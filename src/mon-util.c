@@ -2592,19 +2592,33 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 	int level_mod = my_int_sqrt(mr->level);
 	int magic, magic_mod;
 
-	magic = mr->base->skills[SKILL_MAGIC] + mr->spell_power;
+	static int id = 0;
+	bool output = false;
+	if (rf_has(mr->flags, RF_SPELLCASTER)) {
+		id++;
+		if (id >= 10) {
+			id = 0;
+			output = true;
+		}
+	}
+
+	magic = mr->skills[SKILL_MAGIC];// + mr->spell_power;
 
 	magic_mod = magic > 0 ? my_int_sqrt(magic) : -my_int_sqrt(-magic);
 
+	if (output) dbg_log_fmt("mspell", "Rearranging spells for %s:", mr->name);
+
 	for (i = RSF_NONE + 1; i < RSF_MAX; ++i) {
 		bool on = false;
-		int chance = level_mod;
+		int chance = 1;
+		//int chance = level_mod;
+		int chance_exp = 0;
 		const struct monster_spell *ms = monster_spell_by_index(i);
 
-		if (!mon_spell_is_innate(i)) {
+		/*if (!mon_spell_is_innate(i)) {
 			if (magic <= 0) continue;
 			else chance = magic_mod;
-		}
+		}*/
 		if (!ms) continue;
 		if (!ms->knowable) continue;
 
@@ -2613,17 +2627,46 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 			int mod;
 			struct scaling_data sdata = race_power(mr, j);
 			int r_power = scaling_data_calc_r_xtra(mr, sdata) + sdata.base;
-			if (min <= 0) continue;
+			if (min < 0) continue;
 
-			mod = r_power - min;
+			mod = (r_power - min) * 50 / MAX(25, 50 - min);
+			mod = MIN(r_power, mod);
 
+			//if (output) dbg_log_fmt("mspell", "    mod for power %s is %i (r_power = %i, min = %i)",
+			//	lookup_player_ability(j, PY_ABIL_POWER)->name, mod, r_power, min);
+ 
+			if (mod <= 0) {
+				chance_exp++;
+				chance = 0;
+				break;
+			}
+
+			/*
 			// mages without any specialty at all in the subject are unlikely to know stronger spells
 			if (r_power <= 0) mod *= (ABS(mod) / 3 + 10);
 			
 			// good mages in their specialty are likely to know a spell
 			if (mod > 0) mod += magic_mod;
+			*/
 
-			chance += mod;
+			chance *= mod;
+			chance_exp++;
+		}
+
+		if (chance_exp <= 0) {
+			continue;
+		}
+
+		chance = exponentiate(chance, 1, chance_exp);
+
+		if (!mon_spell_is_innate(i)) {
+			chance *= magic;
+			chance /= 100;
+		}
+
+		else {
+			chance *= mr->level;
+			chance /= 100;
 		}
 
 		if (is_player) {
@@ -2636,6 +2679,10 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 			on = true;
 		}
 
+		if (chance > 0 && output) {
+			dbg_log_fmt("mspell", "  %i%% chance of getting %s: %s", chance, ms->level->lore_desc, on ? "acquired" : "missed");
+		}
+
 		if (on) {
 			rsf_on(mr->spell_flags, i);
 		}
@@ -2643,6 +2690,8 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 			rsf_off(mr->spell_flags, i);
 		}
 	}
+
+	if (output) dbg_log("mspell", "\n");
 }
 
 static int level_to_hp(int level)

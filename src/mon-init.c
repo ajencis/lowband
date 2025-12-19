@@ -1046,6 +1046,11 @@ static enum parser_error parse_mon_spell_name(struct parser *p) {
 	s->index = index;
 	s->level = mem_zalloc(sizeof(*(s->level)));
 	s->knowable = true;
+
+	for (index = 0; index < PP_MAX; ++index) {
+		s->powers[index] = -1;
+	}
+
 	parser_setpriv(p, s);
 	return PARSE_ERROR_NONE;
 }
@@ -1383,7 +1388,7 @@ static enum parser_error parse_mon_spell_save_message(struct parser *p) {
 static enum parser_error parse_mon_spell_power(struct parser *p) {
 	struct monster_spell *s = parser_priv(p);
 	int which_power = power_index_by_name(parser_getsym(p, "name"));
-	int strength = parser_getint(p, "amount");
+	int strength;
 
 	if (!s) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
@@ -1391,6 +1396,12 @@ static enum parser_error parse_mon_spell_power(struct parser *p) {
 
 	if (which_power <= PP_NONE || which_power >= PP_MAX) {
 		return PARSE_ERROR_GENERIC;
+	}
+
+	if (parser_hasval(p, "amount")) {
+		strength = parser_getint(p, "amount");
+	} else {
+		strength = 0;
 	}
 
 	s->powers[which_power] = strength;
@@ -1429,7 +1440,7 @@ static struct parser *init_parse_mon_spell(void) {
 	parser_reg(p, "message-invis str text", parse_mon_spell_blind_message);
 	parser_reg(p, "message-miss str text", parse_mon_spell_miss_message);
 	parser_reg(p, "message-save str text", parse_mon_spell_save_message);
-	parser_reg(p, "power sym name int amount", parse_mon_spell_power);
+	parser_reg(p, "power sym name ?int amount", parse_mon_spell_power);
 	parser_reg(p, "knowable int knowable", parse_mon_spell_knowable);
 	return p;
 }
@@ -2886,6 +2897,11 @@ static errr finish_parse_monster(struct parser *p) {
 			for (j = 0; j < SKILL_MAX; ++j) {
 				race->skills[j] += evolving_race_skill(race, j);
 			}
+		}
+
+		// L: if race isn't a spellcaster don't give it magic
+		if (!rf_has(race->flags, RF_SPELLCASTER)) {
+			race->skills[SKILL_MAGIC] = MIN(race->skills[SKILL_MAGIC], 0);
 		}
 	}
 
