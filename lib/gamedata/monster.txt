@@ -8297,6 +8297,7 @@ depth:32
 rarity:1
 experience:300
 flags:IM_NEXUS
+power:TELEPORTATION_MAGIC:120
 spell-freq:1
 spells:BLINK | TELE_AWAY
 message-invis:BLINK:Something slurps.
@@ -11274,6 +11275,7 @@ sleepiness:0
 depth:45
 rarity:1
 experience:3000
+power:NECROMANCY_MAGIC:50
 spell-freq:2
 spells:BLINK | TPORT
 spells:S_UNDEAD
@@ -11354,6 +11356,7 @@ sleepiness:0
 depth:45
 rarity:1
 experience:3000
+power:DEMONOLOGY_MAGIC:50
 spell-freq:2
 spells:BLINK | TPORT
 spells:S_DEMON
@@ -13862,6 +13865,7 @@ sleepiness:0
 depth:71
 rarity:2
 experience:10500
+power:DEMONOLOGY_MAGIC:75
 flags:ATTR_FLICKER
 spell-freq:2
 spells:BLINK | TELE_TO
@@ -13898,6 +13902,7 @@ sleepiness:0
 depth:71
 rarity:2
 experience:10500
+power:NECROMANCY_MAGIC:75
 flags:ATTR_FLICKER
 spell-freq:2
 spells:BLINK | TELE_TO
@@ -14351,6 +14356,8 @@ depth:76
 rarity:2
 experience:15000
 flags:ATTR_FLICKER
+power:DEMONOLOGY_MAGIC:50
+power:NECROMANCY_MAGIC:50
 spell-freq:1
 spells:BLINK | TELE_TO
 spells:S_ANIMAL | S_HI_DEMON | S_HI_DRAGON | S_HI_UNDEAD | S_MONSTERS

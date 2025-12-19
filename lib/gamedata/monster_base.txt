@@ -318,7 +318,7 @@ name:ghost:undead
 glyph:G
 pain:1
 flags:INVISIBLE | SPIRIT
-flags:PASS_WALL
+flags:PASS_WALL | SPELLCASTER
 flags:RES_PIERCING | RES_SLASHING | RES_BLUDGEONING
 desc:Ghost
 attr:AC:1
@@ -963,7 +963,7 @@ name:wraith:undead
 glyph:W
 pain:1
 flags:SPIRIT
-flags:HURT_LIGHT
+flags:HURT_LIGHT | SPELLCASTER
 desc:Wight/Wraith
 body:Humanoid
 attr:HP:-2
