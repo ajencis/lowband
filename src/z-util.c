@@ -2247,6 +2247,10 @@ static double exponentiate_dbl_base(double base, int exp_num, int exp_denom, boo
 	double result;
 	bool can_exp;
 
+	if (base == 0.0) {
+		return 0.0;
+	}
+
 	if (exp_num * exp_denom < 0) {
 		assert(base != 0);
 		base = 1.0 / base;
