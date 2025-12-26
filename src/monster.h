@@ -157,15 +157,30 @@ enum
 };
 
 /**
+ * L: monster predicates
+ */
+enum monster_race_predicate_ids
+{
+	#define RACE_PRED(x) RACE_PRED_##x,
+	#include "list-mon-race-predicates.h"
+	#undef RACE_PRED
+	RACE_PRED_MAX
+};
+
+typedef bool (*race_predicate)(const struct monster_race *);
+
+extern race_predicate list_race_predicates[];
+
+/**
  * L: monster reaction numbers
  */
-#define MON_REACT_NONE -1
-#define MON_REACT_HOSTILE 0
-#define MON_REACT_NO_TALK 200
-#define MON_REACT_NEUTRAL 300
-#define MON_REACT_FRIENDLY 400
-#define MON_REACT_ALLY 450
-#define MON_REACT_MAX 500
+#define MON_REACT_NONE 			 -1
+#define MON_REACT_HOSTILE		  0
+#define MON_REACT_NO_TALK		200
+#define MON_REACT_NEUTRAL 		300
+#define MON_REACT_FRIENDLY 		400
+#define MON_REACT_ALLY 			450
+#define MON_REACT_MAX 			500
 
 
 /** Structures **/

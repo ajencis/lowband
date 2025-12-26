@@ -2242,7 +2242,7 @@ void reduce_mult(int *num1, int *num2)
 
 static double exponentiate_dbl_base(double base, int exp_num, int exp_denom, bool intify)
 {
-	int i, num, denom, lpf;
+	int num, denom, lpf;
 	assert(exp_denom != 0.0);
 	double result;
 	bool can_exp;

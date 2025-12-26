@@ -214,6 +214,14 @@ static const char *ability_predicate_names[] =
 	NULL
 };
 
+static const char *race_predicate_names[] =
+{
+	#define RACE_PRED(x) #x,
+	#include "list-mon-race-predicates.h"
+	#undef RACE_PRED
+	NULL
+};
+
 static const char *list_feat_names[] =
 {
 	#define FEAT(x) #x,
@@ -5166,7 +5174,7 @@ static enum parser_error parse_class_unlockable(struct parser *p) {
 static enum parser_error parse_class_prereq(struct parser *p) {
 	struct player_class *c = parser_priv(p);
 	const char *prereq_name = parser_getsym(p, "id");
-	int prereq_id = code_index_in_array(ability_predicate_names, prereq_name);
+	int prereq_id = code_index_in_array(race_predicate_names, prereq_name);
 
 	if (!c) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;

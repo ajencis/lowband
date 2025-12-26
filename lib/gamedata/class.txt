@@ -868,6 +868,7 @@ title:Monster
 title:Monster
 title:Monster
 title:Monster
-title:Mosnter
+title:Monster
+prereq:HAS_EVOLUTION
 
 

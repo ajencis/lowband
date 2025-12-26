@@ -2589,8 +2589,7 @@ static bool race_has_drops(struct monster_race *mr)
 static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 {
 	int i, j;
-	int level_mod = my_int_sqrt(mr->level);
-	int magic, magic_mod;
+	int magic;
 
 	static int id = 0;
 	bool output = false;
@@ -2603,8 +2602,6 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 	}
 
 	magic = mr->skills[SKILL_MAGIC];// + mr->spell_power;
-
-	magic_mod = magic > 0 ? my_int_sqrt(magic) : -my_int_sqrt(-magic);
 
 	if (output) dbg_log_fmt("mspell", "Rearranging spells for %s:", mr->name);
 

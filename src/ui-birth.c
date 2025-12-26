@@ -22,6 +22,7 @@
 #include "game-input.h"
 #include "h-basic.h"
 #include "mon-calcs.h"
+#include "mon-predicate.h"
 #include "monster.h"
 #include "player-calcs.h"
 #include "player-enum.h"
@@ -225,17 +226,9 @@ static void birthmenu_display(struct menu *menu, int oid, bool cursor,
 
 static bool class_meets_all_prereqs(const struct player *p, const struct player_class *c)
 {
-	int i;
+	assert(p->mon.race);
 
-	for (i = 0; i < ABIL_PRED_MAX; ++i) {
-		if (c->prereqs[i]) {
-			if (!ability_predicates[i](NULL, p)) {
-				return false;
-			}
-		}
-	}
-
-	return true;
+	return race_meets_all_predicates(p->mon.race, c);
 }
 
 /**

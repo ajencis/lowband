@@ -22,9 +22,10 @@
 #include "cave.h"
 #include "mon-group.h"
 #include "mon-spell.h"
-#include "mon-util.h"
+#include "monster.h"
 #include "obj-properties.h"
 #include "player-timed.h"
+#include "player.h"
 
 /**
  * ------------------------------------------------------------------------
@@ -330,4 +331,73 @@ bool monster_is_invisible(const struct monster *mon)
 
 	return false;
 }
+
+
+static bool mon_race_has_natural_attack(const struct monster_race *mr)
+{
+	return mr->blow && mr->blow[0].method ? true : false;
+}
+
+static bool pred_true_for_any_evol(const struct monster_race *mr, bool (*pred)(const struct monster_race *))
+{
+	struct evolution *evol;
+
+	if (pred(mr)) return true;
+
+	for (evol = mr->evol; evol; evol = evol->next) {
+		if (pred_true_for_any_evol(evol->race, pred)) return true;
+	}
+
+	return false;
+}
+
+
+static bool race_pred_HAS_EVOLUTION(const struct monster_race *mr)
+{
+	return mr->evol ? true : false;
+}
+
+static bool race_pred_EVOL_HAS_NATURAL_ATTACK(const struct monster_race *mr)
+{
+	return pred_true_for_any_evol(mr, mon_race_has_natural_attack);
+}
+
+race_predicate list_race_predicates[] = {
+	#define RACE_PRED(x) race_pred_##x,
+	#include "list-mon-race-predicates.h"
+	#undef RACE_PRED
+	NULL
+};
+
+
+bool race_meets_all_predicates(const struct monster_race *mr, const struct player_class *c)
+{
+	int i;
+
+	for (i = 0; i < RACE_PRED_MAX; ++i) {
+		if (c->prereqs[i] && !list_race_predicates[i](mr)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool any_evol_meets_all_predicates(const struct monster_race *mr, const struct player_class *c)
+{
+	const struct evolution *evol;
+
+	if (race_meets_all_predicates(mr, c)) {
+		return true;
+	}
+
+	for (evol = mr->evol; evol; evol = evol->next) {
+		if (any_evol_meets_all_predicates(evol->race, c)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 

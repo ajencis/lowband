@@ -20,6 +20,8 @@
 #ifndef MON_PREDICATE_H
 #define MON_PREDICATE_H
 
+struct player_class;
+
 /**
  * monster_predicate is a function pointer which tests a given monster to
  * see if the predicate in question is true.
@@ -56,5 +58,8 @@ bool monster_is_obvious(const struct monster *mon);
 bool monster_is_mimicking(const struct monster *mon);
 bool monster_can_be_scared(const struct monster *mon);
 bool monster_is_decoyed(const struct monster *mon);
+
+bool race_meets_all_predicates(const struct monster_race *mr, const struct player_class *c);
+bool any_evol_meets_all_predicates(const struct monster_race *mr, const struct player_class *c);
 
 #endif /* !MON_PREDICATE_H */

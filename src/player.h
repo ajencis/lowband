@@ -264,7 +264,7 @@ struct player_class {
 
 	bool unlockable;			// L: does it need unlocking
 
-	bool prereqs[ABIL_PRED_MAX];	// L: what is needed to take the class
+	bool prereqs[RACE_PRED_MAX];	// L: what is needed to take the class
 };
 
 /**
