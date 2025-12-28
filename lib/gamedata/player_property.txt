@@ -33,6 +33,12 @@
 # desc - the description of the property
 #        L: for powers, will be prepended with "You" or "The user"
 # value - value for elements; -1 (vulnerability), 1 (resistance) or 3 (immunity)
+# scale - numerator and denominator to the scaling of the power. this will
+#         affect only the values at mid levels, not at max or min level. eg a
+#         power that grants +50 to ac at level 50 will do so irrespective of
+#         scaling, but if scale is less than 1:1 will grant more than 25 at
+#         power level 25. scale:1:2 is equivalent to square root. default scale
+#         is 2:3.
 
 ## Shapechange player flags
 
@@ -717,7 +723,7 @@ adj-positive:more effectively
 adj-negative:less effectively
 cost:15
 rarity:5
-scale:1
+scale:1:1
 parent:skill:TO_HIT_MELEE
 
 type:power
@@ -729,7 +735,7 @@ adj-positive:more effectively
 adj-negative:less effectively
 cost:10
 rarity:5
-scale:1
+scale:1:1
 parent:power:UNARMED_STRIKE
 parent:skill:TO_HIT_MELEE
 prereq:HAS_NATURAL_ATTACK
@@ -745,7 +751,7 @@ adj-negative:less effectively
 comment:especially when not weighed down
 cost:15
 rarity:5
-scale:-1
+scale:1:1
 parent:skill:STEALTH
 
 type:power
@@ -757,7 +763,7 @@ adj-positive:particularly quickly
 adj-negative:particularly slowly
 cost:10
 rarity:5
-scale:-1
+scale:1:1
 parent:power:AGILITY
 
 type:power
@@ -770,7 +776,7 @@ adj-negative:less damage
 comment:when the target is distracted
 cost:10
 rarity:5
-scale:-1
+scale:1:1
 parent:power:SWORD_SPECIALIZATION
 
 type:power
@@ -780,7 +786,7 @@ verb-second:consume nearby mana
 verb-third:consumes nearby mana
 cost:20
 rarity:3
-scale:-1
+scale:1:1
 parent:skill:SAVE
 
 type:power

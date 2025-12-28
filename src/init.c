@@ -48,6 +48,7 @@
 #include "obj-util.h"
 #include "object.h"
 #include "option.h"
+#include "parser.h"
 #include "player-enum.h"
 #include "player.h"
 #include "player-properties.h"
@@ -287,114 +288,6 @@ errr grab_effect_data(struct parser *p, struct effect *effect)
 
 	return PARSE_ERROR_NONE;
 }
-
-/*static enum parser_error write_book_kind(struct class_book *book,
-										 const char *name)
-{
-	struct object_kind *temp, *kind;
-	int i;
-
-	assert(book->tval != TV_POLEARM);
-
-	// Check we haven't already made this book
-	for (i = 0; i < z_info->k_max; i++) {
-		if (k_info[i].name && streq(name, k_info[i].name)) {
-			book->sval = k_info[i].sval;
-			return PARSE_ERROR_NONE;
-		}
-	}
-
-	// Extend by 1 and realloc
-	z_info->k_max += 1;
-	z_info->ordinary_kind_max += 1;
-	temp = mem_realloc(k_info, (z_info->k_max + 1) * sizeof(*temp));
-
-	// Copy if no errors
-	if (!temp) {
-		return PARSE_ERROR_INTERNAL;
-	} else {
-		k_info = temp;
-	}
-
-	// Add this entry at the end
-	kind = &k_info[z_info->k_max - 1];
-	memset(kind, 0, sizeof(*kind));
-
-	// Copy the tval and base
-	kind->tval = book->tval;
-	kind->base = &kb_info[kind->tval];
-	assert(kind->base);
-
-	// Make the name and index
-	kind->name = string_make(name);
-	kind->kidx = z_info->k_max - 1;
-
-	// Increase the sval count for this tval, set the new one to the max
-	for (i = 0; i < TV_MAX; i++)
-		if (kb_info[i].tval == kind->tval) {
-			kb_info[i].num_svals++;
-			kind->sval = kb_info[i].num_svals;
-			break;
-		}
-	if (i == TV_MAX) return PARSE_ERROR_INTERNAL;
-
-	// Copy the sval to the artifact info
-	book->sval = kind->sval;
-
-	// Set object defaults (graphics should be overwritten)
-	kind->d_char = '*';
-	kind->d_attr = COLOUR_RED;
-	kind->dd = 1;
-	kind->ds = 1;
-	kind->weight = 30;
-
-	// Inherit base flags.
-	kf_union(kind->kind_flags, kb_info[kind->tval].kind_flags);
-
-	// Dungeon books get extra properties
-	if (book->dungeon) {
-		for (i = ELEM_BASE_MIN; i < ELEM_BASE_MAX; i++) {
-			kind->el_info[i].flags |= EL_INFO_IGNORE;
-		}
-		kf_on(kind->kind_flags, KF_GOOD);
-	}
-
-	return PARSE_ERROR_NONE;
-}*/
-
-/*static enum parser_error write_gener_book_kind(struct player_spell *spell)
-{
-	struct object_kind *temp, *kind;
-
-	z_info->k_max++;
-	z_info->ordinary_kind_max++;
-	temp = mem_realloc(k_info, (z_info->k_max + 1) * sizeof(*temp));
-	
-	// Copy if no errors
-	if (!temp) {
-		return PARSE_ERROR_INTERNAL;
-	} else {
-		k_info = temp;
-	}
-
-	kind = &k_info[z_info->k_max - 1];
-	memset(kind, 0, sizeof(*kind));
-	
-	// Copy the tval and base
-	kind->tval = TV_BOOK;
-	kind->base = &kb_info[kind->tval];
-	assert(kind->base);
-	
-	kind->name = string_make(spell->name);
-	kind->kidx = z_info->k_max - 1;
-
-	kb_info[TV_BOOK].num_svals++;
-	kind->sval = kb_info[TV_BOOK].num_svals;
-
-	spell_to_obj(spell, kind);
-
-	return PARSE_ERROR_NONE;
-}*/
 
 /**
  * Find the default paths to all of our important sub-directories.
@@ -1355,6 +1248,9 @@ static enum parser_error parse_player_prop_type(struct parser *p) {
 		embryo->parent[i] = -1;
 	}
 
+	embryo->ability.scale_num = 2;
+	embryo->ability.scale_den = 3;
+
 	if (embryo->ability.type < 0) {
 		return PARSE_ERROR_GENERIC;
 	}
@@ -1492,16 +1388,22 @@ static enum parser_error parse_player_prop_rarity(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
-static enum parser_error parse_player_prop_scale(struct parser *p)
-{
+static enum parser_error parse_player_prop_scale(struct parser *p) {
 	struct embryo_player_ability *embryo = parser_priv(p);
-	int scale = parser_getint(p, "scale");
-	
-	if (!embryo) {
+	int num, den;
+
+	if (!embryo)
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
+
+	num = parser_getint(p, "numerator");
+	den = parser_getint(p, "denominator");
+
+	if (num <= 0 || den <= 0) {
+		return PARSE_ERROR_GENERIC;
 	}
 
-	embryo->ability.scale = scale;
+	embryo->ability.scale_num = num;
+	embryo->ability.scale_den = den;
 
 	return PARSE_ERROR_NONE;
 }
@@ -1652,7 +1554,7 @@ static struct parser *init_parse_player_prop(void) {
 	parser_reg(p, "bindui sym ui int aux sym uival", parse_player_prop_bindui);
 	parser_reg(p, "cost int cost", parse_player_prop_cost);
 	parser_reg(p, "rarity int rarity", parse_player_prop_rarity);
-	parser_reg(p, "scale int scale", parse_player_prop_scale);
+	parser_reg(p, "scale int numerator int denominator", parse_player_prop_scale);
 	parser_reg(p, "parent sym parent-type sym parent-code", parse_player_prop_parent);
 	parser_reg(p, "prereq sym id", parse_player_prop_prereq);
 	parser_reg(p, "verb-second str verb", parse_player_prop_verb_second);
@@ -1794,20 +1696,7 @@ static errr finish_parse_player_prop(struct parser *p) {
 				mem_free(boundui_cursor);
 			}
 		} else {
-			new->type = embryo->ability.type;
-			new->index = embryo->ability.index;
-			new->desc = embryo->ability.desc;
-			new->name = embryo->ability.name;
-
-			new->cost = embryo->ability.cost;
-			new->rarity = embryo->ability.rarity;
-			new->scale = embryo->ability.scale;
-
-			new->pos_adjective = embryo->ability.pos_adjective;
-			new->neg_adjective = embryo->ability.neg_adjective;
-			new->second_verb = embryo->ability.second_verb;
-			new->third_verb = embryo->ability.third_verb;
-			new->comment = embryo->ability.comment;
+			memcpy(new, &embryo->ability, sizeof *new);
 
 			if (!new->desc && (!new->second_verb || !new->third_verb)) {
 				plog_fmt("Error: property %s does not have an acceptable description!", new->name);
@@ -5206,32 +5095,11 @@ static struct parser *init_parse_class(void) {
 	parser_reg(p, "skill-health int base int incr", parse_class_skill_health);
 	parser_reg(p, "skill-monster int base int incr", parse_class_skill_monster);
 	parser_reg(p, "power sym name int value", parse_class_power);
-	/*parser_reg(p, "hitdie int mhp", parse_class_hitdie);
-	parser_reg(p, "exp int exp", parse_class_exp);
-	parser_reg(p, "max-attacks int max-attacks", parse_class_max_attacks);
-	parser_reg(p, "min-weight int min-weight", parse_class_min_weight);
-	parser_reg(p, "strength-multiplier int att-multiply", parse_class_str_mult);*/
 	parser_reg(p, "title str title", parse_class_title);
 	parser_reg(p, "equip sym tval sym sval uint min uint max sym eopts",
 			   parse_class_equip);
 	parser_reg(p, "obj-flags ?str flags", parse_class_obj_flags);
 	parser_reg(p, "player-flags ?str flags", parse_class_play_flags);
-	/*parser_reg(p, "magic uint first uint weight uint books", parse_class_magic);
-	parser_reg(p, "book sym tval sym quality sym name uint spells str realm",
-			   parse_class_book);
-	parser_reg(p, "book-graphics char glyph sym color",
-			   parse_class_book_graphics);
-	parser_reg(p, "book-properties int cost int common str minmax",
-			   parse_class_book_properties);
-	parser_reg(p, "spell sym name int level int mana int fail int exp",
-			   parse_class_spell);
-	parser_reg(p, "effect sym eff ?sym type ?int radius ?int other", parse_class_effect);
-	parser_reg(p, "effect-yx int y int x", parse_class_effect_yx);
-	parser_reg(p, "dice str dice", parse_class_dice);
-	parser_reg(p, "expr sym name sym base str expr", parse_class_expr);
-	parser_reg(p, "effect-msg str text", parse_class_effect_msg);
-	parser_reg(p, "desc str desc", parse_class_desc);
-	parser_reg(p, "school sym school", parse_class_school);*/
 	parser_reg(p, "realm sym realm", parse_class_realm);
 	parser_reg(p, "unlockable int unlockable", parse_class_unlockable);
 	parser_reg(p, "prereq sym id", parse_class_prereq);

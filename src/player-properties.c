@@ -451,7 +451,6 @@ int attack_specialization_power(const struct monster *mon, const struct object *
 /**
  * L: utilities for powers in general
  */
-
 int get_skill_scale_state(const struct player_state *state, int skill, int scaleto)
 {
 	int base = state->skills[skill];
@@ -464,11 +463,20 @@ int get_skill_scale_state(const struct player_state *state, int skill, int scale
 
 int get_power_scale_state(const struct player_state *state, int power, int scaleto)
 {
-	int base = state->powers[power];
+	int base, sign;
+	double div, lev_fact;
+	struct player_ability *abil = lookup_player_ability(power, PY_ABIL_POWER);
 
 	assert(power < PP_MAX && power > PP_NONE);
+	
+	base = ABS(state->powers[power]);
+	sign = SGN(state->powers[power]);
 
-	return (ABS(base) * scaleto + 50 * 2 / 3) / 50 * SGN(base);
+	div = MAX((base + 100.0) / 3.0, 50.0); // scale down if above 50
+
+	lev_fact = exponentiate_dbl(base / div, abil->scale_num, abil->scale_den);
+
+	return (int)(lev_fact * scaleto + 1.0 / 3.0) * sign;
 }
 
 int get_skill_scale(const struct monster *mon, int skill, int scaleto)
