@@ -316,7 +316,7 @@ name:Aasimar
 #monster:ophan
 
 name:Sling
-monster:cave spider
+#monster:cave spider
 
 name:Quyling
 #monster:quylthulg
@@ -334,7 +334,7 @@ name:Resurrected
 #monster:phoenix
 
 name:Batling
-monster:fruit bat
+#monster:fruit bat
 
 name:Skeletal
 
