@@ -379,7 +379,7 @@ static void mon_stat_calc(const struct monster *mon, struct player_state *state)
 
 static int evolving_race_power(const struct monster_race *mr, int which)
 {
-	int sum = 0, div = 0;
+	int sum = 0, div = 0, base;
 	struct evolution *evol;
 
 	if (mr->level > 0) return 0;
@@ -392,7 +392,11 @@ static int evolving_race_power(const struct monster_race *mr, int which)
 
 	assert(div > 0);
 
-	return ABS(sum) / div * SGN(sum);
+	base = ABS(sum) / div;
+	base = exponentiate(base * 7 / 2, 2, 3);
+	base = RND_TO_MULT(base, 5);
+
+	return base * SGN(sum);
 }
 
 struct scaling_data mon_class_power(const struct monster *mon, int power)
