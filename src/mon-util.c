@@ -2591,24 +2591,11 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 	int i, j;
 	int magic;
 
-	static int id = 0;
-	bool output = false;
-	if (rf_has(mr->flags, RF_SPELLCASTER)) {
-		id++;
-		if (id >= 10) {
-			id = 0;
-			output = true;
-		}
-	}
-
 	magic = mr->skills[SKILL_MAGIC];// + mr->spell_power;
-
-	if (output) dbg_log_fmt("mspell", "Rearranging spells for %s:", mr->name);
 
 	for (i = RSF_NONE + 1; i < RSF_MAX; ++i) {
 		bool on = false;
 		int chance = 1;
-		//int chance = level_mod;
 		int chance_exp = 0;
 		const struct monster_spell *ms = monster_spell_by_index(i);
 
@@ -2618,6 +2605,10 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 		}*/
 		if (!ms) continue;
 		if (!ms->knowable) continue;
+
+		if (!rf_has(mr->flags, RF_SPELLCASTER) && !mon_spell_is_innate(i)) {
+			continue;
+		}
 
 		for (j = 0; j < PP_MAX; ++j) {
 			int min = ms->powers[j];
@@ -2676,10 +2667,6 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 			on = true;
 		}
 
-		if (chance > 0 && output) {
-			dbg_log_fmt("mspell", "  %i%% chance of getting %s: %s", chance, ms->level->lore_desc, on ? "acquired" : "missed");
-		}
-
 		if (on) {
 			rsf_on(mr->spell_flags, i);
 		}
@@ -2687,8 +2674,6 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 			rsf_off(mr->spell_flags, i);
 		}
 	}
-
-	if (output) dbg_log("mspell", "\n");
 }
 
 static int level_to_hp(int level)
@@ -2837,7 +2822,7 @@ void rearrange_monster(struct monster_race *mr, bool is_player)
 	mr->freq_spell = MIN(75, mr->freq_spell);
 	mr->mexp = rf_has(mr->flags, RF_UNIQUE) ? power * power * 10 : 0;
 
-	mr->skills[SKILL_HEALTH] = mr->avg_hp;
+	//mr->skills[SKILL_HEALTH] = mr->avg_hp;
 
 	// spread damage over its damaging blows
 	quo = 0;

@@ -2900,9 +2900,9 @@ static errr finish_parse_monster(struct parser *p) {
 		}
 
 		// L: if race isn't a spellcaster don't give it magic
-		if (!rf_has(race->flags, RF_SPELLCASTER)) {
-			race->skills[SKILL_MAGIC] = MIN(race->skills[SKILL_MAGIC], 0);
-		}
+		//if (!rf_has(race->flags, RF_SPELLCASTER)) {
+		//	race->skills[SKILL_MAGIC] = MIN(race->skills[SKILL_MAGIC], 75);
+		//}
 	}
 
 	/* Allocate space for the monster lore */
