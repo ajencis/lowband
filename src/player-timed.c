@@ -32,6 +32,7 @@
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
+#include "z-virt.h"
 
 int PY_FOOD_MAX;
 int PY_FOOD_FULL;
@@ -53,7 +54,7 @@ const char *list_player_flag_names[] = {
 };
 
 struct timed_effect_data timed_effects[TMD_MAX] = {
-	#define TMD(a, b, c, d, e, f, g, h, i, j)	{ #a, b, c, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 0, OF_NONE, false, -1, -1, -1 },
+	#define TMD(a, b, c, d, e, f, g, h, i, j)	{ #a, b, c, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, 0, OF_NONE, false, -1, -1, -1 },
 	#include "list-player-timed.h"
 	#undef TMD
 };
@@ -120,6 +121,19 @@ static enum parser_error parse_player_timed_desc(struct parser *p)
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
 	ps->t->desc = string_append(ps->t->desc, parser_getstr(p, "text"));
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_player_timed_verb(struct parser *p)
+{
+	struct timed_effect_parse_state *ps = parser_priv(p);
+
+	assert(ps);
+	if (!ps->t) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	ps->t->verb = string_append(ps->t->verb, parser_getstr(p, "text"));
 	return PARSE_ERROR_NONE;
 }
 
@@ -625,6 +639,7 @@ static struct parser *init_parse_player_timed(void)
 	parser_setpriv(p, ps);
 	parser_reg(p, "name str name", parse_player_timed_name);
 	parser_reg(p, "desc str text", parse_player_timed_desc);
+	parser_reg(p, "verb str text", parse_player_timed_verb);
 	parser_reg(p, "on-end str text", parse_player_timed_end_message);
 	parser_reg(p, "on-increase str text", parse_player_timed_increase_message);
 	parser_reg(p, "on-decrease str text", parse_player_timed_decrease_message);
@@ -701,6 +716,8 @@ static void cleanup_player_timed(void)
 
 		string_free(effect->desc);
 		effect->desc = NULL;
+		string_free(effect->verb);
+		effect->verb = NULL;
 
 		string_free(effect->on_end);
 		effect->on_end = NULL;

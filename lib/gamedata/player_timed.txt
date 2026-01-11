@@ -191,12 +191,14 @@
 
 name:FAST
 desc:haste
+verb:haste
 grade:G:10000:Haste:You feel yourself moving faster!
 on-end:You feel yourself slow down.
 msgt:SPEED
 
 name:SLOW
 desc:slowness
+verb:slow
 grade:U:10000:Slow:You feel yourself moving slower!
 on-end:You feel yourself speed up.
 msgt:SLOW
@@ -204,6 +206,7 @@ fail:1:FREE_ACT
 
 name:BLIND
 desc:blindness
+verb:blind
 grade:o:10000:Blind:You are blind.
 on-end:You blink and your eyes clear.
 msgt:BLIND
@@ -211,6 +214,7 @@ fail:1:PROT_BLIND
 
 name:PARALYZED
 desc:paralysis
+verb:paralyze
 grade:r:10000:Paralyzed!:You are paralysed!
 on-end:You can move again.
 msgt:PARALYZED
@@ -219,6 +223,7 @@ flags:NONSTACKING
 
 name:CONFUSED
 desc:confusion
+verb:confuse
 grade:o:10000:Confused:You are confused!
 on-end:You are no longer confused.
 on-increase:You are more confused!
@@ -228,6 +233,7 @@ fail:1:PROT_CONF
 
 name:AFRAID
 desc:fear
+verb:scare
 grade:o:10000:Afraid:You are terrified!
 on-end:You feel bolder now.
 on-increase:You are more scared!
@@ -245,6 +251,7 @@ fail:2:CHAOS
 
 name:POISONED
 desc:poisoning
+verb:poison
 grade:o:10000:Poisoned:You are poisoned!
 on-end:You are no longer poisoned.
 on-increase:You are more poisoned!
@@ -255,6 +262,7 @@ fail:5:OPP_POIS
 
 name:TOXIC
 desc:bad poisoning
+verb:badly poison
 grade:o:10000:Toxic:You are badly poisoned!
 on-end:You are no longer badly poisoned.
 on-increase:You are more badly poisoned!
@@ -278,6 +286,7 @@ fail:4:ROCK
 
 name:STUN
 desc:stunning
+verb:stun
 grade:o:50:Stun:You have been stunned.
 grade:o:150:Heavy Stun:You have been heavily stunned.
 grade:r:10000:Knocked Out:You have been knocked out.
@@ -292,12 +301,14 @@ on-end:You are no longer disenchanted.
 
 name:CHARMED
 desc:charm
+verb:charm
 grade:o:50:Charm:You are charmed.
 on-end:You are no longer charmed.
 
 # Note food grades are in percentages here, and are translated on parsing
 name:FOOD
 desc:nourishment
+verb:feed
 grade:R:1:Starving: :You are starving!!
 grade:r:4:Faint:You are still faint.:You are getting faint from hunger!
 grade:o:8:Weak:You are still weak.:You are getting weak from hunger!
@@ -330,6 +341,7 @@ flag-synonym:PROT_FEAR:0
 
 name:SHERO
 desc:berserk rage
+verb:enrage
 grade:G:10000:Berserk:You feel like a killing machine!
 on-end:You no longer feel berserk.
 on-increase:You feel even more berserk!
@@ -338,6 +350,7 @@ flag-synonym:PROT_FEAR:0
 
 name:SHIELD
 desc:mystic shield
+verb:shield
 grade:G:10000:Shield:A mystic shield forms around your body!
 on-end:Your mystic shield crumbles away.
 on-increase:The mystic shield strengthens.
@@ -345,6 +358,7 @@ msgt:SHIELD
 
 name:BLESSED
 desc:your AC and to-hit bonus
+verb:bless
 grade:G:10000:Blssd:You feel righteous!
 on-end:The prayer has expired.
 on-increase:You feel more righteous!
@@ -454,6 +468,7 @@ effect-dice:100
 
 name:BOLD
 desc:fearlessness
+verb:enbolden
 grade:G:10000:Bold:You feel bold.
 on-end:You no longer feel bold.
 on-increase:You feel even bolder!
@@ -462,6 +477,7 @@ flag-synonym:PROT_FEAR:1
 
 name:SCRAMBLE
 desc:scrambled
+verb:scramble
 grade:v:10000:Scrambled:Your body starts to scramble...
 on-end:Your body reasserts its true nature.
 on-increase:You are more scrambled!
@@ -561,6 +577,7 @@ on-end:Your shooting power returns to normal.
 
 name:TAUNT
 desc:taunting
+verb:taunt
 grade:i:10000:Taunt:You start aggravating your enemies!
 on-end:You stop aggravating your enemies.
 
@@ -625,11 +642,13 @@ on-end:You feel filled with flame.
 
 name:CHANGED
 desc:polymorph
+verb:polymorph
 grade:G:10000:Change:You change.
 on-end:You revert formes.
 
 name:SUFFOCATE
 desc:suffocation
+verb:suffocate
 grade:G:10000:Suffocate:You can't breathe.
 on-end:You can breathe again.
 
@@ -639,7 +658,7 @@ grade:G:10000:Summoned:You are whisked elsewhere.
 on-end:You return.
 
 name:POLYMORPHED
-desc:POLYMORPHED
+desc:polymorph
 grade:v:10000:Poly:You transform.
 on-end:You revert to your original form.
 on-end-effect:UNPOLY_SELF

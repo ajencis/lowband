@@ -78,6 +78,7 @@ struct timed_effect_data {
 	uint32_t flag_update;
 
 	char *desc;
+	char *verb;
 	char *on_end;
 	char *on_increase;
 	char *on_decrease;

@@ -663,8 +663,15 @@ size_t effect_get_menu_name_base(char *buf, size_t max, int ef_type, int ef_subt
 		break;
 
 	case EFINFO_CURE:
-	case EFINFO_TIMED:
 		len = strnfmt(buf, max, fmt, timed_effects[ef_subtype].desc);
+		break;
+
+	case EFINFO_TIMED:
+		if (timed_effects[ef_subtype].verb) {
+			len = strnfmt(buf, max, "%s", timed_effects[ef_subtype].verb);
+		} else {
+			len = strnfmt(buf, max, fmt, timed_effects[ef_subtype].desc);
+		}
 		break;
 
 	case EFINFO_STAT:
