@@ -834,6 +834,16 @@ rarity:5
 parent:power:SWORD_SPECIALIZATION
 
 type:power
+code:STUNNING_BLOWS
+name:Stunning Blows
+verb-second:stun monsters
+verb-third:stuns monsters
+comment:when striking
+cost:10
+rarity:5
+parent:power:HAFTED_SPECIALIZATION
+
+type:power
 code:DEATH_TOUCH
 name:Touch of Death
 verb-second:slay at a touch

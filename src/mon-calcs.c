@@ -27,6 +27,8 @@
 #include "player-util.h"
 #include "player.h"
 #include "project.h"
+#include "z-dice.h"
+#include "z-rand.h"
 #include "z-util.h"
 #include "z-virt.h"
 
@@ -94,7 +96,7 @@ struct embryo_attack {
 
 	const struct monster_blow *mon_blow;
 	const struct object *obj;
-	int special_type;
+	enum attack_special_type_ind special_type;
 
 	struct effect *extra;
 };
@@ -785,13 +787,42 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 
 
 
+static int atk_weight(const struct monster *mon, const struct attack *atk)
+{
+	if (atk->obj) {
+		return atk->obj->weight;
+	}
+	
+	if (atk->mb) {
+		return randcalc(atk->mb->dice, mon->race->level, MAXIMISE);
+	}
 
+	return 10 + get_power_scale(mon, PP_UNARMED_STRIKE, 90);
+}
 
 static void effect_add_value(struct effect *ef, random_value rv)
 {
 	if (!ef->dice) ef->dice = dice_new();
 
 	dice_parse_random_value(ef->dice, rv);
+}
+
+static void emb_attack_add_extra(struct embryo_attack *emb, struct effect *extra)
+{
+	struct effect *last;
+
+	if (!emb->extra) {
+		emb->extra = extra;
+		return;
+	}
+
+	last = emb->extra;
+
+	while (last->next) {
+		last = last->next;
+	}
+
+	last->next = extra;
 }
 
 
@@ -907,9 +938,76 @@ static void emb_atk_mod_breath_bite(const struct monster *mon, struct embryo_att
 	}
 }
 
+static void emb_atk_mod_stunning_blows(const struct monster *mon, struct embryo_attack *emb)
+{
+	struct effect *stun_ef;
+	random_value rv = { 0, 0, 0, 0 };
+	int wgt = atk_weight(mon, &emb->atk);
+	int power = 0, power1, power2;
+	int chance, amt;
+
+	chance = exponentiate(wgt, 2, 3);
+	amt = get_power_scale(mon, PP_STUNNING_BLOWS, 25);
+
+	if (emb->special_type == ATK_SPCL_TYP_KICK || emb->special_type == ATK_SPCL_TYP_PUNCH) {
+		int temp_chance = get_power_scale(mon, PP_UNARMED_STRIKE, 25);
+		int temp_amt = get_power_scale(mon, PP_UNARMED_STRIKE, 10);
+
+		chance = MAX(chance, temp_chance);
+		amt = MAX(amt, temp_amt);
+	}
+
+	if (chance <= 0 || amt <= 5) {
+		return;
+	}
+
+	stun_ef = mem_zalloc(sizeof *stun_ef);
+
+	stun_ef->index = EF_OTHER_TIMED_INC;
+	stun_ef->subtype = TMD_STUN;
+	stun_ef->chance = chance;
+
+	rv.dice = 2;
+	rv.sides = amt;
+
+	effect_add_value(stun_ef, rv);
+
+	emb_attack_add_extra(emb, stun_ef);
+
+	return;
+
+
+
+
+	power1 = my_int_sqrt((wgt + 50) * get_power_scale(mon, PP_STUNNING_BLOWS, 50) / 25);
+	if (!emb->mon_blow && !emb->obj) {
+		power2 = get_power_scale(mon, PP_UNARMED_STRIKE, 50);
+	}
+
+	power = power1 + power2;
+
+	msg_add_fmt("power1 = %i, power2 = %i", power1, power2);
+
+	if (power <= 10) return;
+
+	stun_ef = mem_zalloc(sizeof *stun_ef);
+
+	stun_ef->index = EF_OTHER_TIMED_INC;
+	stun_ef->subtype = TMD_STUN;
+	stun_ef->chance = my_int_sqrt(power) * 2 + 5;
+
+	rv.dice = power / 25 + 3;
+	rv.sides = power / 3;
+
+	effect_add_value(stun_ef, rv);
+
+	emb_attack_add_extra(emb, stun_ef);
+}
+
 emb_atk_mod_fn mod_fns[] = {
 	emb_atk_mod_death_touch,
-	emb_atk_mod_breath_bite
+	emb_atk_mod_breath_bite,
+	emb_atk_mod_stunning_blows
 };
 
 
@@ -1202,6 +1300,7 @@ static struct embryo_attack *get_special_attack(const struct monster *mon, int s
 	bool p = mon->player ? true : false;
 
 	emb->obj = NULL;
+	emb->special_type = special;
 
 	emb->atk.skill = SKILL_TO_HIT_MELEE;
 
