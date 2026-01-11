@@ -26,7 +26,7 @@ EFFECT(TIMED_INC,					true,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s turns",
 EFFECT(TIMED_INC_NO_RES,			false,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s turns (unresistable)",	"extend %s")
 EFFECT(MON_TIMED_INC,				true,	"dur",		2,		EFINFO_TIMED,	"increases monster %s by %s turns",	"")
 EFFECT(SELF_TIMED_INC,				false,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s turns to user", "extend %s")
-EFFECT(OTHER_TIMED_INC,				true,	"dur",		2,		EFINFO_TIMED,	"extends %s for %s turns to target", "impose %s")
+EFFECT(OTHER_TIMED_INC,				true,	"dur",		2,		EFINFO_TIMED,	"impose %s for %s turns on target", "impose %s")
 EFFECT(TIMED_DEC,					false,	NULL,		2,		EFINFO_TIMED,	"reduces length of %s by %s turns",	"reduce %s")
 EFFECT(GLYPH,						false,	NULL,		1,		EFINFO_NONE,	"inscribes a glyph beneath you",	"inscribe a glyph")
 EFFECT(RESTORE_STAT,				false,	NULL,		1,		EFINFO_STAT,	"restores your %s",	"restore %s")
