@@ -802,7 +802,7 @@ static int get_panel_attack_one(struct attack *atk, bool ranged, struct panel *p
 	int bth = atk->to_hit;
 	struct effect *ef;
 	random_value rv;
-	char atk_title[80], range[80] = "", rv_desc[80], ef_name[80];
+	char atk_title[80], range[80] = "", rv_desc[80], ef_name[80], chance_desc[80];
 	const char *title;
 	int blows = atk->blows / 100, blow_frac = (atk->blows / 10) % 10;
 	int attr;
@@ -831,6 +831,12 @@ static int get_panel_attack_one(struct attack *atk, bool ranged, struct panel *p
 		random_value_description(rv, false, rv_desc, sizeof rv_desc);
 		attr = ef_attr(ef);
 
+		if (ef->chance && ef->chance < 100) {
+			strnfmt(chance_desc, sizeof chance_desc, " (%i%%)", ef->chance);
+		} else {
+			chance_desc[0] = '\0';
+		}
+
 		title = num_choice > 0 ? "   - " : " ";
 		num_choice--;
 
@@ -838,7 +844,7 @@ static int get_panel_attack_one(struct attack *atk, bool ranged, struct panel *p
 			num_choice = dice_roll(ef->dice, &rv);
 		}
 
-		panel_line(p, (uint8_t)attr, title, "%s: %s", ef_name, rv_desc);
+		panel_line(p, (uint8_t)attr, title, "%s%s: %s", ef_name, chance_desc, rv_desc);
 		hgt++;
 	}
 
