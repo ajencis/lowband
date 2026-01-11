@@ -63,6 +63,8 @@ struct effect {
 	int other;		/**< Extra parameter to be passed to the handler */
 	char *msg;		/**< Message for death or whatever */
 	char *subtype_temp;	/**< L: temporary subtype */
+
+	int chance;		/** L: likelihood of occuring in 100; 0 means always occurs */
 };
 
 /**

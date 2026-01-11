@@ -33,6 +33,7 @@
 #include "project.h"
 #include "target.h"
 #include "trap.h"
+#include "z-rand.h"
 #include "z-type.h"
 
 
@@ -478,6 +479,7 @@ bool effect_do(struct effect *effect,
 
 	do {
 		int choice_count = 0, leftover = 1;
+		bool skip;
 
 		if (!effect_valid(effect)) {
 			msg("Bad effect passed to effect_do(). Please report this bug.");
@@ -568,9 +570,17 @@ bool effect_do(struct effect *effect,
 			}
 		}
 
+		skip = false;
+
+		if (effect->chance) {
+			if (!x_in_y(effect->chance, 100)) {
+				skip = true;
+			}
+		}
+
 		/* Handle the effect */
 		handler = effects[effect->index].handler;
-		if (handler != NULL) {
+		if (handler != NULL && !skip) {
 			effect_handler_context_t context = {
 				effect->index,
 				origin,
