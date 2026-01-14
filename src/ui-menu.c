@@ -63,8 +63,59 @@ static void free_menu_filter(struct menu *m)
 }
 
 
-static int (* current_menu_compare)(int, int) = NULL;
+static struct menu *curr_menu = NULL;
 
+static int nth_parent(struct menu *m, int which, int n)
+{
+	int i, curr = which;
+
+	return -1;
+
+	if (!m->data_parents) {
+		return which;
+	}
+
+	for (i = 0; i < n && curr >= 0; ++i) {
+		curr = m->data_parents[curr];
+	}
+
+	return curr;
+}
+
+static int parent_depth(struct menu *m, int oid)
+{
+	int depth = 0, curr;
+
+	return 0;
+
+	if (!m->data_parents) {
+		return 0;
+	}
+
+	for (curr = m->data_parents[oid]; curr >= 0; curr = m->data_parents[curr]) {
+		depth++;
+	}
+
+	return depth;
+}
+
+static bool has_children(struct menu *m, int oid) {
+	int i;
+
+	return false;
+
+	if (!m->data_parents) {
+		return false;
+	}
+
+	for (i = 0; i < m->count; ++i) {
+		if (m->data_parents[i] == oid) {
+			return true;
+		}
+	}
+
+	return false;
+}
 
 /**
  * L: compares two menu elements
@@ -72,10 +123,45 @@ static int (* current_menu_compare)(int, int) = NULL;
  */
 static int menu_filter_cmp(const void *s1, const void *s2)
 {
-	int i1 = * (int *) s1;
-	int i2 = * (int *) s2;
+	int i1 = * (int *) s1, i2 = * (int *) s2;
+	int i1_parent = i1, i2_parent = i2;
+	int i1_next, i2_next;
+	int i1_depth, i2_depth;
 
-	return current_menu_compare(i1, i2);
+	if (!curr_menu) return 0;
+
+	i1_depth = parent_depth(curr_menu, i1);
+	i2_depth = parent_depth(curr_menu, i2);
+
+	// get the parent of equal depth
+	if (i1_depth > i2_depth) {
+		i1_parent = nth_parent(curr_menu, i1, i1_depth - i2_depth);
+	}
+	else if (i2_depth > i1_depth) {
+		i2_parent = nth_parent(curr_menu, i2, i2_depth - i1_depth);
+	}
+
+	// if one is a parent of the other then the parent goes first
+	if (i1_parent == i2_parent && i1_depth != i2_depth) {
+		return i1_depth > i2_depth ? 1 : -1;
+	}
+
+	i1_next = i1_parent;
+	i2_next = i2_parent;
+
+	// find the last parent where they differ
+	while (i1_next != i2_next) {
+		i1_parent = i1_next;
+		i2_parent = i2_next;
+		i1_next = nth_parent(curr_menu, i1_parent, 1);
+		i2_next = nth_parent(curr_menu, i2_parent, 1);
+	}
+
+	if (curr_menu->row_funcs->compare) {
+		return curr_menu->row_funcs->compare(i1_parent, i2_parent);
+	}
+
+	return 0;
 }
 
 /**
@@ -90,17 +176,49 @@ static bool menu_filter_sort(struct menu *m, int *filter_list, size_t filter_siz
 	if (!m->row_funcs->compare) return false;
 	if (filter_size < 1) return false;
 
-	current_menu_compare = m->row_funcs->compare;
+	curr_menu = m;
 
 	sort(filter_list, filter_size, sizeof *filter_list, menu_filter_cmp);
 
-	current_menu_compare = NULL;
+	curr_menu = NULL;
 
 	for (i = 1; i < filter_size; ++i) {
 		if (filter_list[i] < filter_list[i - 1]) return true;
 	}
 
 	return false;
+}
+
+static bool parent_collapsed(struct menu *m, int which)
+{
+	int i;
+
+	return false;
+
+	if (!m->data_parents || !m->collapsed) {
+		return false;
+	}
+
+	for (i = m->data_parents[which]; i >= 0; i = m->data_parents[i]) {
+		if (m->collapsed[i]) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static bool row_displayable(struct menu *m, int row)
+{
+	if (parent_collapsed(m, row)) {
+		return false;
+	}
+
+	if (m->row_funcs->valid_row && (m->row_funcs->valid_row(m, row) == MN_ROW_SKIP)) {
+		return false;
+	}
+
+	return true;
 }
 
 /**
@@ -111,32 +229,14 @@ bool get_menu_filter(struct menu *m)
 {
 	int i;
 	bool need_filter = false;
-	bool no_valid = m->row_funcs->valid_row ? false : true;
 
 	free_menu_filter(m);
-
-	/*if (!m->row_funcs->valid_row) {
-		menu_ensure_cursor_valid(m);
-		return false;
-	}
-
-	int i, valid_count = 0;
-
-	for (i = 0; i < m->count; ++i) {
-		if (m->row_funcs->valid_row(m, i) != MN_ROW_SKIP) {
-			++valid_count;
-		}
-	}
-
-	if (valid_count != m->count) {
-		need_filter = true;
-	}*/
 
 	m->filter_list = mem_zalloc(sizeof (*m->filter_list) * m->count);
 	m->filter_count = 0;
 
 	for (i = 0; i < m->count; ++i) {
-		if (no_valid || (m->row_funcs->valid_row(m, i) != MN_ROW_SKIP)) {
+		if (row_displayable(m, i)) {
 			m->filter_list[m->filter_count] = i;
 			++m->filter_count;
 		}
@@ -736,9 +836,38 @@ static void display_menu_row(struct menu *menu, int pos, int top,
 		if (flags & MN_REL_TAGS)
 			sel = menu->skin->get_tag(menu, pos);
 		else if (menu->selections && !(flags & MN_PVT_TAGS))
-			sel = menu->selections[pos];
+			sel = menu->selections[pos];//oid];
 		else if (menu->row_funcs->get_tag)
 			sel = menu->row_funcs->get_tag(menu, oid);
+	}
+
+	if (menu->collapsed) {
+		const char *label;
+
+		if (!has_children(menu, oid)) {
+			label = "    ";
+		} else if (menu->collapsed[oid]) {
+			label = "[+] ";
+		} else {
+			label = "[-] ";
+		}
+
+		Term_putstr(col, row, 4, COLOUR_WHITE, label);
+
+		col += 4;
+		width -= 4;
+	}
+
+	if (menu->data_parents) {
+		int depth = parent_depth(menu, oid), i;
+		depth = MIN(width / 2, depth);
+
+		for (i = 0; i < depth; ++i) {
+			Term_putstr(col, row, 2, COLOUR_WHITE, "  ");
+
+			col += 2;
+			width -= 2;
+		}
 	}
 
 	if (sel) {
@@ -909,6 +1038,17 @@ bool menu_handle_keypress(struct menu *menu, const ui_event *in,
 		}
 	} else if (in->key.code == KC_ENTER) {
 		out->type = EVT_SELECT;
+	} else if ((in->key.code == '+' || in->key.code == '-') && menu->collapsed) {
+		int oid = menu_cursor_to_oid(menu, menu->cursor);
+
+		if (in->key.code == '-') {
+			menu->collapsed[oid] = true;
+		}
+		else if (in->key.code == '+') {
+			menu->collapsed[oid] = false;
+		}
+
+		get_menu_filter(menu);
 	} else if (target_dir(in->key)) {
 		/* Try directional movement */
 		int dir = target_dir(in->key);
@@ -970,6 +1110,7 @@ ui_event menu_select(struct menu *menu, int notify, bool popup)
 		int cursor = menu->cursor;
 
 		menu_refresh(menu, popup);
+
 		in = inkey_ex();
 
 		/* Handle mouse & keyboard commands */
@@ -1019,13 +1160,16 @@ ui_event menu_select(struct menu *menu, int notify, bool popup)
 			if (popup) {
 				screen_load();
 			}
+
 			return out;
 		}
+
 	}
 
 	if (popup) {
 		screen_load();
 	}
+
 	return in;
 }
 
@@ -1095,11 +1239,11 @@ void menu_release_filter(struct menu *menu)
  */
 void menu_ensure_cursor_valid(struct menu *m)
 {
-	if (menu_cursor_to_oid(m, m->cursor) == m->oid_selected) return;
-	if (no_valid_row(m, m->count)) return;
-
 	int row;
 	int most_recent_valid_row = -1;
+
+	if (menu_cursor_to_oid(m, m->cursor) == m->oid_selected) return;
+	if (no_valid_row(m, m->count)) return;
 
 	for (row = 0; row < m->count; ++row) {
 		int row_validity = m->row_funcs->valid_row ? m->row_funcs->valid_row(m, row) : MN_ROW_VALID;

@@ -265,6 +265,9 @@ struct menu
 
 	bool autorefilter;			// L: should the menu refresh its filters whenever it refreshes?
 
+	bool *collapsed;			// L: whether the row inquestion is collapsed; if NULL collapsing is ignored
+	int *data_parents;			// L: parents for the items, if NULL parents are ignored
+
 	int count;               /* number of rows in underlying data set */
 	void *menu_data;         /* the data used to access rows. */
 
