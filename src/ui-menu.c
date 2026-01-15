@@ -69,8 +69,6 @@ static int nth_parent(struct menu *m, int which, int n)
 {
 	int i, curr = which;
 
-	return -1;
-
 	if (!m->data_parents) {
 		return which;
 	}
@@ -86,8 +84,6 @@ static int parent_depth(struct menu *m, int oid)
 {
 	int depth = 0, curr;
 
-	return 0;
-
 	if (!m->data_parents) {
 		return 0;
 	}
@@ -101,8 +97,6 @@ static int parent_depth(struct menu *m, int oid)
 
 static bool has_children(struct menu *m, int oid) {
 	int i;
-
-	return false;
 
 	if (!m->data_parents) {
 		return false;
@@ -192,8 +186,6 @@ static bool menu_filter_sort(struct menu *m, int *filter_list, size_t filter_siz
 static bool parent_collapsed(struct menu *m, int which)
 {
 	int i;
-
-	return false;
 
 	if (!m->data_parents || !m->collapsed) {
 		return false;
@@ -1342,6 +1334,9 @@ void menu_init(struct menu *menu, skin_id id, const menu_iter *iter)
 
 	// L: by default don't remake filter
 	menu->autorefilter = false;
+	menu->filter_list = NULL;
+	menu->data_parents = NULL;
+	menu->collapsed = NULL;
 }
 
 struct menu *menu_new(skin_id id, const menu_iter *iter)
@@ -1361,6 +1356,14 @@ struct menu *menu_new_action(menu_action *acts, size_t n)
 void menu_free(struct menu *m)
 {
 	free_menu_filter(m);
+
+	if (m->data_parents) {
+		mem_free(m->data_parents);
+	}
+	if (m->collapsed) {
+		mem_free(m->collapsed);
+	}
+
 	mem_free(m);
 }
 
