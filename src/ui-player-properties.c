@@ -1267,12 +1267,18 @@ static void evolution_choice_display(struct menu *menu, int oid, bool cursor,
 {
 	struct evolution_choice_menu_data *data = menu_priv(menu);
 	char desc[128] = "";
-	int i;
 	const struct monster_race *curr = data->choices[oid];
-	uint8_t colour = cursor ? COLOUR_WHITE : COLOUR_L_BLUE;
-	if (data->choice == oid) {
-		colour = cursor ? COLOUR_L_GREEN : COLOUR_GREEN;
+	uint8_t colour;
+	int parent;
+	bool is_parent = false;
+
+	for (parent = menu->oid_selected; !is_parent && !cursor && parent >= 0; parent = menu->data_parents[parent]) {
+		if (parent == oid) {
+			is_parent = true;
+		}
 	}
+
+	colour = cursor || is_parent ? COLOUR_WHITE : COLOUR_L_BLUE;
 
 	if (oid == 0) {
 		Term_gotoxy(col, row);
@@ -1281,19 +1287,17 @@ static void evolution_choice_display(struct menu *menu, int oid, bool cursor,
 	}
 
 	assert(curr);
-
 	assert(oid >= 0 && oid < menu->count);
-
-	for (i = 0; i < data->depths[oid]; ++i) {
-		my_strcat(desc, " ", sizeof desc);
-	}
 
 	my_strcat(desc, curr->name, sizeof desc);
 
 	my_strcap_full(desc);
 
 	Term_gotoxy(col, row);
-	text_out_c(colour, " %s", desc);
+	text_out_c(colour, "%s", desc);
+
+	Term_gotoxy(col + width - 6, row);
+	text_out_c(colour, "L %i", curr->level);
 }
 
 static bool evolution_choice_handler(struct menu *m, const ui_event *e, int oid)
@@ -1336,32 +1340,36 @@ static int count_evolutions(const struct evolution *evol)
 	return num;
 }
 
-static int fill_evolutions(const struct evolution *evol, struct evolution_choice_menu_data *data, int depth, int current_index)
+static int fill_evolutions(struct menu *m, const struct evolution *evol, struct evolution_choice_menu_data *data, int depth, int current_index, int parent)
 {
 	const struct evolution *curr;
+	int currlen;
 
 	for (curr = evol; curr; curr = curr->next) {
 		assert(current_index < data->n_choices);
 		data->choices[current_index] = curr->race;
 		data->depths[current_index] = depth;
+		m->data_parents[current_index] = parent;
 
-		current_index = fill_evolutions(curr->race->evol, data, depth + 1, current_index + 1);
+		currlen = strlen(curr->race->name);
+
+		current_index = fill_evolutions(m, curr->race->evol, data, depth + 1, current_index + 1, current_index);
 	}
 
 	return current_index;
 }
 
-static struct evolution_choice_menu_data *evolution_choice_data_get(const struct evolution *curr, bool birth)
+static bool evolution_choice_data_get(struct menu *m, const struct evolution *curr, bool birth)
 {
 	struct evolution_choice_menu_data *data;
-	int choices;
+	int choices, i;
 
 	choices = count_evolutions(curr);
 
-	if (choices <= 0) return NULL;
+	if (choices <= 0) return false;
 
 	data = mem_zalloc(sizeof *data);
-	data->n_choices = choices+ 1;
+	data->n_choices = choices + 1;
 	data->choice = -1;
 
 	data->choices = mem_zalloc(sizeof *data->choices * (unsigned)data->n_choices);
@@ -1369,28 +1377,40 @@ static struct evolution_choice_menu_data *evolution_choice_data_get(const struct
 
 	data->birth = birth;
 
-	fill_evolutions(curr, data, 0, 1);
+	m->data_parents = mem_zalloc(sizeof *m->data_parents * (unsigned)data->n_choices);
+	m->data_parents[0] = -1;
 
-	return data;
+	fill_evolutions(m, curr, data, 0, 1, -1);
+
+	m->collapsed = mem_zalloc(sizeof *m->collapsed * data->n_choices);
+	for (i = 0; i < data->n_choices; ++i) {
+		m->collapsed[i] = true;
+	}
+
+	menu_setpriv(m, data->n_choices, data);
+
+	return true;
 }
 
 static struct menu *evolution_choice_menu_new(const struct evolution *curr, bool birth)
 {
 	struct menu *m;
-	struct evolution_choice_menu_data *data;
 	region loc = { 25, 1, 50, 30 };
 
 	m = menu_new(MN_SKIN_SCROLL, &evolution_choice_menu_iter);
-	data = evolution_choice_data_get(curr, birth);
 
-	loc.page_rows = MAX(data->n_choices + 3, 25);
+	if (!evolution_choice_data_get(m, curr, birth)) {
+		menu_free(m);
+		return NULL;
+	}
+
+	loc.page_rows = MAX(m->count + 3, 25);
 
 	m->title = "Evolve into which monster?";
 	m->header = "  Name";
 	m->browse_hook = evolution_choice_browse;
 	m->selections = all_letters_nohjkl;
 
-	menu_setpriv(m, data->n_choices, data);
 	menu_layout(m, &loc);
 
 	return m;
@@ -1411,13 +1431,13 @@ bool evolution_choice_menu_select(const struct evolution *evol, struct player *p
 {
 	struct menu *m;
 	struct evolution_choice_menu_data *data;
-	int depth, i, n_added = 0;
+	int which;
 
 	if (!evol) return false;
 
 	m = evolution_choice_menu_new(evol, birth);
 
-	assert(m);
+	if (!m) return false;
 
 	menu_select(m, 0, true);
 
@@ -1434,15 +1454,10 @@ bool evolution_choice_menu_select(const struct evolution *evol, struct player *p
 		return true;
 	}
 
-	n_added = data->depths[data->choice];
+	assert(m->data_parents);
 
-	for (depth = 0; depth <= n_added; depth++) {
-		for (i = data->choice; i >= 0; i--) {
-			if (data->depths[i] == depth) {
-				add_evolution(p, data->choices[i]);
-				break;
-			}
-		}
+	for (which = data->choice; which >= 0; which = m->data_parents[which]) {
+		add_evolution(p, data->choices[which]);
 	}
 
 	evolution_choice_menu_free(m);
