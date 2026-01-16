@@ -463,7 +463,7 @@ static void race_help(int i, void *db, const region *l)
 
 	text_out_e("\n");
 	skill_help(race_skills, race_x_skills,  r->r_exp, r->infra);
-	text_out_e("\n");
+	//text_out_e("\n");
 
 	for (ability = player_abilities; ability; ability = ability->next) {
 		if (n_flags >= flag_space) break;

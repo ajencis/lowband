@@ -1343,15 +1343,12 @@ static int count_evolutions(const struct evolution *evol)
 static int fill_evolutions(struct menu *m, const struct evolution *evol, struct evolution_choice_menu_data *data, int depth, int current_index, int parent)
 {
 	const struct evolution *curr;
-	int currlen;
 
 	for (curr = evol; curr; curr = curr->next) {
 		assert(current_index < data->n_choices);
 		data->choices[current_index] = curr->race;
 		data->depths[current_index] = depth;
 		m->data_parents[current_index] = parent;
-
-		currlen = strlen(curr->race->name);
 
 		current_index = fill_evolutions(m, curr->race->evol, data, depth + 1, current_index + 1, current_index);
 	}
