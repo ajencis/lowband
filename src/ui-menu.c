@@ -124,6 +124,14 @@ static int menu_filter_cmp(const void *s1, const void *s2)
 
 	if (!curr_menu) return 0;
 
+	if (!curr_menu->data_parents) {
+		if (!curr_menu->row_funcs->compare) {
+			return 0;
+		}
+
+		return curr_menu->row_funcs->compare(i1, i2);
+	}
+
 	i1_depth = parent_depth(curr_menu, i1);
 	i2_depth = parent_depth(curr_menu, i2);
 
@@ -154,7 +162,7 @@ static int menu_filter_cmp(const void *s1, const void *s2)
 	if (curr_menu->row_funcs->compare) {
 		return curr_menu->row_funcs->compare(i1_parent, i2_parent);
 	}
-
+	
 	return 0;
 }
 
