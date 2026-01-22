@@ -214,9 +214,8 @@ struct angband_constants
 	/* See comment for o_m_max_added above. */
 	struct my_rational o_r_max_added;
 
-
 	// L: maxima for learning
-	int learn_max;
+	int abil_id_max;
 };
 
 struct init_module {

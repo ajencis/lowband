@@ -843,10 +843,10 @@ int rd_player(void)
 	}
 
 	rd_u16b(&tmp16u);
-	if (tmp16u != z_info->learn_max) return -1;
+	if (tmp16u != z_info->abil_id_max) return -1;
 
 	// L: extra powers and extra skills
-	for (i = 0; i < z_info->learn_max; i++) {
+	for (i = 0; i < z_info->abil_id_max; i++) {
 		rd_s16b(&player->extra_learned[i]);
 		rd_u16b(&player->extra_target[i]);
 		rd_s16b(&player->extra_choice[i]);
@@ -957,12 +957,7 @@ int rd_player(void)
 		player->unlocked_races[i] = tmp8u;
 	}
 
-	/*rd_u16b(&tmp16u);
-	if (tmp16u != TOME_MAX) {
-		note(format("Wrong number (%i) of skills and powers!", tmp16u));
-		return -1;
-	}*/
-	for (i = 0; i < z_info->learn_max; ++i) {
+	for (i = 0; i < z_info->abil_id_max; ++i) {
 		rd_u16b(&tmp16u);
 		player->unlocked_tomes[i] = tmp16u;
 	}

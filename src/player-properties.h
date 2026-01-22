@@ -45,6 +45,14 @@ enum player_ability_types {
     PY_ABIL_MAX
 };
 
+enum ability_subproperty_types {
+    SUBPROP_TYP_NONE = 0,
+    #define SUB_TYP(x) SUBPROP_TYP_##x,
+    #include "list-subproperty-types.h"
+    #undef SUB_TYP
+    SUBPROP_TYPE_MAX
+};
+
 struct player_ability *lookup_player_ability(int idx, int type);
 bool class_has_ability(const struct player_class *class,
 					   struct player_ability *ability);
@@ -56,6 +64,11 @@ bool mon_power_minimum(const struct monster *mon, int power, int min);
 bool mon_has_power(const struct monster *mon, int power);
 struct player_ability *attack_spec_type(const struct object *obj, const struct monster_blow *blow);
 int attack_specialization_power(const struct monster *mon, const struct object *obj, const struct monster_blow *blow);
+
+bool abil_subid_valid(int subid, int type);
+int ability_subprop_max(int type);
+char *ability_subprop_name(const struct player_ability *abil, int type);
+bool abil_subprop_currently_relevant(const struct monster *mon, const struct player_ability *abil);
 
 const char *ability_subchoice_title(const struct player_ability *parent);
 int ability_subchoice_choices(struct player_ability *parent);

@@ -823,16 +823,16 @@ static void init_player(void) {
 
 	player->unlocked_classes = mem_zalloc(z_info->c_max * sizeof(*player->unlocked_classes));
 	player->unlocked_races = mem_zalloc(z_info->pr_max * sizeof(*player->unlocked_races));
-	player->unlocked_tomes = mem_zalloc(z_info->learn_max * sizeof(*player->unlocked_tomes));
+	player->unlocked_tomes = mem_zalloc(z_info->abil_id_max * sizeof(*player->unlocked_tomes));
 
-	player->extra_target = mem_zalloc(z_info->learn_max * sizeof *player->extra_target);
-	player->extra_choice = mem_zalloc(z_info->learn_max * sizeof *player->extra_choice);
-	player->extra_learned = mem_zalloc(z_info->learn_max * sizeof *player->extra_learned);
-	player->learned_when = mem_zalloc(z_info->learn_max * sizeof *player->learned_when);
+	player->extra_target = mem_zalloc(z_info->abil_id_max * sizeof *player->extra_target);
+	player->extra_choice = mem_zalloc(z_info->abil_id_max * sizeof *player->extra_choice);
+	player->extra_learned = mem_zalloc(z_info->abil_id_max * sizeof *player->extra_learned);
+	player->learned_when = mem_zalloc(z_info->abil_id_max * sizeof *player->learned_when);
 
 	assert(player->extra_learned);
 
-	for (i = 0; i < z_info->learn_max; ++i) {
+	for (i = 0; i < z_info->abil_id_max; ++i) {
 		player->extra_choice[i] = -1;
 	}
 	

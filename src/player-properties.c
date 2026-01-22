@@ -27,6 +27,7 @@
 #include "mon-util.h"
 #include "monster.h"
 #include "obj-properties.h"
+#include "obj-tval.h"
 #include "object.h"
 #include "player-calcs.h"
 #include "player-properties.h"
@@ -322,6 +323,118 @@ void do_cmd_abilities(void)
 
 
 
+int ability_subprop_max(int type)
+{
+	if (type == SUBPROP_TYP_WEAP_KIND) {
+		return z_info->k_max;
+	}
+
+	return 1;
+}
+
+bool abil_subid_valid(int subid, int type)
+{
+	if (type == SUBPROP_TYP_WEAP_KIND) {
+		if (subid > z_info->k_max || subid < 0) {
+			return false;
+		}
+		if (!tval_is_weapon_k(&k_info[subid])) {
+			return false;
+		}
+		if (tval_is_ammo_k(&k_info[subid])) {
+			return false;
+		}
+		return true;
+	}
+
+	return false;
+}
+
+static void kind_name_normalize(const struct object_kind *kind, char *buf, size_t bufsize)
+{
+	size_t ni, bi;
+
+	for (ni = 0, bi = 0; bi < bufsize; ++ni) {
+		if (kind->name[ni] == '\0') {
+			buf[bi] = '\0';
+			break;
+		}
+
+		if (kind->name[ni] == ' ') {
+			if (bi <= 0 || buf[bi - 1] == ' ') {
+				continue;
+			}
+		}
+
+		else if (kind->name[ni] == '~' || kind->name[ni] == '#' || kind->name[ni] == '&') {
+			continue;
+		}
+
+		buf[bi] = kind->name[ni];
+		bi++;
+	}
+}
+
+char *ability_subprop_name(const struct player_ability *abil, int subprop_type)
+{
+	char result[80], temp[80], subname[80];
+
+	if (subprop_type == SUBPROP_TYP_WEAP_KIND) {
+		kind_name_normalize(&k_info[abil->sub_id], subname, sizeof subname);
+
+		strnfmt(temp, sizeof temp, "%s", abil->name);
+		strnfmt(result, sizeof result, temp, subname);
+
+		return string_make(result);
+
+		/*count = -1;
+
+		for (i = 0; i < z_info->k_max; ++i) {
+			if (tval_is_weapon_k(&k_info[i]) && !tval_is_ammo_k(&k_info[i])) {
+				count++;
+
+				if (count == abil->sub_id) {
+					kind_name_normalize(&k_info[i], subname, sizeof subname);
+
+					dbg_log_fmt("subprop", "subprop %i is named %s / %s", count, k_info[i].name, subname);
+
+					strnfmt(temp, sizeof temp, "%s", abil->name);
+					strnfmt(result, sizeof result, temp, subname);
+					return string_make(result);
+				}
+			}
+		}
+
+		return "error";*/
+	}
+
+	return NULL;
+}
+
+bool abil_subprop_currently_relevant(const struct monster *mon, const struct player_ability *abil)
+{
+	if (abil->type == PY_ABIL_POWER && abil->index == PP_ONE_WEAP_SPEC) {
+		int i;
+
+		if (!mon->body.slots) {
+			return false;
+		}
+
+		for (i = 0; i < mon->body.count; ++i) {
+			if (mon->body.slots[i].obj && mon->body.slots[i].obj->kind->kidx == (uint16_t)abil->sub_id) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	return true;
+}
+
+
+
+
 
 bool mon_power_minimum(const struct monster *mon, int power, int min)
 {
@@ -379,11 +492,11 @@ static bool ability_needs_subchoice(struct player_ability *abil, struct player *
 {
 	int curr = 0;
 
-	if (abil->learn_index < 0) return false;
-	if (p->extra_choice[abil->learn_index] >= 0) return false;
-	curr = p->extra_learned[abil->learn_index];
+	if (abil->id < 0) return false;
+	if (p->extra_choice[abil->id] >= 0) return false;
+	curr = p->extra_learned[abil->id];
 
-	if (curr <= 0 && p->extra_target[abil->learn_index] <= 0) return false;
+	if (curr <= 0 && p->extra_target[abil->id] <= 0) return false;
 	if (ability_subchoice_choices(abil) <= 0) return false;
 
 	return true;
@@ -497,10 +610,10 @@ static int py_extra_target(const struct player *p, const struct player_ability *
 {
 	int base, xtra = 0;
 
-	if (abil->learn_index < 0) return 0;
-	assert(abil->learn_index < z_info->learn_max);
+	if (abil->id < 0) return 0;
+	assert(abil->id < z_info->abil_id_max);
 
-	base = p->extra_target[abil->learn_index];
+	base = p->extra_target[abil->id];
 
 	if (abil->type == PY_ABIL_POWER && p->class) {
 		xtra = p->class->c_powers[abil->index];
@@ -530,11 +643,11 @@ bool increase_ability(struct monster *mon, const struct player_ability *abil, bo
 	}
 
 	if (!p) return false;
-	if (abil->learn_index < 0) return false;
-	if (p->extra_learned[abil->learn_index] >= py_extra_target(p, abil)) return false;
-	assert(abil->learn_index < z_info->learn_max);
+	if (abil->id < 0) return false;
+	if (p->extra_learned[abil->id] >= py_extra_target(p, abil)) return false;
+	assert(abil->id < z_info->abil_id_max);
 
-	p->extra_learned[abil->learn_index]++;
+	p->extra_learned[abil->id]++;
 
 	if (verbose && mon_is_player(mon)) {
 		//strnfmt(name, sizeof name, "%s", abil->name);
@@ -549,7 +662,7 @@ bool increase_ability(struct monster *mon, const struct player_ability *abil, bo
 
 bool exercise_ability(struct monster *mon, const struct player_ability *abil, int efficacy)
 {
-	int learn_i = abil->learn_index, target, curr, total, chance, bonus;
+	int learn_i = abil->id, target, curr, total, chance, bonus;
 	bool monster = abil->index == SKILL_MONSTER && abil->type == PY_ABIL_SKILL && !mon->player;
 
 	if (!abil || !mon) return false;
@@ -568,7 +681,7 @@ bool exercise_ability(struct monster *mon, const struct player_ability *abil, in
 		curr = mon->mon_lev;
 	} else {
 		target = py_extra_target(mon->player, abil);
-		curr = mon->player->extra_learned[abil->learn_index];
+		curr = mon->player->extra_learned[abil->id];
 	}
 
 	if (abil->type == PY_ABIL_POWER) {

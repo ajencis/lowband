@@ -246,10 +246,10 @@ static void save_roller_data(birther *tosave)
 	my_strcpy(tosave->name, player->full_name, sizeof(tosave->name));
 
 	if (!tosave->extra_targets) {
-		tosave->extra_targets = mem_zalloc(sizeof *tosave->extra_targets * z_info->learn_max);
+		tosave->extra_targets = mem_zalloc(sizeof *tosave->extra_targets * z_info->abil_id_max);
 	}
 
-	memcpy(tosave->extra_targets, player->extra_target, z_info->learn_max * sizeof *tosave->extra_targets);
+	memcpy(tosave->extra_targets, player->extra_target, z_info->abil_id_max * sizeof *tosave->extra_targets);
 }
 
 
@@ -301,7 +301,7 @@ static void load_roller_data(birther *saved, birther *prev_player)
 	my_strcpy(player->full_name, saved->name, sizeof(player->full_name));
 
 	if (saved->extra_targets && OPT(player, birth_level_one_learn)) {
-		memcpy(player->extra_target, saved->extra_targets, z_info->learn_max * sizeof *player->extra_target);
+		memcpy(player->extra_target, saved->extra_targets, z_info->abil_id_max * sizeof *player->extra_target);
 	}
 
 	/* Save the current data if the caller is interested in it. */
@@ -695,7 +695,7 @@ void player_init(struct player *p)
 
 	size_t csize = sizeof (*p->unlocked_classes) * z_info->c_max;
 	size_t rsize = sizeof (*p->unlocked_races) * z_info->pr_max;
-	size_t tsize = sizeof (*p->unlocked_tomes) * z_info->learn_max;
+	size_t tsize = sizeof (*p->unlocked_tomes) * z_info->abil_id_max;
 
 	bool *unlocked_classes_save = mem_zalloc(csize);
 	bool *unlocked_races_save = mem_zalloc(rsize);
@@ -749,13 +749,13 @@ void player_init(struct player *p)
 	p->obj_k->curses = mem_zalloc(z_info->curse_max *
 								  sizeof(struct curse_data));
 
-	p->extra_target = mem_zalloc(z_info->learn_max * sizeof *player->extra_target);
-	p->extra_choice = mem_zalloc(z_info->learn_max * sizeof *player->extra_choice);
-	p->extra_learned = mem_zalloc(z_info->learn_max * sizeof *player->extra_learned);
-	p->learned_when = mem_zalloc(z_info->learn_max * sizeof *player->learned_when);
+	p->extra_target = mem_zalloc(z_info->abil_id_max * sizeof *player->extra_target);
+	p->extra_choice = mem_zalloc(z_info->abil_id_max * sizeof *player->extra_choice);
+	p->extra_learned = mem_zalloc(z_info->abil_id_max * sizeof *player->extra_learned);
+	p->learned_when = mem_zalloc(z_info->abil_id_max * sizeof *player->learned_when);
 
 	// L: initialize extra_choice
-	for (i = 0; i < z_info->learn_max; ++i) {
+	for (i = 0; i < z_info->abil_id_max; ++i) {
 		p->extra_choice[i] = -1;
 	}
 
@@ -1251,7 +1251,7 @@ void player_generate(struct player *p, const struct player_race *r,
 	p->realm = c->realm;
 	if (c->realm) {
 		struct player_ability *magic = lookup_player_ability(SKILL_MAGIC, PY_ABIL_SKILL);
-		p->extra_choice[magic->learn_index] = c->realm->index;
+		p->extra_choice[magic->id] = c->realm->index;
 	}
 
 	/* Roll for age/height/weight */

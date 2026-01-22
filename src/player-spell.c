@@ -1101,7 +1101,7 @@ struct magic_realm *realm_by_index(int index)
 const struct magic_realm *get_player_realm(const struct player *p)
 {
 	struct player_ability *abil = lookup_player_ability(SKILL_MAGIC, PY_ABIL_SKILL);
-	int which = p->extra_choice[abil->learn_index];
+	int which = p->extra_choice[abil->id];
 
 	return realm_by_index(which);
 

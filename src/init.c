@@ -231,6 +231,15 @@ static const char *list_feat_names[] =
 	NULL
 };
 
+static const char *list_subprop_type_names[] =
+{
+	"NONE",
+	#define SUB_TYP(x) #x,
+	#include "list-subproperty-types.h"
+	#undef SUB_TYP
+	NULL
+};
+
 static int school_idx_by_name(const char *name)
 {
 	int i;
@@ -1200,13 +1209,16 @@ struct player_bound_ui {
 	bool isaux;
 	bool isspecial;
 };
+
 struct embryo_player_ability {
 	struct player_ability ability;
 	struct player_bound_ui *boundui;
 	struct embryo_player_ability *next;
 	int parent_type[MAX_ABIL_PARENTS];
 	int parent[MAX_ABIL_PARENTS];
+	int subprop_type;
 };
+
 static struct embryo_player_ability  *embryo_player_abilities = NULL;
 
 static int abil_type_by_name(const char *name)
@@ -1250,6 +1262,8 @@ static enum parser_error parse_player_prop_type(struct parser *p) {
 
 	embryo->ability.scale_num = 2;
 	embryo->ability.scale_den = 3;
+
+	embryo->subprop_type = SUBPROP_TYP_NONE;
 
 	if (embryo->ability.type < 0) {
 		return PARSE_ERROR_GENERIC;
@@ -1444,6 +1458,25 @@ static enum parser_error parse_player_prop_parent(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_player_prop_subprop(struct parser *p)
+{
+	struct embryo_player_ability *embryo = parser_priv(p);
+	const char *subprop_name = parser_getsym(p, "id");
+	int sub_typ_id = code_index_in_array(list_subprop_type_names, subprop_name);
+	
+	if (!embryo) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	if (sub_typ_id < 0) {
+		return PARSE_ERROR_GENERIC;
+	}
+
+	embryo->subprop_type = sub_typ_id;
+
+	return PARSE_ERROR_NONE;
+}
+
 static enum parser_error parse_player_prop_prereq(struct parser *p)
 {
 	struct embryo_player_ability *embryo = parser_priv(p);
@@ -1556,6 +1589,7 @@ static struct parser *init_parse_player_prop(void) {
 	parser_reg(p, "rarity int rarity", parse_player_prop_rarity);
 	parser_reg(p, "scale int numerator int denominator", parse_player_prop_scale);
 	parser_reg(p, "parent sym parent-type sym parent-code", parse_player_prop_parent);
+	parser_reg(p, "subprop sym id", parse_player_prop_subprop);
 	parser_reg(p, "prereq sym id", parse_player_prop_prereq);
 	parser_reg(p, "verb-second str verb", parse_player_prop_verb_second);
 	parser_reg(p, "verb-third str verb", parse_player_prop_verb_third);
@@ -1653,20 +1687,19 @@ static errr finish_parse_player_prop(struct parser *p) {
 	struct embryo_player_ability *embryo = embryo_player_abilities, *next;
 	struct player_bound_ui *boundui_cursor;
 	struct player_ability *new, *previous = NULL;
-	int err = 0;
+	int err = 0, i;
 
-	//embryo_player_abilities = NULL;
 	/* Copy abilities over, making multiple copies for element types */
 	player_abilities = mem_zalloc(sizeof(*player_abilities));
 	new = player_abilities;
 	while (embryo) {
 		if (embryo->ability.type == PY_ABIL_ELEMENT) {
-			uint16_t i, n;
+			uint16_t ui, n;
 			assert(N_ELEMENTS(list_element_names) < 65536);
 			n = (uint16_t) N_ELEMENTS(list_element_names);
-			for (i = 0; i < n - 1; i++) {
-				char *name = string_make(projections[i].name);
-				new->index = i;
+			for (ui = 0; ui < n - 1; ui++) {
+				char *name = string_make(projections[ui].name);
+				new->index = ui;
 				new->type = embryo->ability.type;
 				new->desc = string_make(format("%s %s.", embryo->ability.desc, name));
 				my_strcap(name);
@@ -1675,18 +1708,17 @@ static errr finish_parse_player_prop(struct parser *p) {
 				new->value = embryo->ability.value;
 				boundui_cursor = embryo->boundui;
 				while (boundui_cursor) {
-					name = string_make(format("%s<%s>", boundui_cursor->name, list_element_names[i]));
+					name = string_make(format("%s<%s>", boundui_cursor->name, list_element_names[ui]));
 					(void) bind_player_ability_to_ui_entry_by_name(name, new, boundui_cursor->value, !boundui_cursor->isspecial, boundui_cursor->isaux);
 					string_free(name);
 					boundui_cursor = boundui_cursor->next;
 				}
-				if ((i != n - 2) || embryo->next) {
+				if ((ui != n - 2) || embryo->next) {
 					previous = new;
 					new = mem_zalloc(sizeof(*new));
 					previous->next = new;
 				}
 			}
-			//string_free(embryo->ability.type);
 			string_free(embryo->ability.desc);
 			string_free(embryo->ability.name);
 			while (embryo->boundui) {
@@ -1695,15 +1727,15 @@ static errr finish_parse_player_prop(struct parser *p) {
 				string_free(boundui_cursor->name);
 				mem_free(boundui_cursor);
 			}
-		} else {
+		} else if (embryo->subprop_type == SUBPROP_TYP_NONE) {
 			memcpy(new, &embryo->ability, sizeof *new);
+
+			new->sub_id = 0;
 
 			if (!new->desc && (!new->second_verb || !new->third_verb)) {
 				plog_fmt("Error: property %s does not have an acceptable description!", new->name);
 				err = -1;
 			}
-
-			memcpy(new->prereqs, embryo->ability.prereqs, sizeof *new->prereqs * ABIL_PRED_MAX);
 
 			while (embryo->boundui) {
 				boundui_cursor = embryo->boundui;
@@ -1712,40 +1744,108 @@ static errr finish_parse_player_prop(struct parser *p) {
 				string_free(boundui_cursor->name);
 				mem_free(boundui_cursor);
 			}
+
 			if (embryo->next) {
 				previous = new;
 				new = mem_zalloc(sizeof(*new));
 				previous->next = new;
 			}
+		} else {
+			int num_subprops = ability_subprop_max(embryo->subprop_type);
+
+			for (i = 0; i < num_subprops; ++i) {
+				if (!abil_subid_valid(i, embryo->subprop_type)) {
+					continue;
+				}
+
+				memcpy(new, &embryo->ability, sizeof *new);
+				new->sub_id = i;
+
+				if (embryo->ability.comment) {
+					new->comment = string_make(embryo->ability.comment);
+				}
+				if (embryo->ability.name) {
+					new->name = ability_subprop_name(new, embryo->subprop_type);
+				}
+				if (embryo->ability.desc) {
+					new->desc = string_make(embryo->ability.desc);
+				}
+				if (embryo->ability.second_verb) {
+					new->second_verb = string_make(embryo->ability.second_verb);
+				}
+				if (embryo->ability.third_verb) {
+					new->third_verb = string_make(embryo->ability.third_verb);
+				}
+				if (embryo->ability.pos_adjective) {
+					new->pos_adjective = string_make(embryo->ability.pos_adjective);
+				}
+				if (embryo->ability.neg_adjective) {
+					new->neg_adjective = string_make(embryo->ability.neg_adjective);
+				}
+
+				if (!new->desc && (!new->second_verb || !new->third_verb)) {
+					plog_fmt("Error: property %s does not have an acceptable description!", new->name);
+					err = -1;
+				}
+
+				while (embryo->boundui) {
+					boundui_cursor = embryo->boundui;
+					embryo->boundui = embryo->boundui->next;
+					(void) bind_player_ability_to_ui_entry_by_name(boundui_cursor->name, new, boundui_cursor->value, !boundui_cursor->isspecial, boundui_cursor->isaux);
+					string_free(boundui_cursor->name);
+					mem_free(boundui_cursor);
+				}
+
+				previous = new;
+				new = mem_zalloc(sizeof(*new));
+				previous->next = new;
+			}
+
+			if (!embryo->next) {
+				mem_free(new);
+			}
+
+			string_free(embryo->ability.comment);
+			string_free(embryo->ability.name);
+			string_free(embryo->ability.desc);
+			string_free(embryo->ability.second_verb);
+			string_free(embryo->ability.third_verb);
+			string_free(embryo->ability.pos_adjective);
+			string_free(embryo->ability.neg_adjective);
 		}
 
-		//target = embryo;
 		embryo = embryo->next;
-		//mem_free(target);
 	}
 
 	// L: find parents
 	for (embryo = embryo_player_abilities, next = embryo->next; embryo; embryo = next, next = embryo ? embryo->next : NULL) {
-		int i;
 		struct player_ability *prop_base, *prop_parent;
+		struct player_ability **parents = mem_zalloc(sizeof prop_base->parent);
 
-		prop_base = player_prop_lookup(embryo->ability.type, embryo->ability.index);
+		//prop_base = player_prop_lookup(embryo->ability.type, embryo->ability.index);
 
 		for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
 			int parent_type = embryo->parent_type[i];
 			int parent = embryo->parent[i];
-			prop_base = player_prop_lookup(embryo->ability.type, embryo->ability.index);
+			//prop_base = player_prop_lookup(embryo->ability.type, embryo->ability.index);
 
 			if (parent_type < 0) continue;
 
 			//prop_base = player_prop_by_name(name);
 			prop_parent = player_prop_lookup(parent_type, parent);
 
-			assert(prop_base && prop_parent);
+			assert(prop_parent);
 
-			prop_base->parent[i] = prop_parent;
+			parents[i] = prop_parent;
 		}
 
+		for (prop_base = player_abilities; prop_base; prop_base = prop_base->next) {
+			if (prop_base->type == embryo->ability.type && prop_base->index == embryo->ability.index) {
+				memcpy(prop_base->parent, parents, sizeof prop_base->parent);
+			}
+		}
+
+		mem_free(parents);
 		mem_free(embryo);
 	}
 
@@ -1754,14 +1854,9 @@ static errr finish_parse_player_prop(struct parser *p) {
 	embryo_player_abilities = NULL;
 
 	assert(z_info);
-	z_info->learn_max = 0;
+	z_info->abil_id_max = 0;
 	for (new = player_abilities; new; new = new->next) {
-		if (new->cost) {
-			new->learn_index = z_info->learn_max++;
-		}
-		else {
-			new->learn_index = -1;
-		}
+		new->id = z_info->abil_id_max++;
 	}
 
 	parser_destroy(p);
@@ -5430,7 +5525,6 @@ static struct {
 	{ "projections", &projection_parser },
 	{ "ui renderers", &ui_entry_renderer_parser },
 	{ "ui entries", &ui_entry_parser },
-	{ "player properties", &player_property_parser },
 	{ "features", &feat_parser },
 	{ "object bases", &object_base_parser },
 	{ "slays", &slay_parser },
@@ -5440,6 +5534,7 @@ static struct {
 	{ "curses", &curse_parser },
 	{ "player shapes", &shape_parser },
 	{ "objects", &object_parser }, // L: must be after player shapes
+	{ "player properties", &player_property_parser },
 	{ "player spells", &spell_parser }, // L: must be after objects
 	{ "magic realms", &realm_parser },
 	{ "player classes", &class_parser }, // L: must be after spells and realms

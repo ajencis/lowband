@@ -1,0 +1,1 @@
+SUB_TYP(WEAP_KIND)

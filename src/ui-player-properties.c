@@ -383,7 +383,7 @@ static const struct player_ability *ability_by_tome_id(int tome_id)
 	const struct player_ability *pa;
 
 	for (pa = player_abilities; pa; pa = pa->next) {
-		if (pa->learn_index == tome_id) {
+		if (pa->id == tome_id) {
 			return pa;
 		}
 	}
@@ -463,7 +463,7 @@ static void ability_learn_valid_refresh(struct menu *menu)
 	struct ability_learn_menu_data *data = menu_priv(menu);
 	const struct player_ability *abil;
 
-	for (oid = 0; oid < z_info->learn_max; ++oid) {
+	for (oid = 0; oid < z_info->abil_id_max; ++oid) {
 		data->valid[oid] = MN_ROW_SKIP;
 		abil = ability_by_tome_id(oid);
 
@@ -484,12 +484,15 @@ static void ability_learn_valid_refresh(struct menu *menu)
 		else if (data->birth) {
 			data->valid[oid] = MN_ROW_VALID;
 		}
+		else if (!abil_subprop_currently_relevant(&data->p->mon, abil)) {
+			data->valid[oid] = MN_ROW_SKIP;
+		}
 		else if (data->max_learnable[oid] > 0) {
 			data->valid[oid] = MN_ROW_VALID;
 		}
 
 		if (data->valid[oid] == MN_ROW_SKIP &&
-				(data->p->extra_learned[abil->learn_index] > 0 || data->p->mon.state.powers[abil->index] > 0)) {
+				(data->p->extra_learned[abil->id] > 0 || data->p->mon.state.powers[abil->index] > 0)) {
 			data->valid[oid] = MN_ROW_INVALID;
 		}
 	}
@@ -497,15 +500,15 @@ static void ability_learn_valid_refresh(struct menu *menu)
 	while (changed) {
 		changed = false;
 
-		for (oid = 0; oid < z_info->learn_max; ++oid) {
+		for (oid = 0; oid < z_info->abil_id_max; ++oid) {
 			abil = ability_by_tome_id(oid);
 
 			if (data->valid[oid] != MN_ROW_SKIP) {
 				int i;
 				for (i = 0; i < MAX_ABIL_PARENTS; ++i) {
 					const struct player_ability *parent = abil->parent[i];
-					if (parent && data->valid[parent->learn_index] == MN_ROW_SKIP) {
-						data->valid[parent->learn_index] = MN_ROW_INVALID;
+					if (parent && data->valid[parent->id] == MN_ROW_SKIP) {
+						data->valid[parent->id] = MN_ROW_INVALID;
 						changed = true;
 					}
 				}
@@ -542,17 +545,18 @@ static int ability_learn_valid_mode(struct menu *menu, int oid, int mode)
 	struct ability_learn_menu_data *data = menu_priv(menu);
 
 	return data->valid[oid];
-	const struct player_ability *abil = ability_by_tome_id(oid);
+	
+	/*const struct player_ability *abil = ability_by_tome_id(oid);
 	assert(abil);
 
-	if (oid < 0 || oid >= z_info->learn_max) return MN_ROW_SKIP;
+	if (oid < 0 || oid >= z_info->abil_id_max) return MN_ROW_SKIP;
 
 	if (!ability_satisfies_all_prereqs(abil, data->p)) {
 		return MN_ROW_SKIP;
 	}
 
 	if (abil->type == PY_ABIL_POWER) {
-		if (data->p->extra_learned[abil->learn_index] <= 0 &&
+		if (data->p->extra_learned[abil->id] <= 0 &&
 				data->p->mon.state.powers[abil->index] <= 0) {
 			// if it's the full menu show all powers
 			// if it's the partial menu only show learned powers
@@ -561,6 +565,9 @@ static int ability_learn_valid_mode(struct menu *menu, int oid, int mode)
 			}
 			return MN_ROW_SKIP;
 		}
+
+		if (!abil_subprop_currently_relevant(const struct monster *mon, const struct player_ability *abil))
+
 		return MN_ROW_VALID;
 	}
 	else {
@@ -568,7 +575,7 @@ static int ability_learn_valid_mode(struct menu *menu, int oid, int mode)
 		return MN_ROW_VALID;
 	}
 
-	return MN_ROW_SKIP;
+	return MN_ROW_SKIP;*/
 }
 
 static int ability_learn_valid(struct menu *menu, int oid)
@@ -590,9 +597,9 @@ static void ability_learn_display(struct menu *m, int oid, bool cursor,
 	int name_indent = tome_depth(abil) * 1;
 	bool power = abil->type == PY_ABIL_POWER;
 
-	if (oid < 0 || oid >= z_info->learn_max) return;
+	if (oid < 0 || oid >= z_info->abil_id_max) return;
 
-	learn_level = data->p->extra_learned[abil->learn_index];
+	learn_level = data->p->extra_learned[abil->id];
 
 	if (power) {
 		total_level = data->p->mon.state.powers[abil->index];
@@ -714,9 +721,9 @@ static void refresh_hypothetical_player(struct menu *m)
 	}
 
 	for (abil = player_abilities; abil; abil = abil->next) {
-		if (abil->learn_index < 0) continue;
+		if (abil->id < 0) continue;
 
-		hypo->extra_learned[abil->learn_index] = data->temp_target[abil->learn_index];
+		hypo->extra_learned[abil->id] = data->temp_target[abil->id];
 	}
 
 	calc_bonuses(hypo, &hypo->mon, &hypo->mon.state, false, false);
@@ -911,21 +918,21 @@ static struct menu *ability_learn_menu_new(struct player *p, ability_learn_mode 
 	//region loc = { /*0 - width*/ 15, 5, width, 15 };
 
 	data->mode = mode;
-	data->max_learnable = mem_zalloc(sizeof *data->max_learnable * z_info->learn_max);
-	data->temp_target = mem_zalloc(sizeof *data->temp_target * z_info->learn_max);
-	data->extra_max_learnable = mem_zalloc(sizeof *data->extra_max_learnable * z_info->learn_max);
-	data->valid = mem_zalloc(sizeof *data->valid * z_info->learn_max);
+	data->max_learnable = mem_zalloc(sizeof *data->max_learnable * z_info->abil_id_max);
+	data->temp_target = mem_zalloc(sizeof *data->temp_target * z_info->abil_id_max);
+	data->extra_max_learnable = mem_zalloc(sizeof *data->extra_max_learnable * z_info->abil_id_max);
+	data->valid = mem_zalloc(sizeof *data->valid * z_info->abil_id_max);
 	data->birth = birth;
 	data->p = p;
 
 	data->end_monster = last_evolution(p);
 
 	if (max_learn) {
-		memcpy(data->extra_max_learnable, max_learn, sizeof *data->max_learnable * z_info->learn_max);
+		memcpy(data->extra_max_learnable, max_learn, sizeof *data->max_learnable * z_info->abil_id_max);
 	}
-	memcpy(data->temp_target, p->extra_target, sizeof *data->temp_target * z_info->learn_max);
+	memcpy(data->temp_target, p->extra_target, sizeof *data->temp_target * z_info->abil_id_max);
 
-	menu_setpriv(m, z_info->learn_max, data);
+	menu_setpriv(m, z_info->abil_id_max, data);
 
 	get_max_learnable(m, p);
 
@@ -979,7 +986,7 @@ static bool validate_result(struct player *p, struct menu *m, bool correct, int 
 	}
 
 	if (calc_extra_points_array(data->p, data->temp_target) > points) {
-		if (correct) memcpy(data->temp_target, p->extra_target, sizeof *data->temp_target * z_info->learn_max);
+		if (correct) memcpy(data->temp_target, p->extra_target, sizeof *data->temp_target * z_info->abil_id_max);
 		else return false;
 	}
 
@@ -1031,7 +1038,7 @@ static struct player *hypothetical_player(const struct player *p)
 	hypo->max_lev = PY_MAX_LEVEL;
 	hypo->lev = PY_MAX_LEVEL;
 	hypo->mon.player = hypo;
-	hypo->extra_learned = mem_zalloc(sizeof *hypo->extra_learned * z_info->learn_max);
+	hypo->extra_learned = mem_zalloc(sizeof *hypo->extra_learned * z_info->abil_id_max);
 
 	strnfmt(hypo->full_name, sizeof hypo->full_name, "HYPOTHETICAL");
 
@@ -1083,7 +1090,7 @@ bool textui_powers_learn(struct player *p, int *max_learn, bool birth)
 
 		if (go_back) {
 			changed = false;
-			for (i = 0; !changed && i < z_info->learn_max; ++i) {
+			for (i = 0; !changed && i < z_info->abil_id_max; ++i) {
 				changed = p->extra_target[i] != data->temp_target[i];
 			}
 			done = !changed || get_check("Discard changes? ");
@@ -1104,12 +1111,12 @@ bool textui_powers_learn(struct player *p, int *max_learn, bool birth)
 	}
 
 	if (!go_back) {
-		for (i = 0; !changed && i < z_info->learn_max; ++i) {
+		for (i = 0; !changed && i < z_info->abil_id_max; ++i) {
 			changed = p->extra_target[i] != data->temp_target[i];
 		}
 
 		if (changed && (birth || get_forced_check("Use these targets? "))) {
-			memcpy(p->extra_target, data->temp_target, sizeof *p->extra_target * z_info->learn_max);
+			memcpy(p->extra_target, data->temp_target, sizeof *p->extra_target * z_info->abil_id_max);
 			p->upkeep->update |= PU_BONUS;
 		}
 	}
@@ -1223,7 +1230,7 @@ static void ability_subchoice_menu_destroy(struct menu *m)
 
 bool textui_ability_subchoice(struct player *p, struct player_ability *abil)
 {
-	if (p->extra_choice[abil->learn_index] >= 0) return false;
+	if (p->extra_choice[abil->id] >= 0) return false;
 
 	struct menu *m = ability_subchoice_menu_new(abil);
 	const ui_event evt = menu_select(m, 0, true);
@@ -1231,7 +1238,7 @@ bool textui_ability_subchoice(struct player *p, struct player_ability *abil)
 
 	if (evt.type == EVT_SELECT) {
 		int selection = m->cursor;
-		p->extra_choice[abil->learn_index] = selection;
+		p->extra_choice[abil->id] = selection;
 		made_choice = true;
 	}
 

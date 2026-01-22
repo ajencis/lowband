@@ -113,7 +113,7 @@ bool give_monster_powers(struct monster *mon)
 	}*/
 	
 	/*for (abil = player_abilities; abil; abil = abil->next) {
-		if (abil->learn_index < 0) continue;
+		if (abil->id < 0) continue;
 		if (abil->type != PY_ABIL_POWER) continue;
 		int i = abil->index;
 
@@ -231,13 +231,13 @@ bool player_can_learn_from_monster(struct player *p, struct monster *mon)
 {
 	struct player_ability *abil;
 
-	int *max_target = mem_zalloc(sizeof *max_target * z_info->learn_max);
+	int *max_target = mem_zalloc(sizeof *max_target * z_info->abil_id_max);
 	tome_max_learnable(p, max_target);
 
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->type != PY_ABIL_POWER) continue;
 		if (mon->powers[abil->index]) continue;
-		if (mon->race->level <= max_target[abil->learn_index]) continue;
+		if (mon->race->level <= max_target[abil->id]) continue;
 		
 		mem_free(max_target);
 		return true;
@@ -2619,9 +2619,6 @@ static void rearrange_monster_spells(struct monster_race *mr, bool is_player)
 
 			mod = (r_power - min) * 50 / MAX(25, 50 - min);
 			mod = MIN(r_power, mod);
-
-			//if (output) dbg_log_fmt("mspell", "    mod for power %s is %i (r_power = %i, min = %i)",
-			//	lookup_player_ability(j, PY_ABIL_POWER)->name, mod, r_power, min);
  
 			if (mod <= 0) {
 				chance_exp++;

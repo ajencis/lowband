@@ -533,9 +533,9 @@ void wr_player(void)
 		wr_string(player->mon.body.slots[i].name);
 	}
 
-	wr_u16b(z_info->learn_max);
+	wr_u16b(z_info->abil_id_max);
 	// L: extra powers
-	for (i = 0; i < z_info->learn_max; i++) {
+	for (i = 0; i < z_info->abil_id_max; i++) {
 		wr_s16b(player->extra_learned[i]);
 		wr_u16b(player->extra_target[i]);
 		wr_s16b(player->extra_choice[i]);
@@ -604,7 +604,7 @@ void wr_player(void)
 	}
 	
 	//wr_u16b(TOME_MAX);
-	for (i = 0; i < z_info->learn_max; ++i)  {
+	for (i = 0; i < z_info->abil_id_max; ++i)  {
 		wr_u16b(player->unlocked_tomes[i]);
 	}
 

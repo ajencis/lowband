@@ -76,12 +76,12 @@ static struct player_ability *get_random_power(void)
 	struct player_ability *abil = NULL;
 
 	for (abil = player_abilities; abil; abil = abil->next) {
-		if (abil->learn_index < 0) continue;
+		if (abil->id < 0) continue;
 		sum += abil->rarity;
 	}
 	choice = randint0(sum);
 	for (abil = player_abilities; abil; abil = abil->next) {
-		if (abil->learn_index < 0) continue;
+		if (abil->id < 0) continue;
 		if (abil->rarity > choice) break;
 		choice -= abil->rarity;
 	}
@@ -904,7 +904,7 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 			 of_has(obj->kind->flags, OF_POWER_LEARN_3) ||
 			 of_has(obj->kind->flags, OF_POWER_LEARN_2) ||
 			 of_has(obj->kind->flags, OF_POWER_LEARN_1)) {
-		obj->pval = get_random_power()->learn_index;
+		obj->pval = get_random_power()->id;
 	}
 
 	else if (of_has(obj->kind->flags, OF_REALM_LEARN)) {

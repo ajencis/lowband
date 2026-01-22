@@ -2963,7 +2963,7 @@ void do_cmd_wiz_learn_tomes(struct command *cmd)
 	struct player_ability *abil;
 
 	for (abil = player_abilities; abil; abil = abil->next) {
-		if (abil->learn_index > -1) {
+		if (abil->id > -1) {
 			didmsg = false;
 			while (increase_ability(&player->mon, abil, !didmsg)) {
 				didmsg = true;

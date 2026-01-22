@@ -1223,7 +1223,7 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int cur
 	}
 
 	for (abil = player_abilities; abil; abil = abil->next) {
-		if (abil->learn_index < 0) continue;
+		if (abil->id < 0) continue;
 		if (abil->type != PY_ABIL_POWER) continue;
 		int base = mrace->powers[abil->index];
 		int add = base < 0 ? base / 2 : base / 5;
@@ -1255,9 +1255,9 @@ void calc_monster_powers(struct monster_race *mrace, int powers[PP_MAX], int cur
 
 	if (!p) return;
 	if (skill < 0 || skill >= SKILL_MAX) return;
-	if (!abil || abil->learn_index < 0) return;
+	if (!abil || abil->id < 0) return;
 
-	tome = p->extra_learned[abil->learn_index];
+	tome = p->extra_learned[abil->id];
 	b_amt = p->class->c_skills[skill];
 	x_amt = p->class->x_skills[skill];
 

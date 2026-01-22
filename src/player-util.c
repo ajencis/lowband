@@ -128,20 +128,20 @@ static bool unlock_tomes(struct player *p)
 	const struct player_ability *abil;
 
 	for (abil = player_abilities; abil; abil = abil->next) {
-		if (abil->learn_index < 0) continue;
+		if (abil->id < 0) continue;
 		bool ispower = abil->type == PY_ABIL_POWER;
 		struct player_class *pc;
 
 		for (pc = classes; pc; pc = pc->next) {
 			if (!p->unlocked_classes[pc->cidx]) continue;
 
-			if (ispower && pc->c_powers[abil->index] > p->unlocked_tomes[abil->learn_index]) {
-				p->unlocked_tomes[abil->learn_index] = pc->c_powers[abil->index];
+			if (ispower && pc->c_powers[abil->index] > p->unlocked_tomes[abil->id]) {
+				p->unlocked_tomes[abil->id] = pc->c_powers[abil->index];
 				didlearn = true;
 			}
 
-			if (!ispower && pc->c_skills[abil->index] > p->unlocked_tomes[abil->learn_index]) {
-				p->unlocked_tomes[abil->learn_index] = pc->c_skills[abil->index];
+			if (!ispower && pc->c_skills[abil->index] > p->unlocked_tomes[abil->id]) {
+				p->unlocked_tomes[abil->id] = pc->c_skills[abil->index];
 				didlearn = true;
 			}
 		}
@@ -522,7 +522,7 @@ static int bonus_to_cost_base(int bonus, int factor)
 
 static int bonus_to_cost(int bonus, const struct player_ability *abil)
 {
-	if (abil->learn_index < 0) return 0;
+	if (abil->id < 0) return 0;
 	return bonus_to_cost_base(bonus, abil->cost);
 }
 
@@ -555,7 +555,7 @@ static int cost_to_bonus_base(int cost, int factor)
 
 static int cost_to_bonus(int cost, const struct player_ability *abil)
 {
-	if (abil->learn_index < 0) return 0;
+	if (abil->id < 0) return 0;
 	int factor = abil->cost;
 	return cost_to_bonus_base(cost, factor);
 }
@@ -583,8 +583,8 @@ uint16_t calc_extra_points_array(struct player *p, uint16_t *extra_abil)
 	assert(extra_abil);
 
 	for (abil = player_abilities; abil; abil = abil->next) {
-		if (abil->learn_index < 0) continue;
-		sum += player_bonus_to_cost(extra_abil[abil->learn_index], abil, p);
+		if (abil->id < 0) continue;
+		sum += player_bonus_to_cost(extra_abil[abil->id], abil, p);
 	}
 
 	return sum;
@@ -639,11 +639,11 @@ bool learn_realm(struct player *p, const struct magic_realm *realm)
 
 bool learn_extra(struct player *p, const struct player_ability *abil)
 {
-	if (!abil || abil->learn_index < 0) return false;
+	if (!abil || abil->id < 0) return false;
 
 	return false;
 
-	p->extra_learned[abil->learn_index]++;
+	p->extra_learned[abil->id]++;
 
 	if (abil->type == PY_ABIL_POWER) {
 		// tell the player when they've learned something
@@ -667,11 +667,11 @@ bool learn_extra(struct player *p, const struct player_ability *abil)
 
 const struct player_ability *player_ability_by_learn_index(int learn_index)
 {
-	assert(learn_index < z_info->learn_max);
+	assert(learn_index < z_info->abil_id_max);
 	const struct player_ability *abil;
 
 	for (abil = player_abilities; abil; abil = abil->next) {
-		if (abil->learn_index == learn_index) return abil;
+		if (abil->id == learn_index) return abil;
 	}
 
 	return NULL;
@@ -732,10 +732,10 @@ static int player_extra_target(struct player *p, const struct player_ability *ab
 {
 	int base, max, result;
 
-	if (abil->learn_index < 0) return 0;
-	assert(abil->learn_index < z_info->learn_max);
+	if (abil->id < 0) return 0;
+	assert(abil->id < z_info->abil_id_max);
 
-	base = p->extra_target[abil->learn_index];
+	base = p->extra_target[abil->id];
 	max = tome_max_learnable_parents(abil, p);
 	result = MIN(base, max);
 
@@ -758,7 +758,7 @@ bool check_learn_powers(struct player *p, int xpgain)
 	return false;
 
 	for (abil = player_abilities; abil; abil = abil->next) {
-		if (abil->learn_index < 0) continue;
+		if (abil->id < 0) continue;
 		int curr_total, curr_lrnd;
 		int target = player_extra_target(p, abil);
 		unsigned int chance;
@@ -767,7 +767,7 @@ bool check_learn_powers(struct player *p, int xpgain)
 			target = (target * p->lev + PY_MAX_LEVEL - 1) / PY_MAX_LEVEL;
 		}
 
-		curr_lrnd = p->extra_learned[abil->learn_index];
+		curr_lrnd = p->extra_learned[abil->id];
 
 		if (abil->type == PY_ABIL_POWER) {
 			curr_total = p->mon.state.powers[abil->index];
@@ -839,7 +839,7 @@ static void max_learnable_object(struct object *obj, int *learn_array, int array
 bool tome_max_learnable_extra_array(bool metaprog, int *learn_array, int *extra_array,
 	int *curr_powers, int *curr_skills, struct player *p)
 {
-	memset(learn_array, 0, z_info->learn_max * sizeof (*learn_array));
+	memset(learn_array, 0, z_info->abil_id_max * sizeof (*learn_array));
 
 	struct object *obj;
 	const struct player_ability *abil;
@@ -847,21 +847,21 @@ bool tome_max_learnable_extra_array(bool metaprog, int *learn_array, int *extra_
 	int i;
 
 	if (!metaprog || !p) {
-		for (i = 0; i < z_info->learn_max; ++i) {
+		for (i = 0; i < z_info->abil_id_max; ++i) {
 			learn_array[i] = LEARN_MAX;
 		}
 	} else {
 		for (obj = p->mon.gear; obj; obj = obj->next) {
-			max_learnable_object(obj, learn_array, z_info->learn_max);
+			max_learnable_object(obj, learn_array, z_info->abil_id_max);
 		}
 
-		for (i = 0; i < z_info->learn_max; ++i) {
+		for (i = 0; i < z_info->abil_id_max; ++i) {
 			learn_array[i] = MAX(learn_array[i], p->unlocked_tomes[i]);
 		}
 	}
 
 	if (extra_array) {
-		for (i = 0; i < z_info->learn_max; ++i) {
+		for (i = 0; i < z_info->abil_id_max; ++i) {
 			if (extra_array[i] > learn_array[i]) {
 				learn_array[i] = extra_array[i];
 				extra = true;
@@ -870,15 +870,15 @@ bool tome_max_learnable_extra_array(bool metaprog, int *learn_array, int *extra_
 	}
 
 	for (abil = player_abilities; abil; abil = abil->next) {
-		if (abil->learn_index < 0) continue;
+		if (abil->id < 0) continue;
 		int tome_parent_max = tome_max_learnable_parents_array(abil, curr_powers, curr_skills);
-		learn_array[abil->learn_index] = MIN(learn_array[abil->learn_index], tome_parent_max);
+		learn_array[abil->id] = MIN(learn_array[abil->id], tome_parent_max);
 		/*struct player_ability *parent = tome_parent(abil);
 		if (parent) {
 			int curr_learned = abil->type == PY_ABIL_POWER ? p->state.powers[abil->index] : p->state.skills[abil->index];
 			int tome_parent_max = tome_max_learnable_parent(curr_learned, abil, parent);
-			if (learn_array[abil->learn_index] > tome_parent_max) {
-				learn_array[abil->learn_index] = tome_parent_max;
+			if (learn_array[abil->id] > tome_parent_max) {
+				learn_array[abil->id] = tome_parent_max;
 			}
 		}*/
 	}
@@ -946,9 +946,9 @@ int player_class_power(struct player *p, int power)
 {
 	struct player_ability *abil = lookup_player_ability(power, PY_ABIL_POWER);
 
-	if (!abil || abil->learn_index < 0) return 0;
+	if (!abil || abil->id < 0) return 0;
 
-	return player_class_power_array(p->class, p->extra_learned[abil->learn_index], power);
+	return player_class_power_array(p->class, p->extra_learned[abil->id], power);
 }
 
 int player_race_power_array(const struct monster_race *r, int extra_power, int power)
@@ -966,9 +966,9 @@ int player_race_power(struct player *p, int power)
 {
 	struct player_ability *abil = lookup_player_ability(power, PY_ABIL_POWER);
 
-	if (!abil || abil->learn_index < 0) return 0;
+	if (!abil || abil->id < 0) return 0;
 
-	return player_race_power_array(p->mon.race, p->extra_learned[abil->learn_index], power);
+	return player_race_power_array(p->mon.race, p->extra_learned[abil->id], power);
 }
 
 int class_x_skill(const struct player_class *c, int extra, int skill)
@@ -987,8 +987,8 @@ int player_class_x_skill(struct player *p, int skill)
 	struct player_ability *abil = lookup_player_ability(skill, PY_ABIL_SKILL);
 	int lrnd = 0;
 
-	if (abil && abil->learn_index >= 0) {
-		lrnd = p->extra_learned[abil->learn_index];
+	if (abil && abil->id >= 0) {
+		lrnd = p->extra_learned[abil->id];
 	}
 
 	return class_x_skill(p->class, lrnd, skill);
@@ -1011,8 +1011,8 @@ int player_class_c_skill(struct player *p, int skill)
 	struct player_ability *abil = lookup_player_ability(skill, PY_ABIL_SKILL);
 	int lrnd = 0;
 
-	if (abil && abil->learn_index >= 0) {
-		lrnd = p->extra_learned[abil->learn_index];
+	if (abil && abil->id >= 0) {
+		lrnd = p->extra_learned[abil->id];
 	}
 
 	return class_c_skill(p->class, lrnd, skill);
@@ -3551,8 +3551,6 @@ void player_start_turn(struct player *p)
 {
 	int i;
 
-	dbg_log("mem", "starting p turn");
-
 	for (i = 1; i < cave_monster_max(cave); ++i) {
 		struct monster *mon = cave_monster(cave, i);
 
@@ -3582,7 +3580,7 @@ void player_start_turn(struct player *p)
 	}
 
 	if (!(turn % 100) && cave->depth) {
-		for (i = 0; i < z_info->learn_max; ++i) {
+		for (i = 0; i < z_info->abil_id_max; ++i) {
 			p->learned_when[i] += cave->depth;
 		}
 	}

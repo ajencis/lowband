@@ -291,7 +291,8 @@ struct player_ability {
 	int rarity;						// L: how likely it is to be found
 	int scale_num;					// L: nonlinear scaling exponent numerator (default 2)
 	int scale_den;					// L: nonlinear scaling exponent denominator (default 3)
-	int learn_index;				// L: what is its index of all learnable abilities
+	int id;							// L: what is its index of all learnable abilities
+	int sub_id;						// L: what its subindex is (eg. TV_POLEARM for PP_TV_SPECIALIZATION)
 	struct player_ability *parent[MAX_ABIL_PARENTS];	// L: what abilities are needed to learn first
 	bool prereqs[ABIL_PRED_MAX];		// L: index of prerequisites needed to learn it
 };

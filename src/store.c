@@ -184,7 +184,7 @@ static void add_kind_to_store_normal(struct store *s, struct object_kind *ok)
 		if (of_has(ok->flags, OF_REALM_LEARN)) {
 			s->normal_max += z_info->realm_max;
 		} else if (ok->tval == TV_TOME) {
-			s->normal_max += z_info->learn_max - 1;
+			s->normal_max += z_info->abil_id_max - 1;
 		} else {
 			++s->normal_max;
 		}

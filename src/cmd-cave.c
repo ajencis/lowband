@@ -2401,9 +2401,9 @@ void do_cmd_dip_learn(struct command *cmd)
 
 	if (!player_can_learn_from_monster(player, mon)) return;
 
-	max_learn = mem_zalloc(sizeof *max_learn * z_info->learn_max);
-	base_max_learn = mem_zalloc(sizeof *base_max_learn * z_info->learn_max);
-	extra_max_learn	= mem_zalloc(sizeof *extra_max_learn * z_info->learn_max);
+	max_learn = mem_zalloc(sizeof *max_learn * z_info->abil_id_max);
+	base_max_learn = mem_zalloc(sizeof *base_max_learn * z_info->abil_id_max);
+	extra_max_learn	= mem_zalloc(sizeof *extra_max_learn * z_info->abil_id_max);
 
 	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
 
@@ -2457,7 +2457,7 @@ void do_cmd_dip_learn(struct command *cmd)
 
 void do_cmd_learn(struct command *cmd)
 {
-	int *max_learn = mem_zalloc(sizeof *max_learn * z_info->learn_max);
+	int *max_learn = mem_zalloc(sizeof *max_learn * z_info->abil_id_max);
 	int tmp;
 	bool birth = false;
 

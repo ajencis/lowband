@@ -223,9 +223,9 @@ struct scaling_data mon_tome_skill(const struct monster *mon, int which)
 	struct scaling_data result = { 0 };
 	struct player_ability *abil = lookup_player_ability(which, PY_ABIL_SKILL);
 
-	if (p && abil && abil->learn_index >= 0) {
+	if (p && abil && abil->id >= 0) {
 		assert(p->extra_learned);
-		result.base = p->extra_learned[abil->learn_index];
+		result.base = p->extra_learned[abil->id];
 	}
 
 	return result;
@@ -244,9 +244,9 @@ struct scaling_data mon_class_skill(const struct monster *mon, int which)
 	result.base = p->class->c_skills[which];
 	result.p_xtra = p->class->x_skills[which];
 
-	if (!abil || abil->learn_index < 0) return result;
+	if (!abil || abil->id < 0) return result;
 
-	tome = p->extra_learned[abil->learn_index];
+	tome = p->extra_learned[abil->id];
 
 	if (pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
 		result.base = MAX(result.base, tome * 1 / 4);
@@ -447,9 +447,9 @@ struct scaling_data mon_tome_power(const struct monster *mon, int power)
 	struct scaling_data result = { 0 };
 	struct player_ability *abil = lookup_player_ability(power, PY_ABIL_POWER);
 
-	if (abil && abil->learn_index >= 0 && mon->player) {
+	if (abil && abil->id >= 0 && mon->player) {
 		assert(mon->player->extra_learned);
-		result.base = mon->player->extra_learned[abil->learn_index];
+		result.base = mon->player->extra_learned[abil->id];
 	}
 	return result;
 }
