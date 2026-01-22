@@ -95,7 +95,7 @@ struct embryo_attack {
 	char title[32];
 
 	const struct monster_blow *mon_blow;
-	const struct object *obj;
+	//const struct object *obj;
 	enum attack_special_type_ind special_type;
 
 	struct effect *extra;
@@ -835,7 +835,7 @@ static void emb_atk_mod_death_touch(const struct monster *mon, struct embryo_att
 	random_value rv = { 0, 0, 0, 0 };
 
 	if (!mon_has_power(mon, PP_DEATH_TOUCH)) return;
-	if (emb->obj) return;
+	if (emb->atk.obj) return;
 
 	div = emb->mon_blow ? 2 : 1;
 	rv.sides = get_power_scale(mon, PP_DEATH_TOUCH, 50 / div);
@@ -943,7 +943,7 @@ static void emb_atk_mod_stunning_blows(const struct monster *mon, struct embryo_
 	struct effect *stun_ef;
 	random_value rv = { 0, 0, 0, 0 };
 	int wgt = atk_weight(mon, &emb->atk);
-	int power = 0, power1, power2;
+	//int power = 0, power1, power2;
 	int chance, amt;
 
 	chance = exponentiate(wgt, 2, 3);
@@ -979,7 +979,7 @@ static void emb_atk_mod_stunning_blows(const struct monster *mon, struct embryo_
 
 
 
-	power1 = my_int_sqrt((wgt + 50) * get_power_scale(mon, PP_STUNNING_BLOWS, 50) / 25);
+	/*power1 = my_int_sqrt((wgt + 50) * get_power_scale(mon, PP_STUNNING_BLOWS, 50) / 25);
 	if (!emb->mon_blow && !emb->obj) {
 		power2 = get_power_scale(mon, PP_UNARMED_STRIKE, 50);
 	}
@@ -1001,7 +1001,7 @@ static void emb_atk_mod_stunning_blows(const struct monster *mon, struct embryo_
 
 	effect_add_value(stun_ef, rv);
 
-	emb_attack_add_extra(emb, stun_ef);
+	emb_attack_add_extra(emb, stun_ef);*/
 }
 
 emb_atk_mod_fn mod_fns[] = {
@@ -1014,7 +1014,7 @@ emb_atk_mod_fn mod_fns[] = {
 static void calc_emb_crit(const struct monster *mon, struct embryo_attack *emb)
 {
 	int chance = 5;
-	const struct object *obj = emb->obj;
+	const struct object *obj = emb->atk.obj;
 
 	if (obj) {
 		chance += z_info->m_crit_chance_weight_scl * obj->weight / 100;
@@ -1029,7 +1029,7 @@ static void calc_emb_crit(const struct monster *mon, struct embryo_attack *emb)
 
 static void calc_emb_blows(const struct monster *mon, struct embryo_attack *emb, int numblows)
 {
-	int wgt = emb->obj ? object_weight_one(emb->obj) : 0;
+	int wgt = emb->atk.obj ? object_weight_one(emb->atk.obj) : 0;
 	int div = wgt * 2 + 100;
 	bool has_acc = emb->atk.hit_stat != STAT_NONE, has_dam = emb->atk.dam_stat != STAT_NONE;
 
@@ -1095,11 +1095,11 @@ static void calc_emb_dual_wield(const struct monster *mon, struct embryo_attack 
 {
 	int wgt;
 
-	if (!emb->obj) return;
+	if (!emb->atk.obj) return;
 	if (numweaps <= 1) return;
 
 	// longsword has 130 wgt
-	wgt = object_weight_one(emb->obj);
+	wgt = object_weight_one(emb->atk.obj);
 
 	wgt -= get_power_scale(mon, PP_DUAL_WIELD, 25);
 
@@ -1134,7 +1134,7 @@ static int num_weap_embryos(const struct embryo_attack *emb)
 	int count = 0;
 	const struct embryo_attack *curr;
 	for (curr = emb; curr; curr = curr->next) {
-		if (curr->obj) {
+		if (curr->atk.obj) {
 			count += emb->atk.num;
 		}
 	}
@@ -1145,7 +1145,7 @@ static int num_weap_embryos(const struct embryo_attack *emb)
 
 static void modify_unarmed_attack(struct embryo_attack *emb, const struct monster *mon)
 {
-	if (emb->obj) return;
+	if (emb->atk.obj) return;
 
 	int factor = MIN(125 - (emb->atk.rv.dice * emb->atk.rv.sides * 2), 100);
 	int dexmin = 75 - factor / 2;
@@ -1272,7 +1272,7 @@ static struct embryo_attack *get_natural_attack(const struct monster *mon, const
 
 static void get_chain_attack(const struct monster *mon, struct embryo_attack *emb)
 {
-	emb->obj = NULL;
+	emb->atk.obj = NULL;
 
 	emb->atk.skill = SKILL_TO_HIT_MELEE;
 
@@ -1299,7 +1299,7 @@ static struct embryo_attack *get_special_attack(const struct monster *mon, int s
 	const struct attack_special_type *data = &atk_spcl_types[special];
 	bool p = mon->player ? true : false;
 
-	emb->obj = NULL;
+	emb->atk.obj = NULL;
 	emb->special_type = special;
 
 	emb->atk.skill = SKILL_TO_HIT_MELEE;
@@ -1330,12 +1330,13 @@ static struct embryo_attack *get_special_attack(const struct monster *mon, int s
 
 static void calc_emb_expertise(const struct monster *mon, struct embryo_attack *emb)
 {
-	int spec = attack_specialization_power(mon, emb->obj, emb->mon_blow);
+	int spec;
 
-	if (spec <= 0) return;
+	spec = attack_specialization_power(mon, emb->atk.obj, emb->mon_blow);
+
+	emb->atk.rv.base += spec / 15;
 
 	emb->atk.blows += spec;
-	emb->atk.rv.base += spec / 15;
 }
 
 
@@ -1600,7 +1601,7 @@ static void get_mon_attacks(struct monster *mon)
 
 static int calc_ranged_emb_blows(const struct monster *mon, struct embryo_attack *emb)
 {
-	int wgt = emb->obj ? object_weight_one(emb->obj) : 0;
+	int wgt = emb->atk.obj ? object_weight_one(emb->atk.obj) : 0;
 	int div = wgt * 2 + 100;
 	bool has_acc = emb->atk.hit_stat != STAT_NONE, has_dam = emb->atk.dam_stat != STAT_NONE;
 
