@@ -580,6 +580,7 @@ verb-second:use law magic
 verb-third:uses law magic
 adj-positive:more effectively
 adj-negative:less effectively
+parent:skill:MAGIC
 
 type:power
 code:CHAOS_MAGIC
@@ -588,6 +589,7 @@ verb-second:use chaos magic
 verb-third:uses chaos magic
 adj-positive:more effectively
 adj-negative:less effectively
+parent:skill:MAGIC
 
 type:power
 code:META_MAGIC
@@ -857,6 +859,7 @@ code:BREATH
 name:Breathing
 verb-second:breathe
 verb-third:breathes
+parent:skill:HEALTH
 
 type:power
 code:BREATH_BITE
@@ -919,6 +922,18 @@ cost:15
 rarity:5
 parent:skill:HEALTH
 prereq:RACE_OR_CLASS_HAS_POWER
+
+type:power
+code:ONE_WEAP_EXPERT
+name:%s Specialization
+subprop:WEAP_KIND
+verb-second:attack
+verb-third:attacks
+adj-positive:more effectively
+adj-negative:less effectively
+cost:5
+rarity:5
+parent:skill:TO_HIT_MELEE
 
 
 # L: skills

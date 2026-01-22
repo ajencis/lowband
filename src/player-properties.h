@@ -54,6 +54,7 @@ enum ability_subproperty_types {
 };
 
 struct player_ability *lookup_player_ability(int idx, int type);
+struct player_ability *lookup_player_subability(int subid, int idx, int type);
 bool class_has_ability(const struct player_class *class,
 					   struct player_ability *ability);
 bool race_has_ability(const struct player_race *race,
@@ -63,7 +64,9 @@ void do_cmd_abilities(void);
 bool mon_power_minimum(const struct monster *mon, int power, int min);
 bool mon_has_power(const struct monster *mon, int power);
 struct player_ability *attack_spec_type(const struct object *obj, const struct monster_blow *blow);
+struct player_ability *attack_expert_type(const struct object *obj, const struct monster_blow *blow);
 int attack_specialization_power(const struct monster *mon, const struct object *obj, const struct monster_blow *blow);
+int attack_expertise_power(const struct monster *mon, const struct object *obj, const struct monster_blow *blow);
 
 bool abil_subid_valid(int subid, int type);
 int ability_subprop_max(int type);

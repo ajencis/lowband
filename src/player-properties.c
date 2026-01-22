@@ -189,6 +189,20 @@ struct player_ability *lookup_player_ability(int idx, int type)
 	return NULL;
 }
 
+struct player_ability *lookup_player_subability(int subid, int idx, int type)
+{
+	struct player_ability *abil;
+
+	for (abil = player_abilities; abil; abil = abil->next) {
+		if (abil->index == idx && abil->type == type && abil->sub_id == subid) {
+			return abil;
+		}
+	}
+
+	return NULL;
+
+}
+
 
 bool class_has_ability(const struct player_class *class,
 					   struct player_ability *ability)
@@ -413,7 +427,7 @@ char *ability_subprop_name(const struct player_ability *abil, int subprop_type)
 
 bool abil_subprop_currently_relevant(const struct monster *mon, const struct player_ability *abil)
 {
-	if (abil->type == PY_ABIL_POWER && abil->index == PP_ONE_WEAP_SPEC) {
+	if (abil->type == PY_ABIL_POWER && abil->index == PP_ONE_WEAP_EXPERT) {
 		int i;
 
 		if (!mon->body.slots) {
@@ -549,9 +563,30 @@ struct player_ability *attack_spec_type(const struct object *obj, const struct m
 	}
 }
 
+struct player_ability *attack_expert_type(const struct object *obj, const struct monster_blow *blow)
+{
+	struct player_ability *result;
+
+	if (!obj) {
+		return NULL;
+	}
+
+	return lookup_player_subability((int)obj->kind->kidx, PP_ONE_WEAP_EXPERT, PY_ABIL_POWER);
+}
+
 int attack_specialization_power(const struct monster *mon, const struct object *obj, const struct monster_blow *blow)
 {
 	struct player_ability *abil = attack_spec_type(obj, blow);
+
+	if (abil && abil->type == PY_ABIL_POWER) {
+		return get_power_scale(mon, abil->index, 100);
+	}
+	return 0;
+}
+
+int attack_expertise_power(const struct monster *mon, const struct object *obj, const struct monster_blow *blow)
+{
+	struct player_ability *abil = attack_expert_type(obj, blow);
 
 	if (abil && abil->type == PY_ABIL_POWER) {
 		return get_power_scale(mon, abil->index, 100);
