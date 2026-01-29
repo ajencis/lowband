@@ -294,20 +294,22 @@ static void view_abilities(void)
 		}
 	}
 
-	// L: powers get listed
-	for (ability = player_abilities; ability && num_abilities < MAX_ABILITIES; ability = ability->next) {
-		if ((ability->type == PY_ABIL_POWER) && player->mon.state.powers[ability->index] != 0) {
-			memcpy(&ability_list[num_abilities], ability,
-				   sizeof(struct player_ability));
-			ability_list[num_abilities++].group = PLAYER_FLAG_POWER;
-		}
-	}
-
 	// L: skills get listed too!
 	for (ability = player_abilities; ability && num_abilities < MAX_ABILITIES; ability = ability->next) {
 		if ((ability->type == PY_ABIL_SKILL) && player->mon.state.skills[ability->index] > 0) {
 			memcpy(&ability_list[num_abilities], ability, sizeof(ability_list[0]));
 			ability_list[num_abilities++].group = PLAYER_FLAG_SKILL;
+		}
+	}
+
+	// L: powers get listed
+	for (ability = player_abilities; ability && num_abilities < MAX_ABILITIES; ability = ability->next) {
+		if ((ability->type == PY_ABIL_POWER) &&
+				player->mon.state.powers[ability->index] != 0 &&
+				abil_subprop_currently_relevant(&player->mon, ability)) {
+			memcpy(&ability_list[num_abilities], ability,
+				   sizeof(struct player_ability));
+			ability_list[num_abilities++].group = PLAYER_FLAG_POWER;
 		}
 	}
 
@@ -570,6 +572,8 @@ struct player_ability *attack_expert_type(const struct object *obj, const struct
 	if (!obj) {
 		return NULL;
 	}
+
+	assert(obj->kind);
 
 	return lookup_player_subability((int)obj->kind->kidx, PP_ONE_WEAP_EXPERT, PY_ABIL_POWER);
 }

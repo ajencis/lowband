@@ -1779,14 +1779,19 @@ bool mon_test_blow(struct monster *mon, struct monster *t_mon, struct attack *at
 
 		dice_free(tmp_dice);
 
-		if (atk->skill >= 0 && atk->skill < SKILL_MAX) {
-			abil = lookup_player_ability(atk->skill, PY_ABIL_SKILL);
-			exercise_ability(mon, abil, ac);
+		abil = lookup_player_ability(atk->skill, PY_ABIL_SKILL);
+		if (abil) {
+			exercise_ability(mon, abil, mon_ac(t_mon));
+		}
 
-			abil = attack_spec_type(atk->obj, atk->mb);
-			if (abil) {
-				exercise_ability(mon, abil, mon_ac(t_mon));
-			}
+		abil = attack_spec_type(atk->obj, atk->mb);
+		if (abil) {
+			exercise_ability(mon, abil, mon_ac(t_mon));
+		}
+
+		abil = attack_expert_type(atk->obj, atk->mb);
+		if (abil) {
+			exercise_ability(mon, abil, mon_ac(t_mon));
 		}
 	}
 	else {
@@ -1897,8 +1902,6 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 	if (ap) {
 		ap->upkeep->energy_use = energy;
 	}
-
-	//free_temp_attack_data(tmp_data);
 
 	t_mon = cave_monster(cave, t_midx);
 	if (t_mon && t_mon->race) {
@@ -2430,14 +2433,19 @@ static bool mon_test_ranged_blow(struct monster *mon, struct monster *t_mon, str
 
 		dice_free(dice);
 
-		if (atk->skill >= 0 && atk->skill < SKILL_MAX) {
-			abil = lookup_player_ability(atk->skill, PY_ABIL_SKILL);
+		abil = lookup_player_ability(atk->skill, PY_ABIL_SKILL);
+		if (abil) {
 			exercise_ability(mon, abil, mon_ac(t_mon));
+		}
 
-			abil = attack_spec_type(atk->obj, atk->mb);
-			if (abil) {
-				exercise_ability(mon, abil, mon_ac(t_mon));
-			}
+		abil = attack_spec_type(atk->obj, atk->mb);
+		if (abil) {
+			exercise_ability(mon, abil, mon_ac(t_mon));
+		}
+
+		abil = attack_expert_type(atk->obj, atk->mb);
+		if (abil) {
+			exercise_ability(mon, abil, mon_ac(t_mon));
 		}
 	}
 	else {

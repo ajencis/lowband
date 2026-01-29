@@ -1330,13 +1330,24 @@ static struct embryo_attack *get_special_attack(const struct monster *mon, int s
 
 static void calc_emb_expertise(const struct monster *mon, struct embryo_attack *emb)
 {
-	int spec;
+	//int spec, expert;
+	struct player_ability *spec, *expert;
+	int sblows = 0, eblows = 0;
 
-	spec = attack_specialization_power(mon, emb->atk.obj, emb->mon_blow);
+	spec = attack_spec_type(emb->atk.obj, emb->atk.mb);
+	expert = attack_expert_type(emb->atk.obj, emb->atk.mb);
 
-	emb->atk.rv.base += spec / 15;
+	if (spec) {
+		emb->atk.rv.base += get_power_scale(mon, spec->index, 10);
+		sblows = get_power_scale(mon, spec->index, 100);
+	}
 
-	emb->atk.blows += spec;
+	if (expert) {
+		emb->atk.to_hit += get_power_scale(mon, expert->index, 10);
+		eblows = get_power_scale(mon, expert->index, 125);
+	}
+
+	emb->atk.blows += MAX(sblows, eblows) + MIN(sblows, eblows) / 2;
 }
 
 

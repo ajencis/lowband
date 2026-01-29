@@ -931,6 +931,7 @@ verb-second:attack
 verb-third:attacks
 adj-positive:more effectively
 adj-negative:less effectively
+initial:-10
 cost:5
 rarity:5
 parent:skill:TO_HIT_MELEE

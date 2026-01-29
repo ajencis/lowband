@@ -45,6 +45,7 @@
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "player.h"
 #include "store.h"
 #include "ui-player-properties.h"
 #include "ui-birth.h"
@@ -1217,6 +1218,7 @@ void player_generate(struct player *p, const struct player_race *r,
 	int i;
 	struct monster_race *mr;
 	bool reembody;
+	struct player_ability *abil;
 
 	if (!c) {
 		c = p->class;
@@ -1252,6 +1254,11 @@ void player_generate(struct player *p, const struct player_race *r,
 	if (c->realm) {
 		struct player_ability *magic = lookup_player_ability(SKILL_MAGIC, PY_ABIL_SKILL);
 		p->extra_choice[magic->id] = c->realm->index;
+	}
+
+	// L: initialize starting powers
+	for (abil = player_abilities; abil; abil = abil->next) {
+		p->extra_learned[abil->id] = abil->initial;
 	}
 
 	/* Roll for age/height/weight */

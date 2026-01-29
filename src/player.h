@@ -295,6 +295,7 @@ struct player_ability {
 	int sub_id;						// L: what its subindex is (eg. TV_POLEARM for PP_TV_SPECIALIZATION)
 	struct player_ability *parent[MAX_ABIL_PARENTS];	// L: what abilities are needed to learn first
 	bool prereqs[ABIL_PRED_MAX];		// L: index of prerequisites needed to learn it
+	int initial;					// L: how much a typical character starts with
 };
 
 /**

@@ -1422,6 +1422,20 @@ static enum parser_error parse_player_prop_scale(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_player_prop_initial(struct parser *p)
+{
+	struct embryo_player_ability *embryo = parser_priv(p);
+	int initial = parser_getint(p, "initial");
+	
+	if (!embryo) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+
+	embryo->ability.initial = initial;
+
+	return PARSE_ERROR_NONE;
+}
+
 static enum parser_error parse_player_prop_parent(struct parser *p)
 {
 	struct embryo_player_ability *embryo = parser_priv(p);
@@ -1587,6 +1601,7 @@ static struct parser *init_parse_player_prop(void) {
 	parser_reg(p, "bindui sym ui int aux sym uival", parse_player_prop_bindui);
 	parser_reg(p, "cost int cost", parse_player_prop_cost);
 	parser_reg(p, "rarity int rarity", parse_player_prop_rarity);
+	parser_reg(p, "initial int initial", parse_player_prop_initial);
 	parser_reg(p, "scale int numerator int denominator", parse_player_prop_scale);
 	parser_reg(p, "parent sym parent-type sym parent-code", parse_player_prop_parent);
 	parser_reg(p, "subprop sym id", parse_player_prop_subprop);
