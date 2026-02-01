@@ -1824,7 +1824,7 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 	int16_t pretimed[TMD_MAX];
 	//int t_mon_hp = t_mon->state.skills[SKILL_HEALTH];
 	int n_attacks = 0, n_cleaves;
-	size_t n_diff_attacks;
+	size_t n_diff_attacks = 0;
 	int *atk_blows;
 
 	memcpy(pretimed, t_mon->m_timed, sizeof pretimed);
@@ -1848,7 +1848,7 @@ bool mon_test_attack(struct monster *mon, struct monster *t_mon)
 	}
 
 	for (atk = mon->atk; atk; atk = atk->next) {
-		n_diff_attacks += 1;
+		n_diff_attacks++;
 		if (attack_valid(mon, t_mon, atk, cave)) {
 			n_attacks += atk->num;
 		}
