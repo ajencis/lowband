@@ -681,6 +681,10 @@ void process_world(struct chunk *c)
 
 	cave_feat_upkeep(c);
 
+	if (!(turn & 0xf)) {
+		chunk_list_feat_log();
+	}
+
 	/*** Damage (or healing) over Time ***/
 	for (i = 0; i < cave_monster_max(c); ++i) {
 		mon = cave_monster(c, i);

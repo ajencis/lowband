@@ -335,6 +335,16 @@ bool grid_is_danger(const struct monster *mon, struct chunk *c, struct loc grid)
 
 int burn_square(struct chunk *c, struct loc grid, int power, int fidx);
 
+#ifdef FEAT_ALLOC_DBG
+
+void chunk_list_feat_log(void);
+
+#else
+
+#define chunk_list_feat_log() NULL
+
+#endif
+
 /* cave-map.c */
 void map_info(struct loc grid, struct grid_data *g);
 void square_note_spot(struct chunk *c, struct loc grid);

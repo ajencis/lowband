@@ -1,7 +1,6 @@
 #include "angband.h"
 #include "cave.h"
 #include "game-world.h"
-#include "init.h"
 #include "mon-desc.h"
 #include "project.h"
 
@@ -29,6 +28,12 @@ static int feat_compare(int feat1, int feat2)
 	return 0;
 }
 
+#ifdef FEAT_ALLOC_DBG
+
+static int num_feats_alloced = 0;
+
+#endif
+
 static struct feature *feat_new(int fidx, int size)
 {
 	struct feature *new;
@@ -38,6 +43,11 @@ static struct feature *feat_new(int fidx, int size)
 	if (size <= 0) return NULL;
 
 	new = mem_zalloc(sizeof *new);
+
+#ifdef FEAT_ALLOC_DBG	
+	num_feats_alloced++;
+	dbg_log_fmt("feat", "turn %i: new feat, total alloced = %i", turn, num_feats_alloced);
+#endif
 
 	new->kind = &f_info[fidx];
 	new->size = size;
@@ -51,6 +61,12 @@ static struct feature *feat_new(int fidx, int size)
 static void feat_free(struct feature *feat)
 {
 	mem_free(feat);
+
+
+#ifdef FEAT_ALLOC_DBG
+	num_feats_alloced--;
+	dbg_log_fmt("feat", "turn %i: freeing feat, total alloced = %i", turn, num_feats_alloced);
+#endif
 }
 
 static int feat_priority(int feat)
@@ -1473,5 +1489,59 @@ bool grid_is_danger(const struct monster *mon, struct chunk *c, struct loc grid)
 
 	return false;
 }
+
+
+#ifdef FEAT_ALLOC_DBG
+
+static int chunk_feat_log(struct chunk *c)
+{
+	struct feature *feat;
+	struct loc grid;
+	char c_name[80] = "(unnamed)";
+	int count = 0;
+
+	if (!c) {
+		return 0;
+	}
+
+	for (grid.x = 0; grid.x < c->width; ++grid.x) {
+		for (grid.y = 0; grid.y < c->height; ++grid.y) {
+			for (feat = square_feat(c, grid); feat; feat = feat->next) {
+				count++;
+			}
+		}
+	}
+
+	if (c->name) {
+		strnfmt(c_name, sizeof c_name, "%s", c->name);
+	}
+	else if (c == cave) {
+		strnfmt(c_name, sizeof c_name, "cave");
+	}
+	else {
+		strnfmt(c_name, sizeof c_name, "chunk of depth %i", c->depth);
+	}
+
+	dbg_log_fmt("feat", " - chunk %s: %i feats", c_name, count);
+
+	return count;
+}
+
+void chunk_list_feat_log(void)
+{
+	int total = 0, chunk_id;
+
+	dbg_log_fmt("feat", "\nfeats on turn %i:", turn);
+
+	for (chunk_id = 0; chunk_id < chunk_list_max; chunk_id++) {
+		total += chunk_feat_log(chunk_list[chunk_id]);
+	}
+
+	total += chunk_feat_log(cave);
+
+	dbg_log_fmt("feat", "\ntotal number of existing feats = %i\n\n", total);
+}
+
+#endif
 
 
