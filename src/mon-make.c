@@ -761,6 +761,12 @@ void wipe_mon_list(struct chunk *c, struct player *p)
 
 		/* Monster is gone from square */
 		square_set_mon(c, mon->grid, 0);
+	
+		// L: free bodies
+		mon_disembody(mon);
+
+		// L: free attacks
+		free_mon_attacks(mon);
 
 		/* Wipe the Monster */
 		memset(mon, 0, sizeof(struct monster));
