@@ -785,7 +785,22 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 
 
 
+//static int emb_alloced = 0, ef_alloced = 0, atk_alloced = 0;
 
+static struct embryo_attack *embryo_new(void)
+{
+	return mem_zalloc(sizeof (struct embryo_attack));
+}
+
+static struct effect *effect_new(void)
+{
+	return mem_zalloc(sizeof (struct effect));
+}
+
+static struct attack *attack_new(void)
+{
+	return mem_zalloc(sizeof (struct attack));
+}
 
 static int atk_weight(const struct monster *mon, const struct attack *atk)
 {
@@ -841,7 +856,7 @@ static void emb_atk_mod_death_touch(const struct monster *mon, struct embryo_att
 	rv.sides = get_power_scale(mon, PP_DEATH_TOUCH, 50 / div);
 	rv.dice = 1;
 
-	ef = mem_zalloc(sizeof *ef);
+	ef = effect_new();// mem_zalloc(sizeof *ef);
 
 	ef->index = EF_HIT;
 	ef->subtype = PROJ_NETHER;
@@ -868,7 +883,7 @@ static struct effect *breath_bite_ef(int innate, const struct monster *mon)
 	if (!ef_src) return NULL;
 	assert(effect_valid(ef_src));
 
-	ef_new = mem_zalloc(sizeof *ef_new);
+	ef_new = effect_new();// mem_zalloc(sizeof *ef_new);
 	memcpy(ef_new, ef_src, sizeof *ef_new);
 	ef_new->msg = ef_src->msg ? string_make(ef_src->msg) : NULL;
 	ef_new->next = NULL;
@@ -914,7 +929,7 @@ static void emb_atk_mod_breath_bite(const struct monster *mon, struct embryo_att
 	}
 
 	if (num_breaths > 1) {
-		ef_temp = mem_zalloc(sizeof *ef_temp);
+		ef_temp = effect_new();// mem_zalloc(sizeof *ef_temp);
 		ef_temp->index = EF_RANDOM;
 		random_value rv = { 0, 0, 0, 0 };
 
@@ -961,7 +976,7 @@ static void emb_atk_mod_stunning_blows(const struct monster *mon, struct embryo_
 		return;
 	}
 
-	stun_ef = mem_zalloc(sizeof *stun_ef);
+	stun_ef = effect_new();// mem_zalloc(sizeof *stun_ef);
 
 	stun_ef->index = EF_OTHER_TIMED_INC;
 	stun_ef->subtype = TMD_STUN;
@@ -975,33 +990,6 @@ static void emb_atk_mod_stunning_blows(const struct monster *mon, struct embryo_
 	emb_attack_add_extra(emb, stun_ef);
 
 	return;
-
-
-
-
-	/*power1 = my_int_sqrt((wgt + 50) * get_power_scale(mon, PP_STUNNING_BLOWS, 50) / 25);
-	if (!emb->mon_blow && !emb->obj) {
-		power2 = get_power_scale(mon, PP_UNARMED_STRIKE, 50);
-	}
-
-	power = power1 + power2;
-
-	msg_add_fmt("power1 = %i, power2 = %i", power1, power2);
-
-	if (power <= 10) return;
-
-	stun_ef = mem_zalloc(sizeof *stun_ef);
-
-	stun_ef->index = EF_OTHER_TIMED_INC;
-	stun_ef->subtype = TMD_STUN;
-	stun_ef->chance = my_int_sqrt(power) * 2 + 5;
-
-	rv.dice = power / 25 + 3;
-	rv.sides = power / 3;
-
-	effect_add_value(stun_ef, rv);
-
-	emb_attack_add_extra(emb, stun_ef);*/
 }
 
 emb_atk_mod_fn mod_fns[] = {
@@ -1169,7 +1157,7 @@ static struct embryo_attack *get_weapon_attack(const struct monster *mon, const 
 
 	bool p = mon->player ? true : false;
 
-	struct embryo_attack *emb = mem_zalloc(sizeof *emb);
+	struct embryo_attack *emb = embryo_new();// mem_zalloc(sizeof *emb);
 
 	uint16_t od_mode;
 
@@ -1210,7 +1198,7 @@ static struct effect *get_timed_effect(int lev, int timed)
 
 	if (timed >= TMD_MAX || timed < 0) return new;
 
-	new = mem_zalloc(sizeof *new);
+	new = effect_new();// mem_zalloc(sizeof *new);
 
 	new->index = EF_OTHER_TIMED_INC;
 	new->subtype = timed;
@@ -1226,7 +1214,7 @@ static struct effect *get_timed_effect(int lev, int timed)
 
 static struct embryo_attack *get_natural_attack(const struct monster *mon, const struct monster_blow *blow)
 {
-	struct embryo_attack *emb = mem_zalloc(sizeof *emb);
+	struct embryo_attack *emb = embryo_new();// mem_zalloc(sizeof *emb);
 	bool p = mon_is_player(mon);
 
 	emb->mon_blow = blow;
@@ -1295,7 +1283,7 @@ static void get_chain_attack(const struct monster *mon, struct embryo_attack *em
 
 static struct embryo_attack *get_special_attack(const struct monster *mon, int special)
 {
-	struct embryo_attack *emb = mem_zalloc(sizeof *emb);
+	struct embryo_attack *emb = embryo_new();// mem_zalloc(sizeof *emb);
 	const struct attack_special_type *data = &atk_spcl_types[special];
 	bool p = mon->player ? true : false;
 
@@ -1534,7 +1522,7 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 		rv.dice += get_skill_scale(mon, emb->atk.skill, rv.dice * 3) / 2;
 	}
 
-	result = mem_zalloc(sizeof *result);
+	result = attack_new();// mem_zalloc(sizeof *result);
 
 	memcpy(result, &emb->atk, sizeof *result);
 
@@ -1646,7 +1634,7 @@ static int calc_ranged_emb_blows(const struct monster *mon, struct embryo_attack
 
 static struct embryo_attack *get_ranged_weapon_attack(const struct monster *mon, const struct object *weap)
 {
-	struct embryo_attack *emb = mem_zalloc(sizeof *emb);
+	struct embryo_attack *emb = embryo_new();// mem_zalloc(sizeof *emb);
 	bool p = mon_is_player(mon);
 	uint32_t od_mode;
 	char title[128];
@@ -1703,7 +1691,7 @@ static struct embryo_attack *get_ranged_natural_attack(const struct monster *mon
 	if (!blow) return NULL;
 	if (!blow->method->ranged) return NULL;
 
-	emb = mem_zalloc(sizeof *emb);
+	emb = embryo_new();// mem_zalloc(sizeof *emb);
 
 	emb->atk.ammo_tval = TV_NULL;
 	emb->atk.mb = blow;
@@ -1746,7 +1734,7 @@ static struct embryo_attack *get_ranged_natural_attack(const struct monster *mon
 
 static struct attack *hatch_ranged_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 {
-	struct attack *atk = mem_zalloc(sizeof *atk);
+	struct attack *atk = attack_new();// mem_zalloc(sizeof *atk);
 	int ind;
 
 	memcpy(atk, &emb->atk, sizeof *atk);
