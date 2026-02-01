@@ -5738,6 +5738,8 @@ void cleanup_angband(void)
 
 	cmdq_release();
 
+	alloced_mem_list_destroy(true);
+
 	if (play_again) {
 		return;
 	}
