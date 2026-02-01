@@ -352,6 +352,8 @@ void my_dclose(ang_dir *dir);
 /**
  * L: log message  msg  in file  filename  in dir  dir , for debug purposes
  */
+extern char *ANGBAND_DIR_USER;
+
 void dbg_file_reset(const char *filename);
 void dbg_file_log(const char *filename, const char *dir, const char *msg);
 void dbg_file_log_fmt(const char *filename, const char *dir, const char *fmt, ...);
