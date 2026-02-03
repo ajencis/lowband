@@ -373,6 +373,7 @@ skill:TO_HIT_THROW:95
 skill:DIGGING:75
 skill:MAGIC:75
 skill:HEALTH:65
+power:BOW_SPECIALIZATION:20
 desc:An elf.
 
 name:hobbit
@@ -386,7 +387,7 @@ sleepiness:40
 depth:0
 rarity:10
 experience:0
-flags:PLAYABLE
+flags:PLAYABLE | NO_DRAIN
 stats:-2:0:0:1:1
 skill:DISARM_PHYS:90
 skill:DISARM_MAGIC:90
@@ -413,7 +414,7 @@ sleepiness:40
 depth:0
 rarity:10
 experience:0
-flags:PLAYABLE
+flags:PLAYABLE | NO_SLEEP
 stats:-1:1:-2:1:1
 skill:DISARM_PHYS:85
 skill:DISARM_MAGIC:85
@@ -440,7 +441,7 @@ sleepiness:40
 depth:0
 rarity:10
 experience:0
-flags:PLAYABLE
+flags:PLAYABLE | NO_BLIND
 stats:0:-1:1:-2:2
 skill:DISARM_PHYS:80
 skill:DISARM_MAGIC:80
@@ -529,7 +530,7 @@ sleepiness:40
 depth:0
 rarity:10
 experience:0
-flags:PLAYABLE
+flags:PLAYABLE | RES_LIGHT
 stats:-1:2:-1:1:-1
 skill:DISARM_PHYS:90
 skill:DISARM_MAGIC:90
@@ -543,6 +544,7 @@ skill:TO_HIT_THROW:95
 skill:DIGGING:75
 skill:MAGIC:75
 skill:HEALTH:60
+power:SWORD_SPECIALIZATION:20
 desc:A high-elf.
 
 name:tallfolk

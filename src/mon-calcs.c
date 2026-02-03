@@ -42,19 +42,20 @@ static int safe_div(int dividend, int divisor)
 
 
 struct mon_player_match of_matches[] = {
-	{ RF_PASS_WEB, OF_PASS_WEB },
-	{ RF_INVISIBLE, OF_INVISIBILITY },
-	{ RF_HI_REGEN, OF_HI_REGEN },
-	{ RF_PASS_TREE, OF_PASS_TREE },
-	{ RF_PASS_ROCK, OF_PASS_ROCK },
-	{ RF_NONE, -1 }
+	{ RF_PASS_WEB,	OF_PASS_WEB },
+	{ RF_INVISIBLE,	OF_INVISIBILITY },
+	{ RF_HI_REGEN,	OF_HI_REGEN },
+	{ RF_PASS_TREE,	OF_PASS_TREE },
+	{ RF_PASS_ROCK,	OF_PASS_ROCK },
+	{ RF_NO_DRAIN,	OF_HOLD_LIFE },
+	{ RF_NO_BLIND,	OF_PROT_BLIND },
+	{ RF_NONE, 		OF_NONE }
 };
 
 struct mon_player_match pf_matches[] = {
 	{ RF_UNDEAD, PF_UNDEAD },
 	{ RF_EVIL, PF_EVIL },
 	{ RF_PASS_WALL, PF_PASS_WALL },
-	{ RF_PHOENIX_RESURRECT, PF_PHOENIX_RESURRECT },
 	{ RF_NONE, -1 }
 };
 

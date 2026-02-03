@@ -65,19 +65,6 @@
 
 
 name:Human
-#stats:0:0:0:0:0
-#skill-disarm-phys:0
-#skill-disarm-magic:0
-#skill-device:0
-#skill-save:0
-#skill-stealth:0
-#skill-search:0
-#skill-melee:0
-#skill-shoot:0
-#skill-throw:0
-#skill-dig:0
-#skill-magic:0
-#skill-health:0
 #hitdie:5
 exp:100
 infravision:0
@@ -86,22 +73,8 @@ age:14:6
 height:69:10
 weight:165:35
 player-flags:EXTRA_LEARNING
-#body:Humanoid
 
 name:Half-Elf
-#stats:0:0:-1:1:0
-#skill-disarm-phys:2
-#skill-disarm-magic:2
-#skill-device:3
-#skill-save:3
-#skill-stealth:4
-#skill-search:3
-#skill-melee:-1
-#skill-shoot:4
-#skill-dig:0
-#skill-magic:0
-#skill-health:-1
-#hitdie:5
 exp:120
 infravision:2
 history:4
@@ -109,22 +82,8 @@ age:24:16
 height:71:8
 weight:115:25
 obj-flags:SUST_DEX
-#body:Humanoid
 
 name:Elf
-#stats:0:1:-1:1:-1
-#skill-disarm-phys:4
-#skill-disarm-magic:4
-#skill-device:5
-#skill-save:5
-#skill-stealth:6
-###kill-shoot:10
-#skill-throw:10
-#skill-dig:0
-#skill-magic:0
-#skill-health:-2
-#power:BOW_SPECIALIZATION:20
-#hitdie:4
 exp:120
 infravision:3
 history:5
@@ -132,23 +91,9 @@ age:75:75
 height:73:7
 weight:90:10
 obj-flags:SUST_DEX
-values:RES_LIGHT[1]
-#body:Humanoid
+#values:RES_LIGHT[1]
 
 name:Hobbit
-#stats:-2:0:0:1:1
-#skill-disarm-phys:10
-#skill-disarm-magic:10
-#skill-device:12
-##skill-stealth:15
-#s#kill-search:6
-#skill-melee:-10
-#skill-shoot:15
-#skill-throw:15
-#skill-dig:0
-#skill-magic:0
-#skill-health:-2
-#hitdie:2
 exp:120
 infravision:4
 history:10
@@ -157,7 +102,6 @@ height:34:4
 weight:55:5
 obj-flags:HOLD_LIFE
 player-flags:KNOW_MUSHROOM
-#body:Humanoid
 
 name:Gnome
 #power:ILLUSION_MAGIC:20
@@ -168,9 +112,8 @@ history:13
 age:50:40
 height:40:5
 weight:80:5
-obj-flags:FREE_ACT
+#obj-flags:FREE_ACT
 player-flags:KNOW_ZAPPER
-#body:Humanoid
 
 name:Dwarf
 #hitdie:6
@@ -180,9 +123,8 @@ history:16
 age:35:15
 height:47:4
 weight:135:20
-obj-flags:PROT_BLIND
+#obj-flags:PROT_BLIND
 player-flags:SEE_ORE
-#body:Humanoid
 
 name:Half-Orc
 #hitdie:5
@@ -192,8 +134,7 @@ history:19
 age:11:4
 height:64:2
 weight:135:15
-values:RES_DARK[1]
-#body:Humanoid
+#values:RES_DARK[1]
 
 name:Half-Troll
 #hitdie:7
@@ -204,24 +145,14 @@ age:20:10
 height:90:16
 weight:240:60
 obj-flags:SUST_STR | REGEN
-#body:Humanoid
-#monster:forest troll
-#monster:hill troll
-#monster:cave troll
-#monster:stone troll
-#monster:mountain troll
-#monster:etten
 
 name:Half-Ghoul
-#hitdie:7
 exp:120
 infravision:3
 history:21
 age:20:10
 height:90:16
 weight:240:60
-#body:Humanoid
-#monster:ghoul
 
 name:Dunadan
 #hitdie:6
@@ -232,7 +163,6 @@ age:50:20
 height:80:6
 weight:190:20
 obj-flags:SUST_CON
-#body:Humanoid
 
 name:High-Elf
 #power:SWORD_SPECIALIZATION:20
@@ -244,8 +174,6 @@ age:100:30
 height:77:6
 weight:190:20
 obj-flags:SEE_INVIS
-values:RES_LIGHT[1]
-#body:Humanoid
 
 name:Kobold
 #power:BACKSTAB:20
@@ -257,7 +185,7 @@ history:23
 age:15:10
 height:37:4
 weight:65:5
-values:RES_POIS[1]
+#values:RES_POIS[1]
 #body:Humanoid
 
 name:Tallfolk
