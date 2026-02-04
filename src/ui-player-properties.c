@@ -1431,11 +1431,25 @@ static void evolution_choice_menu_free(struct menu *m)
 	menu_free(m);
 }
 
+static bool add_evolution_reverse_order(struct player *p, const int choice, const int *parents, const struct monster_race **choices)
+{
+	bool success = false;
+
+	int parent = parents[choice];
+
+	if (parent >= 0) {
+		success = add_evolution_reverse_order(p, parent, parents, choices);
+	}
+
+	success = add_evolution(p, choices[choice]) || success;
+
+	return success;
+}
+
 bool evolution_choice_menu_select(const struct evolution *evol, struct player *p, bool birth)
 {
 	struct menu *m;
 	struct evolution_choice_menu_data *data;
-	int which;
 
 	if (!evol) return false;
 
@@ -1460,9 +1474,7 @@ bool evolution_choice_menu_select(const struct evolution *evol, struct player *p
 
 	assert(m->data_parents);
 
-	for (which = data->choice; which >= 0; which = m->data_parents[which]) {
-		add_evolution(p, data->choices[which]);
-	}
+	add_evolution_reverse_order(p, data->choice, m->data_parents, data->choices);
 
 	evolution_choice_menu_free(m);
 

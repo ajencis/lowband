@@ -53,6 +53,7 @@
 #include "trap.h"
 #include "ui-input.h"
 #include "ui-player-properties.h"
+#include "z-util.h"
 
 
 
@@ -336,64 +337,19 @@ void change_player_monster(struct player *p, const struct monster_race *mon, boo
 
 bool check_player_monster(struct player *p, bool init)
 {
-	bool success;
-
-	success = mon_check_evolution(&p->mon, !init);
+	bool success = mon_check_evolution(&p->mon, !init);
 
 	if (success) {
+		msg("You transform into a%s %s.", is_a_vowel(p->mon.race->name[0]) ? "n" : "", p->mon.race->name);
+
 		remove_first_evolution(p);
+
 		if (!init) {
 			player_increase_stat(p);
 		}
 	}
 
 	return success;
-
-	const struct monster_race *selected = NULL;
-	int numevols = 0;
-	bool do_change = false;
-	uint64_t xpneed;
-	uint64_t currxp = init ? 0 : p->monster_xp;
-
-	if (p->evol_choices && !p->evol_choices[0]) {
-		return false;
-	}
-
-	if (p->mon.original_race && p->mon.race && p->mon.original_race->ridx != p->mon.race->ridx) {
-		return false;
-	}
-
-	if (p->num_evol_choices <= 0 && !init) {
-		select_evolution(p);
-	}
-
-	if (!p->evol_choices) return false;
-	if (init && p->mon.race) return false;
-	//assert(p->evol_choices);
-
-	selected = p->evol_choices[0];
-
-	if (!selected) return false;
-
-	if (selected) {
-		int monlev = selected->level;
-
-		++numevols;
-
-		xpneed = player_exp_new(monlev, 1);
-	}
-
-	if (currxp >= xpneed) do_change = true;
-
-	if (do_change) {
-		change_player_monster(p, selected, init);
-		if (!init) {
-			remove_first_evolution(p);
-			player_increase_stat(p);
-		}
-	}
-
-	return do_change;
 }
 
 void player_race_name(struct player *p, char *buf, size_t bufsize)
