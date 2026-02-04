@@ -28,6 +28,7 @@
 #include "mon-lore.h"
 #include "mon-timed.h"
 #include "mon-util.h"
+#include "monster.h"
 #include "obj-chest.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
@@ -3469,8 +3470,9 @@ void search(struct player *p)
 
 			/* L: find invisible monsters
 			   invisible monsters percieved will get spotted and will be visible until
-			   they teleport or move out of range*/
+			   they teleport or move out of range */
 			if (mon && monster_is_invisible(mon) &&
+					!mflag_has(mon->mflag, MFLAG_SPOTTED) &&
 					currpower > randint0(mon->race->level)) {
 				char mdesc[128];
 

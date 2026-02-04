@@ -2954,7 +2954,7 @@ bool effect_handler_TELEPORT(effect_handler_context_t *context)
 			context->origin.what == SRC_MONSTER);
 	}
 	else if (t_mon) {
-		// L: teeporing monsters get unspotted
+		// L: teleporing monsters get unspotted
 		mflag_off(t_mon->mflag, MFLAG_SPOTTED);
 	}
 
@@ -3095,7 +3095,7 @@ bool effect_handler_TELEPORT_TO(effect_handler_context_t *context)
 			context->origin.what == SRC_MONSTER);
 	}
 	else if (t_mon) {
-		// L: teeporing monsters get unspotted
+		// L: teleporing monsters get unspotted
 		mflag_off(t_mon->mflag, MFLAG_SPOTTED);
 	}
 

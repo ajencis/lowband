@@ -703,6 +703,9 @@ void update_mon(struct monster *mon, struct chunk *c, bool full)
 						/* Easy to see */
 						easy = flag = true;
 					}
+					if (mflag_has(mon->mflag, MFLAG_SPOTTED)) {
+						easy = flag = true;
+					}
 				} else {
 					/* Easy to see */
 					easy = flag = true;
@@ -799,8 +802,9 @@ void update_mon(struct monster *mon, struct chunk *c, bool full)
 			mflag_off(mon->mflag, MFLAG_SPOTTED);
 
 			/* Disturb on disappearance */
-			if (OPT(player, disturb_near) && !monster_is_camouflaged(mon))
+			if (OPT(player, disturb_near) && !monster_is_camouflaged(mon)) {
 				disturb(player);
+			}
 
 			/* Re-draw monster list window */
 			player->upkeep->redraw |= PR_MONLIST;
