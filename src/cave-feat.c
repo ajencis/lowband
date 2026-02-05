@@ -876,11 +876,12 @@ static void square_update_feat_memorization(const struct chunk *c, struct player
 		new[fidx] = MAX(new[fidx], real->size);
 	}
 
-	square_clear_feats(p->cave, grid);
-
 	for (i = 0; i < FEAT_MAX; ++i) {
 		if (new[i] > 0 && (!pred || pred(i))) {
-			square_force_add_feat_size(p->cave, grid, i, new[i]);
+			square_set_feat_size(p->cave, grid, i, new[i]);
+		}
+		else {
+			square_remove_feat(p->cave, grid, i);
 		}
 	}
 }
