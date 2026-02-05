@@ -119,6 +119,7 @@ code:NONE
 name:unknown grid
 graphics: :w
 priority:2
+flags: LOS | PROJECT | PASSABLE | EASY | TRAP
 
 
 code:FLOOR
