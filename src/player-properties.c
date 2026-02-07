@@ -137,10 +137,13 @@ static bool pred_HAS_MATCHING_SPELL(const struct player_ability *abil, const str
 
 static bool pred_RACE_OR_CLASS_HAS_POWER(const struct player_ability *abil, const struct player *p)
 {
+	int i;
 	assert(abil->type == PY_ABIL_POWER);
 
 	if (lookup_player_monster(p)->powers[abil->index] > 0) return true;
-	if (p->class->c_powers[abil->index] > 0) return true;
+	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
+		if (p->classes[i]->c_powers[abil->index] > 0) return true;
+	}
 
 	return false;
 }
@@ -273,15 +276,18 @@ void ability_desc_base(char *buf, size_t bufsize, const struct player_ability *a
 static void view_abilities(void)
 {
 	struct player_ability *ability;
-	int num_abilities = 0;
+	int num_abilities = 0, i;
 	struct player_ability ability_list[MAX_ABILITIES];
 
 	/* Count the number of class powers we have */
 	for (ability = player_abilities; ability && num_abilities < MAX_ABILITIES; ability = ability->next) {
-		if (class_has_ability(player->class, ability)) {
-			memcpy(&ability_list[num_abilities], ability,
-				   sizeof(struct player_ability));
-			ability_list[num_abilities++].group = PLAYER_FLAG_CLASS;
+		for (i = 0; i < MAX_PLAYER_CLASSES && player->classes[i]; ++i) {
+			if (class_has_ability(player->classes[i], ability)) {
+				memcpy(&ability_list[num_abilities], ability,
+					   sizeof(struct player_ability));
+				ability_list[num_abilities++].group = PLAYER_FLAG_CLASS;
+				break;
+			}
 		}
 	}
 
@@ -647,22 +653,32 @@ int get_power_scale(const struct monster *mon, int power, int scaleto)
  */
 static int py_extra_target(const struct player *p, const struct player_ability *abil)
 {
-	int base, xtra = 0;
+	int base, xtra = 0, i;
 
 	if (abil->id < 0) return 0;
 	assert(abil->id < z_info->abil_id_max);
 
 	base = p->extra_target[abil->id];
 
-	if (abil->type == PY_ABIL_POWER && p->class) {
-		xtra = p->class->c_powers[abil->index];
-	} else if (abil->type == PY_ABIL_SKILL && p->class) {
-		xtra = p->class->x_skills[abil->index];
+	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
+		int temp_xtra;
+
+		if (abil->type == PY_ABIL_POWER) {
+			xtra = p->classes[i]->c_powers[abil->index];
+		} else if (abil->type == PY_ABIL_SKILL) {
+			xtra = p->classes[i]->x_skills[abil->index];
+		}
+
+		if (pf_has(p->classes[i]->pflags, PF_EXTRA_LEARNING)) {
+			temp_xtra = MAX(temp_xtra, base);
+		}
+
+		xtra += temp_xtra;
 	}
 
-	if (p->class && pf_has(p->class->pflags, PF_EXTRA_LEARNING)) {
-		xtra = MAX(xtra, base);
-	}
+	assert(i > 0);
+	xtra += xtra * (i - 1) / 10;
+	xtra /= i; 
 
 	return base + xtra;
 }

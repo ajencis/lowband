@@ -24,16 +24,18 @@
 /* Based on the adaptation of Exo's patch to frogcomposband. */
 bool save_charoutput(void)
 {
-	char path[1024];
+	char path[1024], c_name[128];
 	ang_file *fo;
 	bool written = true;
+
+	class_name(player, c_name, sizeof c_name);
 
 	path_build(path, sizeof(path), ANGBAND_DIR_USER, "CharOutput.txt");
 	fo = file_open(path, MODE_WRITE, FTYPE_TEXT);
 	if (fo) {
 		if (! file_put(fo, "{\n")) written = false;
 		if (! file_putf(fo, "race: \"%s\",\n", player->race->name)) written = false;
-		if (! file_putf(fo, "class: \"%s\",\n", player->class->name)) written = false;
+		if (! file_putf(fo, "class: \"%s\",\n", c_name)) written = false;
 		if (! file_put(fo, "mapName: \"Angband\",\n")) written = false;
 		if (! file_putf(fo, "dLvl: \"%i\",\n", player->depth)) written = false;
 		if (! file_putf(fo, "cLvl: \"%i\",\n", player->lev)) written = false;

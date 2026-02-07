@@ -187,7 +187,7 @@ static int fmt_title(char buf[], int max, bool short_mode)
 		my_strcpy(buf, player->shape->name, max);
 		my_strcap(buf);		
 	} else if (!short_mode) {
-		my_strcpy(buf, player->class->title[MIN(player->lev - 1, 49) / 5], max);
+		class_title(player, buf, max);
 	}
 
 	return strlen(buf);
@@ -608,15 +608,16 @@ static void prt_race(int row, int col) {
 static int prt_race_class_short(int row, int col)
 {
 	char buf[512] = "";
-	char buf2[13] = "";
+	char r_name[13] = "", c_name[128] = "";
 
 	if (player_is_shapechanged(player)) return 0;
 
-	player_race_name(player, buf2, sizeof(buf2));
+	player_race_name(player, r_name, sizeof r_name);
+	class_name(player, c_name, sizeof c_name);
 
-	strnfmt(buf, sizeof(buf), "%s %s",
-		buf2,
-		player->class->title[(player->lev - 1) / 5]);
+	strnfmt(buf, sizeof buf, "%s %s",
+		r_name,
+		c_name);
 
 	c_put_str(COLOUR_L_GREEN, buf, row, col);
 
@@ -627,7 +628,9 @@ static void prt_class(int row, int col) {
 	if (player_is_shapechanged(player)) {
 		prt_field("", row, col);
 	} else {
-		prt_field(player->class->name, row, col);
+		char c_name[128];
+		class_name(player, c_name, sizeof c_name);
+		prt_field(c_name, row, col);
 	}
 }
 
@@ -2160,7 +2163,7 @@ static void update_topbar_subwindow(game_event_type type,
 	term *inv_term = user;
 
 	/* Check sanity */
-	if (!(player && player->race && player->class && cave)) return;
+	if (!(player && player->race && player->classes[0] && cave)) return;
 
 	/* Activate */
 	Term_activate(inv_term);
@@ -2188,7 +2191,7 @@ static void update_player_compact_subwindow(game_event_type type,
 	term *old = Term;
 	term *inv_term = user;
 
-	char buf[13] = "";
+	char buf[13] = "", c_name[128];
 
 	/* Activate */
 	Term_activate(inv_term);
@@ -2196,7 +2199,9 @@ static void update_player_compact_subwindow(game_event_type type,
 	/* Race and Class */
 	player_race_name(player, buf, sizeof(buf));
 	prt_field(buf, row++, col);
-	prt_field(player->class->name, row++, col);
+
+	class_name(player, c_name, sizeof c_name);
+	prt_field(c_name, row++, col);
 
 	/* Title */
 	prt_title(row++, col);

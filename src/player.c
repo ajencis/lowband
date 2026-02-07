@@ -16,6 +16,7 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#include "player.h"
 #include "effects.h"
 #include "init.h"
 #include "mon-calcs.h"
@@ -550,9 +551,13 @@ void check_level(struct player *p)
  */
 void player_flags(struct player *p, bitflag f[OF_SIZE])
 {
+	int i;
+
 	/* Add racial flags */
 	memcpy(f, p->race->flags, sizeof(p->race->flags));
-	of_union(f, p->class->flags);
+	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
+		of_union(f, p->classes[i]->flags);
+	}
 
 	/* Some classes become immune to fear at a certain plevel */
 	if (player_has(p, PF_BRAVERY_30) && p->lev >= 30) {

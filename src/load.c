@@ -39,6 +39,7 @@
 #include "player-spell.h"
 #include "player-timed.h"
 #include "player-util.h"
+#include "player.h"
 #include "savefile.h"
 #include "store.h"
 #include "trap.h"
@@ -783,15 +784,27 @@ int rd_player(void)
 	}
 
 	/* Player class */
-	rd_string(buf, sizeof(buf));
+	for (i = 0; i < MAX_PLAYER_CLASSES; ++i) {
+		rd_string(buf, sizeof buf);
+		if (!buf[0]) {
+			player->classes[i] = NULL;
+			break;
+		}
+		for (c = classes; c; c = c->next) {
+			if (streq(c->name, buf)) {
+				player->classes[i] = c;
+			}
+		}
+	}
+	/*rd_string(buf, sizeof(buf));
 	for (c = classes; c; c = c->next) {
 		if (streq(c->name, buf)) {
 			player->class = c;
 			break;
 		}
-	}
+	}*/
 
-	if (!player->class) {
+	if (!player->classes[0]) {
 		note(format("Invalid player class (%s).", buf));
 		return -1;
 	}

@@ -225,7 +225,14 @@ static void birthmenu_display(struct menu *menu, int oid, bool cursor,
 
 static bool class_meets_all_prereqs(const struct player *p, const struct player_class *c)
 {
+	int i;
 	assert(p->mon.race);
+
+	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
+		if (p->classes[i] == c) {
+			//return false;
+		}
+	}
 
 	return race_meets_all_predicates(p->mon.race, c);
 }
@@ -285,7 +292,7 @@ void reset_birthmenu_filters(void)
 	get_menu_filter(&race_menu);
 	unsigned int curr_idx = race_menu.oid_selected;
 	struct player_race *new_race = NULL;
-	struct player_class *new_class = NULL;
+	//struct player_class *new_class = NULL;
 
 	if (curr_idx != player->race->ridx) {
 		new_race = player_id2race(curr_idx);
@@ -295,12 +302,12 @@ void reset_birthmenu_filters(void)
 
 	curr_idx = class_menu.oid_selected;
 
-	if (curr_idx != player->class->cidx) {
+	/*if (curr_idx != player->class->cidx) {
 		new_class = player_id2class(curr_idx);
-	}
+	}*/
 
-	if (new_race || new_class) {
-		player_generate(player, new_race, new_class, false);
+	if (new_race) {
+		player_generate(player, new_race, /*new_class,*/ false);
 	}
 }
 
@@ -795,7 +802,7 @@ static void setup_menus(void)
 	for (c = classes; c; c = c->next) n++;
 
 	/* Class menu similar to race. */
-	init_birth_menu(&class_menu, n, player->class->cidx,
+	init_birth_menu(&class_menu, n, player->classes[0]->cidx,
 	                &class_region, true, class_help, BQ_CLASS);
 	mdata = menu_priv(&class_menu);
 
@@ -1977,6 +1984,7 @@ int textui_do_birth(void)
 				print_menu_instructions();
 
 				if (current_stage > BIRTH_RACE_CHOICE) {
+					//birth_clear_classes(player);
 					menu_refresh(&race_menu, false);
 					menu = &class_menu;
 					command = CMD_CHOOSE_CLASS;

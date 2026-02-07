@@ -192,7 +192,7 @@ static void generate_player_for_stats(void)
 	player->wizard = 1; /* Set wizard mode on */
 
 	player->race = races;  /* Human   */
-	player->class = classes; /* Warrior */
+	player->classes[0] = classes; /* Warrior */
 
 	/* Needs a body; duplicates logic from the private player_embody(). */
 	memcpy(&player->mon.body, &bodies[player->race->mon.body],

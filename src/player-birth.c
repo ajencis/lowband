@@ -39,6 +39,7 @@
 #include "object.h"
 #include "player-birth.h"
 #include "player-calcs.h"
+#include "player-enum.h"
 #include "player-history.h"
 #include "player-properties.h"
 #include "player-quest.h"
@@ -96,7 +97,7 @@ typedef struct birther /*lovely*/ birther; /*sometimes we think she's a dream*/
 struct birther
 {
 	const struct player_race *race;
-	const struct player_class *class;
+	const struct player_class *classes[MAX_PLAYER_CLASSES];
 
 	int16_t age;
 	int16_t wt;
@@ -228,11 +229,14 @@ static void save_roller_data(birther *tosave)
 
 	/* Save the data */
 	tosave->race = player->race;
-	tosave->class = player->class;
 	tosave->age = player->age;
 	tosave->wt = player->wt_birth;
 	tosave->ht = player->ht_birth;
 	tosave->au = player->au_birth;
+
+	for (i = 0; i < MAX_PLAYER_CLASSES; ++i) {
+		tosave->classes[i] = player->classes[i];
+	}
 
 	/* Save the stats */
 	for (i = 0; i < STAT_MAX; i++) {
@@ -279,12 +283,15 @@ static void load_roller_data(birther *saved, birther *prev_player)
 
 	/* Load previous data */
 	player->race     = saved->race;
-	player->class    = saved->class;
 	player->age      = saved->age;
 	player->wt       = player->wt_birth = saved->wt;
 	player->ht       = player->ht_birth = saved->ht;
 	player->au_birth = saved->au;
 	player->au       = player->au_birth;
+
+	for (i = 0; i < MAX_PLAYER_CLASSES; ++i) {
+		player->classes[i] = saved->classes[i];
+	}
 
 	/* Load previous stats */
 	for (i = 0; i < STAT_MAX; i++) {
@@ -559,69 +566,72 @@ static void player_birth_equip(struct player *p)
 {
 	const struct start_item *si;
 	struct object *obj, *known_obj;
+	int i;
 
-	if (!p->class) return;
+	if (!p->classes[0]) return;
 
 	player_birth_unequip(p);
 
 	/* Give the player starting equipment */
-	for (si = p->class->start_items; si; si = si->next) {
-		int num = rand_range(si->min, si->max);
-		struct object_kind *kind = lookup_kind(si->tval, si->sval);
-		assert(kind);
+	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
+		for (si = p->classes[i]->start_items; si; si = si->next) {
+			int num = rand_range(si->min, si->max);
+			struct object_kind *kind = lookup_kind(si->tval, si->sval);
+			assert(kind);
 
-		/* Without start_kit, only start with 1 food and 1 light */
-		if (!OPT(p, birth_start_kit)) {
-			if (!tval_is_food_k(kind) && !tval_is_light_k(kind))
-				continue;
+			/* Without start_kit, only start with 1 food and 1 light */
+			if (!OPT(p, birth_start_kit)) {
+				if (!tval_is_food_k(kind) && !tval_is_light_k(kind))
+					continue;
 
-			num = 1;
-		}
-
-		if (tval_is_wearable_k(kind) && !obj_can_wear_k(kind)) {
-			continue;
-		}
-
-		/* Exclude if configured to do so based on birth options. */
-		if (si->eopts) {
-			bool included = true;
-			int eind = 0;
-
-			while (si->eopts[eind] && included) {
-				if (si->eopts[eind] > 0) {
-					if (p->opts.opt[si->eopts[eind]]) {
-						included = false;
-					}
-				} else {
-					if (!p->opts.opt[-si->eopts[eind]]) {
-						included = false;
-					}
-				}
-				++eind;
+				num = 1;
 			}
-			if (!included) continue;
+
+			if (tval_is_wearable_k(kind) && !obj_can_wear_k(kind)) {
+				continue;
+			}
+
+			/* Exclude if configured to do so based on birth options. */
+			if (si->eopts) {
+				bool included = true;
+				int eind = 0;
+
+				while (si->eopts[eind] && included) {
+					if (si->eopts[eind] > 0) {
+						if (p->opts.opt[si->eopts[eind]]) {
+							included = false;
+						}
+					} else {
+						if (!p->opts.opt[-si->eopts[eind]]) {
+							included = false;
+						}
+					}
+					++eind;
+				}
+				if (!included) continue;
+			}
+
+			/* Prepare a new item */
+			obj = object_new();
+			object_prep(obj, kind, 0, MINIMISE);
+			obj->number = num;
+			obj->origin = ORIGIN_BIRTH;
+
+			known_obj = object_new();
+			obj->known = known_obj;
+			object_set_base_known(p, obj);
+			object_flavor_aware(p, obj);
+			obj->known->pval = obj->pval;
+			obj->known->effect = obj->effect;
+			obj->known->notice |= OBJ_NOTICE_ASSESSED;
+
+			/* Deduct the cost of the item from starting cash */
+			p->au -= object_value_real(obj, obj->number);
+
+			/* Carry the item */
+			inven_carry(cave, &p->mon, obj, true, false);
+			kind->everseen = true;
 		}
-
-		/* Prepare a new item */
-		obj = object_new();
-		object_prep(obj, kind, 0, MINIMISE);
-		obj->number = num;
-		obj->origin = ORIGIN_BIRTH;
-
-		known_obj = object_new();
-		obj->known = known_obj;
-		object_set_base_known(p, obj);
-		object_flavor_aware(p, obj);
-		obj->known->pval = obj->pval;
-		obj->known->effect = obj->effect;
-		obj->known->notice |= OBJ_NOTICE_ASSESSED;
-
-		/* Deduct the cost of the item from starting cash */
-		p->au -= object_value_real(obj, obj->number);
-
-		/* Carry the item */
-		inven_carry(cave, &p->mon, obj, true, false);
-		kind->everseen = true;
 	}
 
 	wield_all(p);
@@ -671,7 +681,7 @@ static void get_money(struct player *p)
 {
 	if (p->au_birth == 0) {
 		p->au_birth = z_info->start_gold;
-		if (pf_has(p->class->pflags, PF_EXTRA_GOLD)) p->au_birth *= 5;
+		if (any_class_has_flag(p, PF_EXTRA_GOLD)) p->au_birth *= 5;
 	}
 	p->au = p->au_birth;
 }
@@ -779,7 +789,11 @@ void player_init(struct player *p)
 
 	/* Default to the first race/class in the edit file */
 	p->race = races;
-	p->class = classes;
+	p->classes[0] = classes;
+	for (i = 1; i < MAX_PLAYER_CLASSES; ++i) {
+		p->classes[i] = NULL;
+	}
+
 	give_player_race(p);
 
 	/* Player starts unshapechanged */
@@ -924,7 +938,7 @@ static void recalculate_stats(int *stats_local_local, int points_left_local)
 
 	/* Gold is inversely proportional to cost */
 	player->au_birth = z_info->start_gold * (1 + points_left_local);
-	if (pf_has(player->class->pflags, PF_EXTRA_GOLD)) player->au_birth *= 5;
+	if (any_class_has_flag(player, PF_EXTRA_GOLD)) player->au_birth *= 5;
 
 	/* Update bonuses, hp, etc. */
 	get_bonuses();
@@ -1052,6 +1066,7 @@ static void generate_stats(int st[STAT_MAX], int spent[STAT_MAX],
 		int inc[STAT_MAX], int *left)
 {
 	return;
+#if 0
 	int step = 0;
 	bool maxed[STAT_MAX] = { 0 };
 	/* Hack - for now, just use stat of first book - NRM */
@@ -1206,6 +1221,72 @@ static void generate_stats(int st[STAT_MAX], int spent[STAT_MAX],
 	/* Recalculate everything that's changed because
 	   the stat has changed, and inform the UI. */
 	recalculate_stats(st, *left);
+#endif
+}
+
+static bool birth_add_class(struct player *p, const struct player_class *c)
+{
+	int i;
+
+	assert(c);
+
+	if (p->classes[MAX_PLAYER_CLASSES - 1]) {
+		return false;
+	}
+
+	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
+		if (p->classes[i] == c) {
+			return false;
+		}
+	}
+
+	for (i = MAX_PLAYER_CLASSES - 1; i > 0; --i) {
+		p->classes[i] = p->classes[i - 1];
+	}
+
+	p->classes[0] = c;
+
+	return true;
+}
+
+#if 0
+static bool birth_remove_class(struct player *p, const struct player_class *c)
+{
+	int i, j;
+
+	assert(c);
+	dbg_log_fmt("class", "entering brc for %s", c->name);
+
+	for (i = 0; i < MAX_PLAYER_CLASSES; ++i) {
+		if (p->classes[i] == c) {
+			for (j = i; j < MAX_PLAYER_CLASSES - 1; ++j) {
+				p->classes[j] = p->classes[j + 1];
+			}
+			p->classes[MAX_PLAYER_CLASSES - 1] = NULL;
+			
+			if (!p->classes[0]) {
+				p->classes[0] = classes;
+			}
+
+			dbg_log("class", "exiting brc");
+			return true;
+		}
+	}
+
+	dbg_log("class", "exiting brc");
+	return false;
+}
+#endif
+
+bool birth_clear_classes(struct player *p)
+{
+	int i;
+
+	for (i = 0; i < MAX_PLAYER_CLASSES; ++i) {
+		p->classes[i] = NULL;
+	}
+
+	return 0;
 }
 
 /**
@@ -1213,21 +1294,21 @@ static void generate_stats(int st[STAT_MAX], int spent[STAT_MAX],
  * and so is called whenever things like race or class are chosen.
  */
 void player_generate(struct player *p, const struct player_race *r,
-					 const struct player_class *c, bool old_history)
+					 /*const struct player_class *c,*/ bool old_history)
 {
 	int i;
 	struct monster_race *mr;
 	bool reembody;
 	struct player_ability *abil;
 
-	if (!c) {
+	/*if (!c) {
 		c = p->class;
-	}
+	}*/
 	if (!r) {
 		r = p->race;
 	}
 
-	p->class = c;
+	//p->class = c;
 	p->race = r;
 
 	mr = race_to_monster(r);
@@ -1250,10 +1331,13 @@ void player_generate(struct player *p, const struct player_race *r,
 	}
 
 	/* L: copy realm over */
-	p->realm = c->realm;
-	if (c->realm) {
-		struct player_ability *magic = lookup_player_ability(SKILL_MAGIC, PY_ABIL_SKILL);
-		p->extra_choice[magic->id] = c->realm->index;
+	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
+		if (p->classes[i]->realm) {
+			p->realm = p->classes[i]->realm;
+			struct player_ability *magic = lookup_player_ability(SKILL_MAGIC, PY_ABIL_SKILL);
+			p->extra_choice[magic->id] = p->classes[i]->realm->index;
+			break;
+		}
 	}
 
 	// L: initialize starting powers
@@ -1291,7 +1375,9 @@ static void do_birth_reset(bool use_quickstart, birther *quickstart_prev_local)
 
 	while (player->evol_choices) remove_first_evolution(player);
 
-	player_generate(player, NULL, NULL, use_quickstart && quickstart_prev_local);
+	birth_clear_classes(player);
+	player->classes[0] = classes;
+	player_generate(player, NULL, use_quickstart && quickstart_prev_local);
 
 	player->depth = 0;
 
@@ -1328,7 +1414,9 @@ void do_cmd_birth_init(struct command *cmd)
 		save_roller_data(&quickstart_prev);
 		quickstart_allowed = true;
 	} else {
-		player_generate(player, player_id2race(0), player_id2class(0), false);
+		birth_clear_classes(player);
+		player->classes[0] = classes;
+		player_generate(player, player_id2race(0), false);
 		quickstart_allowed = false;
 	}
 
@@ -1348,20 +1436,24 @@ void do_cmd_choose_race(struct command *cmd)
 {
 	int choice;
 	cmd_get_arg_choice(cmd, "choice", &choice);
-	player_generate(player, player_id2race(choice), NULL, false);
+	player_generate(player, player_id2race(choice), false);
 
 	reset_stats(stats, points_spent, points_inc, &points_left, false);
 	generate_stats(stats, points_spent, points_inc, &points_left);
 	rolled_stats = false;
 
 	reset_birthmenu_filters();
+
+	//birth_clear_classes(player);
 }
 
 void do_cmd_choose_class(struct command *cmd)
 {
 	int choice;
 	cmd_get_arg_choice(cmd, "choice", &choice);
-	player_generate(player, NULL, player_id2class(choice), false);
+	birth_clear_classes(player);
+	birth_add_class(player,  player_id2class(choice));
+	player_generate(player, NULL, false);
 
 	reset_stats(stats, points_spent, points_inc, &points_left, false);
 	generate_stats(stats, points_spent, points_inc, &points_left);

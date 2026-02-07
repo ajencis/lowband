@@ -249,7 +249,7 @@ void build_score(struct high_score *entry, const struct player *p,
 	/* Save the player info XXX XXX XXX */
 	strnfmt(entry->uid, sizeof(entry->uid), "%7u", player_uid);
 	strnfmt(entry->p_r, sizeof(entry->p_r), "%2d", p->race->ridx);
-	strnfmt(entry->p_c, sizeof(entry->p_c), "%2d", p->class->cidx);
+	strnfmt(entry->p_c, sizeof(entry->p_c), "%2d", p->classes[0]->cidx);
 
 	/* Save the level and such */
 	strnfmt(entry->cur_lev, sizeof(entry->cur_lev), "%3d", p->lev);

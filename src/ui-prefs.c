@@ -558,7 +558,7 @@ static const char *process_pref_file_expr(char **sp, char *fp)
 			else if (streq(b+1, "RACE"))
 				v = player->race->name;
 			else if (streq(b+1, "CLASS"))
-				v = player->class->name;
+				v = player->classes[0]->name;
 		} else {
 			v = b;
 		}

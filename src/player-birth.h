@@ -23,7 +23,7 @@
 
 extern void player_init(struct player *p);
 extern void player_generate(struct player *p, const struct player_race *r,
-                            const struct player_class *c, bool old_history);
+                            /*const struct player_class *c,*/ bool old_history);
 extern char *get_history(struct history_chart *h);
 extern void wield_all(struct player *p);
 extern bool player_make_simple(const char *nrace, const char *nclass,
@@ -31,6 +31,7 @@ extern bool player_make_simple(const char *nrace, const char *nclass,
 extern void get_bonuses(void);
 extern void demonster_player(struct player *p);
 void give_player_race(struct player *p);
+bool birth_clear_classes(struct player *p);
 
 void do_cmd_birth_init(struct command *cmd);
 void do_cmd_birth_reset(struct command *cmd);

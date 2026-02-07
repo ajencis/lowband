@@ -21,6 +21,7 @@
 #include "init.h"
 #include "obj-desc.h"
 #include "obj-info.h"
+#include "player.h"
 #include "store.h"
 #include "ui-death.h"
 #include "ui-history.h"
@@ -61,7 +62,7 @@ static void put_str_centred(int y, int x1, int x2, const char *fmt, ...)
 static void display_exit_screen(void)
 {
 	ang_file *fp;
-	char buf[1024];
+	char buf[1024], c_name[128], c_title[128];
 	int line = 0;
 	time_t death_time = (time_t)0;
 	bool retired = streq(player->died_from, "Retiring");
@@ -83,16 +84,19 @@ static void display_exit_screen(void)
 
 	line = 7;
 
+	class_name(player, c_name, sizeof c_name);
+	class_title(player, c_title, sizeof c_title);
+
 	put_str_centred(line++, 8, 8+31, "%s", player->full_name);
 	put_str_centred(line++, 8, 8+31, "the");
 	if (player->total_winner)
 		put_str_centred(line++, 8, 8+31, "Magnificent");
 	else
-		put_str_centred(line++, 8, 8+31, "%s", player->class->title[MIN(player->lev - 1, 49) / 5]);
+		put_str_centred(line++, 8, 8+31, "%s", c_title);
 
 	line++;
 
-	put_str_centred(line++, 8, 8+31, "%s", player->class->name);
+	put_str_centred(line++, 8, 8+31, "%s", c_name);
 	put_str_centred(line++, 8, 8+31, "Level: %d", (int)player->lev);
 	put_str_centred(line++, 8, 8+31, "Exp: %lu", (int)player->exp);
 	put_str_centred(line++, 8, 8+31, "AU: %d", (int)player->au);

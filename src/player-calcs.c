@@ -1323,7 +1323,9 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 
 	/* Base pflags */
 	pf_union(state->pflags, p->race->pflags);
-	pf_union(state->pflags, p->class->pflags);
+	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
+		pf_union(state->pflags, p->classes[i]->pflags);
+	}
 
 	/* Extract the player flags */
 	player_flags(p, collect_f);
@@ -1445,7 +1447,10 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 	}
 
 	/* L: change expfact based on int */
-	state->expfact = p->race->r_exp + p->class->c_exp + adj_int_xp(state->stat_ind[STAT_INT]);
+	state->expfact = p->race->r_exp + adj_int_xp(state->stat_ind[STAT_INT]);
+	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
+		state->expfact += p->classes[i]->c_exp;
+	}
 	state->expfact = MAX(50, state->expfact);
 
 	/* Modify skills */

@@ -491,7 +491,7 @@ int player_bonus_to_cost(int bonus, const struct player_ability *abil, struct pl
 	int base = bonus_to_cost(bonus, abil);
 	int discount = 0; // in percent
 
-	if ((of_has(p->class->pflags, PF_EXTRA_LEARNING) || 
+	if ((any_class_has_flag(p, PF_EXTRA_LEARNING) || 
 				of_has(p->race->pflags, PF_EXTRA_LEARNING)) &&
 			abil->type != PY_ABIL_POWER) {
 		discount += 35;
@@ -682,6 +682,7 @@ static int tome_max_learnable_parents_array(const struct player_ability *abil, i
 	return LEARN_MAX;
 }
 
+#if 0
 static int tome_max_learnable_parents(const struct player_ability *abil, struct player *p)
 {
 	return tome_max_learnable_parents_array(abil, p->mon.state.powers, p->mon.state.skills);
@@ -689,7 +690,7 @@ static int tome_max_learnable_parents(const struct player_ability *abil, struct 
 
 static int player_extra_target(struct player *p, const struct player_ability *abil)
 {
-	int base, max, result;
+	int base, max, result, i;
 
 	if (abil->id < 0) return 0;
 	assert(abil->id < z_info->abil_id_max);
@@ -708,13 +709,14 @@ static int player_extra_target(struct player *p, const struct player_ability *ab
 
 	return result;
 }
+#endif
 
 static bool check_learn_powers(struct player *p, int xpgain)
 {
-	bool learned = false;
-	const struct player_ability *abil;
-
 	return false;
+
+	/*bool learned = false;
+	const struct player_ability *abil;
 
 	for (abil = player_abilities; abil; abil = abil->next) {
 		if (abil->id < 0) continue;
@@ -752,7 +754,7 @@ static bool check_learn_powers(struct player *p, int xpgain)
 		}
 	}
 
-	return learned;
+	return learned;*/
 }
 
 /**
@@ -890,6 +892,7 @@ int tome_prev_increment(struct player *p, const struct player_ability *abil, int
 	return prev_bonus;
 }
 
+#if 0
 int player_class_power_array(const struct player_class *c, int extra_power, int power)
 {
 	assert(power >= 0 && power < PP_MAX);
@@ -909,6 +912,7 @@ int player_class_power(struct player *p, int power)
 
 	return player_class_power_array(p->class, p->extra_learned[abil->id], power);
 }
+#endif
 
 int player_race_power_array(const struct monster_race *r, int extra_power, int power)
 {
@@ -930,6 +934,7 @@ int player_race_power(struct player *p, int power)
 	return player_race_power_array(p->mon.race, p->extra_learned[abil->id], power);
 }
 
+#if 0
 int class_x_skill(const struct player_class *c, int extra, int skill)
 {
 	assert(skill >= 0 && skill < SKILL_MAX);
@@ -953,7 +958,6 @@ int player_class_x_skill(struct player *p, int skill)
 	return class_x_skill(p->class, lrnd, skill);
 }
 
-
 int class_c_skill(const struct player_class *c, int extra, int skill)
 {
 	assert(skill >= 0 && skill < SKILL_MAX);
@@ -976,6 +980,7 @@ int player_class_c_skill(struct player *p, int skill)
 
 	return class_c_skill(p->class, lrnd, skill);
 }
+#endif
 
 void skill_stat(const struct magic_realm *realm, const int indices[STAT_MAX], int skill, int *stat1, int *stat2)
 {

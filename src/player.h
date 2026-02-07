@@ -407,6 +407,8 @@ struct player_upkeep {
 	struct loc entered;			/* L: the grid where they entered the level */
 };
 
+#define MAX_PLAYER_CLASSES 3
+
 /**
  * Most of the "player" information goes here.
  *
@@ -420,7 +422,7 @@ struct player_upkeep {
  */
 struct player {
 	const struct player_race *race;
-	const struct player_class *class;
+	const struct player_class *classes[MAX_PLAYER_CLASSES];
 
 	struct monster mon;	// L: player as a monster
 
@@ -563,6 +565,9 @@ extern struct player *player;
 
 /* player-class.c */
 struct player_class *player_id2class(guid id);
+bool any_class_has_flag(const struct player *p, int flag);
+size_t class_name(const struct player *p, char *buf, size_t bufsize);
+size_t class_title(const struct player *p, char *buf, size_t bufsize);
 
 /* player.c */
 uint64_t player_exp_new(int level_num, int level_denom);

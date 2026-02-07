@@ -50,6 +50,9 @@
 void wr_description(void)
 {
 	char buf[1024];
+	char classname[128];
+
+	class_name(player, classname, sizeof classname);
 
 	if (player->is_dead)
 		strnfmt(buf, sizeof buf, "%s, dead (%s)",
@@ -60,7 +63,7 @@ void wr_description(void)
 				player->full_name,
 				player->lev,
 				player->race->name,
-				player->class->name,
+				classname,
 				player->depth);
 
 	wr_string(buf);
@@ -503,7 +506,14 @@ void wr_player(void)
 	}
 
 	wr_string(player->shape->name);
-	wr_string(player->class->name);
+	for (i = 0; i < MAX_PLAYER_CLASSES; ++i) {
+		if (player->classes[i]) {
+			wr_string(player->classes[i]->name);
+		}
+		else {
+			wr_string("");
+		}
+	}
 	wr_byte(player->opts.name_suffix);
 
 	//wr_byte(player->hitdie);

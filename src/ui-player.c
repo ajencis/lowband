@@ -641,14 +641,14 @@ static void display_panel(const struct panel *p, bool left_adj,
 	}
 }
 
-static const char *show_title(void)
+static size_t show_title(char *buf, size_t bufsize)
 {
 	if (player->wizard)
-		return "[=-WIZARD-=]";
+		return strnfmt(buf, bufsize, "[=-WIZARD-=]");
 	else if (player->total_winner || player->lev > PY_MAX_LEVEL)
-		return "***WINNER***";
+		return strnfmt(buf, bufsize, "***WINNER***");
 	else
-		return player->class->title[MIN(player->lev - 1, 49) / 5];
+		return class_title(player, buf, bufsize);
 }
 
 static const char *show_adv_exp(void)
@@ -710,13 +710,15 @@ static const uint8_t colour_table[] =
 
 static struct panel *get_panel_topleft(void) {
 	struct panel *p = panel_allocate(6);
-	char buf[15];
-	player_race_name(player, buf, sizeof(buf));
+	char r_name[15], c_name[64], p_title[128];
+	player_race_name(player, r_name, sizeof r_name);
+	class_name(player, c_name, sizeof c_name);
+	show_title(p_title, sizeof p_title);
 
 	panel_line(p, COLOUR_L_BLUE, "Name", "%s", player->full_name);
-	panel_line(p, COLOUR_L_BLUE, "Race", "%s", buf);
-	panel_line(p, COLOUR_L_BLUE, "Class", "%s", player->class->name);
-	panel_line(p, COLOUR_L_BLUE, "Title", "%s", show_title());
+	panel_line(p, COLOUR_L_BLUE, "Race", "%s", r_name);
+	panel_line(p, COLOUR_L_BLUE, "Class", "%s", c_name);
+	panel_line(p, COLOUR_L_BLUE, "Title", "%s", p_title);
 	panel_line(p, COLOUR_L_BLUE, "HP", "%d/%d", player->mon.hp, player->mon.maxhp);
 	panel_line(p, COLOUR_L_BLUE, "SP", "%d/%d", player->csp, player->msp);
 

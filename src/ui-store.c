@@ -32,6 +32,7 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
+#include "player.h"
 #include "store.h"
 #include "ui-display.h"
 #include "ui-input.h"
@@ -136,9 +137,16 @@ static void prt_welcome(const struct owner *proprietor)
 	const char *owner_name = proprietor->name;
 
 	int j;
+	const struct player_class *c = NULL;
 
 	if (one_in_(2)) {
 		return;
+	}
+
+	for (j = 0; j < MAX_PLAYER_CLASSES && player->classes[j]; ++j) {
+		if (one_in_(j + 1)) {
+			c = player->classes[j];
+		}
 	}
 
 	/* Get the first name of the store owner (stop before the first space) */
@@ -161,7 +169,7 @@ static void prt_welcome(const struct owner *proprietor)
 
 		/* Get a title for the character */
 		if ((i % 2) && randint0(2))
-			player_name = player->class->title[MIN(player->lev - 1, 49) / 5];
+			player_name = c->title[MIN(player->lev - 1, 49) / 5];
 		else if (randint0(2))
 			player_name = player->full_name;
 		else
