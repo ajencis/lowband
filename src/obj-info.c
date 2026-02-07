@@ -2030,11 +2030,12 @@ static bool describe_light(textblock *tb, const struct object *obj,
 static bool describe_book(textblock *tb, const struct object *obj,
 						   oinfo_detail_t mode)
 {
-	if (!obj_can_browse(obj)) return false;
+	return false;
+	/*if (!obj_can_browse(obj)) return false;
 
 	textblock_append(tb, "\nYou can read this book.\n");
 
-	return true;
+	return true;*/
 }
 
 

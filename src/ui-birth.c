@@ -29,7 +29,6 @@
 #include "player.h"
 #include "player-birth.h"
 #include "player-properties.h"
-#include "player-spell.h"
 #include "player-util.h"
 #include "ui-birth.h"
 #include "ui-display.h"
@@ -537,8 +536,8 @@ static void class_help(int i, void *db, const region *l)
 		skills_b[j] += sdata.base;
 		skills_x[j] += sdata.p_xtra;
 
-		skills_b[j] += class_c_skill(c, 0, j);
-		skills_x[j] += class_x_skill(c, 0, j);
+		//skills_b[j] += class_c_skill(c, 0, j);
+		//skills_x[j] += class_x_skill(c, 0, j);
 	}
 
 	/* Output to the screen */
@@ -550,7 +549,7 @@ static void class_help(int i, void *db, const region *l)
 	
 	skill_help(skills_b, skills_x, r->r_exp + c->c_exp, -1);
 
-	if (c->magic.total_spells) {
+	/*if (c->magic.total_spells) {
 		int count;
 		struct magic_realm *realm = class_magic_realms(c, &count), *realm_next;
 		char buf[120];
@@ -574,7 +573,7 @@ static void class_help(int i, void *db, const region *l)
 			}
 		}
 		text_out_e("\nLearns %s magic", buf);
-	}
+	}*/
 
 	for (ability = player_abilities; ability; ability = ability->next) {
 		if (n_flags >= flag_space) break;
@@ -796,7 +795,7 @@ static void setup_menus(void)
 	for (c = classes; c; c = c->next) n++;
 
 	/* Class menu similar to race. */
-	init_birth_menu(&class_menu, n, player->class ? player->class->cidx : 0,
+	init_birth_menu(&class_menu, n, player->class->cidx,
 	                &class_region, true, class_help, BQ_CLASS);
 	mdata = menu_priv(&class_menu);
 

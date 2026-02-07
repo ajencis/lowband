@@ -567,7 +567,7 @@ struct player_ability *attack_spec_type(const struct object *obj, const struct m
 
 struct player_ability *attack_expert_type(const struct object *obj, const struct monster_blow *blow)
 {
-	struct player_ability *result;
+	//struct player_ability *result;
 
 	if (!obj) {
 		return NULL;

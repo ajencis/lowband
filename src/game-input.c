@@ -30,13 +30,13 @@ bool (*get_forced_check_hook)(const char *prompt);
 bool (*get_com_hook)(const char *prompt, char *command);
 bool (*get_rep_dir_hook)(int *dir, bool allow_none);
 bool (*get_aim_dir_hook)(int *dir);
-int (*get_spell_from_book_hook)(struct player *p, const char *verb,
+/*int (*get_spell_from_book_hook)(struct player *p, const char *verb,
 	struct object *book, const char *error,
-	bool (*spell_filter)(const struct player *p, int spell));
-int (*get_spell_hook)(struct player *p, const char *verb,
+	bool (*spell_filter)(const struct player *p, int spell));*/
+/*int (*get_spell_hook)(struct player *p, const char *verb,
 	item_tester book_filter, cmd_code cmd, const char *book_error,
 	bool (*spell_filter)(const struct player *p, int spell),
-	const char *spell_error, struct object **rtn_book);
+	const char *spell_error, struct object **rtn_book);*/
 int (*get_innate_hook)(struct player *p,
 	struct monster_race *monr, const char *error,
 	bool (*innate_filter)(const struct player *p, int innate_index));
@@ -173,10 +173,10 @@ int get_spell_from_book(struct player *p, const char *verb,
 		bool (*spell_filter)(const struct player *p, int spell))
 {
 	/* Ask the UI for it */
-	if (get_spell_from_book_hook) {
+	/*if (get_spell_from_book_hook) {
 		return get_spell_from_book_hook(p, verb, book, error,
 			spell_filter);
-	}
+	}*/
 	return -1;
 }
 
@@ -205,10 +205,10 @@ int get_spell(struct player *p, const char *verb,
 		const char *spell_error, struct object **rtn_book)
 {
 	/* Ask the UI for it */
-	if (get_spell_hook) {
+	/*if (get_spell_hook) {
 		return get_spell_hook(p, verb, book_filter, cmd, book_error,
 			spell_filter, spell_error, rtn_book);
-	}
+	}*/
 	return -1;
 }
 

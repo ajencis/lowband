@@ -2303,7 +2303,7 @@ void do_cmd_dip_hire(struct command *cmd) {
 		mon->faction = '@';
 		my_strcap(desc);
 		msg("%s agrees to follow you.", desc);
-		races_unlock(player);
+		//races_unlock(player);
 	}
 	else if (result) {
 		msg("You can't afford their price!");

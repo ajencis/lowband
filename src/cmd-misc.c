@@ -17,19 +17,13 @@
  */
 
 #include "angband.h"
-#include "buildid.h"
 #include "cave.h"
 #include "cmd-core.h"
 #include "cmds.h"
 #include "game-input.h"
-#include "init.h"
-#include "mon-lore.h"
-#include "mon-util.h"
 #include "player-calcs.h"
 #include "player-history.h"
-#include "player-util.h"
 #include "obj-util.h"
-#include "target.h"
 
 
 /**
@@ -77,7 +71,7 @@ void do_cmd_retire(struct command *cmd)
 	player->is_dead = true;
 	my_strcpy(player->died_from, "Retiring", sizeof(player->died_from));
 
-	tomes_unlock(player);
+	//tomes_unlock(player);
 }
 
 /**
@@ -118,6 +112,7 @@ void do_cmd_note(void)
 	history_add(player, note, HIST_USER_INPUT);
 }
 
+#if 0
 #ifdef ALLOW_BORG
 
 extern void do_cmd_borg(void);
@@ -148,3 +143,4 @@ void do_cmd_try_borg(void)
 }
 
 #endif /* ALLOW_BORG */
+#endif

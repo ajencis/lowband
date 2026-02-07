@@ -17,15 +17,12 @@
  */
 #include "angband.h"
 #include "cave.h"
-#include "cmds.h"
 #include "cmd-core.h"
 #include "effects.h"
 #include "effects-info.h"
-#include "game-input.h"
 #include "init.h"
 #include "monster.h"
 #include "mon-spell.h"
-#include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
 #include "player-calcs.h"
@@ -36,6 +33,7 @@
 #include "ui-spell.h"
 
 
+#if 0
 /**
  * Spell menu data struct
  */
@@ -405,6 +403,7 @@ int textui_get_spell(struct player *p, const char *verb,
 	return textui_get_spell_from_book(p, verb, book, spell_error,
 		spell_filter);
 }
+#endif
 
 
 

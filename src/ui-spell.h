@@ -27,7 +27,7 @@ enum gener_spell_menu_modes {
 	GSM_MODE_MAX
 };
 
-void textui_book_browse(const struct object *obj);
+/*void textui_book_browse(const struct object *obj);
 void textui_spell_browse(void);
 int textui_get_spell_from_book(struct player *p, const char *verb,
 	struct object *book, const char *error,
@@ -35,7 +35,7 @@ int textui_get_spell_from_book(struct player *p, const char *verb,
 int textui_get_spell(struct player *p, const char *verb,
 	item_tester book_filter, cmd_code cmd, const char *book_error,
 	bool (*spell_filter)(const struct player *p, int spell_index),
-	const char *spell_error, struct object **rtn_book);
+	const char *spell_error, struct object **rtn_book);*/
 int textui_get_innate(struct player *p,
 	struct monster_race *monr, const char *error,
 	bool (*innate_filter)(const struct player *p, int innate_index));

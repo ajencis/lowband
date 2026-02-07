@@ -23,7 +23,6 @@
 #include "game-input.h"
 #include "game-world.h"
 #include "generate.h"
-#include "grafmode.h"
 #include "init.h"
 #include "mon-lore.h"
 #include "mon-make.h"
@@ -31,7 +30,6 @@
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
-#include "player-path.h"
 #include "player-properties.h"
 #include "player-util.h"
 #include "savefile.h"
@@ -49,7 +47,6 @@
 #include "ui-knowledge.h"
 #include "ui-map.h"
 #include "ui-menu.h"
-#include "ui-mon-list.h"
 #include "ui-object.h"
 #include "ui-output.h"
 #include "ui-player.h"
@@ -58,7 +55,6 @@
 #include "ui-score.h"
 #include "ui-signals.h"
 #include "ui-spoil.h"
-#include "ui-store.h"
 #include "ui-target.h"
 #include "ui-wizard.h"
 #include "z-file.h"
@@ -229,7 +225,7 @@ struct cmd_info cmd_hidden[] =
 	{ "Do autopickup", { KTRL('G') }, CMD_AUTOPICKUP, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Debug mode commands", { KTRL('A') }, CMD_NULL, NULL, NULL, 1, "Debug Command: ", "That is not a valid debug command.", "Debug", -1 },
 #ifdef ALLOW_BORG
-	{ "Borg commands", { KTRL('Z') }, CMD_NULL, do_cmd_try_borg, NULL, 0, NULL, NULL, NULL, 0 },
+	//{ "Borg commands", { KTRL('Z') }, CMD_NULL, do_cmd_try_borg, NULL, 0, NULL, NULL, NULL, 0 },
 #endif
 };
 

@@ -785,7 +785,7 @@ bool obj_can_refill(const struct object *obj)
 	return false;
 }
 
-bool obj_kind_can_browse(const struct object_kind *kind)
+/*bool obj_kind_can_browse(const struct object_kind *kind)
 {
 	int i;
 
@@ -813,7 +813,7 @@ bool obj_can_study(const struct object *obj)
 {
 	return obj_can_browse(obj) &&
 		spell_book_count_spells(player, obj, spell_okay_to_study) > 0;
-}
+}*/
 
 static bool gener_spell_can_study(const struct player_spell *spell)
 {

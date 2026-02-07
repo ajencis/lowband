@@ -668,7 +668,7 @@ int context_menu_object(struct object *obj)
 	/* 'I' is used for inspect in both keymaps. */
 	menu_dynamic_add_label(m, "Inspect", 'I', MENU_VALUE_INSPECT, labels);
 
-	if (obj_can_browse(obj)) {
+	/*if (obj_can_browse(obj)) {
 		if (obj_can_cast_from(obj) && player_can_cast(player, false))
 			ADD_LABEL("Cast", CMD_CAST, MN_ROW_VALID);
 
@@ -677,7 +677,7 @@ int context_menu_object(struct object *obj)
 
 		if (player_can_read(player, false))
 			ADD_LABEL("Browse", CMD_BROWSE_SPELL, MN_ROW_VALID);
-	} else if (obj_is_useable(obj)) {
+	} else */if (obj_is_useable(obj)) {
 		if (tval_is_wand(obj)) {
 			menu_row_validity_t valid = (obj_has_charges(obj)) ?
 				MN_ROW_VALID : MN_ROW_INVALID;
@@ -858,18 +858,19 @@ int context_menu_object(struct object *obj)
 		/* ignore or unignore the item */
 		textui_cmd_ignore_menu(obj);
 	} else if (selected == CMD_BROWSE_SPELL) {
-		/* browse a spellbook */
-		/* copied from textui_spell_browse */
-		textui_book_browse(obj);
+		// browse a spellbook
+		// copied from textui_spell_browse
+		textui_gener_spell_browse();
+		//textui_book_browse(obj);
 		return 2;
 	} else if (selected == CMD_STUDY) {
 		cmdq_push(CMD_STUDY);
 		cmd_set_arg_item(cmdq_peek(), "item", obj);
 	} else if (selected == CMD_CAST) {
-		if (obj_can_cast_from(obj)) {
-			cmdq_push(CMD_CAST);
+		cmdq_push(CMD_CAST);
+		/*if (obj_can_cast_from(obj)) {
 			cmd_set_arg_item(cmdq_peek(), "book", obj);
-		}
+		}*/
 	} else {
 		cmdq_push(selected);
 		cmd_set_arg_item(cmdq_peek(), "item", obj);

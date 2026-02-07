@@ -17,7 +17,6 @@
  */
 
 #include "angband.h"
-#include "cmds.h"
 #include "game-event.h"
 #include "game-input.h"
 #include "game-world.h"
@@ -29,24 +28,17 @@
 #include "savefile.h"
 #include "target.h"
 #include "ui-birth.h"
-#include "ui-command.h"
 #include "ui-context.h"
 #include "ui-curse.h"
-#include "ui-display.h"
 #include "ui-effect.h"
-#include "ui-help.h"
 #include "ui-keymap.h"
-#include "ui-knowledge.h"
 #include "ui-map.h"
 #include "ui-menu.h"
 #include "ui-object.h"
 #include "ui-output.h"
 #include "ui-player-properties.h"
-#include "ui-player.h"
-#include "ui-prefs.h"
 #include "ui-signals.h"
 #include "ui-spell.h"
-#include "ui-store.h"
 #include "ui-target.h"
 
 static bool inkey_xtra;
@@ -1761,8 +1753,8 @@ void textui_input_init(void)
 	get_com_hook = textui_get_com;
 	get_rep_dir_hook = textui_get_rep_dir;
 	get_aim_dir_hook = textui_get_aim_dir;
-	get_spell_from_book_hook = textui_get_spell_from_book;
-	get_spell_hook = textui_get_spell;
+	//get_spell_from_book_hook = textui_get_spell_from_book;
+	//get_spell_hook = textui_get_spell;
 	get_innate_hook = textui_get_innate;
 	get_gener_spell_hook = textui_get_gener_spell;
 	get_learn_hook = textui_powers_learn;

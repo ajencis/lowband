@@ -63,10 +63,10 @@ enum
 
 int stat_max_max(struct player *p, int stat);
 
-bool unlock_all(struct player *p);
-bool races_unlock(struct player *p);
-bool tomes_unlock(struct player *p);
-bool player_can_metaprogress(struct player *p);
+//bool unlock_all(struct player *p);
+//bool races_unlock(struct player *p);
+//bool tomes_unlock(struct player *p);
+//bool player_can_metaprogress(struct player *p);
 
 struct monster_race *race_to_monster(const struct player_race *r);
 struct monster_race *lookup_player_monster(const struct player *p);
@@ -86,7 +86,7 @@ int expected_max_evol_level(const struct player *p);
 //int get_power_scale(const struct player *p, int power, int scaleto);
 uint16_t calc_extra_points_array(struct player *p, uint16_t *extra_abil);
 void calc_extra_points(struct player *p, struct player_state *ps);
-bool check_learn_powers(struct player *p, int xpgain);
+//bool check_learn_powers(struct player *p, int xpgain);
 bool obj_can_learn_extra_from(const struct object *obj);
 bool learn_extra(struct player *p, const struct player_ability *abil);
 bool learn_realm(struct player *p, const struct magic_realm *realm);
@@ -170,7 +170,7 @@ bool player_can_fire_prereq(void);
 bool player_can_refuel_prereq(void);
 bool player_can_debug_prereq(void);
 bool player_is_invisible(struct player *p);
-bool player_book_has_unlearned_spells(struct player *p);
+//bool player_book_has_unlearned_spells(struct player *p);
 bool player_confuse_dir(struct player *p, int *dir, bool too);
 bool player_resting_is_special(int16_t count);
 bool player_is_resting(const struct player *p);

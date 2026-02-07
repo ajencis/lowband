@@ -68,6 +68,7 @@ int stat_max_max(struct player *p, int stat)
 }
 
 
+#if 0
 /**
  * L: unlock all classes that should be unlocked
  */
@@ -214,6 +215,7 @@ bool player_can_metaprogress(struct player *p)
 
 	return true;
 }
+#endif
 
 
 /**
@@ -707,7 +709,7 @@ static int player_extra_target(struct player *p, const struct player_ability *ab
 	return result;
 }
 
-bool check_learn_powers(struct player *p, int xpgain)
+static bool check_learn_powers(struct player *p, int xpgain)
 {
 	bool learned = false;
 	const struct player_ability *abil;
@@ -1595,11 +1597,11 @@ void death_knowledge(struct player *p)
 /**
  * L: unlock tomes on death or victory
  */
+#if 0
 bool tomes_unlock(struct player *p)
 {
 	return false;
 
-#if 0
 	bool can_unlock = false;
 	const char *prevent_unlock = NULL;
 	bool add_space = true;
@@ -1651,10 +1653,9 @@ bool tomes_unlock(struct player *p)
 	if (did_unlock) message_add(" ", MSG_GENERIC);
 
 	return did_unlock;
-#endif
 }
+	
 
-#if 0
 static bool race_is_evolution(struct monster_race *or, struct monster_race *mr)
 {
 	struct evolution *evol;
@@ -1666,11 +1667,10 @@ static bool race_is_evolution(struct monster_race *or, struct monster_race *mr)
 	}
 	return false;
 }
-#endif
+	
 
 static bool unlock_by_race(struct player *p, struct monster_race *mr, bool first)
 {
-#if 0
 	struct player_race *pr;
 	bool unlockedany = false;
 	bool addspace = first;
@@ -1709,7 +1709,6 @@ static bool unlock_by_race(struct player *p, struct monster_race *mr, bool first
 	}
 
 	return unlockedany;
-#endif
 	return false;
 }
 
@@ -1743,6 +1742,7 @@ bool races_unlock(struct player *p)
 
 	return didunlock;
 }
+#endif
 
 /**
  * Energy per move, taking extra moves into account
@@ -2480,7 +2480,7 @@ bool player_can_study(const struct player *p, bool show_msg)
 		return false;
 	}
 
-	if (!p->upkeep->new_spells) {
+	/*if (!p->upkeep->new_spells) {
 		if (show_msg) {
 			int count;
 			struct magic_realm *r = class_magic_realms(p->class, &count), *r1;
@@ -2509,7 +2509,7 @@ bool player_can_study(const struct player *p, bool show_msg)
 			msg("You cannot learn any new %s!", buf);
 		}
 		return false;
-	}
+	}*/
 
 	return true;
 }
@@ -2682,30 +2682,30 @@ bool player_can_debug_prereq(void)
  *
  * \param p is the player
  */
-bool player_book_has_unlearned_spells(struct player *p)
+/*bool player_book_has_unlearned_spells(struct player *p)
 {
 	int i, j;
 	int item_max = z_info->pack_size + z_info->floor_size;
 	struct object **item_list = mem_zalloc(item_max * sizeof(struct object *));
 	int item_num;
 
-	/* Check if the player can learn new spells */
+	// Check if the player can learn new spells
 	if (!p->upkeep->new_spells) {
 		mem_free(item_list);
 		return false;
 	}
 
-	/* Check through all available books */
+	// Check through all available books
 	item_num = scan_items(item_list, item_max, p, USE_INVEN | USE_FLOOR,
 		obj_can_study);
 	for (i = 0; i < item_num; i++) {
 		const struct class_book *book = player_object_to_book(p, item_list[i]);
 		if (!book) continue;
 
-		/* Extract spells */
+		// Extract spells
 		for (j = 0; j < book->num_spells; j++)
 			if (spell_okay_to_study(p, book->spells[j].sidx)) {
-				/* There is a spell the player can study */
+				// There is a spell the player can study
 				mem_free(item_list);
 				return true;
 			}
@@ -2713,7 +2713,7 @@ bool player_book_has_unlearned_spells(struct player *p)
 
 	mem_free(item_list);
 	return false;
-}
+}*/
 
 /**
  * Apply confusion, if needed, to a direction

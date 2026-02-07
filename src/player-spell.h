@@ -23,7 +23,7 @@
 
 void player_spells_init(struct player *p);
 void player_spells_free(struct player *p);
-struct magic_realm *class_magic_realms(const struct player_class *c,
+/*struct magic_realm *class_magic_realms(const struct player_class *c,
 									   int *count);
 const struct class_book *object_kind_to_book(const struct object_kind *kind);
 const struct class_book *player_object_to_book(const struct player *p,
@@ -42,14 +42,14 @@ bool spell_okay_to_study(const struct player *p, int spell_index);
 bool spell_okay_to_browse(const struct player *p, int spell_index);
 int16_t spell_chance(int spell_index);
 void spell_learn(int spell_index);
-bool spell_cast(int spell_index, int dir, struct command *cmd);
+bool spell_cast(int spell_index, int dir, struct command *cmd);*/
 bool gener_spell_cast(int spell_index, int dir, struct command *cmd);
 
 const char *school_idx_to_name(int idx);
 
-extern void get_spell_info(int index, char *buf, size_t len);
+//extern void get_spell_info(int index, char *buf, size_t len);
 //extern bool cast_spell(int tval, int index, int dir);
-extern bool spell_needs_aim(int spell_index);
+//extern bool spell_needs_aim(int spell_index);
 extern bool innate_needs_aim(int innate_index);
 extern bool gener_spell_needs_aim(const struct player_spell *spell);
 

@@ -49,6 +49,7 @@ struct spell_info_iteration_state {
 	bool have_shared;
 };
 
+#if 0
 /**
  * Stat Table (INT/WIS) -- Minimum failure rate (percentage)
  */
@@ -94,7 +95,6 @@ static const int adj_mag_fail[STAT_RANGE] =
 	0	/* 18/220+ */
 };
 
-#if 0
 /**
  * Stat Table (INT/WIS) -- failure rate adjustment
  */
@@ -158,6 +158,8 @@ void player_spells_free(struct player *p)
 	mem_free(p->player_spell_flags);
 	mem_free(p->player_spell_order);
 }
+
+#if 0
 
 /**
  * Make a list of the spell realms the player's class has books from
@@ -515,6 +517,7 @@ void spell_learn(int spell_index)
 	/* Redraw Study Status */
 	player->upkeep->redraw |= (PR_STUDY | PR_OBJECT);
 }
+#endif
 
 static int beam_chance(void)
 {
@@ -522,6 +525,7 @@ static int beam_chance(void)
 	return (player_has(player, PF_BEAM) ? plev : (plev / 2));
 }
 
+#if 0
 /**
  * Cast the specified spell
  */
@@ -595,6 +599,7 @@ bool spell_cast(int spell_index, int dir, struct command *cmd)
 
 	return true;
 }
+#endif
 
 
 bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
@@ -681,12 +686,12 @@ bool gener_spell_cast(int spell_index, int dir, struct command *cmd)
 
 
 
-bool spell_needs_aim(int spell_index)
+/*bool spell_needs_aim(int spell_index)
 {
 	const struct class_spell *spell = spell_by_index(player, spell_index);
 	assert(spell);
 	return effect_aim(spell->effect);
-}
+}*/
 
 bool innate_needs_aim(int innate_index)
 {
@@ -840,7 +845,7 @@ static void spell_effect_append_value_info(const struct effect *effect,
 	}
 }
 
-void get_spell_info(int spell_index, char *p, size_t len)
+/*void get_spell_info(int spell_index, char *p, size_t len)
 {
 	struct effect *effect = spell_by_index(player, spell_index)->effect;
 	struct spell_info_iteration_state ist = {
@@ -852,7 +857,7 @@ void get_spell_info(int spell_index, char *p, size_t len)
 		spell_effect_append_value_info(effect, p, len, &ist);
 		effect = effect->next;
 	}
-}
+}*/
 
 /**
  * L: functions for magic schools

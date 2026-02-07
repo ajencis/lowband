@@ -1295,8 +1295,8 @@ static size_t prt_study(int row, int col)
 	if (player->upkeep->new_spells) {
 		/* If the player does not carry a book with spells they can study,
 		   the message is displayed in a darker colour */
-		if (!player_book_has_unlearned_spells(player))
-			attr = COLOUR_L_DARK;
+		/*if (!player_book_has_unlearned_spells(player))
+			attr = COLOUR_L_DARK;*/
 
 		/* Print study message */
 		text = format("Study (%d)", player->upkeep->new_spells);

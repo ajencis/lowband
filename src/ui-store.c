@@ -730,7 +730,7 @@ static bool store_purchase(struct store_context *ctx, int item, bool single)
 		bool response;
 
 		bool obj_is_book = tval_is_book_k(obj->kind);
-		bool obj_can_use = !obj_is_book || obj_can_browse(obj);
+		bool obj_can_use = !obj_is_book;// || obj_can_browse(obj);
 
 		/* Describe the object (fully) */
 		object_desc(o_name, sizeof(o_name), dummy,
@@ -809,8 +809,8 @@ static void store_examine(struct store_context *ctx, int item)
 	textblock_free(tb);
 
 	/* Hack -- Browse book, then prompt for a command */
-	if (obj_can_browse(obj))
-		textui_book_browse(obj);
+	//if (obj_can_browse(obj))
+	//	textui_book_browse(obj);
 }
 
 
@@ -868,8 +868,8 @@ static bool store_process_command_key(struct keypress kp)
 		case KTRL('D'): /* roguelike */
 		case 'k': textui_cmd_ignore(); break;
 
-		case 'P': /* roguelike */
-		case 'b': textui_spell_browse(); break;
+		//case 'P': /* roguelike */
+		//case 'b': textui_spell_browse(); break;
 
 		case '~': textui_browse_knowledge(); break;
 		case 'I': textui_obj_examine(); break;

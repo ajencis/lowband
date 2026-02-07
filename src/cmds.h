@@ -146,7 +146,7 @@ void do_cmd_wiz_learn_tomes(struct command *cmd);
 void do_cmd_wiz_learn_spell(struct command *cmd);
 
 #ifdef ALLOW_BORG
-void do_cmd_try_borg(void);
+//void do_cmd_try_borg(void);
 #endif
 
 #endif
