@@ -64,7 +64,7 @@ SYS_gcu = -DUSE_GCU -DUSE_NCURSES -lncursesw
 # high scores.  If you want Borg players in the high scores as well, use the
 # second line below.  If you do not want the Borg at all, comment out both of
 # these lines.
-BORG_FLAGS = -DALLOW_BORG
+#BORG_FLAGS = -DALLOW_BORG
 #BORG_FLAGS = -DALLOW_BORG -DSCORE_BORGS
 
 

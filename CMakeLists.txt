@@ -22,7 +22,7 @@ OPTION(SUPPORT_STATS_FRONTEND "Support for statistics front end; requires sqlite
 OPTION(SUPPORT_TEST_FRONTEND "Support for test front end." OFF)
 OPTION(SUPPORT_WINDOWS_FRONTEND "Support for windows front end." OFF)
 OPTION(SUPPORT_STATS_BACKEND "Enable backend support for statistics and related debugging commands.  Implied by SUPPORT_STATS_FRONTEND." OFF)
-OPTION(SUPPORT_BORG "Support for Borg." ON)
+OPTION(SUPPORT_BORG "Support for Borg." OFF)
 OPTION(SUPPORT_BORG_HIGH_SCORES "Borg characters allowed in high scores." OFF)
 
 # By default, generate a self-contained build left where the build was run.
