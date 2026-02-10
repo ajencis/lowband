@@ -211,7 +211,7 @@ struct scaling_data mon_race_skill(const struct monster *mon, int which)
 
 	result = race_skill(mon->race, which);
 
-	if (mon->player && !any_class_has_flag(mon->player, PF_NO_SKILL)) {
+	if (mon->player) {
 		result.r_xtra /= 2;
 		result.base /= 2;
 	}
@@ -229,6 +229,52 @@ struct scaling_data mon_tome_skill(const struct monster *mon, int which)
 		assert(p->extra_learned);
 		result.base = p->extra_learned[abil->id];
 	}
+
+	return result;
+}
+
+static struct scaling_data one_class_skill(const struct player_class *class, int which, int tome, const struct monster_race *mr)
+{
+	struct scaling_data result = { 0 };
+
+	result.base = class->c_skills[which];
+	result.p_xtra = class->x_skills[which];
+
+	if (pf_has(class->flags, PF_EXTRA_LEARNING)) {
+		result.base = MAX(result.base, tome / 4);
+		result.p_xtra = MAX(result.p_xtra, tome * 3 / 4);
+	}
+
+	if (pf_has(class->flags, PF_NO_SKILL)) {
+		result = race_skill(mr, which);
+		result.base /= 2;
+		result.p_xtra = result.r_xtra / 2;
+		result.r_xtra = 0;
+	}
+
+	return result;
+}
+
+struct scaling_data classes_skill(const struct player_class *list[], size_t len, int which, int tome, const struct monster_race *mr)
+{
+	size_t i;
+	struct scaling_data result, temp;
+	int temp_base, temp_xtra;
+
+	assert(list[0]);
+
+	result = one_class_skill(list[0], which, tome, mr);
+
+	for (i = 1; i < len && list[i]; ++i) {
+		temp = one_class_skill(list[i], which, tome, mr);
+
+		result.base = MAX(result.base, temp.base);
+		result.p_xtra += temp.p_xtra;
+		result.r_xtra += temp.r_xtra;
+	}
+
+	result.p_xtra = RND_TO_MULT(result.p_xtra / i, 5);
+	result.p_xtra = RND_TO_MULT(result.r_xtra / i, 5);
 
 	return result;
 }
@@ -413,23 +459,31 @@ static int evolving_race_power(const struct monster_race *mr, int which)
 	return base * SGN(sum);
 }
 
-struct scaling_data mon_class_power(const struct monster *mon, int power)
+struct scaling_data classes_power(const struct player_class *list[], size_t len, int power)
 {
 	struct scaling_data result = { 0 };
-	int i;
+	size_t i;
 
-	if (!mon->player || !mon->player->classes[0]) return result;
-
-	for (i = 0; i < MAX_PLAYER_CLASSES && mon->player->classes[i]; ++i) {
-		result.p_xtra += mon->player->classes[i]->c_powers[power];
+	for (i = 0; i < len && list[i]; ++i) {
+		result.p_xtra += list[i]->c_powers[power];
 	}
 
-	assert(i > 0);
+	if (i <= 0) return result;
 
 	result.p_xtra += result.p_xtra * (i - 1) / 10;
 	result.p_xtra /= i;
 
 	return result;
+}
+
+struct scaling_data mon_class_power(const struct monster *mon, int power)
+{
+	struct scaling_data result = { 0 };
+	int i;
+
+	if (!mon->player) return result;
+
+	return classes_power(mon->player->classes, MAX_PLAYER_CLASSES, power);
 }
 
 struct scaling_data race_power(const struct monster_race *mr, int power)
@@ -474,7 +528,6 @@ struct scaling_data mon_tome_power(const struct monster *mon, int power)
 	return result;
 }
 
-#if 0
 static int mon_power(const struct monster *mon, int power)
 {
 	if (power <= PP_NONE || power >= PP_MAX) return 0;
@@ -490,7 +543,6 @@ static int mon_power(const struct monster *mon, int power)
 
 	return scaling_data_calc_mon(mon, sdata);
 }
-#endif
 
 static void get_mon_ac(struct monster *mon, struct player_state *state)
 {
@@ -544,11 +596,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	mon_stat_calc(mon, state);
 
 	for (i = PP_NONE + 1; i < PP_MAX; ++i) {
-		sdata = mon_race_power(mon, i);
-		sdata = scaling_data_sum(sdata, mon_tome_power(mon, i));
-		sdata = scaling_data_sum(sdata, mon_class_power(mon, i));
-
-		state->powers[i] = scaling_data_calc_mon(mon, sdata);
+		state->powers[i] = mon_power(mon, i);
 	}
 
 	for (i = 0; i < SKILL_MAX; i++) {

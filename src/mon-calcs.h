@@ -28,11 +28,14 @@ int scaling_data_calc_mon(const struct monster *mon, struct scaling_data sdata);
 struct scaling_data race_skill(const struct monster_race *mr, int which);
 struct scaling_data mon_race_skill(const struct monster *mon, int which);
 struct scaling_data mon_tome_skill(const struct monster *mon, int which);
+struct scaling_data classes_skill(const struct player_class *list[], size_t len, int which, int tome, const struct monster_race *mr);
 struct scaling_data mon_class_skill(const struct monster *mon, int which);
+static int mon_power(const struct monster *mon, int power);
 
 struct scaling_data race_power(const struct monster_race *mr, int power);
 struct scaling_data mon_race_power(const struct monster *mon, int power);
 struct scaling_data mon_tome_power(const struct monster *mon, int power);
+struct scaling_data classes_power(const struct player_class *list[], size_t len, int power);
 struct scaling_data mon_class_power(const struct monster *mon, int power);
 
 int skill_stepdown(const struct monster *mon, int skill);
