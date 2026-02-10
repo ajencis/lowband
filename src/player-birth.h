@@ -31,7 +31,9 @@ extern bool player_make_simple(const char *nrace, const char *nclass,
 extern void get_bonuses(void);
 extern void demonster_player(struct player *p);
 void give_player_race(struct player *p);
-bool birth_clear_classes(struct player *p);
+//bool birth_clear_classes(struct player *p);
+//bool birth_add_class(struct player *p, const struct player_class *c);
+//bool birth_remove_class(struct player *p, const struct player_class *c);
 
 void do_cmd_birth_init(struct command *cmd);
 void do_cmd_birth_reset(struct command *cmd);

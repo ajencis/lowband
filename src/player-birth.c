@@ -1224,7 +1224,8 @@ static void generate_stats(int st[STAT_MAX], int spent[STAT_MAX],
 #endif
 }
 
-static bool birth_add_class(struct player *p, const struct player_class *c)
+#if 0
+bool birth_add_class(struct player *p, const struct player_class *c)
 {
 	int i;
 
@@ -1249,13 +1250,11 @@ static bool birth_add_class(struct player *p, const struct player_class *c)
 	return true;
 }
 
-#if 0
-static bool birth_remove_class(struct player *p, const struct player_class *c)
+bool birth_remove_class(struct player *p, const struct player_class *c)
 {
 	int i, j;
 
 	assert(c);
-	dbg_log_fmt("class", "entering brc for %s", c->name);
 
 	for (i = 0; i < MAX_PLAYER_CLASSES; ++i) {
 		if (p->classes[i] == c) {
@@ -1268,15 +1267,12 @@ static bool birth_remove_class(struct player *p, const struct player_class *c)
 				p->classes[0] = classes;
 			}
 
-			dbg_log("class", "exiting brc");
 			return true;
 		}
 	}
 
-	dbg_log("class", "exiting brc");
 	return false;
 }
-#endif
 
 bool birth_clear_classes(struct player *p)
 {
@@ -1288,6 +1284,7 @@ bool birth_clear_classes(struct player *p)
 
 	return 0;
 }
+#endif
 
 /**
  * This fleshes out a full player based on the choices currently made,
@@ -1375,7 +1372,7 @@ static void do_birth_reset(bool use_quickstart, birther *quickstart_prev_local)
 
 	while (player->evol_choices) remove_first_evolution(player);
 
-	birth_clear_classes(player);
+	player_set_class(player, 0);
 	player->classes[0] = classes;
 	player_generate(player, NULL, use_quickstart && quickstart_prev_local);
 
@@ -1414,8 +1411,7 @@ void do_cmd_birth_init(struct command *cmd)
 		save_roller_data(&quickstart_prev);
 		quickstart_allowed = true;
 	} else {
-		birth_clear_classes(player);
-		player->classes[0] = classes;
+		player_set_class(player, 0);
 		player_generate(player, player_id2race(0), false);
 		quickstart_allowed = false;
 	}
@@ -1451,8 +1447,8 @@ void do_cmd_choose_class(struct command *cmd)
 {
 	int choice;
 	cmd_get_arg_choice(cmd, "choice", &choice);
-	birth_clear_classes(player);
-	birth_add_class(player,  player_id2class(choice));
+	//birth_clear_classes(player);
+	player_add_class(player, choice);
 	player_generate(player, NULL, false);
 
 	reset_stats(stats, points_spent, points_inc, &points_left, false);

@@ -21,6 +21,7 @@
 #include "game-event.h"
 #include "game-input.h"
 #include "h-basic.h"
+#include "init.h"
 #include "mon-calcs.h"
 #include "mon-predicate.h"
 #include "monster.h"
@@ -32,6 +33,7 @@
 #include "player-util.h"
 #include "ui-birth.h"
 #include "ui-display.h"
+#include "ui-event.h"
 #include "ui-game.h"
 #include "ui-help.h"
 #include "ui-input.h"
@@ -41,8 +43,12 @@
 #include "ui-player-properties.h"
 #include "ui-prefs.h"
 #include "ui-target.h"
+#include "ui-term.h"
+#include "z-color.h"
 #include "z-form.h"
+#include "z-textblock.h"
 #include "z-util.h"
+#include <string.h>
 
 /**
  * Overview
@@ -202,12 +208,21 @@ typedef void (*browse_f) (int oid, void *db, const region *l);
 struct birthmenu_data 
 {
 	const char **items;
+	bool *selected;
 	const char *hint;
 	bool allow_random;
 	enum birth_stage stage_inout;
 	enum birth_questions question;
 	struct player *p;
 };
+
+
+static struct player_class *class_to_display(void)
+{
+	struct player_class *result = player_id2class(class_menu.oid_selected);
+
+	return result ? result : classes;
+}
 
 /**
  * A custom "display" function for our menus that simply displays the
@@ -218,22 +233,19 @@ static void birthmenu_display(struct menu *menu, int oid, bool cursor,
 			      int row, int col, int width)
 {
 	struct birthmenu_data *data = menu_priv(menu);
+	uint8_t attr;
 
-	uint8_t attr = curs_attrs[CURS_KNOWN][0 != cursor];
+	if (data->selected[oid]) {
+		attr = COLOUR_L_GREEN;
+	} else {
+		attr = curs_attrs[CURS_KNOWN][0 != cursor];
+	}
+
 	c_put_str(attr, data->items[oid], row, col);
 }
 
 static bool class_meets_all_prereqs(const struct player *p, const struct player_class *c)
 {
-	int i;
-	assert(p->mon.race);
-
-	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
-		if (p->classes[i] == c) {
-			//return false;
-		}
-	}
-
 	return race_meets_all_predicates(p->mon.race, c);
 }
 
@@ -311,13 +323,78 @@ void reset_birthmenu_filters(void)
 	}
 }
 
+static void refresh_birth_classes(struct player *p, int cursor, bool *selected)
+{
+	int i, cidx;
+
+	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ) {
+		cidx = p->classes[i]->cidx;
+
+		if (!selected[cidx]) {
+			player_remove_class(p, cidx);
+		}
+		else {
+			i++;
+		}
+	}
+
+	for (cidx = 0; cidx < z_info->c_max; ++cidx) {
+		if (selected[cidx]) {
+			player_add_class(player, cidx);
+		}
+	}
+
+	player_add_class(player, cursor);
+}
+
+static bool can_add_class(struct player *p, bool *selected)
+{
+	int count = 0, i;
+
+	for (i = 0; i < z_info->c_max; ++i) {
+		if (selected[i]) {
+			count++;
+		}
+		if (count >= MAX_PLAYER_CLASSES) return false;
+	}
+
+	return true;
+}
+
+static bool birthmenu_handler(struct menu *menu, const ui_event *event, int oid)
+{
+	struct birthmenu_data *data = menu_priv(menu);
+	int question = data->question;
+	bool handled = false;
+
+	if (question == BQ_CLASS) {
+		if (event->type == EVT_KBRD) {
+			if (event->key.code == '+' && can_add_class(player, data->selected)) {
+				data->selected[oid] = true;
+				handled = true;
+			}
+			else if (event->key.code == '-') {
+				data->selected[oid] = false;
+				handled = true;
+			}
+		}
+		/*if (event->type == EVT_SELECT) {
+			data->selected[oid] = true;
+		}*/
+
+		refresh_birth_classes(player, oid, data->selected);
+	}
+
+	return handled;
+}
+
 
 /**
  * Our custom menu iterator, only really needed to allow us to override
  * the default handling of "commands" in the standard iterators (hence
  * only defining the display and handler parts).
  */
-static const menu_iter birth_iter = { NULL, birthmenu_valid, birthmenu_display, NULL, NULL, NULL };
+static const menu_iter birth_iter = { NULL, birthmenu_valid, birthmenu_display, birthmenu_handler, NULL, NULL };
 
 static void skill_help(const int skills_b[SKILL_MAX], const int skills_x[SKILL_MAX],
 	int exp, int infra)
@@ -401,6 +478,7 @@ static bool race_of_has(struct monster_race *mr, int oflag)
 static void race_help(int i, void *db, const region *l)
 {
 	int j, base, xtra;
+	int hgt, wid;
 	struct player_race *r = player_id2race(i);
 	struct monster_race *mon = race_to_monster(r);
 	//int len = (STAT_MAX + 1) / 2;
@@ -411,12 +489,15 @@ static void race_help(int i, void *db, const region *l)
 	int race_skills[SKILL_MAX] = { 0 };
 	int race_x_skills[SKILL_MAX] = { 0 };
 	int race_powers[PP_MAX];
+	char r_name[128];
 
 	struct scaling_data sdata;
 
 	assert(mon);
 
 	if (!r) return;
+
+	strnfmt(r_name, sizeof r_name, "%s", r->name);
 
 	for (j = 0; j < SKILL_MAX; ++j) {
 		sdata = race_skill(mon, j);
@@ -429,12 +510,17 @@ static void race_help(int i, void *db, const region *l)
 
 	memcpy(race_powers, mon->powers, sizeof race_powers);
 
+	clear_from_xy(TABLE_ROW, RACE_AUX_COL);
+
 	/* Output to the screen */
 	text_out_hook = text_out_to_screen;
 
 	/* Indent output */
 	text_out_indent = RACE_AUX_COL;
 	Term_gotoxy(RACE_AUX_COL, TABLE_ROW);
+
+	text_out_c(COLOUR_L_BLUE, "%s", r_name);
+	text_out_e(":\n\n");
 
 	for (j = 0; j < STAT_MAX; j++) {
 		int sind = j & 1 ? j / 2 + (STAT_MAX + 1) / 2 : j / 2;
@@ -526,6 +612,10 @@ static void class_help(int i, void *db, const region *l)
 	const struct player_race *r = player->race;
 	const struct monster_race *mr = race_to_monster(r);
 	struct scaling_data sdata = { 0 };
+	//const struct player_class *curr_classes[MAX_PLAYER_CLASSES] = { 0 };
+	struct birthmenu_data *data = db;
+	char c_name[128], r_name[128];
+	int wid, hgt;
 
 	int skills_b[SKILL_MAX] = { 0 }, skills_x[SKILL_MAX] = { 0 };
 
@@ -534,10 +624,20 @@ static void class_help(int i, void *db, const region *l)
 	int flag_space = 5 + 1 + 4;
 	int j;
 
-	if (!c) return;
+	refresh_birth_classes(player, i, data->selected);
+
+	class_name(player, c_name, sizeof c_name);
+	player_race_name(player, r_name, sizeof r_name);
 
 	for (j = 0; j < SKILL_MAX; ++j) {
 		sdata = race_skill(mr, j);
+
+		skills_b[j] += scaling_data_calc_r_xtra(mr, sdata);
+		skills_b[j] += sdata.base;
+		skills_x[j] += sdata.p_xtra;
+
+		//sdata = classes_skill(player->classes, MAX_PLAYER_CLASSES, j, 0, mr);
+		sdata = mon_class_skill(&player->mon, j);
 
 		skills_b[j] += scaling_data_calc_r_xtra(mr, sdata);
 		skills_b[j] += sdata.base;
@@ -547,42 +647,33 @@ static void class_help(int i, void *db, const region *l)
 		//skills_x[j] += class_x_skill(c, 0, j);
 	}
 
+	clear_from_xy(TABLE_ROW, CLASS_AUX_COL);
+
 	/* Output to the screen */
 	text_out_hook = text_out_to_screen;
 	
 	/* Indent output */
 	text_out_indent = CLASS_AUX_COL;
 	Term_gotoxy(CLASS_AUX_COL, TABLE_ROW);
+
+	Term_erase(CLASS_AUX_COL, TABLE_ROW, 30);
+
+	text_out_c(COLOUR_L_BLUE, "%s", r_name);
+
+	text_out_c(COLOUR_L_GREEN, " %s", player->classes[0]->name);
+	for (j = 1; j < MAX_PLAYER_CLASSES && player->classes[j]; ++j) {
+		text_out_e(" | ");
+		text_out_c(COLOUR_L_GREEN, "%s", player->classes[j]->name);
+	}
+
+	text_out_e(":\n\n");
 	
 	skill_help(skills_b, skills_x, r->r_exp + c->c_exp, -1);
 
-	/*if (c->magic.total_spells) {
-		int count;
-		struct magic_realm *realm = class_magic_realms(c, &count), *realm_next;
-		char buf[120];
-
-		my_strcpy(buf, realm->name, sizeof(buf));
-		realm_next = realm->next;
-		mem_free(realm);
-		realm = realm_next;
-		if (count > 1) {
-			while (realm) {
-				count--;
-				if (count) {
-					my_strcat(buf, ", ", sizeof(buf));
-				} else {
-					my_strcat(buf, " and ", sizeof(buf));
-				}
-				my_strcat(buf, realm->name, sizeof(buf));
-				realm_next = realm->next;
-				mem_free(realm);
-				realm = realm_next;
-			}
-		}
-		text_out_e("\nLearns %s magic", buf);
-	}*/
-
 	for (ability = player_abilities; ability; ability = ability->next) {
+		struct scaling_data sdata;
+		int base, xtra;
+
 		if (n_flags >= flag_space) break;
 		if (ability->type == PY_ABIL_OBJECT &&
 				!of_has(c->flags, ability->index)) {
@@ -592,15 +683,31 @@ static void class_help(int i, void *db, const region *l)
 			continue;
 		} else if (ability->type == PY_ABIL_ELEMENT) {
 			continue;
-		} else if ((ability->type == PY_ABIL_POWER) &&
-		        !c->c_powers[ability->index]) {
-            continue;
+		} else if (ability->type == PY_ABIL_POWER) {
+			sdata = mon_race_power(&player->mon, ability->index);
+			sdata = scaling_data_sum(sdata, mon_class_power(&player->mon, ability->index));
+
+			base = scaling_data_calc_r_xtra(mr, sdata);
+			xtra = sdata.p_xtra;
+
+			if (!base && !xtra) {
+            	continue;
+			}
 		} else if (ability->type == PY_ABIL_SKILL) {
 			continue;
 		}
 
 		if (ability->type == PY_ABIL_POWER) {
-			text_out_e("\n%s: %i%%", ability->name, c->c_powers[ability->index]);
+			text_out_e("\n%s: ", ability->name);
+			if (base) {
+				text_out_e("%i", base);
+			}
+			if (base && xtra) {
+				text_out_e(" %s ", xtra >= 0 ? "+" : "-");
+			}
+			if (xtra) {
+				text_out_e("%i%%", ABS(xtra));
+			}
 		} else {
             text_out_e("\n%s", ability->name);
 		}
@@ -746,6 +853,7 @@ static void init_birth_menu(struct menu *menu, int n_choices,
 	/* Allocate space for an array of menu item texts and help texts
 	   (where applicable) */
 	menu_data->items = mem_alloc(n_choices * sizeof *menu_data->items);
+	menu_data->selected = mem_zalloc(n_choices * sizeof *menu_data->selected);
 	menu_data->allow_random = allow_random;
 
 	// L: which question is being asked
@@ -802,7 +910,7 @@ static void setup_menus(void)
 	for (c = classes; c; c = c->next) n++;
 
 	/* Class menu similar to race. */
-	init_birth_menu(&class_menu, n, player->classes[0]->cidx,
+	init_birth_menu(&class_menu, n, class_to_display()->cidx,
 	                &class_region, true, class_help, BQ_CLASS);
 	mdata = menu_priv(&class_menu);
 
@@ -829,6 +937,7 @@ static void free_birth_menu(struct menu *menu)
 
 	if (data) {
 		mem_free(data->items);
+		mem_free(data->selected);
 		mem_free(data);
 	}
 }
@@ -1029,6 +1138,8 @@ static enum birth_stage menu_question(enum birth_stage current,
 	Term_putstr(QUESTION_COL, QUESTION_ROW, -1, COLOUR_YELLOW, menu_data->hint);
 
 	current_menu->cmd_keys = "?=*@\x18";	 /* ?, =, *, @, <ctl-X> */
+
+	clear_from_xy(TABLE_ROW, current_menu->boundary.col);
 
 	while (next == BIRTH_RESET) {
 		/* Display the menu, wait for a selection of some sort to be made. */
