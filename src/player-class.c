@@ -85,3 +85,100 @@ size_t class_title(const struct player *p, char *buf, size_t bufsize)
 
 	return result;
 }
+
+
+static int class_sort(const void *a, const void *b)
+{
+	const struct player_class *c1 = a, *c2 = b;
+
+	if (!c1 && !c2) {
+		return 0;
+	}
+	if (!c1) {
+		return 1;
+	}
+	if (!c2) {
+		return -1;
+	}
+
+	return my_stricmp(c1->name, c2->name);
+}
+
+static bool player_can_add_class(const struct player *p, int cidx)
+{
+	int i;
+
+	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
+		if (p->classes[i]->cidx == (unsigned)cidx) {
+
+			return false;
+		}
+	}
+
+	return i < MAX_PLAYER_CLASSES;
+}
+
+static void player_insert_class(struct player *p, int cidx, int ind)
+{
+	int i;
+
+	for (i = MAX_PLAYER_CLASSES - 1; i > ind; --i) {
+		p->classes[i] = p->classes[i - 1];
+	}
+
+	p->classes[ind] = player_id2class(cidx);
+}
+
+bool player_add_class(struct player *p, int cidx)
+{
+	int i;
+	const struct player_class *new = player_id2class(cidx);
+
+	if (!player_can_add_class(p, cidx)) {
+		return false;
+	}
+
+	for (i = 0; i < MAX_PLAYER_CLASSES; ++i) {
+		if (!p->classes[i] || (class_sort(p->classes[i], new) > 0)) {
+			player_insert_class(p, cidx, i);
+
+			return true;
+		} 
+	}
+
+	return false;
+}
+
+bool player_remove_class(struct player *p, int cidx)
+{
+	int i, j;
+
+	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
+		if (p->classes[i]->cidx == (unsigned)cidx) {
+			break;
+		}
+	}
+
+	if (i >= MAX_PLAYER_CLASSES || !p->classes[i]) {
+		return false;
+	}
+
+	for (j = i; j < MAX_PLAYER_CLASSES - 1; ++j) {
+		p->classes[j] = p->classes[j + 1];
+	}
+
+	p->classes[MAX_PLAYER_CLASSES - 1] = NULL;
+
+	return true;
+}
+
+void player_set_class(struct player *p, int cidx)
+{
+	int i;
+
+	p->classes[0] = player_id2class(cidx);
+
+	for (i = 1; i < MAX_PLAYER_CLASSES; ++i) {
+		p->classes[i] = NULL;
+	}
+}

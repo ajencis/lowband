@@ -568,6 +568,9 @@ struct player_class *player_id2class(guid id);
 bool any_class_has_flag(const struct player *p, int flag);
 size_t class_name(const struct player *p, char *buf, size_t bufsize);
 size_t class_title(const struct player *p, char *buf, size_t bufsize);
+bool player_add_class(struct player *p, int cidx);
+bool player_remove_class(struct player *p, int cidx);
+void player_set_class(struct player *p, int cidx);
 
 /* player.c */
 uint64_t player_exp_new(int level_num, int level_denom);
