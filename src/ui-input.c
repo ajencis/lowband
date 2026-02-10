@@ -640,6 +640,18 @@ void clear_from(int row)
 }
 
 /**
+ * L: Clear the bottom-right part of the screen
+ */
+void clear_from_xy(int row, int col)
+{
+	int y;
+
+	for (y = row; y < Term->hgt; y++) {
+		Term_erase(col, y, Term->wid - col);
+	}
+}
+
+/**
  * The default "keypress handling function" for askfor_aux()/askfor_aux_ext(),
  * this takes the given keypress, input buffer, length, etc, and does the
  * appropriate action for that keypress, such as moving the cursor left or

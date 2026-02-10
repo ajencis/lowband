@@ -93,6 +93,7 @@ void display_message(game_event_type unused, game_event_data *data, void *user);
 void bell_message(game_event_type unused, game_event_data *data, void *user);
 void message_flush(game_event_type unused, game_event_data *data, void *user);
 void clear_from(int row);
+void clear_from_xy(int row, int col);
 bool askfor_aux_keypress(char *buf, size_t buflen, size_t *curs, size_t *len,
 						 struct keypress keypress, bool firsttime);
 int askfor_aux_mouse(char *buf, size_t buflen, size_t *curs, size_t *len,
