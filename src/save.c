@@ -478,6 +478,7 @@ static void wr_followers(void)
 void wr_player(void)
 {
 	int i;
+	uint8_t count;
 	struct monster_race *mr = lookup_player_monster(player);
 
 	wr_string(player->full_name);
@@ -506,17 +507,20 @@ void wr_player(void)
 	}
 
 	wr_string(player->shape->name);
-	for (i = 0; i < MAX_PLAYER_CLASSES; ++i) {
-		if (player->classes[i]) {
-			wr_string(player->classes[i]->name);
-		}
-		else {
-			wr_string("");
+
+	count = 0;
+	for (count = 0; count < MAX_PLAYER_CLASSES; count++) {
+		if (!player->classes[count]) {
+			break;
 		}
 	}
-	wr_byte(player->opts.name_suffix);
+	wr_byte(count);
 
-	//wr_byte(player->hitdie);
+	for (i = 0; i < (signed)count; ++i) {
+		assert(player->classes[i]);
+		wr_string(player->classes[i]->name);
+	}
+	wr_byte(player->opts.name_suffix);
 
 	wr_s16b(player->age);
 	wr_s16b(player->ht);

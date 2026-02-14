@@ -784,25 +784,17 @@ int rd_player(void)
 	}
 
 	/* Player class */
-	for (i = 0; i < MAX_PLAYER_CLASSES; ++i) {
+	rd_byte(&num);
+
+	for (i = 0; i < (signed)num; ++i) {
 		rd_string(buf, sizeof buf);
-		if (!buf[0]) {
-			player->classes[i] = NULL;
-			break;
-		}
 		for (c = classes; c; c = c->next) {
 			if (streq(c->name, buf)) {
 				player->classes[i] = c;
+				break;
 			}
 		}
 	}
-	/*rd_string(buf, sizeof(buf));
-	for (c = classes; c; c = c->next) {
-		if (streq(c->name, buf)) {
-			player->class = c;
-			break;
-		}
-	}*/
 
 	if (!player->classes[0]) {
 		note(format("Invalid player class (%s).", buf));
