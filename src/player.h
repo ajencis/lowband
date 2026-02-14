@@ -560,7 +560,7 @@ extern struct player_ability *player_abilities;
 extern struct magic_realm *realms;
 extern struct player_spell *spells;
 
-extern const uint32_t player_exp[PY_MAX_LEVEL];
+//extern const uint32_t player_exp[PY_MAX_LEVEL];
 extern struct player *player;
 
 /* player-class.c */
@@ -573,7 +573,8 @@ bool player_remove_class(struct player *p, int cidx);
 void player_set_class(struct player *p, int cidx);
 
 /* player.c */
-uint64_t player_exp_new(int level_num, int level_denom);
+uint64_t player_exp(int level, int xpfact);
+//uint64_t player_exp_new(int level_num, int level_denom);
 uint64_t player_exp_needed(struct player *p, int level);
 int stat_name_to_idx(const char *name);
 const char *stat_idx_to_name(int type);
