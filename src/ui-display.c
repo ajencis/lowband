@@ -232,12 +232,13 @@ static void prt_exp(int row, int col)
 	bool ready = false;
 	char out_val[32];
 	bool lev50 = player_at_max_level(player);
+	long long xp;
 
-	long xp = (long)player->exp;
-
-	/* Calculate XP for next level */
-	if (!lev50) {
-		xp = player_exp_needed(player, player->lev + 1);
+	if (lev50) {
+		xp = player->exp;
+	}
+	else {
+		xp = (signed)player_exp_needed(player, player->lev + 1) - (signed)player->exp;
 	}
 	
 	/* L: can have xp to level without having leveled now */
@@ -248,8 +249,7 @@ static void prt_exp(int row, int col)
 	}
 
 	/* Format XP */
-	strnfmt(out_val, sizeof(out_val), "%8ld", xp);
-
+	strnfmt(out_val, sizeof(out_val), "%8lli", xp);
 
 	if (player->exp >= player->max_exp) {
 		put_str((lev50 ? "EXP" : "NXT"), row, col);
