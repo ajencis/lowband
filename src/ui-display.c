@@ -59,6 +59,7 @@
 #include "wizard.h"
 #include "z-color.h"
 #include "z-util.h"
+#include <stdint.h>
 
 /**
  * There are a few functions installed to be triggered by several 
@@ -232,24 +233,21 @@ static void prt_exp(int row, int col)
 	bool ready = false;
 	char out_val[32];
 	bool lev50 = player_at_max_level(player);
-	long long xp;
+	uint64_t xp, needed = player_exp_needed(player, player->lev + 1);
 
 	if (lev50) {
 		xp = player->exp;
 	}
-	else {
-		xp = (signed)player_exp_needed(player, player->lev + 1) - (signed)player->exp;
+	else if (needed > player->exp) {
+		xp = needed - player->exp;
 	}
-	
-	/* L: can have xp to level without having leveled now */
-	if (xp <= 0)
-	{
-		xp = 0;
+	else {
+		xp = 0U;
 		ready = true;
 	}
 
 	/* Format XP */
-	strnfmt(out_val, sizeof(out_val), "%8lli", xp);
+	strnfmt(out_val, sizeof(out_val), "%8u", (unsigned int)xp);
 
 	if (player->exp >= player->max_exp) {
 		put_str((lev50 ? "EXP" : "NXT"), row, col);
