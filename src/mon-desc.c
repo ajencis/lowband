@@ -110,18 +110,19 @@ void monster_desc(char *desc, size_t max, const struct monster *mon, int mode)
 {
 	assert(mon != NULL);
 
+	bool is_p = mon_is_player(mon);
+
 	/* Can we see it? (forced, or not hidden + visible) */
 	bool seen = (mode & MDESC_SHOW) ||
 		(!(mode & MDESC_HIDE) && monster_is_visible(mon));
 
 	/* Sexed pronouns (seen and forced, or unseen and allowed) */
 	bool use_pronoun = (seen && (mode & MDESC_PRO_VIS)) ||
-			(!seen && (mode & MDESC_PRO_HID));
-
-	bool is_p = mon_is_player(mon);
+			(!seen && (mode & MDESC_PRO_HID)) ||
+			is_p;
 
 	/* First, try using pronouns, or describing hidden monsters */
-	if (!seen || use_pronoun || is_p) {
+	if (!seen || use_pronoun) {
 		const char *choice = "it";
 
 		/* an encoding of the monster "sex" */
