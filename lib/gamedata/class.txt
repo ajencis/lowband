@@ -280,7 +280,7 @@ skill-melee:10:80
 skill-shoot:10:70
 skill-throw:10:70
 skill-dig:0:0
-skill-magic:-10:0
+skill-magic:-25:0
 skill-health:10:85
 power:UNARMED_STRIKE:25
 power:NATURAL_COMBAT:75
@@ -318,7 +318,7 @@ skill-magic:10:85
 skill-health:5:50
 equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
-equip:sword:Rapier:1:1:none
+equip:sword:Dagger:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
 equip:spellbook:spellbook:1:1:none
 player-flags:CHOOSE_SPELLS
@@ -352,11 +352,44 @@ skill-health:5:40
 power:SPELL_POWER:40
 equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
-equip:sword:Rapier:1:1:none
+equip:sword:Dagger:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
 equip:spellbook:spellbook:1:1:none
 player-flags:CHOOSE_SPELLS
 realm:arcane
+title:Novice
+title:Apprentice
+title:Trickster
+title:Illusionist
+title:Spellbinder
+title:Evoker
+title:Conjurer
+title:Warlock
+title:Sorcerer
+title:Arch-Mage
+
+############### SORCERER ###############
+name:Sorcerer
+unlockable:0
+skill-disarm-phys:20:50
+skill-disarm-magic:25:50
+skill-device:35:75
+skill-save:15:30
+skill-stealth:10:0
+skill-search:10:40
+skill-melee:10:75
+skill-shoot:10:75
+skill-throw:10:75
+skill-dig:0:0
+skill-magic:15:70
+skill-health:10:60
+power:NATURAL_COMBAT:-25
+equip:food:Ration of Food:1:3:none
+equip:light:Wooden Torch:1:3:none
+equip:sword:Dagger:1:1:none
+equip:scroll:Word of Recall:1:1:birth_no_recall
+player-flags:CHOOSE_SPELLS
+realm:sorcery
 title:Novice
 title:Apprentice
 title:Trickster
