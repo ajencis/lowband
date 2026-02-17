@@ -189,7 +189,7 @@ uint64_t player_exp(int level, int xpfact)
 		fact_mod = exponentiate(xpfact, 2, 3); 
 
 		new_num = fact_mod * 100 * level;
-		new_div = 20 * 100 * 2;
+		new_div = 15 * 100 * 2;
 
 		new_num = exponentiate(new_num, 1, 2);
 		new_div = exponentiate(new_div, 1, 2);
@@ -197,7 +197,7 @@ uint64_t player_exp(int level, int xpfact)
 		result = exponentiate(10, new_num, new_div);
 
 		mode = 0;
-		for (round = 1; (unsigned)round < (result / 75); mode = (mode + 1) % 3) {
+		for (round = 1; (unsigned)round < (result / 50); mode = (mode + 1) % 3) {
 			if (mode == 1) {
 				round *= 5;
 				round /= 2;
@@ -515,10 +515,8 @@ void player_exp_gain(struct player *p, uint64_t amount, uint32_t fract)
 	new_fract += extra_fract;
 	new_fract += p->exp_frac;
 
-	while (new_fract > UINT16_MAX) {
-		++new_amt;
-		new_fract -= UINT16_MAX;
-	}
+	new_amt += new_fract / UINT16_MAX;
+	new_fract = new_fract % UINT16_MAX;
 
 	if (new_amt > tolev - p->exp) {
 		p->exp = tolev;
@@ -554,13 +552,13 @@ void player_exp_gain(struct player *p, uint64_t amount, uint32_t fract)
 int player_min_xp_depth(struct player *p)
 {
 	uint64_t eff_xp = p->max_exp;// * p->mon.state.expfact / 100;
-	int i;
+	static int i = 1;
 
-	for (i = 1; i < PY_MAX_LEVEL; ++i) {
-		if (player_exp(i, 100) > eff_xp) break;
+	for (; i < PY_MAX_LEVEL; ++i) {
+		if (player_exp(i, 75) > eff_xp) break;
 	}
 
-	return i * 3 / 2;
+	return i;
 }
 
 void player_exp_lose(struct player *p, int64_t amount, bool permanent)
