@@ -98,7 +98,7 @@ static const char *res_type_names[] = {
 
 static bool grab_element_flag(struct element_info *info, const char *flag_name)
 {
-	char *under = strchr(flag_name, '_');
+	const char *under = strchr(flag_name, '_');
 	size_t i;
 
 	if (!under) {
@@ -671,6 +671,11 @@ static enum parser_error parse_object_base_max_stack(struct parser *p) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;
 	}
 	kb->max_stack = parser_getint(p, "size");
+
+	if (kb->max_stack > UINT8_MAX) {
+		kb->max_stack = UINT8_MAX;
+	}
+
 	return PARSE_ERROR_NONE;
 }
 
