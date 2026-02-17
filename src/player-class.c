@@ -17,6 +17,7 @@
  */
 
 
+#include "player-enum.h"
 #include "player.h"
 #include "z-form.h"
 #include "z-util.h"
@@ -90,6 +91,7 @@ size_t class_title(const struct player *p, char *buf, size_t bufsize)
 static int class_sort(const void *a, const void *b)
 {
 	const struct player_class *c1 = a, *c2 = b;
+	int maxskill1 = 0, maxskill2 = 0, i;
 
 	if (!c1 && !c2) {
 		return 0;
@@ -99,6 +101,21 @@ static int class_sort(const void *a, const void *b)
 	}
 	if (!c2) {
 		return -1;
+	}
+
+	for (i = 0; i < SKILL_MAX; ++i) {
+		if (c1->c_skills[maxskill1] + c1->x_skills[maxskill1] <
+				c1->c_skills[i] + c1->x_skills[i]) {
+			maxskill1 = i;
+		}
+		if (c2->c_skills[maxskill2] + c2->x_skills[maxskill2] <
+				c2->c_skills[i] + c2->x_skills[i]) {
+			maxskill1 = i;
+		}
+	}
+
+	if (maxskill1 != maxskill2) {
+		return SGN(maxskill2 - maxskill1);
 	}
 
 	return my_stricmp(c1->name, c2->name);

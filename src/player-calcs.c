@@ -582,9 +582,9 @@ static void calc_spells(struct player *p)
 
 
 	// L: if we're an innate caster and never got any spells known give them now
-	if (realm && realm->realm_special[RLM_SPCL_INNATE] && lev >= 3 && num_known == 0) {
-		player_learn_spell_xp(p, true, 0);
-	}
+	//if (realm && realm->realm_special[RLM_SPCL_INNATE] && lev >= 3 && num_known == 0) {
+	//	player_learn_spell_xp(p, true, 0);
+	//}
 
 
 	// Forget spells which are too hard 
@@ -1738,7 +1738,7 @@ static void update_bonuses(struct player *p)
 	}
 
 	/* Hack -- handle partial mode */
-	if (!p->upkeep->only_partial) {
+	if (!p->upkeep->only_partial && character_generated) {
 		/* Take note when "heavy bow" changes */
 		if (p->mon.state.heavy_shoot != state.heavy_shoot) {
 			/* Message */

@@ -588,7 +588,8 @@ bool learn_realm(struct player *p, const struct magic_realm *realm)
 	msg("You feel that you understand %s magic.", realm->name);
 
 	if (p->realm->realm_special[RLM_SPCL_INNATE]) {
-		player_learn_spell_xp(p, true, 0);
+		check_player_learn_spell_initial(p);
+		//player_learn_spell_xp(p, true, 0);
 	}
 
 	p->upkeep->update |= PU_BONUS;
@@ -1049,6 +1050,25 @@ int player_skill_stat_ind(const struct player *p, const struct player_state *ps,
 	return skill_stat_ind(get_player_realm(p), ps->stat_ind, skill);
 }
 
+
+static bool player_can_learn_spell_xp(const struct player *p)
+{
+	if (!p) {
+		return false;
+	}
+	if (!p->realm) {
+		return false;
+	}
+	if (!(p->realm->realm_special[RLM_SPCL_INNATE])) {
+		return false;
+	}
+	if (p->mon.state.skills[SKILL_MAGIC] < 3) {
+		return false;
+	}
+
+	return true;
+}
+
 /**
  * L: upon gaining xp, consider adding spells to those known
  * clericy casters don't use spellbooks, they get granted spells by their god
@@ -1064,13 +1084,7 @@ bool player_learn_spell_xp(struct player *p, bool initial, int xp)
 	int forgottenind = 0;
 	const struct magic_realm *realm = get_player_realm(p);
 
-	// only some casters learn spells this way
-	if (!realm || !realm->realm_special[RLM_SPCL_INNATE]) {
-		return false;
-	}
-
-	// don't get spells until skill 3
-	if (p->mon.state.skills[SKILL_MAGIC] < 3) {
+	if (!player_can_learn_spell_xp(p)) {
 		return false;
 	}
 
@@ -1168,12 +1182,47 @@ bool player_learn_spell_xp(struct player *p, bool initial, int xp)
 		++currnum;
 	}
 
-	if (character_generated && learned_num) {
+	if (character_generated && learned_num && !initial) {
 		msg(learned_num == 1 ? "You feel a new spell in your mind." : "You feel new spells in your mind.");
 		p->upkeep->update |= PU_SPELLS;
 	}
 
 	return learned_num ? true : false;
+}
+
+
+bool check_player_learn_spell_initial(struct player *p)
+{
+	int i, pwr, curr;
+	struct player_spell *ps, *choice;
+
+	if (!player_can_learn_spell_xp(p)) {
+		return false;
+	}
+
+	for (i = 0; i < z_info->spell_max; ++i) {
+		if (p->player_spell_flags[i] & PY_SPELL_LEARNED) {
+			return false;
+		}
+	}
+
+	choice = spells;
+	pwr = gener_spell_power(p, choice);
+
+	for (ps = spells; ps; ps = ps->next) {
+		curr = gener_spell_power(p, ps);
+
+		if (curr > pwr) {
+			choice = ps;
+			pwr = curr;
+		}
+	}
+
+	assert(choice);
+
+	gener_spell_learn(p, choice, false);
+
+	return true;
 }
 
 
@@ -1188,41 +1237,6 @@ int antimagic_radius(struct player *p)
 	return get_power_scale(&p->mon, PP_ANTIMAGIC, 3) + 2;
 }
 
-
-#if 0
-/**
- * L: unlight players like to be in the dark
- * scales up to UNLIGHT_MAX_POWER
- */
-int unlight_power_state(struct player_state *ps, struct player *p)
-{
-	if (!cave || !character_dungeon) return 0;
-	if (ps->powers[PP_UNLIGHT] <= 0) return 0;
-	int bonus = -square_light(cave, p->mon.grid);
-	int malus = get_power_scale_state(ps, PP_UNLIGHT, UNLIGHT_MAX_POWER, p->lev);
-	return bonus - malus;
-}
-
-int unlight_power(struct player *p)
-{
-	return unlight_power_state(&p->mon.state, p);
-}
-
-
-int glow_power_state(struct player_state *ps, struct player *p)
-{
-	if (!cave || !character_dungeon) return 0;
-	if (ps->powers[PP_GLOW] <= 0) return 0;
-	int bonus = square_light(cave, p->mon.grid);
-	int malus = get_power_scale_state(ps, PP_GLOW, UNLIGHT_MAX_POWER, p->lev);
-	return bonus - malus;
-}
-
-int glow_power(struct player *p)
-{
-	return glow_power_state(&p->mon.state, p);
-}
-#endif
 
 /**
  * L: radius of darkness from an unlight player, also the depth of darkness
@@ -3547,6 +3561,8 @@ void player_start_turn(struct player *p)
 			p->learned_when[i] += cave->depth;
 		}
 	}
+
+	check_player_learn_spell_initial(p);
 }
 
 bool player_is_invisible(struct player *p)
