@@ -103,10 +103,10 @@ int slot_by_type(struct monster *mon, int type, bool full)
  * \param type is one of the EQUIP_* constants from list-equip-slots.h.
  * \return true if the slot can hold that type; otherwise false
  */
-bool slot_type_is(struct monster *mon, int slot, int type)
+bool slot_type_is(const struct monster *mon, int slot, int type)
 {
 	/* Assume default body if no player */
-	struct player_body *body = &mon->body;
+	const struct player_body *body = &mon->body;
 
 	return body->slots[slot].type == type ? true : false;
 }

@@ -2454,6 +2454,8 @@ bool player_is_trapsafe(const struct player *p)
 bool player_can_cast(const struct player *p, bool show_msg)
 {
 	const struct magic_realm *realm = get_player_realm(p);
+	int i;
+	bool hands_full;
 
 	if (p->mon.state.skills[SKILL_MAGIC] <= 0 || !realm) {
 		if (show_msg) {
@@ -2479,6 +2481,26 @@ bool player_can_cast(const struct player *p, bool show_msg)
 	if (realm->realm_special[RLM_SPCL_HP_CAST] && pf_has(p->mon.state.pflags, PF_UNDEAD)) {
 		if (show_msg) {
 			msg("You have no blood with which to cast!");
+		}
+		return false;
+	}
+
+	hands_full = false;
+	for (i = 0; i < p->mon.body.count; ++i) {
+		if (slot_type_is(&p->mon, i, EQUIP_WEAPON)) {
+			if (p->mon.body.slots[i].obj) {
+				hands_full = true;
+			}
+			else {
+				hands_full = false;
+				break;
+			}
+		}
+	}
+
+	if (hands_full) {
+		if (show_msg) {
+			msg("You need an unoccupied hand to cast with!");
 		}
 		return false;
 	}

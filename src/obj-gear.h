@@ -35,7 +35,7 @@ enum
 
 int slot_by_name(struct monster *mon, const char *name);
 int slot_by_type(struct monster *mon, int type, bool full);
-bool slot_type_is(struct monster *mon, int slot, int type);
+bool slot_type_is(const struct monster *mon, int slot, int type);
 struct object *slot_object(struct monster *mon, int slot);
 struct object *equipped_item_by_slot_name(struct monster *mon, const char *name);
 int object_slot(struct player_body body, const struct object *obj);
