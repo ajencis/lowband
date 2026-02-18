@@ -1045,11 +1045,15 @@ struct player_spell *player_spell_lookup(int index) {
 
 int player_spell_mana(const struct player_spell *ps) {
 	int base = ps->smana;
+	int no_man_lev = 50 + (player->mon.state.armour_wgt + 5) / 10;
 	int power = gener_spell_power(player, ps);
 	int result;
 	assert(NO_MANA_LEVEL > 0);
 
-	result = ((NO_MANA_LEVEL - power) * base + NO_MANA_LEVEL - 1) / NO_MANA_LEVEL;
+	base *= 100 + player->mon.state.armour_wgt / 3;
+	base /= 100;
+
+	result = ((no_man_lev - power) * base + no_man_lev - 1) / no_man_lev;
 
 	return MAX(0, MIN(base, result));
 }

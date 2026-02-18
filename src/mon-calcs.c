@@ -571,7 +571,6 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	int i, j;
 	int extra_blows = 0, extra_shots = 0, extra_might = 0, extra_moves = 0;
 	int curr_light = 0;
-	//struct element_info race_elem_info[ELEM_MAX] = { 0 };
 	struct monster_race *mrace = mon->race;
 	bitflag f[OF_SIZE];
 
@@ -621,24 +620,22 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 		}
 	}
 
-
 	for (i = 0; i < mon->body.count; ++i) {
 		struct object *obj = slot_object(mon, i);
-		int dig, index = 0, light_amt, arm_wgt;
+		int dig, index = 0, light_amt;
 		struct curse_data *curse;
 
 		if (!obj) continue;
-
-		if (tval_is_armor(obj)) {
-			arm_wgt = object_weight_one(obj);
-			state->armour_wgt = MAX(state->armour_wgt, arm_wgt);
-		}
 
 		while (obj) {
 			object_flags(obj, f);
 			of_union(state->flags, f);
 
 			dig = 0;
+
+			if (tval_is_armor(obj)) {
+				state->armour_wgt += object_weight_one(obj);
+			}
 
 			state->stat_add[STAT_STR] += obj->modifiers[OBJ_MOD_STR];
 			state->stat_add[STAT_INT] += obj->modifiers[OBJ_MOD_INT];
@@ -714,6 +711,13 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 				obj = NULL;
 			}
 		}
+	}
+
+	if (state->armour_wgt > 100) {
+		extra_moves -= (state->armour_wgt - 100) / 25;
+	}
+	if (state->armour_wgt > 250) {
+		state->speed -= (state->armour_wgt - 250) / 50;
 	}
 
 	if (rf_has(mon->race->flags, RF_NEVER_MOVE)) {
