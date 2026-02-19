@@ -44,6 +44,7 @@
 #include "obj-init.h"
 #include "obj-list.h"
 #include "obj-pile.h"
+#include "obj-properties.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
@@ -260,6 +261,59 @@ static int realm_special_by_name(const char *name)
 		}
 	}
 	return -1;
+}
+
+static void spell_to_spellbook(const struct player_spell *spell, struct object_kind *kind)
+{
+	assert(spell && kind);
+
+	kind->spell = spell;
+
+	kind->alloc_max = spell->slevel * 5;
+	kind->alloc_min = spell->slevel;
+	kind->alloc_prob = MAX(1, 10 - spell->slevel / 11);
+
+	kind->cost = exponentiate(spell->slevel, 3, 1) * 100;
+	kind->name = string_make(kind->name);
+	kind->name = string_append(kind->name, " of ");
+	kind->name = string_append(kind->name, spell->name);
+}
+
+static void write_spellbook_kinds(void)
+{
+	struct object_base *base = &kb_info[TV_BOOK];
+	struct object_kind *book, *base_book = lookup_kind(TV_BOOK, 1);
+	struct player_spell *spell;
+	int i, prev_svals = base->num_svals, prev_k_max = z_info->k_max;
+
+	assert(base_book);
+
+	z_info->k_max += z_info->spell_max;
+
+	k_info = mem_realloc(k_info, sizeof *k_info * z_info->k_max);
+
+	for (i = 0, spell = spells; i < z_info->spell_max && spell; ++i, spell = spell->next) {
+		book = &k_info[i + prev_k_max];
+
+		memcpy(book, base_book, sizeof *book);
+
+		book->base = base;
+		book->kidx = i + prev_k_max;
+		book->sval = prev_svals + i;
+
+		k_info[i + prev_k_max - 1].next = book;
+		book->next = NULL;
+		
+		book->text = NULL;
+		book->brands = NULL;
+		book->slays = NULL;
+		book->curses = NULL;
+		book->effect_msg = NULL;
+		book->vis_msg = NULL;
+		book->flavor = NULL;
+
+		spell_to_spellbook(spell, book);
+	}
 }
 
 errr grab_effect_data(struct parser *p, struct effect *effect)
@@ -4289,14 +4343,8 @@ static errr run_parse_spell(struct parser *p) {
 static errr finish_parse_spell(struct parser *p) {
 	spells = parser_priv(p);
 	parser_destroy(p);
-	/*struct player_spell *ps;
 
-	for (ps = spells; ps; ps = ps->next) {
-		errr error = write_gener_book_kind(ps);
-		if (error != PARSE_ERROR_NONE) {
-			return error;
-		}
-	}*/
+	write_spellbook_kinds();
 	
 	return 0;
 }
@@ -4699,443 +4747,6 @@ static enum parser_error parse_class_play_flags(struct parser *p) {
 	string_free(flags);
 	return s ? PARSE_ERROR_INVALID_FLAG : PARSE_ERROR_NONE;
 }
-
-/*
-static enum parser_error parse_class_magic(struct parser *p) {
-	struct player_class *c = parser_priv(p);
-	int num_books;
-
-	if (!c) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	if (c->magic.books) {
-		// There's more than one magic directive for this class.
-		return PARSE_ERROR_REPEATED_DIRECTIVE;
-	}
-	c->magic.spell_first = parser_getuint(p, "first");
-	c->magic.spell_weight = parser_getuint(p, "weight");
-	num_books = parser_getuint(p, "books");
-	c->magic.books = mem_zalloc(num_books * sizeof(struct class_book));
-	class_max_books = num_books;
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_class_book(struct parser *p) {
-	struct player_class *c = parser_priv(p);
-	int tval, splls;
-	const char *name, *quality;
-	struct class_book *b;
-
-	if (!c) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	tval = tval_find_idx(parser_getsym(p, "tval"));
-	if (tval < 0) {
-		return PARSE_ERROR_UNRECOGNISED_TVAL;
-	}
-	if (!c->magic.books || c->magic.num_books >= class_max_books) {
-		// This isn't the best description for the !c->magic.books
-		// case (no magic directive for the class before the book
-		// directive), but it's better than
-		// PARSE_ERROR_MISSING_RECORD_HEADER (already used above).
-		return PARSE_ERROR_TOO_MANY_ENTRIES;
-	}
-	assert(c->magic.num_books >= 0);
-	b = &c->magic.books[c->magic.num_books];
-	b->tval = tval;
-
-	quality = parser_getsym(p, "quality");
-	if (streq(quality, "dungeon")) {
-		b->dungeon = true;
-	}
-	name = parser_getsym(p, "name");
-	write_book_kind(b, name);
-
-	splls = parser_getuint(p, "spells");
-	b->spells = mem_zalloc(splls * sizeof(struct class_spell));
-	book_max_spells = splls;
-	b->realm = lookup_realm(parser_getstr(p, "realm"));
-	++c->magic.num_books;
-
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_class_book_graphics(struct parser *p) {
-	struct player_class *c = parser_priv(p);
-	wchar_t glyph = parser_getchar(p, "glyph");
-	const char *color = parser_getsym(p, "color");
-	struct class_book *b;
-	struct object_kind *k;
-
-	if (!c) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	if (c->magic.num_books < 1) {
-		// Either missing a magic directive for the class or didn't
-		// have a book directive after the magic directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(c->magic.books && c->magic.num_books <= class_max_books);
-	b = &c->magic.books[c->magic.num_books - 1];
-	k = lookup_kind(b->tval, b->sval);
-	assert(k);
-	k->d_char = glyph;
-	if (strlen(color) > 1) {
-		k->d_attr = color_text_to_attr(color);
-	} else {
-		k->d_attr = color_char_to_attr(color[0]);
-	}
-
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_class_book_properties(struct parser *p) {
-	struct player_class *c = parser_priv(p);
-	struct class_book *b;
-	struct object_kind *k;
-	const char *tmp;
-	int amin, amax;
-
-	if (!c) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	if (c->magic.num_books < 1) {
-		// Either missing a magic directive for the class or didn't
-		// have a book directive after the magic directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(c->magic.books && c->magic.num_books <= class_max_books);
-	b = &c->magic.books[c->magic.num_books - 1];
-	k = lookup_kind(b->tval, b->sval);
-	assert(k);
-	k->cost = parser_getint(p, "cost");
-	k->alloc_prob = parser_getint(p, "common");
-
-	tmp = parser_getstr(p, "minmax");
-	if (grab_int_range(&amin, &amax, tmp, "to")) {
-		return PARSE_ERROR_INVALID_ALLOCATION;
-	}
-	k->level = amin;
-	k->alloc_min = amin;
-	k->alloc_max = amax;
-
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_class_spell(struct parser *p) {
-	struct player_class *c = parser_priv(p);
-	struct class_book *book;
-	struct class_spell *spell;
-
-	if (!c) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	if (c->magic.num_books < 1) {
-		// Either missing a magic directive for the class or didn't
-		// have a book directive after the magic directive.  Use
-		// this under the assumption that without those, the maximum
-		// number of spells is zero.
-		return PARSE_ERROR_TOO_MANY_ENTRIES;
-	}
-	assert(c->magic.books && c->magic.num_books <= class_max_books);
-	book = &c->magic.books[c->magic.num_books - 1];
-	if (book->num_spells >= book_max_spells) {
-		return PARSE_ERROR_TOO_MANY_ENTRIES;
-	}
-	assert(book->spells && book->num_spells >= 0);
-	spell = &book->spells[book->num_spells];
-	spell->realm = book->realm;
-	spell->name = string_make(parser_getsym(p, "name"));
-	spell->sidx = c->magic.total_spells;
-	c->magic.total_spells++;
-	spell->bidx = c->magic.num_books - 1;
-	spell->slevel = parser_getint(p, "level");
-	spell->smana = parser_getint(p, "mana");
-	spell->sfail = parser_getint(p, "fail");
-	spell->sexp = parser_getint(p, "exp");
-	++book->num_spells;
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_class_effect(struct parser *p) {
-	struct player_class *c = parser_priv(p);
-	struct class_book *book;
-	struct class_spell *spell;
-	struct effect *effect, *new_effect;
-
-	if (!c) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	if (c->magic.num_books < 1) {
-		// Either missing a magic directive for the class or didn't
-		// have a book directive after the magic directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(c->magic.books && c->magic.num_books <= class_max_books);
-	book = &c->magic.books[c->magic.num_books - 1];
-	if (book->num_spells < 1) {
-		// Missing a spell directive after the book directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(book->spells && book->num_spells <= book_max_spells);
-	spell = &book->spells[book->num_spells - 1];
-	// Go to the next vacant effect and set it to the new one
-	new_effect = mem_zalloc(sizeof(*effect));
-	if (spell->effect) {
-		effect = spell->effect;
-		while (effect->next) effect = effect->next;
-		effect->next = new_effect;
-	} else {
-		spell->effect = new_effect;
-	}
-	// Fill in the detail
-	return grab_effect_data(p, new_effect);
-}
-
-static enum parser_error parse_class_effect_yx(struct parser *p) {
-	struct player_class *c = parser_priv(p);
-	struct class_book *book;
-	struct class_spell *spell;
-	struct effect *effect;
-
-	if (!c) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	if (c->magic.num_books < 1) {
-		// Either missing a magic directive for the class or didn't
-		// have a book directive after the magic directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(c->magic.books && c->magic.num_books <= class_max_books);
-	book = &c->magic.books[c->magic.num_books - 1];
-	if (book->num_spells < 1) {
-		// Missing a spell directive after the book directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(book->spells && book->num_spells <= book_max_spells);
-	spell = &book->spells[book->num_spells - 1];
-	// If there is no effect, assume that this is human and not parser error.
-	effect = spell->effect;
-	if (effect == NULL) {
-		return PARSE_ERROR_NONE;
-	}
-	while (effect->next) effect = effect->next;
-	effect->y = parser_getint(p, "y");
-	effect->x = parser_getint(p, "x");
-
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_class_dice(struct parser *p) {
-	struct player_class *c = parser_priv(p);
-	struct class_book *book;
-	struct class_spell *spell;
-	struct effect *effect;
-	dice_t *dice;
-	const char *string;
-
-	if (!c) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	if (c->magic.num_books < 1) {
-		// Either missing a magic directive for the class or didn't
-		// have a book directive after the magic directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(c->magic.books && c->magic.num_books <= class_max_books);
-	book = &c->magic.books[c->magic.num_books - 1];
-	if (book->num_spells < 1) {
-		// Missing a spell directive after the book directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(book->spells && book->num_spells <= book_max_spells);
-	spell = &book->spells[book->num_spells - 1];
-	// If there is no effect, assume that this is human and not parser error.
-	effect = spell->effect;
-	if (effect == NULL) {
-		return PARSE_ERROR_NONE;
-	}
-	while (effect->next) effect = effect->next;
-
-	dice = dice_new();
-	if (dice == NULL) {
-		return PARSE_ERROR_INVALID_DICE;
-	}
-
-	string = parser_getstr(p, "dice");
-	if (dice_parse_string(dice, string)) {
-		dice_free(effect->dice);
-		effect->dice = dice;
-	} else {
-		dice_free(dice);
-		return PARSE_ERROR_INVALID_DICE;
-	}
-
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_class_expr(struct parser *p) {
-	struct player_class *c = parser_priv(p);
-	struct class_book *book;
-	struct class_spell *spell;
-	struct effect *effect;
-	expression_t *expression;
-	expression_base_value_f function;
-	const char *name;
-	const char *base;
-	const char *expr;
-	enum parser_error result;
-
-	if (!c) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	if (c->magic.num_books < 1) {
-		// Either missing a magic directive for the class or didn't
-		// have a book directive after the magic directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(c->magic.books && c->magic.num_books <= class_max_books);
-	book = &c->magic.books[c->magic.num_books - 1];
-	if (book->num_spells < 1) {
-		// Missing a spell directive after the book directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(book->spells && book->num_spells <= book_max_spells);
-	spell = &book->spells[book->num_spells - 1];
-	// If there is no effect, assume that this is human and not parser error.
-	effect = spell->effect;
-	if (effect == NULL) {
-		return PARSE_ERROR_NONE;
-	}
-	while (effect->next) effect = effect->next;
-
-	// If there are no dice, assume that this is human and not parser error.
-	if (effect->dice == NULL) {
-		return PARSE_ERROR_NONE;
-	}
-	name = parser_getsym(p, "name");
-	base = parser_getsym(p, "base");
-	expr = parser_getstr(p, "expr");
-	expression = expression_new();
-
-	if (expression == NULL) {
-		return PARSE_ERROR_INVALID_EXPRESSION;
-	}
-	function = effect_value_base_by_name(base);
-	expression_set_base_value(expression, function);
-
-	if (expression_add_operations_string(expression, expr) < 0) {
-		result = PARSE_ERROR_BAD_EXPRESSION_STRING;
-	} else if (dice_bind_expression(effect->dice, name, expression) < 0) {
-		result = PARSE_ERROR_UNBOUND_EXPRESSION;
-	} else {
-		result = PARSE_ERROR_NONE;
-	}
-
-	// The dice object makes a deep copy of the expression, so we can free it
-	expression_free(expression);
-
-	return result;
-}
-
-static enum parser_error parse_class_effect_msg(struct parser *p) {
-	struct player_class *c = parser_priv(p);
-	struct class_book *book;
-	struct class_spell *spell;
-	struct effect *effect;
-
-	if (!c) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	if (c->magic.num_books < 1) {
-		// Either missing a magic directive for the class or didn't
-		// have a book directive after the magic directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(c->magic.books && c->magic.num_books <= class_max_books);
-	book = &c->magic.books[c->magic.num_books - 1];
-	if (book->num_spells < 1) {
-		// Missing a spell directive after the book directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(book->spells && book->num_spells <= book_max_spells);
-	spell = &book->spells[book->num_spells - 1];
-	// If there is no effect, assume that this is human and not parser error.
-	effect = spell->effect;
-	if (effect == NULL) {
-		return PARSE_ERROR_NONE;
-	}
-	while (effect->next) effect = effect->next;
-
-	effect->msg = string_append(effect->msg, parser_getstr(p, "text"));
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_class_desc(struct parser *p) {
-	struct player_class *c = parser_priv(p);
-	struct class_book *book;
-	struct class_spell *spell;
-
-	if (!c) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	if (c->magic.num_books < 1) {
-		// Either missing a magic directive for the class or didn't
-		// have a book directive after the magic directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(c->magic.books && c->magic.num_books <= class_max_books);
-	book = &c->magic.books[c->magic.num_books - 1];
-	if (book->num_spells < 1) {
-		// Missing a spell directive after the book directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(book->spells && book->num_spells <= book_max_spells);
-	spell = &book->spells[book->num_spells - 1];
-	spell->text = string_append(spell->text, parser_getstr(p, "desc"));
-	return PARSE_ERROR_NONE;
-}
-
-static enum parser_error parse_class_school(struct parser *p) {
-	struct player_class *c = parser_priv(p);
-	struct class_book *book;
-	struct class_spell *spell;
-	const char *school_name;
-	int school_idx;
-	int i;
-
-	if (!c) {
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	if (c->magic.num_books < 1) {
-		// Either missing a magic directive for the class or didn't
-		// have a book directive after the magic directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(c->magic.books && c->magic.num_books <= class_max_books);
-	book = &c->magic.books[c->magic.num_books - 1];
-	if (book->num_spells < 1) {
-		// Missing a spell directive after the book directive.
-		return PARSE_ERROR_MISSING_RECORD_HEADER;
-	}
-	assert(book->spells && book->num_spells <= book_max_spells);
-	spell = &book->spells[book->num_spells - 1];
-	school_name = parser_getsym(p, "school");
-
-	school_idx = -1;
-	for (i = 0; list_school_names[i]; i++) {
-		if (streq(school_name, list_school_names[i])) {
-			school_idx = i;
-		}
-	}
-
-	if (school_idx == -1) return PARSE_ERROR_GENERIC;
-
-	spell->school = school_idx;
-
-	return PARSE_ERROR_NONE;
-}
-*/
 
 static enum parser_error parse_class_realm(struct parser *p)
 {

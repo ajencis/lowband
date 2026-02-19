@@ -890,8 +890,11 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 		obj->modifiers[i] = randcalc(k->modifiers[i], lev, rand_aspect);
 	}
 
-	if (of_has(obj->kind->flags, OF_SPELL_HOLD)) {
-		obj->spell = random_spell_at_level(lev);
+	//if (of_has(obj->kind->flags, OF_SPELL_HOLD)) {
+	//	obj->spell = random_spell_at_level(lev);
+	//}
+	if (obj->tval == TV_BOOK) {
+		obj->spell = obj->kind->spell;
 	}
 	
 	/* Assign charges (wands/staves only) */

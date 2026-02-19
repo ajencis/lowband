@@ -601,7 +601,7 @@ static size_t obj_desc_power_learn(const struct object *obj, char *buf, size_t m
 	return end;
 }
 
-static size_t obj_desc_spell(const struct object *obj, char *buf, size_t max,
+/*static size_t obj_desc_spell(const struct object *obj, char *buf, size_t max,
 		size_t end, int mode)
 {
 	if (!obj->spell) return end;
@@ -609,7 +609,7 @@ static size_t obj_desc_spell(const struct object *obj, char *buf, size_t max,
 	strnfcat(buf, max, &end, " of %s", obj->spell->name);
 
 	return end;
-}
+}*/
 
 /**
  * Add player-defined inscriptions or game-defined descriptions
@@ -775,7 +775,7 @@ size_t object_desc(char *buf, size_t max, const struct object *obj,
 
 		end = obj_desc_power_learn(obj, buf, max, end, mode);
 
-		end = obj_desc_spell(obj, buf, max, end, mode);
+		//end = obj_desc_spell(obj, buf, max, end, mode);
 
 		if (mode & ODESC_STORE) {
 			end = obj_desc_aware(obj, buf, max, end);
