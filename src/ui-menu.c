@@ -465,10 +465,11 @@ static void display_scrolling(struct menu *menu, int cursor, int *top, region *l
 
 static char scroll_get_tag(struct menu *menu, int pos)
 {
-	if (menu->selections)
-		return menu->selections[pos - menu->top];
+	if (!menu->selections) {
+		return 0;
+	}
 
-	return 0;
+	return menu->selections[pos - menu->top];
 }
 
 static ui_event scroll_process_direction(struct menu *m, int dir)
@@ -766,8 +767,9 @@ static int get_cursor_key(struct menu *menu, int top, struct keypress key)
 			if ((menu->flags & MN_CASELESS_TAGS) && c)
 				c = toupper((unsigned char) c);
 
-			if (c && c == (char)key.code)
-				return i + menu->top;
+			if (c && c == (char)key.code) {
+				return i;// + menu->top;
+			}
 		}
 	} else if (!(menu->flags & MN_PVT_TAGS) && menu->selections) {
 		for (i = 0; menu->selections[i]; i++) {
@@ -1028,7 +1030,6 @@ bool menu_handle_keypress(struct menu *menu, const ui_event *in,
 		if (rows < total) {
 			/* Go to start of next page */
 			menu_move_cursor_by(menu, menu->active.page_rows);
-			//menu->cursor += menu->active.page_rows;
 			if (menu->cursor >= total - 1) menu_move_cursor_to(menu, 0);
 			menu->top = menu->cursor;
 	
