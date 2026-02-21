@@ -699,11 +699,16 @@ static void class_help(int i, void *db, const region *l)
 			if (base) {
 				text_out_e("%i", base);
 			}
-			if (base && xtra) {
-				text_out_e(" %s ", xtra >= 0 ? "+" : "-");
-			}
 			if (xtra) {
-				text_out_e("%i%%", ABS(xtra));
+				const char *sgn = "";
+
+				if (base) {
+					sgn = xtra > 0 ? " + " : " - ";
+				} else {
+					sgn = xtra > 0 ? "" : "-";
+				}
+
+				text_out_e("%s%i%%", sgn, ABS(xtra));
 			}
 		} else {
             text_out_e("\n%s", ability->name);
