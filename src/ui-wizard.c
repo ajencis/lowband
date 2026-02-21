@@ -18,7 +18,6 @@
  */
 
 #include "angband.h"
-#include "cmds.h"
 #include "game-input.h"
 #include "grafmode.h"
 #include "init.h"
@@ -245,7 +244,7 @@ static bool wiz_create_item_action(struct menu *m, const ui_event *e, int oid)
 	char buf[80];
 	char title[80];
 
-	int choice[70];
+	int choice[256];
 	int num;
 
 	int i;
@@ -261,7 +260,7 @@ static bool wiz_create_item_action(struct menu *m, const ui_event *e, int oid)
 	/* Artifacts */
 	if (choose_artifact) {
 		/* ...We have to search the whole artifact list. */
-		for (num = 0, i = 1; (num < 60) && (i < z_info->a_max); i++) {
+		for (num = 0, i = 1; num < (int)(sizeof choice / sizeof *choice - 5) && (i < z_info->a_max); i++) {
 			const struct artifact *art = &a_info[i];
 
 			if (art->tval != oid) continue;
@@ -270,7 +269,7 @@ static bool wiz_create_item_action(struct menu *m, const ui_event *e, int oid)
 		}
 	} else {
 		/* Regular objects */
-		for (num = 0, i = 1; (num < 60) && (i < z_info->k_max); i++) {
+		for (num = 0, i = 1; (num < (int)(sizeof choice / sizeof *choice - 5)) && (i < z_info->k_max); i++) {
 			struct object_kind *kind = &k_info[i];
 
 			if (kind->tval != oid ||
@@ -293,8 +292,9 @@ static bool wiz_create_item_action(struct menu *m, const ui_event *e, int oid)
 	screen_save();
 	clear_from(0);
 
-	menu = menu_new(MN_SKIN_COLUMNS, &wiz_create_item_submenu);
+	menu = menu_new(MN_SKIN_SCROLL, &wiz_create_item_submenu);
 	menu->selections = all_letters;
+	menu->flags |= MN_REL_TAGS;
 
 	object_base_name(buf, sizeof(buf), oid, true);
 	if (choose_artifact) {
