@@ -741,7 +741,7 @@ color:White
 
 code:MON_HEAL
 type:monster
-desc:heals monsters
+desc:heal
 blind-desc:something
 obvious:1
 wake:1
@@ -749,7 +749,7 @@ color:White
 
 code:MON_SPEED
 type:monster
-desc:hastes monsters
+desc:haste
 blind-desc:something
 obvious:1
 wake:1
@@ -757,7 +757,7 @@ color:White
 
 code:MON_SLOW
 type:monster
-desc:attempts to slow monsters
+desc:slow
 blind-desc:something
 obvious:1
 wake:1
@@ -765,28 +765,28 @@ color:White
 
 code:MON_CONF
 type:monster
-desc:attempts to confuse monsters
+desc:confuse
 blind-desc:something
 obvious:0
 color:White
 
 code:MON_HOLD
 type:monster
-desc:attempts to hold monsters still
+desc:hold
 blind-desc:something
 obvious:0
 color:White
 
 code:MON_STUN
 type:monster
-desc:attempts to stun monsters
+desc:stun
 blind-desc:something
 obvious:0
 color:White
 
 code:MON_DRAIN
 type:monster
-desc:damages living monsters
+desc:drain living
 blind-desc:something
 obvious:1
 wake:1

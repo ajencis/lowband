@@ -928,7 +928,7 @@ static void emb_atk_mod_death_touch(const struct monster *mon, struct embryo_att
 	ef = effect_new();// mem_zalloc(sizeof *ef);
 
 	ef->index = EF_HIT;
-	ef->subtype = PROJ_NETHER;
+	ef->subtype = PROJ_MON_DRAIN;
 	effect_add_value(ef, rv);
 
 	ef->next = emb->extra;

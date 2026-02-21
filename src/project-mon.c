@@ -20,7 +20,6 @@
 #include "cave.h"
 #include "effects.h"
 #include "generate.h"
-#include "init.h"
 #include "mon-desc.h"
 #include "mon-lore.h"
 #include "mon-make.h"
@@ -37,7 +36,6 @@
 #include "player-util.h"
 #include "project.h"
 #include "source.h"
-#include <stdint.h>
 
 
 /**
@@ -1011,6 +1009,9 @@ static void project_monster_handler_MON_STUN(project_monster_handler_context_t *
 /* Drain Life */
 static void project_monster_handler_MON_DRAIN(project_monster_handler_context_t *context)
 {
+	struct monster *src_mon = NULL;
+	bool slowed = false, dummy;
+
 	if (context->seen) context->obvious = true;
 	if (context->seen) {
 		rf_on(context->lore->flags, RF_UNDEAD);
@@ -1019,7 +1020,27 @@ static void project_monster_handler_MON_DRAIN(project_monster_handler_context_t 
 		context->hurt_msg = MON_MSG_UNAFFECTED;
 		context->obvious = false;
 		context->dam = 0;
+		return;
 	}
+
+	if (context->dam > 0) {
+		slowed = mon_inc_timed(context->mon, TMD_SLOW, (context->dam + 1) / 2, MON_TMD_FLG_GETS_SAVE | MON_TMD_FLG_NORES);
+	}
+
+	if (context->origin.what == SRC_PLAYER) {
+		src_mon = &player->mon;
+	} else if (context->origin.what == SRC_MONSTER) {
+		src_mon = cave_monster(cave, context->origin.which.monster);
+	}
+
+	if (slowed && src_mon && src_mon->race) {
+		effect_simple(EF_HEAL_HP,
+			context->origin,
+			format("%id1", context->dam),
+			0, 0, 0, 0, 0, &dummy);
+	}
+
+	context->dam = 0;
 }
 
 /* Crush */
