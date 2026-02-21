@@ -435,7 +435,6 @@ static void mon_stat_calc(const struct monster *mon, struct player_state *state)
 	}
 }
 
-
 static int evolving_race_power(const struct monster_race *mr, int which)
 {
 	int sum = 0, div = 0, base;
@@ -469,8 +468,8 @@ struct scaling_data classes_power(const struct player_class *list[], size_t len,
 
 	if (i <= 0) return result;
 
-	result.p_xtra += result.p_xtra * (i - 1) / 10;
-	result.p_xtra /= i;
+	result.p_xtra += result.p_xtra * ((int)i - 1) / 10;
+	result.p_xtra /= (int)i;
 
 	return result;
 }
