@@ -13750,7 +13750,7 @@ hearing:50
 smell:50
 armor-class:192
 sleepiness:10
-depth:90
+depth:70
 rarity:1
 experience:40000
 blow:GAZE:TURN_EVIL:9d12
