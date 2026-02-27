@@ -224,7 +224,7 @@ bool player_can_metaprogress(struct player *p)
 struct monster_race *race_to_monster(const struct player_race *r)
 {
 	assert(r->mon_race);
-	return (struct monster_race *)r->mon_race;
+	return r->mon_race;
 }
 
 struct monster_race *lookup_player_monster(const struct player *p)
@@ -289,6 +289,13 @@ void remove_last_evolution(struct player *p)
 {
 	if (p->num_evol_choices > 0) {
 		remove_evolution(p, p->num_evol_choices - 1);
+	}
+}
+
+void remove_all_evolutions(struct player *p)
+{
+	while (p->num_evol_choices > 0) {
+		remove_last_evolution(p);
 	}
 }
 
@@ -422,7 +429,7 @@ bool select_evolution(struct player *p)
 
 	if (!choice_evol) return false;
 
-	evolution_choice_menu_select(choice_evol, p, false);
+	evolution_choice_menu_select(choice_evol, p, false, 1, 25);
 
 	return p->num_evol_choices > prev_num;
 }
@@ -1082,7 +1089,7 @@ bool player_learn_spell_xp(struct player *p, bool initial, int xp)
 	int learned_num = 0;
 	int forgotten[3] = { -1, -1, -1 }; // track which ones we forgot so we don't relearn them
 	int forgottenind = 0;
-	const struct magic_realm *realm = get_player_realm(p);
+	//const struct magic_realm *realm = get_player_realm(p);
 
 	if (!player_can_learn_spell_xp(p)) {
 		return false;

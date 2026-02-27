@@ -77,6 +77,7 @@ void player_race_name(struct player *p, char *buf, size_t bufsize);
 bool player_increase_stat(struct player *p);
 void remove_first_evolution(struct player *p);
 void remove_last_evolution(struct player *p);
+void remove_all_evolutions(struct player *p);
 bool add_evolution(struct player *p, const struct monster_race *mr);
 bool select_evolution(struct player *p);
 int expected_monster_evol_level(const struct monster_race *mr);

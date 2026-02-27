@@ -913,11 +913,17 @@ void menu_refresh(struct menu *menu, bool reset_screen)
 				loc->width, COLOUR_WHITE, menu->prompt);
 	}
 
+	if (menu->flags & MN_BROWSE_OVER_CHOICES) {
+		menu->skin->display_list(menu, menu->cursor, &menu->top, loc);
+	}
+
 	if (menu->browse_hook && oid >= 0) {
 		menu->browse_hook(oid, menu->menu_data, loc);
 	}
 
-	menu->skin->display_list(menu, menu->cursor, &menu->top, loc);
+	if (!(menu->flags & MN_BROWSE_OVER_CHOICES)) {
+		menu->skin->display_list(menu, menu->cursor, &menu->top, loc);
+	}
 
 	if (menu->autorefilter) {
 		get_menu_filter(menu);

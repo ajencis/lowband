@@ -1286,6 +1286,26 @@ bool birth_clear_classes(struct player *p)
 }
 #endif
 
+static void ensure_proper_evolutions(struct player *p)
+{
+	const struct monster_race *mr = p->mon.race, *first;
+	const struct evolution *evol;
+
+	if (p->num_evol_choices <= 0) {
+		return;
+	}
+
+	first = p->evol_choices[0];
+
+	for (evol = mr->evol; evol;evol = evol->next) {
+		if (evol->race == first) {
+			return;
+		}
+	}
+
+	remove_all_evolutions(p);
+}
+
 /**
  * This fleshes out a full player based on the choices currently made,
  * and so is called whenever things like race or class are chosen.
@@ -1319,6 +1339,14 @@ void player_generate(struct player *p, const struct player_race *r,
 	if (reembody) {
 		player_embody(p);
 	}
+
+	ensure_proper_evolutions(p);
+
+	/*if (p->num_evol_choices > 0) {
+		p->start_race_level = (uint16_t)p->evol_choices[p->num_evol_choices - 1]->level;
+	} else {
+		p->start_race_level = (uint16_t)mr->level;
+	}*/
 
 	/* Level 1 */
 	p->max_lev = p->lev = 1;
@@ -1804,7 +1832,7 @@ static int roman_to_int(const char *roman)
 {
 	size_t i;
 	int n = 0;
-	char *p;
+	const char *p;
 
 	char roman_token_chr1[] = "MDCLXVI";
 	const char *roman_token_chr2[] = {0, 0, "DM", 0, "LC", 0, "VX"};

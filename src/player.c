@@ -210,6 +210,11 @@ uint64_t player_exp(int level, int xpfact)
 		result += round / 2;
 		result /= round;
 		result *= round;
+
+		prev_fact = xpfact;
+		prev_level = level;
+
+		dbg_log_fmt("xp", "player_exp(%i, %i) = %i", xpfact, level, (int)result);
 	}
 
 	return result;
@@ -411,7 +416,7 @@ uint64_t player_exp_needed(struct player *p, int level)
 	//int num = level * p->mon.state.expfact;
 	//int denom = 100;
 
-	return player_exp(level, p->mon.state.expfact);
+	return player_exp(level, (int)p->mon.state.expfact);
 }
 
 bool player_at_max_level(struct player *p)
@@ -500,7 +505,7 @@ void player_exp_gain(struct player *p, uint64_t amount, uint32_t fract)
 	uint64_t tolev;
 	uint64_t new_fract, extra_fract, new_amt;
 
-	if (p->max_lev >= PY_MAX_LEVEL) tolev = PY_MAX_EXP;
+	if (player_at_max_level(p)) tolev = PY_MAX_EXP;
 	else tolev = player_exp_needed(p, p->max_lev + 1);
 
 	new_amt = amount * 100;

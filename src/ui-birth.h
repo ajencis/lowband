@@ -28,6 +28,7 @@ struct power_name {
 
 void ui_init_birthstate_handlers(void);
 void reset_birthmenu_filters(void);
+void mon_race_help(const struct monster_race *mr, int row, int col);
 int textui_do_birth(void);
 
 //phantom

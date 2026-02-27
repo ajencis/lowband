@@ -888,7 +888,7 @@ title:Skillmaster
 ############### MONSTER ###############
 name:Monster
 unlockable:0
-skill-monster:10:90
+#skill-monster:10:90
 equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
 player-flags:NO_SKILL

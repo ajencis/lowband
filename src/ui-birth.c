@@ -384,6 +384,16 @@ static bool birthmenu_handler(struct menu *menu, const ui_event *event, int oid)
 
 		refresh_birth_classes(player, oid, data->selected);
 	}
+	else if (question == BQ_RACE) {
+		if (event->type == EVT_KBRD) {
+			if (event->key.code == '+') {
+				player_generate(player, player_id2race(oid), false);
+				if (evolution_choice_menu_select(player->mon.race->evol, player, true, TABLE_ROW, RACE_AUX_COL)) {
+					return true;
+				}
+			}
+		}
+	}
 
 	return handled;
 }
@@ -449,7 +459,7 @@ static void skill_help(const int skills_b[SKILL_MAX], const int skills_x[SKILL_M
 	}
 }
 
-static bool race_pf_has(struct monster_race *mr, int pflag)
+static bool race_pf_has(const struct monster_race *mr, int pflag)
 {
 	int i;
 
@@ -462,7 +472,7 @@ static bool race_pf_has(struct monster_race *mr, int pflag)
 	return false;
 }
 
-static bool race_of_has(struct monster_race *mr, int oflag)
+static bool race_of_has(const struct monster_race *mr, int oflag)
 {
 	int i;
 
@@ -475,8 +485,150 @@ static bool race_of_has(struct monster_race *mr, int oflag)
 	return false;
 }
 
+static const struct monster_race *birth_monster_use(const struct player *p, int unevol)
+{
+	struct player_race *prace = player_id2race(unevol);
+	const struct monster_race *base_mr = race_to_monster(prace);
+	const struct evolution *evol;
+
+	assert(prace);
+	assert(base_mr);
+
+	if (!player->num_evol_choices) {
+		return base_mr;
+	}
+
+	for (evol = base_mr->evol; evol; evol = evol->next) {
+		if (evol->race == player->evol_choices[0]) {
+			return player->evol_choices[player->num_evol_choices - 1];
+		}
+	}
+
+	return base_mr;
+}
+
+void mon_race_help(const struct monster_race *mr, int row, int col)
+{
+	int j, base, xtra;
+
+	const struct player_ability *ability;
+	int n_flags = 0;
+	int flag_space = 5;
+	int race_skills[SKILL_MAX] = { 0 };
+	int race_x_skills[SKILL_MAX] = { 0 };
+	int race_powers[PP_MAX];
+	char r_name[128];
+
+	struct scaling_data sdata;
+
+	assert(mr);
+
+	strnfmt(r_name, sizeof r_name, "%s", mr->name);
+	my_strcap_full(r_name);
+
+	for (j = 0; j < SKILL_MAX; ++j) {
+		sdata = race_skill(mr, j);
+
+		race_skills[j] = scaling_data_calc_r_xtra(mr, sdata);
+		race_skills[j] += sdata.base;
+
+		race_x_skills[j] = sdata.p_xtra;
+	}
+
+	memcpy(race_powers, mr->powers, sizeof race_powers);
+
+	clear_from_xy(row, col);
+
+	/* Output to the screen */
+	text_out_hook = text_out_to_screen;
+
+	/* Indent output */
+	text_out_indent = col;
+	Term_gotoxy(col, row);
+
+	text_out_c(COLOUR_L_BLUE, "%s", r_name);
+	text_out_e(":\n\n");
+
+	for (j = 0; j < STAT_MAX; j++) {
+		int sind = j & 1 ? j / 2 + (STAT_MAX + 1) / 2 : j / 2;
+
+		const char *name = stat_names_reduced[sind];
+		int adj = mr->stat_mod[sind];
+
+		text_out_e("%s %+1d", name, adj);
+
+		if (j & 1 || j + 1 == STAT_MAX) {
+			text_out("\n");
+		}
+		else {
+			text_out("  ");
+		}
+	}
+
+	int xp = mr->level + 100;
+
+	text_out_e("\n");
+	skill_help(race_skills, race_x_skills, xp, 0);
+	//text_out_e("\n");
+
+	for (ability = player_abilities; ability; ability = ability->next) {
+		if (n_flags >= flag_space) break;
+		if ((ability->type == PY_ABIL_OBJECT) && !race_of_has(mr, ability->index)) {
+			continue;
+		} else if ((ability->type == PY_ABIL_PLAYER) && !race_pf_has(mr, ability->index)) {
+			continue;
+		} else if ((ability->type == PY_ABIL_ELEMENT) &&
+				(mr->el_info[ability->index].res_level != ability->value)) {
+			continue;
+		} else if (ability->type == PY_ABIL_SKILL) {
+			continue;
+		}
+
+		if (ability->type == PY_ABIL_POWER) {
+			char base_str[80] = "", xtra_str[80] = "";
+
+			sdata = race_power(mr, ability->index);
+
+			base = scaling_data_calc_r_xtra(mr, sdata) + sdata.base;
+			xtra = sdata.p_xtra;
+
+			if (base) {
+				strnfmt(base_str, sizeof base_str, "%i", base);
+				if (xtra) {
+					strnfmt(xtra_str, sizeof xtra_str, " %+i%%", xtra);
+				}
+			} else if (xtra) {
+				strnfmt(xtra_str, sizeof xtra_str, "%i%%", xtra);
+			}
+
+			if (base || xtra) {
+		    	text_out_e("\n%s: %s%s", ability->name, base_str, xtra_str);
+				n_flags++;
+			}
+		} else {
+			text_out_e("\n%s", ability->name);
+			n_flags++;
+		}
+	}
+
+	while (n_flags < flag_space) {
+		text_out_e("\n");
+		n_flags++;
+	}
+
+	/* Reset text_out() indentation */
+	text_out_indent = 0;
+
+}
+
 static void race_help(int i, void *db, const region *l)
 {
+	const struct monster_race *mr = birth_monster_use(player, i);
+
+	mon_race_help(mr, TABLE_ROW, RACE_AUX_COL);
+
+	return;
+
 	int j, base, xtra;
 	struct player_race *r = player_id2race(i);
 	struct monster_race *mon = race_to_monster(r);
@@ -491,8 +643,6 @@ static void race_help(int i, void *db, const region *l)
 	char r_name[128];
 
 	struct scaling_data sdata;
-
-	assert(mon);
 
 	if (!r) return;
 
@@ -608,8 +758,8 @@ static void race_help(int i, void *db, const region *l)
 static void class_help(int i, void *db, const region *l)
 {
 	struct player_class *c = player_id2class(i);
-	const struct player_race *r = player->race;
-	const struct monster_race *mr = race_to_monster(r);
+	//const struct player_race *r = player->race;
+	const struct monster_race *mr = birth_monster_use(player, player->race->ridx);
 	struct scaling_data sdata = { 0 };
 	//const struct player_class *curr_classes[MAX_PLAYER_CLASSES] = { 0 };
 	struct birthmenu_data *data = db;
@@ -625,7 +775,9 @@ static void class_help(int i, void *db, const region *l)
 	refresh_birth_classes(player, i, data->selected);
 
 	class_name(player, c_name, sizeof c_name);
-	player_race_name(player, r_name, sizeof r_name);
+	strnfmt(r_name, sizeof r_name, "%s", mr->name);
+	my_strcap_full(r_name);
+	//player_race_name(player, r_name, sizeof r_name);
 
 	for (j = 0; j < SKILL_MAX; ++j) {
 		sdata = race_skill(mr, j);
@@ -666,7 +818,7 @@ static void class_help(int i, void *db, const region *l)
 
 	text_out_e(":\n\n");
 	
-	skill_help(skills_b, skills_x, r->r_exp + c->c_exp, -1);
+	skill_help(skills_b, skills_x, mr->level + c->c_exp, -1);
 
 	for (ability = player_abilities; ability; ability = ability->next) {
 		int base, xtra;
@@ -681,7 +833,8 @@ static void class_help(int i, void *db, const region *l)
 		} else if (ability->type == PY_ABIL_ELEMENT) {
 			continue;
 		} else if (ability->type == PY_ABIL_POWER) {
-			sdata = mon_race_power(&player->mon, ability->index);
+			//sdata = mon_race_power(&player->mon, ability->index);
+			sdata = race_power(mr, ability->index);
 			sdata = scaling_data_sum(sdata, mon_class_power(&player->mon, ability->index));
 
 			base = scaling_data_calc_r_xtra(mr, sdata);
@@ -1347,8 +1500,8 @@ static enum birth_stage roller_command(bool first_call)
 
 	case ACT_CTX_BIRTH_ROLL_ACCEPT:
 		/* Accept the roll.  Go to the next stage. */
-		//next = BIRTH_NAME_CHOICE;
-		next = BIRTH_MONSTER;
+		next = BIRTH_NAME_CHOICE;
+		//next = BIRTH_MONSTER;
 		break;
 
 	case ACT_CTX_BIRTH_ROLL_QUIT:
@@ -1628,8 +1781,8 @@ static enum birth_stage point_based_command(void)
 
 	case ACT_CTX_BIRTH_PTS_ACCEPT:
 		/* Done with this stage.  Proceed to the next. */
-		//next = BIRTH_NAME_CHOICE;
-		next = BIRTH_MONSTER;
+		next = BIRTH_NAME_CHOICE;
+		//next = BIRTH_MONSTER;
 		break;
 
 	case ACT_CTX_BIRTH_PTS_QUIT:
@@ -1644,6 +1797,7 @@ static enum birth_stage point_based_command(void)
 	return next;
 }
 
+#if 0
 static void check_player_birth_monster(struct player *p)
 {
 	check_player_monster(p, true);
@@ -1666,12 +1820,11 @@ static enum birth_stage get_evol_command(bool going_back)
 		return going_back ? BIRTH_BACK : BIRTH_LEARN;
 	}
 
-	success = evolution_choice_menu_select(player->mon.race->evol, player, true);
+	success = evolution_choice_menu_select(player->mon.race->evol, player, true, TABLE_ROW, CLASS_AUX_COL);
 
 	check_player_birth_monster(player);
 	return success ? BIRTH_LEARN : BIRTH_BACK;
 
-#if 0
 	bool back = going_back;
 
 	if (going_back) {
@@ -1710,8 +1863,8 @@ static enum birth_stage get_evol_command(bool going_back)
 
 	check_player_birth_monster(player);
 	return back ? BIRTH_BACK : BIRTH_LEARN;
-#endif
 }
+#endif
 
 static enum birth_stage get_learn_command(bool going_back)
 {
@@ -2158,20 +2311,20 @@ int textui_do_birth(void)
 				break;
 			}
 
-			case BIRTH_MONSTER:
+			/*case BIRTH_MONSTER:
 			{
 				next = get_evol_command(prev > BIRTH_MONSTER);
 
 				if (next == BIRTH_BACK) next = roller;
 
 				break;
-			}
+			}*/
 
 			case BIRTH_LEARN:
 			{
 				next = get_learn_command(prev > BIRTH_LEARN);
 
-				if (next == BIRTH_BACK) next = BIRTH_MONSTER;
+				if (next == BIRTH_BACK) next = roller;
 
 				break;
 			}

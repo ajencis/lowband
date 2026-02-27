@@ -1448,14 +1448,16 @@ void calc_bonuses(struct player *p, struct monster *mon, struct player_state *st
 
 	/* L: change expfact based on int */
 	state->expfact = 0;
-	for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
+	state->expfact = player_num_classes(p) * 25 + 75;
+	/*for (i = 0; i < MAX_PLAYER_CLASSES && p->classes[i]; ++i) {
 		state->expfact += p->classes[i]->c_exp;
 	}
 
 	state->expfact *= 2 * i;
-	state->expfact /= i + 1;
+	state->expfact /= i + 1;*/
 
-	state->expfact += p->race->r_exp;
+	state->expfact += p->start_race_level;
+	assert((int)state->expfact > adj_int_xp(state->stat_ind[STAT_INT]));
 	state->expfact += adj_int_xp(state->stat_ind[STAT_INT]);
 	state->expfact = MAX(50, state->expfact);
 

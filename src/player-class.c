@@ -17,6 +17,7 @@
  */
 
 
+#include "init.h"
 #include "player-enum.h"
 #include "player.h"
 #include "z-form.h"
@@ -199,3 +200,15 @@ void player_set_class(struct player *p, int cidx)
 		p->classes[i] = NULL;
 	}
 }
+
+int player_num_classes(struct player *p)
+{
+	int i;
+
+	for (i = 0; i < MAX_PLAYER_CLASSES; ++i) {
+		if (!p->classes[i]) return i;
+	}
+
+	return i;
+}
+

@@ -204,7 +204,10 @@ enum
 	MN_NO_ACTION = 0x20,
 
 	/* Tags can be selected via an inscription */
-	MN_INSCRIP_TAGS = 0x40
+	MN_INSCRIP_TAGS = 0x40,
+
+	// L: Print menu choices before browse data
+	MN_BROWSE_OVER_CHOICES = 0x80,
 };
 
 

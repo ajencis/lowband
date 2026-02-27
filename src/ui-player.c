@@ -48,6 +48,7 @@
 #include "z-file.h"
 #include "z-form.h"
 #include <stdbool.h>
+#include <stdint.h>
 #include "ui-player.h"
 
 
@@ -655,8 +656,8 @@ static const char *show_adv_exp(void)
 {
 	if (!player_at_max_level(player)) {
 		static char buffer[30];
-		int64_t advance = player_exp_needed(player, player->lev);// player_exp[player->lev - 1];
-		strnfmt(buffer, sizeof(buffer), "%ld", (long)advance);
+		uint64_t advance = player_exp_needed(player, player->lev);// player_exp[player->lev - 1];
+		strnfmt(buffer, sizeof(buffer), "%lld", (long long)advance);
 		return buffer;
 	}
 	else {

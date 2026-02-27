@@ -194,25 +194,30 @@ static bool change_monster_race(struct monster *mon, const struct monster_race *
 bool mon_check_evolution(struct monster *mon, bool select)
 {
 	const struct monster_race *target = NULL;
-	int max_lev;
+	int max_lev, tgts = 0;
+	struct evolution *evol;
 
-	if (!mon->player) {
-		int tgts = 0;
-		struct evolution *evol;
+	if (mon->player) {
+		if (mon->player->num_evol_choices <= 0) return false;
 
-		max_lev = mon->mon_lev;
+		target = mon->player->evol_choices[0];
 
-		for (evol = mon->race->evol; evol; evol = evol->next) {
-			if (evol->race->level >= mon->mon_lev) {
-				tgts++;
-				if (one_in_(tgts)) {
-					target = evol->race;
-				}
+		if (player_exp(target->level, 75) > mon->player->exp) {
+			return false;
+		}
+
+		return change_monster_race(mon, target);
+	}
+
+	max_lev = mon->mon_lev;
+
+	for (evol = mon->race->evol; evol; evol = evol->next) {
+		if (evol->race->level >= mon->mon_lev) {
+			tgts++;
+			if (one_in_(tgts)) {
+				target = evol->race;
 			}
 		}
-	} else if (mon->player->num_evol_choices > 0) {
-		target = mon->player->evol_choices[0];
-		max_lev = mon->state.skills[SKILL_MONSTER];
 	}
 
 	if (!target || target->level > max_lev) {

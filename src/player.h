@@ -424,7 +424,8 @@ struct player {
 	const struct player_race *race;
 	const struct player_class *classes[MAX_PLAYER_CLASSES];
 
-	struct monster mon;	// L: player as a monster
+	struct monster mon;			// L: player as a monster
+	uint16_t start_race_level;	// L: what level of monster was selected at birth
 
 	//struct loc grid;	/* Player location */
 	struct loc old_grid;/* Player location before leaving for an arena */
@@ -571,6 +572,7 @@ size_t class_title(const struct player *p, char *buf, size_t bufsize);
 bool player_add_class(struct player *p, int cidx);
 bool player_remove_class(struct player *p, int cidx);
 void player_set_class(struct player *p, int cidx);
+int player_num_classes(struct player *p);
 
 /* player.c */
 uint64_t player_exp(int level, int xpfact);
