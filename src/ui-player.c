@@ -800,17 +800,26 @@ static void random_value_description(random_value rv, bool ignore_sides, char *b
 	}
 }
 
-static int get_panel_attack_one(struct attack *atk, bool ranged, struct panel *p)
+static int get_panel_attack_one(struct attack *atk, bool ranged, int blow_num, struct panel *p)
 {
 	int bth = atk->to_hit;
 	struct effect *ef;
 	random_value rv;
 	char atk_title[80], range[80] = "", rv_desc[80], ef_name[80], chance_desc[80];
 	const char *title;
-	int blows = atk->blows / 100, blow_frac = (atk->blows / 10) % 10;
+	int blows, blow_frac;
 	int attr;
 	int num_choice = 0;
 	int hgt = 0;
+
+	if (ranged) {
+		blows = ranged_atk_blows(&player->mon, atk);
+	} else {
+		blows = attack_blows(&player->mon, atk, blow_num);
+	}
+
+	blow_frac = (blows / 10) % 10;
+	blows /= 100;
 
 	if (ranged ? atk->range < z_info->max_range : atk->range != 1) {
 		strnfmt(range, sizeof range, " (rng %i)", atk->range);
@@ -857,9 +866,14 @@ static int get_panel_attack_one(struct attack *atk, bool ranged, struct panel *p
 static struct panel *get_panel_combat(void) {
 	struct panel *p;
 	struct attack *atk;
-	int hgt = 0, panel_size;
+	int hgt = 0, panel_size, total_num;
 
 	update_mon_attacks(&player->mon);
+
+	total_num = 0;
+	for (atk = player->mon.atk; atk; atk = atk->next) {
+		total_num += atk->num;
+	}
 
 	panel_size = combat_panel_min_size(player);
 	p = panel_allocate(panel_size + 3);
@@ -874,7 +888,7 @@ static struct panel *get_panel_combat(void) {
 	++hgt;
 
 	for (atk = player->mon.atk; atk; atk = atk->next) {
-		hgt += get_panel_attack_one(atk, false, p);
+		hgt += get_panel_attack_one(atk, false, total_num, p);
 
 #if 0
 		bth = atk->to_hit;
@@ -936,8 +950,9 @@ static struct panel *get_panel_combat(void) {
 		hgt++;
 	}
 
+
 	for (atk = player->mon.rng_atk; atk; atk = atk->next) {
-		hgt = get_panel_attack_one(atk, true, p);
+		hgt = get_panel_attack_one(atk, true, 0, p);
 	}
 
 	/* Ranged */

@@ -91,6 +91,8 @@ struct embryo_attack {
 	struct attack atk;
 	
 	int auto_freq;
+	//int specialization;
+	//int expertise;
 
 	const char *msg;
 	char title[32];
@@ -1083,6 +1085,7 @@ static void calc_emb_crit(const struct monster *mon, struct embryo_attack *emb)
 	emb->atk.crit_chance = chance;
 }
 
+#if 0
 static void calc_emb_blows(const struct monster *mon, struct embryo_attack *emb, int numblows)
 {
 	int wgt = emb->atk.obj ? object_weight_one(emb->atk.obj) : 0;
@@ -1114,6 +1117,7 @@ static void calc_emb_blows(const struct monster *mon, struct embryo_attack *emb,
 
 	emb->atk.blows = MAX(blows + 50 * emb->atk.num, blows / 2 + 100 * emb->atk.num);
 }
+#endif
 
 int attack_blows(const struct monster *mon, struct attack *atk, int total_attacks)
 {
@@ -1142,7 +1146,11 @@ int attack_blows(const struct monster *mon, struct attack *atk, int total_attack
 
 	skill = mon->state.skills[atk->skill];
 
-	blows = (skill * base / div + mon->state.extra_blows) * atk->num / total_attacks;
+	blows = skill * base / div + mon->state.extra_blows + atk->expert;
+	blows *= atk->num;
+	blows /= total_attacks;
+	blows = MAX(0, blows);
+	//blows = (skill * base / div + mon->state.extra_blows) * atk->num / total_attacks;
 
 	return MAX(blows + 50 * atk->num, blows / 2 + 100 * atk->num);
 }
@@ -1175,6 +1183,7 @@ static void calc_emb_dual_wield(const struct monster *mon, struct embryo_attack 
 	// using two longswords to-h for each is 58% normal - 21
 }
 
+#if 0
 static int num_embryos(const struct embryo_attack *emb)
 {
 	int count = 0;
@@ -1184,6 +1193,7 @@ static int num_embryos(const struct embryo_attack *emb)
 	}
 	return count;
 }
+#endif
 
 static int num_weap_embryos(const struct embryo_attack *emb)
 {
@@ -1388,22 +1398,24 @@ static void calc_emb_expertise(const struct monster *mon, struct embryo_attack *
 {
 	//int spec, expert;
 	struct player_ability *spec, *expert;
-	int sblows = 0, eblows = 0;
+	//int sblows = 0, eblows = 0;
 
 	spec = attack_spec_type(emb->atk.obj, emb->atk.mb);
 	expert = attack_expert_type(emb->atk.obj, emb->atk.mb);
 
 	if (spec) {
 		emb->atk.rv.base += get_power_scale(mon, spec->index, 10);
-		sblows = get_power_scale(mon, spec->index, 100);
+		emb->atk.expert += get_power_scale(mon, spec->index, 40);
+		//sblows = get_power_scale(mon, spec->index, 100);
 	}
 
 	if (expert) {
 		emb->atk.to_hit += get_power_scale(mon, expert->index, 10);
-		eblows = get_power_scale(mon, expert->index, 125);
+		emb->atk.expert += get_power_scale(mon, expert->index, 60);
+		//eblows = get_power_scale(mon, expert->index, 125);
 	}
 
-	emb->atk.blows += MAX(sblows, eblows) + MIN(sblows, eblows) / 2;
+	//emb->atk.blows += MAX(sblows, eblows) + MIN(sblows, eblows) / 2;
 }
 
 
@@ -1635,7 +1647,7 @@ static void hatch_attack_embryo(struct embryo_attack *emb, struct monster *mon)
 static void get_mon_attacks(struct monster *mon)
 {
 	struct embryo_attack *emb = init_mon_attacks(mon), *curr, *next;
-	int count = num_embryos(emb), weapcount = num_weap_embryos(emb), i;
+	int weapcount = num_weap_embryos(emb), i;
 
 	curr = emb;
 	while (curr) {
@@ -1643,7 +1655,7 @@ static void get_mon_attacks(struct monster *mon)
 
 		modify_unarmed_attack(curr, mon);
 
-		calc_emb_blows(mon, curr, count);
+		//calc_emb_blows(mon, curr, count);
 
 		calc_emb_dual_wield(mon, curr, weapcount);
 
@@ -1666,21 +1678,21 @@ static void get_mon_attacks(struct monster *mon)
 
 
 
-static int calc_ranged_emb_blows(const struct monster *mon, struct embryo_attack *emb)
+int ranged_atk_blows(const struct monster *mon, const struct attack *atk)
 {
-	int wgt = emb->atk.obj ? object_weight_one(emb->atk.obj) : 0;
+	int wgt = atk->obj ? object_weight_one(atk->obj) : 0;
 	int div = wgt * 2 + 100;
-	bool has_acc = emb->atk.hit_stat != STAT_NONE, has_dam = emb->atk.dam_stat != STAT_NONE;
+	bool has_acc = atk->hit_stat != STAT_NONE, has_dam = atk->dam_stat != STAT_NONE;
 
 	int sdiv = 0, sind = 0;
 	int base, skill, blows;
 
 	if (has_dam) {
-		sind += mon->state.stat_ind[emb->atk.dam_stat];
+		sind += mon->state.stat_ind[atk->dam_stat];
 		++sdiv;
 	}
 	if (has_acc) {
-		sind += mon->state.stat_ind[emb->atk.hit_stat];
+		sind += mon->state.stat_ind[atk->hit_stat];
 		++sdiv;
 	}
 
@@ -1691,13 +1703,11 @@ static int calc_ranged_emb_blows(const struct monster *mon, struct embryo_attack
 		base = adj_stat_blow(AVG_STAT_IND);
 	}
 
-	skill = mon->state.skills[emb->atk.skill];
+	skill = mon->state.skills[atk->skill];
 
 	blows = skill * base / div + mon->state.extra_shots;
 
-	emb->atk.blows = MAX(blows / 3 + 100, blows / 2);
-
-	return emb->atk.blows;
+	return MAX(blows / 3 + 100, blows / 2);
 }
 
 static struct embryo_attack *get_ranged_weapon_attack(const struct monster *mon, const struct object *weap)
@@ -1746,7 +1756,7 @@ static struct embryo_attack *get_ranged_weapon_attack(const struct monster *mon,
 	emb->atk.num = 1;
 	emb->atk.range = z_info->max_range;
 
-	calc_ranged_emb_blows(mon, emb);
+	//calc_ranged_emb_blows(mon, emb);
 
 	return emb;
 }
@@ -1795,7 +1805,7 @@ static struct embryo_attack *get_ranged_natural_attack(const struct monster *mon
 		emb->atk.ef = ef;
 	}
 
-	calc_ranged_emb_blows(mon, emb);
+	//calc_ranged_emb_blows(mon, emb);
 
 	return emb;
 }

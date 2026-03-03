@@ -27,7 +27,7 @@ struct attack {
 
 	struct effect *ef;
 	int to_hit;
-	int blows;			// number of blows per round the user gets with it
+	//int blows;			// number of blows per round the user gets with it
 	int num;			// number of the same attacks the user has
 
 	random_value rv;	// basic damage random value

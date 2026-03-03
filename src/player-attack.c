@@ -2520,7 +2520,7 @@ static bool obj_can_fire_test(const struct object *obj)
  */
 void do_cmd_fire(struct command *cmd) {
 	struct object *ammo = NULL;
-	int dir, range;
+	int dir, range, blows;
 	struct loc target;
 	struct attack *atk;
 
@@ -2528,8 +2528,9 @@ void do_cmd_fire(struct command *cmd) {
 
 	atk = player->mon.rng_atk;
 	range = atk->range;
+	blows = ranged_atk_blows(&player->mon, atk);
 
-	if (!atk || atk->blows <= 0) {
+	if (!atk || blows <= 0) {
 		msg("You have no ranged attacks!");
 		return;
 	}
@@ -2567,7 +2568,7 @@ void do_cmd_fire(struct command *cmd) {
 		return;
 	}
 
-	player->upkeep->energy_use = (z_info->move_energy * 100 + atk->blows - 1) / atk->blows;
+	player->upkeep->energy_use = (z_info->move_energy * 100 + blows - 1) / blows;
 
 	attack_project(&player->mon, atk, ammo, target);
 }
