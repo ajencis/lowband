@@ -39,6 +39,7 @@ const char lower_case[] = "abcdefghijklmnopqrstuvwxyz";
 const char upper_case[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const char all_letters[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const char all_letters_nohjkl[] = "abcdefgimnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const char lower_case_hohjkl[] = "abcdefgimnopqrstuvwxyz";
 
 /**
  * Forward declarations
@@ -746,7 +747,7 @@ static bool no_valid_row(struct menu *menu, int count)
  * Return a new position in the menu based on the key
  * pressed and the flags and various handler functions.
  */
-static int get_cursor_key(struct menu *menu, int top, struct keypress key)
+int get_cursor_key(struct menu *menu, int top, struct keypress key)
 {
 	int i;
 	int n = menu_count(menu);

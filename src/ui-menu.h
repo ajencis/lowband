@@ -57,6 +57,7 @@ extern const char lower_case[];			/* abc..z */
 extern const char upper_case[];			/* ABC..Z */
 extern const char all_letters[];		/* abc..zABC..Z */
 extern const char all_letters_nohjkl[];		/* abc..gim..zABC..Z */
+extern const char lower_case_nohjkl[];	// abc..gim...xyz
 
 
 /*
@@ -295,6 +296,8 @@ struct menu
 struct menu *menu_new(skin_id id, const menu_iter *iter);
 struct menu *menu_new_action(menu_action *acts, size_t n);
 void menu_free(struct menu *m);
+
+int get_cursor_key(struct menu *menu, int top, struct keypress key);
 
 
 /**

@@ -48,7 +48,6 @@
 #include "z-form.h"
 #include "z-textblock.h"
 #include "z-util.h"
-#include <string.h>
 
 /**
  * Overview
@@ -182,7 +181,8 @@ static struct menu race_menu, class_menu, roller_menu;
 #define ROLLER_COL      36
 #define HIST_INSTRUCT_ROW 18
 
-#define MENU_ROWS TABLE_ROW + 14
+#define MENU_ROWS 22
+//#define MENU_ROWS TABLE_ROW + 14
 
 /**
  * upper left column and row, width, and lower column
@@ -364,29 +364,35 @@ static bool can_add_class(struct player *p, bool *selected)
 static bool birthmenu_handler(struct menu *menu, const ui_event *event, int oid)
 {
 	struct birthmenu_data *data = menu_priv(menu);
-	int question = data->question;
-	bool handled = false;
+	int question = data->question, cursor;
+	bool handled = false, uppercase_choice = false;;
+
+	if (event->type == EVT_KBRD && isupper(event->key.code)) {
+		struct keypress temp = { event->type, tolower(event->key.code), event->key.mods };
+
+		cursor = get_cursor_key(menu, menu->top, temp);
+		oid = menu_cursor_to_oid(menu, cursor);
+		menu_move_cursor_to(menu, cursor);
+		uppercase_choice = true;
+	}
 
 	if (question == BQ_CLASS) {
 		if (event->type == EVT_KBRD) {
-			if (event->key.code == '+' && can_add_class(player, data->selected)) {
+			if (((uppercase_choice && !data->selected[oid]) || event->key.code == '+') && can_add_class(player, data->selected)) {
 				data->selected[oid] = true;
 				handled = true;
 			}
-			else if (event->key.code == '-') {
+			else if (uppercase_choice || event->key.code == '-') {
 				data->selected[oid] = false;
 				handled = true;
 			}
 		}
-		/*if (event->type == EVT_SELECT) {
-			data->selected[oid] = true;
-		}*/
 
 		refresh_birth_classes(player, oid, data->selected);
 	}
 	else if (question == BQ_RACE) {
 		if (event->type == EVT_KBRD) {
-			if (event->key.code == '+') {
+			if (uppercase_choice || event->key.code == '+') {
 				player_generate(player, player_id2race(oid), false);
 				if (evolution_choice_menu_select(player->mon.race->evol, player, true, TABLE_ROW, RACE_AUX_COL)) {
 					return true;
@@ -398,13 +404,25 @@ static bool birthmenu_handler(struct menu *menu, const ui_event *event, int oid)
 	return handled;
 }
 
+static char birthmenu_get_tag(struct menu *menu, int oid)
+{
+	int select = menu->top;
+	const char selections[] = "abcdefgimnopqrstuvwxyz";
+
+	if (oid >= menu->top && oid < (int)(sizeof selections) + menu->top) {
+		return selections[oid % ((int)(sizeof selections) - 1)];
+	}
+
+	return 0;
+}
+
 
 /**
  * Our custom menu iterator, only really needed to allow us to override
  * the default handling of "commands" in the standard iterators (hence
  * only defining the display and handler parts).
  */
-static const menu_iter birth_iter = { NULL, birthmenu_valid, birthmenu_display, birthmenu_handler, NULL, NULL };
+static const menu_iter birth_iter = { birthmenu_get_tag, birthmenu_valid, birthmenu_display, birthmenu_handler, NULL, NULL };
 
 static void skill_help(const int skills_b[SKILL_MAX], const int skills_x[SKILL_MAX],
 	int exp, int infra)
@@ -997,7 +1015,7 @@ static void init_birth_menu(struct menu *menu, int n_choices,
 	   skipping the rogue-like cardinal direction movements and a
 	   double tap to act as a selection. */
 	menu->selections = all_letters_nohjkl;
-	menu->flags = MN_DBL_TAP;
+	menu->flags = MN_DBL_TAP | MN_PVT_TAGS;
 
 	/* Copy across the game's suggested initial selection, etc. */
 	menu_move_cursor_to(menu, initial_choice);
