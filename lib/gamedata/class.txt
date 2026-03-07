@@ -320,7 +320,7 @@ equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
 equip:sword:Dagger:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-equip:spellbook:spellbook:1:1:none
+equip:spellbook:spellbook of magic missile:1:1:none
 player-flags:CHOOSE_SPELLS
 realm:arcane
 title:Novice
@@ -354,7 +354,7 @@ equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
 equip:sword:Dagger:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-equip:spellbook:spellbook:1:1:none
+equip:spellbook:spellbook of magic missile:1:1:none
 player-flags:CHOOSE_SPELLS
 realm:arcane
 title:Novice
@@ -420,7 +420,7 @@ equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
 equip:sword:Rapier:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-equip:spellbook:spellbook:1:1:none
+equip:spellbook:spellbook of sleep:1:1:none
 player-flags:CHOOSE_SPELLS
 realm:music
 title:Novice
@@ -487,7 +487,7 @@ equip:food:Ration of Food:1:3:none
 equip:light:Wooden Torch:1:3:none
 equip:sword:Rapier:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-equip:spellbook:spellbook:1:1:none
+equip:spellbook:spellbook of nether bolt:1:1:none
 player-flags:CHOOSE_SPELLS
 realm:blood
 title:Novice
@@ -593,7 +593,7 @@ power:NECROMANCY_MAGIC:40
 equip:food:Ration of Food:1:3:none
 equip:sword:Main Gauche:1:1:none
 equip:scroll:Word of Recall:1:1:birth_no_recall
-equip:spellbook:spellbook:1:1:none
+equip:spellbook:spellbook of nether bolt:1:1:none
 player-flags:UNLIGHT | EVIL
 realm:arcane
 title:Acolyte
