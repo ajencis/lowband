@@ -6,6 +6,7 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
+#include "angband.h"
 #include "source.h"
 
 enum resist_types {
@@ -124,7 +125,9 @@ void thrust_away(struct loc centre, struct loc target, int grids_away);
 int inven_damage(struct player *p, int type, int cperc);
 int adjust_dam(struct player *p, int type, int dam, aspect dam_aspect,
 			   int resist, bool actual);
+int adjust_dam_monster(const struct monster *mon, int proj_type, int dam);
 
+int mon_resist_level(const struct monster *mon, int proj_type);
 int mon_resist_proj_percent(struct monster *mon, int proj_type);
 bool mon_proj_is_immune(const struct monster *mon, int proj_type);
 bool mon_race_proj_is_immune(const struct monster_race *mr, int proj_type);

@@ -406,7 +406,6 @@ static bool birthmenu_handler(struct menu *menu, const ui_event *event, int oid)
 
 static char birthmenu_get_tag(struct menu *menu, int oid)
 {
-	int select = menu->top;
 	const char selections[] = "abcdefgimnopqrstuvwxyz";
 
 	if (oid >= menu->top && oid < (int)(sizeof selections) + menu->top) {

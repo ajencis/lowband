@@ -244,15 +244,15 @@ static bool flag_to_elem_info(const char *flag, struct element_info el_info[ELEM
 
 	if (strstr(flag, "RES_") == flag) {
 		strnfmt(elem_name, sizeof elem_name, "%s", flag + 4);
-		res_lev = 1;
+		res_lev = 25;
 	}
 	else if (strstr(flag, "IM_") == flag) {
 		strnfmt(elem_name, sizeof elem_name, "%s", flag + 3);
-		res_lev = 3;
+		res_lev = 100;
 	}
 	else if (strstr(flag, "HURT_") == flag) {
 		strnfmt(elem_name, sizeof elem_name, "%s", flag + 5);
-		res_lev = -1;
+		res_lev = -25;
 	}
 	else if (strstr(flag, "NTRL_") == flag) {
 		strnfmt(elem_name, sizeof elem_name, "%s", flag + 5);

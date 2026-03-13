@@ -199,8 +199,9 @@ static bool describe_elements(textblock *tb,
 	bool list[ELEM_MAX], prev = false;
 
 	/* Immunities */
-	for (i = 0; i < ELEM_MAX; i++)
-		list[i] = (el_info[i].res_level == 3);
+	for (i = 0; i < ELEM_MAX; i++) {
+		list[i] = (el_info[i].res_level == 100);
+	}
 	count = element_info_collect(list, i_descs);
 	if (count) {
 		textblock_append(tb, "Provides immunity to ");
@@ -208,9 +209,21 @@ static bool describe_elements(textblock *tb,
 		prev = true;
 	}
 
+	/* High Resistances */
+	for (i = 0; i < ELEM_MAX; i++) {
+		list[i] = (el_info[i].res_level >= 50) && (el_info[i].res_level < 100);
+	}
+	count = element_info_collect(list, r_descs);
+	if (count) {
+		textblock_append(tb, "Provides great resistance to ");
+		info_out_list(tb, r_descs, count);
+		prev = true;
+	}
+
 	/* Resistances */
-	for (i = 0; i < ELEM_MAX; i++)
-		list[i] = (el_info[i].res_level == 1);
+	for (i = 0; i < ELEM_MAX; i++) {
+		list[i] = (el_info[i].res_level > 0) && (el_info[i].res_level < 50);
+	}
 	count = element_info_collect(list, r_descs);
 	if (count) {
 		textblock_append(tb, "Provides resistance to ");
@@ -219,8 +232,9 @@ static bool describe_elements(textblock *tb,
 	}
 
 	/* Vulnerabilities */
-	for (i = 0; i < ELEM_MAX; i++)
-		list[i] = (el_info[i].res_level == -1);
+	for (i = 0; i < ELEM_MAX; i++) {
+		list[i] = (el_info[i].res_level < 0);
+	}
 	count = element_info_collect(list, v_descs);
 	if (count) {
 		textblock_append(tb, "Makes you vulnerable to ");

@@ -233,7 +233,7 @@ static enum parser_error parse_projection_code(struct parser *p) {
 	projection->index = index;
 
 	if (index < ELEM_MAX) {
-		projection->resist_types[index] = RES_TYPE_NORMAL;
+		projection->resist_types[index] = 100;
 	}
 
 	if (h) assert(h->type);
@@ -448,13 +448,20 @@ static enum parser_error parse_projection_resist(struct parser *p) {
 		return PARSE_ERROR_GENERIC;
 	}
 
-	if (parser_hasval(p, "level")) {
+	if (parser_hasval(p, "mult")) {
+		resist_amount = parser_getint(p, "mult");
+	}
+	else {
+		resist_amount = 100;
+	}
+
+	/*if (parser_hasval(p, "level")) {
 		strnfmt(level_name, sizeof level_name, "%s", parser_getsym(p, "level"));
 		resist_amount = code_index_in_array(res_type_names, level_name);
 	}
 	else {
 		resist_amount = RES_TYPE_NORMAL;
-	}
+	}*/
 
 	projection->resist_types[elem] = resist_amount;
 
@@ -480,7 +487,7 @@ static struct parser *init_parse_projection(void) {
 	parser_reg(p, "obvious uint answer", parse_projection_obvious);
 	parser_reg(p, "wake uint answer", parse_projection_wake);
 	parser_reg(p, "color sym color", parse_projection_color);
-	parser_reg(p, "resist sym element ?sym level", parse_projection_resist);
+	parser_reg(p, "resist sym element ?int mult", parse_projection_resist);
 	return p;
 }
 

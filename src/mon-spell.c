@@ -489,7 +489,7 @@ void unset_spells(bitflag *mspells, bitflag *flags, bitflag *pflags,
 		/* First we test the elemental spells */
 		if (info->type & (RST_BOLT | RST_BALL | RST_BREATH)) {
 			int element = effect->subtype;
-			int learn_chance = el[element].res_level * (smart ? 50 : 25);
+			int learn_chance = el[element].res_level * (smart ? 5 : 2);
 			if (randint0(100) < learn_chance) {
 				rsf_off(mspells, info->index);
 			}

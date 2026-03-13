@@ -20,11 +20,9 @@
 #include "cave.h"
 #include "game-event.h"
 #include "game-input.h"
-#include "game-world.h"
 #include "generate.h"
 #include "init.h"
 #include "mon-predicate.h"
-#include "mon-util.h"
 #include "player-calcs.h"
 #include "player-timed.h"
 #include "project.h"
@@ -82,13 +80,33 @@ const char *proj_idx_to_name(int type)
 }
 
 
+static int el_info_resist_level(const struct element_info el_info[ELEM_MAX], int proj_type)
+{
+	int i, lev, total = 0;
+	const struct projection *proj = &projections[proj_type];
+
+	for (i = 0; i < ELEM_MAX; ++i) {
+		total += el_info[i].res_level * proj->resist_types[i];
+	}
+
+	return total / 100;
+}
+
+
+int mon_resist_level(const struct monster *mon, int proj_type)
+{
+	return el_info_resist_level(mon->state.el_info, proj_type);
+}
+
+
 /**
  * L: Projection predicates
  */
-
 static bool el_info_proj_is_immune(const struct element_info el_info[ELEM_MAX], int proj_type)
 {
-	int i, lev;
+	return el_info_resist_level(el_info, proj_type) >= 100;
+
+	/*int i, lev;
 	struct projection *proj = &projections[proj_type];
 
 	assert(proj_type >= 0 && proj_type < PROJ_MAX);
@@ -100,7 +118,7 @@ static bool el_info_proj_is_immune(const struct element_info el_info[ELEM_MAX], 
 		if (proj->resist_types[i] == RES_TYPE_EASY_IMMUNE && lev >= 1) return true;
 	}
 
-	return false;
+	return false;*/
 }
 
 bool mon_race_proj_is_immune(const struct monster_race *mr, int proj_type)
@@ -111,6 +129,24 @@ bool mon_race_proj_is_immune(const struct monster_race *mr, int proj_type)
 bool mon_proj_is_immune(const struct monster *mon, int proj_type)
 {
 	return el_info_proj_is_immune(mon->state.el_info, proj_type);
+}
+
+/**
+ * L: adjusts a  random_value  to provide appropriate resistance level; returns true
+ * if the target takes no damage
+ */
+int adjust_dam_monster(const struct monster *mon, int proj_type, int dam)
+{
+	const struct player *p = mon->player;
+	int res_amt = el_info_resist_level(mon->state.el_info, proj_type);
+
+	dam -= res_amt;
+
+	dam *= 100 - res_amt;
+	dam += 99;
+	dam /= 100;
+
+	return dam;
 }
 
 /**

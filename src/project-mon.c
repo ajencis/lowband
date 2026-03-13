@@ -519,25 +519,25 @@ static void project_monster_charm(project_monster_handler_context_t *context, in
 /* Acid */
 static void project_monster_handler_ACID(project_monster_handler_context_t *context)
 {
-	project_monster_resist_element(context, RF_IM_ACID, 9);
+	//project_monster_resist_element(context, RF_IM_ACID, 9);
 }
 
 /* Electricity */
 static void project_monster_handler_ELEC(project_monster_handler_context_t *context)
 {
-	project_monster_resist_element(context, RF_IM_ELEC, 9);
+	//project_monster_resist_element(context, RF_IM_ELEC, 9);
 }
 
 /* Fire damage */
 static void project_monster_handler_FIRE(project_monster_handler_context_t *context)
 {
-	project_monster_hurt_immune(context, RF_HURT_FIRE, RF_IM_FIRE, 2, 9, MON_MSG_CATCH_FIRE, MON_MSG_DISINTEGRATES);
+	//project_monster_hurt_immune(context, RF_HURT_FIRE, RF_IM_FIRE, 2, 9, MON_MSG_CATCH_FIRE, MON_MSG_DISINTEGRATES);
 }
 
 /* Cold */
 static void project_monster_handler_COLD(project_monster_handler_context_t *context)
 {
-	project_monster_hurt_immune(context, RF_HURT_COLD, RF_IM_COLD, 2, 9, MON_MSG_BADLY_FROZEN, MON_MSG_FREEZE_SHATTER);
+	//project_monster_hurt_immune(context, RF_HURT_COLD, RF_IM_COLD, 2, 9, MON_MSG_BADLY_FROZEN, MON_MSG_FREEZE_SHATTER);
 }
 
 /* Poison */
@@ -545,7 +545,7 @@ static void project_monster_handler_POIS(project_monster_handler_context_t *cont
 {
 	context->mon_timed[TMD_POISONED] = randint1(context->dam) + 10;
 
-	project_monster_resist_element(context, RF_IM_POIS, 9);
+	//project_monster_resist_element(context, RF_IM_POIS, 9);
 }
 
 /* Light -- opposite of Dark */
@@ -593,7 +593,7 @@ static void project_monster_handler_SHARD(project_monster_handler_context_t *con
 /* Nexus */
 static void project_monster_handler_NEXUS(project_monster_handler_context_t *context)
 {
-	project_monster_resist_other(context, RF_IM_NEXUS, 3, true, MON_MSG_RESIST);
+	//project_monster_resist_other(context, RF_IM_NEXUS, 3, true, MON_MSG_RESIST);
 
 	if (one_in_(3)) {
 		/* Blink */
@@ -1566,8 +1566,7 @@ void project_m(struct source origin, int r, struct loc grid, int dam, int typ,
 	if (!mon || !mon->race) return;
 
 	// L: check resists
-	dam *= mon_resist_proj_percent(mon, typ);
-	dam /= 100;
+	dam = adjust_dam_monster(mon, typ, dam);
 
 	project_monster_handler_f monster_handler = monster_handlers[typ];
 	project_monster_handler_context_t context = {
