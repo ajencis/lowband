@@ -542,6 +542,24 @@ struct loc origin_get_loc(struct source origin)
 	return loc(-1, -1);
 }
 
+struct monster *origin_get_monster(struct source origin)
+{
+	struct monster *result;
+
+	switch (origin.what) {
+		case SRC_MONSTER: {
+			result = cave_monster(cave, origin.which.monster);
+			return result && result->race ? result : NULL;
+		}
+		case SRC_PLAYER: {
+			return &player->mon;
+		}
+		default: {
+			return NULL;
+		}
+	}
+}
+
 /**
  * Generic "beam"/"bolt"/"ball" projection routine.
  *   -BEN-, some changes by -LM-

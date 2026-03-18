@@ -148,6 +148,7 @@ int proj_name_to_idx(const char *name);
 const char *proj_idx_to_name(int type);
 
 struct loc origin_get_loc(struct source origin);
+struct monster *origin_get_monster(struct source origin);
 
 bool project(struct source origin, int rad, struct loc finish, int dam, int typ,
 	int flg, int degrees_of_arc, uint8_t diameter_of_source,
