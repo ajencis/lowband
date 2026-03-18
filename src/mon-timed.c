@@ -280,7 +280,11 @@ bool mon_inc_timed(struct monster *mon, int effect_type, int timer, int flag)
 		}
 
 		case STACK_INCR: {
-			new_value = mon->m_timed[effect_type] + timer;
+			if ((int)mon->m_timed[effect_type] > INT16_MAX - timer) {
+				new_value = INT16_MAX;
+			} else {
+				new_value = mon->m_timed[effect_type] + timer;
+			}
 			break;
 		}
 	}
