@@ -730,21 +730,21 @@ bool effect_handler_TIMED_INC_NO_RES(effect_handler_context_t *context)
  */
 bool effect_handler_SELF_TIMED_INC(effect_handler_context_t *context)
 {
-	int amount = effect_calculate_value(context, true);
+	int64_t amount = effect_calculate_value(context, true), curr;
+	struct monster *src_mon = origin_get_monster(context->origin);
 
-	if (context->origin.what == SRC_PLAYER) {
-		player_inc_timed(player, context->subtype, amount, true, true, false);
-	}
-
-	else if (context->origin.what == SRC_MONSTER) {
-		struct monster *mon = cave_monster(cave, context->origin.which.monster);
-		assert(mon);
-		mon_inc_timed(mon, context->subtype, amount, 0);
-	}
-
-	else {
+	if (!src_mon) {
 		return false;
 	}
+
+	curr = src_mon->m_timed[context->subtype];
+	if (curr > 100) {
+		amount = amount * curr / 100;
+	}
+
+	amount = MIN(amount, INT16_MAX);
+
+	mon_inc_timed(src_mon, context->subtype, amount, 0);
 
 	return true;
 }
