@@ -89,12 +89,12 @@ static const char *projection_names[] = {
 	NULL
 };
 
-static const char *res_type_names[] = {
+/*static const char *res_type_names[] = {
 	#define RES_TYPE(x) #x,
 	#include "list-resist-types.h"
 	#undef RES_TYPE
 	NULL
-};
+};*/
 
 static bool grab_element_flag(struct element_info *info, const char *flag_name)
 {
@@ -435,7 +435,7 @@ static enum parser_error parse_projection_verb(struct parser *p) {
 static enum parser_error parse_projection_resist(struct parser *p) {
 	struct projection *projection = parser_priv(p);
 	int elem, resist_amount;
-	char elem_name[80], level_name[80] = "NORMAL";
+	char elem_name[80];//, level_name[80] = "NORMAL";
 
 	if (!projection) {
 		return PARSE_ERROR_MISSING_RECORD_HEADER;

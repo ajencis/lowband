@@ -818,10 +818,10 @@ void alloc_mana(struct chunk *c)
 void alloc_objects(struct chunk *c, int set, int typ, int num, int depth,
 		uint8_t origin)
 {
-	int k, l = 0;
+	int k;
 	for (k = 0; k < num; k++) {
-		bool ok = alloc_object(c, set, typ, depth, origin);
-		if (!ok) l++;
+		alloc_object(c, set, typ, depth, origin);
+		//if (!ok) l++;
 	}
 
 	object_lists_check_integrity(c, player->cave);

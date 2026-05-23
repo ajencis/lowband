@@ -1580,7 +1580,7 @@ static void point_based_points(game_event_type type, game_event_data *data,
 							   void *user)
 {
 	int i;
-	int sum = 0;
+	//int sum = 0;
 	const int *spent = data->birthpoints.points;
 	const int *inc = data->birthpoints.inc_points;
 	int remaining = data->birthpoints.remaining;
@@ -1599,7 +1599,7 @@ static void point_based_points(game_event_type type, game_event_data *data,
 		}
 		/* Display cost */
 		put_str(format("%4d", spent[i]), COSTS_ROW + i, COSTS_COL);
-		sum += spent[i];
+		//sum += spent[i];
 	}
 	
 	put_str(format("Points Remaining: %2i", remaining),

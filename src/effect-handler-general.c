@@ -776,7 +776,7 @@ bool effect_handler_OTHER_TIMED_INC(effect_handler_context_t *context)
 
 		if (src_p || monster_is_in_view(t_mon)) flg |= MON_TMD_FLG_NOTIFY;
 		
-		mon_inc_timed(t_mon, context->subtype, amount, 0);
+		mon_inc_timed(t_mon, context->subtype, amount, flg);
 	}
 
 	return true;
@@ -3488,7 +3488,7 @@ bool effect_handler_CURSE_WEAPON(effect_handler_context_t *context)
 			int pick = randint1(z_info->curse_max - 1);
 			int power = 10 * m_bonus(9, player->depth);
 			if (!curses[pick].poss[obj->tval]) {
-				max_tries--;
+				if (!--max_tries) break;
 				continue;
 			}
 			append_object_curse(obj, pick, power);

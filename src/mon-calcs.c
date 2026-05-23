@@ -570,7 +570,7 @@ static void get_mon_ac(struct monster *mon, struct player_state *state)
 void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 {
 	int i, j;
-	int extra_blows = 0, extra_shots = 0, extra_might = 0, extra_moves = 0;
+	int extra_blows = 0, extra_shots = 0, extra_moves = 0;
 	int curr_light = 0;
 	struct monster_race *mrace = mon->race;
 	bitflag f[OF_SIZE];
@@ -662,7 +662,7 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 			state->dam_red += obj->modifiers[OBJ_MOD_DAM_RED];
 			extra_blows += obj->modifiers[OBJ_MOD_BLOWS] * 100;
 			extra_shots += obj->modifiers[OBJ_MOD_SHOTS];
-			extra_might += obj->modifiers[OBJ_MOD_MIGHT];
+			//extra_might += obj->modifiers[OBJ_MOD_MIGHT];
 			extra_moves += obj->modifiers[OBJ_MOD_MOVES];
 
 

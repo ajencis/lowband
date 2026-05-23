@@ -1258,14 +1258,14 @@ int unlight_radius(struct player *p)
 int player_grid_visibility(struct loc grid, struct player *p, struct chunk *c)
 {
 	int darkest = 1;
-	int brightest = 10;
+	//int brightest = 10;
 	int light = square_light(c, grid);
 	int unl_rad = unlight_radius(p);
 	int dist = distance(p->mon.grid, grid);
 	bool p_is_unlight = p->mon.state.powers[PP_UNLIGHT] ? true : false;
 
 	darkest -= get_power_scale(&p->mon, PP_UNLIGHT, UNLIGHT_MAX_POWER * 4);
-	brightest -= get_power_scale(&p->mon, PP_UNLIGHT, 10);
+	//brightest -= get_power_scale(&p->mon, PP_UNLIGHT, 10);
 
 	if (p_is_unlight && dist <= unl_rad && light <= 0) return PY_SEE_VISIBLE;
 	if (light == 0) return PY_SEE_TOO_DARK;

@@ -1453,7 +1453,7 @@ static int rd_dungeon_aux(struct chunk **c)
 	struct chunk *c1;
 	int i, n, y, x;
 	struct loc grid;
-	int fidx, size, num;
+	int fidx, size;//, num;
 
 	uint16_t height, width;
 
@@ -1526,18 +1526,18 @@ static int rd_dungeon_aux(struct chunk **c)
 	}
 	*/
 
-	int totalnum = 0;
+	//int totalnum = 0;
 	// L: features
 	for (grid.y = 0; grid.y < height; ++grid.y) {
 		for (grid.x = 0; grid.x < width; ++grid.x) {
-			num = 0;
+			//num = 0;
 
 			rd_u16b(&tmp16u);
 
 			fidx = (int)tmp16u;
 
 			while (fidx >= FEAT_NONE && fidx < FEAT_MAX) {
-				++num;
+				//++num;
 				rd_u16b(&tmp16u);
 				size = (int)tmp16u;
 
@@ -1546,7 +1546,7 @@ static int rd_dungeon_aux(struct chunk **c)
 				rd_u16b(&tmp16u);
 				fidx = (int)tmp16u;
 			}
-			totalnum += num;
+			//totalnum += num;
 		}
 	}
 

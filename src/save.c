@@ -999,21 +999,21 @@ static void wr_dungeon_aux(struct chunk *c)
 		wr_byte(prev_char);
 	}
 
-	int totalnum = 0;
+	//int totalnum = 0;
 	// L: features
 	for (y = 0; y < c->height; ++y) {
 		for (x = 0; x < c->width; ++x) {
-			int num = 0;
+			//int num = 0;
 
 			for (feat = square_feat(c, loc(x, y)); feat; feat = feat->next) {
-				++num;
+				//++num;
 				wr_u16b((uint16_t)feat->kind->fidx);
 				wr_u16b((uint16_t)feat->size);
 			}
 
 			wr_u16b(UINT16_MAX);
 
-			totalnum += num;
+			//totalnum += num;
 		}
 	}
 

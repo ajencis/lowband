@@ -82,7 +82,7 @@ const char *proj_idx_to_name(int type)
 
 static int el_info_resist_level(const struct element_info el_info[ELEM_MAX], int proj_type)
 {
-	int i, lev, total = 0;
+	int i, total = 0;
 	const struct projection *proj = &projections[proj_type];
 
 	for (i = 0; i < ELEM_MAX; ++i) {
@@ -137,7 +137,7 @@ bool mon_proj_is_immune(const struct monster *mon, int proj_type)
  */
 int adjust_dam_monster(const struct monster *mon, int proj_type, int dam)
 {
-	const struct player *p = mon->player;
+	//const struct player *p = mon->player;
 	int res_amt = el_info_resist_level(mon->state.el_info, proj_type);
 
 	dam -= res_amt;
