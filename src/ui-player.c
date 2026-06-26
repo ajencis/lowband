@@ -710,16 +710,24 @@ static const uint8_t colour_table[] =
 
 
 static struct panel *get_panel_topleft(void) {
-	struct panel *p = panel_allocate(6);
+	int size = 5 + player_num_classes(player);
+	struct panel *p = panel_allocate(size);
 	char r_name[15], c_name[64], p_title[128];
+	int i;
+
 	player_race_name(player, r_name, sizeof r_name);
 	class_name(player, c_name, sizeof c_name);
 	show_title(p_title, sizeof p_title);
 
 	panel_line(p, COLOUR_L_BLUE, "Name", "%s", player->full_name);
 	panel_line(p, COLOUR_L_BLUE, "Race", "%s", r_name);
-	panel_line(p, COLOUR_L_BLUE, "Class", "%s", c_name);
-	panel_line(p, COLOUR_L_BLUE, "Title", "%s", p_title);
+
+	panel_line(p, COLOUR_L_BLUE, "Class", "%s", player->classes[0]->name);
+	for (i = 1; i < MAX_PLAYER_CLASSES && player->classes[i]; ++i) {
+		panel_line(p, COLOUR_L_BLUE, "     ", "%s", player->classes[i]->name);
+	}
+
+	//panel_line(p, COLOUR_L_BLUE, "Title", "%s", p_title);
 	panel_line(p, COLOUR_L_BLUE, "HP", "%d/%d", player->mon.hp, player->mon.maxhp);
 	panel_line(p, COLOUR_L_BLUE, "SP", "%d/%d", player->csp, player->msp);
 
@@ -890,59 +898,6 @@ static struct panel *get_panel_combat(void) {
 	for (atk = player->mon.atk; atk; atk = atk->next) {
 		hgt += get_panel_attack_one(atk, false, total_num, p);
 
-#if 0
-		bth = atk->to_hit;
-		struct effect *ef;
-		char atk_title[80], range[80] = "";
-		int blows = atk->blows / 100, blow_frac = (atk->blows / 10) % 10, attr;
-		int num_choice = 0;
-
-		if (atk->range > 1) {
-			strnfmt(range, sizeof range, " (rng %i)", atk->range);
-		}
-
-		my_strcpy(atk_title, atk->title, sizeof atk_title);
-
-		my_strcat(atk_title, format(": %+i (%i.%i)%s", bth, blows, blow_frac, range), sizeof atk_title);
-
-		panel_line(p, COLOUR_WHITE, atk_title, "");
-		++hgt;
-
-		for (ef = atk->ef; ef; ef = ef->next) {
-			char ef_name[80] = "", title[80] = " ";
-			random_value rv;
-
-			dice_random_value(ef->dice, &rv);
-			effect_get_menu_name(ef_name, sizeof ef_name, ef);
-
-			if (num_choice > 0) {
-				strnfmt(title, sizeof title, "-");
-				--num_choice;
-			}
-
-			if (ef->index == EF_RANDOM) {
-				num_choice = dice_roll(ef->dice, &rv);
-			}
-			else if (rv.dice <= 0 || rv.sides <= 0) {
-				my_strcat(ef_name, format(": %i", MAX(rv.base, 0)), sizeof ef_name);
-			}
-			else if (rv.sides == 1) {
-				my_strcat(ef_name, format(": %i", MAX(rv.base + rv.dice, 0)), sizeof ef_name);
-			}
-			else if (rv.base <= 0) {
-				my_strcat(ef_name, format(": %id%i", rv.dice, rv.sides), sizeof ef_name);
-			}
-			else {
-				my_strcat(ef_name, format(": %id%i%+i", rv.dice, rv.sides, rv.base), sizeof ef_name);
-			}
-
-			attr = ef_attr(ef);
-
-			panel_line(p, attr, title, "%s", ef_name);
-
-			++hgt;
-		}
-#endif
 	}
 
 	if (player->mon.atk && player->mon.rng_atk) {
@@ -1066,40 +1021,68 @@ static struct panel *get_panel_misc(void) {
  */
 static const struct {
 	region bounds;
+	uint8_t row;
 	bool align_left;
 	struct panel *(*panel)(void);
 } panels[] =
 {
-	/*   x  y wid rows */
-	{ {  1, 1, 40, 7 }, true,  get_panel_topleft },	/* Name, Class, ... */
-	{ { 24, 1, 18, 3 }, false, get_panel_misc },	/* Age, ht, wt, ... */
-	{ {  1, 9, 21, 9 }, false, get_panel_midleft },	/* Cur Exp, Max Exp, ... */
-	{ { 25, 9, 25, 9 }, false, get_panel_combat },
-	{ { 53, 9, 19, 8 }, false, get_panel_skills },
+	/*       x  y wid rows */
+	{ {  1, 1, 40, 7 }, 1, true,  get_panel_topleft },	/* Name, Class, ... */
+	{ { 24, 1, 18, 3 }, 1, false, get_panel_misc },	/* Age, ht, wt, ... */
+	{ {  1, 9, 21, 9 }, 2, false, get_panel_midleft },	/* Cur Exp, Max Exp, ... */
+	{ { 25, 9, 25, 9 }, 2, false, get_panel_combat },
+	{ { 53, 9, 19, 8 }, 2, false, get_panel_skills },
 };
 
 int display_player_xtra_info(void)
 {
-	size_t i;
-	for (i = 0; i < N_ELEMENTS(panels); i++) {
+	size_t i, row;
+	int y = 1, height;
+
+	for (row = 1; row < 5; ++row) {
+		struct panel *p;
+		region loc;
+		height = 0;
+
+		for (i = 0; i < N_ELEMENTS(panels); ++i) {
+			if (panels[i].row != row) continue;
+
+			p = panels[i].panel();
+			loc = panels[i].bounds;
+
+			loc.row = y;
+			loc.page_rows = p->len;
+
+			display_panel(p, panels[i].align_left, &loc);
+
+			height = MAX(height, (int)p->len);
+
+			panel_free(p);
+		}
+
+		y += height + 1;
+	}
+
+	/*for (i = 0; i < N_ELEMENTS(panels); i++) {
 		struct panel *p = panels[i].panel();
+		struct region loc = panels[i].;
 		display_panel(p, panels[i].align_left, &panels[i].bounds);
 		panel_free(p);
-	}
+	}*/
 
 	/* Indent output by 1 character, and wrap at column 72 */
 	text_out_wrap = 72;
 	text_out_indent = 1;
 
 	/* History */
-	Term_gotoxy(text_out_indent, 9 + panel_height + 1);
+	Term_gotoxy(text_out_indent, y);
 	text_out_to_screen(COLOUR_WHITE, player->history);
 
 	/* Reset text_out() vars */
 	text_out_wrap = 0;
 	text_out_indent = 0;
 
-	return 9 + panel_height + 1 + 3 + 1;
+	return y + 3 + 1;
 }
 
 /**

@@ -24,6 +24,7 @@
 #include "game-event.h"
 #include "game-world.h"
 #include "grafmode.h"
+#include "h-basic.h"
 #include "init.h"
 #include "mon-lore.h"
 #include "mon-predicate.h"
@@ -197,19 +198,21 @@ static int fmt_title(char buf[], int max, bool short_mode)
 /**
  * Prints title, including wizard, winner or shape as needed.
  */
-static void prt_title(int row, int col)
+static int prt_title(int row, int col)
 {	
 	char buf[32];
 
 	fmt_title(buf, sizeof(buf), false);	
 
 	prt_field(buf, row, col);
+
+	return 1;
 }
 
 /**
  * Prints level
  */
-static void prt_level(int row, int col)
+static int prt_level(int row, int col)
 {
 	char tmp[32];
 
@@ -222,13 +225,15 @@ static void prt_level(int row, int col)
 		put_str("Level ", row, col);
 		c_put_str(COLOUR_YELLOW, tmp, row, col + 6);
 	}
+
+	return 1;
 }
 
 
 /**
  * Display the experience
  */
-static void prt_exp(int row, int col)
+static int prt_exp(int row, int col)
 {
 	bool ready = false;
 	char out_val[32];
@@ -256,13 +261,15 @@ static void prt_exp(int row, int col)
 		put_str((lev50 ? "Exp" : "Nxt"), row, col);
 		c_put_str(ready ? COLOUR_L_BLUE : COLOUR_YELLOW, out_val, row, col + 4);
 	}
+
+	return 1;
 }
 
 
 /**
  * Prints current gold
  */
-static void prt_gold(int row, int col)
+static int prt_gold(int row, int col)
 {
 	char tmp[32];
 	int frac_digits = 3, i;
@@ -283,13 +290,15 @@ static void prt_gold(int row, int col)
 
 	put_str("AU ", row, col);
 	c_put_str(COLOUR_L_GREEN, tmp, row, col + 3);
+
+	return 1;
 }
 
 
 /**
  * Equippy chars (ASCII representation of gear in equipment slot order)
  */
-static void prt_equippy(int row, int col)
+static int prt_equippy(int row, int col)
 {
 	int i;
 
@@ -315,13 +324,15 @@ static void prt_equippy(int row, int col)
 		/* Dump */
 		Term_putch(col + i, row, a, c);
 	}
+
+	return 1;
 }
 
 
 /**
  * Prints current AC
  */
-static void prt_ac(int row, int col)
+static int prt_ac(int row, int col)
 {
 	char tmp[32];
 
@@ -329,12 +340,14 @@ static void prt_ac(int row, int col)
 	strnfmt(tmp, sizeof(tmp), "%5d", 
 			player->known_state.ac + player->known_state.to_a);
 	c_put_str(COLOUR_L_GREEN, tmp, row, col + 7);
+
+	return 1;
 }
 
 /**
  * Prints current hitpoints
  */
-static void prt_hp(int row, int col)
+static int prt_hp(int row, int col)
 {
 	char cur_hp[32], max_hp[32];
 	uint8_t color = player_hp_attr(player);
@@ -347,14 +360,16 @@ static void prt_hp(int row, int col)
 	c_put_str(color, cur_hp, row, col + 3);
 	c_put_str(COLOUR_WHITE, "/", row, col + 7);
 	c_put_str(COLOUR_L_GREEN, max_hp, row, col + 8);
+
+	return 1;
 }
 
 /**
  * Prints players max/cur spell points
  */
-static void prt_sp(int row, int col)
+static int prt_sp(int row, int col)
 {
-	if (!character_dungeon) return;
+	if (!character_dungeon) return 0;
 	//char cur_sp[32], max_sp[32];
 	char manastr[32];
 	//uint8_t color = player_sp_attr(player);
@@ -366,13 +381,13 @@ static void prt_sp(int row, int col)
 	if (player->mon.state.powers[PP_ANTIMAGIC]) show = true;
 	if (pf_has(player->mon.state.pflags, PF_PHOENIX_RESURRECT)) show = true;
 
-	if (!show) return;
+	if (!show) return 0;
 
 	put_str("Mana ", row, col);
 
 	strnfmt(manastr, sizeof(manastr), "%4i", mana);
 	c_put_str(COLOUR_L_GREEN, manastr, row, col + 8);
-	return;
+	return 1;
 
 
 	// Do not show mana unless we should have some 
@@ -382,7 +397,7 @@ static void prt_sp(int row, int col)
 		 * having points.
 		 */
 		put_str("            ", row, col);
-		return;
+		return 1;
 	}
 
 	/*put_str("SP ", row, col);
@@ -510,9 +525,11 @@ static int prt_health_aux(int row, int col)
  * is being tracked, we clear the health bar.  If the monster being
  * tracked is not currently visible, a special health bar is shown.
  */
-static void prt_health(int row, int col)
+static int prt_health(int row, int col)
 {
 	prt_health_aux(row, col);
+
+	return 1;
 }
 
 static int prt_speed_aux(char buf[], int max, uint8_t *attr)
@@ -548,7 +565,7 @@ static int prt_speed_aux(char buf[], int max, uint8_t *attr)
 /**
  * Prints the speed of a character.
  */
-static void prt_speed(int row, int col)
+static int prt_speed(int row, int col)
 {
 	uint8_t attr = COLOUR_WHITE;
 	char buf[32] = "";
@@ -557,6 +574,8 @@ static void prt_speed(int row, int col)
 
 	/* Display the speed */
 	c_put_str(attr, format("%-11s", buf), row, col);
+
+	return 1;
 }
 
 static int fmt_depth(char buf[], int max)
@@ -572,7 +591,7 @@ static int fmt_depth(char buf[], int max)
 /**
  * Prints depth in stat area
  */
-static void prt_depth(int row, int col)
+static int prt_depth(int row, int col)
 {
 	char depths[32];
 
@@ -580,6 +599,8 @@ static void prt_depth(int row, int col)
 
 	/* Right-Adjust the "depth", and clear old values */
 	put_str(format("%-13s", depths), row, col);
+
+	return 1;
 }
 
 
@@ -588,12 +609,12 @@ static void prt_depth(int row, int col)
 /**
  * Some simple wrapper functions
  */
-static void prt_str(int row, int col) { prt_stat(STAT_STR, row, col); }
-static void prt_dex(int row, int col) { prt_stat(STAT_DEX, row, col); }
-static void prt_wis(int row, int col) { prt_stat(STAT_WIS, row, col); }
-static void prt_int(int row, int col) { prt_stat(STAT_INT, row, col); }
-static void prt_con(int row, int col) { prt_stat(STAT_CON, row, col); }
-static void prt_race(int row, int col) {
+static int prt_str(int row, int col) { prt_stat(STAT_STR, row, col); return 1; }
+static int prt_dex(int row, int col) { prt_stat(STAT_DEX, row, col); return 1; }
+static int prt_wis(int row, int col) { prt_stat(STAT_WIS, row, col); return 1; }
+static int prt_int(int row, int col) { prt_stat(STAT_INT, row, col); return 1; }
+static int prt_con(int row, int col) { prt_stat(STAT_CON, row, col); return 1; }
+static int prt_race(int row, int col) {
 	if (player_is_shapechanged(player)) {
 		prt_field("", row, col);
 	} else {
@@ -601,6 +622,8 @@ static void prt_race(int row, int col) {
 		player_race_name(player, buf, sizeof(buf));
 		prt_field(buf, row, col);
 	}
+
+	return 1;
 }
 
 static int prt_race_class_short(int row, int col)
@@ -622,14 +645,21 @@ static int prt_race_class_short(int row, int col)
 	return strlen(buf)+1;
 }
 
-static void prt_class(int row, int col) {
+static int prt_class(int row, int col) {
+	int i;
+
 	if (player_is_shapechanged(player)) {
 		prt_field("", row, col);
-	} else {
-		char c_name[128];
-		class_name(player, c_name, sizeof c_name);
-		prt_field(c_name, row, col);
+		return 0;
 	}
+
+	for (i = 0; i < MAX_PLAYER_CLASSES; ++i) {
+		if (!player->classes[i]) return i;
+
+		prt_field(player->classes[i]->name, row + i, col);
+	}
+
+	return i;
 }
 
 /**
@@ -868,12 +898,12 @@ static void update_topbar(game_event_type type, game_event_data *data,
  */
 static const struct side_handler_t
 {
-	void (*hook)(int, int);	 /* int row, int col */
+	int (*hook)(int, int);	 /* int row, int col */
 	int priority;		 /* 1 is most important (always displayed) */
 	game_event_type type;	 /* PR_* flag this corresponds to */
 } side_handlers[] = {
 	{ prt_race,    19, EVENT_RACE_CLASS },
-	{ prt_title,   18, EVENT_PLAYERTITLE },
+	//{ prt_title,   18, EVENT_PLAYERTITLE },
 	{ prt_class,   22, EVENT_RACE_CLASS },
 	{ prt_level,   10, EVENT_PLAYERLEVEL },
 	{ prt_exp,     16, EVENT_EXPERIENCE },
@@ -911,6 +941,7 @@ static void update_sidebar(game_event_type type, game_event_data *data,
 	int x, y, row;
 	int max_priority;
 	size_t i;
+	static int handler_sizes[N_ELEMENTS(side_handlers)] = { 0 };
 
 	if (Term->sidebar_mode == SIDEBAR_NONE) {		
 		return;
@@ -931,6 +962,7 @@ static void update_sidebar(game_event_type type, game_event_data *data,
 		const struct side_handler_t *hnd = &side_handlers[i];
 		int priority = hnd->priority;
 		bool from_bottom = false;
+		int row_inc;
 
 		/* Negative means print from bottom */
 		if (priority < 0) {
@@ -941,14 +973,22 @@ static void update_sidebar(game_event_type type, game_event_data *data,
 		/* If this is high enough priority, display it */
 		if (priority <= max_priority) {
 			if (hnd->type == type && hnd->hook) {
-				if (from_bottom)
-					hnd->hook(Term->hgt - (N_ELEMENTS(side_handlers) - i), 0);
-				else
-				    hnd->hook(row, 0);
+				if (from_bottom) {
+					row_inc = hnd->hook(Term->hgt - (N_ELEMENTS(side_handlers) - i), 0);
+				} else {
+					dbg_log_fmt("sidebar", "printing handler %i at row %i", i, row);
+				    row_inc = hnd->hook(row, 0);
+				}
+
+				handler_sizes[i] = row_inc;
+			}
+			else {
+				row_inc = handler_sizes[i];
 			}
 
 			/* Increment for next time */
-			row++;
+			row += row_inc;
+			dbg_log_fmt("sidebar", "increasing row by %i to %i", row_inc, row);
 		}
 	}
 }
