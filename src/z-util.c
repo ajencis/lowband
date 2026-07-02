@@ -2201,10 +2201,8 @@ static double inverse_binary_exponent_search(double num, int exponent, bool inti
 			result = exponentiate_base(mid, exponent);
 		}
 		else {
-			//plog_fmt("Error: cannot exponentiate %f ^ %i in inverse_binary_exponent_search!", mid, exponent);
 			result = DBL_MAX;
 		}
-		//result = exponentiate_base(mid, exponent);
 
 		if (intify && ((int)result) == ((int)num)) {
 			return mid;
@@ -2215,8 +2213,6 @@ static double inverse_binary_exponent_search(double num, int exponent, bool inti
 	}
 
 	// best guess
-	//dbg_log_fmt("xp", "\nibes for %f^(1/%i) = %f\n", num, exponent, mid);
-
 	return mid;
 }
 
@@ -2284,24 +2280,16 @@ static double exponentiate_dbl_base(double base, int exp_num, int exp_denom, boo
 		lpf = lowest_prime_factor(num);
 		can_exp = can_exponentiate(result, lpf);
 
-		//dbg_log_fmt("xp", "exponentiating %f^(%i/%i), lpf = %i, can_exp = %s",
-		//	result, num, denom,
-		//	lpf, can_exp ? "true" : "false");
-
 		if (!can_exp || (lpf <= 1)) {
 			lpf = lowest_prime_factor(denom);
 			if (lpf <= 1 && !can_exp) {
 				plog_fmt("Error: result of %f^(%i/%i) is too high to calculate!", base, exp_num, exp_denom);
 			}
-			double prev = result;
 			result = inverse_binary_exponent_search(result, lpf, intify && (num <= 1));
-			//dbg_log_fmt("xp", "%f^(1/%i) = %f <--\n", prev, lpf, result);
 			denom /= lpf;
 		}
 		else {
-			double prev = result;
 			result = exponentiate_base(result, lpf);
-			//dbg_log_fmt("xp", "%f^%i = %f", prev, lpf, result);
 			num /= lpf;
 		}
 	}
@@ -2317,8 +2305,6 @@ double exponentiate_dbl(double base, int exp_num, int exp_denom)
 
 int64_t exponentiate(int64_t base, int exp_num, int exp_denom)
 {
-	double result = exponentiate_dbl_base((double)base, exp_num, exp_denom, true);
-	//dbg_log_fmt("xp", "exponentiate result (%i^(%i/%i)) = %f -> %i", base, exp_num, exp_denom, result, (int)result);
 	return (int64_t)exponentiate_dbl_base((double)base, exp_num, exp_denom, true);
 }
 
