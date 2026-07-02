@@ -21,6 +21,7 @@
 
 #include "z-util.h"
 #include "z-form.h"
+#include "z-file.h"
 
 /**
  * Convenient storage of the program name
@@ -2173,7 +2174,7 @@ static bool can_exponentiate(double num, int exponent)
 
 	result = 1.0;
 	for (i = 0; i < exponent; ++i) {
-		if (result >= DBL_MAX / num) {
+		if (result >= FLT_MAX / num) {
 			return false;
 		}
 		result *= num;
@@ -2189,24 +2190,33 @@ static double inverse_binary_exponent_search(double num, int exponent, bool inti
 	double low = MIN(num, 1.0), high = MAX(num, 1.0), mid, result;
 	int tries;
 
+	if (num > (double)INT_MAX) {
+		intify = false;
+	}
+
 	for (tries = 0; tries < 1024; ++tries) {
-		mid = (low + high) / 2;
+		mid = low / 2 + high / 2;
 
 		if (can_exponentiate(mid, exponent)) {
 			result = exponentiate_base(mid, exponent);
 		}
 		else {
+			//plog_fmt("Error: cannot exponentiate %f ^ %i in inverse_binary_exponent_search!", mid, exponent);
 			result = DBL_MAX;
 		}
 		//result = exponentiate_base(mid, exponent);
 
-		if (intify && ((int)result) == ((int)num)) return mid;
+		if (intify && ((int)result) == ((int)num)) {
+			return mid;
+		}
 		else if (result > num) high = mid;
 		else if (result < num) low = mid;
-		else return mid;
+		else break;
 	}
 
 	// best guess
+	//dbg_log_fmt("xp", "\nibes for %f^(1/%i) = %f\n", num, exponent, mid);
+
 	return mid;
 }
 
@@ -2274,16 +2284,24 @@ static double exponentiate_dbl_base(double base, int exp_num, int exp_denom, boo
 		lpf = lowest_prime_factor(num);
 		can_exp = can_exponentiate(result, lpf);
 
+		//dbg_log_fmt("xp", "exponentiating %f^(%i/%i), lpf = %i, can_exp = %s",
+		//	result, num, denom,
+		//	lpf, can_exp ? "true" : "false");
+
 		if (!can_exp || (lpf <= 1)) {
 			lpf = lowest_prime_factor(denom);
 			if (lpf <= 1 && !can_exp) {
 				plog_fmt("Error: result of %f^(%i/%i) is too high to calculate!", base, exp_num, exp_denom);
 			}
+			double prev = result;
 			result = inverse_binary_exponent_search(result, lpf, intify && (num <= 1));
+			//dbg_log_fmt("xp", "%f^(1/%i) = %f <--\n", prev, lpf, result);
 			denom /= lpf;
 		}
 		else {
+			double prev = result;
 			result = exponentiate_base(result, lpf);
+			//dbg_log_fmt("xp", "%f^%i = %f", prev, lpf, result);
 			num /= lpf;
 		}
 	}
@@ -2297,9 +2315,11 @@ double exponentiate_dbl(double base, int exp_num, int exp_denom)
 	return exponentiate_dbl_base(base, exp_num, exp_denom, false);
 }
 
-int exponentiate(int base, int exp_num, int exp_denom)
+int64_t exponentiate(int64_t base, int exp_num, int exp_denom)
 {
-	return (int)exponentiate_dbl_base((double)base, exp_num, exp_denom, true);
+	double result = exponentiate_dbl_base((double)base, exp_num, exp_denom, true);
+	//dbg_log_fmt("xp", "exponentiate result (%i^(%i/%i)) = %f -> %i", base, exp_num, exp_denom, result, (int)result);
+	return (int64_t)exponentiate_dbl_base((double)base, exp_num, exp_denom, true);
 }
 
 

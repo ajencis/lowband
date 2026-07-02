@@ -285,6 +285,6 @@ int my_int_sqrt(int num);
 int my_int_cbrt(int num);
 
 double exponentiate_dbl(double base, int exp_num, int exp_denom);
-int exponentiate(int base, int exp_num, int exp_denom);
+int64_t exponentiate(int64_t base, int exp_num, int exp_denom);
 
 #endif /* INCLUDED_Z_UTIL_H */
