@@ -257,15 +257,14 @@ static struct scaling_data one_class_skill(const struct player_class *class, int
 
 struct scaling_data classes_skill(const struct player_class *list[], size_t len, int which, int tome, const struct monster_race *mr)
 {
-	size_t i;
+	int i;
 	struct scaling_data result, temp;
-	int temp_base, temp_xtra;
 
 	assert(list[0]);
 
 	result = one_class_skill(list[0], which, tome, mr);
 
-	for (i = 1; i < len && list[i]; ++i) {
+	for (i = 1; (size_t)i < len && list[i]; ++i) {
 		temp = one_class_skill(list[i], which, tome, mr);
 
 		result.base = MAX(result.base, temp.base);
@@ -479,7 +478,6 @@ struct scaling_data classes_power(const struct player_class *list[], size_t len,
 struct scaling_data mon_class_power(const struct monster *mon, int power)
 {
 	struct scaling_data result = { 0 };
-	int i;
 
 	if (!mon->player) return result;
 
@@ -528,7 +526,7 @@ struct scaling_data mon_tome_power(const struct monster *mon, int power)
 	return result;
 }
 
-static int mon_power(const struct monster *mon, int power)
+int mon_power(const struct monster *mon, int power)
 {
 	if (power <= PP_NONE || power >= PP_MAX) return 0;
 
@@ -576,7 +574,6 @@ void calc_mon_bonuses(struct monster *mon, struct player_state *state)
 	//struct element_info race_elem_info[ELEM_MAX] = { 0 };
 	struct monster_race *mrace = mon->race;
 	bitflag f[OF_SIZE];
-	struct scaling_data sdata;
 
 	verify_mon_ownership(mon, cave);
 

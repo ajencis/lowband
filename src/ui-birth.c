@@ -478,7 +478,6 @@ static bool race_of_has(struct monster_race *mr, int oflag)
 static void race_help(int i, void *db, const region *l)
 {
 	int j, base, xtra;
-	int hgt, wid;
 	struct player_race *r = player_id2race(i);
 	struct monster_race *mon = race_to_monster(r);
 	//int len = (STAT_MAX + 1) / 2;
@@ -615,7 +614,6 @@ static void class_help(int i, void *db, const region *l)
 	//const struct player_class *curr_classes[MAX_PLAYER_CLASSES] = { 0 };
 	struct birthmenu_data *data = db;
 	char c_name[128], r_name[128];
-	int wid, hgt;
 
 	int skills_b[SKILL_MAX] = { 0 }, skills_x[SKILL_MAX] = { 0 };
 
@@ -671,7 +669,6 @@ static void class_help(int i, void *db, const region *l)
 	skill_help(skills_b, skills_x, r->r_exp + c->c_exp, -1);
 
 	for (ability = player_abilities; ability; ability = ability->next) {
-		struct scaling_data sdata;
 		int base, xtra;
 
 		if (n_flags >= flag_space) break;
