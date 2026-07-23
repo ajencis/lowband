@@ -652,16 +652,14 @@ static size_t show_title(char *buf, size_t bufsize)
 		return class_title(player, buf, bufsize);
 }
 
-static const char *show_adv_exp(void)
+static void show_adv_exp(struct player *p, char *buf, size_t bufsize)
 {
-	if (!player_at_max_level(player)) {
-		static char buffer[30];
-		uint64_t advance = player_exp_needed(player, player->lev);// player_exp[player->lev - 1];
-		strnfmt(buffer, sizeof(buffer), "%lld", (long long)advance);
-		return buffer;
-	}
-	else {
-		return "********";
+	if (player_at_max_level(p)) {
+		strnfmt(buf, sizeof buf, "******");
+	} else {
+		uint64_t adv = player_exp_needed(p, player->lev);
+
+		desc_bignum(adv, buf, bufsize);
 	}
 }
 
@@ -693,10 +691,12 @@ static const char *show_speed(void)
 	return buffer;
 }
 
-static uint8_t max_color(int val, int max)
+#define MAX_COLOUR(val, max) (((val) < (max)) ? COLOUR_YELLOW : COLOUR_L_GREEN)
+
+/*static uint8_t max_color(int val, int max)
 {
 	return val < max ? COLOUR_YELLOW : COLOUR_L_GREEN;
-}
+}*/
 
 /**
  * Colours for table items
@@ -738,13 +738,18 @@ static struct panel *get_panel_midleft(void) {
 	struct panel *p = panel_allocate(9);
 	int diff = weight_remaining(player);
 	uint8_t attr = diff < 0 ? COLOUR_L_RED : COLOUR_L_GREEN;
+	char cur_xp[32], max_xp[32], adv_xp[32];
 
-	panel_line(p, max_color(player->lev, player->max_lev),
+	desc_bignum(player->exp, cur_xp, sizeof cur_xp);
+	desc_bignum(player->max_exp, max_xp, sizeof max_xp);
+	show_adv_exp(player, adv_xp, sizeof adv_xp);
+
+	panel_line(p, MAX_COLOUR(player->lev, player->max_lev),
 			"Level", "%d", player->lev);
-	panel_line(p, max_color(player->exp, player->max_exp),
-			"Cur Exp", "%ld", player->exp);
-	panel_line(p, COLOUR_L_GREEN, "Max Exp", "%d", player->max_exp);
-	panel_line(p, COLOUR_L_GREEN, "Adv Exp", "%s", show_adv_exp());
+	panel_line(p, MAX_COLOUR(player->exp, player->max_exp),
+			"Cur Exp", "%s", cur_xp);
+	panel_line(p, COLOUR_L_GREEN, "Max Exp", "%s", max_xp);
+	panel_line(p, COLOUR_L_GREEN, "Adv Exp", "%s", adv_xp);
 	panel_space(p);
 	panel_line(p, COLOUR_L_GREEN, "Gold", "%d", player->au);
 	panel_line(p, attr, "Burden", "%.1f lb",

@@ -252,7 +252,8 @@ static int prt_exp(int row, int col)
 	}
 
 	/* Format XP */
-	strnfmt(out_val, sizeof(out_val), "%8u", (unsigned int)xp);
+	desc_bignum(xp, out_val, sizeof out_val);
+	//strnfmt(out_val, sizeof(out_val), "%8u", (unsigned int)xp);
 
 	if (player->exp >= player->max_exp) {
 		put_str((lev50 ? "EXP" : "NXT"), row, col);
@@ -714,7 +715,7 @@ static int prt_exp_short(int row, int col)
 	char out_val[32];
 	bool lev50 = player_at_max_level(player);
 
-	long xp = (long)player->exp;
+	uint64_t xp = player->exp;
 
 	/* Calculate XP for next level */
 	if (!lev50) {
@@ -722,7 +723,8 @@ static int prt_exp_short(int row, int col)
 	}
 
 	/* Format XP */
-	strnfmt(out_val, sizeof(out_val), "%ld", xp);
+	desc_bignum(xp, out_val, sizeof out_val);
+	//strnfmt(out_val, sizeof(out_val), "%ld", xp);
 
 	if (player->exp >= player->max_exp) {
 		put_str((lev50 ? "EXP:" : "NXT:"), row, col);
@@ -976,7 +978,6 @@ static void update_sidebar(game_event_type type, game_event_data *data,
 				if (from_bottom) {
 					row_inc = hnd->hook(Term->hgt - (N_ELEMENTS(side_handlers) - i), 0);
 				} else {
-					dbg_log_fmt("sidebar", "printing handler %i at row %i", i, row);
 				    row_inc = hnd->hook(row, 0);
 				}
 
@@ -988,7 +989,6 @@ static void update_sidebar(game_event_type type, game_event_data *data,
 
 			/* Increment for next time */
 			row += row_inc;
-			dbg_log_fmt("sidebar", "increasing row by %i to %i", row_inc, row);
 		}
 	}
 }

@@ -2266,6 +2266,10 @@ static double exponentiate_dbl_base(double base, int exp_num, int exp_denom, boo
 		return 1.0;
 	}
 
+	if (exp_denom == 0) {
+		return 0.0;
+	}
+
 	exp_num = ABS(exp_num);
 	exp_denom = ABS(exp_denom);
 

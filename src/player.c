@@ -17,6 +17,7 @@
  */
 
 #include "player.h"
+#include "h-basic.h"
 #include "init.h"
 #include "mon-calcs.h"
 #include "mon-make.h"
@@ -175,6 +176,57 @@ const uint32_t player_exp[PY_MAX_LEVEL] =
 #endif
 
 
+static const char *num_terminators[] = {
+	"",
+	"K",
+	"M",
+	"B",
+	"T",
+	"Q",
+};
+
+
+void desc_bignum(uint64_t amt, char *buf, size_t bufsize)
+{
+	int log10 = 0, buf_ind = 0, i;
+	char base[5] = "000\0";
+	int stop_i;
+	int term_i;
+
+	while (amt >= 1000U) {
+		log10++;
+		amt /= 10U;
+	}
+
+	strnfmt(base, sizeof base, "%i", (int)amt);
+
+	term_i = (log10 + 2) / 3;
+
+	if (term_i < 1) {
+		strnfmt(buf, bufsize, "%s", base);
+		return;
+	}
+	else if ((unsigned)term_i >= N_ELEMENTS(num_terminators)) {
+		strnfmt(buf, bufsize, "%se%i", base, log10);
+		return;
+	}
+
+	stop_i = 3 + log10 - 3 * term_i;
+
+	for (i = 0; i < 3; ++i) {
+		if (stop_i == i) {
+			buf[buf_ind++] = '.';
+		}
+
+		buf[buf_ind++] = base[i];
+	}
+
+	buf[buf_ind++] = '\0';
+
+	my_strcat(buf, num_terminators[term_i], bufsize);
+}
+
+
 /**
  * xpfact is in percent
  */
@@ -184,9 +236,9 @@ uint64_t player_exp(int level, int xpfact)
 	static uint64_t result = 0;
 
 	if (prev_fact != xpfact || prev_level != level) {
-		int round, new_num, new_div, mode, fact_mod;
+		int64_t round, new_num, new_div, mode, fact_mod;
 
-		fact_mod = exponentiate(xpfact, 2, 3); 
+		fact_mod = exponentiate(xpfact, 2, 3);
 
 		new_num = fact_mod * 100 * level;
 		new_div = 15 * 100 * 2;
@@ -194,7 +246,7 @@ uint64_t player_exp(int level, int xpfact)
 		new_num = exponentiate(new_num, 1, 2);
 		new_div = exponentiate(new_div, 1, 2);
 
-		result = exponentiate(10, new_num, new_div);
+		result = (uint64_t)exponentiate(10, new_num, new_div);
 
 		mode = 0;
 		for (round = 1; (unsigned)round < (result / 50); mode = (mode + 1) % 3) {
@@ -207,17 +259,24 @@ uint64_t player_exp(int level, int xpfact)
 			}
 		}
 
-		result += round / 2;
-		result /= round;
-		result *= round;
+		result += (uint64_t)(round / 2);
+		result /= (uint64_t)round;
+		result *= (uint64_t)round;
 
 		prev_fact = xpfact;
 		prev_level = level;
-
-		dbg_log_fmt("xp", "player_exp(%i, %i) = %i", xpfact, level, (int)result);
 	}
 
 	return result;
+}
+
+char *player_xp_string(struct player *p)
+{
+	static char buf[16];
+
+	desc_bignum(p->exp, buf, sizeof buf);
+
+	return buf;
 }
 
 #if 0
@@ -413,9 +472,6 @@ bool player_stat_dec(struct player *p, int stat, bool permanent)
 
 uint64_t player_exp_needed(struct player *p, int level)
 {
-	//int num = level * p->mon.state.expfact;
-	//int denom = 100;
-
 	return player_exp(level, (int)p->mon.state.expfact);
 }
 

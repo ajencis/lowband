@@ -98,7 +98,7 @@ static void display_exit_screen(void)
 
 	put_str_centred(line++, 8, 8+31, "%s", c_name);
 	put_str_centred(line++, 8, 8+31, "Level: %d", (int)player->lev);
-	put_str_centred(line++, 8, 8+31, "Exp: %lu", (int)player->exp);
+	put_str_centred(line++, 8, 8+31, "Exp: %s", player_xp_string(player));
 	put_str_centred(line++, 8, 8+31, "AU: %d", (int)player->au);
 	if (retired) {
 		put_str_centred(line++, 8, 8+31, "Retired on Level %d",

@@ -578,6 +578,8 @@ int player_num_classes(struct player *p);
 uint64_t player_exp(int level, int xpfact);
 //uint64_t player_exp_new(int level_num, int level_denom);
 uint64_t player_exp_needed(struct player *p, int level);
+void desc_bignum(uint64_t amt, char *buf, size_t bufsize);
+char *player_xp_string(struct player *p);
 int stat_name_to_idx(const char *name);
 const char *stat_idx_to_name(int type);
 const struct magic_realm *lookup_realm(const char *code);
